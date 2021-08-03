@@ -75,7 +75,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               }
 
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
-              logger.d("$TAG - QR_DATA:$qrData");
+              logger.i("$TAG - QR_DATA:$qrData");
               if (qrData != null) {
                 _qrController.sink.add(qrData.toString());
               }

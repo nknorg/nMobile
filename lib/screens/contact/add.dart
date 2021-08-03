@@ -78,13 +78,13 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
   }
 
   formatQrDate(String? clientAddress) async {
-    logger.d("$TAG - QR_DATA - $clientAddress");
+    logger.i("$TAG - QR_DATA - $clientAddress");
     if (clientAddress == null || clientAddress.isEmpty) return;
 
     String nickName = ContactSchema.getDefaultName(clientAddress);
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
 
-    logger.d("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
+    logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !verifyAddress(walletAddress)) {
       ModalDialog.of(this.context).show(
         content: S.of(this.context).error_unknown_nkn_qrcode,
@@ -114,7 +114,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.getLocalFile(_headImage?.path) : null;
 
-      logger.d("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
+      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
       ContactSchema schema = ContactSchema(
         clientAddress: clientAddress,
