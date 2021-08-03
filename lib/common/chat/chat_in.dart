@@ -194,7 +194,7 @@ class ChatInCommon with Tag {
           // }
         }
       } else {
-        logger.d("$TAG - receiveContact - profileVersionSame - contact:$exist - data:$data");
+        logger.d("$TAG - receiveContact - profile version same - contact:$exist - data:$data");
       }
     }
   }
@@ -374,7 +374,7 @@ class ChatInCommon with Tag {
     int parity = piece.parity ?? (total ~/ ChatOutCommon.piecesParity);
     int bytesLength = piece.bytesLength ?? 0;
     int piecesCount = await _messageStorage.queryCountByType(piece.msgId, piece.contentType);
-    logger.d("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
+    logger.v("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
     if (piecesCount < total || bytesLength <= 0) return;
     logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
@@ -410,7 +410,7 @@ class ChatInCommon with Tag {
     }
     MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
     // combine.content - handle later
-    logger.d("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
+    logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
     await onClientMessage(combine, needWait: true);
     // delete
     logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
@@ -420,7 +420,7 @@ class ChatInCommon with Tag {
         if (element.content is File) {
           if ((element.content as File).existsSync()) {
             (element.content as File).delete(); // await
-            // logger.d("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+            // logger.v("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
           } else {
             logger.e("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
           }
@@ -428,7 +428,7 @@ class ChatInCommon with Tag {
           logger.e("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
         }
       });
-      logger.d("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
+      logger.i("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
     } else {
       logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
     }
