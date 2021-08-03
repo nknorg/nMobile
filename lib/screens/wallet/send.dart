@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -210,7 +211,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferETH(String? keystore, String? password) async {
-    // TODO:GG eth transfer
+    // TODO:GG eth transfer + balance check
     // try {
     // final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
     //   final ethClient = EthErc20Client();
@@ -234,27 +235,45 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferNKN(String? keystore, String? password) async {
-    if (keystore == null || password == null) return false;
     S _localizations = S.of(context);
+    if (keystore == null || password == null) {
+      Toast.show(_localizations.password_wrong);
+      return false;
+    }
+    Loading.show();
     try {
       Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
       if (restore.address.isEmpty || restore.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;
       }
+
       String amount = _amount?.toString() ?? '0';
       String fee = _fee.toString();
-      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') return false;
+      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
+        Toast.show(_localizations.enter_amount);
+        return false;
+      }
+
+      double balance = await restore.getBalance();
+      double tradeTotal = (double.tryParse(amount) ?? 0) + (double.tryParse(fee) ?? 0);
+      if (balance < tradeTotal) {
+        Toast.show("余额不足"); // TODO:GG locale balance
+        return false;
+      }
 
       String? txHash = await restore.transfer(_sendTo!, amount, fee: fee);
       if (txHash != null) {
         walletCommon.queryBalance();
         return txHash.length > 10;
       }
+      Toast.show(_localizations.failure);
       return false;
     } catch (e) {
       handleError(e, toast: _localizations.failure);
       return false;
+    } finally {
+      Loading.dismiss();
     }
   }
 
