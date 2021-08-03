@@ -46,7 +46,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   void onRefreshArguments() {
     loaded = false;
     if (widget.session.isTopic) {
-      if (_topic == null || widget.session.targetId != _topic?.id?.toString()) {
+      if (_topic == null || (widget.session.targetId != _topic?.topic)) {
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
@@ -58,7 +58,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     } else {
-      if (_contact == null || widget.session.targetId != _contact?.id?.toString()) {
+      if (_contact == null || (widget.session.targetId != _contact?.clientAddress)) {
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
