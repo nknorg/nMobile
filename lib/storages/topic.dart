@@ -40,7 +40,6 @@ class TopicStorage with Tag {
       )''');
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic)');
-    await db.execute('CREATE INDEX index_topic_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_topic_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
@@ -74,7 +73,7 @@ class TopicStorage with Tag {
       if (id != null && id != 0) {
         TopicSchema? schema = TopicSchema.fromMap(entity);
         schema?.id = id;
-        logger.d("$TAG - insert - success - schema:$schema");
+        logger.v("$TAG - insert - success - schema:$schema");
         return schema;
       }
       logger.w("$TAG - insert - fail - schema:$schema");
@@ -95,7 +94,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - delete - success - topicId:$topicId");
+        logger.v("$TAG - delete - success - topicId:$topicId");
         return true;
       }
       logger.w("$TAG - delete - fail - topicId:$topicId");
@@ -116,10 +115,10 @@ class TopicStorage with Tag {
       );
       if (res != null && res.length > 0) {
         TopicSchema? schema = TopicSchema.fromMap(res.first);
-        logger.d("$TAG - query - success - topicId:$topicId - schema:$schema");
+        logger.v("$TAG - query - success - topicId:$topicId - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - query - empty - topicId:$topicId");
+      logger.v("$TAG - query - empty - topicId:$topicId");
     } catch (e) {
       handleError(e);
     }
@@ -137,10 +136,10 @@ class TopicStorage with Tag {
       );
       if (res != null && res.length > 0) {
         TopicSchema? schema = TopicSchema.fromMap(res.first);
-        logger.d("$TAG - queryByTopic - success - topic:$topic - schema:$schema");
+        logger.v("$TAG - queryByTopic - success - topic:$topic - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryByTopic - empty - topic:$topic");
+      logger.v("$TAG - queryByTopic - empty - topic:$topic");
     } catch (e) {
       handleError(e);
     }
@@ -159,17 +158,17 @@ class TopicStorage with Tag {
         orderBy: orderBy ?? 'create_at DESC',
       );
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryList - empty - topicType:$topicType");
+        logger.v("$TAG - queryList - empty - topicType:$topicType");
         return [];
       }
       List<TopicSchema> results = <TopicSchema>[];
       String logText = '';
       res.forEach((map) {
-        logText += "\n$map";
+        logText += "\n      $map";
         TopicSchema? topic = TopicSchema.fromMap(map);
         if (topic != null) results.add(topic);
       });
-      logger.d("$TAG - queryList - items:$logText");
+      logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -198,7 +197,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+        logger.v("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
         return true;
       }
       logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
@@ -221,7 +220,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
+        logger.v("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
         return true;
       }
       logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
@@ -244,7 +243,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setCount - success - topicId:$topicId - count:$count");
+        logger.v("$TAG - setCount - success - topicId:$topicId - count:$count");
         return true;
       }
       logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
@@ -267,7 +266,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setTop - success - topicId:$topicId - top:$top");
+        logger.v("$TAG - setTop - success - topicId:$topicId - top:$top");
         return true;
       }
       logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
@@ -290,7 +289,7 @@ class TopicStorage with Tag {
         whereArgs: [topicId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - topicId:$topicId - newData:$newData");
+        logger.v("$TAG - setData - success - topicId:$topicId - newData:$newData");
         return true;
       }
       logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");

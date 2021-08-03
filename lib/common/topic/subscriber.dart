@@ -150,7 +150,7 @@ class SubscriberCommon with Tag {
 
     // merge
     List<SubscriberSchema> results = [];
-    if (_acceptAll == true) {
+    if (!meta || _acceptAll == true) {
       results = subscribers;
       results = results.map((e) {
         e.status = SubscriberStatus.Subscribed;

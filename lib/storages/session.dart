@@ -57,7 +57,7 @@ class SessionStorage with Tag {
       if (id != null && id != 0) {
         SessionSchema schema = SessionSchema.fromMap(entity);
         schema.id = id;
-        logger.d("$TAG - insert - success - schema:$schema");
+        logger.v("$TAG - insert - success - schema:$schema");
         return schema;
       }
       logger.w("$TAG - insert - fail - schema:$schema");
@@ -76,7 +76,7 @@ class SessionStorage with Tag {
         whereArgs: [targetId],
       );
       if (result != null && result > 0) {
-        logger.d("$TAG - delete - success - targetId:$targetId");
+        logger.v("$TAG - delete - success - targetId:$targetId");
         return true;
       }
       logger.w("$TAG - delete - empty - targetId:$targetId");
@@ -97,10 +97,10 @@ class SessionStorage with Tag {
       );
       if (res != null && res.length > 0) {
         SessionSchema schema = SessionSchema.fromMap(res.first);
-        logger.d("$TAG - query - success - targetId:$targetId - schema:$schema");
+        logger.v("$TAG - query - success - targetId:$targetId - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - query - empty - targetId:$targetId ");
+      logger.v("$TAG - query - empty - targetId:$targetId ");
     } catch (e) {
       handleError(e);
     }
@@ -117,17 +117,17 @@ class SessionStorage with Tag {
         orderBy: 'is_top desc, last_message_time DESC',
       );
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListRecent - empty");
+        logger.v("$TAG - queryListRecent - empty");
         return [];
       }
       List<SessionSchema> result = <SessionSchema>[];
       String logText = '';
       res.forEach((map) {
         SessionSchema item = SessionSchema.fromMap(map);
-        logText += "\n$item";
+        logText += "\n      $item";
         result.add(item);
       });
-      logger.d("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
+      logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
       return result;
     } catch (e) {
       handleError(e);
@@ -148,7 +148,7 @@ class SessionStorage with Tag {
         where: 'target_id = ?',
         whereArgs: [schema.targetId],
       );
-      logger.d("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema}");
+      logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema}");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -168,7 +168,7 @@ class SessionStorage with Tag {
         where: 'target_id = ?',
         whereArgs: [schema.targetId],
       );
-      logger.d("$TAG - updateLastMessage - count:$count - schema:$schema}");
+      logger.v("$TAG - updateLastMessage - count:$count - schema:$schema}");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -187,7 +187,7 @@ class SessionStorage with Tag {
         where: 'target_id = ?',
         whereArgs: [targetId],
       );
-      logger.d("$TAG - updateIsTop - targetId:$targetId - isTop:$isTop");
+      logger.v("$TAG - updateIsTop - targetId:$targetId - isTop:$isTop");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -206,7 +206,7 @@ class SessionStorage with Tag {
         where: 'target_id = ?',
         whereArgs: [targetId],
       );
-      logger.d("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
+      logger.v("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);

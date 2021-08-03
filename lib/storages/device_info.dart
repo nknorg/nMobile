@@ -39,7 +39,7 @@ class DeviceInfoStorage with Tag {
       if (id != null && id != 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(entity);
         schema.id = id;
-        logger.d("$TAG - insert - success - schema:$schema");
+        logger.v("$TAG - insert - success - schema:$schema");
         return schema;
       }
       logger.w("$TAG - insert - fail - schema:$schema");
@@ -63,10 +63,10 @@ class DeviceInfoStorage with Tag {
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.d("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
+        logger.v("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryLatest - empty - contactAddress:$contactAddress");
+      logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
     } catch (e) {
       handleError(e);
     }
@@ -87,10 +87,10 @@ class DeviceInfoStorage with Tag {
       );
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.d("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
+        logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
+      logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
     } catch (e) {
       handleError(e);
     }
@@ -110,7 +110,7 @@ class DeviceInfoStorage with Tag {
         whereArgs: [deviceInfoId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
+        logger.v("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
         return true;
       }
       logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");

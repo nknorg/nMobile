@@ -33,7 +33,6 @@ class SubscriberStorage with Tag {
       )''');
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_subscriber_topic_chat_id ON $tableName (topic, chat_id)');
-    await db.execute('CREATE INDEX index_subscriber_topic ON $tableName (topic)');
     await db.execute('CREATE INDEX index_subscriber_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_subscriber_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_subscriber_topic_create_at ON $tableName (topic, create_at)');
@@ -68,7 +67,7 @@ class SubscriberStorage with Tag {
       if (id != null && id != 0) {
         SubscriberSchema? schema = SubscriberSchema.fromMap(entity);
         schema?.id = id;
-        logger.d("$TAG - insert - success - schema:$schema");
+        logger.v("$TAG - insert - success - schema:$schema");
         return schema;
       }
       logger.w("$TAG - insert - fail - schema:$schema");
@@ -89,7 +88,7 @@ class SubscriberStorage with Tag {
         whereArgs: [subscriberId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - delete - success - subscriberId:$subscriberId");
+        logger.v("$TAG - delete - success - subscriberId:$subscriberId");
         return true;
       }
       logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
@@ -108,7 +107,7 @@ class SubscriberStorage with Tag {
   //       whereArgs: [topic],
   //     );
   //     if (count != null && count > 0) {
-  //       logger.d("$TAG - deleteByTopic - success - topic:$topic");
+  //       logger.v("$TAG - deleteByTopic - success - topic:$topic");
   //       return count;
   //     }
   //     logger.w("$TAG - deleteByTopic - fail - topic:$topic");
@@ -129,10 +128,10 @@ class SubscriberStorage with Tag {
       );
       if (res != null && res.length > 0) {
         SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.d("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
+        logger.v("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - query - empty - subscriberId:$subscriberId");
+      logger.v("$TAG - query - empty - subscriberId:$subscriberId");
     } catch (e) {
       handleError(e);
     }
@@ -150,10 +149,10 @@ class SubscriberStorage with Tag {
       );
       if (res != null && res.length > 0) {
         SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.d("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
+        logger.v("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
+      logger.v("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
     } catch (e) {
       handleError(e);
     }
@@ -173,17 +172,17 @@ class SubscriberStorage with Tag {
         orderBy: orderBy ?? 'create_at ASC',
       );
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
+        logger.v("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
         return [];
       }
       List<SubscriberSchema> results = <SubscriberSchema>[];
       String logText = '';
       res.forEach((map) {
-        logText += "\n$map";
+        logText += "\n      $map";
         SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
         if (subscriber != null) results.add(subscriber);
       });
-      logger.d("$TAG - queryListByTopic - items:$logText");
+      logger.v("$TAG - queryListByTopic - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -201,17 +200,17 @@ class SubscriberStorage with Tag {
         whereArgs: [topic, permPage],
       );
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
+        logger.v("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
         return [];
       }
       List<SubscriberSchema> results = <SubscriberSchema>[];
       String logText = '';
       res.forEach((map) {
-        logText += "\n$map";
+        logText += "\n      $map";
         SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
         if (subscriber != null) results.add(subscriber);
       });
-      logger.d("$TAG - queryListByTopicPerm - items:$logText");
+      logger.v("$TAG - queryListByTopicPerm - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -229,7 +228,7 @@ class SubscriberStorage with Tag {
         whereArgs: status != null ? [topic, status] : [topic],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("$TAG - queryCountByTopic - topic:$topic - count:$status");
+      logger.v("$TAG - queryCountByTopic - topic:$topic - count:$status");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -247,7 +246,7 @@ class SubscriberStorage with Tag {
         whereArgs: status != null ? [topic, permPage, status] : [topic, permPage],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
+      logger.v("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -267,10 +266,10 @@ class SubscriberStorage with Tag {
       );
       if (res != null && res.length > 0) {
         SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.d("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
+        logger.v("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
         return schema?.permPage ?? 0;
       }
-      logger.d("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
+      logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
       return 0;
     } catch (e) {
       handleError(e);
@@ -291,7 +290,7 @@ class SubscriberStorage with Tag {
         whereArgs: [subscriberId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
+        logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
         return true;
       }
       logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
@@ -314,7 +313,7 @@ class SubscriberStorage with Tag {
         whereArgs: [subscriberId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
+        logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
         return true;
       }
       logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
@@ -337,7 +336,7 @@ class SubscriberStorage with Tag {
   //       whereArgs: [subscriberId],
   //     );
   //     if (count != null && count > 0) {
-  //       logger.d("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
+  //       logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
   //       return true;
   //     }
   //     logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");

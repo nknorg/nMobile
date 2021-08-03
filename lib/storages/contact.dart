@@ -39,7 +39,6 @@ class ContactStorage with Tag {
 
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (address)');
-    await db.execute('CREATE INDEX index_contact_type ON $tableName (type)');
     await db.execute('CREATE INDEX index_contact_create_at ON $tableName (create_at)');
     await db.execute('CREATE INDEX index_contact_update_at ON $tableName (update_at)');
     await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
@@ -73,7 +72,7 @@ class ContactStorage with Tag {
       if (id != null && id != 0) {
         ContactSchema schema = await ContactSchema.fromMap(entity);
         schema.id = id;
-        logger.d("$TAG - insert - success - schema:$schema");
+        logger.v("$TAG - insert - success - schema:$schema");
         return schema;
       }
       logger.w("$TAG - insert - fail - schema:$schema");
@@ -94,7 +93,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - delete - success - contactId:$contactId");
+        logger.v("$TAG - delete - success - contactId:$contactId");
         return true;
       }
       logger.w("$TAG - delete - fail - contactId:$contactId");
@@ -115,10 +114,10 @@ class ContactStorage with Tag {
       );
       if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
-        logger.d("$TAG - query - success - contactId:$contactId - schema:$schema");
+        logger.v("$TAG - query - success - contactId:$contactId - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - query - empty - contactId:$contactId");
+      logger.v("$TAG - query - empty - contactId:$contactId");
     } catch (e) {
       handleError(e);
     }
@@ -136,10 +135,10 @@ class ContactStorage with Tag {
       );
       if (res != null && res.length > 0) {
         ContactSchema schema = await ContactSchema.fromMap(res.first);
-        logger.d("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
+        logger.v("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
       }
-      logger.d("$TAG - queryByClientAddress - empty - address:$clientAddress");
+      logger.v("$TAG - queryByClientAddress - empty - address:$clientAddress");
     } catch (e) {
       handleError(e);
     }
@@ -159,17 +158,17 @@ class ContactStorage with Tag {
         orderBy: orderBy,
       );
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryList - empty - contactType:$contactType");
+        logger.v("$TAG - queryList - empty - contactType:$contactType");
         return [];
       }
       List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
       String logText = '';
       res.forEach((map) {
-        logText += "\n$map";
+        logText += "\n      $map";
         futures.add(ContactSchema.fromMap(map));
       });
       List<ContactSchema> results = await Future.wait(futures);
-      logger.d("$TAG - queryList - items:$logText");
+      logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e) {
       handleError(e);
@@ -187,7 +186,7 @@ class ContactStorage with Tag {
         whereArgs: [clientAddress],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.d("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
+      logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -208,7 +207,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setType - success - contactId:$contactId - type:$contactType");
+        logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
         return true;
       }
       logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
@@ -235,7 +234,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setProfile - success - contactId:$contactId - profileInfo:$profileInfo");
+        logger.v("$TAG - setProfile - success - contactId:$contactId - profileInfo:$profileInfo");
         return true;
       }
       logger.w("$TAG - setProfile - fail - contactId:$contactId - profileInfo:$profileInfo");
@@ -258,7 +257,7 @@ class ContactStorage with Tag {
         whereArgs: [clientAddress],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
+        logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
         return true;
       }
       logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
@@ -281,7 +280,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
+        logger.v("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
         return true;
       }
       logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
@@ -307,7 +306,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
+        logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
         return true;
       }
       logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
@@ -334,7 +333,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
+        logger.v("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
         return true;
       }
       logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
@@ -357,7 +356,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
+        logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
         return true;
       }
       logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
@@ -382,7 +381,7 @@ class ContactStorage with Tag {
         whereArgs: [contactId],
       );
       if (count != null && count > 0) {
-        logger.d("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+        logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
         return true;
       }
       logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
