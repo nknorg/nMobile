@@ -243,6 +243,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _tipNotificationOpen() async {
+    if (this._topic != null || this._contact == null) return;
     bool need = await contactCommon.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
     if (!need) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
