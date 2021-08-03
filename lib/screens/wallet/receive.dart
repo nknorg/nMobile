@@ -101,7 +101,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                           wallet: _wallet,
                           onTapWave: false,
                           onSelected: (WalletSchema picked) {
-                            logger.d("$TAG - wallet picked - $picked");
+                            logger.i("$TAG - wallet picked - $picked");
                             setState(() {
                               _wallet = picked;
                             });

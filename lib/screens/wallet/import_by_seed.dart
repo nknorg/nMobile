@@ -73,7 +73,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
       String seed = _seedController.text;
       String name = _nameController.text;
       String password = _passwordController.text;
-      logger.d("$TAG - seed:$seed, name:$name, password:$password");
+      logger.i("$TAG - seed:$seed, name:$name, password:$password");
 
       try {
         if (widget.walletType == WalletType.nkn) {
@@ -81,7 +81,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
           if (result.address.isEmpty || result.keystore.isEmpty) return;
 
           WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-          logger.d("$TAG - import_nkn - ${wallet.toString()}");
+          logger.i("$TAG - import_nkn - ${wallet.toString()}");
 
           _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
         } else {
