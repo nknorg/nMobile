@@ -66,7 +66,7 @@ class ClientCommon with Tag {
       }
     });
     onErrorStream.listen((dynamic event) {
-      // TODO:GG client error
+      handleError(event);
     });
   }
 
