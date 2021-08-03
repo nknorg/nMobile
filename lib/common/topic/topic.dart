@@ -731,7 +731,7 @@ class TopicCommon with Tag {
     if (checkDuplicated) {
       TopicSchema? exist = await queryByTopic(schema.topic);
       if (exist != null) {
-        logger.d("$TAG - add - duplicated - schema:$exist");
+        logger.i("$TAG - add - duplicated - schema:$exist");
         return null;
       }
     }

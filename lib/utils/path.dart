@@ -7,8 +7,6 @@ import 'package:nmobile/common/global.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
-import 'logger.dart';
-
 class SubDirType {
   static const String cache = "cache";
   static const String chat = "chat";
@@ -64,7 +62,6 @@ class Path {
     if (!await dir.exists()) {
       dir = await dir.create(recursive: true);
     }
-    // logger.d("Path - getDir - path:${dir.path}");
     return dir.path;
   }
 
@@ -72,7 +69,6 @@ class Path {
   static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? fileExt}) async {
     String dirPath = await getDir(mPubKey, dirType);
     String path = join(dirPath, joinFileExt(fileName, fileExt));
-    // logger.d("Path - getFile - path:$path");
     return path;
   }
 
@@ -83,7 +79,6 @@ class Path {
       fileName += ".$fileExt";
     }
     String path = await _getFile(mPubKey, SubDirType.cache, fileName, fileExt: fileExt);
-    logger.d("Path - getCacheFile - path:$path");
     return path;
   }
 
