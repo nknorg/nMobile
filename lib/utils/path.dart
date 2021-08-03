@@ -95,8 +95,12 @@ class Path {
     return filePath.split(rootDir).last;
   }
 
-  /// eg:{mPubKey}/{dirType}/{fileName}
-  static String createLocalFile(String mPubKey, String dirType, String filePath) {
-    return join(mPubKey, dirType, Path.getFileName(filePath));
+  /// eg:{mPubKey}/{dirType}/{chatTarget}/{fileName}
+  static String createLocalFile(String mPubKey, String dirType, String filePath, {String? chatTarget}) {
+    if (chatTarget?.isNotEmpty == true) {
+      return join(mPubKey, dirType, chatTarget, Path.getFileName(filePath));
+    } else {
+      return join(mPubKey, dirType, Path.getFileName(filePath));
+    }
   }
 }
