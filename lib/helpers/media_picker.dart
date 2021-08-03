@@ -39,7 +39,7 @@ class MediaPicker {
       return null;
     }
     // pick
-    PickedFile? pickedResult = await ImagePicker().getImage(source: source);
+    PickedFile? pickedResult = await ImagePicker().getImage(source: source); // TODO:GG 估计得替换了
     if (pickedResult == null || pickedResult.path.isEmpty) {
       return null;
     }
@@ -59,7 +59,7 @@ class MediaPicker {
       }
     }
     bool isGif = (mime(pickedFile.path)?.indexOf('image/gif') ?? -1) >= 0;
-    logger.d("MediaPicker - media_pick - picked - path:${pickedFile.path} - ext:$fileExt"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    logger.i("MediaPicker - media_pick - picked - path:${pickedFile.path} - ext:$fileExt"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
     // logger.d('MediaPicker - media_pick - picked - size:${formatFlowSize(pickedFile.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     // crop
@@ -86,7 +86,7 @@ class MediaPicker {
           lockAspectRatio: false,
         ),
       );
-      logger.d('MediaPicker - media_pick - crop - path:${croppedFile?.path}');
+      logger.i('MediaPicker - media_pick - crop - path:${croppedFile?.path}');
       // logger.d('MediaPicker - media_pick - crop - size:${formatFlowSize(croppedFile?.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
     if (croppedFile == null) return null;
@@ -125,7 +125,7 @@ class MediaPicker {
           compressFile = croppedFile;
         }
       }
-      logger.d('MediaPicker - media_pick - compress - format:$format - path:${compressFile?.path}');
+      logger.i('MediaPicker - media_pick - compress - format:$format - path:${compressFile?.path}');
       // logger.d('MediaPicker - media_pick - compress - size:${formatFlowSize(compressFile?.lengthSync().toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
     if (compressFile == null) return null;
@@ -146,7 +146,7 @@ class MediaPicker {
       }
       returnFile = compressFile.copySync(randomPath);
     }
-    logger.d('MediaPicker - media_pick - return - path:${returnFile.path}');
+    logger.i('MediaPicker - media_pick - return - path:${returnFile.path}');
     return returnFile;
   }
 }
