@@ -102,7 +102,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   }
 
   _readyExport(WalletSchema? schema) {
-    logger.d("$TAG - backup picked - $schema");
+    logger.i("$TAG - backup picked - $schema");
     if (schema == null || schema.address.isEmpty) return;
     S _localizations = S.of(context);
 
