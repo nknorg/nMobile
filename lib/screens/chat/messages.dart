@@ -420,7 +420,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           message: msg,
                           topic: _topic,
                           contact: _contact,
-                          showProfile: !msg.isOutbound && msg.isTopic,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
                           onAvatarLonePress: (ContactSchema contact, _) {
