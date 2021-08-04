@@ -30,7 +30,7 @@ class MediaPicker {
     String? returnPath,
     Duration? maxDuration,
   }) async {
-    if (source == ImageSource.camera || Platform.isIOS) {
+    if (source == ImageSource.camera) {
       return pickImageAndVideoBySystem(
         source: source,
         mediaType: mediaType,
@@ -75,7 +75,7 @@ class MediaPicker {
     }
 
     // convert
-    File? pickedFile = await pickedResults[0].originFile;
+    File? pickedFile = (await pickedResults[0].originFile) ?? (await pickedResults[0].loadFile(isOrigin: false));
     if (pickedFile == null || pickedFile.path.isEmpty) {
       logger.w("MediaPicker - pickSingle - pickedFile = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
       return null;
