@@ -186,7 +186,7 @@ class TopicCommon with Tag {
           }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.w("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - between:${betweenS}s - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - between:${betweenS}s - topic:$exists");
           if (!forceSubscribe) return exists;
         }
       } else {
@@ -214,7 +214,7 @@ class TopicCommon with Tag {
           }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.d("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - between:${betweenS}s - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - between:${betweenS}s - topic:$exists");
         }
       } else {
         // DB is joined + node is joined
