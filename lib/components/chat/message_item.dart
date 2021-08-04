@@ -20,7 +20,6 @@ class ChatMessageItem extends StatelessWidget {
   final ContactSchema? contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
-  final bool showProfile;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
@@ -30,7 +29,6 @@ class ChatMessageItem extends StatelessWidget {
     required this.contact,
     this.prevMessage,
     this.nextMessage,
-    this.showProfile = false,
     this.onAvatarLonePress,
     this.onResend,
   });
@@ -55,6 +53,9 @@ class ChatMessageItem extends StatelessWidget {
         }
       }
     }
+
+    bool showProfile = !message.isOutbound && message.isTopic;
+    bool hideProfile = !showTime && showProfile && (message.from == nextMessage?.from && (nextMessage?.canBurning == true));
 
     if (showTime) {
       contentsWidget.add(
@@ -87,7 +88,8 @@ class ChatMessageItem extends StatelessWidget {
           ChatBubble(
             message: this.message,
             contact: this.contact,
-            showProfile: this.showProfile,
+            showProfile: showProfile,
+            hideProfile: hideProfile,
             onAvatarLonePress: this.onAvatarLonePress,
             onResend: this.onResend,
           ),

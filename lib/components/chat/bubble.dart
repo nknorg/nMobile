@@ -34,6 +34,7 @@ class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema? contact;
   final bool showProfile;
+  final bool hideProfile;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
@@ -41,6 +42,7 @@ class ChatBubble extends BaseStateFulWidget {
     required this.message,
     required this.contact,
     this.showProfile = false,
+    this.hideProfile = false,
     this.onAvatarLonePress,
     this.onResend,
   });
@@ -59,6 +61,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   late int _msgStatus;
 
   late bool _showProfile;
+  late bool _hideProfile;
   ContactSchema? _contact;
 
   double _uploadProgress = 1;
@@ -132,6 +135,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _msgStatus = MessageStatus.get(_message);
     // contact
     _showProfile = widget.showProfile;
+    _hideProfile = widget.hideProfile;
     if (_showProfile) {
       if (widget.contact != null) {
         _contact = widget.contact;
@@ -235,7 +239,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool dark = styles[1];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 4 : 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : (_hideProfile ? 0 : 8)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,24 +276,27 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Widget _getAvatar() {
     return _showProfile
-        ? GestureDetector(
-            onTap: () async {
-              File? file = await _contact?.displayAvatarFile;
-              PhotoScreen.go(context, filePath: file?.path);
-            },
-            onLongPress: () => widget.onAvatarLonePress?.call(_contact!, _message),
-            child: _contact != null
-                ? ContactAvatar(
-                    contact: _contact!,
-                    radius: 24,
-                  )
-                : SizedBox(width: 24 * 2, height: 24 * 2),
+        ? Opacity(
+            opacity: _hideProfile ? 0 : 1,
+            child: GestureDetector(
+              onTap: () async {
+                File? file = await _contact?.displayAvatarFile;
+                PhotoScreen.go(context, filePath: file?.path);
+              },
+              onLongPress: () => widget.onAvatarLonePress?.call(_contact!, _message),
+              child: _contact != null
+                  ? ContactAvatar(
+                      contact: _contact!,
+                      radius: 24,
+                    )
+                  : SizedBox(width: 24 * 2, height: 24 * 2),
+            ),
           )
         : SizedBox.shrink();
   }
 
   Widget _getName() {
-    return _showProfile
+    return _showProfile && !_hideProfile
         ? Label(
             _contact?.displayName ?? " ",
             maxWidth: Global.screenWidth() * 0.5,
