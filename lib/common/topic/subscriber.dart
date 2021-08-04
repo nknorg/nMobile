@@ -201,7 +201,7 @@ class SubscriberCommon with Tag {
       return [null, null, null, null];
     }
     if (!isPrivate) {
-      logger.w("$TAG - findPermissionFromNode - isPrivate = false");
+      logger.i("$TAG - findPermissionFromNode - isPrivate = false");
       return [null, true, true, false];
     }
     // permissions
