@@ -20,7 +20,7 @@ class ChatBottomMenu extends StatelessWidget {
   });
 
   _getImageFile({required ImageSource source}) async {
-    File? picked = await MediaPicker.pick(
+    File? picked = await MediaPicker.pickSingle(
       source: source,
       mediaType: MediaType.image,
       compressQuality: 50,
