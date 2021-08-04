@@ -82,13 +82,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       });
     });
 
-    // TimerAuth.onOtherPage = true; // TODO:GG wallet lock
+    // TimerAuth.onOtherPage = true; // TODO:GG auth wallet lock
   }
 
   @override
   void dispose() {
     _walletSubscription?.cancel();
-    // TimerAuth.onOtherPage = false; // TODO:GG wallet unlock
+    // TimerAuth.onOtherPage = false; // TODO:GG auth wallet unlock
     super.dispose();
   }
 
