@@ -41,17 +41,9 @@ class ChatInCommon with Tag {
       message.contentType = MessageContentType.receipt;
       message.content = message.msgId;
     }
-    // contact
-    ContactSchema? contact = await chatCommon.contactHandle(message);
-    chatCommon.deviceInfoHandle(message, contact); // await
-    // topic
-    TopicSchema? topic = await chatCommon.topicHandle(message);
-    chatCommon.subscriberHandle(message, topic); // await
-    // session
-    chatCommon.sessionHandle(message); // await
     // message
     if (needWait) {
-      await _messageHandle(message, contact: contact);
+      await _messageHandle(message);
     } else {
       _onReceiveSink.add(message);
     }
@@ -63,7 +55,20 @@ class ChatInCommon with Tag {
     }
   }
 
-  Future _messageHandle(MessageSchema received, {ContactSchema? contact}) async {
+  Future _messageHandle(MessageSchema received) async {
+    // contact
+    ContactSchema? contact = await chatCommon.contactHandle(received);
+    chatCommon.deviceInfoHandle(received, contact); // await
+    // topic
+    TopicSchema? topic = await chatCommon.topicHandle(received);
+    SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic);
+    if (topic != null && subscriber != null && subscriber.status != SubscriberStatus.Subscribed) {
+      logger.w("$TAG - _messageHandle - subscriber no permission - subscriber:$subscriber - topic:$topic}");
+      return;
+    }
+    // session
+    await chatCommon.sessionHandle(received); // must await
+    // message
     switch (received.contentType) {
       case MessageContentType.receipt:
         _receiveReceipt(received); // await

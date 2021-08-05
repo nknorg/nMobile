@@ -46,7 +46,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   List<SessionSchema> _sessionList = [];
 
   bool _isShowTip = true;
-  bool checked = false;
+  bool firstConnected = true;
 
   @override
   void onRefreshArguments() {
@@ -69,8 +69,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     // client
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(refreshSubscribers: !checked);
-        checked = true;
+        topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
+        firstConnected = false;
       }
     });
 

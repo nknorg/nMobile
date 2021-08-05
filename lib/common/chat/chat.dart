@@ -188,18 +188,18 @@ class ChatCommon with Tag {
         ),
         notify: true,
       );
-      if (added != null) return added;
+      return added;
     }
     if (message.isOutbound) {
-      exist?.lastMessageTime = message.sendTime;
-      exist?.lastMessageOptions = message.toMap();
-      sessionCommon.setLastMessage(exist?.targetId, message, notify: true); // await
+      exist.lastMessageTime = message.sendTime;
+      exist.lastMessageOptions = message.toMap();
+      await sessionCommon.setLastMessage(exist.targetId, message, notify: true); // must await
     } else {
-      int unreadCount = message.canDisplayAndRead ? (exist?.unReadCount ?? 0) + 1 : (exist?.unReadCount ?? 0);
-      exist?.unReadCount = unreadCount;
-      exist?.lastMessageTime = message.sendTime;
-      exist?.lastMessageOptions = message.toMap();
-      sessionCommon.setLastMessageAndUnReadCount(exist?.targetId, message, unreadCount, notify: true); // await
+      int unreadCount = message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount;
+      exist.unReadCount = unreadCount;
+      exist.lastMessageTime = message.sendTime;
+      exist.lastMessageOptions = message.toMap();
+      await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, message, unreadCount, notify: true); // must await
     }
     return exist;
   }
@@ -259,7 +259,6 @@ class ChatCommon with Tag {
     return _messageStorage.unReadCount();
   }
 
-  // TODO:GG refactor
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
     bool success = await _messageStorage.delete(msgId);
     if (success) {

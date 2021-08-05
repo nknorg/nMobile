@@ -44,13 +44,47 @@ class TopicCommon with Tag {
     topics.forEach((TopicSchema topic) {
       if (!topic.isPrivate && enablePublic) {
         futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
-      }
-      if (topic.isPrivate && enablePrivate) {
+      } else if (topic.isPrivate && enablePrivate) {
         futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
       }
     });
     await Future.wait(futures);
   }
+
+  // Future checkAllTopics({
+  //   bool refreshSubscribers = true,
+  //   bool enablePublic = true,
+  //   bool enablePrivate = true,
+  //   int intervalMs = 0,
+  //   List<TopicSchema>? topics,
+  //   int index = 0,
+  // }) async {
+  //   if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
+  //   topics = topics ?? await queryList();
+  //   if (topics.isEmpty || (index >= topics.length && index >= 0)) {
+  //     logger.i("$TAG - checkAllTopics - check all over - count:${topics.length}");
+  //     return;
+  //   } else {
+  //     logger.i("$TAG - checkAllTopics - check progress - progress:${index + 1}/${topics.length} - topic:${topics[index].topic}");
+  //   }
+  //   TopicSchema topic = topics[index];
+  //   await Future.delayed(Duration(milliseconds: intervalMs ~/ 2));
+  //   if (!topic.isPrivate && enablePublic) {
+  //     await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers);
+  //   } else if (topic.isPrivate && enablePrivate) {
+  //     await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers);
+  //   }
+  //   await Future.delayed(Duration(milliseconds: intervalMs ~/ 2));
+  //   // loop
+  //   checkAllTopics(
+  //     intervalMs: intervalMs,
+  //     refreshSubscribers: refreshSubscribers,
+  //     enablePublic: enablePublic,
+  //     enablePrivate: enablePrivate,
+  //     topics: topics,
+  //     index: ++index,
+  //   );
+  // }
 
   /// ***********************************************************************************************************
   /// *********************************************** subscribe *************************************************

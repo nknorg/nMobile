@@ -9,27 +9,27 @@ class Badge {
 
   static Future refreshCount({int? count}) async {
     if (!Platform.isIOS) return;
-    int num = count ?? (await chatCommon.unreadCount());
-    logger.d("Badge - refreshCount - $num");
-    await updateCount(num);
+    _count = count ?? (await chatCommon.unreadCount());
+    logger.d("Badge - refreshCount - $_count");
+    await _updateCount(_count);
   }
 
   static Future onCountUp(int count) async {
     if (!Platform.isIOS) return;
     _count += count;
     logger.d("Badge - onCountUp - $_count");
-    await updateCount(_count);
+    await _updateCount(_count);
   }
 
   static Future onCountDown(int count) async {
     if (!Platform.isIOS) return;
     _count -= count;
     logger.d("Badge - onCountDown - $_count");
-    await updateCount(_count);
+    await _updateCount(_count);
   }
 
-  static Future updateCount(int count) async {
-    if (!Platform.isIOS) return _count = count;
+  static Future _updateCount(int count) async {
+    if (!Platform.isIOS) return;
     logger.d("Badge - updateCount - $count");
     await Common.updateBadgeCount(_count);
   }
