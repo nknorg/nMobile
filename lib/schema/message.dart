@@ -41,6 +41,7 @@ class MessageContentType {
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
+  static const String nknOnePiece = 'nknOnePiece';
   // SUPPORT:END
 }
 
@@ -215,6 +216,9 @@ class MessageData {
       'responseType': RequestType.header,
       'version': profileVersion,
       'expiresAt': expiresAt,
+      // SUPPORT:START
+      'onePieceReady': '1',
+      // SUPPORT:END
     };
     return jsonEncode(data);
   }
@@ -226,6 +230,9 @@ class MessageData {
       'responseType': RequestType.full,
       'version': profileVersion,
       'expiresAt': expiresAt,
+      // SUPPORT:START
+      'onePieceReady': '1',
+      // SUPPORT:END
     };
     Map<String, dynamic> content = Map();
     if (firstName?.isNotEmpty == true) {
@@ -668,6 +675,7 @@ class MessageSchema extends Equatable {
       case MessageContentType.nknImage:
       case MessageContentType.audio:
       case MessageContentType.piece:
+      case MessageContentType.nknOnePiece:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
         }
@@ -680,7 +688,8 @@ class MessageSchema extends Equatable {
         break;
     }
 
-    if (contentType == MessageContentType.piece) {
+    if (contentType == MessageContentType.piece || contentType == MessageContentType.nknOnePiece) {
+      map['type'] = MessageContentType.piece;
       if (options == null) {
         options = Map<String, dynamic>();
       }
@@ -726,6 +735,7 @@ class MessageSchema extends Equatable {
       case MessageContentType.nknImage:
       case MessageContentType.audio:
       case MessageContentType.piece:
+      case MessageContentType.nknOnePiece:
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
