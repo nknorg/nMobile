@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/push/send_push.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
@@ -190,7 +191,7 @@ class ChatOutCommon with Tag {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || content.isEmpty) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
@@ -212,7 +213,7 @@ class ChatOutCommon with Tag {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists())) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
@@ -235,7 +236,7 @@ class ChatOutCommon with Tag {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists())) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
     MessageSchema message = MessageSchema.fromSend(
@@ -332,7 +333,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      // Toast.show(S.of(Global.appContext).failure); // TODO:GG locale
+      Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
     MessageSchema message = MessageSchema.fromSend(
