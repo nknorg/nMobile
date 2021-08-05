@@ -93,6 +93,7 @@ class ChatInCommon with Tag {
         await _receiveAudio(received);
         break;
       case MessageContentType.piece:
+      case MessageContentType.nknOnePiece:
         await _receivePiece(received);
         break;
       case MessageContentType.topicSubscribe:
@@ -392,7 +393,7 @@ class ChatInCommon with Tag {
         logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
         continue;
       }
-      Uint8List itemBytes = file.readAsBytesSync();
+      Uint8List itemBytes = await file.readAsBytes();
       if (item.index != null && item.index! >= 0 && item.index! < recoverList.length) {
         recoverList[item.index!] = itemBytes;
         recoverCount++;
