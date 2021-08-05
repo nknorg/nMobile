@@ -158,7 +158,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                           String? path = result.files.first.path;
                           if (path == null) return;
                           File picked = File(path);
-                          String keystore = picked.readAsStringSync();
+                          String keystore = await picked.readAsString();
                           logger.i("$TAG - picked:$keystore");
 
                           setState(() => _keystoreController.text = keystore);

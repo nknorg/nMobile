@@ -38,7 +38,7 @@ Future<double> getTotalSizeOfDbFile(final FileSystemEntity file) async {
 
 Future<void> clearCacheFile(final FileSystemEntity file) async {
   if (file is File) {
-    file.deleteSync();
+    await file.delete();
   }
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
@@ -52,7 +52,7 @@ Future<void> clearCacheFile(final FileSystemEntity file) async {
 
 Future<void> clearDbFile(final FileSystemEntity file) async {
   if (file is File) {
-    file.deleteSync();
+    await file.delete();
   }
 
   if (file is Directory) {

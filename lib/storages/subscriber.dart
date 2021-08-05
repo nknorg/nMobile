@@ -11,12 +11,12 @@ class SubscriberStorage with Tag {
 
   // create_at // TODO:GG rename field
   // update_at // TODO:GG new field
-  // status // TODO:GG rename + retype field
+  // status // TODO:GG rename(member_status) + retype field
   // perm_page // TODO:GG rename field + 需要放进data里吗
   // data // TODO:GG new field
-  // uploaded BOOLEAN, // TODO:GG replace by status
-  // upload_done BOOLEAN, // TODO:GG replace by status
-  // subscribed BOOLEAN, // TODO:GG replace by status
+  // subscribed BOOLEAN, // TODO:GG delete
+  // uploaded BOOLEAN, // TODO:GG delete
+  // upload_done BOOLEAN, // TODO:GG delete
   // expire_at INTEGER // TODO:GG delete
   static create(Database db, int version) async {
     // create table

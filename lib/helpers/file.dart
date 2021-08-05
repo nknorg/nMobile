@@ -50,7 +50,7 @@ class FileHelper {
     if (file == null) return null;
 
     if (!await file.exists()) {
-      file.createSync(recursive: true);
+      await file.create(recursive: true);
       logger.d('MessageSchema - loadMediaFile - write:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
     }
