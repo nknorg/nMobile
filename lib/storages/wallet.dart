@@ -22,7 +22,7 @@ class WalletStorage with Tag {
     var wallets = await _localStorage.getArray(KEY_WALLET);
     if (wallets.isNotEmpty) {
       String logText = '';
-      final list = wallets.map((e) {
+      var list = wallets.map((e) {
         WalletSchema walletSchema = WalletSchema.fromMap(e);
         logText += "\n      $e";
         return walletSchema;

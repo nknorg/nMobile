@@ -1,9 +1,9 @@
 import 'dart:async';
 
 class CacheEntry {
-  final int? invalid;
-  final String key;
-  final dynamic val;
+  int? invalid;
+  String key;
+  dynamic val;
 
   CacheEntry({required this.key, required this.val, this.invalid});
 }

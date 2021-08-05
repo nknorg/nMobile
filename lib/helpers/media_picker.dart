@@ -104,9 +104,9 @@ class MediaPicker {
     if (returnPath != null && returnPath.isNotEmpty) {
       returnFile = File(returnPath);
       if (!await returnFile.exists()) {
-        returnFile.createSync(recursive: true);
+        await returnFile.create(recursive: true);
       }
-      returnFile = compressFile.copySync(returnPath);
+      returnFile = await compressFile.copy(returnPath);
     } else {
       String? fileExt = Path.getFileExt(pickedFile);
       if (fileExt == null || fileExt.isEmpty) {
@@ -125,9 +125,9 @@ class MediaPicker {
       String randomPath = await Path.getCacheFile("cache", fileExt: fileExt);
       returnFile = File(randomPath);
       if (!await returnFile.exists()) {
-        returnFile.createSync(recursive: true);
+        await returnFile.create(recursive: true);
       }
-      returnFile = compressFile.copySync(randomPath);
+      returnFile = await compressFile.copy(randomPath);
     }
     logger.i('MediaPicker - pickSingle - return - path:${returnFile.path}');
     return returnFile;
@@ -192,9 +192,9 @@ class MediaPicker {
     if (returnPath != null && returnPath.isNotEmpty) {
       returnFile = File(returnPath);
       if (!await returnFile.exists()) {
-        returnFile.createSync(recursive: true);
+        await returnFile.create(recursive: true);
       }
-      returnFile = compressFile.copySync(returnPath);
+      returnFile = await compressFile.copy(returnPath);
     } else {
       String? fileExt = Path.getFileExt(pickedFile);
       if (fileExt == null || fileExt.isEmpty) {
@@ -213,9 +213,9 @@ class MediaPicker {
       String randomPath = await Path.getCacheFile("cache", fileExt: fileExt);
       returnFile = File(randomPath);
       if (!await returnFile.exists()) {
-        returnFile.createSync(recursive: true);
+        await returnFile.create(recursive: true);
       }
-      returnFile = compressFile.copySync(randomPath);
+      returnFile = await compressFile.copy(randomPath);
     }
     logger.i('MediaPicker - pickImageAndVideoBySystem - return - path:${returnFile.path}');
     return returnFile;

@@ -117,7 +117,7 @@ class ChatOutCommon with Tag {
         burningUpdateAt: updateAt,
       );
       send.content = MessageData.getContactOptionsBurn(send); // same with receive and old version
-      await _sendAndDisplay(send, send.content);
+      await _sendAndDB(send, send.content);
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -141,7 +141,7 @@ class ChatOutCommon with Tag {
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
       send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
-      await _sendAndDisplay(send, send.content);
+      await _sendAndDB(send, send.content);
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
       handleError(e);
@@ -205,7 +205,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String data = MessageData.getText(message);
-    return _sendAndDisplay(message, data);
+    return _sendAndDB(message, data);
   }
 
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -228,7 +228,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String? data = await MessageData.getImage(message);
-    return _sendAndDisplay(message, data);
+    return _sendAndDB(message, data);
   }
 
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -250,7 +250,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String? data = await MessageData.getAudio(message);
-    return _sendAndDisplay(message, data);
+    return _sendAndDB(message, data);
   }
 
   // NO DB NO display
@@ -294,7 +294,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
-      await _sendAndDisplay(send, data);
+      await _sendAndDB(send, data);
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -317,7 +317,7 @@ class ChatOutCommon with Tag {
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
-      await _sendAndDisplay(send, data, displaySelf: false);
+      await _sendAndDB(send, data, displaySelf: false);
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -343,7 +343,7 @@ class ChatOutCommon with Tag {
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
-    return _sendAndDisplay(message, data);
+    return _sendAndDB(message, data);
   }
 
   // NO DB NO single
@@ -359,7 +359,7 @@ class ChatOutCommon with Tag {
         content: targetAddress,
       );
       String data = MessageData.getTopicKickOut(send);
-      await _sendAndDisplay(send, data, displaySelf: false);
+      await _sendAndDB(send, data, displaySelf: false);
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
       handleError(e);
@@ -393,10 +393,10 @@ class ChatOutCommon with Tag {
         msgData = await MessageData.getAudio(message);
         break;
     }
-    return await _sendAndDisplay(message, msgData, contact: contact, topic: topic, resend: true);
+    return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
   }
 
-  Future<MessageSchema?> _sendAndDisplay(
+  Future<MessageSchema?> _sendAndDB(
     MessageSchema? message,
     String? msgData, {
     ContactSchema? contact,
