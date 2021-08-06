@@ -46,7 +46,7 @@ class TopicSubscribersScreen extends BaseStateFulWidget {
 
 class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscribersScreen> {
   StreamSubscription? _updateTopicSubscription;
-  StreamSubscription? _deleteTopicSubscription;
+  // StreamSubscription? _deleteTopicSubscription;
   StreamSubscription? _addSubscriberSubscription;
   StreamSubscription? _deleteSubscriberSubscription;
   StreamSubscription? _updateSubscriberSubscription;
@@ -71,14 +71,18 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     super.initState();
     // topic listen
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
+      if (!event.joined) {
+        Navigator.pop(this.context);
+        return;
+      }
       setState(() {
         _topicSchema = event;
       });
       _refreshMembersCount(); // await
     });
-    _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
-      Navigator.pop(this.context);
-    });
+    // _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
+    //   Navigator.pop(this.context);
+    // });
 
     // subscriber listen
     _addSubscriberSubscription = subscriberCommon.addStream.listen((SubscriberSchema schema) {
@@ -113,7 +117,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
-    _deleteTopicSubscription?.cancel();
+    // _deleteTopicSubscription?.cancel();
     _addSubscriberSubscription?.cancel();
     _deleteSubscriberSubscription?.cancel();
     _updateSubscriberSubscription?.cancel();

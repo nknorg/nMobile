@@ -84,24 +84,24 @@ class ContactStorage with Tag {
     return null;
   }
 
-  Future<bool> delete(int? contactId) async {
-    if (contactId == null || contactId == 0) return false;
-    try {
-      int? count = await db?.delete(
-        tableName,
-        where: 'id = ?',
-        whereArgs: [contactId],
-      );
-      if (count != null && count > 0) {
-        logger.v("$TAG - delete - success - contactId:$contactId");
-        return true;
-      }
-      logger.w("$TAG - delete - fail - contactId:$contactId");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
+  // Future<bool> delete(int? contactId) async {
+  //   if (contactId == null || contactId == 0) return false;
+  //   try {
+  //     int? count = await db?.delete(
+  //       tableName,
+  //       where: 'id = ?',
+  //       whereArgs: [contactId],
+  //     );
+  //     if (count != null && count > 0) {
+  //       logger.v("$TAG - delete - success - contactId:$contactId");
+  //       return true;
+  //     }
+  //     logger.w("$TAG - delete - fail - contactId:$contactId");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
 
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;

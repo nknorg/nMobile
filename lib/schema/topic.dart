@@ -54,13 +54,16 @@ class TopicSchema {
     }
   }
 
-  static TopicSchema? create(String? topic, {int? type}) {
+  static TopicSchema? create(String? topic, {int? type, int expireHeight = 0}) {
     if (topic?.isNotEmpty == true) {
       return TopicSchema(
         topic: topic!,
         type: type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic),
         createAt: DateTime.now().millisecondsSinceEpoch,
         updateAt: DateTime.now().millisecondsSinceEpoch,
+        joined: expireHeight > 0 ? true : false,
+        subscribeAt: expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null,
+        expireBlockHeight: expireHeight > 0 ? expireHeight : null,
       );
     }
     return null;

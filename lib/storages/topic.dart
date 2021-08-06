@@ -46,6 +46,9 @@ class TopicStorage with Tag {
     await db.execute('CREATE INDEX index_topic_type_create_at ON $tableName (type, create_at)');
     await db.execute('CREATE INDEX index_topic_type_update_at ON $tableName (type, update_at)');
     await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
+    await db.execute('CREATE INDEX index_topic_joined_type_create_at ON $tableName (joined, type, create_at)');
+    await db.execute('CREATE INDEX index_topic_joined_type_update_at ON $tableName (joined, type, update_at)');
+    await db.execute('CREATE INDEX index_topic_joined_type_subscribe_at ON $tableName (joined, type, subscribe_at)');
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
@@ -153,6 +156,36 @@ class TopicStorage with Tag {
         columns: ['*'],
         where: topicType != null ? 'type = ?' : null,
         whereArgs: topicType != null ? [topicType] : null,
+        offset: offset ?? null,
+        limit: limit ?? null,
+        orderBy: orderBy ?? 'create_at DESC',
+      );
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryList - empty - topicType:$topicType");
+        return [];
+      }
+      List<TopicSchema> results = <TopicSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n      $map";
+        TopicSchema? topic = TopicSchema.fromMap(map);
+        if (topic != null) results.add(topic);
+      });
+      logger.v("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+  }
+
+  Future<List<TopicSchema>> queryListJoined({String? topicType, String? orderBy, int? limit, int? offset}) async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: topicType != null ? 'joined = ? AND type = ?' : 'joined = ?',
+        whereArgs: topicType != null ? [1, topicType] : [1],
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy ?? 'create_at DESC',

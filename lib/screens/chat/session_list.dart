@@ -13,6 +13,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -36,7 +37,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
   StreamSubscription? _sessionUpdateSubscription;
-  StreamSubscription? _onTopicDeleteStreamSubscription;
+  StreamSubscription? _onTopicUpdateStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
 
   ContactSchema? _current;
@@ -97,10 +98,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // topic
-    _onTopicDeleteStreamSubscription = topicCommon.deleteStream.listen((String topic) {
-      setState(() {
-        _sessionList = _sessionList.where((element) => element.targetId != topic).toList();
-      });
+    _onTopicUpdateStreamSubscription = topicCommon.updateStream.listen((TopicSchema event) {
+      if (!event.joined) {
+        setState(() {
+          _sessionList = _sessionList.where((element) => element.targetId != event.topic).toList();
+        });
+      }
     });
 
     // message
@@ -159,7 +162,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
     _sessionUpdateSubscription?.cancel();
-    _onTopicDeleteStreamSubscription?.cancel();
+    _onTopicUpdateStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
     super.dispose();
   }
