@@ -65,7 +65,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
   StreamSubscription? _onTopicUpdateStreamSubscription;
-  StreamSubscription? _onTopicDeleteStreamSubscription;
+  // StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onSubscriberUpdateStreamSubscription;
   StreamSubscription? _onContactUpdateStreamSubscription;
 
@@ -88,9 +88,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
       this._topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
+      this._isJoined = this._topic?.joined == true;
       this._contact = null;
     } else if (who is ContactSchema) {
       this._topic = null;
+      this._isJoined = null;
       this._contact = widget.arguments![ChatMessagesScreen.argWho] ?? _contact;
     }
   }
@@ -102,14 +104,18 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // topic
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
+      if (!event.joined) {
+        Navigator.pop(this.context);
+        return;
+      }
       setState(() {
         _topic = event;
       });
       _refreshTopicJoined();
     });
-    _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
-      Navigator.pop(this.context);
-    });
+    // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
+    //   Navigator.pop(this.context);
+    // });
 
     // subscriber
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (event.clientAddress == clientCommon.address)).listen((event) {
@@ -170,7 +176,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     audioHelper.recordRelease(); // await
 
     _onTopicUpdateStreamSubscription?.cancel();
-    _onTopicDeleteStreamSubscription?.cancel();
+    // _onTopicDeleteStreamSubscription?.cancel();
     _onSubscriberUpdateStreamSubscription?.cancel();
     _onContactUpdateStreamSubscription?.cancel();
 
@@ -222,7 +228,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     if (!joined && mounted) {
       topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: true).then((value) async {
-        await Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
+        await Future.delayed(Duration(seconds: 5), () => _refreshTopicJoined());
       });
     }
     if (_isJoined != joined) {
