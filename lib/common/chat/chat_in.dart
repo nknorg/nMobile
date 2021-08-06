@@ -58,13 +58,31 @@ class ChatInCommon with Tag {
   Future _messageHandle(MessageSchema received) async {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(received);
-    chatCommon.deviceInfoHandle(received, contact); // await
+    DeviceInfoSchema? deviceInfo = await chatCommon.deviceInfoHandle(received, contact);
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
-    SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic);
-    if (topic != null && subscriber != null && subscriber.status != SubscriberStatus.Subscribed) {
-      logger.w("$TAG - _messageHandle - subscriber no permission - subscriber:$subscriber - topic:$topic}");
-      return;
+    SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
+    if (topic != null && subscriber != null) {
+      if (topic.joined != true) {
+        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic}");
+        return;
+      } else if (subscriber.status == SubscriberStatus.Subscribed) {
+        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic}");
+      } else {
+        // SUPPORT:START
+        if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+          if (subscriber.status == SubscriberStatus.None) {
+            logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic}");
+          } else {
+            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic}");
+            return;
+          }
+        } else {
+          // SUPPORT:END
+          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic}");
+          return;
+        }
+      }
     }
     // session
     await chatCommon.sessionHandle(received); // must await
