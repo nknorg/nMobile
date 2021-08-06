@@ -13,6 +13,7 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -54,7 +55,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   StreamSubscription? _updateContactSubscription;
 
   StreamSubscription? _addTopicSubscription;
-  StreamSubscription? _deleteTopicSubscription;
+  // StreamSubscription? _deleteTopicSubscription;
   StreamSubscription? _updateTopicSubscription;
 
   TextEditingController _searchController = TextEditingController();
@@ -134,12 +135,15 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       _allTopics.insert(0, schema);
       _searchAction(_searchController.text);
     });
-    _deleteTopicSubscription = topicCommon.deleteStream.listen((String topic) {
-      _allTopics = _allTopics.where((element) => element.topic != topic).toList();
-      _searchAction(_searchController.text);
-    });
+    // _deleteTopicSubscription = topicCommon.deleteStream.listen((String topic) {
+    //   _allTopics = _allTopics.where((element) => element.topic != topic).toList();
+    //   _searchAction(_searchController.text);
+    // });
     _updateContactSubscription = topicCommon.updateStream.listen((TopicSchema event) {
       _allTopics = _allTopics.map((e) => e.id == event.id ? event : e).toList();
+      if (!event.joined) {
+        _allTopics = _allTopics.where((element) => element.topic != event.topic).toList();
+      }
       _searchAction(_searchController.text);
     });
 
@@ -153,7 +157,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     // _deleteContactSubscription?.cancel();
     _updateContactSubscription?.cancel();
     _addTopicSubscription?.cancel();
-    _deleteTopicSubscription?.cancel();
+    // _deleteTopicSubscription?.cancel();
     _updateTopicSubscription?.cancel();
     super.dispose();
   }
@@ -161,7 +165,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   _initData() async {
     List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
-    List<TopicSchema> topics = await topicCommon.queryList();
+    List<TopicSchema> topics = await topicCommon.queryListJoined();
     topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
 
     setState(() {
@@ -482,7 +486,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           icon: Icons.delete,
           onTap: () => {
             ModalDialog.of(this.context).confirm(
-              title: "删除群聊吗?", // TODO:GG locale delete topic
+              title: "退订群聊吗?", // TODO:GG locale delete topic
               contentWidget: TopicItem(
                 topic: item,
                 bodyTitle: item.topicShort,
@@ -496,9 +500,11 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 onPressed: () async {
                   Navigator.pop(this.context);
                   Loading.show();
-                  // await subscriberCommon.deleteByTopic(item.topic);
-                  await topicCommon.delete(item.id, notify: true);
+                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic);
                   Loading.dismiss();
+                  if (deleted != null) {
+                    Toast.show(_localizations.unsubscribed);
+                  }
                 },
               ),
               reject: Button(
