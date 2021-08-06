@@ -21,9 +21,9 @@ class TopicCommon with Tag {
   StreamSink<TopicSchema> get _addSink => _addController.sink;
   Stream<TopicSchema> get addStream => _addController.stream;
 
-  StreamController<String> _deleteController = StreamController<String>.broadcast();
-  StreamSink<String> get _deleteSink => _deleteController.sink;
-  Stream<String> get deleteStream => _deleteController.stream;
+  // StreamController<String> _deleteController = StreamController<String>.broadcast();
+  // StreamSink<String> get _deleteSink => _deleteController.sink;
+  // Stream<String> get deleteStream => _deleteController.stream;
 
   StreamController<TopicSchema> _updateController = StreamController<TopicSchema>.broadcast();
   StreamSink<TopicSchema> get _updateSink => _updateController.sink;
@@ -33,7 +33,7 @@ class TopicCommon with Tag {
 
   close() {
     _addController.close();
-    _deleteController.close();
+    // _deleteController.close();
     _updateController.close();
   }
 
@@ -43,9 +43,9 @@ class TopicCommon with Tag {
     List<Future> futures = [];
     topics.forEach((TopicSchema topic) {
       if (!topic.isPrivate && enablePublic) {
-        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
+        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
       } else if (topic.isPrivate && enablePrivate) {
-        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers));
+        futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
       }
     });
     await Future.wait(futures);
@@ -97,13 +97,9 @@ class TopicCommon with Tag {
     // topic exist
     TopicSchema? exists = await queryByTopic(topicName);
     if (exists == null) {
-      TopicSchema? newAdd = TopicSchema.create(topicName);
       int expireHeight = await getExpireAtByNode(topicName, clientCommon.address);
-      newAdd?.joined = expireHeight > 0 ? true : false;
-      newAdd?.subscribeAt = expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null;
-      newAdd?.expireBlockHeight = expireHeight > 0 ? expireHeight : null;
-      logger.d("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$newAdd");
-      exists = await add(newAdd, notify: true, checkDuplicated: false);
+      exists = await add(TopicSchema.create(topicName, expireHeight: expireHeight), notify: true, checkDuplicated: false);
+      logger.d("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
       // refreshSubscribers later
     }
     if (exists == null) {
@@ -123,7 +119,6 @@ class TopicCommon with Tag {
 
     // permission(private + normal)
     int? permPage;
-    bool forceSubscribe = false;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
       List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
       permPage = permission[0];
@@ -147,12 +142,10 @@ class TopicCommon with Tag {
           logger.d("$TAG - subscribe - accept all - schema:$exists");
         }
       }
-      forceSubscribe = _subscriberMe?.status != SubscriberStatus.Subscribed;
-      if (forceSubscribe) logger.i("$TAG - subscribe - subscriber has not permission but need subscribe force");
     }
 
     // check expire + pull subscribers
-    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: forceSubscribe, refreshSubscribers: true, fee: fee);
+    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: true, fee: fee);
     if (exists == null) {
       Toast.show(S.of(Global.appContext).failure);
       return null;
@@ -187,9 +180,9 @@ class TopicCommon with Tag {
   // caller = self(owner/normal)
   Future<TopicSchema?> checkExpireAndSubscribe(
     String? topicName, {
-    bool enableFirst = false,
-    bool forceSubscribe = false,
     bool refreshSubscribers = false,
+    bool forceSubscribe = false,
+    bool enableFirst = false,
     double fee = 0,
   }) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
@@ -221,17 +214,11 @@ class TopicCommon with Tag {
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
           logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - between:${betweenS}s - topic:$exists");
-          if (!forceSubscribe) return exists;
         }
       } else {
         // DB no joined + node no joined
         noSubscribed = true;
-        if (enableFirst) {
-          logger.d("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
-        } else {
-          logger.i("$TAG - checkExpireAndSubscribe - enableFirst is false - topic:$exists");
-          return null;
-        }
+        logger.i("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
       }
     } else {
       if (expireHeight <= 0) {
@@ -240,7 +227,7 @@ class TopicCommon with Tag {
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
         if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
-          bool success = await setJoined(exists.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+          bool success = await setJoined(exists.id, false, notify: true);
           if (success) {
             exists.joined = false;
             exists.subscribeAt = 0;
@@ -260,7 +247,7 @@ class TopicCommon with Tag {
     // subscribe
     int? globalHeight = await clientCommon.client?.getHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
-    if (forceSubscribe || noSubscribed || shouldResubscribe) {
+    if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
@@ -326,7 +313,7 @@ class TopicCommon with Tag {
   // caller = self
   Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
-    // permission modify in message received
+    // permission modify in owners message received by owner
 
     // client unsubscribe
     bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee);
@@ -335,7 +322,7 @@ class TopicCommon with Tag {
 
     // topic update
     TopicSchema? exists = await queryByTopic(topicName);
-    bool setSuccess = await setJoined(exists?.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+    bool setSuccess = await setJoined(exists?.id, false, notify: true);
     if (setSuccess) {
       exists?.joined = false;
       exists?.subscribeAt = 0;
@@ -347,7 +334,7 @@ class TopicCommon with Tag {
     // DB(topic+subscriber) delete
     await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
     // await subscriberCommon.deleteByTopic(topicName); // stay is useful
-    // await delete(exists?.id, notify: true); // do it later in chat out
+    // await delete(exists?.id, notify: true); // replace by setJoined
 
     // send message
     await chatOutCommon.sendTopicUnSubscribe(topicName);
@@ -630,7 +617,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // permission modify in invitee action
+    // permission modify in invitee action by owner
 
     // subscriber update
     SubscriberSchema? _subscriber = await subscriberCommon.onSubscribe(topicName, clientAddress, null);
@@ -724,24 +711,24 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // permission modify in kick action
+    // permission modify in kick action by owner
 
     // self unsubscribe
     if (clientAddress == clientCommon.address) {
       bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
-      if (!exitSuccess) return null;
-      bool setSuccess = await setJoined(_topic.id, false, subscribeAt: 0, expireBlockHeight: 0, notify: true);
+      if (!exitSuccess) {
+        logger.w("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
+        return null;
+      }
+      bool setSuccess = await setJoined(_topic.id, false, notify: true);
       if (setSuccess) {
         _topic.joined = false;
         _topic.subscribeAt = 0;
         _topic.expireBlockHeight = 0;
       }
-    }
-
-    // DB update (just node sync can delete)
-    if (clientAddress == clientCommon.address) {
+      // DB update (just node sync can delete)
       // await subscriberCommon.deleteByTopic(topicName); // stay is useful
-      await delete(_topic.id, notify: true); // do it now
+      // await delete(_topic.id, notify: true); // replace by setJoined
     } else {
       bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
       if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
@@ -779,7 +766,7 @@ class TopicCommon with Tag {
     TopicSchema? topic = await query(topicId);
     if (topic == null) return false;
     bool success = await _topicStorage.delete(topicId);
-    if (success && notify) _deleteSink.add(topic.topic);
+    // if (success && notify) _deleteSink.add(topic.topic);
     return success;
   }
 
@@ -794,6 +781,10 @@ class TopicCommon with Tag {
 
   Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? offset, int? limit}) {
     return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
+  }
+
+  Future<List<TopicSchema>> queryListJoined({String? topicType, String? orderBy, int? offset, int? limit}) {
+    return _topicStorage.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
