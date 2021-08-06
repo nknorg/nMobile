@@ -481,6 +481,25 @@ class ChatOutCommon with Tag {
     }
     // subscribers
     List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
+    List<SubscriberSchema> _oldSubscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.None);
+    if (_oldSubscribers.isNotEmpty) {
+      // SUPPORT:START
+      List<Future> futures = [];
+      _oldSubscribers.forEach((element) {
+        futures.add(deviceInfoCommon.queryLatest(element.clientAddress).then((value) {
+          if (!deviceInfoCommon.isTopicPermissionEnable(value?.platform, value?.appVersion)) {
+            logger.i("$TAG - _sendWithTopic - add receiver to support old version - subscriber:$element");
+            _subscribers.add(element);
+          } else {
+            logger.w("$TAG - _sendWithTopic - skip receiver because status is none - subscriber:$element");
+          }
+          return;
+        }));
+      });
+      await Future.wait(futures);
+      // SUPPORT:END
+    }
+    // subscribers check
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
       SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content, SubscriberStatus.None, null);
@@ -539,10 +558,10 @@ class ChatOutCommon with Tag {
       }));
     });
     await Future.wait(futures);
-    // do not forget delete
-    if (message.contentType == MessageContentType.topicUnsubscribe) {
-      await topicCommon.delete(topic.id, notify: true);
-    }
+    // do not forget delete (replace by setJoined)
+    // if (message.contentType == MessageContentType.topicUnsubscribe) {
+    //   await topicCommon.delete(topic.id, notify: true);
+    // }
     return pid;
   }
 

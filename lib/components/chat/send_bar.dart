@@ -278,7 +278,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: Button(
           child: Label(
-            "不在此群", // TODO:GG locale enable
+            S.of(context).tip_ask_group_owner_permission,
             type: LabelType.h4,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
