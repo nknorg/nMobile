@@ -3,13 +3,13 @@ import 'dart:io';
 Future<double> getTotalSizeOfCacheFile(final FileSystemEntity file) async {
   if (file is File) {
     int length = await file.length();
-    return double.parse(length.toString());
+    return double.tryParse(length.toString()) ?? 0;
   }
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
     double total = 0;
     for (final FileSystemEntity child in children) {
-      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
+      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path) || (child.path == "cache")) {
         total += await getTotalSizeOfCacheFile(child);
       }
     }
@@ -21,7 +21,7 @@ Future<double> getTotalSizeOfCacheFile(final FileSystemEntity file) async {
 Future<double> getTotalSizeOfDbFile(final FileSystemEntity file) async {
   if (file is File) {
     int length = await file.length();
-    return double.parse(length.toString());
+    return double.tryParse(length.toString()) ?? 0;
   }
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
@@ -43,7 +43,7 @@ Future<void> clearCacheFile(final FileSystemEntity file) async {
   if (file is Directory) {
     final List<FileSystemEntity> children = file.listSync();
     for (final FileSystemEntity child in children) {
-      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path)) {
+      if (RegExp(r'[0-9a-f]{64}(/[^/]+)?$').hasMatch(child.path) || (child.path == "cache")) {
         await clearCacheFile(child);
       }
     }
