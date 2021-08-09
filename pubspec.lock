@@ -245,7 +245,7 @@ packages:
       name: file_picker
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.0.3"
+    version: "3.0.4"
   fixnum:
     dependency: transitive
     description:
@@ -285,14 +285,14 @@ packages:
       name: flutter_local_notifications
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.0.0"
+    version: "8.1.1"
   flutter_local_notifications_platform_interface:
     dependency: transitive
     description:
       name: flutter_local_notifications_platform_interface
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "4.0.0"
+    version: "4.0.1"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
@@ -304,7 +304,7 @@ packages:
       name: flutter_markdown
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.6.2"
+    version: "0.6.4"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -318,7 +318,7 @@ packages:
       name: flutter_secure_storage
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "4.2.0"
+    version: "4.2.1"
   flutter_slidable:
     dependency: "direct main"
     description:
@@ -678,14 +678,14 @@ packages:
       name: photo_manager
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.2.9"
+    version: "1.3.1"
   photo_view:
     dependency: "direct main"
     description:
       name: photo_view
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.11.1"
+    version: "0.12.0"
   platform:
     dependency: transitive
     description:
@@ -748,7 +748,7 @@ packages:
       name: qr_code_scanner
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.5.1"
+    version: "0.5.2"
   qr_flutter:
     dependency: "direct main"
     description:
@@ -1012,7 +1012,7 @@ packages:
       name: wechat_assets_picker
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "5.5.8"
+    version: "6.0.1"
   win32:
     dependency: transitive
     description:

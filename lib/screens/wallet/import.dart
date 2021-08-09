@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/layout/tabs.dart';
@@ -76,8 +77,13 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.i("$TAG - QR_DATA:$qrData");
-              if (qrData != null) {
+              if (qrData != null && qrData.toString().isNotEmpty) {
                 _qrController.sink.add(qrData.toString());
+              } else {
+                ModalDialog.of(this.context).show(
+                  content: _localizations.error_unknown_nkn_qrcode,
+                  hasCloseButton: true,
+                );
               }
             },
           )

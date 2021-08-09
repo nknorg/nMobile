@@ -20,7 +20,7 @@ class DB {
   static Future<Database> _openDB(String publicKey, String password) async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
-    logger.i("DB - path:$path - key:$publicKey - pwd:$password");
+    logger.i("DB - path:$path - pwd:$password");
     var db = await openDatabase(
       path,
       password: password,
