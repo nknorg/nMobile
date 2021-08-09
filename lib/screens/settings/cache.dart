@@ -1,20 +1,29 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 import '../common/select.dart';
+
+class FileType {
+  static const int cache = 0;
+  static const int db = 1;
+}
 
 class SettingsCacheScreen extends BaseStateFulWidget {
   static const String routeName = '/settings/cache';
@@ -37,16 +46,46 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
   @override
   void initState() {
     super.initState();
-    initAsync();
+    _refreshFilesLength();
   }
 
-  initAsync() async {
+  _refreshFilesLength() async {
     var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-    var dbs = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
+    var databasesPath = Directory(await getDatabasesPath());
+    var dbs = await getTotalSizeOfDbFile(databasesPath);
     setState(() {
       _cacheSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
       _dbSize = formatFlowSize(dbs, unitArr: ['B', 'KB', 'MB', 'GB']);
     });
+  }
+
+  _clearCache(int type) async {
+    // auth
+    String? address = await walletCommon.getDefaultAddress();
+    if (address == null || address.isEmpty) return;
+    String? input = await authorization.getWalletPassword(address);
+    if (input == null || input.isEmpty) {
+      Toast.show(S.of(context).input_password);
+      return;
+    }
+    String? pwd = await walletCommon.getPasswordNoCheck(address);
+    if (pwd != input) {
+      Toast.show(S.of(context).error_confirm_password);
+      return;
+    }
+    // clear
+    Loading.show();
+    await clientCommon.signOut();
+    await Future.delayed(Duration(seconds: 1));
+    if (type == FileType.cache) {
+      await clearCacheFile(Global.applicationRootDirectory);
+    } else if (type == FileType.db) {
+      var databasesPath = Directory(await getDatabasesPath());
+      await clearDbFile(databasesPath);
+    }
+    await _refreshFilesLength();
+    Loading.dismiss();
+    Toast.show(S.of(context).success);
   }
 
   @override
@@ -107,8 +146,9 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             ),
                             backgroundColor: application.theme.strongColor,
                             width: double.infinity,
-                            onPressed: () async {
-                              // TODO:GG cache
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _clearCache(FileType.cache);
                             },
                           ),
                           reject: Button(
@@ -116,7 +156,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.pop(this.context),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         );
                       },
@@ -188,15 +228,9 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                               ],
                             ),
                             backgroundColor: application.theme.strongColor,
-                            onPressed: () async {
-                              // TODO:GG cache
-                              await DB.currentDatabase?.close();
-                              await clearDbFile(Global.applicationRootDirectory);
-                              var size = await getTotalSizeOfDbFile(Global.applicationRootDirectory);
-                              setState(() {
-                                _dbSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
-                              });
-                              Navigator.pop(this.context);
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _clearCache(FileType.db);
                             },
                           ),
                           reject: Button(
@@ -204,7 +238,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.pop(this.context),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         );
                       },
