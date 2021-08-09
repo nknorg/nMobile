@@ -158,14 +158,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     List<int?> burningOptions = MessageOptions.getContactBurning(_message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_msgStatus != MessageStatus.Sending)) {
-      _message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      chatCommon.burningHandle(_message); // await
+      _message = chatCommon.burningHandle(_message);
     }
     if (_message.deleteTime != null) {
       DateTime deleteTime = _message.deleteTime ?? DateTime.now();
       if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch && clientCommon.address?.isNotEmpty == true) {
         String taskKey = "${TaskService.KEY_MSG_BURNING}:${clientCommon.address}:${_message.msgId}";
-        taskService.addTask1(taskKey, (String key) async {
+        taskService.addTask1(taskKey, (String key) {
           if (clientCommon.address?.isNotEmpty == true && !key.contains(clientCommon.address!)) {
             taskService.removeTask1(key);
             // onRefreshArguments(); // refresh task (will dead loop)
@@ -175,7 +174,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {
             logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-            await chatCommon.msgDelete(_message.msgId, notify: true);
+            chatCommon.msgDelete(_message.msgId, notify: true); // await
             taskService.removeTask1(key);
           }
           setState(() {}); // async need
