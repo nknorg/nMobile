@@ -133,9 +133,10 @@ class AudioHelper with Tag {
     }
     // duplicated
     if (record.isRecording) {
-      bool isSame = recordId == this.recordId;
-      await recordStop();
-      if (isSame) return null;
+      if ((this.recordId?.isNotEmpty == true) && this.recordId == recordId) {
+        this.recordId = null;
+        return await recordStart(recordId, savePath: savePath, maxDurationS: maxDurationS, onProgress: onProgress);
+      }
     }
     // save
     this.recordPath = savePath ?? await _getRecordPath(recordId);
@@ -187,7 +188,7 @@ class AudioHelper with Tag {
     _onRecordProgressSubscription = null;
     await record.stopRecorder();
     await record.closeAudioSession();
-    // this.recordId = null;
+    this.recordId = null;
     // this.recordPath = null;
     // this.recordMaxDurationS = null;
     return recordPath;
