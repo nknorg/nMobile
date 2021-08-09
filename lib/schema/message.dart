@@ -17,8 +17,8 @@ import 'contact.dart';
 
 class MessageContentType {
   // static const String system = 'system';
-  static const String receipt = 'receipt'; // db
-  // static const String read = 'read'; // db
+  static const String receipt = 'receipt'; // status
+  // static const String read = 'read'; // status
 
   static const String contact = 'contact'; // .
   static const String contactOptions = 'event:contactOptions'; // db + visible
@@ -32,12 +32,12 @@ class MessageContentType {
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible
 
-  static const String piece = 'piece'; // db
+  static const String piece = 'piece'; // db(delete)
 
-  static const String topicSubscribe = 'event:subscribe';
-  static const String topicUnsubscribe = 'event:unsubscribe';
-  static const String topicInvitation = 'event:channelInvitation';
-  static const String topicKickOut = 'event:channelKickOut';
+  static const String topicSubscribe = 'event:subscribe'; // db + visible
+  static const String topicUnsubscribe = 'event:unsubscribe'; // .
+  static const String topicInvitation = 'event:channelInvitation'; // db + visible
+  static const String topicKickOut = 'event:channelKickOut'; // .
 
   // SUPPORT:START
   static const String nknImage = 'nknImage';
