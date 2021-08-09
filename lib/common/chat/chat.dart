@@ -240,15 +240,16 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  Future<MessageSchema> burningHandle(MessageSchema message) async {
+  MessageSchema burningHandle(MessageSchema message) {
     if (!message.canBurning || message.isTopic) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if (burnAfterSeconds != null && burnAfterSeconds > 0) {
       logger.i("$TAG - burningHandle - start - message:$message");
       message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      bool success = await _messageStorage.updateDeleteTime(message.msgId, message.deleteTime);
-      if (success) _onUpdateSink.add(message);
+      _messageStorage.updateDeleteTime(message.msgId, message.deleteTime).then((success) {
+        if (success) _onUpdateSink.add(message);
+      });
     }
     return message;
   }
