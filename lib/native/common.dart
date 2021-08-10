@@ -47,6 +47,18 @@ class Common {
     return false;
   }
 
+  static Future saveImageToGallery(Uint8List imageData, String imageName, String albumName) async {
+    try {
+      await _methodChannel.invokeMethod('saveImageToGallery', {
+        'imageData': imageData,
+        'imageName': imageName,
+        'albumName': albumName,
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
+
   static Future<String?> getAPNSToken() async {
     try {
       final Map resp = await _methodChannel.invokeMethod('getAPNSToken', {});

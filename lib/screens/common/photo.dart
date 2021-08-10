@@ -1,9 +1,17 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/native/common.dart';
+import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:photo_view/photo_view.dart';
 
 class PhotoScreen extends BaseStateFulWidget {
@@ -61,47 +69,38 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
       borderRadius: BorderRadius.zero,
       header: Header(
         backgroundColor: Colors.black,
-        // TODO:GG image save to album
-        // actions: [
-        //   PopupMenuButton(
-        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        //     icon: Asset.iconSvg('more', width: 24),
-        //     onSelected: (int result) async {
-        //       switch (result) {
-        //         case 0:
-        //           // File file = File(widget.arguments);
-        //           // print(file.path);
-        //           // bool exist = await file.exists();
-        //           // if (exist) {
-        //           //   try {
-        //           //     String name = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString();
-        //           //     final Uint8List bytes = await file.readAsBytes();
-        //           //     bool success = await ImageSave.saveImage(bytes, 'jpeg', albumName: name);
-        //           //     if (success) {
-        //           //       showToast(NL10ns.of(context).success);
-        //           //     } else {
-        //           //       showToast(NL10ns.of(context).failure);
-        //           //     }
-        //           //   } catch (e) {
-        //           //     showToast(NL10ns.of(context).failure);
-        //           //   }
-        //           // } else {
-        //           //   showToast(NL10ns.of(context).failure);
-        //           // }
-        //           break;
-        //       }
-        //     },
-        //     itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-        //       PopupMenuItem<int>(
-        //         value: 0,
-        //         child: Label(
-        //           _localizations.save_to_album,
-        //           type: LabelType.display,
-        //         ),
-        //       ),
-        //     ],
-        //   )
-        // ],
+        actions: [
+          PopupMenuButton(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            icon: Asset.iconSvg('more', width: 24),
+            onSelected: (int result) async {
+              switch (result) {
+                case 0:
+                  File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
+                  logger.i("PhotoScreen - save image - path:${file?.path}");
+                  if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+                  try {
+                    String name = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
+                    Uint8List bytes = await file.readAsBytes();
+                    await Common.saveImageToGallery(bytes, name, Settings.appName);
+                    Toast.show(S.of(context).success);
+                  } catch (e) {
+                    Toast.show(S.of(context).failure);
+                  }
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+              PopupMenuItem<int>(
+                value: 0,
+                child: Label(
+                  S.of(context).save_to_album,
+                  type: LabelType.display,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: InkWell(
         onTap: () {
