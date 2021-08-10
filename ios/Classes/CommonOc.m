@@ -7,12 +7,64 @@
 
 #import "CommonOc.h"
 
+#import <Photos/Photos.h>
 #import <Nkn/Nkn.h>
+#import <Flutter/Flutter.h>
 
 @implementation CommonOc
 
 -(instancetype)init{
     return self;
+}
+
+-(void)saveImageWithImageName:(NSString*) imageName imageData:(FlutterStandardTypedData*) imageData albumName:(NSString *)albumName overwriteFile:(BOOL)overwriteFile {
+    __block NSString* localId;
+    [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
+        PHAssetCreationRequest *assetChangeRequest = [PHAssetCreationRequest creationRequestForAsset];
+        PHAssetResourceCreationOptions *options = [[PHAssetResourceCreationOptions alloc] init];
+        options.originalFilename = imageName;
+        options.shouldMoveFile = overwriteFile;
+        [assetChangeRequest addResourceWithType:PHAssetResourceTypePhoto data:imageData.data options:options];
+        PHObjectPlaceholder *placeholder = [assetChangeRequest placeholderForCreatedAsset];
+        localId = placeholder.localIdentifier;
+        if(![albumName isEqual:[NSNull null]]){
+            PHAssetCollectionChangeRequest *collectionRequest;
+            PHAssetCollection *assetCollection = [self getCurrentPhotoCollectionWithTitle:albumName];
+            if (assetCollection) {
+                collectionRequest = [PHAssetCollectionChangeRequest changeRequestForAssetCollection:assetCollection];
+            } else {
+                collectionRequest = [PHAssetCollectionChangeRequest creationRequestForAssetCollectionWithTitle:albumName];
+            }
+            [collectionRequest addAssets:@[placeholder]];
+        }
+    } completionHandler:^(BOOL success, NSError *error) {
+//        if(error !=  nil){
+//            result([FlutterError errorWithCode:[NSString stringWithFormat:@"%ld",error.code] message:error.description details:error.localizedFailureReason]);
+//            return;
+//        }
+//        if (success) {
+//            PHFetchResult* assetResult = [PHAsset fetchAssetsWithLocalIdentifiers:@[localId] options:nil];
+//            PHAsset *asset = [assetResult firstObject];
+//            [asset requestContentEditingInputWithOptions:nil completionHandler:^(PHContentEditingInput * _Nullable contentEditingInput, NSDictionary * _Nonnull info) {
+//                result(@YES);
+//            }];
+//        } else {
+//            result(@NO);
+//        }
+    }];
+}
+
+- (PHAssetCollection *)getCurrentPhotoCollectionWithTitle:(NSString *)collectionName {
+    for (PHAssetCollection *assetCollection in [self getAlbumGroup]) {
+        if ([assetCollection.localizedTitle containsString:collectionName]) {
+            return assetCollection;
+        }
+    }
+    return nil;
+}
+
+-(PHFetchResult<PHAssetCollection *> *)getAlbumGroup{
+    return [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
 }
 
 - (NSString *)combinePieces:(NSArray *)dataPieces dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece bytesLength:(NSInteger)tBytesLength{
