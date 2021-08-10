@@ -68,6 +68,8 @@ class Common : ChannelBase, FlutterStreamHandler {
         switch call.method{
         case "configure":
             create(call, result: result)
+        case "saveImageToGallery":
+            saveImageToGallery(call, result: result)
         case "getAPNSToken":
             getAPNSToken(call, result: result)
         case "sendPushAPNS":
@@ -85,6 +87,21 @@ class Common : ChannelBase, FlutterStreamHandler {
     
     private func create(_ call: FlutterMethodCall, result: FlutterResult) {
         result(nil)
+    }
+    
+    private func saveImageToGallery(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let imageData = args["imageData"] as! FlutterStandardTypedData
+        let imageName = args["imageName"] as! String
+        let albumName = args["albumName"] as! String
+        
+        commonQueue.async {
+            CommonOc.init().saveImage(withImageName: imageName, imageData: imageData, albumName: albumName, overwriteFile: true)
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "saveImageToGallery"
+            self.resultSuccess(result: result, resp: resp)
+            return
+        }
     }
     
     private func getAPNSToken(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
