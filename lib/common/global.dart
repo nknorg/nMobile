@@ -1,9 +1,9 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:device_info/device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../storages/settings.dart';
@@ -31,6 +31,11 @@ class Global {
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
     'http://mainnet-seed-0002.nkn.org:30003',
+    'http://mainnet-seed-0003.nkn.org:30003',
+    'http://mainnet-seed-0004.nkn.org:30003',
+    'http://mainnet-seed-0005.nkn.org:30003',
+    'http://mainnet-seed-0006.nkn.org:30003',
+    'http://mainnet-seed-0007.nkn.org:30003',
     'http://mainnet-seed-0008.nkn.org:30003',
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
@@ -44,12 +49,12 @@ class Global {
 
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
-      Global.deviceId = (await deviceInfo.androidInfo).androidId;
-      Global.deviceVersion = (await deviceInfo.androidInfo).version.release;
+      Global.deviceId = (await deviceInfo.androidInfo).androidId ?? "";
+      Global.deviceVersion = (await deviceInfo.androidInfo).version.release ?? "";
       Global.deviceVersion = Global.deviceVersion.split(".")[0];
     } else if (Platform.isIOS) {
-      Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor;
-      Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion;
+      Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor ?? "";
+      Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion ?? "";
       Global.deviceVersion = Global.deviceVersion.split(".")[0];
     }
   }
@@ -58,7 +63,7 @@ class Global {
   static Future<List<String>> getSeedRpcList() async {
     SettingsStorage settingsStorage = SettingsStorage();
     List<String> list = await settingsStorage.getSeedRpcServers();
-    list.addAll(defaultSeedRpcList);
+    list.insertAll(0, defaultSeedRpcList); // TODO:GG
     list = LinkedHashSet<String>.from(list).toList();
     return list;
   }
