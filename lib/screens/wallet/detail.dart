@@ -347,7 +347,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               return;
             }
 
-            // TimerAuth.instance.enableAuth(); // TODO:GG wallet auth?
+            // TimerAuth.instance.enableAuth(); // TODO:GG auth
 
             if (_wallet == null) return;
             WalletExportScreen.go(
