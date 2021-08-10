@@ -37,7 +37,7 @@ dependencies:
   url_launcher: ^6.0.2
 
   # common
-  flutter_bloc: ^7.0.1
+  flutter_bloc: ^7.1.0
   equatable: ^2.0.3
   dio: ^4.0.0
   get_it: ^7.1.3
