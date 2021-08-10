@@ -12,6 +12,8 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
 
 class PhotoScreen extends BaseStateFulWidget {
@@ -76,13 +78,29 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
             onSelected: (int result) async {
               switch (result) {
                 case 0:
+                  if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
+                    return null;
+                  }
+                  if ((await Permission.storage.request()) != PermissionStatus.granted) {
+                    return null;
+                  }
+
                   File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                  logger.i("PhotoScreen - save image - path:${file?.path}");
+                  String? ext = Path.getFileExt(file) ?? "jpg";
+                  logger.i("PhotoScreen - save image file - path:${file?.path}");
                   if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+
+                  File copyFile = File(await Path.getCacheFile("cache", fileExt: ext));
+                  if (!await copyFile.exists()) {
+                    await copyFile.create(recursive: true);
+                  }
+                  copyFile = await file.copy(copyFile.path);
+                  logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
+
                   try {
-                    String name = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + ".jpg";
-                    Uint8List bytes = await file.readAsBytes();
-                    await Common.saveImageToGallery(bytes, name, Settings.appName);
+                    String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+                    Uint8List imageBytes = await copyFile.readAsBytes();
+                    await Common.saveImageToGallery(imageBytes, imageName, Settings.appName);
                     Toast.show(S.of(context).success);
                   } catch (e) {
                     Toast.show(S.of(context).failure);
