@@ -25,7 +25,7 @@ class DeviceInfoStorage with Tag {
     db.execute(createSql);
 
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_device_info_contact_address ON $tableName (contact_address)');
+    await db.execute('CREATE UNIQUE INDEX unique_index_device_info_contact_address_device_id ON $tableName (contact_address, device_id)');
     await db.execute('CREATE INDEX index_device_info_device_id ON $tableName (device_id)');
     await db.execute('CREATE INDEX index_device_info_contact_address_update_at ON $tableName (contact_address, update_at)');
     await db.execute('CREATE INDEX index_device_info_contact_address_device_id_update_at ON $tableName (contact_address, device_id, update_at)');
