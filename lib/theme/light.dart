@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+
 import './theme.dart';
 
 class LightTheme implements SkinTheme {
@@ -176,7 +177,7 @@ class LightTheme implements SkinTheme {
 
   @override
   List<Color> randomBackgroundColorList = [
-    Color(0x190F6EFF),
+    Color(0x19FF0F0F),
     Color(0x19F5B800),
     Color(0x19FC5D68),
     Color(0x195458F7),
@@ -186,7 +187,7 @@ class LightTheme implements SkinTheme {
 
   @override
   List<Color> randomColorList = [
-    Color(0xFF0F6EFF),
+    Color(0xFFFF0F0F),
     Color(0xFFF5B800),
     Color(0xFFFC5D68),
     Color(0xff5458F7),
