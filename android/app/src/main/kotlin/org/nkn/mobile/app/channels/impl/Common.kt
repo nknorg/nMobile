@@ -4,6 +4,11 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Environment
+import android.os.Environment.DIRECTORY_PICTURES
 import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -24,6 +29,8 @@ import org.nkn.mobile.app.push.APNSPush
 import reedsolomon.BytesArray
 import reedsolomon.Encoder
 import reedsolomon.Reedsolomon
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.text.Charsets.UTF_8
 
 class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
@@ -96,6 +103,9 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "backDesktop" -> {
                 backDesktop(call, result)
             }
+            "saveImageToGallery" -> {
+                saveImageToGallery(call, result)
+            }
             "sendPushAPNS" -> {
                 sendPushAPNS(call, result)
             }
@@ -120,6 +130,39 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun backDesktop(call: MethodCall, result: MethodChannel.Result) {
         MainActivity.instance.moveTaskToBack(false)
         result.success(true)
+    }
+
+    private fun saveImageToGallery(call: MethodCall, result: MethodChannel.Result) {
+        val data = call.argument<ByteArray>("imageData")!!
+        val imageName = call.argument<String>("imageName")!!
+        val albumName = call.argument<String>("albumName")!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val parentDir = File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES), albumName)
+                // val parentDir = File(MainActivity.instance.getExternalFilesDir(Environment.DIRECTORY_PICTURES), albumName)
+                if (!parentDir.exists()) {
+                    parentDir.mkdir()
+                }
+
+                val file = File(parentDir, imageName)
+                val fos = FileOutputStream(file)
+                fos.write(data)
+                fos.close()
+
+                MainActivity.instance.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file.absoluteFile)))
+                // MediaScannerConnection.scanFile(MainActivity.instance, arrayOf(file.absolutePath), null, null)
+
+                val resp = hashMapOf(
+                    "event" to "saveImageToGallery",
+                )
+                resultSuccess(result, resp)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
     }
 
     private fun sendPushAPNS(call: MethodCall, result: MethodChannel.Result) {
