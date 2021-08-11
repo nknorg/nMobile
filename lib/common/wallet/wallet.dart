@@ -107,8 +107,7 @@ class WalletCommon with Tag {
           //       }
           //     }));
         } else {
-          WalletConfig? config = WalletConfig(seedRPCServerAddr: await Global.getSeedRpcList());
-          Wallet.getBalanceByAddr(w.address, config: config).then((balance) {
+          Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: await Global.getSeedRpcList())).then((balance) {
             logger.d("$TAG - queryBalance: END - balance_old:${w.balance} - balance_new:$balance - nkn_address:${w.address}");
             if (w.balance != balance) {
               w.balance = balance;
