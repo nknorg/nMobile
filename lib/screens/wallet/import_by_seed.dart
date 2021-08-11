@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -77,7 +78,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password));
+          Wallet result = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
           if (result.address.isEmpty || result.keystore.isEmpty) return;
 
           WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -125,7 +126,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         //   'name': ethWallet.name,
         // });
       } else {
-        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
         if (restore.address.isEmpty || restore.address != schema.address) {
           Toast.show(_localizations.password_wrong);
           return;
