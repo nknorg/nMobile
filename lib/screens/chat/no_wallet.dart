@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -53,7 +54,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
       String password = _passwordController.text;
       logger.i("$TAG - name:$name, password:$password");
 
-      Wallet result = await Wallet.create(null, config: WalletConfig(password: password));
+      Wallet result = await Wallet.create(null, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
       if (result.address.isEmpty || result.keystore.isEmpty) return;
 
       WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);

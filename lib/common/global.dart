@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -59,12 +61,14 @@ class Global {
     }
   }
 
-  // TODO:GG seedRpcAddress Nkn.measureSeedRPCServer(seedRpcArray, 1500)
   static Future<List<String>> getSeedRpcList() async {
     SettingsStorage settingsStorage = SettingsStorage();
     List<String> list = await settingsStorage.getSeedRpcServers();
-    list.insertAll(0, defaultSeedRpcList); // TODO:GG
+    list.addAll(defaultSeedRpcList);
     list = LinkedHashSet<String>.from(list).toList();
+    logger.i("Global - getSeedRpcList - originalSeedRPCServer - length:${list.length} - list:$list");
+    list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
+    logger.i("Global - getSeedRpcList - measureSeedRPCServer - length:${list.length} - list:$list");
     return list;
   }
 }
