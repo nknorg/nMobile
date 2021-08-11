@@ -242,7 +242,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     }
     Loading.show();
     try {
-      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password));
+      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
       if (restore.address.isEmpty || restore.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;

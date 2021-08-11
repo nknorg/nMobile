@@ -81,7 +81,7 @@ class ClientCommon with Tag {
       if (pwd == null || pwd.isEmpty) return null;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
-      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd));
+      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: await Global.getSeedRpcList()));
       if (wallet.address.isEmpty || wallet.keystore.isEmpty) return null;
 
       if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
@@ -101,8 +101,12 @@ class ClientCommon with Tag {
       return await _connect(wallet);
     } catch (e) {
       handleError(e);
+      // loop
+      await SettingsStorage().setSeedRpcServers([]);
+      await Future.delayed(Duration(seconds: 1));
+      return signIn(schema, walletDefault: walletDefault, onWalletOk: onWalletOk);
     }
-    return null;
+    // return null;
   }
 
   Future<Client?> _connect(Wallet? wallet) async {
