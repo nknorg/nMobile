@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:nkn_sdk_flutter/configure.dart';
 
 const String DEFAULT_SEED_RPC_SERVER = 'http://seed.nkn.org:30003';
 
@@ -33,11 +32,29 @@ class Wallet {
 
   Wallet({required this.walletConfig});
 
+  static Future<List<String>?> measureSeedRPCServer(List<String> seedRPCServerAddr) async {
+    try {
+      final Map data = await _methodChannel.invokeMethod('measureSeedRPCServer', {
+        'seedRpc': seedRPCServerAddr.isNotEmpty == true ? seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
+      });
+      List<String> result = [];
+      (data['seedRPCServerAddrList'] as List?)?.forEach((element) {
+        if (element is String) {
+          result.add(element);
+        }
+      });
+      return result;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   static Future<Wallet> create(Uint8List? seed, {required WalletConfig config}) async {
     try {
       final Map data = await _methodChannel.invokeMethod('create', {
         'seed': seed,
         'password': config.password,
+        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       Wallet wallet = Wallet(walletConfig: config);
       wallet.keystore = data['keystore'];
@@ -55,6 +72,7 @@ class Wallet {
       final Map data = await _methodChannel.invokeMethod('restore', {
         'keystore': keystore,
         'password': config.password,
+        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       Wallet wallet = Wallet(walletConfig: config);
       wallet.keystore = data['keystore'];
