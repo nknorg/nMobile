@@ -280,6 +280,7 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty) return false;
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
+    int? nonce = await Global.getNonce();
 
     bool success;
     try {
@@ -289,6 +290,7 @@ class TopicCommon with Tag {
         fee: fee.toString(),
         identifier: identifier,
         meta: metaString,
+        nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
         logger.d("$TAG - _clientSubscribe - success - topicHash:$topicHash");
@@ -345,6 +347,7 @@ class TopicCommon with Tag {
   Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0}) async {
     if (topicName == null || topicName.isEmpty) return false;
     // String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
+    int? nonce = await Global.getNonce();
 
     bool success;
     try {
@@ -352,6 +355,7 @@ class TopicCommon with Tag {
         topic: genTopicHash(topicName),
         identifier: "", // no used (maybe will be used by owner later)
         fee: fee.toString(),
+        nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
         logger.d("$TAG - _clientUnsubscribe - success - topicHash:$topicHash");
