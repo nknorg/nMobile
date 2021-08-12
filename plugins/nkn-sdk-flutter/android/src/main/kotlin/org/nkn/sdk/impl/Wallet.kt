@@ -217,7 +217,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val address = call.argument<String>("address")
         val amount = call.argument<String>("amount") ?: "0"
         val fee = call.argument<String>("fee") ?: "0"
-        val nonce = call.argument<Long>("nonce")
+        val nonce = call.argument<Int>("nonce")
         val attributes = call.argument<ByteArray>("attributes")
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
@@ -237,7 +237,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 val transactionConfig = TransactionConfig()
                 transactionConfig.fee = fee
                 if (nonce != null) {
-                    transactionConfig.nonce = nonce
+                    transactionConfig.nonce = nonce.toLong()
                 }
                 if (attributes != null) {
                     transactionConfig.attributes = attributes
