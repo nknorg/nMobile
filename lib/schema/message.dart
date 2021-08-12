@@ -70,7 +70,7 @@ class MessageOptions {
     if (message == null || message.options == null || message.options!.keys.length == 0) return null;
     var duration = message.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
-    return double.parse(duration);
+    return double.tryParse(duration) ?? 0;
   }
 
   static MessageSchema setContactBurning(MessageSchema message, int deleteTimeSec, int? updateAt) {

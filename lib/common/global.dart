@@ -108,11 +108,7 @@ class Global {
       nonceMap[walletAddress!] = nonce;
     }
 
-    if (nonce == null || nonce == 0) {
-      logger.w("Global - getNonce - nonce = null - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
-    } else {
-      logger.i("Global - getNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
-    }
+    logger.i("Global - getNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
     return nonce;
   }
 }

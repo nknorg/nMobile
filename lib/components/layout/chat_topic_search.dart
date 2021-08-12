@@ -191,10 +191,10 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
                             textInputAction: TextInputAction.done,
                             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
-                            onSaved: (v) => _fee = double.parse(v ?? '0'),
+                            onSaved: (v) => _fee = double.tryParse(v ?? '0') ?? 0,
                             onChanged: (v) {
                               setState(() {
-                                double fee = v.isNotEmpty ? double.parse(v) : 0;
+                                double fee = v.isNotEmpty ? (double.tryParse(v) ?? 0) : 0;
                                 if (fee > _sliderFeeMax) {
                                   fee = _sliderFeeMax;
                                 } else if (fee < _sliderFeeMin) {

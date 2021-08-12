@@ -141,7 +141,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   _checkFeeForm(bool eth, value) {
     if (_wallet.type == WalletType.eth) {
       // TODO:GG eth fee form
-      // int gasPrice = (num.parse(value).ETH.gwei / _maxGas).round();
+      // int gasPrice = (num.tryParse(value).ETH.gwei / _maxGas).round();
       // if (gasPrice < _sliderGasPriceMin) {
       //   gasPrice = _sliderGasPriceMin;
       // }
@@ -154,7 +154,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       //   _updateFee(true);
       // }
     } else {
-      double fee = value.isNotEmpty ? double.parse(value) : 0;
+      double fee = value.isNotEmpty ? (double.tryParse(value) ?? 0) : 0;
       if (fee > _sliderFeeMax) {
         fee = _sliderFeeMax;
       } else if (fee < _sliderFeeMin) {
@@ -415,7 +415,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_sendToFocusNode),
-                                    onSaved: (String? v) => _amount = num.parse(v ?? "0"),
+                                    onSaved: (String? v) => _amount = num.tryParse(v ?? "0") ?? 0,
                                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
                                     showErrorMessage: false,
                                     suffixIcon: GestureDetector(
@@ -541,7 +541,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                           padding: EdgeInsets.only(top: 10),
                                           controller: _feeController,
                                           focusNode: _feeToFocusNode,
-                                          onSaved: (v) => _fee = double.parse(v ?? "0"),
+                                          onSaved: (v) => _fee = double.tryParse(v ?? "0") ?? 0,
                                           textInputAction: TextInputAction.done,
                                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                                           onChanged: (v) {
