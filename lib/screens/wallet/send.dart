@@ -90,7 +90,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   void initState() {
     super.initState();
     // balance query
-    walletCommon.queryBalance();
+    walletCommon.queryBalance(); // await
     // init
     _init(this._wallet.type == WalletType.eth);
   }
@@ -262,9 +262,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return false;
       }
 
-      String? txHash = await restore.transfer(_sendTo!, amount, fee: fee);
+      int? nonce = await Global.getNonce(walletAddress: restore.address);
+      String? txHash = await restore.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
       if (txHash != null) {
-        walletCommon.queryBalance();
+        walletCommon.queryBalance(); // await
         return txHash.length > 10;
       }
       Toast.show(_localizations.failure);
