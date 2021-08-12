@@ -298,7 +298,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let duration = args["duration"] as! Int
         let meta = args["meta"] as? String
         let fee = args["fee"] as? String ?? "0"
-        let nonce = args["nonce"] as? Int64
+        let nonce = args["nonce"] as? Int
         
         guard (clientMap.keys.contains(_id)) else {
             result(FlutterError(code: "", message: "client is null", details: ""))
@@ -313,7 +313,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
             if (nonce != nil) {
-                config.nonce = nonce!
+                config.nonce = Int64(nonce!)
             }
             
             let hash = client.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: config, error: &error)
@@ -333,7 +333,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let identifier = args["identifier"] as? String ?? ""
         let topic = args["topic"] as! String
         let fee = args["fee"] as? String ?? "0"
-        let nonce = args["nonce"] as? Int64
+        let nonce = args["nonce"] as? Int
         
         guard (clientMap.keys.contains(_id)) else {
             result(FlutterError(code: "", message: "client is null", details: ""))
@@ -348,7 +348,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
             if (nonce != nil) {
-                config.nonce = nonce!
+                config.nonce = Int64(nonce!)
             }
             
             let hash = client.unsubscribe(identifier, topic: topic, config: config, error: &error)
