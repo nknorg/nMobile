@@ -566,7 +566,7 @@ packages:
       path: "plugins/nkn-sdk-flutter"
       relative: true
     source: path
-    version: "0.1.7"
+    version: "0.1.9"
   package_config:
     dependency: transitive
     description:
