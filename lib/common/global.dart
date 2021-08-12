@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -42,6 +44,8 @@ class Global {
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
 
+  static Map<String, int> nonceMap = {};
+
   static init() async {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
 
@@ -61,14 +65,54 @@ class Global {
     }
   }
 
-  static Future<List<String>> getSeedRpcList() async {
+  static Future<List<String>> getSeedRpcList({bool measure = true}) async {
     SettingsStorage settingsStorage = SettingsStorage();
     List<String> list = await settingsStorage.getSeedRpcServers();
     list.addAll(defaultSeedRpcList);
     list = LinkedHashSet<String>.from(list).toList();
-    logger.i("Global - getSeedRpcList - originalSeedRPCServer - length:${list.length} - list:$list");
-    list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
-    logger.i("Global - getSeedRpcList - measureSeedRPCServer - length:${list.length} - list:$list");
+    logger.i("Global - getSeedRpcList - seedRPCServer - length:${list.length} - list:$list");
+    if (measure) {
+      list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
+      logger.i("Global - getSeedRpcList - measureSeedRPCServer - length:${list.length} - list:$list");
+    }
     return list;
+  }
+
+  static Future<int?> getNonce({String? walletAddress}) async {
+    int? nonce;
+
+    // walletAddress
+    if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
+      walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+    }
+
+    // cached
+    if (walletAddress?.isNotEmpty == true) {
+      if (nonceMap[walletAddress] != null && nonceMap[walletAddress] != 0) {
+        nonce = nonceMap[walletAddress]! + 1;
+        logger.d("Global - getNonce - cached - nonce:$nonce");
+      }
+    }
+
+    // rpc
+    if (nonce == null || nonce == 0) {
+      if (walletAddress?.isNotEmpty == true) {
+        nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: await getSeedRpcList()));
+      } else {
+        nonce = await clientCommon.client?.getNonce(txPool: true);
+      }
+    }
+
+    // set
+    if ((walletAddress?.isNotEmpty == true) && (nonce != null && nonce != 0)) {
+      nonceMap[walletAddress!] = nonce;
+    }
+
+    if (nonce == null || nonce == 0) {
+      logger.w("Global - getNonce - nonce = null - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
+    } else {
+      logger.i("Global - getNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
+    }
+    return nonce;
   }
 }
