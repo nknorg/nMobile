@@ -185,6 +185,7 @@ class Client {
     int duration = 400000,
     String fee = '0',
     String meta = '',
+    int? nonce,
   }) async {
     try {
       String hash = await _methodChannel.invokeMethod('subscribe', {
@@ -194,6 +195,7 @@ class Client {
         'duration': duration,
         'fee': fee,
         'meta': meta,
+        'nonce': nonce,
       });
       return hash;
     } catch (e) {
@@ -201,13 +203,19 @@ class Client {
     }
   }
 
-  Future<String> unsubscribe({String identifier = '', required String topic, String fee = '0'}) async {
+  Future<String> unsubscribe({
+    String identifier = '',
+    required String topic,
+    String fee = '0',
+    int? nonce,
+  }) async {
     try {
       String hash = await _methodChannel.invokeMethod('unsubscribe', {
         '_id': this.address,
         'identifier': identifier,
         'topic': topic,
         'fee': fee,
+        'nonce': nonce,
       });
       return hash;
     } catch (e) {
@@ -273,9 +281,7 @@ class Client {
 
   Future<int?> getHeight() async {
     try {
-      int? resp = await _methodChannel.invokeMethod('getHeight', {
-        '_id': this.address
-      });
+      int? resp = await _methodChannel.invokeMethod('getHeight', {'_id': this.address});
       return resp;
     } catch (e) {
       throw e;
@@ -296,7 +302,7 @@ class Client {
     }
   }
 
-  Future<int?> getNonceByAddress(String address,{bool txPool = true}) async {
+  Future<int?> getNonceByAddress(String address, {bool txPool = true}) async {
     try {
       int? resp = await _methodChannel.invokeMethod('getNonce', {
         '_id': this.address,
