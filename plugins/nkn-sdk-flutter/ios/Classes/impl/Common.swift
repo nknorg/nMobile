@@ -1,10 +1,10 @@
 class Common : NSObject, IChannelHandler, FlutterStreamHandler {
     
+    let CHANNEL_NAME = "org.nkn.sdk/common"
+    let EVENT_NAME = "org.nkn.sdk/common/event"
     var methodChannel: FlutterMethodChannel?
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
-    let CHANNEL_NAME = "org.nkn.sdk/common"
-    let EVENT_NAME = "org.nkn.sdk/common/event"
     
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
