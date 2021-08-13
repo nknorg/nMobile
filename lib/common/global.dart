@@ -14,13 +14,18 @@ import '../storages/settings.dart';
 
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
-  static late BuildContext appContext;
 
+  static late BuildContext appContext;
   static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
+
+  static String packageName = '';
   static String version = '';
   static String build = '';
 
-  static String get versionFormat => '${Global.version} + (Build ${Global.build})';
+  static String get versionFormat {
+    String suffix = (Global.packageName.endsWith("test") || Global.packageName.endsWith("Test")) ? " + test" : "";
+    return '${Global.version} + (Build ${Global.build})$suffix';
+  }
 
   static String deviceId = "";
   static String deviceVersion = "";
@@ -50,6 +55,7 @@ class Global {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
 
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    Global.packageName = packageInfo.packageName;
     Global.version = packageInfo.version;
     Global.build = packageInfo.buildNumber.replaceAll('.', '');
 

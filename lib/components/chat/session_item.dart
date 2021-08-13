@@ -290,7 +290,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       } else {
         contentWidget = SizedBox.shrink();
       }
-    } else if (msgType == MessageContentType.media || msgType == MessageContentType.image || msgType == MessageContentType.nknImage) {
+    } else if (msgType == MessageContentType.media || msgType == MessageContentType.image) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(

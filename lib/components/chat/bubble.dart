@@ -381,7 +381,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-      case MessageContentType.nknImage:
         _bodyList = _getContentBodyImage(dark);
         if (_message.content is File) {
           File file = _message.content as File;

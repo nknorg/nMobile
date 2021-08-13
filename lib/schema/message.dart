@@ -29,20 +29,15 @@ class MessageContentType {
   static const String text = 'text'; // db + visible
   static const String textExtension = 'textExtension'; // db + visible
   static const String media = 'media'; // db + visible
-  static const String image = 'image'; // db + visible
+  static const String image = 'nknImage'; // db + visible
   static const String audio = 'audio'; // db + visible
 
-  static const String piece = 'piece'; // db(delete)
+  static const String piece = 'nknOnePiece'; // db(delete)
 
   static const String topicSubscribe = 'event:subscribe'; // db + visible
   static const String topicUnsubscribe = 'event:unsubscribe'; // .
   static const String topicInvitation = 'event:channelInvitation'; // db + visible
   static const String topicKickOut = 'event:channelKickOut'; // .
-
-  // SUPPORT:START
-  static const String nknImage = 'nknImage';
-  static const String nknOnePiece = 'nknOnePiece';
-  // SUPPORT:END
 }
 
 class MessageOptions {
@@ -481,7 +476,7 @@ class MessageSchema extends Equatable {
   // Burning
   bool get canBurning {
     bool isText = contentType == MessageContentType.text || contentType == MessageContentType.textExtension;
-    bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.nknImage;
+    bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
     bool isAudio = contentType == MessageContentType.audio;
     return isText || isImage || isAudio;
   }
@@ -503,7 +498,7 @@ class MessageSchema extends Equatable {
   }
 
   bool get needReceipt {
-    return contentType == MessageContentType.contactOptions || contentType == MessageContentType.text || contentType == MessageContentType.textExtension || contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.nknImage || contentType == MessageContentType.audio || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicInvitation;
+    return contentType == MessageContentType.contactOptions || contentType == MessageContentType.text || contentType == MessageContentType.textExtension || contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.audio || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicInvitation;
   }
 
   ContactSchema? contact;
@@ -672,10 +667,8 @@ class MessageSchema extends Equatable {
       // case ContentType.textExtension:
       case MessageContentType.media:
       case MessageContentType.image:
-      case MessageContentType.nknImage:
       case MessageContentType.audio:
       case MessageContentType.piece:
-      case MessageContentType.nknOnePiece:
         if (content is File) {
           map['content'] = Path.getLocalFile((content as File).path);
         }
@@ -688,7 +681,7 @@ class MessageSchema extends Equatable {
         break;
     }
 
-    if (contentType == MessageContentType.piece || contentType == MessageContentType.nknOnePiece) {
+    if (contentType == MessageContentType.piece) {
       map['type'] = MessageContentType.piece;
       if (options == null) {
         options = Map<String, dynamic>();
@@ -732,10 +725,8 @@ class MessageSchema extends Equatable {
       // case ContentType.textExtension:
       case MessageContentType.media:
       case MessageContentType.image:
-      case MessageContentType.nknImage:
       case MessageContentType.audio:
       case MessageContentType.piece:
-      case MessageContentType.nknOnePiece:
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;

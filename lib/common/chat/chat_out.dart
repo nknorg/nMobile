@@ -387,7 +387,6 @@ class ChatOutCommon with Tag {
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-      case MessageContentType.nknImage:
         msgData = await MessageData.getImage(message);
         break;
       case MessageContentType.audio:

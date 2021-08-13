@@ -109,14 +109,12 @@ class ChatInCommon with Tag {
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-      case MessageContentType.nknImage:
         await _receiveImage(received);
         break;
       case MessageContentType.audio:
         await _receiveAudio(received);
         break;
       case MessageContentType.piece:
-      case MessageContentType.nknOnePiece:
         await _receivePiece(received);
         break;
       case MessageContentType.topicSubscribe:
