@@ -463,7 +463,7 @@ class ChatOutCommon with Tag {
     }
     // success
     if (pid?.isNotEmpty == true) {
-      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
       _sendPush(message, contact?.deviceToken); // await
     }
     return pid;
