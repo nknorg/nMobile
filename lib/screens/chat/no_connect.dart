@@ -7,6 +7,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -161,8 +162,13 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                             child: Button(
                               width: double.infinity,
                               text: _localizations.connect,
-                              onPressed: () {
-                                clientCommon.signIn(this._selectWallet, walletDefault: true);
+                              onPressed: () async {
+                                await clientCommon.signIn(
+                                  this._selectWallet,
+                                  walletDefault: true,
+                                  onWalletOk: () => Loading.show(),
+                                );
+                                Loading.dismiss();
                               },
                             ),
                           )

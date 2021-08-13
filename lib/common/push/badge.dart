@@ -1,36 +1,43 @@
 import 'dart:io';
 
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class Badge {
-  static int _count = 0;
+  static bool? isEnable;
+  static int _currentCount = 0;
 
-  static Future refreshCount({int? count}) async {
-    if (!Platform.isIOS) return;
-    _count = count ?? (await chatCommon.unreadCount());
-    logger.d("Badge - refreshCount - $_count");
-    await _updateCount(_count);
+  static Future<bool> checkEnable() async {
+    if (isEnable != null) return isEnable!;
+    isEnable = Platform.isIOS;
+    logger.d("Badge - checkEnable - isEnable:$isEnable");
+    return isEnable!;
+  }
+
+  static Future refreshCount({int count = 0}) async {
+    if (!(await checkEnable())) return;
+    _currentCount = count;
+    logger.d("Badge - refreshCount - currentCount:$_currentCount");
+    await _updateCount(_currentCount);
   }
 
   static Future onCountUp(int count) async {
-    if (!Platform.isIOS) return;
-    _count += count;
-    logger.d("Badge - onCountUp - $_count");
-    await _updateCount(_count);
+    if (!(await checkEnable())) return;
+    _currentCount += count;
+    logger.d("Badge - onCountUp - up:$count - currentCount:$_currentCount");
+    await _updateCount(_currentCount);
   }
 
   static Future onCountDown(int count) async {
-    if (!Platform.isIOS) return;
-    _count -= count;
-    logger.d("Badge - onCountDown - $_count");
-    await _updateCount(_count);
+    if (!(await checkEnable())) return;
+    _currentCount -= count;
+    logger.d("Badge - onCountDown - down:$count currentCount:$_currentCount");
+    await _updateCount(_currentCount);
   }
 
   static Future _updateCount(int count) async {
-    if (!Platform.isIOS) return;
-    logger.d("Badge - updateCount - $count");
-    await Common.updateBadgeCount(_count);
+    if (!(await checkEnable())) return;
+    logger.d("Badge - updateCount - count:$count");
+    await Common.updateBadgeCount(count);
   }
 }
