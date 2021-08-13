@@ -91,7 +91,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, 1500)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
-                val elements = seedRPCServerAddr.elemsString().split(",")
+                val elements = seedRPCServerAddr.join(",").split(",")
                 for (element in elements) {
                     if (element.isNotEmpty()) {
                         seedRPCServerAddrs.add(element)
