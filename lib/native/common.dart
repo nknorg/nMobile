@@ -32,7 +32,6 @@ class Common {
           if (!(isApplicationForeground ?? true)) {
             localNotification.show(Uuid().v4(), title, content);
           }
-          Badge.onCountUp(1);
           break;
       }
     });

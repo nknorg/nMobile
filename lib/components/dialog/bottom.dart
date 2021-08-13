@@ -493,7 +493,6 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
           onTapUp: _handleTapUp,
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              // logger.i("$TAG - ---> ${constraints}");
               return Container(
                 width: constraints.maxWidth - 32 * 2,
                 height: _dragHeight,

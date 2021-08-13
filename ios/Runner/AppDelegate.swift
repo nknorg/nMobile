@@ -104,7 +104,7 @@ import Sentry
 //    }
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
-        UIApplication.shared.applicationIconBadgeNumber = 0
+        //UIApplication.shared.applicationIconBadgeNumber = 0
     }
     
 }

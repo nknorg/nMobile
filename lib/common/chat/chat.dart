@@ -254,18 +254,19 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future<List<MessageSchema>> queryListAndReadByTargetId(
+  Future<List<MessageSchema>> getAndReadMessagesTargetId(
     String? targetId, {
     int offset = 0,
     int limit = 20,
     int? unread,
-    bool handleBurn = true,
   }) async {
     List<MessageSchema> list = await _messageStorage.queryListCanDisplayReadByTargetId(targetId, offset: offset, limit: limit);
+    // badge
+    int badgeDown = await _messageStorage.unReadCountByTargetId(targetId);
+    Badge.onCountDown(badgeDown); // await
     // unread
     if (offset == 0 && (unread == null || unread > 0)) {
       _messageStorage.queryListUnReadByTargetId(targetId).then((List<MessageSchema> unreadList) {
-        int badgeDown = 0;
         unreadList.asMap().forEach((index, MessageSchema element) {
           if (index == 0) {
             sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
@@ -274,9 +275,7 @@ class ChatCommon with Tag {
           // if (index >= unreadList.length - 1) {
           //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
           // }
-          if (element.canDisplayAndRead) badgeDown++;
         });
-        Badge.onCountDown(badgeDown);
       });
       list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
     }
