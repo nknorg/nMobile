@@ -1,10 +1,12 @@
 import Nkn
 
 class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
-    let walletQueue = DispatchQueue(label: "org.nkn.sdk/wallet/queue", qos: .default, attributes: .concurrent)
+    
+    let CHANNEL_NAME = "org.nkn.sdk/wallet"
     var methodChannel: FlutterMethodChannel?
     var eventSink: FlutterEventSink?
-    let CHANNEL_NAME = "org.nkn.sdk/wallet"
+    
+    let walletQueue = DispatchQueue(label: "org.nkn.sdk/wallet/queue", qos: .default, attributes: .concurrent)
     
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
