@@ -34,7 +34,7 @@ catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? 
   };
 }
 
-void handleError(
+String? handleError(
   dynamic error, {
   StackTrace? stackTrace,
   String? toast,
@@ -49,6 +49,7 @@ void handleError(
   } else if (toast?.isNotEmpty == true) {
     Toast.show(toast);
   }
+  return show;
 }
 
 String? getErrorShow(dynamic error) {

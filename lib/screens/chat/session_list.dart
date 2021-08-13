@@ -149,7 +149,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // badge
-    Badge.refreshCount();
+    chatCommon.unreadCount().then((value) {
+      Badge.refreshCount(count: value);
+    });
 
     // TODO:GG auth
   }

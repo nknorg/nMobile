@@ -8,6 +8,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -100,7 +101,10 @@ class ClientCommon with Tag {
       // start client connect (no await)
       return await _connect(wallet);
     } catch (e) {
-      handleError(e);
+      String? error = handleError(e);
+      if ((error?.contains(S.of(Global.appContext).tip_password_error) == true) || (error?.contains("password") == true) || (error?.contains("keystore") == true)) {
+        return null;
+      }
       // loop
       await SettingsStorage().setSeedRpcServers([]);
       await Future.delayed(Duration(seconds: 1));
