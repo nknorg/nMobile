@@ -55,17 +55,21 @@ String? getErrorShow(dynamic error) {
   if (error == null) return null;
   S _localizations = S.of(Global.appContext);
 
-  String pwdWrong = "wrong password";
-  if (error.message == pwdWrong || error.toString() == pwdWrong) {
-    return _localizations.tip_password_error;
+  String loginError = "failed to create client";
+  if (error.message == loginError || error.toString() == loginError) {
+    return loginError;
+  }
+  String rpcError = 'all rpc request failed';
+  if (error.message == rpcError || error.toString() == rpcError) {
+    return rpcError;
   }
   String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
   if (error.message == txError || error.toString() == txError) {
     return txError;
   }
-  String rpcError = 'all rpc request failed';
-  if (error.message == rpcError || error.toString() == rpcError) {
-    return rpcError;
+  String pwdWrong = "wrong password";
+  if (error.message == pwdWrong || error.toString() == pwdWrong) {
+    return _localizations.tip_password_error;
   }
   String ksError = "keystore not exits";
   if (error.message == ksError || error.toString() == ksError) {
