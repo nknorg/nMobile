@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -195,7 +194,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else {
       _offset = _messages.length;
     }
-    var messages = await chatCommon.queryListAndReadByTargetId(_topic?.topic ?? _contact?.clientAddress, offset: _offset, limit: 20);
+    var messages = await chatCommon.getAndReadMessagesTargetId(_topic?.topic ?? _contact?.clientAddress, offset: _offset, limit: 20);
     setState(() {
       _messages = _messages + messages;
     });
@@ -207,11 +206,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!schema.isOutbound) {
       schema = chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
       sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
-      if (schema.canDisplayAndRead) Badge.onCountDown(1);
     }
     // state
     setState(() {
-      logger.i("$TAG - messages insert 0:$schema");
+      logger.i("$TAG - messages insert 0 - message:$schema");
       _messages.insert(0, schema!);
     });
     // tip
