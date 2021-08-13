@@ -1,15 +1,24 @@
 import Nkn
 
 class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
-    let clientQueue = DispatchQueue(label: "org.nkn.sdk/client/queue", qos: .default, attributes: .concurrent)
-    let clientSendQueue = DispatchQueue(label: "org.nkn.sdk/client/send/queue", qos: .default, attributes: .concurrent)
-    let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
-    let clientTransferQueue = DispatchQueue(label: "org.nkn.sdk/client/transfer/queue", qos: .default, attributes: .concurrent)
+    
+    let CHANNEL_NAME = "org.nkn.sdk/client"
+    let EVENT_NAME = "org.nkn.sdk/client/event"
     var methodChannel: FlutterMethodChannel?
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
-    let CHANNEL_NAME = "org.nkn.sdk/client"
-    let EVENT_NAME = "org.nkn.sdk/client/event"
+    
+    let clientQueue = DispatchQueue(label: "org.nkn.sdk/client/queue", qos: .default, attributes: .concurrent)
+    private var clientWorkItem: DispatchWorkItem?
+    
+    let clientSendQueue = DispatchQueue(label: "org.nkn.sdk/client/send/queue", qos: .default, attributes: .concurrent)
+    private var clientSendWorkItem: DispatchWorkItem?
+    
+    let clientReceiveQueue = DispatchQueue(label: "org.nkn.sdk/client/receive/queue", qos: .default, attributes: .concurrent)
+    private var clientReceiveWorkItem: DispatchWorkItem?
+    
+    let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
+    private var clientEventWorkItem: DispatchWorkItem?
     
     let numSubClients = 3
     var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
@@ -97,6 +106,13 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
     }
     
+    private func addMessageReceiveQueue(client: NknMultiClient) {
+        clientReceiveWorkItem = DispatchWorkItem {
+            self.onMessage(client: client)
+        }
+        clientReceiveQueue.async(execute: clientReceiveWorkItem!)
+    }
+    
     private func onMessage(client: NknMultiClient) {
         guard let msg = client.onMessage?.next() else {
             return
@@ -114,7 +130,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         ]
         NSLog("%@", resp)
         self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
-        self.onMessage(client: client)
+        self.addMessageReceiveQueue(client: client)
     }
     
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -173,7 +189,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientQueue.async {
+        clientWorkItem = DispatchWorkItem {
             var resp:[String:Any] = [String:Any]()
             resp["address"] = client.address()
             resp["publicKey"] = client.pubKey()
@@ -181,19 +197,22 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: resp)
             
             self.onConnect(client: client)
-            self.onMessage(client: client)
+            
+            self.addMessageReceiveQueue(client: client)
         }
+        clientQueue.async(execute: clientWorkItem!)
     }
     
     private func close(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
         
-        clientQueue.async {
+        clientWorkItem = DispatchWorkItem {
             self.closeClient(id: _id)
             
             self.resultSuccess(result: result, resp: nil)
         }
+        clientQueue.async(execute: clientWorkItem!)
     }
     
     private func sendText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -219,7 +238,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             }
         }
         
-        clientSendQueue.async {
+        clientSendWorkItem = DispatchWorkItem {
             do {
                 let config: NknMessageConfig = NknMessageConfig()
                 config.maxHoldingSeconds = maxHoldingSeconds < 0 ? 0 : maxHoldingSeconds
@@ -253,6 +272,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.resultError(result: result, error: error, code: _id)
             }
         }
+        clientSendQueue.async(execute: clientSendWorkItem!)
     }
     
     private func publishText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -271,7 +291,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientSendQueue.async {
+        clientSendWorkItem = DispatchWorkItem {
             do {
                 let config: NknMessageConfig = NknMessageConfig()
                 config.maxHoldingSeconds = maxHoldingSeconds < 0 ? 0 : maxHoldingSeconds
@@ -288,6 +308,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.resultError(result: result, error: error, code: _id)
             }
         }
+        clientSendQueue.async(execute: clientSendWorkItem!)
     }
     
     private func subscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -308,7 +329,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             var error: NSError?
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
@@ -325,6 +346,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: hash)
             return
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func unsubscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -343,7 +365,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             var error: NSError?
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
@@ -360,6 +382,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: hash)
             return
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func getSubscribers(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -380,7 +403,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             do {
                 let res: NknSubscribers? = try client.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
                 let mapPro = MapProtocol()
@@ -393,6 +416,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func getSubscribersCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -409,7 +433,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             do {
                 var count: Int = 0
                 try client.getSubscribersCount(topic, subscriberHashPrefix: subscriberHashPrefix?.data, ret0_: &count)
@@ -421,6 +445,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func getSubscription(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -437,7 +462,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             do {
                 let res: NknSubscription = try client.getSubscription(topic, subscriber: subscriber)
                 
@@ -451,6 +476,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func getHeight(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -465,7 +491,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             do {
                 var height: Int32 = 0
                 try client.getHeight(&height)
@@ -477,6 +503,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
     
     private func getNonce(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -493,7 +520,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        clientTransferQueue.async {
+        clientEventWorkItem = DispatchWorkItem {
             do {
                 var nonce: Int64 = 0
                 try client.getNonceByAddress(address, txPool: txPool, ret0_: &nonce)
@@ -505,5 +532,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        clientEventQueue.async(execute: clientEventWorkItem!)
     }
 }

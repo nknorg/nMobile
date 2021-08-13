@@ -73,11 +73,11 @@ class ClientCommon with Tag {
   /// ******************************************************   Client   ****************************************************** ///
 
   // need close
-  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function? onWalletOk}) async {
+  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function? onWalletOk, String? pwd}) async {
     if (schema == null) return null;
     // if (client != null) await close(); // async boom!!!
     try {
-      String? pwd = await authorization.getWalletPassword(schema.address);
+      pwd = pwd ?? (await authorization.getWalletPassword(schema.address));
       if (pwd == null || pwd.isEmpty) return null;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
@@ -104,7 +104,7 @@ class ClientCommon with Tag {
       // loop
       await SettingsStorage().setSeedRpcServers([]);
       await Future.delayed(Duration(seconds: 1));
-      return signIn(schema, walletDefault: walletDefault, onWalletOk: onWalletOk);
+      return signIn(schema, walletDefault: walletDefault, onWalletOk: onWalletOk, pwd: pwd);
     }
     // return null;
   }

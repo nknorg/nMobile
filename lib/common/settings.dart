@@ -9,6 +9,7 @@ class NotificationType {
 }
 
 class PlatformName {
+  static const String web = "web";
   static const String android = "android";
   static const String ios = "ios";
 
