@@ -67,7 +67,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         seedRPCServerAddr = NknMeasureSeedRPCServer(seedRPCServerAddr, 1500, nil)
         
         var seedRPCServerAddrs = [String]()
-        let elements = seedRPCServerAddr?.elemsString().split(separator: ",")
+        let elements = seedRPCServerAddr?.join(",").split(separator: ",")
         if elements != nil && !(elements!.isEmpty) {
             for element in elements! {
                 if !(element.isEmpty) {
