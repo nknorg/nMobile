@@ -54,13 +54,17 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
       String password = _passwordController.text;
       logger.i("$TAG - name:$name, password:$password");
 
-      Wallet result = await Wallet.create(null, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
-      if (result.address.isEmpty || result.keystore.isEmpty) return;
+      Wallet nkn = await Wallet.create(null, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+      logger.i("$TAG - wallet create - nkn:${nkn.toString()}");
+      if (nkn.address.isEmpty || nkn.keystore.isEmpty) {
+        Loading.dismiss();
+        return;
+      }
 
-      WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-      logger.i("$TAG - wallet create - ${wallet.toString()}");
+      WalletSchema wallet = WalletSchema(name: name, address: nkn.address, type: WalletType.nkn);
+      logger.i("$TAG - wallet create - wallet:${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
+      _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
 
       Loading.dismiss();
       AppScreen.go(context);

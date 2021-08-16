@@ -1,16 +1,24 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
+
+import '../../app.dart';
 
 class WalletCreateETHScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/create_eth';
@@ -23,10 +31,10 @@ class WalletCreateETHScreen extends BaseStateFulWidget {
   _WalletCreateETHScreenState createState() => _WalletCreateETHScreenState();
 }
 
-class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateETHScreen> {
+class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateETHScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  // WalletsBloc _walletsBloc;
+  late WalletBloc _walletBloc;
 
   bool _formValid = false;
   TextEditingController _nameController = TextEditingController();
@@ -41,21 +49,34 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
   @override
   void initState() {
     super.initState();
-    // _walletsBloc = BlocProvider.of<WalletsBloc>(context);
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
   }
 
   _create() async {
-    // TODO:GG eth create
-    // if ((_formKey.currentState as FormState).validate()) {
-    //   (_formKey.currentState as FormState).save();
-    //   final eth = Ethereum.createWallet(name: _name, password: _password);
-    //   Ethereum.saveWallet(ethWallet: eth, walletsBloc: _walletsBloc);
-    //
-    //   // Password
-    //   Navigator.pop(this.context).pushReplacementNamed(AppScreen.routeName, arguments: {
-    //   AppScreen.argIndex: 1,
-    //   });
-    // }
+    if ((_formKey.currentState as FormState).validate()) {
+      (_formKey.currentState as FormState).save();
+      Loading.show();
+
+      String name = _nameController.text;
+      String password = _passwordController.text;
+      logger.i("$TAG - name:$name, password:$password");
+
+      final eth = Ethereum.create(name: name, password: password);
+      String ethAddress = (await eth.address).hex;
+      logger.i("$TAG - wallet create - eth:${eth.toString()}");
+      if (ethAddress.isEmpty || eth.keystore.isEmpty) {
+        Loading.dismiss();
+        return;
+      }
+
+      WalletSchema wallet = WalletSchema(name: eth.name, address: ethAddress, type: WalletType.eth);
+      logger.i("$TAG - wallet create - ${wallet.toString()}");
+
+      _walletBloc.add(AddWallet(wallet, eth.keystore, password: password));
+
+      Loading.dismiss();
+      AppScreen.go(context);
+    }
   }
 
   @override
