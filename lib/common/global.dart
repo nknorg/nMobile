@@ -72,8 +72,7 @@ class Global {
   }
 
   static Future<List<String>> getSeedRpcList({bool measure = true}) async {
-    SettingsStorage settingsStorage = SettingsStorage();
-    List<String> list = await settingsStorage.getSeedRpcServers();
+    List<String> list = await SettingsStorage.getSeedRpcServers();
     list.addAll(defaultSeedRpcList);
     list = LinkedHashSet<String>.from(list).toList();
     logger.i("Global - getSeedRpcList - seedRPCServer - length:${list.length} - list:$list");
