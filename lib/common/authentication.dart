@@ -62,7 +62,7 @@ class Authorization {
       }
       return false;
     }).then((bool authOk) async {
-      String? pwd = await walletCommon.getPasswordNoCheck(walletAddress);
+      String? pwd = await walletCommon.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
         return BottomDialog.of(context ?? Global.appContext).showInput(
           title: _localizations.verify_wallet_password,

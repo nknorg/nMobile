@@ -254,8 +254,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._topic != null || this._contact == null) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if (isOpen == null || isOpen == true) return;
-    SettingsStorage settings = SettingsStorage();
-    bool need = await settings.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    bool need = await SettingsStorage.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
     if (!need) return;
     // check
     int sendCount = 0, receiveCount = 0;
@@ -282,7 +281,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await settings.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    await SettingsStorage.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
   }
 
   _toggleNotificationOpen() async {
