@@ -141,9 +141,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _updateFee(bool eth, {gweiFee, gasFee, nknFee}) {
     if (eth) {
-      _feeController.text = nknFormat(_gasPriceInGwei.gwei.ether, decimalDigits: 8).trim();
+      _feeController.text = nknFormat((_gasPriceInGwei.gwei.ether * _maxGas), decimalDigits: 8).trim();
       if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
-        _amountController.text = nknFormat(((_wallet.balanceEth ?? 0) - _gasPriceInGwei.gwei.ether), decimalDigits: 8).trim();
+        _amountController.text = nknFormat(((_wallet.balanceEth ?? 0) - (_gasPriceInGwei.gwei.ether * _maxGas)), decimalDigits: 8).trim();
       }
       setState(() {
         if (gasFee != null) {
@@ -165,7 +165,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _setAmountToMax(bool eth) {
     if (eth) {
-      _amountController.text = nknFormat(_ethTrueTokenFalse ? ((_wallet.balanceEth ?? 0) - _gasPriceInGwei.gwei.ether) : _wallet.balance, decimalDigits: 8).trim();
+      _amountController.text = nknFormat(_ethTrueTokenFalse ? ((_wallet.balanceEth ?? 0) - (_gasPriceInGwei.gwei.ether * _maxGas)) : _wallet.balance, decimalDigits: 8).trim();
     } else {
       _amountController.text = (_wallet.balance ?? 0).toString();
     }
@@ -226,7 +226,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
 
       double? balance = (_ethTrueTokenFalse ? (await _ethClient.getBalanceEth(address: _sendTo!)) : (await _ethClient.getBalanceNkn(address: _sendTo!)))?.ether as double?;
-      double tradeTotal = (double.tryParse(amount) ?? 0); // + (double.tryParse(fee) ?? 0);
+      double tradeTotal = (double.tryParse(amount) ?? 0); //  + (double.tryParse(fee) ?? 0);
       if (balance == null || balance < tradeTotal) {
         Toast.show("余额不足"); // TODO:GG locale balance
         return false;
@@ -442,6 +442,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         child: Label(
                                           useETH ? _localizations.eth : _localizations.nkn,
                                           type: LabelType.bodyRegular,
+                                          color: application.theme.primaryColor,
                                         ),
                                       ),
                                       onTap: () {
@@ -571,7 +572,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               width: 20,
                                               alignment: Alignment.centerRight,
                                               child: Label(
-                                                useETH ? _localizations.eth : _localizations.nkn,
+                                                _localizations.eth,
                                                 type: LabelType.label,
                                               ),
                                             ),
