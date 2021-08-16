@@ -7,6 +7,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -52,6 +53,7 @@ class WalletSendScreen extends BaseStateFulWidget {
 class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
   late WalletSchema _wallet;
+  final _ethClient = EthErc20Client();
 
   bool _formValid = false;
   TextEditingController _amountController = TextEditingController();
@@ -95,31 +97,54 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     _init(this._wallet.type == WalletType.eth);
   }
 
+  @override
+  void dispose() {
+    _ethClient.close();
+    super.dispose();
+  }
+
   _init(bool eth) async {
     if (eth) {
-      // TODO:GG eth gasPrice
-      // final gasPrice = await EthErc20Client().getGasPrice;
-      // _gasPriceInGwei = (gasPrice?.gwei ?? 0 * 0.8).round();
-      // logger.d('$TAG - gasPrice:$_gasPriceInGwei GWei');
+      _gasPriceInGwei = await walletCommon.getErc20GasPrice();
+      logger.d('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
     } else {
       _feeController.text = _fee.toString();
     }
     _updateFee(eth);
   }
 
+  _checkFeeForm(bool eth, value) {
+    if (_wallet.type == WalletType.eth) {
+      int gasPrice = ((num.tryParse(value) ?? 0).ETH.gwei / _maxGas).round();
+      if (gasPrice < _sliderGasPriceMin) {
+        gasPrice = _sliderGasPriceMin;
+      }
+      if (gasPrice > _sliderGasPriceMax) {
+        gasPrice = _sliderGasPriceMax;
+      }
+      if (_gasPriceInGwei != gasPrice) {
+        _gasPriceInGwei = gasPrice;
+        _updateFee(true);
+      }
+    } else {
+      double fee = value.isNotEmpty ? (double.tryParse(value) ?? 0) : 0;
+      if (fee > _sliderFeeMax) {
+        fee = _sliderFeeMax;
+      } else if (fee < _sliderFeeMin) {
+        fee = _sliderFeeMin;
+      }
+      setState(() {
+        _sliderFee = fee;
+      });
+    }
+  }
+
   _updateFee(bool eth, {gweiFee, gasFee, nknFee}) {
     if (eth) {
-      // TODO:GG eth fee
-      // _feeController.text = nknFormat(
-      //   (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas),
-      //   decimalDigits: 8,
-      // ).trim();
-      // if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
-      //   _amountController.text = nknFormat(
-      //     (_wallet?.balanceEth - (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas)),
-      //     decimalDigits: 8,
-      //   ).trim();
-      // }
+      _feeController.text = nknFormat(_gasPriceInGwei.gwei.ether, decimalDigits: 8).trim();
+      if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
+        _amountController.text = nknFormat(((_wallet.balanceEth ?? 0) - _gasPriceInGwei.gwei.ether), decimalDigits: 8).trim();
+      }
       setState(() {
         if (gasFee != null) {
           _maxGas = gasFee;
@@ -138,41 +163,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     }
   }
 
-  _checkFeeForm(bool eth, value) {
-    if (_wallet.type == WalletType.eth) {
-      // TODO:GG eth fee form
-      // int gasPrice = (num.tryParse(value).ETH.gwei / _maxGas).round();
-      // if (gasPrice < _sliderGasPriceMin) {
-      //   gasPrice = _sliderGasPriceMin;
-      // }
-      // if (gasPrice > _sliderGasPriceMax) {
-      //   gasPrice = _sliderGasPriceMax;
-      // }
-      // logger.d('$TAG - fee field | gasPrice:$gasPrice');
-      // if (_gasPriceInGwei != gasPrice) {
-      //   _gasPriceInGwei = gasPrice;
-      //   _updateFee(true);
-      // }
-    } else {
-      double fee = value.isNotEmpty ? (double.tryParse(value) ?? 0) : 0;
-      if (fee > _sliderFeeMax) {
-        fee = _sliderFeeMax;
-      } else if (fee < _sliderFeeMin) {
-        fee = _sliderFeeMin;
-      }
-      setState(() {
-        _sliderFee = fee;
-      });
-    }
-  }
-
   _setAmountToMax(bool eth) {
     if (eth) {
-      // TODO:GG eth amount
-      // _amountController.text = nknFormat(
-      //   _ethTrueTokenFalse ? (_wallet?.balanceEth - (_gasPriceInGwei?.gwei?.ether ?? 0 * _maxGas)) : _wallet?.balance,
-      //   decimalDigits: 8,
-      // ).trim();
+      _amountController.text = nknFormat(_ethTrueTokenFalse ? ((_wallet.balanceEth ?? 0) - _gasPriceInGwei.gwei.ether) : _wallet.balance, decimalDigits: 8).trim();
     } else {
       _amountController.text = (_wallet.balance ?? 0).toString();
     }
@@ -188,7 +181,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     return _maxGas.toDouble();
   }
 
-  _readyTransfer() async {
+  _goToTransfer() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       logger.i("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
@@ -196,12 +189,16 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       authorization.getWalletPassword(_wallet.address, context: context).then((String? password) async {
         if (password == null || password.isEmpty) return;
         String keystore = await walletCommon.getKeystoreByAddress(_wallet.address);
+        if (keystore.isEmpty || password.isEmpty) {
+          Toast.show(S.of(context).password_wrong);
+          return;
+        }
 
         if (_wallet.type == WalletType.eth) {
-          final result = _transferETH(keystore, password);
+          final result = _transferETH(_wallet.name ?? "", keystore, password);
           Navigator.pop(this.context, result);
         } else {
-          final result = _transferNKN(keystore, password);
+          final result = _transferNKN(_wallet.name ?? "", keystore, password);
           Navigator.pop(this.context, result);
         }
       }).onError((error, stackTrace) {
@@ -210,40 +207,61 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     }
   }
 
-  Future<bool> _transferETH(String? keystore, String? password) async {
-    // TODO:GG eth transfer + balance check
-    // try {
-    // final ethWallet = await Ethereum.restoreWalletSaved(schema: wallet, password: password);
-    //   final ethClient = EthErc20Client();
-    //   final txHash = _ethTrueTokenFalse
-    //       ? await ethClient.sendEthereum(ethWallet.credt,
-    //       address: _sendTo,
-    //       amountEth: _amount,
-    //       gasLimit: _maxGas,
-    //       gasPriceInGwei: _gasPriceInGwei)
-    //       : await ethClient.sendNknToken(ethWallet.credt,
-    //       address: _sendTo,
-    //       amountNkn: _amount,
-    //       gasLimit: _maxGas,
-    //       gasPriceInGwei: _gasPriceInGwei);
-    //   return txHash.length > 10;
-    // } catch (e) {
-    //   showToast(e.message);
-    //   return false;
-    // }
-    return false;
-  }
-
-  Future<bool> _transferNKN(String? keystore, String? password) async {
+  Future<bool> _transferETH(String name, String keystore, String password) async {
     S _localizations = S.of(context);
-    if (keystore == null || password == null) {
-      Toast.show(_localizations.password_wrong);
-      return false;
-    }
     Loading.show();
     try {
-      Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
-      if (restore.address.isEmpty || restore.address != _wallet.address) {
+      final eth = Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
+      String ethAddress = (await eth.address).hex;
+      if (ethAddress.isEmpty || ethAddress != _wallet.address) {
+        Toast.show(_localizations.password_wrong);
+        return false;
+      }
+
+      String amount = _amount?.toString() ?? '0';
+      // String fee = _fee.toString();
+      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
+        Toast.show(_localizations.enter_amount);
+        return false;
+      }
+
+      double? balance = (_ethTrueTokenFalse ? (await _ethClient.getBalanceEth(address: _sendTo!)) : (await _ethClient.getBalanceNkn(address: _sendTo!)))?.ether as double?;
+      double tradeTotal = (double.tryParse(amount) ?? 0); // + (double.tryParse(fee) ?? 0);
+      if (balance == null || balance < tradeTotal) {
+        Toast.show("余额不足"); // TODO:GG locale balance
+        return false;
+      }
+
+      final txHash = _ethTrueTokenFalse
+          ? await _ethClient.sendEthereum(
+              eth.credt,
+              address: _sendTo!,
+              amountEth: _amount!,
+              gasLimit: _maxGas,
+              gasPriceInGwei: _gasPriceInGwei,
+            )
+          : await _ethClient.sendNknToken(
+              eth.credt,
+              address: _sendTo!,
+              amountNkn: _amount!,
+              gasLimit: _maxGas,
+              gasPriceInGwei: _gasPriceInGwei,
+            );
+      return txHash.length > 10;
+    } catch (e) {
+      handleError(e, toast: _localizations.failure);
+      return false;
+    } finally {
+      Loading.dismiss();
+    }
+  }
+
+  Future<bool> _transferNKN(String name, String keystore, String password) async {
+    S _localizations = S.of(context);
+    Loading.show();
+    try {
+      Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+      if (nkn.address.isEmpty || nkn.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;
       }
@@ -255,15 +273,15 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return false;
       }
 
-      double balance = await restore.getBalance();
+      double balance = await nkn.getBalance();
       double tradeTotal = (double.tryParse(amount) ?? 0) + (double.tryParse(fee) ?? 0);
       if (balance < tradeTotal) {
         Toast.show("余额不足"); // TODO:GG locale balance
         return false;
       }
 
-      int? nonce = await Global.getNonce(walletAddress: restore.address);
-      String? txHash = await restore.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
+      int? nonce = await Global.getNonce(walletAddress: nkn.address);
+      String? txHash = await nkn.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
       if (txHash != null) {
         walletCommon.queryBalance(); // await
         return txHash.length > 10;
@@ -314,11 +332,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 logger.i("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'] ?? "";
                 _amountController.text = jsonData['amount']?.toString() ?? "";
-              } else if (_wallet.type == WalletType.nkn && verifyAddress(qrData.toString())) {
+              } else if (_wallet.type == WalletType.nkn && verifyNknAddress(qrData.toString())) {
                 logger.i("$TAG - wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData.toString();
-              } else if (_wallet.type == WalletType.eth) {
-                // && verifyEthAddress(qrData) TODO:GG eth address
+              } else if (_wallet.type == WalletType.eth && verifyEthAddress(qrData.toString())) {
                 logger.i("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
@@ -706,7 +723,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                       text: _localizations.continue_text,
                                       width: double.infinity,
                                       disabled: !_formValid,
-                                      onPressed: _readyTransfer,
+                                      onPressed: _goToTransfer,
                                     ),
                                   ),
                                 ],
