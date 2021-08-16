@@ -8,6 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -73,18 +75,32 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          Wallet result = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
-          if (result.address.isEmpty || result.keystore.isEmpty) return;
+          Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+          logger.i("$TAG - import_nkn - nkn:${nkn.toString()}");
+          if (nkn.address.isEmpty || nkn.keystore.isEmpty) {
+            Loading.dismiss();
+            return;
+          }
 
-          WalletSchema wallet = WalletSchema(name: name, address: result.address, type: WalletType.nkn);
-          logger.i("$TAG - import_nkn - ${wallet.toString()}");
+          WalletSchema wallet = WalletSchema(name: name, address: nkn.address, type: WalletType.nkn);
+          logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, result.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
         } else {
-          // TODO:GG eth import by keystore
-          // final ethWallet = Ethereum.restoreWallet(name: _name, keystore: _keystore, password: _password);
-          // Ethereum.saveWallet(ethWallet: ethWallet, walletsBloc: _walletsBloc);
+          final eth = Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
+          String ethAddress = (await eth.address).hex;
+          logger.i("$TAG - import_nkn - eth:${eth.toString()}");
+          if (ethAddress.isEmpty || eth.keystore.isEmpty) {
+            Loading.dismiss();
+            return;
+          }
+
+          WalletSchema wallet = WalletSchema(name: name, address: ethAddress, type: WalletType.eth);
+          logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
+
+          _walletBloc.add(AddWallet(wallet, eth.keystore, password: password));
         }
+        Future.delayed(Duration(seconds: 3), () => walletCommon.queryBalance());
 
         Loading.dismiss();
         Toast.show(_localizations.success);
