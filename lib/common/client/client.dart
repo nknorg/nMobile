@@ -106,7 +106,7 @@ class ClientCommon with Tag {
         return null;
       }
       // loop
-      await SettingsStorage().setSeedRpcServers([]);
+      await SettingsStorage.setSeedRpcServers([]);
       await Future.delayed(Duration(seconds: 1));
       return signIn(schema, walletDefault: walletDefault, onWalletOk: onWalletOk, pwd: pwd);
     }
@@ -132,7 +132,7 @@ class ClientCommon with Tag {
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
       logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-      SettingsStorage().addSeedRpcServers(event.rpcServers!);
+      SettingsStorage.addSeedRpcServers(event.rpcServers!);
       _statusSink.add(ClientConnectStatus.connected);
       if (!completer.isCompleted) completer.complete();
     });
