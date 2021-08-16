@@ -87,7 +87,7 @@ class WalletCommon with Tag {
 
   Future<int> getErc20GasPrice() async {
     final gasPrice = await _erc20client.getGasPrice;
-    return gasPrice.gwei.round();
+    return (gasPrice.gwei * 0.8).round();
   }
 
   queryBalance() {
