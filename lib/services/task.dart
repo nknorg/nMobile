@@ -20,12 +20,12 @@ class TaskService with Tag {
 
   TaskService();
 
-  install({bool isFirst = true}) {
+  init({bool isFirst = true}) {
     // listen
     if (isFirst) {
       application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
         if (states[1] == AppLifecycleState.resumed) {
-          install(isFirst: false);
+          init(isFirst: false);
         } else if (states[1] == AppLifecycleState.paused) {
           uninstall();
         }
