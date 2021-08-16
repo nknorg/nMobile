@@ -35,12 +35,11 @@ class Settings {
   static late int txPoolDelayMs = 3 * 60 * 1000; // 3m
 
   static init() async {
-    SettingsStorage settingsStorage = SettingsStorage();
     // load language
-    Settings.locale = (await settingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';
+    Settings.locale = (await SettingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';
     // load notification type
-    Settings.notificationType = (await settingsStorage.getSettings(SettingsStorage.NOTIFICATION_TYPE_KEY)) ?? NotificationType.only_name;
+    Settings.notificationType = (await SettingsStorage.getSettings(SettingsStorage.NOTIFICATION_TYPE_KEY)) ?? NotificationType.only_name;
     // load biometrics authentication
-    Settings.biometricsAuthentication = (await settingsStorage.getSettings(SettingsStorage.BIOMETRICS_AUTHENTICATION)) ?? false;
+    Settings.biometricsAuthentication = (await SettingsStorage.getSettings(SettingsStorage.BIOMETRICS_AUTHENTICATION)) ?? false;
   }
 }

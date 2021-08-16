@@ -32,7 +32,6 @@ class SettingsHomeScreen extends BaseStateFulWidget {
 
 class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
   SettingsBloc? _settingsBloc;
-  SettingsStorage _settingsStorage = SettingsStorage();
   String? _currentLanguage;
   String? _currentNotificationType;
   List<SelectListItem> _languageList = [];
@@ -242,31 +241,28 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                   WalletSchema? _wallet = await walletCommon.getDefault();
                                   if (_wallet == null || _wallet.address.isEmpty) {
                                     ModalDialog.of(this.context).confirm(
-                                      title: 'Wallet Info missing,Quit and ReImport', // TODO:GG locale wallet empty
+                                      title: 'Wallet Info missing, Quit and ReImport', // TODO:GG locale wallet empty
                                       hasCloseButton: true,
                                     );
                                     return;
                                   }
-                                  BottomDialog.of(context)
-                                      .showInput(
+                                  String? input = await BottomDialog.of(context).showInput(
                                     title: _localizations.verify_wallet_password,
                                     inputTip: _localizations.wallet_password,
                                     inputHint: _localizations.input_password,
                                     actionText: _localizations.continue_text,
                                     validator: Validator.of(context).password(),
                                     password: true,
-                                  )
-                                      .then((String? input) async {
-                                    String? pwd = await walletCommon.getPasswordNoCheck(_wallet.address);
-                                    if (input == null || input != pwd) {
-                                      Toast.show(S.of(context).tip_password_error);
-                                      return;
-                                    }
-                                    Settings.biometricsAuthentication = value;
-                                    _settingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
-                                    setState(() {
-                                      _biometricsSelected = value;
-                                    });
+                                  );
+                                  String? pwd = await walletCommon.getPassword(_wallet.address);
+                                  if (input == null || input != pwd) {
+                                    Toast.show(S.of(context).tip_password_error);
+                                    return;
+                                  }
+                                  Settings.biometricsAuthentication = value;
+                                  SettingsStorage.setSettings('${SettingsStorage.BIOMETRICS_AUTHENTICATION}', value);
+                                  setState(() {
+                                    _biometricsSelected = value;
                                   });
                                 })
                           ],
@@ -341,7 +337,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       }).then((type) {
                         if (type != null) {
                           Settings.notificationType = type as int;
-                          _settingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
+                          SettingsStorage.setSettings('${SettingsStorage.NOTIFICATION_TYPE_KEY}', type);
                           setState(() {
                             _currentNotificationType = _notificationTypeList.firstWhere((x) => x.value == Settings.notificationType).text;
                           });

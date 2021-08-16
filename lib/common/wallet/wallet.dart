@@ -42,6 +42,10 @@ class WalletCommon with Tag {
     return keystore;
   }
 
+  Future getPassword(String walletAddress) {
+    return _walletStorage.getPassword(walletAddress);
+  }
+
   Future<bool> isBackup({List? original}) async {
     List wallets = original ?? await _walletStorage.getWallets();
     // backups
@@ -72,10 +76,6 @@ class WalletCommon with Tag {
 
   Future<String?> getDefaultAddress() {
     return _walletStorage.getDefaultAddress();
-  }
-
-  Future getPasswordNoCheck(String walletAddress) {
-    return _walletStorage.getPassword(walletAddress);
   }
 
   bool isBalanceSame(WalletSchema? w1, WalletSchema? w2) {

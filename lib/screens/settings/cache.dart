@@ -68,8 +68,8 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
       Toast.show(S.of(context).input_password);
       return;
     }
-    String? pwd = await walletCommon.getPasswordNoCheck(address);
-    if (pwd != input) {
+    String? originalPwd = await walletCommon.getPassword(address);
+    if (originalPwd != input) {
       Toast.show(S.of(context).error_confirm_password);
       return;
     }

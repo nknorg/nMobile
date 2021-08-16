@@ -30,7 +30,6 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 }
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
-  SettingsStorage _settingsStorage = SettingsStorage();
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
@@ -141,7 +140,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // tip
-    _settingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
+    SettingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
       bool showed = value != null && value != "false" && value != false;
       setState(() {
         _isShowTip = !showed;
@@ -332,7 +331,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
             top: 10,
             child: InkWell(
               onTap: () {
-                _settingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
+                SettingsStorage.setSettings(SettingsStorage.CHAT_TIP_STATUS, true);
                 setState(() {
                   _isShowTip = false;
                 });

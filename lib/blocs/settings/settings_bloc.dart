@@ -8,8 +8,6 @@ import 'settings_state.dart';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   SettingsBloc() : super(SettingsInitial());
 
-  SettingsStorage _settingsStorage = SettingsStorage();
-
   @override
   Stream<SettingsState> mapEventToState(SettingsEvent event) async* {
     if (event is UpdateLanguage) {
@@ -24,6 +22,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   Future _setLanguage(String lang) async {
-    await _settingsStorage.setSettings(SettingsStorage.LOCALE_KEY, lang);
+    await SettingsStorage.setSettings(SettingsStorage.LOCALE_KEY, lang);
   }
 }
