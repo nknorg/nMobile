@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:web3dart/credentials.dart';
 
 class Validator {
   final BuildContext context;
@@ -79,8 +78,8 @@ class Validator {
         jsonOk = true;
       } on FormatException catch (e) {
         jsonOk = false;
+        debugPrintStack(label: e.toString());
       }
-
       return value.trim().length == 0 ? _localizations?.error_required : (!jsonOk ? _localizations?.error_keystore_format : null);
     };
   }
@@ -88,11 +87,12 @@ class Validator {
   keystoreETH() {
     return (value) {
       bool isValid = false;
-      try {
-        // TODO:GG eth keystore
-        // isValid = Ethereum.isKeystoreValid(value.trim());
-      } catch (e) {
-        handleError(e);
+      if (value.trim().length != 0) {
+        try {
+          isValid = Ethereum.isKeystoreValid(value.trim());
+        } catch (e) {
+          debugPrintStack(label: e.toString());
+        }
       }
       return value.trim().length == 0 ? _localizations?.error_required : (!isValid ? _localizations?.error_keystore_format : null);
     };
@@ -101,10 +101,12 @@ class Validator {
   addressNKN() {
     return (value) {
       bool addressFormat = false;
-      try {
-        addressFormat = verifyAddress(value.trim());
-      } catch (e) {
-        debugPrintStack(label: e.toString());
+      if (value.trim().length != 0) {
+        try {
+          addressFormat = verifyNknAddress(value.trim());
+        } catch (e) {
+          debugPrintStack(label: e.toString());
+        }
       }
       return value.trim().length == 0 ? _localizations?.error_required : (!addressFormat ? _localizations?.error_nkn_address_format : null);
     };
@@ -114,7 +116,7 @@ class Validator {
     return (value) {
       bool addressFormat = false;
       try {
-        addressFormat = verifyAddress(value.trim());
+        addressFormat = verifyNknAddress(value.trim());
       } catch (e) {
         debugPrintStack(label: e.toString());
       }
@@ -125,11 +127,12 @@ class Validator {
   addressETH() {
     return (value) {
       bool addressFormat = false;
-      try {
-        EthereumAddress.fromHex(value.trim());
-        addressFormat = true;
-      } catch (e) {
-        //debugPrintStack(label: e?.toString());
+      if (value.trim().length != 0) {
+        try {
+          addressFormat = verifyEthAddress(value);
+        } catch (e) {
+          debugPrintStack(label: e.toString());
+        }
       }
       return value.trim().length == 0 ? _localizations?.error_required : (!addressFormat ? _localizations?.error_nkn_address_format : null);
     };

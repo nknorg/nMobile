@@ -174,14 +174,14 @@ class WalletStorage with Tag {
 
   Future<String?> getDefaultAddress() async {
     String? address = await _localStorage.get('$KEY_DEFAULT_ADDRESS');
-    if (address == null || !verifyAddress(address)) {
+    if (address == null || !verifyNknAddress(address)) {
       List<WalletSchema> wallets = await getWallets();
       if (wallets.isEmpty) {
         logger.w("$TAG - getDefaultAddress - wallets.isEmpty");
         return null;
       }
       String? firstAddress = wallets[0].address;
-      if (!verifyAddress(firstAddress)) {
+      if (!verifyNknAddress(firstAddress)) {
         logger.w("$TAG - getDefaultAddress - !verifyAddress(firstAddress)");
         return null;
       }

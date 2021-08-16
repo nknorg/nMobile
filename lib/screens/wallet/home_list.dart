@@ -8,6 +8,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -112,22 +113,25 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
       if (schema.type == WalletType.eth) {
-        // TODO:GG eth export
-        // String keyStore = await ws.getKeystore();
-        // EthWallet ethWallet = Ethereum.restoreWallet(
-        //     name: ws.name, keystore: keyStore, password: password);
-        // Navigator.pop(this.context)
-        //     .pushNamed(NknWalletExportScreen.routeName, arguments: {
-        //   'wallet': null,
-        //   'keystore': ethWallet.keystore,
-        //   'address': (await ethWallet.address).hex,
-        //   'publicKey': ethWallet.pubkeyHex,
-        //   'seed': ethWallet.privateKeyHex,
-        //   'name': ethWallet.name,
-        // });
+        final eth = Ethereum.restoreByKeyStore(name: schema.name ?? "", keystore: keystore, password: password);
+        String ethAddress = (await eth.address).hex;
+        if (ethAddress.isEmpty || ethAddress != schema.address) {
+          Toast.show(_localizations.password_wrong);
+          return;
+        }
+
+        WalletExportScreen.go(
+          context,
+          WalletType.eth,
+          schema.name ?? "",
+          ethAddress,
+          eth.pubkeyHex,
+          eth.privateKeyHex,
+          eth.keystore,
+        );
       } else {
-        Wallet restore = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
-        if (restore.address.isEmpty || restore.address != schema.address) {
+        Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+        if (nkn.address.isEmpty || nkn.address != schema.address) {
           Toast.show(_localizations.password_wrong);
           return;
         }
@@ -136,10 +140,10 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
           context,
           WalletType.nkn,
           schema.name,
-          restore.address,
-          hexEncode(restore.publicKey),
-          hexEncode(restore.seed),
-          restore.keystore,
+          nkn.address,
+          hexEncode(nkn.publicKey),
+          hexEncode(nkn.seed),
+          nkn.keystore,
         );
       }
     }).onError((error, stackTrace) {

@@ -8,6 +8,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web3dart/credentials.dart';
 
 import 'hash.dart';
 
@@ -82,7 +83,7 @@ String genAddressVerifyCodeFromProgramHash(String programHash) {
   return hexEncode(Uint8List.fromList(verifyBytes));
 }
 
-bool verifyAddress(String address) {
+bool verifyNknAddress(String address) {
   try {
     Uint8List addressBytes = base58.decode(address);
     if (addressBytes.length != ADDRESS_LEN) {
@@ -98,6 +99,16 @@ bool verifyAddress(String address) {
     var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
     return addressVerifyCode == programHashVerifyCode;
   } catch (e) {
+    return false;
+  }
+}
+
+bool verifyEthAddress(String address) {
+  try {
+    EthereumAddress.fromHex(address.trim());
+    return true;
+  } catch (e) {
+    debugPrintStack(label: e.toString());
     return false;
   }
 }

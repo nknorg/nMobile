@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
@@ -10,6 +11,7 @@ import '../global.dart';
 
 class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
+  EthErc20Client _erc20client = EthErc20Client();
 
   WalletCommon();
 
@@ -83,32 +85,35 @@ class WalletCommon with Tag {
     return w1.balance == w2.balance && w1.balanceEth == w2.balanceEth;
   }
 
+  Future<int> getErc20GasPrice() async {
+    final gasPrice = await _erc20client.getGasPrice;
+    return gasPrice.gwei.round();
+  }
+
   queryBalance() {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
       logger.d("$TAG - queryBalance: START");
-      List<Future> futures = <Future>[];
       state.wallets.forEach((w) async {
         if (w.type == WalletType.eth) {
-          // TODO:GG eth balance query
-          // EthErc20Client _erc20client = EthErc20Client();
-          // futures.add(_erc20client.getBalance(address: w.address).then((balance) {
-          //   NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
-          //   w.balanceEth = balance.ether;
-          //   _walletsBloc.add(UpdateWallet(w));
-          // }));
-          // futures.add(
-          //     _erc20client.getNknBalance(address: w.address).then((balance) {
-          //       if (balance != null) {
-          //         NLog.w('Get Wallet:${w.name} | balance: ${balance.ether}');
-          //         w.balance = balance.ether;
-          //         _walletsBloc.add(UpdateWallet(w));
-          //       }
-          //     }));
+          _erc20client.getBalanceEth(address: w.address).then((balance) {
+            logger.d("$TAG - queryBalance: END - eth - balance_old:${w.balanceEth} - balance_new:${balance?.ether} - wallet_address:${w.address}");
+            if (balance != null && w.balanceEth != (balance.ether as double?)) {
+              w.balanceEth = balance.ether as double?;
+              _walletBloc.add(UpdateWallet(w));
+            }
+          });
+          _erc20client.getBalanceNkn(address: w.address).then((balance) {
+            logger.d("$TAG - queryBalance: END - eth_nkn - balance_old:${w.balanceEth} - balance_new:${balance?.ether} - wallet_address:${w.address}");
+            if (balance != null && w.balanceEth != (balance.ether as double?)) {
+              w.balance = balance.ether as double?;
+              _walletBloc.add(UpdateWallet(w));
+            }
+          });
         } else {
           Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: await Global.getSeedRpcList())).then((balance) {
-            logger.d("$TAG - queryBalance: END - balance_old:${w.balance} - balance_new:$balance - nkn_address:${w.address}");
+            logger.d("$TAG - queryBalance: END - nkn - balance_old:${w.balance} - balance_new:$balance - wallet_address:${w.address}");
             if (w.balance != balance) {
               w.balance = balance;
               _walletBloc.add(UpdateWallet(w));

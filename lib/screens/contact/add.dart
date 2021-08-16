@@ -85,7 +85,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
 
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
-    if (walletAddress == null || !verifyAddress(walletAddress)) {
+    if (walletAddress == null || !verifyNknAddress(walletAddress)) {
       ModalDialog.of(this.context).show(
         content: S.of(this.context).error_unknown_nkn_qrcode,
         hasCloseButton: true,
