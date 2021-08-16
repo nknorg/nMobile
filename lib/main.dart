@@ -40,22 +40,17 @@ void main() async {
   setupLocator();
 
   // init
-  application.registerInitialize(() async {
-    Routes.init();
-    Global.init();
-    Settings.init();
-  });
+  application.registerInitialize(() => Routes.init());
+  application.registerInitialize(() => Global.init());
+  application.registerInitialize(() => Settings.init());
   await application.initialize();
 
   // mounted
+  application.registerMounted(() => taskService.init());
+  application.registerMounted(() => localNotification.init());
+  // application.registerMounted(() => backgroundFetchService.install());
   application.registerMounted(() async {
-    taskService.install();
-    localNotification.init();
-    // backgroundFetchService.install();
-  });
-  application.registerMounted(() async {
-    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
-    _walletBloc.add(LoadWallet());
+    BlocProvider.of<WalletBloc>(Global.appContext).add(LoadWallet());
   });
 
   // error
