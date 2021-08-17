@@ -16,6 +16,7 @@ import 'package:uuid/uuid.dart';
 import 'contact.dart';
 
 class MessageContentType {
+  static const String ping = 'ping'; // .
   // static const String system = 'system';
   static const String receipt = 'receipt'; // status
   // static const String read = 'read'; // status
@@ -183,6 +184,16 @@ class MessageStatus {
 }
 
 class MessageData {
+  static String getPing(bool isOutbound) {
+    Map map = {
+      'id': Uuid().v4(),
+      'contentType': MessageContentType.ping,
+      'content': isOutbound ? "ping" : "pong",
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    return jsonEncode(map);
+  }
+
   static String getReceipt(String msgId) {
     Map map = {
       'id': Uuid().v4(),
@@ -285,6 +296,7 @@ class MessageData {
     Map data = {
       'id': Uuid().v4(),
       'contentType': MessageContentType.deviceRequest,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -298,6 +310,7 @@ class MessageData {
       'appVersion': Global.build,
       'platform': PlatformName.get(),
       'platformVersion': Global.deviceVersion,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -534,16 +547,16 @@ class MessageSchema extends Equatable {
       case MessageContentType.deviceRequest:
         schema.content = data;
         break;
-      // case ContentType.text:
-      // case ContentType.textExtension:
-      // case ContentType.media:
-      // case ContentType.image:
-      // case ContentType.nknImage:
-      // case ContentType.audio:
-      // case ContentType.piece:
-      // case ContentType.topicSubscribe:
-      // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
+      // case MessageContentType.ping:
+      // case MessageContentType.text:
+      // case MessageContentType.textExtension:
+      // case MessageContentType.media:
+      // case MessageContentType.image:
+      // case MessageContentType.audio:
+      // case MessageContentType.piece:
+      // case MessageContentType.topicSubscribe:
+      // case MessageContentType.topicUnsubscribe:
+      // case MessageContentType.topicInvitation:
       default:
         schema.content = data['content'];
         break;
@@ -656,15 +669,12 @@ class MessageSchema extends Equatable {
 
     // content = String
     switch (contentType) {
-      // case ContentType.receipt:
       case MessageContentType.contact:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
       case MessageContentType.deviceInfo:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
-      // case ContentType.text:
-      // case ContentType.textExtension:
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
@@ -673,9 +683,13 @@ class MessageSchema extends Equatable {
           map['content'] = Path.getLocalFile((content as File).path);
         }
         break;
-      // case ContentType.topicSubscribe:
-      // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
+      // case MessageContentType.ping:
+      // case MessageContentType.receipt:
+      // case MessageContentType.text:
+      // case MessageContentType.textExtension:
+      // case MessageContentType.topicSubscribe:
+      // case MessageContentType.topicUnsubscribe:
+      // case MessageContentType.topicInvitation:
       default:
         map['content'] = content;
         break;
@@ -721,8 +735,6 @@ class MessageSchema extends Equatable {
           schema.content = e['content'];
         }
         break;
-      // case ContentType.text:
-      // case ContentType.textExtension:
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
@@ -730,9 +742,12 @@ class MessageSchema extends Equatable {
         String? completePath = Path.getCompleteFile(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
-      // case ContentType.topicSubscribe:
-      // case ContentType.topicUnsubscribe:
-      // case ContentType.topicInvitation:
+      // case MessageContentType.ping:
+      // case MessageContentType.text:
+      // case MessageContentType.textExtension:
+      // case MessageContentType.topicSubscribe:
+      // case MessageContentType.topicUnsubscribe:
+      // case MessageContentType.topicInvitation:
       default:
         schema.content = e['content'];
         break;
