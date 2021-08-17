@@ -24,10 +24,12 @@ class TaskService with Tag {
     // listen
     if (isFirst) {
       application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-        if (states[1] == AppLifecycleState.resumed) {
-          init(isFirst: false);
-        } else if (states[1] == AppLifecycleState.paused) {
-          uninstall();
+        if (states.length > 0) {
+          if (states[states.length - 1] == AppLifecycleState.resumed) {
+            init(isFirst: false);
+          } else if (states[1] == AppLifecycleState.paused) {
+            uninstall();
+          }
         }
       });
     }
