@@ -90,6 +90,9 @@ class ChatInCommon with Tag {
     // message
     bool receiveOk = false;
     switch (received.contentType) {
+      case MessageContentType.ping:
+        _receivePing(received); // await
+        break;
       case MessageContentType.receipt:
         _receiveReceipt(received); // await
         break;
@@ -144,6 +147,33 @@ class ChatInCommon with Tag {
       // not handle in messages screen
       chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead); // await
     }
+  }
+
+  // NO DB NO display NO topic (1 to 1)
+  Future<bool> _receivePing(MessageSchema received) async {
+    // if (received.isTopic) return; (limit in out)
+    if (received.from == received.to || received.from == clientCommon.address) {
+      logger.i("$TAG - _receivePing - ping self receive - received:$received");
+      await clientCommon.pingSuccess();
+      return true;
+    }
+    if (received.content! is String) {
+      logger.w("$TAG - _receivePing - content type error - received:$received");
+      return false;
+    }
+    String content = received.content as String;
+    if (content == "ping") {
+      logger.i("$TAG - _receivePing - replay others ping - received:$received");
+      await chatOutCommon.sendPing(received.from, false);
+    } else if (content == "pong") {
+      logger.i("$TAG - _receivePing - receive others ping - received:$received");
+      // TODO:GG check received.sendTime
+      // TODO:GG other client status
+    } else {
+      logger.w("$TAG - _receivePing - content content error - received:$received");
+      return false;
+    }
+    return true;
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -343,7 +373,7 @@ class ChatInCommon with Tag {
       exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
     } else {
       // SUPPORT:START
-      exists = await _messageStorage.queryList(received.msgId); // old version will send type nknImage/media/image
+      exists = await _messageStorage.queryList(received.msgId); // old version will send type media/image
       // SUPPORT:END
     }
     if (exists.isNotEmpty) {

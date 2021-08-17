@@ -37,9 +37,9 @@ class ClientCommon with Tag {
 
   Uint8List? get publicKey => client?.publicKey;
 
-  int signInAt = 0;
-
   late int status;
+
+  int signInAt = 0;
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -160,5 +160,16 @@ class ClientCommon with Tag {
     client = null;
     // close DB
     await db?.close();
+  }
+
+  Future connectCheck() async {
+    if (status != ClientConnectStatus.connected) return;
+    _statusSink.add(ClientConnectStatus.connecting);
+    await chatOutCommon.sendPing(address, true);
+  }
+
+  Future pingSuccess() async {
+    if (status != ClientConnectStatus.connecting) return;
+    _statusSink.add(ClientConnectStatus.connected);
   }
 }

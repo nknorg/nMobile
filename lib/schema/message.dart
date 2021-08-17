@@ -184,11 +184,11 @@ class MessageStatus {
 }
 
 class MessageData {
-  static String getPing(bool isOutbound) {
+  static String getPing(bool isPing) {
     Map map = {
       'id': Uuid().v4(),
       'contentType': MessageContentType.ping,
-      'content': isOutbound ? "ping" : "pong",
+      'content': isPing ? "ping" : "pong",
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(map);
