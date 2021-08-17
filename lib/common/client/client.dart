@@ -128,7 +128,7 @@ class ClientCommon with Tag {
       _onErrorSink.add(event);
     });
 
-    // client connect
+    // client connect (just listen once)
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
       logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");

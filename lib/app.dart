@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/utils/logger.dart';
 
+import 'common/client/client.dart';
 import 'common/global.dart';
 import 'common/locator.dart';
 import 'components/layout/nav.dart';
@@ -41,6 +43,11 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   late PageController _pageController;
 
+  StreamSubscription? _appLifeChangeSubscription;
+  StreamSubscription? _clientStatusChangeSubscription;
+
+  bool firstConnected = true;
+
   @override
   void initState() {
     super.initState();
@@ -52,10 +59,31 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
+
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      if (states.length > 0) {
+        if (states[states.length - 1] == AppLifecycleState.resumed) {
+          if (!firstConnected) {
+            clientCommon.connectCheck();
+          }
+        }
+      }
+    });
+
+    // client
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if (status == ClientConnectStatus.connected) {
+        topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
+        firstConnected = false;
+      }
+    });
   }
 
   @override
   void dispose() {
+    _appLifeChangeSubscription?.cancel();
+    _clientStatusChangeSubscription?.cancel();
     _pageController.dispose();
     WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
