@@ -268,7 +268,7 @@ class MessageStorage with Tag {
   //       tableName,
   //       columns: ['*'],
   //       where: 'is_outbound = ? AND is_read = ?', // AND NOT type = ?', // AND NOT type = ?',
-  //       whereArgs: [0, 0], // , ContentType.piece], // , ContentType.receipt],
+  //       whereArgs: [0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
   //     );
   //     if (res == null || res.isEmpty) {
   //       logger.v("$TAG - queryListUnRead - empty");
@@ -295,7 +295,7 @@ class MessageStorage with Tag {
         tableName,
         columns: ['COUNT(id)'],
         where: 'is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
-        whereArgs: [0, 0], // , ContentType.piece], // , ContentType.receipt],
+        whereArgs: [0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCount - count:$count");
@@ -313,7 +313,7 @@ class MessageStorage with Tag {
         tableName,
         columns: ['*'],
         where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', // AND NOT type = ?',
-        whereArgs: [targetId, 0, 0], // , ContentType.piece], // , ContentType.receipt],
+        whereArgs: [targetId, 0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
       );
       if (res == null || res.isEmpty) {
         logger.v("$TAG - queryListUnReadByTargetId - empty - targetId:$targetId");
@@ -341,7 +341,7 @@ class MessageStorage with Tag {
         tableName,
         columns: ['COUNT(id)'],
         where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
-        whereArgs: [targetId, 0, 0], // , ContentType.piece], // , ContentType.receipt],
+        whereArgs: [targetId, 0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
