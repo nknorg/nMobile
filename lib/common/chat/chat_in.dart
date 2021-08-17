@@ -352,7 +352,10 @@ class ChatInCommon with Tag {
     }
     // File
     received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null, chatTarget: received.from);
-    if (received.content == null) return false;
+    if (received.content == null) {
+      logger.w("$TAG - receiveImage - content is null - message:$exists");
+      return false;
+    }
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
@@ -384,7 +387,10 @@ class ChatInCommon with Tag {
     }
     // File
     received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null, chatTarget: received.from);
-    if (received.content == null) return false;
+    if (received.content == null) {
+      logger.w("$TAG - receiveAudio - content is null - message:$exists");
+      return false;
+    }
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
@@ -407,7 +413,10 @@ class ChatInCommon with Tag {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
       piece = await _messageStorage.insert(received);
     }
-    if (piece == null) return false;
+    if (piece == null) {
+      logger.w("$TAG - receivePiece - piece is null - message:$received");
+      return false;
+    }
     // pieces
     int total = piece.total ?? ChatOutCommon.maxPiecesTotal;
     int parity = piece.parity ?? (total ~/ ChatOutCommon.piecesParity);
