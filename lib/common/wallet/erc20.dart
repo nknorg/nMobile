@@ -35,6 +35,7 @@ class WalletEth with Tag {
 
   BigInt get pubkeyInt => bytesToInt(pubkeyBytes);
 
+  // FUTURE:some stuck
   String get keystore => raw.toJson();
 }
 
@@ -45,6 +46,7 @@ class Ethereum {
     return WalletEth(name, raw);
   }
 
+  // FUTURE:some stuck
   static WalletEth restoreByKeyStore({required String name, required String keystore, required String password}) {
     try {
       Wallet wallet = Wallet.fromJson(keystore, password);

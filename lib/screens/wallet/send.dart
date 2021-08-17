@@ -52,6 +52,7 @@ class WalletSendScreen extends BaseStateFulWidget {
 
 class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
+
   late WalletSchema _wallet;
   final _ethClient = EthErc20Client();
 
@@ -105,8 +106,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _init(bool eth) async {
     if (eth) {
-      _gasPriceInGwei = await walletCommon.getErc20GasPrice();
-      logger.d('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
+      final gasPrice = await _ethClient.getGasPrice;
+      _gasPriceInGwei = (gasPrice.gwei * 0.8).round();
+      logger.i('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
     } else {
       _feeController.text = _fee.toString();
     }
@@ -225,9 +227,13 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return false;
       }
 
-      double? balance = (_ethTrueTokenFalse ? (await _ethClient.getBalanceEth(address: _sendTo!)) : (await _ethClient.getBalanceNkn(address: _sendTo!)))?.ether as double?;
-      double tradeTotal = (double.tryParse(amount) ?? 0); //  + (double.tryParse(fee) ?? 0);
-      if (balance == null || balance < tradeTotal) {
+      double? balanceEth = (await _ethClient.getBalanceEth(address: ethAddress))?.ether as double?;
+      double? balanceNkn = (await _ethClient.getBalanceNkn(address: ethAddress))?.ether as double?;
+      double? balance = _ethTrueTokenFalse ? balanceEth : balanceNkn;
+      double tradeAmount = double.tryParse(amount) ?? 0;
+      // double tradeFee = (double.tryParse(fee) ?? 0);
+      double tradeTotal = tradeAmount; // + tradeFee
+      if (tradeAmount <= 0 || balance == null || balance < tradeTotal) {
         Toast.show("余额不足"); // TODO:GG locale balance
         return false;
       }
@@ -274,8 +280,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
 
       double balance = await nkn.getBalance();
-      double tradeTotal = (double.tryParse(amount) ?? 0) + (double.tryParse(fee) ?? 0);
-      if (balance < tradeTotal) {
+      double tradeAmount = double.tryParse(amount) ?? 0;
+      double tradeFee = (double.tryParse(fee) ?? 0);
+      double tradeTotal = tradeAmount + tradeFee;
+      if (tradeAmount <= 0 || balance < tradeTotal) {
         Toast.show("余额不足"); // TODO:GG locale balance
         return false;
       }
