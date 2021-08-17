@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -30,8 +29,6 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 }
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
-  StreamSubscription? _appLifeChangeSubscription;
-  StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
@@ -46,7 +43,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   List<SessionSchema> _sessionList = [];
 
   bool _isShowTip = true;
-  bool firstConnected = true;
 
   @override
   void onRefreshArguments() {
@@ -60,20 +56,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   void initState() {
     super.initState();
-
-    // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      // do something
-    });
-
-    // client
-    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if (status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
-        firstConnected = false;
-      }
-    });
-
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
       if (_sessionList.where((element) => element.targetId == event.targetId).toList().isEmpty) {
@@ -157,8 +139,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   @override
   void dispose() {
-    _appLifeChangeSubscription?.cancel();
-    _clientStatusChangeSubscription?.cancel();
     _contactCurrentUpdateSubscription?.cancel();
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
