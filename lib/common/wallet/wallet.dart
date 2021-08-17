@@ -85,11 +85,6 @@ class WalletCommon with Tag {
     return w1.balance == w2.balance && w1.balanceEth == w2.balanceEth;
   }
 
-  Future<int> getErc20GasPrice() async {
-    final gasPrice = await _erc20client.getGasPrice;
-    return (gasPrice.gwei * 0.8).round();
-  }
-
   queryBalance() {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
