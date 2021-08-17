@@ -71,13 +71,14 @@ class ChatMessageItem extends StatelessWidget {
     }
 
     switch (this.message.contentType) {
-      // case ContentType.receipt:
-      // case ContentType.contact:
+      // case MessageContentType.ping:
+      // case MessageContentType.receipt:
+      // case MessageContentType.contact:
       case MessageContentType.contactOptions:
         contentsWidget.add(_contactOptionsWidget(context));
         break;
-      // case ContentType.deviceRequest:
-      // case ContentType.deviceInfo:
+      // case MessageContentType.deviceRequest:
+      // case MessageContentType.deviceInfo:
       case MessageContentType.text:
       case MessageContentType.textExtension:
       case MessageContentType.media:
@@ -94,7 +95,7 @@ class ChatMessageItem extends StatelessWidget {
           ),
         );
         break;
-      // case ContentType.piece:
+      // case MessageContentType.piece:
       case MessageContentType.topicSubscribe:
         contentsWidget.add(_topicSubscribeWidget(context));
         break;
