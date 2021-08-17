@@ -45,6 +45,22 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
+  Future sendPing(String? clientAddress, bool isPing, {int tryCount = 1}) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    if (tryCount > 3) return;
+    try {
+      String data = MessageData.getPing(isPing);
+      await chatCommon.clientSendData(clientAddress, data);
+      logger.d("$TAG - sendPing - success - data:$data");
+    } catch (e) {
+      handleError(e);
+      logger.w("$TAG - sendPing - fail - tryCount:$tryCount - clientAddress:$clientAddress - isPing:$isPing");
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendPing(clientAddress, isPing, tryCount: ++tryCount);
+      });
+    }
+  }
+
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
@@ -659,21 +675,20 @@ class ChatOutCommon with Tag {
 
     String content = localizations.you_have_new_message;
     // switch (message.contentType) {
-    //   case ContentType.text:
-    //   case ContentType.textExtension:
+    //   case MessageContentType.text:
+    //   case MessageContentType.textExtension:
     //     content = message.content;
     //     break;
-    //   case ContentType.media:
-    //   case ContentType.image:
-    //   case ContentType.nknImage:
+    //   case MessageContentType.media:
+    //   case MessageContentType.image:
     //     content = '[${localizations.image}]';
     //     break;
-    //   case ContentType.audio:
+    //   case MessageContentType.audio:
     //     content = '[${localizations.audio}]';
     //     break;
-    //   case ContentType.topicSubscribe:
-    //   case ContentType.topicUnsubscribe:
-    //   case ContentType.topicInvitation:
+    //   case MessageContentType.topicSubscribe:
+    //   case MessageContentType.topicUnsubscribe:
+    //   case MessageContentType.topicInvitation:
     //     break;
     // }
 
