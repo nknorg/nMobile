@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nmobile/common/client/client.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -235,18 +238,37 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     if (_sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
-    if (_isShowTip) {
-      return Column(
-        children: [
-          _getTipView(),
-          Expanded(
-            child: _sessionListView(),
+    return Column(
+      children: [
+        _getClientStatusView(),
+        _isShowTip ? _getTipView() : SizedBox.shrink(),
+        Expanded(
+          child: _sessionListView(),
+        ),
+      ],
+    );
+  }
+
+  _getClientStatusView() {
+    return StreamBuilder<int>(
+      stream: clientCommon.statusStream,
+      initialData: clientCommon.status,
+      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+        if (snapshot.data != ClientConnectStatus.connecting) {
+          return SizedBox.shrink();
+        }
+        return Container(
+          width: double.infinity,
+          height: Global.screenWidth() / 25 + 20,
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: application.theme.backgroundColor6.withAlpha(150), width: 0.5))),
+          // color: application.theme.backgroundColor6,
+          child: SpinKitThreeBounce(
+            color: application.theme.backgroundColor5.withAlpha(100),
+            size: Global.screenWidth() / 25,
           ),
-        ],
-      );
-    } else {
-      return _sessionListView();
-    }
+        );
+      },
+    );
   }
 
   _getTipView() {
