@@ -137,8 +137,6 @@ class ClientCommon with Tag {
       if (!completer.isCompleted) completer.complete();
     });
 
-    // TODO:GG client disconnect/reconnect listen (action statusSink.add) (effect message send / receive)
-
     // client messages_receive
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
       logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
