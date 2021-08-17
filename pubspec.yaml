@@ -40,7 +40,7 @@ dependencies:
   flutter_bloc: ^7.1.0
   equatable: ^2.0.3
   dio: ^4.0.0
-  get_it: ^7.1.3
+  get_it: ^7.2.0
   uuid: ^3.0.4
   crypto: ^3.0.1
   mime_type: ^1.0.0
@@ -80,7 +80,7 @@ dependencies:
 
   # audio
   audioplayers: ^0.19.1
-  flutter_sound: ^8.1.4
+  flutter_sound: ^8.3.9
 
   # file
   path: ^1.8.0
