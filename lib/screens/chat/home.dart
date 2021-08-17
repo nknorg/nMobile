@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -36,7 +38,12 @@ class ChatHomeScreen extends BaseStateFulWidget {
 class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware {
   GlobalKey _floatingActionKey = GlobalKey();
 
+  StreamSubscription? _appLifeChangeSubscription;
+  StreamSubscription? _clientStatusChangeSubscription;
+
   ContactSchema? _contactMe;
+
+  bool firstConnected = true;
 
   @override
   void onRefreshArguments() {}
@@ -44,6 +51,25 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      if (states.length > 0) {
+        if (states[states.length - 1] == AppLifecycleState.resumed) {
+          if (!firstConnected) {
+            clientCommon.connectCheck();
+          }
+        }
+      }
+    });
+
+    // client status
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if (status == ClientConnectStatus.connected) {
+        topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
+        firstConnected = false;
+      }
+    });
+
     // listen
     contactCommon.meUpdateStream.listen((event) {
       setState(() {
@@ -96,6 +122,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   @override
   void dispose() {
+    _appLifeChangeSubscription?.cancel();
+    _clientStatusChangeSubscription?.cancel();
     Routes.routeObserver.unsubscribe(this);
     super.dispose();
   }
