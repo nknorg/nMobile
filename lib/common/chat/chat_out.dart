@@ -211,7 +211,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
-    if (content == null || (!await content.exists())) return null;
+    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
@@ -234,7 +234,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
-    if (content == null || (!await content.exists())) return null;
+    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
       Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
