@@ -15,6 +15,18 @@ import 'package:uuid/uuid.dart';
 
 import 'contact.dart';
 
+class MessageStatus {
+  // send
+  static const int Sending = 100;
+  static const int SendFail = 110;
+  static const int SendSuccess = 120;
+  static const int SendReceipt = 130;
+  // receive
+  static const int Received = 200;
+  // common
+  static const int Read = 310;
+}
+
 class MessageContentType {
   static const String ping = 'ping'; // .
   // static const String system = 'system';
@@ -48,13 +60,14 @@ class MessageOptions {
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
-  static const KEY_PARENT_TYPE = "parentType";
-  static const KEY_BYTES_LENGTH = "bytesLength";
-  static const KEY_PARITY = "parity";
-  static const KEY_TOTAL = "total";
-  static const KEY_INDEX = "index";
+  static const KEY_FROM_PIECE = "from_piece";
 
-  static const KEY_PARENT_PIECE = "parent_piece";
+  static const KEY_PIECE = 'piece';
+  static const KEY_PIECE_PARENT_TYPE = "parentType";
+  static const KEY_PIECE_BYTES_LENGTH = "bytesLength";
+  static const KEY_PIECE_PARITY = "parity";
+  static const KEY_PIECE_TOTAL = "total";
+  static const KEY_PIECE_INDEX = "index";
 
   static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
     if (message.options == null) message.options = Map<String, dynamic>();
@@ -96,110 +109,25 @@ class MessageOptions {
     var deviceToken = message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
     return deviceToken;
   }
-
-  static Map<String, dynamic> createPiece(MessageSchema message) {
-    return {
-      KEY_PARENT_TYPE: message.parentType,
-      KEY_BYTES_LENGTH: message.bytesLength,
-      KEY_TOTAL: message.total,
-      KEY_PARITY: message.parity,
-      KEY_INDEX: message.index,
-    };
-  }
-
-  static Map<String, dynamic>? clearPiece(Map<String, dynamic>? options) {
-    options?.remove(KEY_PARENT_TYPE);
-    options?.remove(KEY_BYTES_LENGTH);
-    options?.remove(KEY_TOTAL);
-    options?.remove(KEY_PARITY);
-    options?.remove(KEY_INDEX);
-    return options;
-  }
-}
-
-class MessageStatus {
-  static const int Sending = 100;
-  static const int SendFail = 110;
-  static const int SendSuccess = 120;
-  static const int SendWithReceipt = 130;
-  static const int Received = 200;
-  static const int ReceivedRead = 210;
-
-  static MessageSchema set(MessageSchema message, int status) {
-    if (status == Sending) {
-      message.isOutbound = true;
-      message.isSendError = false;
-      message.isSuccess = false;
-      message.isRead = false;
-    } else if (status == SendFail) {
-      message.isOutbound = true;
-      message.isSendError = true;
-      message.isSuccess = false;
-      message.isRead = false;
-    } else if (status == SendSuccess) {
-      message.isOutbound = true;
-      message.isSendError = false;
-      message.isSuccess = true;
-      message.isRead = false;
-    } else if (status == SendWithReceipt) {
-      message.isOutbound = true;
-      message.isSendError = false;
-      message.isSuccess = true;
-      message.isRead = true;
-    }
-    if (status == Received) {
-      message.isOutbound = false;
-      message.isSendError = false;
-      message.isSuccess = true;
-      message.isRead = false;
-    } else if (status == ReceivedRead) {
-      message.isOutbound = false;
-      message.isSendError = false;
-      message.isSuccess = true;
-      message.isRead = true;
-    }
-    return message;
-  }
-
-  static int get(MessageSchema message) {
-    if (message.isOutbound) {
-      if (message.isSendError) {
-        // || message.pid == null
-        return SendFail;
-      } else if (message.isSuccess && message.isRead) {
-        return SendWithReceipt;
-      } else if (message.isSuccess) {
-        return SendSuccess;
-      } else {
-        return Sending;
-      }
-    } else {
-      if (message.isRead) {
-        return ReceivedRead;
-      } else {
-        return Received;
-      }
-    }
-  }
 }
 
 class MessageData {
   static String getPing(bool isPing) {
     Map map = {
       'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.ping,
       'content': isPing ? "ping" : "pong",
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(map);
   }
 
-  static String getReceipt(String msgId) {
+  static String getReceipt(String targetId) {
     Map map = {
       'id': Uuid().v4(),
-      'contentType': MessageContentType.receipt,
-      'targetID': msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.receipt,
+      'targetID': targetId,
     };
     return jsonEncode(map);
   }
@@ -207,6 +135,7 @@ class MessageData {
   static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contact,
       'requestType': requestType,
       'version': profileVersion,
@@ -218,6 +147,7 @@ class MessageData {
   static String getContactResponseHeader(String? profileVersion, int expiresAt) {
     Map data = {
       'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contact,
       'responseType': RequestType.header,
       'version': profileVersion,
@@ -232,6 +162,7 @@ class MessageData {
   static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
     Map data = {
       'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contact,
       'responseType': RequestType.full,
       'version': profileVersion,
@@ -264,6 +195,7 @@ class MessageData {
     int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contactOptions,
       'optionType': '0',
       'content': {
@@ -273,7 +205,6 @@ class MessageData {
         'updateBurnAfterTime': updateBurnAfterAt,
         // SUPPORT:END
       },
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -282,12 +213,12 @@ class MessageData {
     String? deviceToken = MessageOptions.getDeviceToken(message);
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contactOptions,
       'optionType': '1',
       'content': {
         'deviceToken': deviceToken,
       },
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -295,8 +226,8 @@ class MessageData {
   static String getDeviceRequest() {
     Map data = {
       'id': Uuid().v4(),
-      'contentType': MessageContentType.deviceRequest,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.deviceRequest,
     };
     return jsonEncode(data);
   }
@@ -304,13 +235,13 @@ class MessageData {
   static String getDeviceInfo() {
     Map data = {
       'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.deviceInfo,
       'deviceId': Global.deviceId,
       'appName': Settings.appName,
       'appVersion': Global.build,
       'platform': PlatformName.get(),
       'platformVersion': Global.deviceVersion,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -318,9 +249,9 @@ class MessageData {
   static String getText(MessageSchema message) {
     Map map = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     if (message.isTopic) {
       map['topic'] = message.topic;
@@ -337,9 +268,9 @@ class MessageData {
     String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -358,9 +289,9 @@ class MessageData {
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -374,14 +305,14 @@ class MessageData {
   static String getPiece(MessageSchema message) {
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'parentType': message.parentType ?? message.contentType,
-      'bytesLength': message.bytesLength,
-      'total': message.total,
-      'parity': message.parity,
-      'index': message.index,
+      'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
+      'bytesLength': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
+      'total': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL],
+      'parity': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY],
+      'index': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX],
     };
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -395,9 +326,9 @@ class MessageData {
   static String getTopicSubscribe(MessageSchema message) {
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicSubscribe,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -405,9 +336,9 @@ class MessageData {
   static String getTopicUnSubscribe(MessageSchema message) {
     Map data = {
       'id': message.msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicUnsubscribe,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -415,9 +346,9 @@ class MessageData {
   static String getTopicInvitee(MessageSchema message) {
     Map data = {
       'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.topicInvitation,
       'content': message.content,
-      'timestamp': message.sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -425,10 +356,10 @@ class MessageData {
   static String getTopicKickOut(MessageSchema message) {
     Map data = {
       'id': message.msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicKickOut,
       'content': message.content,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
     return jsonEncode(data);
   }
@@ -441,42 +372,37 @@ class MessageSchema extends Equatable {
   String? to; // <-> receiver / -> target_id(session_id)
   String? topic; // <-> topic / -> target_id(session_id)
 
+  int status; // <-> status
+  bool isOutbound; // <-> is_outbound
+  bool isDelete; // <-> is_delete
+
+  int? sendAt; // <-> send_at
+  int? receiveAt; // <-> receive_at
+  int? deleteAt; // <-> delete_at
+
   String contentType; // (required) <-> type
   dynamic content; // <-> content
   Map<String, dynamic>? options; // <-> options
 
-  // TODO:GG time -> at
-  DateTime? sendTime; // <-> send_time
-  DateTime? receiveTime; // <-> receive_time
-  DateTime? deleteTime; // <-> delete_time
-
-  // TODO:GG merge to one field ??? (status)
-  bool isOutbound = false; // <-> is_outbound
-  bool isSendError = false; // <-> is_send_error
-  bool isSuccess = false; // <-> is_success
-  bool isRead = false; // <-> is_read
-
-  // TODO:GG move to options?
-  String? parentType;
-  int? bytesLength;
-  int? total;
-  int? parity;
-  int? index;
-
-  MessageSchema(
-    this.msgId,
-    this.from,
-    this.contentType, {
+  MessageSchema({
     this.pid,
+    required this.msgId,
+    required this.from,
     this.to,
     this.topic,
+    // status
+    required this.status,
+    required this.isOutbound,
+    this.isDelete = false,
+    // at
+    required this.sendAt,
+    this.receiveAt,
+    this.deleteAt,
+    // data
+    required this.contentType,
     this.content,
     this.options,
-    this.sendTime,
-  }) {
-    if (msgId.isEmpty) msgId = Uuid().v4();
-    if (sendTime == null) sendTime = DateTime.now();
-  }
+  });
 
   String? get targetId {
     return isTopic ? topic : (isOutbound ? to : from);
@@ -510,10 +436,6 @@ class MessageSchema extends Equatable {
     return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
   }
 
-  bool get needReceipt {
-    return contentType == MessageContentType.contactOptions || contentType == MessageContentType.text || contentType == MessageContentType.textExtension || contentType == MessageContentType.media || contentType == MessageContentType.image || contentType == MessageContentType.audio || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicInvitation;
-  }
-
   ContactSchema? contact;
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     if (contact != null) return contact;
@@ -528,12 +450,21 @@ class MessageSchema extends Equatable {
     Map<String, dynamic>? data = jsonFormat(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
     MessageSchema schema = MessageSchema(
-      data['id'] ?? "",
-      raw.src ?? "",
-      data['contentType'] ?? "",
       pid: raw.messageId,
+      msgId: data['id'] ?? "",
+      from: raw.src ?? "",
       to: clientCommon.address,
       topic: data['topic'],
+      // status
+      status: MessageStatus.Received,
+      isOutbound: false,
+      isDelete: false,
+      // at
+      sendAt: data['timestamp'] != null ? data['timestamp'] : null,
+      receiveAt: DateTime.now().millisecondsSinceEpoch,
+      deleteAt: null, // set in messages bubble
+      // data
+      contentType: data['contentType'] ?? "",
       options: data['options'],
     );
 
@@ -562,81 +493,110 @@ class MessageSchema extends Equatable {
         break;
     }
 
-    if (data['timestamp'] != null) {
-      schema.sendTime = DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
+    if (schema.options == null) {
+      schema.options = Map();
     }
-    schema.receiveTime = DateTime.now();
-    schema.deleteTime = null; // set in messages bubble
 
-    schema = MessageStatus.set(schema, MessageStatus.Received);
-
-    schema.parentType = data['parentType'];
-    schema.bytesLength = data['bytesLength'];
-    schema.total = data['total'];
-    schema.parity = data['parity'];
-    schema.index = data['index'];
+    // piece
+    if (data['parentType'] != null || data['total'] != null) {
+      if (schema.options![MessageOptions.KEY_PIECE] == null) {
+        schema.options![MessageOptions.KEY_PIECE] = Map();
+      }
+      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] = data['parentType'];
+      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = data['bytesLength'];
+      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
+      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
+      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
+    }
 
     return schema;
   }
 
-  static MessageSchema fromPieces(List<MessageSchema> sortPieces, String base64String) {
+  static MessageSchema fromPiecesReceive(List<MessageSchema> sortPieces, String base64String) {
     MessageSchema piece = sortPieces.firstWhere((element) => element.pid != null);
 
     MessageSchema combine = MessageSchema(
-      piece.msgId,
-      piece.from,
-      piece.parentType ?? "",
       pid: piece.pid,
-      topic: piece.topic,
+      msgId: piece.msgId,
+      from: piece.from,
       to: piece.to,
+      topic: piece.topic,
+      // status
+      status: MessageStatus.Received,
+      isOutbound: false,
+      isDelete: false,
+      // at
+      sendAt: piece.sendAt,
+      receiveAt: DateTime.now().millisecondsSinceEpoch,
+      deleteAt: null, // set in messages bubble
+      // data
+      contentType: piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
       content: base64String,
-      sendTime: piece.sendTime,
+      // options: piece.options,
     );
 
-    combine.options = MessageOptions.clearPiece(piece.options);
-    if (combine.options == null) combine.options = Map();
-    combine.options?[MessageOptions.KEY_PARENT_PIECE] = true; // diff with really image
+    piece.options?.remove(MessageOptions.KEY_PIECE);
+    combine.options = piece.options;
 
-    combine.receiveTime = DateTime.now();
-    combine.deleteTime = null; // set in messages bubble
+    if (combine.options == null) {
+      combine.options = Map();
+    }
 
-    combine = MessageStatus.set(combine, MessageStatus.Received);
-
-    // combine.parentType = data['parentType'];
-    // combine.bytesLength = data['bytesLength'];
-    // combine.total = data['total'];
-    // combine.parity = data['parity'];
-    // combine.index = data['index'];
+    // diff with no pieces image
+    combine.options?[MessageOptions.KEY_FROM_PIECE] = true;
 
     return combine;
   }
 
   /// to send
-  MessageSchema.fromSend(
-    this.msgId,
-    this.from,
-    this.contentType, {
+  MessageSchema.fromSend({
+    // this.pid, // SDK create
+    required this.msgId,
+    required this.from,
     this.to,
     this.topic,
+    // status
+    this.status = MessageStatus.Sending,
+    this.isOutbound = true,
+    this.isDelete = false,
+    // at
+    // this.sendAt,
+    // this.receiveAt, // null
+    // this.deleteAt, // set in messages bubble
+    // data
+    required this.contentType,
     this.content,
     this.options,
-    this.parentType,
-    this.bytesLength,
-    this.total,
-    this.parity,
-    this.index,
+    // piece
+    String? parentType,
+    int? bytesLength,
+    int? total,
+    int? parity,
+    int? index,
+    // other
     double? audioDurationS,
     int? deleteAfterSeconds,
     int? burningUpdateAt,
   }) {
-    // pid (SDK create)
-    if (msgId.isEmpty) msgId = Uuid().v4();
+    // at
+    this.sendAt = DateTime.now().millisecondsSinceEpoch;
+    this.receiveAt = null;
+    this.deleteAt = null; // set in messages bubble
 
-    sendTime = DateTime.now();
-    receiveTime = null;
-    deleteTime = null; // set in messages bubble
-
-    MessageStatus.set(this, MessageStatus.Sending);
+    // piece
+    if (parentType != null || total != null) {
+      if (this.options == null) {
+        this.options = Map();
+      }
+      if (this.options![MessageOptions.KEY_PIECE] == null) {
+        this.options![MessageOptions.KEY_PIECE] = Map();
+      }
+      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] = parentType;
+      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = bytesLength;
+      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] = total;
+      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] = parity;
+      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = index;
+    }
 
     // duration
     if (audioDurationS != null && audioDurationS > 0) {
@@ -657,14 +617,18 @@ class MessageSchema extends Equatable {
       'receiver': to,
       'topic': topic,
       'target_id': targetId,
-      'type': contentType,
-      'send_time': sendTime?.millisecondsSinceEpoch,
-      'receive_time': receiveTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-      'delete_time': deleteTime?.millisecondsSinceEpoch,
-      'is_read': isRead ? 1 : 0,
+      // status
+      'status': status,
       'is_outbound': isOutbound ? 1 : 0,
-      'is_success': isSuccess ? 1 : 0,
-      'is_send_error': isSendError ? 1 : 0,
+      'is_delete': isDelete ? 1 : 0,
+      // at
+      'send_at': sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+      'delete_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+      // data
+      'type': contentType,
+      // content:,
+      'options': options != null ? jsonEncode(options) : null,
     };
 
     // content = String
@@ -694,29 +658,27 @@ class MessageSchema extends Equatable {
         map['content'] = content;
         break;
     }
-
-    if (contentType == MessageContentType.piece) {
-      map['type'] = MessageContentType.piece;
-      if (options == null) {
-        options = Map<String, dynamic>();
-      }
-      Map<String, dynamic> piece = MessageOptions.createPiece(this);
-      options?.addAll(piece);
-    }
-    map['options'] = options != null ? jsonEncode(options) : null;
-
     return map;
   }
 
   /// from sqlite
   static MessageSchema fromMap(Map<String, dynamic> e) {
     MessageSchema schema = MessageSchema(
-      e['msg_id'] ?? "",
-      e['sender'] ?? "",
-      e['type'] ?? "",
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
+      msgId: e['msg_id'] ?? "",
+      from: e['sender'] ?? "",
       to: e['receiver'],
       topic: e['topic'],
+      // status
+      status: e['status'] ?? 0,
+      isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
+      isDelete: (e['is_delete'] != null && e['is_delete'] == 1) ? true : false,
+      // at
+      sendAt: e['send_at'] != null ? e['send_at'] : null,
+      receiveAt: e['receive_at'] != null ? e['receive_at'] : null,
+      deleteAt: e['delete_at'] != null ? e['delete_at'] : null,
+      // data
+      contentType: e['type'] ?? "",
       options: (e['options']?.toString().isNotEmpty == true) ? jsonFormat(e['options']) : null,
     );
 
@@ -752,23 +714,6 @@ class MessageSchema extends Equatable {
         schema.content = e['content'];
         break;
     }
-
-    schema.sendTime = e['send_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['send_time']) : null;
-    schema.receiveTime = e['receive_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['receive_time']) : null;
-    schema.deleteTime = e['delete_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['delete_time']) : null;
-
-    schema.isOutbound = (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false;
-    schema.isSendError = (e['is_send_error'] != null && e['is_send_error'] == 1) ? true : false;
-    schema.isSuccess = (e['is_success'] != null && e['is_success'] == 1) ? true : false;
-    schema.isRead = (e['is_read'] != null && e['is_read'] == 1) ? true : false;
-
-    Map<String, dynamic> options = schema.options ?? Map<String, dynamic>();
-    schema.parentType = options[MessageOptions.KEY_PARENT_TYPE];
-    schema.bytesLength = options[MessageOptions.KEY_BYTES_LENGTH];
-    schema.total = options[MessageOptions.KEY_TOTAL];
-    schema.parity = options[MessageOptions.KEY_PARITY];
-    schema.index = options[MessageOptions.KEY_INDEX];
-
     return schema;
   }
 
@@ -777,6 +722,6 @@ class MessageSchema extends Equatable {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, contentType: $contentType, content: ${(content is String && (content as String).length <= 1000) ? content : "~~~~~"}, options: $options, sendTime: $sendTime, receiveTime: $receiveTime, deleteTime: $deleteTime, isOutbound: $isOutbound, isSendError: $isSendError, isSuccess: $isSuccess, isRead: $isRead, parentType: $parentType, bytesLength: $bytesLength, total: $total, parity: $parity, index: $index}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, status: $status, isOutbound: $isOutbound, isDelete: $isDelete, sendAt: $sendAt, receiveAt: $receiveAt, deleteAt: $deleteAt, contentType: $contentType, options: $options, content: $content}';
   }
 }
