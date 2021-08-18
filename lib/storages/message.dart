@@ -15,6 +15,14 @@ class MessageStorage with Tag {
 
   MessageStorage();
 
+  // is_read BOOLEAN // TODO:GG delete
+  // is_success BOOLEAN // TODO:GG delete
+  // is_send_error BOOLEAN // TODO:GG delete
+  // send_at // TODO:GG rename field
+  // receive_at // TODO:GG rename field
+  // delete_at // TODO:GG rename field
+  // status // TODO:GG new field
+  // is_delete // TODO:GG new field
   static create(Database db, int version) async {
     // create table
     await db.execute('''
@@ -24,27 +32,24 @@ class MessageStorage with Tag {
         msg_id TEXT,
         sender TEXT,
         receiver TEXT,
-        target_id TEXT,
-        type TEXT,
         topic TEXT,
-        content TEXT,
-        options TEXT,
-        is_read BOOLEAN DEFAULT 0,
-        is_success BOOLEAN DEFAULT 0,
+        target_id TEXT,
+        status INTEGER,
         is_outbound BOOLEAN DEFAULT 0,
-        is_send_error BOOLEAN DEFAULT 0,
-        receive_time INTEGER,
-        send_time INTEGER,
-        delete_time INTEGER
+        is_delete BOOLEAN DEFAULT 0,
+        send_at INTEGER,
+        receive_at INTEGER,
+        delete_at INTEGER,
+        type TEXT,
+        content TEXT,
+        options TEXT
       )''');
-    // index TODO:GG 调整之后记得改index
-    await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
-    await db.execute('CREATE INDEX index_messages_msg_id ON $tableName (msg_id)');
-    await db.execute('CREATE INDEX index_messages_target_id ON $tableName (target_id)');
+    // index
+    await db.execute('CREATE UNIQUE INDEX unique_index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
-    await db.execute('CREATE INDEX index_messages_is_outbound_is_read ON $tableName (is_outbound, is_read)');
-    await db.execute('CREATE INDEX index_messages_target_id_is_outbound_is_read ON $tableName (target_id, is_outbound, is_read)');
-    await db.execute('CREATE INDEX index_messages_target_id_type_send_time ON $tableName (target_id, type, send_time)');
+    await db.execute('CREATE INDEX index_messages_msg_id_send_at ON $tableName (msg_id, send_at)');
+    await db.execute('CREATE INDEX index_messages_status_is_delete_type_target_id ON $tableName (status, is_delete, type, target_id)');
+    await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -64,27 +69,27 @@ class MessageStorage with Tag {
     return null;
   }
 
-  Future<bool> delete(String msgId) async {
-    if (msgId.isEmpty) return false;
-    try {
-      int? result = await db?.delete(
-        tableName,
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
-      );
-      if (result != null && result > 0) {
-        logger.v("$TAG - delete - success - msgId:$msgId");
-        return true;
-      }
-      logger.w("$TAG - delete - empty - msgId:$msgId");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
+  // Future<bool> delete(String msgId) async {
+  //   if (msgId.isEmpty) return false;
+  //   try {
+  //     int? result = await db?.delete(
+  //       tableName,
+  //       where: 'msg_id = ?',
+  //       whereArgs: [msgId],
+  //     );
+  //     if (result != null && result > 0) {
+  //       logger.v("$TAG - delete - success - msgId:$msgId");
+  //       return true;
+  //     }
+  //     logger.w("$TAG - delete - empty - msgId:$msgId");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
 
-  Future<bool> deleteByType(String msgId, String contentType) async {
-    if (msgId.isEmpty || contentType.isEmpty) return false;
+  Future<bool> deleteByContentType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return false;
     try {
       int? result = await db?.delete(
         tableName,
@@ -92,10 +97,10 @@ class MessageStorage with Tag {
         whereArgs: [msgId, contentType],
       );
       if (result != null && result > 0) {
-        logger.v("$TAG - deleteByType - success - msgId:$msgId - contentType:$contentType");
+        logger.v("$TAG - deleteByContentType - success - msgId:$msgId - contentType:$contentType");
         return true;
       }
-      logger.w("$TAG - deleteByType - empty - msgId:$msgId - contentType:$contentType");
+      logger.w("$TAG - deleteByContentType - empty - msgId:$msgId - contentType:$contentType");
     } catch (e) {
       handleError(e);
     }
@@ -136,6 +141,27 @@ class MessageStorage with Tag {
   //   return 0;
   // }
 
+  Future<MessageSchema?> query(String? msgId) async {
+    if (msgId == null || msgId.isEmpty) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.v("$TAG - queryList - success - msgId:$msgId - schema:$schema");
+        return schema;
+      }
+      logger.v("$TAG - queryList - success - msgId:$msgId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
   Future<MessageSchema?> queryByPid(Uint8List? pid) async {
     if (pid == null || pid.isEmpty) return null;
     try {
@@ -150,43 +176,15 @@ class MessageStorage with Tag {
         logger.v("$TAG - queryByPid - success - pid:$pid - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryByPid - empty - pid:$pid ");
+      logger.v("$TAG - queryByPid - empty - pid:$pid");
     } catch (e) {
       handleError(e);
     }
     return null;
   }
 
-  Future<List<MessageSchema>> queryList(String? msgId) async {
-    if (msgId == null || msgId.isEmpty) return [];
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
-      );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryList - empty - msgId:$msgId");
-        return [];
-      }
-      List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
-        result.add(item);
-      });
-      logger.v("$TAG - queryList - success - msgId:$msgId - length:${result.length} - items:$logText");
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
-
-  Future<List<MessageSchema>> queryListByType(String? msgId, String? contentType) async {
-    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
+  Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -194,26 +192,47 @@ class MessageStorage with Tag {
         where: 'msg_id = ? AND type = ?',
         whereArgs: [msgId, contentType],
       );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByType - empty - msgId:$msgId - contentType:$contentType");
-        return [];
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
+        return schema;
       }
-      List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
-        result.add(item);
-      });
-      logger.v("$TAG - queryListByType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
-      return result;
+      logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
     } catch (e) {
       handleError(e);
     }
-    return [];
+    return null;
   }
 
-  Future<int> queryCountByType(String? msgId, String? contentType) async {
+  // Future<List<MessageSchema>> queryList(String? msgId) async {
+  //   if (msgId == null || msgId.isEmpty) return [];
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'msg_id = ?',
+  //       whereArgs: [msgId],
+  //     );
+  //     if (res == null || res.isEmpty) {
+  //       logger.v("$TAG - queryList - empty - msgId:$msgId");
+  //       return [];
+  //     }
+  //     List<MessageSchema> result = <MessageSchema>[];
+  //     String logText = '';
+  //     res.forEach((map) {
+  //       MessageSchema item = MessageSchema.fromMap(map);
+  //       logText += "    \n$item";
+  //       result.add(item);
+  //     });
+  //     logger.v("$TAG - queryList - success - msgId:$msgId - length:${result.length} - items:$logText");
+  //     return result;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return [];
+  // }
+
+  Future<int> queryCountByContentType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     try {
       List<Map<String, dynamic>>? res = await db?.query(
@@ -223,7 +242,7 @@ class MessageStorage with Tag {
         whereArgs: [msgId, contentType],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - queryCount - msgId:$msgId - count:$count");
+      logger.v("$TAG - queryCountByContentType - msgId:$msgId - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -231,20 +250,20 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<List<MessageSchema>> queryListCanDisplayReadByTargetId(String? targetId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, {int offset = 0, int limit = 20}) async {
     if (targetId == null || targetId.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: 'target_id = ? AND NOT type = ?', // AND NOT type = ?
-        whereArgs: [targetId, MessageContentType.piece], // , ContentType.receipt],
+        where: 'target_id = ? AND is_delete = ? AND NOT type = ?',
+        whereArgs: [targetId, 0, MessageContentType.piece],
         offset: offset,
         limit: limit,
-        orderBy: 'send_time DESC',
+        orderBy: 'send_at DESC',
       );
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListCanDisplayReadByTargetId - empty - targetId:$targetId");
+        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
@@ -254,7 +273,7 @@ class MessageStorage with Tag {
         logText += "    \n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListCanDisplayReadByTargetId - success - targetId:$targetId - length:${result.length} - items:$logText");
+      logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e) {
       handleError(e);
@@ -289,50 +308,33 @@ class MessageStorage with Tag {
   //   return [];
   // }
 
-  Future<int> unReadCount() async {
-    try {
-      var res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: 'is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
-        whereArgs: [0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - unReadCount - count:$count");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
-  }
-
-  Future<List<MessageSchema>> queryListUnReadByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return [];
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', // AND NOT type = ?',
-        whereArgs: [targetId, 0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
-      );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListUnReadByTargetId - empty - targetId:$targetId");
-        return [];
-      }
-      List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        logText += "\n$item";
-        result.add(item);
-      });
-      logger.v("$TAG - queryListUnReadByTargetId - targetId:$targetId - length:${result.length} - items:$logText");
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
-  }
+  // Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId) async {
+  //   if (targetId == null || targetId.isEmpty) return [];
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'target_id = ? AND NOT status = ? AND is_outbound = ? AND is_delete = ? AND NOT type = ?',
+  //       whereArgs: [targetId, MessageStatus.Read, 0, 0, MessageContentType.piece],
+  //     );
+  //     if (res == null || res.isEmpty) {
+  //       logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
+  //       return [];
+  //     }
+  //     List<MessageSchema> result = <MessageSchema>[];
+  //     String logText = '';
+  //     res.forEach((map) {
+  //       MessageSchema item = MessageSchema.fromMap(map);
+  //       logText += "\n$item";
+  //       result.add(item);
+  //     });
+  //     logger.v("$TAG - queryListByTargetIdWithUnRead - targetId:$targetId - length:${result.length} - items:$logText");
+  //     return result;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return [];
+  // }
 
   Future<int> unReadCountByTargetId(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return 0;
@@ -340,11 +342,28 @@ class MessageStorage with Tag {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'target_id = ? AND is_outbound = ? AND is_read = ?', // AND NOT type = ?', //  AND NOT type = ?',
-        whereArgs: [targetId, 0, 0], // , MessageContentType.piece], // , MessageContentType.receipt],
+        where: 'status = ? AND is_delete = ? AND NOT type = ? AND target_id = ?',
+        whereArgs: [MessageStatus.Received, 0, MessageContentType.piece, targetId],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
+  Future<int> unReadCount() async {
+    try {
+      var res = await db?.query(
+        tableName,
+        columns: ['COUNT(id)'],
+        where: 'status = ? AND is_delete = ? AND NOT type = ?',
+        whereArgs: [MessageStatus.Received, 0, MessageContentType.piece],
+      );
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.v("$TAG - unReadCount - count:$count");
       return count ?? 0;
     } catch (e) {
       handleError(e);
@@ -363,7 +382,7 @@ class MessageStorage with Tag {
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
-      logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid}");
+      logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -371,18 +390,94 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateSendTime(String? msgId, DateTime? sendTime) async {
+  Future<bool> updateStatus(String? msgId, int status) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'send_time': sendTime?.millisecondsSinceEpoch ?? DateTime.now(),
+          'status': status,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
-      logger.v("$TAG - updateSendTime - count:$count - msgId:$msgId - sendTime:$sendTime}");
+      logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateStatusBySendAtDown(String? msgId, int status, int? sendAt) async {
+    if (msgId == null || msgId.isEmpty || sendAt == null || sendAt == 0) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'status': status,
+        },
+        where: 'msg_id = ? AND send_at <= ?',
+        whereArgs: [msgId, sendAt],
+      );
+      logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateIsDelete(String? msgId, bool isDelete) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'is_delete': isDelete ? 1 : 0,
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateSendAt(String? msgId, DateTime? sendTime) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'send_at': sendTime?.millisecondsSinceEpoch ?? DateTime.now(),
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendTime:$sendTime");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateDeleteAt(String? msgId, DateTime? deleteTime) async {
+    if (msgId == null || msgId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'delete_at': deleteTime?.millisecondsSinceEpoch ?? DateTime.now(),
+        },
+        where: 'msg_id = ?',
+        whereArgs: [msgId],
+      );
+      logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteTime:$deleteTime");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -401,48 +496,7 @@ class MessageStorage with Tag {
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
-      logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options}");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> updateDeleteTime(String? msgId, DateTime? deleteTime) async {
-    if (msgId == null || msgId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'delete_time': deleteTime?.millisecondsSinceEpoch,
-        },
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
-      );
-      logger.v("$TAG - updateDeleteTime - count:$count - msgId:$msgId - deleteTime:$deleteTime}");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
-
-  Future<bool> updateMessageStatus(MessageSchema? schema) async {
-    if (schema == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'is_outbound': schema.isOutbound ? 1 : 0,
-          'is_send_error': schema.isSendError ? 1 : 0,
-          'is_success': schema.isSuccess ? 1 : 0,
-          'is_read': schema.isRead ? 1 : 0,
-        },
-        where: 'msg_id = ?',
-        whereArgs: [schema.msgId],
-      );
-      logger.v("$TAG - updateMessageStatus - schema:$schema");
+      logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
