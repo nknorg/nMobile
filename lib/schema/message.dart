@@ -53,318 +53,6 @@ class MessageContentType {
   static const String topicKickOut = 'event:channelKickOut'; // .
 }
 
-class MessageOptions {
-  static const KEY_AUDIO_DURATION = "audioDuration";
-
-  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
-  static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
-  static const KEY_DEVICE_TOKEN = "deviceToken";
-
-  static const KEY_FROM_PIECE = "from_piece";
-
-  static const KEY_PIECE = 'piece';
-  static const KEY_PIECE_PARENT_TYPE = "parentType";
-  static const KEY_PIECE_BYTES_LENGTH = "bytesLength";
-  static const KEY_PIECE_PARITY = "parity";
-  static const KEY_PIECE_TOTAL = "total";
-  static const KEY_PIECE_INDEX = "index";
-
-  static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
-    return message;
-  }
-
-  static double? getAudioDuration(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    var duration = message.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
-    if (duration == null || duration.isEmpty) return null;
-    return double.tryParse(duration) ?? 0;
-  }
-
-  static MessageSchema setContactBurning(MessageSchema message, int deleteTimeSec, int? updateAt) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
-    message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
-    return message;
-  }
-
-  static List<int?> getContactBurning(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return [];
-    var seconds = message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    var update = message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
-    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
-    int? t2 = (update == null || update.isEmpty) ? null : int.tryParse(update);
-    return [t1, t2];
-  }
-
-  static MessageSchema setDeviceToken(MessageSchema message, String deviceToken) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
-    return message;
-  }
-
-  static String? getDeviceToken(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    var deviceToken = message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
-    return deviceToken;
-  }
-}
-
-class MessageData {
-  static String getPing(bool isPing) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.ping,
-      'content': isPing ? "ping" : "pong",
-    };
-    return jsonEncode(map);
-  }
-
-  static String getReceipt(String targetId) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.receipt,
-      'targetID': targetId,
-    };
-    return jsonEncode(map);
-  }
-
-  static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'requestType': requestType,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getContactResponseHeader(String? profileVersion, int expiresAt) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'responseType': RequestType.header,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-      // SUPPORT:START
-      'onePieceReady': '1',
-      // SUPPORT:END
-    };
-    return jsonEncode(data);
-  }
-
-  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'responseType': RequestType.full,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-      // SUPPORT:START
-      'onePieceReady': '1',
-      // SUPPORT:END
-    };
-    Map<String, dynamic> content = Map();
-    if (firstName?.isNotEmpty == true) {
-      content['first_name'] = firstName;
-      content['last_name'] = lastName;
-      // SUPPORT:START
-      content['name'] = firstName;
-      // SUPPORT:END
-    }
-    if (avatar != null && await avatar.exists()) {
-      String base64 = base64Encode(await avatar.readAsBytes());
-      if (base64.isNotEmpty == true) {
-        content['avatar'] = {'type': 'base64', 'data': base64};
-      }
-    }
-    data['content'] = content;
-    return jsonEncode(data);
-  }
-
-  static String getContactOptionsBurn(MessageSchema message) {
-    List<int?> burningOptions = MessageOptions.getContactBurning(message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contactOptions,
-      'optionType': '0',
-      'content': {
-        'deleteAfterSeconds': burnAfterSeconds,
-        'updateBurnAfterAt': updateBurnAfterAt,
-        // SUPPORT:START
-        'updateBurnAfterTime': updateBurnAfterAt,
-        // SUPPORT:END
-      },
-    };
-    return jsonEncode(data);
-  }
-
-  static String getContactOptionsToken(MessageSchema message) {
-    String? deviceToken = MessageOptions.getDeviceToken(message);
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contactOptions,
-      'optionType': '1',
-      'content': {
-        'deviceToken': deviceToken,
-      },
-    };
-    return jsonEncode(data);
-  }
-
-  static String getDeviceRequest() {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.deviceRequest,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getDeviceInfo() {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.deviceInfo,
-      'deviceId': Global.deviceId,
-      'appName': Settings.appName,
-      'appVersion': Global.build,
-      'platform': PlatformName.get(),
-      'platformVersion': Global.deviceVersion,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getText(MessageSchema message) {
-    Map map = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': message.content,
-    };
-    if (message.isTopic) {
-      map['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      map['options'] = message.options;
-    }
-    return jsonEncode(map);
-  }
-
-  static Future<String?> getImage(MessageSchema message) async {
-    File? file = message.content as File?;
-    if (file == null) return null;
-    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': content,
-    };
-    if (message.isTopic) {
-      data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
-    }
-    return jsonEncode(data);
-  }
-
-  static Future<String?> getAudio(MessageSchema message) async {
-    File? file = message.content as File?;
-    if (file == null) return null;
-    var mimeType = mime(file.path) ?? "";
-    if (mimeType.split('aac').length <= 0) return null;
-    String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': content,
-    };
-    if (message.isTopic) {
-      data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
-    }
-    return jsonEncode(data);
-  }
-
-  static String getPiece(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': message.content,
-      'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
-      'bytesLength': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
-      'total': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL],
-      'parity': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY],
-      'index': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX],
-    };
-    if (message.isTopic) {
-      data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
-    }
-    return jsonEncode(data);
-  }
-
-  static String getTopicSubscribe(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicSubscribe,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getTopicUnSubscribe(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicUnsubscribe,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getTopicInvitee(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.topicInvitation,
-      'content': message.content,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getTopicKickOut(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicKickOut,
-      'content': message.content,
-    };
-    return jsonEncode(data);
-  }
-}
-
 class MessageSchema extends Equatable {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
@@ -723,5 +411,317 @@ class MessageSchema extends Equatable {
   @override
   String toString() {
     return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, status: $status, isOutbound: $isOutbound, isDelete: $isDelete, sendAt: $sendAt, receiveAt: $receiveAt, deleteAt: $deleteAt, contentType: $contentType, options: $options, content: $content}';
+  }
+}
+
+class MessageOptions {
+  static const KEY_AUDIO_DURATION = "audioDuration";
+
+  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
+  static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
+  static const KEY_DEVICE_TOKEN = "deviceToken";
+
+  static const KEY_FROM_PIECE = "from_piece";
+
+  static const KEY_PIECE = 'piece';
+  static const KEY_PIECE_PARENT_TYPE = "parentType";
+  static const KEY_PIECE_BYTES_LENGTH = "bytesLength";
+  static const KEY_PIECE_PARITY = "parity";
+  static const KEY_PIECE_TOTAL = "total";
+  static const KEY_PIECE_INDEX = "index";
+
+  static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
+    return message;
+  }
+
+  static double? getAudioDuration(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    var duration = message.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
+    if (duration == null || duration.isEmpty) return null;
+    return double.tryParse(duration) ?? 0;
+  }
+
+  static MessageSchema setContactBurning(MessageSchema message, int deleteTimeSec, int? updateAt) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
+    message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
+    return message;
+  }
+
+  static List<int?> getContactBurning(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return [];
+    var seconds = message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
+    var update = message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
+    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
+    int? t2 = (update == null || update.isEmpty) ? null : int.tryParse(update);
+    return [t1, t2];
+  }
+
+  static MessageSchema setDeviceToken(MessageSchema message, String deviceToken) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
+    return message;
+  }
+
+  static String? getDeviceToken(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    var deviceToken = message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+    return deviceToken;
+  }
+}
+
+class MessageData {
+  static String getPing(bool isPing) {
+    Map map = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.ping,
+      'content': isPing ? "ping" : "pong",
+    };
+    return jsonEncode(map);
+  }
+
+  static String getReceipt(String targetId) {
+    Map map = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.receipt,
+      'targetID': targetId,
+    };
+    return jsonEncode(map);
+  }
+
+  static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
+    Map data = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.contact,
+      'requestType': requestType,
+      'version': profileVersion,
+      'expiresAt': expiresAt,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getContactResponseHeader(String? profileVersion, int expiresAt) {
+    Map data = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.contact,
+      'responseType': RequestType.header,
+      'version': profileVersion,
+      'expiresAt': expiresAt,
+      // SUPPORT:START
+      'onePieceReady': '1',
+      // SUPPORT:END
+    };
+    return jsonEncode(data);
+  }
+
+  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
+    Map data = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.contact,
+      'responseType': RequestType.full,
+      'version': profileVersion,
+      'expiresAt': expiresAt,
+      // SUPPORT:START
+      'onePieceReady': '1',
+      // SUPPORT:END
+    };
+    Map<String, dynamic> content = Map();
+    if (firstName?.isNotEmpty == true) {
+      content['first_name'] = firstName;
+      content['last_name'] = lastName;
+      // SUPPORT:START
+      content['name'] = firstName;
+      // SUPPORT:END
+    }
+    if (avatar != null && await avatar.exists()) {
+      String base64 = base64Encode(await avatar.readAsBytes());
+      if (base64.isNotEmpty == true) {
+        content['avatar'] = {'type': 'base64', 'data': base64};
+      }
+    }
+    data['content'] = content;
+    return jsonEncode(data);
+  }
+
+  static String getContactOptionsBurn(MessageSchema message) {
+    List<int?> burningOptions = MessageOptions.getContactBurning(message);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.contactOptions,
+      'optionType': '0',
+      'content': {
+        'deleteAfterSeconds': burnAfterSeconds,
+        'updateBurnAfterAt': updateBurnAfterAt,
+        // SUPPORT:START
+        'updateBurnAfterTime': updateBurnAfterAt,
+        // SUPPORT:END
+      },
+    };
+    return jsonEncode(data);
+  }
+
+  static String getContactOptionsToken(MessageSchema message) {
+    String? deviceToken = MessageOptions.getDeviceToken(message);
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.contactOptions,
+      'optionType': '1',
+      'content': {
+        'deviceToken': deviceToken,
+      },
+    };
+    return jsonEncode(data);
+  }
+
+  static String getDeviceRequest() {
+    Map data = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.deviceRequest,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getDeviceInfo() {
+    Map data = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.deviceInfo,
+      'deviceId': Global.deviceId,
+      'appName': Settings.appName,
+      'appVersion': Global.build,
+      'platform': PlatformName.get(),
+      'platformVersion': Global.deviceVersion,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getText(MessageSchema message) {
+    Map map = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': message.contentType,
+      'content': message.content,
+    };
+    if (message.isTopic) {
+      map['topic'] = message.topic;
+    }
+    if (message.options != null && message.options!.keys.length > 0) {
+      map['options'] = message.options;
+    }
+    return jsonEncode(map);
+  }
+
+  static Future<String?> getImage(MessageSchema message) async {
+    File? file = message.content as File?;
+    if (file == null) return null;
+    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': message.contentType,
+      'content': content,
+    };
+    if (message.isTopic) {
+      data['topic'] = message.topic;
+    }
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
+    }
+    return jsonEncode(data);
+  }
+
+  static Future<String?> getAudio(MessageSchema message) async {
+    File? file = message.content as File?;
+    if (file == null) return null;
+    var mimeType = mime(file.path) ?? "";
+    if (mimeType.split('aac').length <= 0) return null;
+    String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': message.contentType,
+      'content': content,
+    };
+    if (message.isTopic) {
+      data['topic'] = message.topic;
+    }
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
+    }
+    return jsonEncode(data);
+  }
+
+  static String getPiece(MessageSchema message) {
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': message.contentType,
+      'content': message.content,
+      'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
+      'bytesLength': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
+      'total': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL],
+      'parity': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY],
+      'index': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX],
+    };
+    if (message.isTopic) {
+      data['topic'] = message.topic;
+    }
+    if (message.options != null && message.options!.keys.length > 0) {
+      data['options'] = message.options;
+    }
+    return jsonEncode(data);
+  }
+
+  static String getTopicSubscribe(MessageSchema message) {
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'topic': message.topic,
+      'contentType': MessageContentType.topicSubscribe,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicUnSubscribe(MessageSchema message) {
+    Map data = {
+      'id': message.msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'topic': message.topic,
+      'contentType': MessageContentType.topicUnsubscribe,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicInvitee(MessageSchema message) {
+    Map data = {
+      'id': message.msgId,
+      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.topicInvitation,
+      'content': message.content,
+    };
+    return jsonEncode(data);
+  }
+
+  static String getTopicKickOut(MessageSchema message) {
+    Map data = {
+      'id': message.msgId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'topic': message.topic,
+      'contentType': MessageContentType.topicKickOut,
+      'content': message.content,
+    };
+    return jsonEncode(data);
   }
 }
