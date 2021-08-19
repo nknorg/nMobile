@@ -131,12 +131,9 @@ class AudioHelper with Tag {
       await recordStop();
       return null;
     }
-    // duplicated
-    if (record.isRecording) {
-      if ((this.recordId?.isNotEmpty == true) && this.recordId == recordId) {
-        this.recordId = null;
-        return await recordStart(recordId, savePath: savePath, maxDurationS: maxDurationS, onProgress: onProgress);
-      }
+    // recording
+    if (!record.isStopped) {
+      await recordStop();
     }
     // save
     this.recordPath = savePath ?? await _getRecordPath(recordId);

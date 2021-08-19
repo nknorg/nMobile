@@ -254,8 +254,10 @@ class ChatCommon with Tag {
     // delete later
     if (message.isDelete && message.content != null) {
       if (status == MessageStatus.SendReceipt) {
-        logger.i("$TAG - updateMessageStatus - delete later - message:$message");
+        logger.i("$TAG - updateMessageStatus - delete later yes - message:$message");
         _messageStorage.updateIsDelete(message.msgId, true, clearContent: true); // await
+      } else {
+        logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
     }
     return message;
