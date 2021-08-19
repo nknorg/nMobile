@@ -45,9 +45,9 @@ class ChatMessageItem extends StatelessWidget {
     if (nextMessage == null) {
       showTime = true;
     } else {
-      if (message.sendTime != null && nextMessage?.sendTime != null) {
-        int curSec = message.sendTime!.millisecondsSinceEpoch ~/ 1000;
-        int nextSec = nextMessage!.sendTime!.millisecondsSinceEpoch ~/ 1000;
+      if (message.sendAt != null && nextMessage?.sendAt != null) {
+        int curSec = message.sendAt! ~/ 1000;
+        int nextSec = nextMessage!.sendAt! ~/ 1000;
         if (curSec - nextSec > 60 * 2) {
           showTime = true;
         }
@@ -62,7 +62,7 @@ class ChatMessageItem extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 12, bottom: 6),
           child: Label(
-            formatChatTime(this.message.sendTime),
+            formatChatTime(DateTime.fromMillisecondsSinceEpoch(this.message.sendAt ?? DateTime.now().millisecondsSinceEpoch)),
             type: LabelType.bodySmall,
             fontSize: application.theme.bodyText2.fontSize ?? 14,
           ),
@@ -301,7 +301,7 @@ class ChatMessageItem extends StatelessWidget {
                     );
                     if (topic?.isNotEmpty == true) {
                       Loading.show();
-                      int sendAt = message.sendTime?.millisecondsSinceEpoch ?? 0;
+                      int sendAt = message.sendAt ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Settings.txPoolDelayMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, skipPermission: isJustNow);
                       Loading.dismiss();
