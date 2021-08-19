@@ -73,7 +73,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
     // lastMsg + topicSender
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
-    if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId || _lastMsg?.isSendError != lastMsg?.isSendError) {
+    if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId) {
       if (widget.session.isTopic && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
         lastMsg?.getSender(emptyAdd: true).then((ContactSchema? value) {
           setState(() {
@@ -206,7 +206,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                         Padding(
                           padding: const EdgeInsets.only(right: 0, bottom: 6),
                           child: Label(
-                            timeFormat(session.lastMessageTime),
+                            timeFormat(DateTime.fromMillisecondsSinceEpoch(session.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch)),
                             type: LabelType.bodyRegular,
                           ),
                         ),
