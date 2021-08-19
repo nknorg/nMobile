@@ -422,7 +422,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
     logger.v("$TAG - receivePiece - progress:${pieces.length}/$total/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
-    logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
@@ -459,7 +459,7 @@ class ChatInCommon with Tag {
     logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
     await onClientMessage(combine, needWait: true);
     // delete
-    logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
+    logger.i("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
     bool deleted = await _messageStorage.deleteByContentType(piece.msgId, piece.contentType);
     if (deleted) {
       pieces.forEach((MessageSchema element) {
