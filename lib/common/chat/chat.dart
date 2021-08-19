@@ -239,23 +239,13 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future<List<MessageSchema>> getMessagesByTargetIdWithRead(String? targetId, {int offset = 0, int limit = 20}) async {
-    // TODO:GG read
-    // read
-    _messageStorage.updateStatusReadByTargetId(targetId); // await
-    // badge
-    _messageStorage.unReadCountByTargetId(targetId).then((badgeDown) {
-      Badge.onCountDown(badgeDown); // await
-    });
-    // list
-    return await queryMessagesByTargetIdVisible(targetId, offset: offset, limit: limit);
+  Future<bool> messageDelete(String msgId, {bool notify = false}) async {
+    bool success = await _messageStorage.updateIsDelete(msgId, true);
+    if (success && notify) _onDeleteSink.add(msgId);
+    return success;
   }
 
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
-    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
-  }
-
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? sendAt, bool notify = false}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool notify = false}) async {
     message.status = status;
     bool success = await _messageStorage.updateStatus(message.msgId, status);
     if (success && notify) _onUpdateSink.add(message);
@@ -266,9 +256,20 @@ class ChatCommon with Tag {
     return _messageStorage.unReadCount();
   }
 
-  Future<bool> msgDelete(String msgId, {bool notify = false}) async {
-    bool success = await _messageStorage.updateIsDelete(msgId, true);
-    if (success && notify) _onDeleteSink.add(msgId);
-    return success;
+  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
+    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
+  }
+
+  Future<bool> readMessages(String? targetId, {bool badgeDown = false}) async {
+    // TODO:GG read message
+    // read
+    int count = await _messageStorage.updateStatusReadByTargetIdWho(targetId, true);
+    logger.i("$TAG - readMessages - count:$count");
+    // badge
+    if (badgeDown) {
+      int badgeDown = await _messageStorage.unReadCountByTargetId(targetId);
+      Badge.onCountDown(badgeDown); // await
+    }
+    return true;
   }
 }
