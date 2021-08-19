@@ -57,7 +57,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onPlayPositionChangedSubscription;
 
   late MessageSchema _message;
-  late int _msgStatus;
 
   late bool _showProfile;
   late bool _hideProfile;
@@ -75,7 +74,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
-      if (msgId == null || msgId != this._message.msgId || percent == null || _msgStatus != MessageStatus.Sending || !(_message.content is File)) {
+      if (msgId == null || msgId != this._message.msgId || percent == null || _message.status != MessageStatus.Sending || !(_message.content is File)) {
         // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
         if (_uploadProgress != 1) {
           setState(() {
@@ -131,7 +130,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void onRefreshArguments() {
     _message = widget.message;
-    _msgStatus = MessageStatus.get(_message);
     // contact
     _showProfile = widget.showProfile;
     _hideProfile = widget.hideProfile;
@@ -151,17 +149,16 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _contact = null;
     }
     // progress
-    _uploadProgress = ((_message.content is File) && (_msgStatus == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
+    _uploadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
     // burn
     List<int?> burningOptions = MessageOptions.getContactBurning(_message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    if (_message.deleteTime == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_msgStatus != MessageStatus.Sending)) {
+    if (_message.deleteAt == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_message.status != MessageStatus.Sending)) {
       _message = chatCommon.burningHandle(_message);
     }
-    if (_message.deleteTime != null) {
-      DateTime deleteTime = _message.deleteTime ?? DateTime.now();
-      if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch && clientCommon.address?.isNotEmpty == true) {
+    if (_message.deleteAt != null) {
+      if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (clientCommon.address?.isNotEmpty == true)) {
         String taskKey = "${TaskService.KEY_MSG_BURNING}:${clientCommon.address}:${_message.msgId}";
         taskService.addTask1(taskKey, (String key) {
           if (clientCommon.address?.isNotEmpty == true && !key.contains(clientCommon.address!)) {
@@ -169,18 +166,18 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             // onRefreshArguments(); // refresh task (will dead loop)
             return;
           }
-          if (deleteTime.millisecondsSinceEpoch > DateTime.now().millisecondsSinceEpoch) {
+          if (_message.deleteAt == null || _message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
             // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {
-            logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-            chatCommon.msgDelete(_message.msgId, notify: true); // await
+            logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
+            chatCommon.messageDelete(_message.msgId, notify: true); // await
             taskService.removeTask1(key);
           }
           setState(() {}); // async need
         });
       } else {
-        logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-        chatCommon.msgDelete(_message.msgId, notify: true); // await
+        logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
+        chatCommon.messageDelete(_message.msgId, notify: true); // await
       }
     }
   }
@@ -218,9 +215,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   Widget build(BuildContext context) {
-    if (_message.deleteTime != null) {
-      DateTime deleteTime = _message.deleteTime ?? DateTime.now();
-      if (deleteTime.millisecondsSinceEpoch <= DateTime.now().millisecondsSinceEpoch) {
+    if (_message.deleteAt != null) {
+      int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;
+      if (deleteAt <= DateTime.now().millisecondsSinceEpoch) {
         return SizedBox.shrink();
       }
     }
@@ -301,12 +298,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Widget _getTip(bool self) {
     S _localizations = S.of(context);
-    bool isSending = _msgStatus == MessageStatus.Sending;
+    bool isSending = _message.status == MessageStatus.Sending;
     bool hasProgress = (_message.content is File) && !_message.isTopic;
 
     bool showSending = isSending && !hasProgress;
     bool showProgress = isSending && hasProgress && _uploadProgress < 1;
-    bool showFail = _msgStatus == MessageStatus.SendFail;
+    bool showFail = _message.status == MessageStatus.SendFail;
 
     return Expanded(
       child: Row(
@@ -419,10 +416,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _burnWidget() {
-    if (_message.deleteTime == null) return SizedBox.shrink();
-    List<int?> burningOptions = MessageOptions.getContactBurning(_message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    DateTime deleteTime = _message.deleteTime ?? DateTime.now().add(Duration(seconds: (burnAfterSeconds ?? 0) + 1));
+    if (_message.deleteAt == null) return SizedBox.shrink();
+    DateTime deleteTime = DateTime.fromMillisecondsSinceEpoch(_message.deleteAt ?? DateTime.now().millisecondsSinceEpoch);
     Color clockColor = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
     return Column(
       children: [
@@ -547,7 +542,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
     BoxDecoration decoration;
     bool dark = false;
-    if (_msgStatus == MessageStatus.Sending || _msgStatus == MessageStatus.SendSuccess) {
+    if (_message.status == MessageStatus.Sending || _message.status == MessageStatus.SendSuccess) {
       decoration = BoxDecoration(
         color: _theme.primaryColor.withAlpha(50),
         borderRadius: BorderRadius.only(
@@ -558,7 +553,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         ),
       );
       dark = true;
-    } else if (_msgStatus == MessageStatus.SendFail) {
+    } else if (_message.status == MessageStatus.SendFail) {
       decoration = BoxDecoration(
         color: _theme.primaryColor.withAlpha(50),
         borderRadius: BorderRadius.only(
@@ -569,7 +564,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         ),
       );
       dark = true;
-    } else if (_msgStatus == MessageStatus.SendWithReceipt) {
+    } else if (_message.status == MessageStatus.SendReceipt) {
       decoration = BoxDecoration(
         color: _theme.primaryColor,
         borderRadius: BorderRadius.only(
