@@ -45,7 +45,7 @@ class MessageStorage with Tag {
         options TEXT
       )''');
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_messages_pid ON $tableName (pid)');
+    await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
     await db.execute('CREATE INDEX index_messages_target_id_status_send_at ON $tableName (target_id, status, send_at)');
     await db.execute('CREATE INDEX index_messages_status_is_delete_type_target_id ON $tableName (status, is_delete, type, target_id)');
