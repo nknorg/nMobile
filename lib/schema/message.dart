@@ -310,9 +310,9 @@ class MessageSchema extends Equatable {
       'is_outbound': isOutbound ? 1 : 0,
       'is_delete': isDelete ? 1 : 0,
       // at
-      'send_at': sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'send_at': sendAt,
       'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
-      'delete_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+      'delete_at': deleteAt,
       // data
       'type': contentType,
       // content:,

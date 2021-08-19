@@ -399,9 +399,9 @@ class ChatInCommon with Tag {
   // NO DB NO display
   Future<bool> _receivePiece(MessageSchema received) async {
     String? parentType = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
+    int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
     int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? ChatOutCommon.maxPiecesTotal;
     int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? (total ~/ ChatOutCommon.piecesParity);
-    int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
     // combined duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
