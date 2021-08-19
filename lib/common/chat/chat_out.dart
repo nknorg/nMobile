@@ -133,9 +133,9 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.contactOptions,
+        msgId: Uuid().v4(),
+        from: clientCommon.address!,
+        contentType: MessageContentType.contactOptions,
         to: clientAddress,
         deleteAfterSeconds: deleteSeconds,
         burningUpdateAt: updateAt,
@@ -160,9 +160,9 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.contactOptions,
+        msgId: Uuid().v4(),
+        from: clientCommon.address!,
+        contentType: MessageContentType.contactOptions,
         to: clientAddress,
       );
       send = MessageOptions.setDeviceToken(send, deviceToken);
@@ -228,9 +228,9 @@ class ChatOutCommon with Tag {
     }
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
-      Uuid().v4(),
-      clientCommon.address!,
-      contentType,
+      msgId: Uuid().v4(),
+      from: clientCommon.address!,
+      contentType: contentType,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,
@@ -251,9 +251,9 @@ class ChatOutCommon with Tag {
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
     String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
     MessageSchema message = MessageSchema.fromSend(
-      Uuid().v4(),
-      clientCommon.address!,
-      contentType,
+      msgId: Uuid().v4(),
+      from: clientCommon.address!,
+      contentType: contentType,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,
@@ -272,9 +272,9 @@ class ChatOutCommon with Tag {
       return null;
     }
     MessageSchema message = MessageSchema.fromSend(
-      Uuid().v4(),
-      clientCommon.address!,
-      MessageContentType.audio,
+      msgId: Uuid().v4(),
+      from: clientCommon.address!,
+      contentType: MessageContentType.audio,
       to: contact?.clientAddress,
       topic: topic?.topic,
       content: content,
@@ -289,8 +289,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display
   Future<MessageSchema?> sendPiece(MessageSchema message, {int tryCount = 1}) async {
     try {
-      DateTime timeNow = DateTime.now();
-      await Future.delayed(Duration(milliseconds: (message.sendTime ?? timeNow).millisecondsSinceEpoch - timeNow.millisecondsSinceEpoch));
+      int timeNowAt = DateTime.now().millisecondsSinceEpoch;
+      await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
       String data = MessageData.getPiece(message);
       if (message.to?.isNotEmpty == true) {
         OnMessage? onResult = await chatCommon.clientSendData(message.to, data);
@@ -299,9 +299,12 @@ class ChatOutCommon with Tag {
         logger.w("$TAG - sendPiece - message target is empty - message:$message");
         return null;
       }
-      // logger.d("$TAG - sendPiece - success - index:${schema.index} - total:${schema.total} - time:${timeNow.millisecondsSinceEpoch} - message:$message - data:$data");
+      int? total = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL];
+      int? index = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
+      logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+      // callback
       if (!message.isTopic) {
-        double percent = (message.index ?? 0) / (message.total ?? 1);
+        double percent = (index ?? 0) / (total ?? 1);
         _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
       }
       return message;
@@ -322,9 +325,9 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.topicSubscribe,
+        msgId: Uuid().v4(),
+        from: clientCommon.address!,
+        contentType: MessageContentType.topicSubscribe,
         topic: topic,
       );
       String data = MessageData.getTopicSubscribe(send);
@@ -347,9 +350,9 @@ class ChatOutCommon with Tag {
     if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
     try {
       MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.topicUnsubscribe,
+        msgId: Uuid().v4(),
+        from: clientCommon.address!,
+        contentType: MessageContentType.topicUnsubscribe,
         topic: topic,
       );
       String data = MessageData.getTopicUnSubscribe(send);
@@ -375,9 +378,9 @@ class ChatOutCommon with Tag {
       return null;
     }
     MessageSchema message = MessageSchema.fromSend(
-      Uuid().v4(),
-      clientCommon.address!,
-      MessageContentType.topicInvitation,
+      msgId: Uuid().v4(),
+      from: clientCommon.address!,
+      contentType: MessageContentType.topicInvitation,
       to: clientAddress,
       content: topic,
     );
@@ -390,9 +393,9 @@ class ChatOutCommon with Tag {
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     try {
       MessageSchema send = MessageSchema.fromSend(
-        Uuid().v4(),
-        clientCommon.address!,
-        MessageContentType.topicKickOut,
+        msgId: Uuid().v4(),
+        from: clientCommon.address!,
+        contentType: MessageContentType.topicKickOut,
         topic: topic,
         content: targetAddress,
       );
@@ -418,7 +421,7 @@ class ChatOutCommon with Tag {
     TopicSchema? topic,
   }) async {
     if (message == null) return null;
-    message = chatCommon.updateMessageStatus(message, MessageStatus.Sending);
+    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending);
     String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
@@ -449,8 +452,8 @@ class ChatOutCommon with Tag {
     if (!resend && displaySelf) {
       message = await _messageStorage.insert(message);
     } else if (resend) {
-      message.sendTime = DateTime.now();
-      _messageStorage.updateSendTime(message.msgId, message.sendTime); // await
+      message.sendAt = DateTime.now().millisecondsSinceEpoch;
+      _messageStorage.updateSendAt(message.msgId, message.sendAt); // await
     }
     if (message == null) return null;
     // display
@@ -476,15 +479,14 @@ class ChatOutCommon with Tag {
     } catch (e) {
       handleError(e);
     }
-    // fail
+    // pid
     if (pid == null || pid.isEmpty) {
       logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
-      message = chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true);
-      return message;
+      message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true);
+    } else {
+      message.pid = pid;
+      _messageStorage.updatePid(message.msgId, message.pid); // await
     }
-    // pid
-    message.pid = pid;
-    _messageStorage.updatePid(message.msgId, message.pid); // await
     return message;
   }
 
@@ -548,7 +550,7 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       OnMessage? onResult = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData); // permission checked in received
       if (onResult?.messageId.isNotEmpty == true) {
-        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
       }
       return onResult?.messageId;
     }
@@ -564,14 +566,14 @@ class ChatOutCommon with Tag {
         if (_pid?.isNotEmpty == true) {
           logger.d("$TAG - _sendWithTopic - to_subscriber_pieces - to:${subscriber.clientAddress} - subscriber:$subscriber - pid:$_pid");
           if (subscriber.clientAddress == clientCommon.address) {
-            chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+            chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
           }
           return Future.value(OnMessage(messageId: _pid!, data: null, src: null, type: null, encrypted: null));
         } else {
           logger.d("$TAG - _sendWithTopic - to_subscriber - to:${subscriber.clientAddress} - subscriber:$subscriber");
           return chatCommon.clientSendData(subscriber.clientAddress, msgData).then((value) {
             if ((value?.messageId.isNotEmpty == true) && (subscriber.clientAddress == clientCommon.address)) {
-              chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true);
+              chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
             }
             return value;
           });
@@ -623,9 +625,9 @@ class ChatOutCommon with Tag {
       Uint8List? data = dataList[index] as Uint8List?;
       if (data == null || data.isEmpty) continue;
       MessageSchema send = MessageSchema.fromSend(
-        message.msgId,
-        message.from,
-        MessageContentType.piece,
+        msgId: message.msgId,
+        from: message.from,
+        contentType: MessageContentType.piece,
         to: to ?? message.to,
         topic: message.topic,
         content: base64Encode(data),
@@ -636,19 +638,19 @@ class ChatOutCommon with Tag {
         parity: parity,
         index: index,
       );
-      send.sendTime = dataNow.add(Duration(milliseconds: index * 50)); // wait 50ms
+      send.sendAt = dataNow.add(Duration(milliseconds: index * 50)).millisecondsSinceEpoch; // wait 50ms
       futures.add(sendPiece(send));
     }
-    logger.d("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema?> returnList = await Future.wait(futures);
-    returnList.sort((prev, next) => (prev?.index ?? maxPiecesTotal).compareTo((next?.index ?? maxPiecesTotal)));
+    returnList.sort((prev, next) => (prev?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? maxPiecesTotal).compareTo((next?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? maxPiecesTotal)));
 
     List<MessageSchema?> successList = returnList.where((element) => element != null).toList();
     if (successList.length < total) {
       logger.w("$TAG - _sendByPiecesIfNeed:FAIL - count:${successList.length}");
       return null;
     }
-    logger.d("$TAG - _sendByPiecesIfNeed:SUCCESS - count:${successList.length}");
+    logger.i("$TAG - _sendByPiecesIfNeed:SUCCESS - count:${successList.length}");
 
     MessageSchema? firstSuccess = returnList.firstWhere((element) => element?.pid != null);
     return firstSuccess?.pid;
