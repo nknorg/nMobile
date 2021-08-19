@@ -47,8 +47,8 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
-    await db.execute('CREATE INDEX index_messages_status_is_delete_type ON $tableName (status, is_delete, type)');
-    await db.execute('CREATE INDEX index_messages_target_id_status_is_delete_type ON $tableName (target_id, status, is_delete, type)');
+    await db.execute('CREATE INDEX index_messages_target_id_status_send_at ON $tableName (target_id, status, send_at)');
+    await db.execute('CREATE INDEX index_messages_status_is_delete_type_target_id ON $tableName (status, is_delete, type, target_id)');
     await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
   }
 
@@ -391,8 +391,8 @@ class MessageStorage with Tag {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'target_id = ? AND status = ? AND is_delete = ? AND NOT type = ?',
-        whereArgs: [targetId, MessageStatus.Received, 0, MessageContentType.piece],
+        where: 'status = ? AND is_delete = ? AND NOT type = ? AND target_id = ?',
+        whereArgs: [MessageStatus.Received, 0, MessageContentType.piece, targetId],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
@@ -458,18 +458,19 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<int> updateStatusReadByTargetId(String? targetId) async {
+  Future<int> updateStatusReadByTargetIdWho(String? targetId, bool readByMe, {int? sendAt}) async {
     if (targetId == null || targetId.isEmpty) return 0;
+    int whereStatus = readByMe ? MessageStatus.Received : MessageStatus.SendReceipt;
     try {
       int? count = await db?.update(
         tableName,
         {
           'status': MessageStatus.Read,
         },
-        where: 'target_id = ? AND status IN (?, ?) ?',
-        whereArgs: [targetId, MessageStatus.SendReceipt, MessageStatus.Received],
+        where: sendAt == null ? 'target_id = ? AND status = ?' : 'target_id = ? AND status = ? AND send_at <= ?',
+        whereArgs: sendAt == null ? [targetId, whereStatus] : [targetId, whereStatus, sendAt],
       );
-      logger.v("$TAG - readByTargetId - count:$count - targetId:$targetId");
+      logger.v("$TAG - updateStatusReadByTargetIdWho - count:$count - targetId:$targetId - readByMe:$readByMe - sendAt:$sendAt");
       return count ?? 0;
     } catch (e) {
       handleError(e);
