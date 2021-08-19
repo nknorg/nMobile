@@ -83,7 +83,7 @@ class SessionCommon with Tag {
   Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
-    session.lastMessageAt = lastMessage?.sendAt ?? sendAt ?? DateTime.now().millisecondsSinceEpoch;
+    session.lastMessageAt = lastMessage?.sendAt ?? sendAt;
     session.lastMessageOptions = lastMessage?.toMap();
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);

@@ -20,6 +20,7 @@ import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
@@ -72,6 +73,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       });
     });
     _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
+      if (chatCommon.currentChatTargetId == event.targetId) {
+        event.unReadCount = 0;
+      }
       var finds = _sessionList.where((element) => element.targetId == event.targetId).toList();
       if (finds.isEmpty) {
         _sessionList.insert(0, event);
@@ -92,24 +96,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // message
     _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((String msgId) {
-      setState(() {
-        _sessionList.forEach((SessionSchema element) async {
-          if (element.lastMessageOptions != null && element.lastMessageOptions!["msg_id"] == msgId) {
-            MessageSchema oldLastMsg = MessageSchema.fromMap(element.lastMessageOptions!);
-            MessageSchema? lastMessage = await sessionCommon.findLastMessage(element);
-            if (lastMessage == null) {
-              sessionCommon.delete(element.targetId, notify: true);
-              return;
-            }
-            lastMessage.sendTime = oldLastMsg.sendTime; // for sort
-            element.lastMessageTime = lastMessage.sendTime;
-            element.lastMessageOptions = lastMessage.toMap();
-            int unreadCount = oldLastMsg.canDisplayAndRead ? element.unReadCount - 1 : element.unReadCount;
-            element.unReadCount = unreadCount > 0 ? unreadCount : 0;
-            sessionCommon.setLastMessageAndUnReadCount(element.targetId, lastMessage, element.unReadCount, notify: true);
-          }
-        });
-      });
+      onMessageDelete(msgId);
     });
 
     // scroll
@@ -164,9 +151,45 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
   }
 
+  Future onMessageDelete(String msgId) async {
+    var findIndex = -1;
+    for (var i = 0; i < _sessionList.length; i++) {
+      SessionSchema session = _sessionList[i];
+      if (session.lastMessageOptions != null && session.lastMessageOptions!["msg_id"] == msgId) {
+        findIndex = i;
+        break;
+      }
+    }
+    if (findIndex >= 0 && findIndex < _sessionList.length) {
+      // find
+      SessionSchema session = _sessionList[findIndex];
+      MessageSchema oldLastMsg = MessageSchema.fromMap(session.lastMessageOptions!);
+      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(session.targetId, offset: 0, limit: 1);
+      MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
+      // update
+      if (newLastMsg == null) {
+        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, null, session.unReadCount, sendAt: oldLastMsg.sendAt, notify: true);
+      } else {
+        newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
+        session.lastMessageAt = newLastMsg.sendAt;
+        session.lastMessageOptions = newLastMsg.toMap();
+        int unreadCount = oldLastMsg.canDisplayAndRead ? session.unReadCount - 1 : session.unReadCount;
+        session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
+        if ((findIndex > (_sessionList.length - 1)) || (_sessionList[findIndex].targetId != session.targetId)) {
+          logger.i("ChatSessionListLayout - onMessageDelete - sessions sync again - msgId:$msgId - session:$session");
+          return await onMessageDelete(msgId); // sync with sessions lock
+        }
+        setState(() {
+          _sessionList[findIndex] = session;
+        });
+        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, newLastMsg, session.unReadCount, notify: false);
+      }
+    }
+  }
+
   _sortMessages() {
     setState(() {
-      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageTime ?? DateTime.now()).compareTo((a.lastMessageTime ?? DateTime.now())) : -1) : (b.isTop ? 1 : (b.lastMessageTime ?? DateTime.now()).compareTo((a.lastMessageTime ?? DateTime.now()))));
+      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch).compareTo((a.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch)) : -1) : (b.isTop ? 1 : (b.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch).compareTo((a.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch))));
     });
   }
 
