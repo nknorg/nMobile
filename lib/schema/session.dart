@@ -13,7 +13,7 @@ class SessionSchema {
   String targetId; // (required) <-> target_id
   String type; // (required) <-> type
 
-  DateTime? lastMessageTime; // <-> last_message_time
+  int? lastMessageAt; // <-> last_message_at
   Map<String, dynamic>? lastMessageOptions; // <-> last_message_options
 
   bool isTop; // <-> is_top
@@ -23,7 +23,7 @@ class SessionSchema {
     this.id,
     required this.targetId,
     required this.type,
-    this.lastMessageTime,
+    this.lastMessageAt,
     this.lastMessageOptions,
     this.isTop = false,
     this.unReadCount = 0,
@@ -50,7 +50,7 @@ class SessionSchema {
       'id': id,
       'target_id': targetId,
       'type': type,
-      'last_message_time': lastMessageTime?.millisecondsSinceEpoch,
+      'last_message_at': lastMessageAt,
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
@@ -63,7 +63,7 @@ class SessionSchema {
       id: e['id'],
       targetId: e['target_id'] ?? "",
       type: e['type'] ?? "",
-      lastMessageTime: e['last_message_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['last_message_time']) : null,
+      lastMessageAt: e['last_message_at'],
       lastMessageOptions: e['last_message_options'] != null ? jsonFormat(e['last_message_options']) : null,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
       unReadCount: e['un_read_count'] ?? 0,
@@ -73,6 +73,6 @@ class SessionSchema {
 
   @override
   String toString() {
-    return 'SessionSchema{id: $id, targetId: $targetId, type: $type, unReadCount: $unReadCount, isTop: $isTop, lastMessageTime: $lastMessageTime, lastMessageOptions: $lastMessageOptions}';
+    return 'SessionSchema{id: $id, targetId: $targetId, type: $type, unReadCount: $unReadCount, isTop: $isTop, lastMessageAt: $lastMessageAt, lastMessageOptions: $lastMessageOptions}';
   }
 }
