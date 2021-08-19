@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
@@ -41,6 +42,10 @@ class SessionCommon with Tag {
       }
     }
     // lastMessage
+    if (lastMsg == null) {
+      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(schema.targetId, offset: 0, limit: 1);
+      lastMsg = history.isNotEmpty ? history[0] : null;
+    }
     if (schema.lastMessageAt == null || schema.lastMessageOptions == null) {
       schema.lastMessageAt = lastMsg?.sendAt;
       schema.lastMessageOptions = lastMsg?.toMap();
