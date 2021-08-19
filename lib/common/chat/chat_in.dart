@@ -146,7 +146,9 @@ class ChatInCommon with Tag {
       }
     } else {
       // not handle in messages screen
-      chatCommon.updateMessageStatus(received, MessageStatus.Read); // await
+      if (received.contentType != MessageContentType.piece) {
+        chatCommon.updateMessageStatus(received, MessageStatus.Read); // await
+      }
     }
   }
 
@@ -411,6 +413,7 @@ class ChatInCommon with Tag {
     // piece
     MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
     if (piece == null) {
+      received.status = MessageStatus.Read;
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
     }
