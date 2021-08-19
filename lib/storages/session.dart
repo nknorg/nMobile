@@ -20,16 +20,14 @@ class SessionStorage with Tag {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         target_id TEXT,
         type TEXT,
-        last_message_time INTEGER,
+        last_message_at INTEGER,
         last_message_options TEXT,
         un_read_count INTEGER,
         is_top BOOLEAN DEFAULT 0
       )''');
     // index
-    await db.execute('CREATE INDEX index_session_target_id ON $tableName (target_id)');
-    await db.execute('CREATE INDEX index_session_type ON $tableName (type)');
-    await db.execute('CREATE INDEX index_session_un_read_count ON $tableName (un_read_count)');
-    await db.execute('CREATE INDEX index_session_top_last_message_time ON $tableName (is_top, last_message_time)');
+    await db.execute('CREATE UNIQUE INDEX unique_index_session_target_id ON $tableName (target_id)');
+    await db.execute('CREATE INDEX index_session_top_last_message_at ON $tableName (is_top, last_message_at)');
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
@@ -114,7 +112,7 @@ class SessionStorage with Tag {
         columns: ['*'],
         offset: offset ?? null,
         limit: limit ?? null,
-        orderBy: 'is_top desc, last_message_time DESC',
+        orderBy: 'is_top desc, last_message_at DESC',
       );
       if (res == null || res.isEmpty) {
         logger.v("$TAG - queryListRecent - empty");
@@ -141,14 +139,14 @@ class SessionStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'last_message_time': schema.lastMessageTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
           'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
           'un_read_count': schema.unReadCount,
         },
         where: 'target_id = ?',
         whereArgs: [schema.targetId],
       );
-      logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema}");
+      logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -156,25 +154,25 @@ class SessionStorage with Tag {
     return false;
   }
 
-  Future<bool> updateLastMessage(SessionSchema? schema) async {
-    if (schema == null || schema.targetId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'last_message_time': schema.lastMessageTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
-          'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-        },
-        where: 'target_id = ?',
-        whereArgs: [schema.targetId],
-      );
-      logger.v("$TAG - updateLastMessage - count:$count - schema:$schema}");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
-  }
+  // Future<bool> updateLastMessage(SessionSchema? schema) async {
+  //   if (schema == null || schema.targetId.isEmpty) return false;
+  //   try {
+  //     int? count = await db?.update(
+  //       tableName,
+  //       {
+  //         'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+  //         'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+  //       },
+  //       where: 'target_id = ?',
+  //       whereArgs: [schema.targetId],
+  //     );
+  //     logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
+  //     return (count ?? 0) > 0;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
 
   Future<bool> updateIsTop(String? targetId, bool isTop) async {
     if (targetId == null || targetId.isEmpty) return false;

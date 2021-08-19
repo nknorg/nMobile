@@ -30,24 +30,27 @@ class SessionCommon with Tag {
     _updateController.close();
   }
 
-  Future<SessionSchema?> add(SessionSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<SessionSchema?> add(SessionSchema? schema, MessageSchema? lastMsg, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
-    // lastMessage
-    if (schema.lastMessageTime == null || schema.lastMessageOptions == null) {
-      MessageSchema? lastMessage = await findLastMessage(schema);
-      schema.lastMessageTime = lastMessage?.sendTime;
-      schema.lastMessageOptions = lastMessage?.toMap();
-    }
-    // unReadCount
-    if (schema.unReadCount < 0) {
-      schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
-    }
     // duplicated
     if (checkDuplicated) {
       SessionSchema? exist = await query(schema.targetId);
       if (exist != null) {
         logger.i("$TAG - add - duplicated - schema:$exist");
         return null;
+      }
+    }
+    // lastMessage
+    if (schema.lastMessageAt == null || schema.lastMessageOptions == null) {
+      schema.lastMessageAt = lastMsg?.sendAt;
+      schema.lastMessageOptions = lastMsg?.toMap();
+    }
+    // unReadCount
+    if (schema.unReadCount < 0) {
+      if (lastMsg != null) {
+        schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canDisplayAndRead) ? 0 : 1;
+      } else {
+        schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
       }
     }
     // insert
@@ -72,26 +75,26 @@ class SessionCommon with Tag {
     return _sessionStorage.queryListRecent(offset: offset, limit: limit);
   }
 
-  Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema lastMessage, int? unread, {bool notify = false}) async {
+  Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
-    session.lastMessageTime = lastMessage.sendTime;
-    session.lastMessageOptions = lastMessage.toMap();
+    session.lastMessageAt = lastMessage?.sendAt ?? sendAt ?? DateTime.now().millisecondsSinceEpoch;
+    session.lastMessageOptions = lastMessage?.toMap();
     session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId);
     return success;
   }
 
-  Future<bool> setLastMessage(String? targetId, MessageSchema lastMessage, {bool notify = false}) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
-    session.lastMessageTime = lastMessage.sendTime;
-    session.lastMessageOptions = lastMessage.toMap();
-    bool success = await _sessionStorage.updateLastMessage(session);
-    if (success && notify) queryAndNotify(session.targetId);
-    return success;
-  }
+  // Future<bool> setLastMessage(String? targetId, MessageSchema lastMessage, {bool notify = false}) async {
+  //   if (targetId == null || targetId.isEmpty) return false;
+  //   SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
+  //   session.lastMessageAt = lastMessage.sendAt ?? DateTime.now().millisecondsSinceEpoch;
+  //   session.lastMessageOptions = lastMessage.toMap();
+  //   bool success = await _sessionStorage.updateLastMessage(session);
+  //   if (success && notify) queryAndNotify(session.targetId);
+  //   return success;
+  // }
 
   Future<bool> setTop(String? targetId, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
@@ -115,19 +118,19 @@ class SessionCommon with Tag {
     }
   }
 
-  Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
-    if (session == null) return null;
-    MessageSchema? message;
-    if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
-      message = MessageSchema.fromMap(session.lastMessageOptions!);
-    } else {
-      List<MessageSchema> history = await _messageStorage.queryListCanDisplayReadByTargetId(session.targetId, offset: 0, limit: 1);
-      if (history.isNotEmpty) {
-        message = history[0];
-        // session.lastMessageOptions = message.toMap();
-      }
-    }
-    // session.lastMessageTime = message?.sendTime;
-    return message;
-  }
+  // Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
+  //   if (session == null) return null;
+  //   MessageSchema? message;
+  //   if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
+  //     message = MessageSchema.fromMap(session.lastMessageOptions!);
+  //   } else {
+  //     List<MessageSchema> history = await _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(session.targetId, offset: 0, limit: 1);
+  //     if (history.isNotEmpty) {
+  //       message = history[0];
+  //       // session.lastMessageOptions = message.toMap();
+  //     }
+  //   }
+  //   // session.lastMessageTime = message?.sendTime;
+  //   return message;
+  // }
 }
