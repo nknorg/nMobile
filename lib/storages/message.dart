@@ -47,8 +47,8 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX unique_index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
-    await db.execute('CREATE INDEX index_messages_msg_id_send_at ON $tableName (msg_id, send_at)');
-    await db.execute('CREATE INDEX index_messages_status_is_delete_type_target_id ON $tableName (status, is_delete, type, target_id)');
+    await db.execute('CREATE INDEX index_messages_status_is_delete_type ON $tableName (status, is_delete, type)');
+    await db.execute('CREATE INDEX index_messages_target_id_status_is_delete_type ON $tableName (target_id, status, is_delete, type)');
     await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
   }
 
@@ -314,8 +314,8 @@ class MessageStorage with Tag {
   //     List<Map<String, dynamic>>? res = await db?.query(
   //       tableName,
   //       columns: ['*'],
-  //       where: 'target_id = ? AND NOT status = ? AND is_outbound = ? AND is_delete = ? AND NOT type = ?',
-  //       whereArgs: [targetId, MessageStatus.Read, 0, 0, MessageContentType.piece],
+  //       where: 'target_id = ? AND is_outbound = ? AND NOT status = ?',
+  //       whereArgs: [targetId, 0, MessageStatus.Read],
   //     );
   //     if (res == null || res.isEmpty) {
   //       logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
@@ -342,8 +342,8 @@ class MessageStorage with Tag {
       var res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
-        where: 'status = ? AND is_delete = ? AND NOT type = ? AND target_id = ?',
-        whereArgs: [MessageStatus.Received, 0, MessageContentType.piece, targetId],
+        where: 'target_id = ? AND status = ? AND is_delete = ? AND NOT type = ?',
+        whereArgs: [targetId, MessageStatus.Received, 0, MessageContentType.piece],
       );
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
@@ -409,23 +409,23 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateStatusBySendAtDown(String? msgId, int status, int? sendAt) async {
-    if (msgId == null || msgId.isEmpty || sendAt == null || sendAt == 0) return false;
+  Future<int> updateStatusReadByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return 0;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'status': status,
+          'status': MessageStatus.Read,
         },
-        where: 'msg_id = ? AND send_at <= ?',
-        whereArgs: [msgId, sendAt],
+        where: 'target_id = ? AND status IN (?, ?) ?',
+        whereArgs: [targetId, MessageStatus.SendReceipt, MessageStatus.Received],
       );
-      logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
-      return (count ?? 0) > 0;
+      logger.v("$TAG - readByTargetId - count:$count - targetId:$targetId");
+      return count ?? 0;
     } catch (e) {
       handleError(e);
     }
-    return false;
+    return 0;
   }
 
   Future<bool> updateIsDelete(String? msgId, bool isDelete) async {
@@ -453,7 +453,7 @@ class MessageStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'send_at': sendTime?.millisecondsSinceEpoch ?? DateTime.now(),
+          'send_at': sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
@@ -472,7 +472,7 @@ class MessageStorage with Tag {
       int? count = await db?.update(
         tableName,
         {
-          'delete_at': deleteTime?.millisecondsSinceEpoch ?? DateTime.now(),
+          'delete_at': deleteTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
