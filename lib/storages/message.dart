@@ -478,14 +478,19 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<bool> updateIsDelete(String? msgId, bool isDelete) async {
+  Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
-        {
-          'is_delete': isDelete ? 1 : 0,
-        },
+        clearContent
+            ? {
+                'is_delete': isDelete ? 1 : 0,
+                'content': null,
+              }
+            : {
+                'is_delete': isDelete ? 1 : 0,
+              },
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );

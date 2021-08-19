@@ -239,9 +239,11 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future<bool> messageDelete(String msgId, {bool notify = false}) async {
-    bool success = await _messageStorage.updateIsDelete(msgId, true);
-    if (success && notify) _onDeleteSink.add(msgId);
+  Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
+    if (message == null || message.msgId.isEmpty) return false;
+    bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt) : true;
+    bool success = await _messageStorage.updateIsDelete(message.msgId, true, clearContent: clearContent);
+    if (success && notify) _onDeleteSink.add(message.msgId);
     return success;
   }
 
@@ -249,6 +251,13 @@ class ChatCommon with Tag {
     message.status = status;
     bool success = await _messageStorage.updateStatus(message.msgId, status);
     if (success && notify) _onUpdateSink.add(message);
+    // delete later
+    if (message.isDelete && message.content != null) {
+      if (status == MessageStatus.SendReceipt) {
+        logger.i("$TAG - updateMessageStatus - delete later - message:$message");
+        _messageStorage.updateIsDelete(message.msgId, true, clearContent: true); // await
+      }
+    }
     return message;
   }
 
