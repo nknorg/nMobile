@@ -58,6 +58,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   TopicSchema? _topic;
   bool? _isJoined;
   ContactSchema? _contact;
+  String? targetId;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
@@ -89,17 +90,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       this._topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
       this._isJoined = this._topic?.joined == true;
       this._contact = null;
+      this.targetId = this._topic?.topic;
     } else if (who is ContactSchema) {
       this._topic = null;
       this._isJoined = null;
       this._contact = widget.arguments![ChatMessagesScreen.argWho] ?? _contact;
+      this.targetId = this._contact?.clientAddress;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    chatCommon.currentChatTargetId = _topic?.topic ?? _contact?.clientAddress;
+    chatCommon.currentChatTargetId = this.targetId;
 
     // topic
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
@@ -129,10 +132,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // messages
-    _onMessageReceiveStreamSubscription = chatInCommon.onSavedStream.where((MessageSchema event) => (event.targetId == _topic?.topic) || (event.targetId == _contact?.clientAddress)).listen((MessageSchema event) {
+    _onMessageReceiveStreamSubscription = chatInCommon.onSavedStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
       _insertMessage(event);
     });
-    _onMessageSendStreamSubscription = chatOutCommon.onSavedStream.where((MessageSchema event) => (event.targetId == _topic?.topic) || (event.targetId == _contact?.clientAddress)).listen((MessageSchema event) {
+    _onMessageSendStreamSubscription = chatOutCommon.onSavedStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
       _insertMessage(event);
     });
     _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((event) {
@@ -140,7 +143,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _messages = _messages.where((element) => element.msgId != event).toList();
       });
     });
-    _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.where((MessageSchema event) => (event.targetId == _topic?.topic) || (event.targetId == _contact?.clientAddress)).listen((MessageSchema event) {
+    _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) => (e.msgId == event.msgId) ? event : e).toList();
       });
@@ -164,7 +167,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicJoined(); // await
 
     // read
-    sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
+    sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await
+    chatCommon.readMessages(this.targetId, badgeDown: true); // await
   }
 
   @override
@@ -194,23 +198,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else {
       _offset = _messages.length;
     }
-    var messages = await chatCommon.getAndReadMessagesTargetId(_topic?.topic ?? _contact?.clientAddress, offset: _offset, limit: 20);
+    var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, offset: _offset, limit: 20);
     setState(() {
       _messages = _messages + messages;
     });
   }
 
-  _insertMessage(MessageSchema? schema) {
-    if (schema == null) return;
+  _insertMessage(MessageSchema? added) {
+    if (added == null) return;
     // read
-    if (!schema.isOutbound) {
-      schema = chatCommon.updateMessageStatus(schema, MessageStatus.ReceivedRead);
-      sessionCommon.setUnReadCount(_topic?.topic ?? _contact?.clientAddress, 0, notify: true); // await
+    if (!added.isOutbound) {
+      added.status = MessageStatus.Read;
+      chatCommon.updateMessageStatus(added, added.status); // await
+      // sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await // count not up in chatting
+      chatCommon.readMessages(added.targetId, badgeDown: false); // await
     }
     // state
     setState(() {
-      logger.i("$TAG - messages insert 0 - message:$schema");
-      _messages.insert(0, schema!);
+      logger.i("$TAG - messages insert 0 - added:$added");
+      _messages.insert(0, added);
     });
     // tip
     Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
@@ -254,7 +260,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._topic != null || this._contact == null) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if (isOpen == null || isOpen == true) return;
-    bool need = await SettingsStorage.isNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    bool need = await SettingsStorage.isNeedTipNotificationOpen(this.targetId);
     if (!need) return;
     // check
     int sendCount = 0, receiveCount = 0;
@@ -281,7 +287,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await SettingsStorage.setNeedTipNotificationOpen((_topic?.id ?? _contact?.id)?.toString());
+    await SettingsStorage.setNeedTipNotificationOpen(this.targetId);
   }
 
   _toggleNotificationOpen() async {
@@ -472,7 +478,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ),
               Divider(height: 1, color: _theme.backgroundColor2),
               ChatSendBar(
-                targetId: _topic?.topic ?? _contact?.clientAddress,
+                targetId: this.targetId,
                 enable: _isJoined,
                 onMenuPressed: () {
                   _toggleBottomMenu();
@@ -490,7 +496,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 onRecordTap: (bool visible, bool complete, int durationMs) async {
                   if (visible) {
                     String? savePath = await audioHelper.recordStart(
-                      _topic?.topic ?? _contact?.clientAddress ?? "",
+                      this.targetId ?? "",
                       maxDurationS: AudioHelper.MessageRecordMaxDurationS,
                     );
                     if (savePath == null || savePath.isEmpty) {
@@ -542,7 +548,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     hexEncode(clientCommon.publicKey!),
                     SubDirType.chat,
                     "${Uuid().v4()}.${Path.getFileExt(picked) ?? "jpg"}",
-                    chatTarget: _topic?.topic ?? _contact?.clientAddress ?? "",
+                    chatTarget: this.targetId ?? "",
                   ));
                   if (imagePath == null || imagePath.isEmpty) return null;
                   var outputFile = File(imagePath);
