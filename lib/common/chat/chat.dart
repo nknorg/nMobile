@@ -231,9 +231,8 @@ class ChatCommon with Tag {
     if (burnAfterSeconds != null && burnAfterSeconds > 0) {
       // set delete time
       logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
-      DateTime deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      message.deleteAt = deleteTime.millisecondsSinceEpoch;
-      _messageStorage.updateDeleteAt(message.msgId, deleteTime).then((success) {
+      message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
+      _messageStorage.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
         if (success) _onUpdateSink.add(message);
       });
     }

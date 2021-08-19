@@ -496,18 +496,18 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateSendAt(String? msgId, DateTime? sendTime) async {
+  Future<bool> updateSendAt(String? msgId, int? sendAt) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'send_at': sendTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'send_at': sendAt ?? DateTime.now().millisecondsSinceEpoch,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
-      logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendTime:$sendTime");
+      logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendAt:$sendAt");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
@@ -515,18 +515,18 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateDeleteAt(String? msgId, DateTime? deleteTime) async {
+  Future<bool> updateDeleteAt(String? msgId, int? deleteAt) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
         {
-          'delete_at': deleteTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+          'delete_at': deleteAt ?? DateTime.now().millisecondsSinceEpoch,
         },
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
-      logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteTime:$deleteTime");
+      logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteAt:$deleteAt");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
