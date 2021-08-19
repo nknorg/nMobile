@@ -29,8 +29,6 @@ class ChatCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  Map<String, Map<String, DateTime>> deletedCache = Map<String, Map<String, DateTime>>();
-
   ChatCommon();
 
   Future<OnMessage?> clientSendData(String? dest, String data) async {
@@ -212,31 +210,17 @@ class ChatCommon with Tag {
     if (message.targetId == null || message.targetId!.isEmpty) return null;
     SessionSchema? exist = await sessionCommon.query(message.targetId);
     if (exist == null) {
-      SessionSchema? added = await sessionCommon.add(
-        SessionSchema(
-          targetId: message.targetId!,
-          type: SessionSchema.getTypeByMessage(message),
-          lastMessageTime: message.sendTime,
-          lastMessageOptions: message.toMap(),
-          isTop: false,
-          unReadCount: (message.isOutbound || !message.canDisplayAndRead) ? 0 : 1,
-        ),
-        notify: true,
-      );
+      SessionSchema? added = SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message));
+      added = await sessionCommon.add(added, message, notify: true);
       logger.i("$TAG - sessionHandle - new - targetId:${message.targetId} - added:$added");
       return added;
     }
-    if (message.isOutbound) {
-      exist.lastMessageTime = message.sendTime;
-      exist.lastMessageOptions = message.toMap();
-      await sessionCommon.setLastMessage(exist.targetId, message, notify: true); // must await
-    } else {
-      int unreadCount = message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount;
-      exist.unReadCount = unreadCount;
-      exist.lastMessageTime = message.sendTime;
-      exist.lastMessageOptions = message.toMap();
-      await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, message, unreadCount, notify: true); // must await
-    }
+    // update
+    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount);
+    exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
+    exist.lastMessageAt = message.sendAt;
+    exist.lastMessageOptions = message.toMap();
+    await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, message, exist.unReadCount, notify: true); // must await
     return exist;
   }
 
@@ -245,49 +229,37 @@ class ChatCommon with Tag {
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if (burnAfterSeconds != null && burnAfterSeconds > 0) {
-      logger.i("$TAG - burningHandle - start - message:$message");
-      message.deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
-      _messageStorage.updateDeleteTime(message.msgId, message.deleteTime).then((success) {
+      // set delete time
+      logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
+      DateTime deleteTime = DateTime.now().add(Duration(seconds: burnAfterSeconds));
+      message.deleteAt = deleteTime.millisecondsSinceEpoch;
+      _messageStorage.updateDeleteAt(message.msgId, deleteTime).then((success) {
         if (success) _onUpdateSink.add(message);
       });
     }
     return message;
   }
 
-  Future<List<MessageSchema>> getAndReadMessagesTargetId(
-    String? targetId, {
-    int offset = 0,
-    int limit = 20,
-    int? unread,
-  }) async {
-    List<MessageSchema> list = await _messageStorage.queryListCanDisplayReadByTargetId(targetId, offset: offset, limit: limit);
+  Future<List<MessageSchema>> getMessagesByTargetIdWithRead(String? targetId, {int offset = 0, int limit = 20}) async {
+    // TODO:GG read
+    // read
+    _messageStorage.updateStatusReadByTargetId(targetId); // await
     // badge
-    int badgeDown = await _messageStorage.unReadCountByTargetId(targetId);
-    Badge.onCountDown(badgeDown); // await
-    // unread
-    if (offset == 0 && (unread == null || unread > 0)) {
-      _messageStorage.queryListUnReadByTargetId(targetId).then((List<MessageSchema> unreadList) {
-        unreadList.asMap().forEach((index, MessageSchema element) {
-          if (index == 0) {
-            sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
-          }
-          updateMessageStatus(element, MessageStatus.ReceivedRead);
-          // if (index >= unreadList.length - 1) {
-          //   sessionCommon.setUnReadCount(element.targetId, 0, notify: true); // await
-          // }
-        });
-      });
-      list = list.map((e) => e.isOutbound == false ? MessageStatus.set(e, MessageStatus.ReceivedRead) : e).toList(); // fake read
-    }
-    return list;
+    _messageStorage.unReadCountByTargetId(targetId).then((badgeDown) {
+      Badge.onCountDown(badgeDown); // await
+    });
+    // list
+    return await queryMessagesByTargetIdVisible(targetId, offset: offset, limit: limit);
   }
 
-  // receipt(receive) != read(look)
-  MessageSchema updateMessageStatus(MessageSchema message, int status, {bool notify = false}) {
-    message = MessageStatus.set(message, status);
-    _messageStorage.updateMessageStatus(message).then((success) {
-      if (success && notify) _onUpdateSink.add(message);
-    });
+  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
+    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
+  }
+
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? sendAt, bool notify = false}) async {
+    message.status = status;
+    bool success = await _messageStorage.updateStatus(message.msgId, status);
+    if (success && notify) _onUpdateSink.add(message);
     return message;
   }
 
@@ -296,12 +268,7 @@ class ChatCommon with Tag {
   }
 
   Future<bool> msgDelete(String msgId, {bool notify = false}) async {
-    bool success = await _messageStorage.delete(msgId);
-    if (success) {
-      String key = clientCommon.address ?? "";
-      if (deletedCache[key] == null) deletedCache[key] = Map();
-      deletedCache[key]![msgId] = DateTime.now();
-    }
+    bool success = await _messageStorage.updateIsDelete(msgId, true);
     if (success && notify) _onDeleteSink.add(msgId);
     return success;
   }
