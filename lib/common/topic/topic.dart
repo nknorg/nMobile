@@ -428,7 +428,7 @@ class TopicCommon with Tag {
       subscriber: subscriber,
     );
     if (result?.isNotEmpty == true) {
-      logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - subscriber:$subscriber - result:$result}");
+      logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - subscriber:$subscriber - result:$result");
     } else {
       logger.w("$TAG - _clientGetSubscription - fail - topicName:$topicName - subscriber:$subscriber");
     }
