@@ -51,7 +51,7 @@ class SessionCommon with Tag {
       schema.lastMessageOptions = lastMsg?.toMap();
     }
     // unReadCount
-    if (schema.unReadCount < 0) {
+    if (schema.unReadCount <= 0) {
       if (lastMsg != null) {
         schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canDisplayAndRead) ? 0 : 1;
       } else {
