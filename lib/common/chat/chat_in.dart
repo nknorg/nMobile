@@ -65,22 +65,22 @@ class ChatInCommon with Tag {
     SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
     if (topic != null && subscriber != null) {
       if (topic.joined != true) {
-        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic}");
+        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
         return;
       } else if (subscriber.status == SubscriberStatus.Subscribed) {
-        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic}");
+        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
         // SUPPORT:START
         if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
           if (subscriber.status == SubscriberStatus.None) {
-            logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic}");
+            logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic");
           } else {
-            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic}");
+            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
             return;
           }
         } else {
           // SUPPORT:END
-          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic}");
+          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
           return;
         }
       }
@@ -88,6 +88,7 @@ class ChatInCommon with Tag {
     // session
     await chatCommon.sessionHandle(received); // must await
     // message
+    // TODO:GG ACK receive_at
     bool receiveOk = false;
     switch (received.contentType) {
       case MessageContentType.ping:
@@ -135,7 +136,7 @@ class ChatInCommon with Tag {
         receiveOk = await _receiveTopicKickOut(received);
         break;
     }
-    if (received.needReceipt) {
+    if (received.canDisplay) {
       chatOutCommon.sendReceipt(received); // await
     }
     if (received.canDisplayAndRead) {
@@ -145,7 +146,7 @@ class ChatInCommon with Tag {
       }
     } else {
       // not handle in messages screen
-      chatCommon.updateMessageStatus(received, MessageStatus.ReceivedRead); // await
+      chatCommon.updateMessageStatus(received, MessageStatus.Read); // await
     }
   }
 
@@ -179,22 +180,20 @@ class ChatInCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out)
-    List<MessageSchema> _schemaList = await _messageStorage.queryList(received.content);
-    int effectCount = 0;
-    _schemaList.forEach((MessageSchema element) {
-      if (MessageStatus.get(received) == MessageStatus.SendWithReceipt) {
-        logger.d("$TAG - receiveReceipt - duplicated:$element");
-        return;
-      }
-      logger.d("$TAG - receiveReceipt - updated:$element");
-      effectCount++;
-      chatCommon.updateMessageStatus(element, MessageStatus.SendWithReceipt, notify: true);
-    });
-    // topicInvitation
-    if (_schemaList.length == 1 && _schemaList[0].contentType == MessageContentType.topicInvitation) {
-      subscriberCommon.onInvitedReceipt(_schemaList[0].content, received.from); // await
+    MessageSchema? exists = await _messageStorage.query(received.content);
+    if (exists == null) {
+      logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
+      return false;
+    } else if (received.status == MessageStatus.SendReceipt) {
+      logger.d("$TAG - receiveReceipt - duplicated - received:$received");
+      return false;
     }
-    if (effectCount <= 0) return false;
+    await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
+
+    // topicInvitation
+    if (received.contentType == MessageContentType.topicInvitation) {
+      subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
+    }
     return true;
   }
 
@@ -272,9 +271,9 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return false;
     }
-    List<MessageSchema> existsMsg = await _messageStorage.queryList(received.msgId);
-    if (existsMsg.isNotEmpty) {
-      logger.d("$TAG - _receiveContactOptions - duplicated - message:$existsMsg");
+    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    if (exists != null) {
+      logger.d("$TAG - _receiveContactOptions - duplicated - message:$exists");
       return false;
     }
     // options type
@@ -339,15 +338,9 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveText(MessageSchema received) async {
-    // deleted
-    String key = clientCommon.address ?? "";
-    if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
-      logger.d("$TAG - receiveText - duplicated - deleted:${received.msgId}");
-      return false;
-    }
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
-    if (exists.isNotEmpty) {
+    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    if (exists != null) {
       logger.d("$TAG - receiveText - duplicated - message:$exists");
       return false;
     }
@@ -360,27 +353,14 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveImage(MessageSchema received) async {
-    // deleted
-    String key = clientCommon.address ?? "";
-    if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
-      logger.d("$TAG - receiveImage - duplicated - deleted:${received.msgId}");
-      return false;
-    }
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_PARENT_PIECE] ?? false) : false;
     // duplicated
-    List<MessageSchema> exists = [];
-    if (isPieceCombine) {
-      exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
-    } else {
-      // SUPPORT:START
-      exists = await _messageStorage.queryList(received.msgId); // old version will send type media/image
-      // SUPPORT:END
-    }
-    if (exists.isNotEmpty) {
+    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece);
+    if (exists != null) {
       logger.d("$TAG - receiveImage - duplicated - message:$exists");
       return false;
     }
     // File
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null, chatTarget: received.from);
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
@@ -395,27 +375,14 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveAudio(MessageSchema received) async {
-    // deleted
-    String key = clientCommon.address ?? "";
-    if (chatCommon.deletedCache[key] != null && chatCommon.deletedCache[key]![received.msgId] != null) {
-      logger.d("$TAG - receiveAudio - duplicated - deleted:${received.msgId}");
-      return false;
-    }
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_PARENT_PIECE] ?? false) : false;
     // duplicated
-    List<MessageSchema> exists = [];
-    if (isPieceCombine) {
-      exists = await _messageStorage.queryListByType(received.msgId, received.contentType);
-    } else {
-      // SUPPORT:START
-      exists = await _messageStorage.queryList(received.msgId); // old version will send type 2 times
-      // SUPPORT:END
-    }
-    if (exists.isNotEmpty) {
+    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece);
+    if (exists != null) {
       logger.d("$TAG - receiveAudio - duplicated - message:$exists");
       return false;
     }
     // File
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null, chatTarget: received.from);
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
@@ -431,8 +398,12 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receivePiece(MessageSchema received) async {
-    // duplicated
-    List<MessageSchema> existsCombine = await _messageStorage.queryListByType(received.msgId, received.parentType);
+    String? parentType = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
+    int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? ChatOutCommon.maxPiecesTotal;
+    int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? (total ~/ ChatOutCommon.piecesParity);
+    int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
+    // combined duplicated
+    List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - duplicated - message:$existsCombine");
       return false;
@@ -440,7 +411,7 @@ class ChatInCommon with Tag {
     // piece
     MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
     if (piece == null) {
-      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: received.parentType);
+      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
     }
     if (piece == null) {
@@ -448,15 +419,11 @@ class ChatInCommon with Tag {
       return false;
     }
     // pieces
-    int total = piece.total ?? ChatOutCommon.maxPiecesTotal;
-    int parity = piece.parity ?? (total ~/ ChatOutCommon.piecesParity);
-    int bytesLength = piece.bytesLength ?? 0;
-    int piecesCount = await _messageStorage.queryCountByType(piece.msgId, piece.contentType);
-    logger.v("$TAG - receivePiece - progress:$piecesCount/${piece.total}/${total + parity}");
-    if (piecesCount < total || bytesLength <= 0) return false;
+    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
+    logger.v("$TAG - receivePiece - progress:${pieces.length}/$total/${total + parity}");
+    if (pieces.length < total || bytesLength <= 0) return false;
     logger.d("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    List<MessageSchema> pieces = await _messageStorage.queryListByType(piece.msgId, piece.contentType);
-    pieces.sort((prev, next) => (prev.index ?? ChatOutCommon.maxPiecesTotal).compareTo((next.index ?? ChatOutCommon.maxPiecesTotal)));
+    pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
     for (int index = 0; index < total + parity; index++) {
@@ -471,8 +438,9 @@ class ChatInCommon with Tag {
         continue;
       }
       Uint8List itemBytes = await file.readAsBytes();
-      if (item.index != null && item.index! >= 0 && item.index! < recoverList.length) {
-        recoverList[item.index!] = itemBytes;
+      int? pieceIndex = item.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
+      if (pieceIndex != null && pieceIndex >= 0 && pieceIndex < recoverList.length) {
+        recoverList[pieceIndex] = itemBytes;
         recoverCount++;
       }
     }
@@ -486,13 +454,13 @@ class ChatInCommon with Tag {
       logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
       return false;
     }
-    MessageSchema combine = MessageSchema.fromPieces(pieces, base64String);
+    MessageSchema combine = MessageSchema.fromPiecesReceive(pieces, base64String);
     // combine.content - handle later
     logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
     await onClientMessage(combine, needWait: true);
     // delete
     logger.d("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
-    bool deleted = await _messageStorage.deleteByType(piece.msgId, piece.contentType);
+    bool deleted = await _messageStorage.deleteByContentType(piece.msgId, piece.contentType);
     if (deleted) {
       pieces.forEach((MessageSchema element) {
         if (element.content is File) {
@@ -516,8 +484,8 @@ class ChatInCommon with Tag {
   // NO single
   Future<bool> _receiveTopicSubscribe(MessageSchema received) async {
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
-    if (exists.isNotEmpty) {
+    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    if (exists != null) {
       logger.d("$TAG - _receiveTopicSubscribe - duplicated - message:$exists");
       return false;
     }
@@ -543,8 +511,8 @@ class ChatInCommon with Tag {
   // NO topic (1 to 1)
   Future<bool> _receiveTopicInvitation(MessageSchema received) async {
     // duplicated
-    List<MessageSchema> exists = await _messageStorage.queryList(received.msgId);
-    if (exists.isNotEmpty) {
+    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    if (exists != null) {
       logger.d("$TAG - _receiveTopicInvitation - duplicated - message:$exists");
       return false;
     }

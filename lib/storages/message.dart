@@ -183,8 +183,50 @@ class MessageStorage with Tag {
     return null;
   }
 
-  Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
+  Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: 'msg_id = ? AND NOT type = ?',
+        whereArgs: [msgId, contentType],
+      );
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.v("$TAG - queryByNoContentType - success - msgId:$msgId - schema:$schema");
+        return schema;
+      }
+      logger.v("$TAG - queryByNoContentType - empty - msgId:$msgId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
+  // Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
+  //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'msg_id = ? AND type = ?',
+  //       whereArgs: [msgId, contentType],
+  //     );
+  //     if (res != null && res.length > 0) {
+  //       MessageSchema schema = MessageSchema.fromMap(res.first);
+  //       logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
+  //       return schema;
+  //     }
+  //     logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return null;
+  // }
+
+  Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -192,16 +234,23 @@ class MessageStorage with Tag {
         where: 'msg_id = ? AND type = ?',
         whereArgs: [msgId, contentType],
       );
-      if (res != null && res.length > 0) {
-        MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
-        return schema;
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListByContentType - empty - msgId:$msgId - contentType:$contentType");
+        return [];
       }
-      logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "\n$item";
+        result.add(item);
+      });
+      logger.d("$TAG - queryListByContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+      return result;
     } catch (e) {
       handleError(e);
     }
-    return null;
+    return [];
   }
 
   // Future<List<MessageSchema>> queryList(String? msgId) async {
