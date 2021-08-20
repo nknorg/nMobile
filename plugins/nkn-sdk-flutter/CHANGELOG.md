@@ -1,3 +1,15 @@
+## 0.1.12
+
+* Add API DOC
+
+## 0.1.11
+
+* Update go sdk version
+
+## 0.1.10
+
+* Fix ios client message queue broken
+
 ## 0.1.9
 
 * Fix nonce params type
