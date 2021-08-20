@@ -7,6 +7,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
     var eventSink: FlutterEventSink?
 
     let walletQueue = DispatchQueue(label: "org.nkn.sdk/wallet/queue", qos: .default, attributes: .concurrent)
+    private var walletWorkItem: DispatchWorkItem?
+
+    let walletMoneyQueue = DispatchQueue(label: "org.nkn.sdk/wallet/money/queue", qos: .default, attributes: .concurrent)
+    private var walletMoneyWorkItem: DispatchWorkItem?
+
+    let walletEventQueue = DispatchQueue(label: "org.nkn.sdk/wallet/event/queue", qos: .default, attributes: .concurrent)
+    private var walletEventWorkItem: DispatchWorkItem?
 
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
@@ -60,25 +67,28 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let seedRpc = args["seedRpc"] as? [String]
 
-        var seedRPCServerAddr = NknStringArray(from: nil)
-        for (_, v) in seedRpc!.enumerated() {
-            seedRPCServerAddr?.append(v)
-        }
-        seedRPCServerAddr = NknMeasureSeedRPCServer(seedRPCServerAddr, 1500, nil)
+        walletWorkItem = DispatchWorkItem {
+            var seedRPCServerAddr = NknStringArray(from: nil)
+            for (_, v) in seedRpc!.enumerated() {
+                seedRPCServerAddr?.append(v)
+            }
+            seedRPCServerAddr = NknMeasureSeedRPCServer(seedRPCServerAddr, 1500, nil)
 
-        var seedRPCServerAddrs = [String]()
-        let elements = seedRPCServerAddr?.join(",").split(separator: ",")
-        if elements != nil && !(elements!.isEmpty) {
-            for element in elements! {
-                if !(element.isEmpty) {
-                    seedRPCServerAddrs.append("\(element)")
+            var seedRPCServerAddrs = [String]()
+            let elements = seedRPCServerAddr?.join(",").split(separator: ",")
+            if elements != nil && !(elements!.isEmpty) {
+                for element in elements! {
+                    if !(element.isEmpty) {
+                        seedRPCServerAddrs.append("\(element)")
+                    }
                 }
             }
-        }
 
-        var resp:[String:Any] = [String:Any]()
-        resp["seedRPCServerAddrList"] = seedRPCServerAddrs
-        result(resp)
+            var resp:[String:Any] = [String:Any]()
+            resp["seedRPCServerAddrList"] = seedRPCServerAddrs
+            self.resultSuccess(result: result, resp: resp)
+        }
+        walletQueue.async(execute: walletWorkItem!)
     }
 
     private func create(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -97,20 +107,23 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        var error: NSError?
-        let account:NknAccount? = NknNewAccount(seed?.data, &error)
-        if (error != nil) {
-            resultError(result: result, error: error)
-            return
-        }
-        let wallet = NknWallet(account, config: config)
+        walletWorkItem = DispatchWorkItem {
+            var error: NSError?
+            let account:NknAccount? = NknNewAccount(seed?.data, &error)
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
+            let wallet = NknWallet(account, config: config)
 
-        var resp:[String:Any] = [String:Any]()
-        resp["address"] = wallet?.address()
-        resp["keystore"] = wallet?.toJSON(nil)
-        resp["publicKey"] = wallet?.pubKey()
-        resp["seed"] = wallet?.seed()
-        result(resp)
+            var resp:[String:Any] = [String:Any]()
+            resp["address"] = wallet?.address()
+            resp["keystore"] = wallet?.toJSON(nil)
+            resp["publicKey"] = wallet?.pubKey()
+            resp["seed"] = wallet?.seed()
+            self.resultSuccess(result: result, resp: resp)
+        }
+        walletQueue.async(execute: walletWorkItem!)
     }
 
     private func restore(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -134,32 +147,38 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        var error: NSError?
-        let wallet = NknWalletFromJSON(keystore, config, &error)
-        if (error != nil) {
-            resultError(result: result, error: error)
-            return
-        }
+        walletWorkItem = DispatchWorkItem {
+            var error: NSError?
+            let wallet = NknWalletFromJSON(keystore, config, &error)
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
 
-        var resp:[String:Any] = [String:Any]()
-        resp["address"] = wallet?.address()
-        resp["keystore"] = wallet?.toJSON(nil)
-        resp["publicKey"] = wallet?.pubKey()
-        resp["seed"] = wallet?.seed()
-        result(resp)
+            var resp:[String:Any] = [String:Any]()
+            resp["address"] = wallet?.address()
+            resp["keystore"] = wallet?.toJSON(nil)
+            resp["publicKey"] = wallet?.pubKey()
+            resp["seed"] = wallet?.seed()
+            self.resultSuccess(result: result, resp: resp)
+        }
+        walletQueue.async(execute: walletWorkItem!)
     }
 
     private func pubKeyToWalletAddr(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let publicKey = args["publicKey"] as! String
 
-        var error: NSError?
-        let address = NknPubKeyToWalletAddr(Data(hex: publicKey), &error)
-        if (error != nil) {
-            resultError(result: result, error: error)
-            return
+        walletWorkItem = DispatchWorkItem {
+            var error: NSError?
+            let address = NknPubKeyToWalletAddr(Data(hex: publicKey), &error)
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
+            self.resultSuccess(result: result, resp: address)
         }
-        result(address)
+        walletQueue.async(execute: walletWorkItem!)
     }
 
     func getBalance(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -176,7 +195,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
             let account = NknAccount(NknRandomBytes(32, &error))
             if(error != nil) {
@@ -195,6 +214,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
+        walletMoneyQueue.async(execute: walletMoneyWorkItem!)
     }
 
     func transfer(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -216,7 +236,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
             let account:NknAccount? = NknNewAccount(seed?.data, &error)
             if (error != nil) {
@@ -248,6 +268,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: hash)
             return
         }
+        walletMoneyQueue.async(execute: walletMoneyWorkItem!)
     }
 
     private func getSubscribers(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -269,7 +290,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletEventWorkItem = DispatchWorkItem {
             var error: NSError?
             let res: NknSubscribers? = NknGetSubscribers(topic, offset, limit, meta, txPool, subscriberHashPrefix?.data, config, &error)
             if (error != nil) {
@@ -282,8 +303,8 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
             self.resultSuccess(result: result, resp: mapPro.result)
             return
-
         }
+        walletEventQueue.async(execute: walletEventWorkItem!)
     }
 
     private func getSubscribersCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -301,7 +322,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletEventWorkItem = DispatchWorkItem {
             var count: Int = 0
             var error: NSError?
             NknGetSubscribersCount(topic, subscriberHashPrefix?.data, config, &count, &error)
@@ -312,8 +333,8 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
             self.resultSuccess(result: result, resp: count)
             return
-
         }
+        walletEventQueue.async(execute: walletEventWorkItem!)
     }
 
     private func getSubscription(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -332,7 +353,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletEventWorkItem = DispatchWorkItem {
             var error: NSError?
             let res: NknSubscription? = NknGetSubscription(topic, subscriber, config, &error)
             if (error != nil) {
@@ -346,6 +367,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: resp)
             return
         }
+        walletEventQueue.async(execute: walletEventWorkItem!)
     }
 
     private func getHeight(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -361,7 +383,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletEventWorkItem = DispatchWorkItem {
             var height: Int32 = 0
             var error: NSError?
             NknGetHeight(config, &height, &error)
@@ -372,8 +394,8 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
             self.resultSuccess(result: result, resp: height)
             return
-
         }
+        walletEventQueue.async(execute: walletEventWorkItem!)
     }
 
     private func getNonce(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -391,7 +413,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         // config.rpcConcurrency = 4
 
-        walletQueue.async {
+        walletEventWorkItem = DispatchWorkItem {
             var nonce: Int64 = 0
             var error: NSError?
             NknGetNonce(address, txPool, config, &nonce, &error)
@@ -402,7 +424,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
             self.resultSuccess(result: result, resp: nonce)
             return
-
         }
+        walletEventQueue.async(execute: walletEventWorkItem!)
     }
 }
