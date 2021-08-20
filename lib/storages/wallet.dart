@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:nmobile/helpers/local_storage.dart';
+import 'package:nmobile/helpers/secure_storage.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import '../helpers/local_storage.dart';
-import '../helpers/secure_storage.dart';
 
 class WalletStorage with Tag {
   static const String KEY_WALLET = 'WALLETS';

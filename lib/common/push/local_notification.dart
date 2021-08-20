@@ -2,11 +2,10 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
-
-import '../global.dart';
 
 class LocalNotification {
   static const String channel_id = "nmobile_d_chat";

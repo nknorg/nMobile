@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -11,8 +12,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import '../locator.dart';
 
 class TopicCommon with Tag {
   TopicStorage _topicStorage = TopicStorage();

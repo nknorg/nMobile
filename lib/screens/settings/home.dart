@@ -16,12 +16,11 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import '../common/select.dart';
 
 class SettingsHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/settings';

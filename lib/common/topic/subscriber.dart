@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import '../locator.dart';
 
 class SubscriberCommon with Tag {
   SubscriberStorage _subscriberStorage = SubscriberStorage();

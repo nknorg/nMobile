@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import '../helpers/local_storage.dart';
+import 'package:nmobile/helpers/local_storage.dart';
 
 class SettingsStorage {
   static const String SETTINGS_KEY = 'SETTINGS';

@@ -3,11 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:uuid/uuid.dart';
-
-import '../utils/logger.dart';
 
 class Common {
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.mobile/native/common_method');
