@@ -4,11 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/utils/asset.dart';
-
-import 'avatar.dart';
 
 class ContactAvatarEditable extends BaseStateFulWidget {
   final ContactSchema contact;

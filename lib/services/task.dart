@@ -82,7 +82,14 @@ class TaskService with Tag {
   }
 
   void removeTask1(String key) {
-    tasks1.remove(key);
+    if (!tasks1.keys.contains(key)) return;
+    Map<String, Function(String)> temp = Map();
+    tasks1.forEach((k, v) {
+      if (k != key) {
+        temp[k] = v;
+      }
+    });
+    tasks1 = temp;
   }
 
   void addTask60(String key, Function(String) func, {bool callNow = true}) {
@@ -92,7 +99,14 @@ class TaskService with Tag {
   }
 
   void removeTask60(String key) {
-    tasks60.remove(key);
+    if (!tasks60.keys.contains(key)) return;
+    Map<String, Function(String)> temp = Map();
+    tasks60.forEach((k, v) {
+      if (k != key) {
+        temp[k] = v;
+      }
+    });
+    tasks60 = temp;
   }
 
   void addTask300(String key, Function(String) func, {bool callNow = true}) {
@@ -102,6 +116,13 @@ class TaskService with Tag {
   }
 
   void removeTask300(String key) {
-    _tasks300.remove(key);
+    if (!_tasks300.keys.contains(key)) return;
+    Map<String, Function(String)> temp = Map();
+    _tasks300.forEach((k, v) {
+      if (k != key) {
+        temp[k] = v;
+      }
+    });
+    _tasks300 = temp;
   }
 }

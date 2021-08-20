@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import 'item.dart';
 
 class WalletDropdown extends StatelessWidget with Tag {
   final WalletSchema wallet;

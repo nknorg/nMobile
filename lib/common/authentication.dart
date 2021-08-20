@@ -1,13 +1,12 @@
 import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
-
-import 'global.dart';
 
 /// Biometric authentication (Face ID, Touch ID or lock code), pin code, wallet password
 class Authorization {

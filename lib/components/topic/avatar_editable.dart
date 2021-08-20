@@ -4,11 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/topic/avatar.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/utils/asset.dart';
-
-import 'avatar.dart';
 
 class TopicAvatarEditable extends BaseStateFulWidget {
   final TopicSchema topic;

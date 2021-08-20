@@ -1,4 +1,8 @@
 import 'package:get_it/get_it.dart';
+import 'package:nmobile/common/application.dart';
+import 'package:nmobile/common/authentication.dart';
+import 'package:nmobile/common/chat/chat.dart';
+import 'package:nmobile/common/chat/chat_in.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/chat/session.dart';
 import 'package:nmobile/common/client/client.dart';
@@ -11,11 +15,6 @@ import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
 import 'package:nmobile/services/task.dart';
-
-import 'application.dart';
-import 'authentication.dart';
-import 'chat/chat.dart';
-import 'chat/chat_in.dart';
 
 GetIt locator = GetIt.instance;
 

@@ -1,4 +1,4 @@
-part of 'wallet_bloc.dart';
+import 'package:nmobile/schema/wallet.dart';
 
 abstract class WalletState {
   const WalletState();

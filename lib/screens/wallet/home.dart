@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/components/base/stateful.dart';
-
-import 'home_empty.dart';
-import 'home_list.dart';
+import 'package:nmobile/screens/wallet/home_empty.dart';
+import 'package:nmobile/screens/wallet/home_list.dart';
 
 class WalletHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/home';

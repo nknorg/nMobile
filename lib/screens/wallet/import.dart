@@ -10,11 +10,10 @@ import 'package:nmobile/components/layout/tabs.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
+import 'package:nmobile/screens/wallet/import_by_keystore.dart';
+import 'package:nmobile/screens/wallet/import_by_seed.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import 'import_by_keystore.dart';
-import 'import_by_seed.dart';
 
 class WalletImportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/import';

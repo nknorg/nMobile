@@ -2,15 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/layout/nav.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/screens/chat/home.dart';
+import 'package:nmobile/screens/settings/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import 'common/global.dart';
-import 'common/locator.dart';
-import 'components/layout/nav.dart';
-import 'native/common.dart';
-import 'screens/settings/home.dart';
 
 class AppScreen extends StatefulWidget {
   static const String routeName = '/';
