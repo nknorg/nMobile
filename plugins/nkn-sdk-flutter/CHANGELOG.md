@@ -1,3 +1,7 @@
+## 0.1.13
+
+* Fix ios measureSeedRPCServer and ios client onConnect
+
 ## 0.1.12
 
 * Add API DOC
