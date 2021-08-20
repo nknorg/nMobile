@@ -42,7 +42,7 @@ android {
 }
 
 dependencies {
-    implementation (name: "nkn", ext: "aar")
+    implementation project(":golib")
     implementation "org.bouncycastle:bcprov-jdk15to18:1.68"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3"

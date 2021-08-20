@@ -107,7 +107,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 resultError(result, e)
                 return@launch
             }
-
         }
     }
 
@@ -126,19 +125,20 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
         // config.rpcConcurrency = 4
 
-        try {
-            val account = Nkn.newAccount(seed)
-            val wallet = Nkn.newWallet(account, config)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val account = Nkn.newAccount(seed)
+                val wallet = Nkn.newWallet(account, config)
 
-            val resp = hashMapOf(
-                "address" to wallet.address(),
-                "keystore" to wallet.toJSON(),
-                "publicKey" to wallet.pubKey(),
-                "seed" to wallet.seed()
-            )
-            result.success(resp)
-        } catch (e: Throwable) {
-            result.error("", e.localizedMessage, e.message)
+                val resp = hashMapOf(
+                    "address" to wallet.address(), "keystore" to wallet.toJSON(), "publicKey" to wallet.pubKey(), "seed" to wallet.seed()
+                )
+                result.success(resp)
+                return@launch
+            } catch (e: Throwable) {
+                result.error("", e.localizedMessage, e.message)
+                return@launch
+            }
         }
     }
 
@@ -162,26 +162,30 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
         // config.rpcConcurrency = 4
 
-        try {
-            val wallet = Nkn.walletFromJSON(keystore, config)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val wallet = Nkn.walletFromJSON(keystore, config)
 
-            val resp = hashMapOf(
-                "address" to wallet.address(),
-                "keystore" to wallet?.toJSON(),
-                "publicKey" to wallet.pubKey(),
-                "seed" to wallet.seed()
-            )
-            result.success(resp)
-        } catch (e: Throwable) {
-            result.error("", e.localizedMessage, e.message)
+                val resp = hashMapOf(
+                    "address" to wallet.address(), "keystore" to wallet?.toJSON(), "publicKey" to wallet.pubKey(), "seed" to wallet.seed()
+                )
+                result.success(resp)
+                return@launch
+            } catch (e: Throwable) {
+                result.error("", e.localizedMessage, e.message)
+                return@launch
+            }
         }
     }
 
     private fun pubKeyToWalletAddr(call: MethodCall, result: MethodChannel.Result) {
         val pubkey = call.argument<String>("publicKey")
 
-        val addr = Nkn.pubKeyToWalletAddr(Hex.decode(pubkey))
-        result.success(addr)
+        viewModelScope.launch(Dispatchers.IO) {
+            val addr = Nkn.pubKeyToWalletAddr(Hex.decode(pubkey))
+            result.success(addr)
+            return@launch
+        }
     }
 
     private fun getBalance(call: MethodCall, result: MethodChannel.Result) {
