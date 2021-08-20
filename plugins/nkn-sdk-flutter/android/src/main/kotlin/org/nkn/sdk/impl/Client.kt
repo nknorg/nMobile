@@ -194,6 +194,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 resultSuccess(result, data)
 
                 onConnect(client)
+
                 async(Dispatchers.IO) { onMessage(client) }
             } catch (e: Throwable) {
                 resultError(result, "", e.localizedMessage)
@@ -203,6 +204,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     private fun close(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
+
         viewModelScope.launch(Dispatchers.IO) {
             closeClient(_id)
             resultSuccess(result, null)
