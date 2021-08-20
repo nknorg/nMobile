@@ -13,12 +13,11 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-
-import '../common/select.dart';
 
 class FileType {
   static const int cache = 0;
