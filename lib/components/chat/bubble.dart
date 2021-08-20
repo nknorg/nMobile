@@ -27,8 +27,6 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
-import '../text/markdown.dart';
-
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
   final ContactSchema? contact;

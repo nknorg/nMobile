@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -16,8 +17,6 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import '../global.dart';
 
 class ClientConnectStatus {
   static const int disconnected = 0;

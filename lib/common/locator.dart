@@ -10,8 +10,8 @@ import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
+import 'package:nmobile/services/task.dart';
 
-import '../services/task.dart';
 import 'application.dart';
 import 'authentication.dart';
 import 'chat/chat.dart';
