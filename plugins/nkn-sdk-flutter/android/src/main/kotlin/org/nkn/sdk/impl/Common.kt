@@ -6,6 +6,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import org.nkn.sdk.IChannelHandler
 
+
 class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     companion object {
         val CHANNEL_NAME = "org.nkn.sdk/common"
@@ -40,6 +41,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "installWalletPlugin" -> {
                 installWalletPlugin(call, result)
             }
+
             else -> {
                 result.notImplemented()
             }
