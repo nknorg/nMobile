@@ -7,21 +7,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/app.dart';
+import 'package:nmobile/blocs/settings/settings_bloc.dart';
+import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
+import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-
-import 'app.dart';
-import 'blocs/settings/settings_bloc.dart';
-import 'blocs/settings/settings_state.dart';
-import 'common/global.dart';
-import 'common/locator.dart';
-import 'common/settings.dart';
-import 'generated/l10n.dart';
-import 'routes/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

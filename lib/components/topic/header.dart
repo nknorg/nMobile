@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/topic/avatar.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
-
-import 'avatar.dart';
 
 class TopicHeader extends StatelessWidget {
   final TopicSchema topic;

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/app.dart';
-
-import 'chat.dart' as chat;
-import 'contact.dart' as contact;
-import 'home.dart' as home;
-import 'settings.dart' as settings;
-import 'topic.dart' as topic;
-import 'wallet.dart' as wallet;
+import 'package:nmobile/routes/chat.dart' as chat;
+import 'package:nmobile/routes/contact.dart' as contact;
+import 'package:nmobile/routes/home.dart' as home;
+import 'package:nmobile/routes/settings.dart' as settings;
+import 'package:nmobile/routes/topic.dart' as topic;
+import 'package:nmobile/routes/wallet.dart' as wallet;
 
 class Routes {
   static final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
