@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
-
-import 'avatar.dart';
 
 class ContactHeader extends StatelessWidget {
   final ContactSchema contact;

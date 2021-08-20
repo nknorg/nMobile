@@ -10,9 +10,8 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/utils/asset.dart';
-
-import 'messages.dart';
 
 class ChatNoMessageLayout extends BaseStateFulWidget {
   @override
