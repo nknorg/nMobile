@@ -1,10 +1,9 @@
 import 'dart:async';
 
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import '../settings.dart';
 
 class DeviceInfoCommon with Tag {
   DeviceInfoStorage _deviceInfoStorage = DeviceInfoStorage();

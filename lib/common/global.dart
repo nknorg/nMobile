@@ -6,11 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../storages/settings.dart';
 
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");

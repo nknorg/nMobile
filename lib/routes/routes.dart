@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/app.dart';
 
-import '../app.dart';
 import 'chat.dart' as chat;
 import 'contact.dart' as contact;
 import 'home.dart' as home;

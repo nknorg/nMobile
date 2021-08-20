@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -11,8 +12,6 @@ import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
-
-import '../settings.dart';
 
 class ChatCommon with Tag {
   String? currentChatTargetId;
