@@ -4,10 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-
-import 'option.dart';
 
 class TopicType {
   static int publicTopic = 1;

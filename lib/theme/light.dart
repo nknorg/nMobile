@@ -1,8 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
-import './theme.dart';
+import 'package:nmobile/theme/theme.dart';
 
 class LightTheme implements SkinTheme {
   @override

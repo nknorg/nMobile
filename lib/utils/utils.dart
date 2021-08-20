@@ -7,10 +7,9 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/utils/hash.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web3dart/credentials.dart';
-
-import 'hash.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -114,6 +113,7 @@ bool verifyEthAddress(String address) {
 }
 
 final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
+
 bool isPrivateTopicReg(String topic) {
   return privateTopicRegExp.hasMatch(topic);
 }

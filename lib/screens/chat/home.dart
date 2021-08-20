@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -21,12 +22,11 @@ import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
+import 'package:nmobile/screens/chat/no_wallet.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
-
-import 'no_wallet.dart';
 
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
