@@ -67,7 +67,7 @@ class TopicStorage with Tag {
             whereArgs: [schema.topic],
           );
           if (res != null && res.length > 0) {
-            throw Exception(["topic duplicated!"]);
+            logger.w("$TAG - insert - duplicated - schema:$schema");
           } else {
             id = await txn.insert(tableName, entity);
           }
@@ -78,12 +78,16 @@ class TopicStorage with Tag {
         schema?.id = id;
         logger.v("$TAG - insert - success - schema:$schema");
         return schema;
+      } else {
+        TopicSchema? exists = await queryByTopic(schema.topic);
+        if (exists != null) {
+          logger.i("$TAG - insert - exists - schema:$exists");
+        } else {
+          logger.w("$TAG - insert - fail - schema:$schema");
+        }
       }
-      logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
-      if (e.toString() != "topic duplicated!") {
         handleError(e);
-      }
     }
     return null;
   }

@@ -335,99 +335,110 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       },
       child: Container(
         height: ActionHeight,
-        color: _audioBgColorTween.transform(_audioDragPercent),
+        color: application.theme.backgroundColor1,
         child: Row(
           children: <Widget>[
             Expanded(
-              child: !_audioRecordVisible
-                  ? Row(
-                      children: [
-                        SizedBox(
-                          width: ActionWidth,
-                          height: ActionHeight,
-                          child: UnconstrainedBox(
-                            child: Asset.iconSvg(
-                              'grid',
-                              width: 24,
-                              color: _theme.primaryColor,
-                            ),
+              child: Stack(
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: ActionWidth,
+                        height: ActionHeight,
+                        child: UnconstrainedBox(
+                          child: Asset.iconSvg(
+                            'grid',
+                            width: 24,
+                            color: _theme.primaryColor,
                           ),
                         ),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _theme.backgroundColor2,
-                              borderRadius: BorderRadius.all(Radius.circular(20)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: <Widget>[
-                                Expanded(
-                                  child: TextField(
-                                    style: TextStyle(fontSize: 14, height: 1.4),
-                                    decoration: InputDecoration(
-                                      hintText: S.of(context).type_a_message,
-                                      hintStyle: TextStyle(color: _theme.fontColor2),
-                                      contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                      border: UnderlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                                        borderSide: const BorderSide(width: 0, style: BorderStyle.none),
-                                      ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _theme.backgroundColor2,
+                            borderRadius: BorderRadius.all(Radius.circular(20)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Expanded(
+                                child: TextField(
+                                  style: TextStyle(fontSize: 14, height: 1.4),
+                                  decoration: InputDecoration(
+                                    hintText: S.of(context).type_a_message,
+                                    hintStyle: TextStyle(color: _theme.fontColor2),
+                                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                    border: UnderlineInputBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                                      borderSide: const BorderSide(width: 0, style: BorderStyle.none),
                                     ),
-                                    maxLines: 5,
-                                    minLines: 1,
-                                    controller: _inputController,
-                                    focusNode: _inputFocusNode,
-                                    textInputAction: TextInputAction.newline,
-                                    onChanged: (val) {
-                                      String draft = _inputController.text;
-                                      if (draft.isNotEmpty) {
-                                        memoryCache.setDraft(widget.targetId, draft);
-                                      } else {
-                                        memoryCache.removeDraft(widget.targetId);
-                                      }
-                                      setState(() {
-                                        _canSendText = val.isNotEmpty;
-                                      });
-                                    },
+                                  ),
+                                  maxLines: 5,
+                                  minLines: 1,
+                                  controller: _inputController,
+                                  focusNode: _inputFocusNode,
+                                  textInputAction: TextInputAction.newline,
+                                  onChanged: (val) {
+                                    String draft = _inputController.text;
+                                    if (draft.isNotEmpty) {
+                                      memoryCache.setDraft(widget.targetId, draft);
+                                    } else {
+                                      memoryCache.removeDraft(widget.targetId);
+                                    }
+                                    setState(() {
+                                      _canSendText = val.isNotEmpty;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  _audioRecordVisible
+                      ? Container(
+                          color: application.theme.backgroundColor1,
+                          child: Container(
+                            color: _audioBgColorTween.transform(_audioDragPercent),
+                            child: Row(
+                              children: [
+                                SizedBox(width: 16),
+                                Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
+                                SizedBox(width: 8),
+                                Container(
+                                  child: Label(
+                                    recordDurationText,
+                                    type: LabelType.bodyRegular,
+                                    fontWeight: FontWeight.normal,
+                                    color: recordWidgetColor,
                                   ),
                                 ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Container(
+                                    height: ActionHeight,
+                                    child: Center(
+                                      child: Label(
+                                        _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
+                                        type: LabelType.bodyLarge,
+                                        textAlign: TextAlign.center,
+                                        color: recordWidgetColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 16),
                               ],
                             ),
                           ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        SizedBox(width: 16),
-                        Icon(FontAwesomeIcons.microphone, size: 24, color: volumeColor),
-                        SizedBox(width: 8),
-                        Container(
-                          child: Label(
-                            recordDurationText,
-                            type: LabelType.bodyRegular,
-                            fontWeight: FontWeight.normal,
-                            color: recordWidgetColor,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Container(
-                            height: ActionHeight,
-                            child: Center(
-                              child: Label(
-                                _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
-                                type: LabelType.bodyLarge,
-                                textAlign: TextAlign.center,
-                                color: recordWidgetColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                      ],
-                    ),
+                        )
+                      : SizedBox.shrink()
+                ],
+              ),
             ),
             _canSendText
                 ? SizedBox(
@@ -446,6 +457,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                         width: ActionWidth,
                         height: ActionHeight,
                         alignment: Alignment.center,
+                        color: application.theme.backgroundColor1,
                         child: Label(
                           S.of(context).send,
                           type: LabelType.bodyLarge,
@@ -453,14 +465,20 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                           color: _theme.primaryColor,
                         ),
                       )
-                    : SizedBox(
-                        width: ActionWidth,
-                        height: ActionHeight,
-                        child: UnconstrainedBox(
-                          child: Asset.iconSvg(
-                            'microphone',
-                            width: 24,
-                            color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
+                    : Container(
+                        color: application.theme.backgroundColor1,
+                        child: Container(
+                          color: _audioBgColorTween.transform(_audioDragPercent),
+                          child: SizedBox(
+                            width: ActionWidth,
+                            height: ActionHeight,
+                            child: UnconstrainedBox(
+                              child: Asset.iconSvg(
+                                'microphone',
+                                width: 24,
+                                color: !_canSendText ? _theme.primaryColor : _theme.fontColor2,
+                              ),
+                            ),
                           ),
                         ),
                       )),

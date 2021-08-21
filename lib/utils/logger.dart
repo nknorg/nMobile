@@ -1,13 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:logger/logger.dart';
 
-Logger logger = Logger(
-  filter: null,
-  printer: ColorPrinter(),
-  output: null,
-  level: Level.verbose,
-);
+Logger logger = Platform.isAndroid
+    ? Logger(
+        filter: null,
+        printer: ColorPrinter(),
+        output: null,
+        level: Level.verbose,
+      )
+    : Logger(printer: PrettyPrinter());
 
 mixin Tag {
   String get TAG => _tagInner(32, 5);

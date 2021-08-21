@@ -46,7 +46,7 @@ class SessionStorage with Tag {
             whereArgs: [schema.targetId],
           );
           if (res != null && res.length > 0) {
-            throw Exception(["session duplicated!"]);
+            logger.w("$TAG - insert - duplicated - schema:$schema");
           } else {
             id = await txn.insert(tableName, entity);
           }
@@ -57,8 +57,14 @@ class SessionStorage with Tag {
         schema.id = id;
         logger.v("$TAG - insert - success - schema:$schema");
         return schema;
+      } else {
+        SessionSchema? exists = await query(schema.targetId);
+        if (exists != null) {
+          logger.i("$TAG - insert - exists - schema:$exists");
+        } else {
+          logger.w("$TAG - insert - fail - schema:$schema");
+        }
       }
-      logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
       handleError(e);
     }
