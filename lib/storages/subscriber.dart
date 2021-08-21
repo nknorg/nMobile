@@ -58,7 +58,7 @@ class SubscriberStorage with Tag {
             whereArgs: [schema.topic, schema.clientAddress],
           );
           if (res != null && res.length > 0) {
-            throw Exception(["subscriber duplicated!"]);
+            logger.w("$TAG - insert - duplicated - schema:$schema");
           } else {
             id = await txn.insert(tableName, entity);
           }
@@ -69,12 +69,16 @@ class SubscriberStorage with Tag {
         schema?.id = id;
         logger.v("$TAG - insert - success - schema:$schema");
         return schema;
+      } else {
+        SubscriberSchema? exists = await queryByTopicChatId(schema.topic, schema.clientAddress);
+        if (exists != null) {
+          logger.i("$TAG - insert - exists - schema:$exists");
+        } else {
+          logger.w("$TAG - insert - fail - schema:$schema");
+        }
       }
-      logger.w("$TAG - insert - fail - schema:$schema");
     } catch (e) {
-      if (e.toString() != "subscriber duplicated!") {
-        handleError(e);
-      }
+      handleError(e);
     }
     return null;
   }
