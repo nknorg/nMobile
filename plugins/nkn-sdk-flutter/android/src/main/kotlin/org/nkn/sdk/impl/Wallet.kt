@@ -133,10 +133,10 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 val resp = hashMapOf(
                     "address" to wallet.address(), "keystore" to wallet.toJSON(), "publicKey" to wallet.pubKey(), "seed" to wallet.seed()
                 )
-                result.success(resp)
+                resultSuccess(result, resp)
                 return@launch
             } catch (e: Throwable) {
-                result.error("", e.localizedMessage, e.message)
+                resultError(result, e)
                 return@launch
             }
         }
@@ -169,10 +169,10 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 val resp = hashMapOf(
                     "address" to wallet.address(), "keystore" to wallet?.toJSON(), "publicKey" to wallet.pubKey(), "seed" to wallet.seed()
                 )
-                result.success(resp)
+                resultSuccess(result, resp)
                 return@launch
             } catch (e: Throwable) {
-                result.error("", e.localizedMessage, e.message)
+                resultError(result, e)
                 return@launch
             }
         }
@@ -183,7 +183,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             val addr = Nkn.pubKeyToWalletAddr(Hex.decode(pubkey))
-            result.success(addr)
+            resultSuccess(result, addr)
             return@launch
         }
     }
