@@ -70,14 +70,14 @@ class Global {
     }
   }
 
-  static Future<List<String>> getSeedRpcList({bool measure = true}) async {
-    List<String> list = await SettingsStorage.getSeedRpcServers();
+  static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = true}) async {
+    List<String> list = await SettingsStorage.getSeedRpcServers(prefix: prefix);
     list.addAll(defaultSeedRpcList);
     list = LinkedHashSet<String>.from(list).toList();
-    logger.i("Global - getSeedRpcList - seedRPCServer - length:${list.length} - list:$list");
+    logger.i("Global - getSeedRpcList - seedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
     if (measure) {
       list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
-      logger.i("Global - getSeedRpcList - measureSeedRPCServer - length:${list.length} - list:$list");
+      logger.i("Global - getSeedRpcList - measureSeedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
     }
     return list;
   }
@@ -101,7 +101,8 @@ class Global {
     // rpc
     if (nonce == null || nonce == 0) {
       if (walletAddress?.isNotEmpty == true) {
-        nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: await getSeedRpcList()));
+        List<String> seedRpcList = await Global.getSeedRpcList(walletAddress);
+        nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
       } else {
         nonce = await clientCommon.client?.getNonce(txPool: true);
       }
