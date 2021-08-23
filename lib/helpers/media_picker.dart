@@ -5,8 +5,10 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime_type/mime_type.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -230,7 +232,7 @@ class MediaPicker {
     }
     // crop
     File? cropFile = await ImageCropper.cropImage(
-      sourcePath: original.path,
+      sourcePath: original.absolute.path,
       cropStyle: cropStyle,
       aspectRatio: cropRatio,
       compressQuality: 100, // later handle
@@ -257,11 +259,28 @@ class MediaPicker {
 
   static Future<File?> _compressFile(File? original, int mediaType, int compressQuality) async {
     if (original == null) return null;
+
+    int size = await original.length();
+    bool overMaxSize = size >= ChatOutCommon.maxBodySize;
+    logger.i('MediaPicker - _compressFile - compress:START - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     bool isImage = ((mime(original.path)?.indexOf('image') ?? -1) >= 0) || (mediaType == MediaType.image);
-    if (compressQuality >= 100 || isGif || !isImage) {
+
+    if (isGif || !isImage) {
+      if (overMaxSize) {
+        Toast.show("图片太大了"); // TODO:GG locale maxSIze
+        return null;
+      }
       return original;
+    } else if (compressQuality >= 100) {
+      if (!overMaxSize) {
+        return original;
+      } else {
+        compressQuality = 50;
+      }
     }
+
     // filePath
     String? fileExt = Path.getFileExt(original);
     if (fileExt == null || fileExt.isEmpty) {
@@ -294,7 +313,7 @@ class MediaPicker {
     }
     // compress
     File? compressFile = await FlutterImageCompress.compressAndGetFile(
-      original.path,
+      original.absolute.path,
       compressPath,
       quality: compressQuality,
       autoCorrectionAngle: true,
@@ -304,9 +323,15 @@ class MediaPicker {
       // minHeight: 300,
     );
     logger.i('MediaPicker - _compressFile - compress - format:$format - path:${compressFile?.path}');
-    compressFile?.length().then((value) {
-      logger.i('MediaPicker - _compressFile - compress - size:${formatFlowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-    });
+
+    size = await compressFile?.length() ?? ChatOutCommon.maxBodySize;
+    overMaxSize = size >= ChatOutCommon.maxBodySize;
+    if (overMaxSize) {
+      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      return _compressFile(compressFile, mediaType, 50);
+    }
+    logger.i('MediaPicker - _compressFile - compress:END - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+
     return compressFile;
   }
 }
