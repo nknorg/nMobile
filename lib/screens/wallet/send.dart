@@ -267,7 +267,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     S _localizations = S.of(context);
     Loading.show();
     try {
-      Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+      List<String> seedRpcList = await Global.getSeedRpcList(this._wallet.address);
+      Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
       if (nkn.address.isEmpty || nkn.address != _wallet.address) {
         Toast.show(_localizations.password_wrong);
         return false;

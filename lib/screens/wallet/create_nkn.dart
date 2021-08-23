@@ -61,7 +61,8 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
       String password = _passwordController.text;
       logger.i("$TAG - name:$name, password:$password");
 
-      Wallet nkn = await Wallet.create(null, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+      List<String> seedRpcList = await Global.getSeedRpcList(null);
+      Wallet nkn = await Wallet.create(null, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
       logger.i("$TAG - wallet create - nkn:${nkn.toString()}");
       if (nkn.address.isEmpty || nkn.keystore.isEmpty) {
         Loading.dismiss();
