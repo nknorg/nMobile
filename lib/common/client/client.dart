@@ -83,7 +83,7 @@ class ClientCommon with Tag {
 
       dialogVisible?.call(true);
 
-      List<String> seedRpcList = await Global.getSeedRpcList();
+      List<String> seedRpcList = await Global.getSeedRpcList(schema.address);
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
       Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
@@ -115,7 +115,7 @@ class ClientCommon with Tag {
         return null;
       }
       // loop
-      await SettingsStorage.setSeedRpcServers([]);
+      await SettingsStorage.setSeedRpcServers([], prefix: schema.address);
       await Future.delayed(Duration(seconds: 1));
       return signIn(schema, walletDefault: walletDefault, dialogVisible: dialogVisible, pwd: pwd);
     }
@@ -131,7 +131,8 @@ class ClientCommon with Tag {
     _statusSink.add(ClientConnectStatus.connecting);
 
     // client create
-    ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList ?? await Global.getSeedRpcList());
+    seedRpcList = seedRpcList ?? await Global.getSeedRpcList(wallet.address);
+    ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList);
     client = await Client.create(wallet.seed, config: config);
 
     dialogVisible?.call(false);
@@ -146,7 +147,7 @@ class ClientCommon with Tag {
     Completer completer = Completer();
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
       logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-      SettingsStorage.addSeedRpcServers(event.rpcServers!);
+      SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
       _statusSink.add(ClientConnectStatus.connected);
       if (!completer.isCompleted) completer.complete();
     });

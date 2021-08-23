@@ -91,8 +91,7 @@ class WalletCommon with Tag {
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
       logger.d("$TAG - queryBalance: START");
-      final seedRpcList = await Global.getSeedRpcList();
-      state.wallets.forEach((w) {
+      state.wallets.forEach((w) async {
         if (w.type == WalletType.eth) {
           _erc20client.getBalanceEth(address: w.address).then((balance) {
             logger.d("$TAG - queryBalance: END - eth - balance_old:${w.balanceEth} - balance_new:${balance?.ether} - wallet_address:${w.address}");
@@ -109,6 +108,7 @@ class WalletCommon with Tag {
             }
           });
         } else {
+          final seedRpcList = await Global.getSeedRpcList(w.address);
           Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: seedRpcList)).then((balance) {
             logger.d("$TAG - queryBalance: END - nkn - balance_old:${w.balance} - balance_new:$balance - wallet_address:${w.address}");
             if (w.balance != balance) {
