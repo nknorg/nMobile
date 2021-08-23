@@ -74,24 +74,32 @@ class ClientCommon with Tag {
   /// ******************************************************   Client   ****************************************************** ///
 
   // need close
-  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function? onWalletOk, String? pwd}) async {
+  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function(bool)? dialogVisible, String? pwd}) async {
     if (schema == null) return null;
     // if (client != null) await close(); // async boom!!!
     try {
       pwd = pwd ?? (await authorization.getWalletPassword(schema.address));
       if (pwd == null || pwd.isEmpty) return null;
+
+      dialogVisible?.call(true);
+
+      List<String> seedRpcList = await Global.getSeedRpcList();
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
-      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: await Global.getSeedRpcList()));
-      if (wallet.address.isEmpty || wallet.keystore.isEmpty) return null;
+      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
+      if (wallet.address.isEmpty || wallet.keystore.isEmpty) {
+        dialogVisible?.call(false);
+        return null;
+      }
 
       if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
 
       String pubKey = hexEncode(wallet.publicKey);
       String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
-      if (pubKey.isEmpty || password.isEmpty) return null;
-
-      onWalletOk?.call();
+      if (pubKey.isEmpty || password.isEmpty) {
+        dialogVisible?.call(false);
+        return null;
+      }
 
       // open DB
       db = await DB.open(pubKey, password);
@@ -99,28 +107,34 @@ class ClientCommon with Tag {
       contactCommon.meUpdateSink.add(me);
 
       // start client connect (no await)
-      return await _connect(wallet);
+      return await _connect(wallet, dialogVisible: dialogVisible, seedRpcList: seedRpcList);
     } catch (e) {
       String? error = handleError(e);
       if ((error?.contains(S.of(Global.appContext).tip_password_error) == true) || (error?.contains("password") == true) || (error?.contains("keystore") == true)) {
+        dialogVisible?.call(false);
         return null;
       }
       // loop
       await SettingsStorage.setSeedRpcServers([]);
       await Future.delayed(Duration(seconds: 1));
-      return signIn(schema, walletDefault: walletDefault, onWalletOk: onWalletOk, pwd: pwd);
+      return signIn(schema, walletDefault: walletDefault, dialogVisible: dialogVisible, pwd: pwd);
     }
     // return null;
   }
 
-  Future<Client?> _connect(Wallet? wallet) async {
-    if (wallet == null || wallet.seed.isEmpty) return null;
+  Future<Client?> _connect(Wallet? wallet, {Function(bool)? dialogVisible, List<String>? seedRpcList}) async {
+    if (wallet == null || wallet.seed.isEmpty) {
+      dialogVisible?.call(false);
+      return null;
+    }
     // status
     _statusSink.add(ClientConnectStatus.connecting);
 
     // client create
-    ClientConfig config = ClientConfig(seedRPCServerAddr: await Global.getSeedRpcList());
+    ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList ?? await Global.getSeedRpcList());
     client = await Client.create(wallet.seed, config: config);
+
+    dialogVisible?.call(false);
 
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
