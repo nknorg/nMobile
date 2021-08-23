@@ -260,7 +260,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._topic != null || this._contact == null) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if (isOpen == null || isOpen == true) return;
-    bool need = await SettingsStorage.isNeedTipNotificationOpen(this.targetId);
+    bool need = await SettingsStorage.isNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId);
     if (!need) return;
     // check
     int sendCount = 0, receiveCount = 0;
@@ -272,6 +272,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       }
       if (sendCount >= 3 && receiveCount >= 3) break;
     }
+    logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
     if (sendCount < 3 || receiveCount < 3) return;
     // tip dialog
     ModalDialog.of(this.context).confirm(
@@ -287,7 +288,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await SettingsStorage.setNeedTipNotificationOpen(this.targetId);
+    await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId);
   }
 
   _toggleNotificationOpen() async {
