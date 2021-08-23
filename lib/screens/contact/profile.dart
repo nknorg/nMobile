@@ -233,13 +233,13 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         Navigator.pop(this.context);
         return;
       }
-      var client = await clientCommon.signIn(walletDefault, onWalletOk: () => Loading.show());
+      var client = await clientCommon.signIn(walletDefault, dialogVisible: (show) => show ? Loading.show() : Loading.dismiss());
       await Future.delayed(Duration(seconds: 1)); // wait client create
 
       if (client != null) {
         // refresh state
         ContactSchema? _me = await contactCommon.getMe(canAdd: true);
-        await _refreshContactSchema(schema: _me);
+        _refreshContactSchema(schema: _me); // await
         Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
       } else {
         // pop
@@ -249,10 +249,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       // TimerAuth.instance.enableAuth(); // TODO:GG auth
     } catch (e) {
       handleError(e);
-      Loading.dismiss();
       Navigator.pop(this.context);
-    } finally {
-      Loading.dismiss();
     }
   }
 
