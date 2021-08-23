@@ -349,7 +349,8 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               eth.keystore,
             );
           } else {
-            Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: await Global.getSeedRpcList()));
+            List<String> seedRpcList = await Global.getSeedRpcList(_wallet?.address);
+            Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
             if (nkn.address.isEmpty || nkn.address != _wallet?.address) {
               Toast.show(_localizations.password_wrong);
               return;
