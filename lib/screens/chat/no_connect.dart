@@ -166,9 +166,8 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                                 await clientCommon.signIn(
                                   this._selectWallet,
                                   walletDefault: true,
-                                  onWalletOk: () => Loading.show(),
+                                  dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
                                 );
-                                Loading.dismiss();
                               },
                             ),
                           )
