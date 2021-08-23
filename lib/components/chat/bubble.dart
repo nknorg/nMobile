@@ -222,6 +222,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
     bool isSendOut = _message.isOutbound;
 
+    bool isTipBottom = _message.status == MessageStatus.SendSuccess || _message.status == MessageStatus.SendReceipt;
+
     List styles = _getStyles();
     BoxDecoration decoration = styles[0];
     bool dark = styles[1];
@@ -230,32 +232,32 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : (_hideProfile ? 0 : 8)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           isSendOut ? SizedBox.shrink() : _getAvatar(),
+          SizedBox(width: 8),
           Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 4),
-                  _getName(),
-                  SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
-                    children: [
-                      isSendOut ? _getTip(isSendOut) : SizedBox.shrink(),
-                      _getContent(decoration, dark),
-                      isSendOut ? SizedBox.shrink() : _getTip(isSendOut),
-                    ],
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 4),
+                _getName(),
+                SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  crossAxisAlignment: isTipBottom ? CrossAxisAlignment.end : CrossAxisAlignment.center,
+                  children: [
+                    isSendOut ? _getStatusTip(isSendOut) : SizedBox.shrink(),
+                    _getContent(decoration, dark),
+                    isSendOut ? SizedBox.shrink() : _getStatusTip(isSendOut),
+                  ],
+                ),
+              ],
             ),
           ),
+          SizedBox(width: 8),
           isSendOut ? _getAvatar() : SizedBox.shrink(),
         ],
       ),
@@ -294,73 +296,88 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         : SizedBox.shrink();
   }
 
-  Widget _getTip(bool self) {
+  Widget _getStatusTip(bool self) {
     S _localizations = S.of(context);
+
     bool isSending = _message.status == MessageStatus.Sending;
+    bool isSendFail = _message.status == MessageStatus.SendFail;
+    bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
+    bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
+
     bool hasProgress = (_message.content is File) && !_message.isTopic;
 
     bool showSending = isSending && !hasProgress;
     bool showProgress = isSending && hasProgress && _uploadProgress < 1;
-    bool showFail = _message.status == MessageStatus.SendFail;
 
-    return Expanded(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: self ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          showSending
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: SpinKitRing(
-                    color: application.theme.fontColor4,
-                    lineWidth: 1,
-                    size: 15,
-                  ),
-                )
-              : SizedBox.shrink(),
-          showProgress
-              ? Container(
-                  width: 40,
-                  height: 40,
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator(
-                    backgroundColor: application.theme.fontColor4.withAlpha(80),
-                    color: application.theme.primaryColor.withAlpha(200),
-                    strokeWidth: 2,
-                    value: _uploadProgress,
-                  ),
-                )
-              : SizedBox.shrink(),
-          showFail
-              ? ButtonIcon(
-                  icon: Icon(
-                    FontAwesomeIcons.exclamationCircle,
-                    size: 20,
-                    color: application.theme.fallColor,
-                  ),
-                  width: 50,
-                  height: 50,
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    ModalDialog.of(this.context).confirm(
-                      title: "confirm resend?", // TODO:GG locale resend title
-                      hasCloseButton: true,
-                      agree: Button(
-                        width: double.infinity,
-                        text: _localizations.send_message, // TODO:GG locale resend action
-                        backgroundColor: application.theme.strongColor,
-                        onPressed: () {
-                          widget.onResend?.call(_message.msgId);
-                          Navigator.pop(this.context);
-                        },
-                      ),
-                    );
-                  },
-                )
-              : SizedBox.shrink(),
-        ],
-      ),
-    );
+    if (showSending) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: SpinKitRing(
+          color: application.theme.fontColor4,
+          lineWidth: 1,
+          size: 15,
+        ),
+      );
+    } else if (showProgress) {
+      return Container(
+        width: 40,
+        height: 40,
+        padding: EdgeInsets.all(10),
+        child: CircularProgressIndicator(
+          backgroundColor: application.theme.fontColor4.withAlpha(80),
+          color: application.theme.primaryColor.withAlpha(200),
+          strokeWidth: 2,
+          value: _uploadProgress,
+        ),
+      );
+    } else if (isSendFail) {
+      return ButtonIcon(
+        icon: Icon(
+          FontAwesomeIcons.exclamationCircle,
+          size: 20,
+          color: application.theme.fallColor,
+        ),
+        width: 50,
+        height: 50,
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          ModalDialog.of(this.context).confirm(
+            title: "confirm resend?", // TODO:GG locale resend title
+            hasCloseButton: true,
+            agree: Button(
+              width: double.infinity,
+              text: _localizations.send_message, // TODO:GG locale resend action
+              backgroundColor: application.theme.strongColor,
+              onPressed: () {
+                widget.onResend?.call(_message.msgId);
+                Navigator.pop(this.context);
+              },
+            ),
+          );
+        },
+      );
+    } else if (isSendSuccess) {
+      return Container(
+        width: 5,
+        height: 5,
+        margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          color: application.theme.strongColor.withAlpha(127),
+        ),
+      );
+    } else if (isSendReceipt) {
+      return Container(
+        width: 5,
+        height: 5,
+        margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          color: application.theme.successColor.withAlpha(127),
+        ),
+      );
+    }
+    return SizedBox.shrink();
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
@@ -397,17 +414,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       key: _contentKey,
       onTap: onTap,
       child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
         padding: EdgeInsets.all(10),
         decoration: decoration,
-        child: Container(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ..._bodyList,
-              _burnWidget(),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ..._bodyList,
+            _burnWidget(),
+          ],
         ),
       ),
     );
@@ -537,32 +552,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   List<dynamic> _getStyles() {
     SkinTheme _theme = application.theme;
-
     BoxDecoration decoration;
     bool dark = false;
-    if (_message.status == MessageStatus.Sending || _message.status == MessageStatus.SendSuccess) {
-      decoration = BoxDecoration(
-        color: _theme.primaryColor.withAlpha(50),
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(12),
-          topRight: const Radius.circular(12),
-          bottomLeft: const Radius.circular(12),
-          bottomRight: const Radius.circular(2),
-        ),
-      );
-      dark = true;
-    } else if (_message.status == MessageStatus.SendFail) {
-      decoration = BoxDecoration(
-        color: _theme.primaryColor.withAlpha(50),
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(12),
-          topRight: const Radius.circular(12),
-          bottomLeft: const Radius.circular(12),
-          bottomRight: const Radius.circular(2),
-        ),
-      );
-      dark = true;
-    } else if (_message.status == MessageStatus.SendReceipt) {
+    if (_message.isOutbound) {
       decoration = BoxDecoration(
         color: _theme.primaryColor,
         borderRadius: BorderRadius.only(
