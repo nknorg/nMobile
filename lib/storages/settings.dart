@@ -22,28 +22,28 @@ class SettingsStorage {
     return await _localStorage.set('$SETTINGS_KEY:$key', val);
   }
 
-  static Future setSeedRpcServers(List<String> val) async {
+  static Future setSeedRpcServers(List<String> val, {String? prefix}) async {
     List<String> list = val;
     list = LinkedHashSet<String>.from(list).toList();
     if (list.length > 10) {
       list = list.skip(list.length - 10).take(10).toList();
     }
-    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY', list);
+    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
   }
 
-  static Future addSeedRpcServers(List<String> val) async {
-    List<String> list = await getSeedRpcServers();
+  static Future addSeedRpcServers(List<String> val, {String? prefix}) async {
+    List<String> list = await getSeedRpcServers(prefix: prefix);
     list.addAll(val);
     list = LinkedHashSet<String>.from(list).toList();
     if (list.length > 10) {
       list = list.skip(list.length - 10).take(10).toList();
     }
-    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY', list);
+    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
   }
 
-  static Future<List<String>> getSeedRpcServers() async {
+  static Future<List<String>> getSeedRpcServers({String? prefix}) async {
     List<String> results = [];
-    List? list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY'));
+    List? list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}'));
     if (list?.isNotEmpty == true) {
       for (var i in list!) {
         results.add(i.toString());
@@ -53,14 +53,14 @@ class SettingsStorage {
     return results;
   }
 
-  static Future<bool> isNeedTipNotificationOpen(String? targetId) async {
+  static Future<bool> isNeedTipNotificationOpen(String prefix, String? targetId) async {
     if (targetId == null || targetId.isEmpty) return false;
-    var result = await _localStorage.get('$CHAT_TIP_NOTIFICATION:$targetId');
+    var result = await _localStorage.get('$CHAT_TIP_NOTIFICATION:$prefix:$targetId');
     return result?.toString() != "1";
   }
 
-  static Future setNeedTipNotificationOpen(String? targetId) async {
+  static Future setNeedTipNotificationOpen(String prefix, String? targetId) async {
     if (targetId == null || targetId.isEmpty) return;
-    await _localStorage.set('$CHAT_TIP_NOTIFICATION:$targetId', "1");
+    await _localStorage.set('$CHAT_TIP_NOTIFICATION:$prefix:$targetId', "1");
   }
 }

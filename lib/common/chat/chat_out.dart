@@ -25,10 +25,12 @@ import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   // piece
-  static const int piecesParity = 3;
-  static const int prePieceLength = 1024 * 6;
-  static const int minPiecesTotal = 2 * piecesParity; // parity >= 2
-  static const int maxPiecesTotal = 10 * piecesParity; // parity <= 10
+  static const int piecesPreLength = 5 * 1024; // 4 ~ 8k
+  static const int piecesMinTotal = 3; // total >= 3
+  static const int piecesMaxParity = (255 ~/ 3); // parity <= 85
+  static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 170
+
+  static const int maxBodySize = piecesMaxTotal * piecesPreLength * (piecesMinTotal - 1); // 1,740,800 less then 4,000,000(nkn-go-sdk)
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -614,7 +616,7 @@ class ChatOutCommon with Tag {
     int total = results[2];
     int parity = results[3];
 
-    // dataList.size = (total + parity)
+    // dataList.size = (total + parity) <= 255
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty) return null;
 
@@ -642,7 +644,7 @@ class ChatOutCommon with Tag {
     }
     logger.i("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     List<MessageSchema?> returnList = await Future.wait(futures);
-    returnList.sort((prev, next) => (prev?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? maxPiecesTotal).compareTo((next?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? maxPiecesTotal)));
+    returnList.sort((prev, next) => (prev?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next?.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
 
     List<MessageSchema?> successList = returnList.where((element) => element != null).toList();
     if (successList.length < total) {
@@ -660,28 +662,31 @@ class ChatOutCommon with Tag {
     File? file = message.content as File?;
     if (file == null || !file.existsSync()) return [];
     int length = await file.length();
-    if (length <= prePieceLength) return [];
+    if (length <= piecesPreLength) return [];
     // data
     Uint8List fileBytes = await file.readAsBytes();
     String base64Data = base64.encode(fileBytes);
-    // bytesLength
     int bytesLength = base64Data.length;
-    if (bytesLength < prePieceLength * minPiecesTotal) return [];
-    // total (5~257)
+    // total (3~170)
     int total;
-    if (bytesLength < prePieceLength * maxPiecesTotal) {
-      total = bytesLength ~/ prePieceLength;
-      if (bytesLength % prePieceLength > 0) {
+    if (bytesLength < piecesPreLength * piecesMinTotal) {
+      return [];
+    } else if (bytesLength <= piecesPreLength * piecesMaxTotal) {
+      total = bytesLength ~/ piecesPreLength;
+      if (bytesLength % piecesPreLength > 0) {
         total += 1;
       }
     } else {
-      total = maxPiecesTotal;
+      total = piecesMaxTotal;
     }
-    // parity(>=2)
-    int parity = total ~/ piecesParity;
-    if (parity <= minPiecesTotal ~/ piecesParity) {
-      parity = minPiecesTotal ~/ piecesParity;
+    // parity(1~85)
+    int parity = (total * (piecesMaxParity / (piecesMaxTotal + piecesMaxParity))).toInt();
+    if (total > piecesMaxParity) {
+      total = piecesMaxParity;
     }
+
+    // total + parity < 256
+    logger.i("$TAG - _convert2Pieces - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     return [base64Data, bytesLength, total, parity];
   }
 
