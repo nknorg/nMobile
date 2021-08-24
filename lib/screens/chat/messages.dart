@@ -64,6 +64,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
+  StreamSubscription? _appLifeChangeSubscription;
+
   StreamSubscription? _onTopicUpdateStreamSubscription;
   // StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onSubscriberUpdateStreamSubscription;
@@ -103,6 +105,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   void initState() {
     super.initState();
     chatCommon.currentChatTargetId = this.targetId;
+
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      if (states.length > 0) {
+        if (states[states.length - 1] == AppLifecycleState.resumed) {
+          _readMessages(); // await
+        }
+      }
+    });
 
     // topic
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
@@ -167,8 +178,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicJoined(); // await
 
     // read
-    sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await
-    chatCommon.readMessages(this.targetId, badgeDown: true); // await
+    _readMessages(); // await
   }
 
   @override
@@ -177,6 +187,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
+
+    _appLifeChangeSubscription?.cancel();
 
     _onTopicUpdateStreamSubscription?.cancel();
     // _onTopicDeleteStreamSubscription?.cancel();
@@ -207,11 +219,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _insertMessage(MessageSchema? added) {
     if (added == null) return;
     // read
-    if (!added.isOutbound) {
-      added.status = MessageStatus.Read;
-      chatCommon.updateMessageStatus(added, added.status); // await
-      // sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await // count not up in chatting
-      chatCommon.readMessages(added.targetId, badgeDown: false); // await
+    if (!added.isOutbound && application.appLifecycleState == AppLifecycleState.resumed) {
+      _readMessage(added); // await
     }
     // state
     setState(() {
@@ -240,6 +249,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _isJoined = joined;
       });
     }
+  }
+
+  _readMessages() async {
+    await sessionCommon.setUnReadCount(this.targetId, 0, notify: true);
+    await chatCommon.readMessages(this.targetId, badgeDown: true);
+  }
+
+  _readMessage(MessageSchema? added) async {
+    if (added == null) return;
+    added.status = MessageStatus.Read;
+    chatCommon.updateMessageStatus(added, added.status); // await
+    // sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await // count not up in chatting
+    chatCommon.readMessages(added.targetId, badgeDown: false); // await
   }
 
   _toggleBottomMenu() async {

@@ -30,7 +30,7 @@ class ChatOutCommon with Tag {
   static const int piecesMaxParity = (255 ~/ 3); // parity <= 85
   static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 170
 
-  static const int maxBodySize = piecesMaxTotal * piecesPreLength * (piecesMinTotal - 1); // 1,740,800 less then 4,000,000(nkn-go-sdk)
+  static const int maxBodySize = piecesMaxTotal * piecesPreLength ~/ 5 * 8; // 1,400,000 less then 4,000,000(nkn-go-sdk)
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -223,7 +223,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || content.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
+    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
       Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
@@ -245,7 +245,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
+    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
       Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
@@ -268,7 +268,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
+    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
       Toast.show("连接已断开"); // TODO:GG locale signIn
       return null;
     }
@@ -302,7 +302,7 @@ class ChatOutCommon with Tag {
       }
       int? total = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL];
       int? index = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
-      logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+      // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
       // callback
       if (!message.isTopic) {
         double percent = (index ?? 0) / (total ?? 1);
