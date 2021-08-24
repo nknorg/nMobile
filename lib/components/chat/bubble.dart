@@ -381,7 +381,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
-    double maxWidth = Global.screenWidth() - 12 * 2 * 2 - (24 * 2) * 2 - 8 * 2;
+    double maxWidth = Global.screenWidth() - (12 + 24 * 2 + 8) * 2;
 
     List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
@@ -491,8 +491,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeight,
-          minWidth: maxWidth / 4,
-          minHeight: maxWidth / 4,
+          minWidth: maxWidth / 5,
+          minHeight: maxWidth / 5,
         ),
         child: Image.file(file),
       )
@@ -510,8 +510,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double? durationS = MessageOptions.getAudioDuration(_message);
     double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
-    double minWidth = Global.screenWidth() * 0.1;
-    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.35 : 0.4);
+    double minWidth = Global.screenWidth() * 0.05;
+    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.3 : 0.35);
     double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
 
     num durationText = getNumByValueDouble(durationS ?? 0, 2) ?? 0;
