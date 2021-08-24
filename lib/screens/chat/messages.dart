@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -541,6 +542,16 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     }
                     File content = File(savePath);
                     if (!complete) {
+                      if (await content.exists()) {
+                        await content.delete();
+                      }
+                      await audioHelper.recordStop();
+                      return null;
+                    }
+                    int size = await content.length();
+                    logger.w("$TAG - onRecordTap - saveFileSize:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+                    if (size >= ChatOutCommon.maxBodySize) {
+                      Toast.show("音频文件太大了");
                       if (await content.exists()) {
                         await content.delete();
                       }

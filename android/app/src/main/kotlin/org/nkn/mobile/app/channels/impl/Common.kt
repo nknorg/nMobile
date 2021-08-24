@@ -300,8 +300,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val bytesLength = call.argument<Int>("bytesLength")!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            val totalShards = dataShards + parityShards
-            val encodeDataBytes = BytesArray(totalShards.toLong())
+            val encodeDataBytes = BytesArray((dataShards + parityShards).toLong())
             var piecesLength = 0
             for (index in dataList.indices) {
                 val data = dataList[index]
@@ -319,7 +318,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 val ok = encoder.verifyBytesArray(encodeDataBytes)
                 if (!ok) Log.e("combinePieces", "verifyBytesArray == false")
             } catch (e: Exception) {
-                Log.e("combinePieces", "reconstructBytesArrayE:" + e.localizedMessage)
+                Log.e("combinePieces", "reconstructBytesArray:" + e.localizedMessage)
                 resultError(result, e)
                 return@launch
             }
