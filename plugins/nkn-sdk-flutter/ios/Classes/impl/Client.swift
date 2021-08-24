@@ -294,6 +294,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let data = args["data"] as! String
         let maxHoldingSeconds = args["maxHoldingSeconds"] as? Int32 ?? 0
         let txPool = args["txPool"] as? Bool ?? false
+        let offset = args["offset"] as? Int32 ?? 0
+        let limit = args["limit"] as? Int32 ?? 1000
 
         guard (clientMap.keys.contains(_id)) else {
             result(FlutterError(code: "", message: "client is null", details: ""))
@@ -309,6 +311,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.maxHoldingSeconds = maxHoldingSeconds < 0 ? 0 : maxHoldingSeconds
                 config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
                 config.txPool = txPool
+                config.offset = offset
+                config.limit = limit
 
                 try client.publishText(topic, data: data, config: config)
 
