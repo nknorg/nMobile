@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:nmobile/common/chat/chat_out.dart';
+import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
@@ -15,8 +16,6 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-
-import '../locator.dart';
 
 class ChatInCommon with Tag {
   // ignore: close_sinks
@@ -88,7 +87,6 @@ class ChatInCommon with Tag {
     // session
     await chatCommon.sessionHandle(received); // must await
     // message
-    // TODO:GG ACK receive_at
     bool receiveOk = false;
     switch (received.contentType) {
       case MessageContentType.ping:
@@ -141,7 +139,8 @@ class ChatInCommon with Tag {
     }
     if (received.canDisplayAndRead) {
       // badge
-      if (receiveOk && (chatCommon.currentChatTargetId != received.targetId)) {
+      bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
+      if (receiveOk && !skipBadgeUp) {
         Badge.onCountUp(1); // await
       }
     } else {
@@ -170,8 +169,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check received.sendTime
-      // TODO:GG other client status
+      // TODO:GG check  received.sendTime
+      // TODO:GG other  client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -191,6 +190,7 @@ class ChatInCommon with Tag {
       return false;
     }
     await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
+    // TODO:GG ACK  msg(isoutbound) receive_at
 
     // topicInvitation
     if (received.contentType == MessageContentType.topicInvitation) {
@@ -402,8 +402,8 @@ class ChatInCommon with Tag {
   Future<bool> _receivePiece(MessageSchema received) async {
     String? parentType = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
     int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
-    int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? ChatOutCommon.maxPiecesTotal;
-    int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? (total ~/ ChatOutCommon.piecesParity);
+    int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
+    int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
     // combined duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
@@ -423,13 +423,13 @@ class ChatInCommon with Tag {
     }
     // pieces
     List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
-    logger.v("$TAG - receivePiece - progress:${pieces.length}/$total/${total + parity}");
+    logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? ChatOutCommon.maxPiecesTotal)));
+    pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
-    for (int index = 0; index < total + parity; index++) {
+    for (int index = 0; index < (total + parity); index++) {
       recoverList.add(Uint8List(0)); // fill
     }
     int recoverCount = 0;
@@ -440,7 +440,7 @@ class ChatInCommon with Tag {
         logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
         continue;
       }
-      Uint8List itemBytes = await file.readAsBytes();
+      Uint8List itemBytes = file.readAsBytesSync();
       int? pieceIndex = item.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
       if (pieceIndex != null && pieceIndex >= 0 && pieceIndex < recoverList.length) {
         recoverList[pieceIndex] = itemBytes;
