@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -25,12 +26,13 @@ import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   // piece
-  static const int piecesPreLength = 5 * 1024; // 4 ~ 8k
-  static const int piecesMinTotal = 3; // total >= 3
-  static const int piecesMaxParity = (255 ~/ 3); // parity <= 85
-  static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 170
+  static const int piecesPreLength = 4 * 1024; // 4 ~ 8k
+  static const int piecesMinParity = 2; // parity >= 2
+  static const int piecesMaxParity = (255 ~/ 4); // parity <= 63
+  static const int piecesMinTotal = 5; // total >= 5
+  static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 192
 
-  static const int maxBodySize = piecesMaxTotal * piecesPreLength ~/ 5 * 8; // 1,400,000 less then 4,000,000(nkn-go-sdk)
+  static const int maxBodySize = piecesMaxTotal * piecesPreLength * 2; // 1,572,864 less then 4,000,000(nkn-go-sdk)
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -54,10 +56,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendPing - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendPing - fail - tryCount:$tryCount - clientAddress:$clientAddress - isPing:$isPing");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendPing(clientAddress, isPing, tryCount: ++tryCount);
       });
@@ -73,10 +72,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendReceipt - fail - tryCount:$tryCount - received:$received");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendReceipt(received, tryCount: ++tryCount);
       });
@@ -93,10 +89,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactRequest(target, requestType, tryCount: ++tryCount);
       });
@@ -119,10 +112,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount);
       });
@@ -146,10 +136,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: ++tryCount);
       });
@@ -172,10 +159,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
       logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactOptionsToken(clientAddress, deviceToken, tryCount: ++tryCount);
       });
@@ -191,10 +175,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendDeviceRequest - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendDeviceRequest - fail - tryCount:$tryCount - clientAddress:$clientAddress");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceRequest(clientAddress, tryCount: ++tryCount);
       });
@@ -210,10 +191,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendDeviceInfo - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendDeviceInfo - fail - tryCount:$tryCount - clientAddress:$clientAddress");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceInfo(clientAddress, tryCount: ++tryCount);
       });
@@ -311,10 +289,7 @@ class ChatOutCommon with Tag {
       return message;
     } catch (e) {
       logger.w("$TAG - sendPiece - fail - tryCount:$tryCount - message:$message");
-      if (tryCount >= 3) {
-        handleError(e);
-        return null;
-      }
+      if (_handleSendError(e, tryCount)) return null;
       return await Future.delayed(Duration(seconds: 2), () {
         return sendPiece(message, tryCount: ++tryCount);
       });
@@ -336,10 +311,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topic:$topic");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicSubscribe(topic, tryCount: ++tryCount);
       });
@@ -361,10 +333,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicUnSubscribe(topic, tryCount: ++tryCount);
       });
@@ -405,10 +374,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicKickOut - fail - tryCount:$tryCount - topic:$topic");
-      if (tryCount >= 3) {
-        handleError(e);
-        return;
-      }
+      if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount);
       });
@@ -478,7 +444,7 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _sendAndDisplay - with_null - message:$message");
       }
     } catch (e) {
-      handleError(e);
+      _handleSendError(e, 3);
     }
     // pid
     if (pid == null || pid.isEmpty) {
@@ -625,6 +591,8 @@ class ChatOutCommon with Tag {
     for (int index = 0; index < dataList.length; index++) {
       Uint8List? data = dataList[index] as Uint8List?;
       if (data == null || data.isEmpty) continue;
+      Map<String, dynamic> options = Map();
+      options.addAll(message.options ?? Map());
       MessageSchema send = MessageSchema.fromSend(
         msgId: message.msgId,
         from: message.from,
@@ -632,7 +600,7 @@ class ChatOutCommon with Tag {
         to: to ?? message.to,
         topic: message.topic,
         content: base64Encode(data),
-        options: message.options,
+        options: options,
         parentType: message.contentType,
         bytesLength: bytesLength,
         total: total,
@@ -667,7 +635,7 @@ class ChatOutCommon with Tag {
     Uint8List fileBytes = await file.readAsBytes();
     String base64Data = base64.encode(fileBytes);
     int bytesLength = base64Data.length;
-    // total (3~170)
+    // total (2~192)
     int total;
     if (bytesLength < piecesPreLength * piecesMinTotal) {
       return [];
@@ -679,13 +647,20 @@ class ChatOutCommon with Tag {
     } else {
       total = piecesMaxTotal;
     }
-    // parity(1~85)
+    // parity(1~63)
     int parity = (total * (piecesMaxParity / (piecesMaxTotal + piecesMaxParity))).toInt();
-    if (total > piecesMaxParity) {
-      total = piecesMaxParity;
+    if (total % (piecesMaxParity / (piecesMaxTotal + piecesMaxParity)) > 0) {
+      parity += 1;
+    }
+    if (parity > piecesMaxParity) {
+      parity = piecesMaxParity;
+    } else if (parity >= total) {
+      parity = total - 1;
+    } else if (parity < 1) {
+      parity = 1;
     }
 
-    // total + parity < 256
+    // (total + parity) < 256
     logger.i("$TAG - _convert2Pieces - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     return [base64Data, bytesLength, total, parity];
   }
@@ -723,5 +698,17 @@ class ChatOutCommon with Tag {
     // }
 
     await SendPush.send(deviceToken, title, content);
+  }
+
+  bool _handleSendError(dynamic e, int tryCount) {
+    if (e.toString().contains("write: broken pipe")) {
+      // TODO:GG 知道为啥老版本没这个问题了，因为后台过段时间会开启验证！！！
+      clientCommon.signOut().then((value) => AppScreen.go(Global.appContext));
+      return true;
+    } else if (tryCount >= 3) {
+      handleError(e);
+      return true;
+    }
+    return false;
   }
 }
