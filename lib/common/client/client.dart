@@ -176,7 +176,6 @@ class ClientCommon with Tag {
   }
 
   Future connectCheck() async {
-    if (status != ClientConnectStatus.connected) return;
     _statusSink.add(ClientConnectStatus.connecting);
     await chatOutCommon.sendPing(address, true);
   }
