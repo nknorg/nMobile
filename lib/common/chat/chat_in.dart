@@ -95,6 +95,9 @@ class ChatInCommon with Tag {
       case MessageContentType.receipt:
         _receiveReceipt(received); // await
         break;
+      case MessageContentType.read:
+        _receiveRead(received); // await
+        break;
       case MessageContentType.contact:
         _receiveContact(received, contact: contact); // await
         break;
@@ -134,19 +137,26 @@ class ChatInCommon with Tag {
         receiveOk = await _receiveTopicKickOut(received);
         break;
     }
-    if (received.canDisplay) {
+
+    // receipt
+    if (!received.isTopic && received.canDisplay) {
       chatOutCommon.sendReceipt(received); // await
     }
-    if (received.canDisplayAndRead) {
-      // badge
+    // status (not handle in messages screen)
+    if (received.isTopic) {
+      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
+        chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
+      }
+    } else if (!received.canRead) {
+      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
+        chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
+      }
+    }
+    // badge
+    if (received.canRead) {
       bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
       if (receiveOk && !skipBadgeUp) {
         Badge.onCountUp(1); // await
-      }
-    } else {
-      // not handle in messages screen
-      if (received.contentType != MessageContentType.piece) {
-        chatCommon.updateMessageStatus(received, MessageStatus.Read); // await
       }
     }
   }
@@ -169,8 +179,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check  received.sendTime
-      // TODO:GG other  client status
+      // TODO:GG check received.sendAt
+      // TODO:GG other client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -185,17 +195,49 @@ class ChatInCommon with Tag {
     if (exists == null) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
-    } else if (received.status == MessageStatus.SendReceipt) {
+    } else if (received.status == MessageStatus.SendReceipt || received.status == MessageStatus.Read) {
       logger.d("$TAG - receiveReceipt - duplicated - received:$received");
       return false;
     }
-    await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
-    // TODO:GG ACK  msg(isoutbound) receive_at
+
+    // status
+    int status = (exists.isTopic || received.receiveAt != null) ? MessageStatus.Read : MessageStatus.SendReceipt;
+    await chatCommon.updateMessageStatus(exists, status, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
 
     // topicInvitation
     if (received.contentType == MessageContentType.topicInvitation) {
       subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
     }
+    return true;
+  }
+
+  // NO DB NO display NO topic (1 to 1)
+  Future<bool> _receiveRead(MessageSchema received) async {
+    // // if (received.isTopic) return; (limit in out)
+    // String targetId = received.from;
+    // int? readAt = (received.content as int?);
+    // if (targetId.isEmpty || readAt == null || readAt == 0) {
+    //   logger.w("$TAG - _receiveRead - targetId or content type error - received:$received");
+    //   return false;
+    // }
+    //
+    // _messageStorage.updateStatusReadByTargetIdWho(targetId, false, sendAt: readAt);
+    //
+    // MessageSchema? exists = await _messageStorage.query(received.content);
+    // if (exists == null) {
+    //   logger.w("$TAG - _receiveRead - target is empty - received:$received");
+    //   return false;
+    // } else if (received.status == MessageStatus.SendReceipt || received.status == MessageStatus.Read) {
+    //   logger.d("$TAG - _receiveRead - duplicated - received:$received");
+    //   return false;
+    // }
+    // await _messageStorage.updateReceiveAt(exists.msgId, DateTime.now().millisecondsSinceEpoch);
+    // await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
+    //
+    // // topicInvitation
+    // if (received.contentType == MessageContentType.topicInvitation) {
+    //   subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
+    // }
     return true;
   }
 
@@ -404,16 +446,21 @@ class ChatInCommon with Tag {
     int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
     int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
     int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
+    int index = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
-      logger.d("$TAG - receivePiece - duplicated - message:$existsCombine");
+      logger.d("$TAG - receivePiece - duplicated - index:$index - message:$existsCombine");
+      if (index <= 1) {
+        chatOutCommon.sendReceipt(existsCombine[0]); // await
+      }
       return false;
     }
     // piece
     MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
     if (piece == null) {
       received.status = MessageStatus.Read;
+      received.receiveAt = DateTime.now().millisecondsSinceEpoch;
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
     }
@@ -429,12 +476,12 @@ class ChatInCommon with Tag {
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
-    for (int index = 0; index < (total + parity); index++) {
+    for (int i = 0; i < (total + parity); i++) {
       recoverList.add(Uint8List(0)); // fill
     }
     int recoverCount = 0;
-    for (int index = 0; index < pieces.length; index++) {
-      MessageSchema item = pieces[index];
+    for (int i = 0; i < pieces.length; i++) {
+      MessageSchema item = pieces[i];
       File? file = item.content as File?;
       if (file == null || !file.existsSync()) {
         logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
