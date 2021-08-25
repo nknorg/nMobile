@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100; // TODO:GG 长时间就fail
+  static const int Sending = 100; // TODO:GG  长时间就fail
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
@@ -148,17 +148,12 @@ class MessageSchema extends Equatable {
       isDelete: false,
       // at
       sendAt: DateTime.now().millisecondsSinceEpoch, // data['timestamp'] != null ? data['timestamp'] : null, (used by receive_at, for sort)
-      receiveAt: null, // set in receive(isTopic) / TODO:GG read(contact)
+      receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
       contentType: data['contentType'] ?? "",
       options: data['options'],
     );
-
-    if (schema.isTopic) {
-      schema.status = MessageStatus.Read;
-      schema.receiveAt = schema.sendAt;
-    }
 
     switch (schema.contentType) {
       case MessageContentType.receipt:
@@ -223,18 +218,13 @@ class MessageSchema extends Equatable {
       isDelete: false,
       // at
       sendAt: DateTime.now().millisecondsSinceEpoch, // piece.sendAt, (used by receive_at, for sort)
-      receiveAt: null, // set in receive(isTopic) / TODO:GG read(contact)
+      receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
       contentType: piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
       content: base64String,
       // options: piece.options,
     );
-
-    if (schema.isTopic) {
-      schema.status = MessageStatus.Read;
-      schema.receiveAt = schema.sendAt;
-    }
 
     piece.options?.remove(MessageOptions.KEY_PIECE);
     schema.options = piece.options;
