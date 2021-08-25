@@ -47,7 +47,6 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
-    await db.execute('CREATE INDEX index_messages_target_id_status_send_at ON $tableName (target_id, status, send_at)');
     await db.execute('CREATE INDEX index_messages_status_is_delete_type_target_id ON $tableName (status, is_delete, type, target_id)');
     await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
   }
@@ -439,14 +438,19 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateStatus(String? msgId, int status) async {
+  Future<bool> updateStatus(String? msgId, int status, {int? receiveAt}) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
         tableName,
-        {
-          'status': status,
-        },
+        receiveAt == null
+            ? {
+                'status': status,
+              }
+            : {
+                'status': status,
+                'receive_at': receiveAt,
+              },
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
@@ -456,26 +460,6 @@ class MessageStorage with Tag {
       handleError(e);
     }
     return false;
-  }
-
-  Future<int> updateStatusReadByTargetIdWho(String? targetId, bool readByMe, {int? sendAt}) async {
-    if (targetId == null || targetId.isEmpty) return 0;
-    int whereStatus = readByMe ? MessageStatus.Received : MessageStatus.SendReceipt;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'status': MessageStatus.Read,
-        },
-        where: sendAt == null ? 'target_id = ? AND status = ?' : 'target_id = ? AND status = ? AND send_at <= ?',
-        whereArgs: sendAt == null ? [targetId, whereStatus] : [targetId, whereStatus, sendAt],
-      );
-      logger.v("$TAG - updateStatusReadByTargetIdWho - count:$count - targetId:$targetId - readByMe:$readByMe - sendAt:$sendAt");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
   }
 
   Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
@@ -520,6 +504,25 @@ class MessageStorage with Tag {
     }
     return false;
   }
+
+  // Future<bool> updateReceiveAt(String? msgId, int? receiveAt) async {
+  //   if (msgId == null || msgId.isEmpty) return false;
+  //   try {
+  //     int? count = await db?.update(
+  //       tableName,
+  //       {
+  //         'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+  //       },
+  //       where: 'msg_id = ?',
+  //       whereArgs: [msgId],
+  //     );
+  //     logger.v("$TAG - updateReceiveAt - count:$count - msgId:$msgId - receiveAt:$receiveAt");
+  //     return (count ?? 0) > 0;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
 
   Future<bool> updateDeleteAt(String? msgId, int? deleteAt) async {
     if (msgId == null || msgId.isEmpty) return false;
