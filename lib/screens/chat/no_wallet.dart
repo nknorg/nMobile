@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
@@ -68,7 +67,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
       _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
 
       Loading.dismiss();
-      AppScreen.go(context);
+      // AppScreen.go(context);
     }
   }
 

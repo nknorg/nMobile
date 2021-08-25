@@ -173,7 +173,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
         session.lastMessageAt = newLastMsg.sendAt;
         session.lastMessageOptions = newLastMsg.toMap();
-        int unreadCount = oldLastMsg.canDisplayAndRead ? session.unReadCount - 1 : session.unReadCount;
+        int unreadCount = oldLastMsg.canRead ? session.unReadCount - 1 : session.unReadCount;
         session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
         if ((findIndex > (_sessionList.length - 1)) || (_sessionList[findIndex].targetId != session.targetId)) {
           logger.i("ChatSessionListLayout - onMessageDelete - sessions sync again - msgId:$msgId - session:$session");
