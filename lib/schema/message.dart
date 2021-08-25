@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100;
+  static const int Sending = 100; // TODO:GG 长时间就fail
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
@@ -30,7 +30,7 @@ class MessageContentType {
   static const String ping = 'ping'; // .
   // static const String system = 'system';
   static const String receipt = 'receipt'; // status
-  // static const String read = 'read'; // status
+  static const String read = 'read'; // status
 
   static const String contact = 'contact'; // .
   static const String contactOptions = 'event:contactOptions'; // db + visible
@@ -108,7 +108,7 @@ class MessageSchema extends Equatable {
   }
 
   // ++ UnReadCount / Notification
-  bool get canDisplayAndRead {
+  bool get canRead {
     bool isEvent = contentType == MessageContentType.topicInvitation;
     return canBurning || isEvent;
   }
@@ -116,7 +116,7 @@ class MessageSchema extends Equatable {
   // ++ Session
   bool get canDisplay {
     bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
-    return canDisplayAndRead || isEvent;
+    return canRead || isEvent;
   }
 
   bool get isTopicAction {
@@ -147,17 +147,26 @@ class MessageSchema extends Equatable {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: data['timestamp'] != null ? data['timestamp'] : null,
-      receiveAt: DateTime.now().millisecondsSinceEpoch,
+      sendAt: DateTime.now().millisecondsSinceEpoch, // data['timestamp'] != null ? data['timestamp'] : null, (used by receive_at, for sort)
+      receiveAt: null, // set in receive(isTopic) / TODO:GG read(contact)
       deleteAt: null, // set in messages bubble
       // data
       contentType: data['contentType'] ?? "",
       options: data['options'],
     );
 
+    if (schema.isTopic) {
+      schema.status = MessageStatus.Read;
+      schema.receiveAt = schema.sendAt;
+    }
+
     switch (schema.contentType) {
       case MessageContentType.receipt:
+        schema.receiveAt = data['readAt'];
         schema.content = data['targetID'];
+        break;
+      case MessageContentType.read:
+        schema.content = data['readIds'];
         break;
       case MessageContentType.contact:
       case MessageContentType.contactOptions:
@@ -202,7 +211,7 @@ class MessageSchema extends Equatable {
   static MessageSchema fromPiecesReceive(List<MessageSchema> sortPieces, String base64String) {
     MessageSchema piece = sortPieces.firstWhere((element) => element.pid != null);
 
-    MessageSchema combine = MessageSchema(
+    MessageSchema schema = MessageSchema(
       pid: piece.pid,
       msgId: piece.msgId,
       from: piece.from,
@@ -213,8 +222,8 @@ class MessageSchema extends Equatable {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: piece.sendAt,
-      receiveAt: DateTime.now().millisecondsSinceEpoch,
+      sendAt: DateTime.now().millisecondsSinceEpoch, // piece.sendAt, (used by receive_at, for sort)
+      receiveAt: null, // set in receive(isTopic) / TODO:GG read(contact)
       deleteAt: null, // set in messages bubble
       // data
       contentType: piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
@@ -222,17 +231,22 @@ class MessageSchema extends Equatable {
       // options: piece.options,
     );
 
-    piece.options?.remove(MessageOptions.KEY_PIECE);
-    combine.options = piece.options;
+    if (schema.isTopic) {
+      schema.status = MessageStatus.Read;
+      schema.receiveAt = schema.sendAt;
+    }
 
-    if (combine.options == null) {
-      combine.options = Map();
+    piece.options?.remove(MessageOptions.KEY_PIECE);
+    schema.options = piece.options;
+
+    if (schema.options == null) {
+      schema.options = Map();
     }
 
     // diff with no pieces image
-    combine.options?[MessageOptions.KEY_FROM_PIECE] = true;
+    schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
 
-    return combine;
+    return schema;
   }
 
   /// to send
@@ -267,7 +281,7 @@ class MessageSchema extends Equatable {
   }) {
     // at
     this.sendAt = DateTime.now().millisecondsSinceEpoch;
-    this.receiveAt = null;
+    this.receiveAt = null; // set in receive ACK
     this.deleteAt = null; // set in messages bubble
 
     // piece
@@ -371,9 +385,6 @@ class MessageSchema extends Equatable {
 
     // content = File/Map/String...
     switch (schema.contentType) {
-      case MessageContentType.receipt:
-        schema.content = e['targetID'];
-        break;
       case MessageContentType.contact:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceInfo:
@@ -392,6 +403,8 @@ class MessageSchema extends Equatable {
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
       // case MessageContentType.ping:
+      // case MessageContentType.receipt:
+      // case MessageContentType.read:
       // case MessageContentType.text:
       // case MessageContentType.textExtension:
       // case MessageContentType.topicSubscribe:
@@ -482,12 +495,23 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static String getReceipt(String targetId) {
+  static String getReceipt(String targetId, int? readAt) {
     Map map = {
       'id': Uuid().v4(),
       'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.receipt,
       'targetID': targetId,
+      'readAt': readAt,
+    };
+    return jsonEncode(map);
+  }
+
+  static String getRead(List<String> msgIdList) {
+    Map map = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.read,
+      'readIds': msgIdList,
     };
     return jsonEncode(map);
   }
