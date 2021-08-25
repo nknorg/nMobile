@@ -53,7 +53,7 @@ class SessionCommon with Tag {
     // unReadCount
     if (schema.unReadCount <= 0) {
       if (lastMsg != null) {
-        schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canDisplayAndRead) ? 0 : 1;
+        schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canRead) ? 0 : 1;
       } else {
         schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
       }
