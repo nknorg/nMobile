@@ -67,7 +67,8 @@ class ChatOutCommon with Tag {
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     try {
-      String data = MessageData.getReceipt(received.msgId);
+      received = (await _messageStorage.query(received.msgId)) ?? received; // get receiveAt
+      String data = MessageData.getReceipt(received.msgId, received.receiveAt);
       await chatCommon.clientSendData(received.from, data);
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
@@ -75,6 +76,22 @@ class ChatOutCommon with Tag {
       if (_handleSendError(e, tryCount)) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendReceipt(received, tryCount: ++tryCount);
+      });
+    }
+  }
+
+  // NO DB NO display NO topic (1 to 1)
+  Future sendRead(String? clientAddress, List<String> msgIds, {int tryCount = 1}) async {
+    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
+    try {
+      String data = MessageData.getRead(msgIds);
+      await chatCommon.clientSendData(clientAddress, data);
+      logger.d("$TAG - sendRead - success - data:$data");
+    } catch (e) {
+      logger.w("$TAG - sendRead - fail - tryCount:$tryCount - clientAddress:$clientAddress - msgIds:$msgIds");
+      if (_handleSendError(e, tryCount)) return;
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendRead(clientAddress, msgIds, tryCount: ++tryCount);
       });
     }
   }
@@ -666,7 +683,7 @@ class ChatOutCommon with Tag {
   }
 
   _sendPush(MessageSchema message, String? deviceToken) async {
-    if (!message.canDisplayAndRead) return;
+    if (!message.canRead) return;
     if (deviceToken == null || deviceToken.isEmpty == true) return;
 
     S localizations = S.of(Global.appContext);
@@ -702,7 +719,7 @@ class ChatOutCommon with Tag {
 
   bool _handleSendError(dynamic e, int tryCount) {
     if (e.toString().contains("write: broken pipe")) {
-      // TODO:GG 知道为啥老版本没这个问题了，因为后台过段时间会开启验证！！！
+      // TODO:GG 知道为啥老版本没这个问题了， 因为后台过段时间会开启验证！！！
       clientCommon.signOut().then((value) => AppScreen.go(Global.appContext));
       return true;
     } else if (tryCount >= 3) {
