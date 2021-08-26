@@ -3,13 +3,11 @@ import 'dart:async';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
-import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class SessionCommon with Tag {
   SessionStorage _sessionStorage = SessionStorage();
-  MessageStorage _messageStorage = MessageStorage();
 
   StreamController<SessionSchema> _addController = StreamController<SessionSchema>.broadcast();
   StreamSink<SessionSchema> get _addSink => _addController.sink;
@@ -55,7 +53,7 @@ class SessionCommon with Tag {
       if (lastMsg != null) {
         schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canRead) ? 0 : 1;
       } else {
-        schema.unReadCount = await _messageStorage.unReadCountByTargetId(schema.targetId);
+        schema.unReadCount = await chatCommon.unReadCountByTargetId(schema.targetId);
       }
     }
     // insert
@@ -85,7 +83,7 @@ class SessionCommon with Tag {
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageAt = lastMessage?.sendAt ?? sendAt;
     session.lastMessageOptions = lastMessage?.toMap();
-    session.unReadCount = unread ?? await _messageStorage.unReadCountByTargetId(targetId);
+    session.unReadCount = unread ?? await chatCommon.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId);
     return success;
