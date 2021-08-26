@@ -405,7 +405,7 @@ class ChatOutCommon with Tag {
     TopicSchema? topic,
   }) async {
     if (message == null) return null;
-    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending);
+    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, notify: false);
     String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
@@ -719,7 +719,7 @@ class ChatOutCommon with Tag {
 
   bool _handleSendError(dynamic e, int tryCount) {
     if (e.toString().contains("write: broken pipe")) {
-      // TODO:GG 知道为啥老版本没这个问题了， 因为后台过段时间会开启验证！！！
+      // TODO:GG 知道为啥老版本没这个问题了，因为后台过段时间会开启验证！！！
       clientCommon.signOut().then((value) => AppScreen.go(Global.appContext));
       return true;
     } else if (tryCount >= 3) {
