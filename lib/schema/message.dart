@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100; // TODO:GG  长时间就fail
+  static const int Sending = 100; // TODO:GG 长时间就fail
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
@@ -314,7 +314,7 @@ class MessageSchema extends Equatable {
       'is_delete': isDelete ? 1 : 0,
       // at
       'send_at': sendAt,
-      'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+      'receive_at': receiveAt,
       'delete_at': deleteAt,
       // data
       'type': contentType,

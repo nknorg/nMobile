@@ -152,7 +152,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     // burn
     List<int?> burningOptions = MessageOptions.getContactBurning(_message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    if (_message.deleteAt == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_message.status != MessageStatus.Sending)) {
+    if (_message.deleteAt == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_message.status != MessageStatus.Sending && _message.status != MessageStatus.SendFail)) {
       _message = chatCommon.burningHandle(_message);
     }
     if (_message.deleteAt != null) {
