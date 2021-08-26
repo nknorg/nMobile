@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
@@ -23,7 +24,7 @@ class ClientConnectStatus {
   static const int disconnected = 0;
   static const int connecting = 1;
   static const int connected = 2;
-  static const int stopping = 3;
+  // static const int stopping = 3;
 }
 
 class ClientCommon with Tag {
@@ -59,7 +60,7 @@ class ClientCommon with Tag {
     status = ClientConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
-      if (event == ClientConnectStatus.connected) {
+      if (client != null && event == ClientConnectStatus.connected) {
         int nowAt = DateTime.now().millisecondsSinceEpoch;
         if ((nowAt - signInAt) > 1 * 60 * 60 * 1000) {
           signInAt = nowAt;
@@ -176,12 +177,19 @@ class ClientCommon with Tag {
   }
 
   Future connectCheck() async {
+    if (client == null) return;
     _statusSink.add(ClientConnectStatus.connecting);
     await chatOutCommon.sendPing(address, true);
+    // loop
+    Future.delayed(Duration(seconds: 1), () {
+      if ((status == ClientConnectStatus.connecting) && (application.appLifecycleState == AppLifecycleState.resumed)) {
+        connectCheck();
+      }
+    });
   }
 
   Future pingSuccess() async {
-    if (status != ClientConnectStatus.connecting) return;
+    if (client == null || status != ClientConnectStatus.connecting) return;
     _statusSink.add(ClientConnectStatus.connected);
   }
 }

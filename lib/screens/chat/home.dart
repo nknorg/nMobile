@@ -64,7 +64,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if (status == ClientConnectStatus.connected) {
+      if (clientCommon.client != null && status == ClientConnectStatus.connected) {
         topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
         firstConnected = false;
       }
@@ -147,7 +147,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           stream: clientCommon.statusStream,
           initialData: clientCommon.status,
           builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-            if (snapshot.data == ClientConnectStatus.disconnected || snapshot.data == ClientConnectStatus.stopping) {
+            if (clientCommon.client == null || snapshot.data == ClientConnectStatus.disconnected) {
               return ChatNoConnectLayout();
             }
             late Widget statusWidget;
