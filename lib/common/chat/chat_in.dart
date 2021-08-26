@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -144,11 +145,13 @@ class ChatInCommon with Tag {
     }
     // status (not handle in messages screen)
     if (received.isTopic) {
-      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
+      if (received.contentType != MessageContentType.piece) {
+        //  && received.status != MessageStatus.Read
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     } else if (!received.canRead) {
-      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
+      if (received.contentType != MessageContentType.piece) {
+        //  && received.status != MessageStatus.Read
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     }
@@ -179,8 +182,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check received.sendAt
-      // TODO:GG other client status
+      // TODO:GG check  received.sendAt
+      // TODO:GG other  client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -202,7 +205,7 @@ class ChatInCommon with Tag {
 
     // status
     int status = (exists.isTopic || received.receiveAt != null) ? MessageStatus.Read : MessageStatus.SendReceipt;
-    await chatCommon.updateMessageStatus(exists, status, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
+    exists = await chatCommon.updateMessageStatus(exists, status, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
 
     // topicInvitation
     if (received.contentType == MessageContentType.topicInvitation) {
@@ -213,31 +216,38 @@ class ChatInCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveRead(MessageSchema received) async {
-    // // if (received.isTopic) return; (limit in out)
-    // String targetId = received.from;
-    // int? readAt = (received.content as int?);
-    // if (targetId.isEmpty || readAt == null || readAt == 0) {
-    //   logger.w("$TAG - _receiveRead - targetId or content type error - received:$received");
-    //   return false;
-    // }
-    //
-    // _messageStorage.updateStatusReadByTargetIdWho(targetId, false, sendAt: readAt);
-    //
-    // MessageSchema? exists = await _messageStorage.query(received.content);
-    // if (exists == null) {
-    //   logger.w("$TAG - _receiveRead - target is empty - received:$received");
-    //   return false;
-    // } else if (received.status == MessageStatus.SendReceipt || received.status == MessageStatus.Read) {
-    //   logger.d("$TAG - _receiveRead - duplicated - received:$received");
-    //   return false;
-    // }
-    // await _messageStorage.updateReceiveAt(exists.msgId, DateTime.now().millisecondsSinceEpoch);
-    // await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
-    //
-    // // topicInvitation
-    // if (received.contentType == MessageContentType.topicInvitation) {
-    //   subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
-    // }
+    // if (received.isTopic) return; (limit in out)
+    String targetId = received.from;
+    List? readIds = (received.content as List?);
+    if (targetId.isEmpty || readIds == null || readIds.isEmpty) {
+      logger.w("$TAG - _receiveRead - targetId or content type error - received:$received");
+      return false;
+    }
+
+    // messages
+    List<MessageSchema> msgList = [];
+    List<Future> futures = [];
+    readIds.forEach((element) {
+      futures.add(_messageStorage.query(element).then((value) {
+        if (value == null) {
+          logger.w("$TAG - _receiveRead - message is empty - msgId:$element");
+        } else if (value.status == MessageStatus.Read) {
+          logger.i("$TAG - _receiveRead - message already read - message:$value");
+        } else {
+          logger.d("$TAG - _receiveRead - message none read - message:$value");
+          msgList.add(value);
+        }
+        return;
+      }));
+    });
+    await Future.wait(futures);
+
+    // status
+    futures.clear();
+    msgList.forEach((element) {
+      futures.add(chatCommon.updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true));
+    });
+    await Future.wait(futures);
     return true;
   }
 
@@ -469,10 +479,11 @@ class ChatInCommon with Tag {
       return false;
     }
     // pieces
-    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
-    logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
-    if (pieces.length < total || bytesLength <= 0) return false;
+    int piecesCount = await _messageStorage.queryCountByContentType(piece.msgId, piece.contentType);
+    logger.v("$TAG - receivePiece - progress:$total/$piecesCount/${total + parity}");
+    if (piecesCount < total || bytesLength <= 0) return false;
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
