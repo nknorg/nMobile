@@ -43,6 +43,7 @@ PODS:
   - flutter_image_compress (0.0.1):
     - Flutter
     - Mantle
+    - SDWebImage
     - SDWebImageWebPCoder
   - flutter_local_notifications (0.0.1):
     - Flutter
@@ -237,7 +238,7 @@ SPEC CHECKSUMS:
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
   file_picker: 3e6c3790de664ccf9b882732d9db5eaf6b8d4eb1
   Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
-  flutter_image_compress: 082f8daaf6c1b0c9fe798251c750ef0ecd98d7ae
+  flutter_image_compress: fd2b476345226e1a10ea352fa306af95704642c1
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
   flutter_sound: 91c069f33d811a4c98b9aa7cec9cd1dbfd1786d9
