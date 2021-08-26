@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -36,7 +35,7 @@ class ChatCommon with Tag {
   }
 
   Future<OnMessage?> clientPublishData(String? topic, String data, {bool txPool = true}) async {
-    if (topic == null || topic.isEmpty) return null;
+    if (topic == null || topic.isEmpty) return null; // TODO:GG offset + limit
     return await clientCommon.client?.publishText(topic, data, txPool: txPool);
   }
 
@@ -215,7 +214,7 @@ class ChatCommon with Tag {
       return added;
     }
     // update
-    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canDisplayAndRead ? exist.unReadCount + 1 : exist.unReadCount);
+    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canRead ? exist.unReadCount + 1 : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
     exist.lastMessageAt = message.sendAt;
     exist.lastMessageOptions = message.toMap();
@@ -238,21 +237,33 @@ class ChatCommon with Tag {
     return message;
   }
 
+  Future<int> unreadCount() {
+    return _messageStorage.unReadCount();
+  }
+
+  Future<int> unReadCountByTargetId(String? targetId) {
+    return _messageStorage.unReadCountByTargetId(targetId);
+  }
+
+  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
+    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
+  }
+
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt) : true;
+    bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) : true;
     bool success = await _messageStorage.updateIsDelete(message.msgId, true, clearContent: clearContent);
     if (success && notify) _onDeleteSink.add(message.msgId);
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool notify = false}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool notify = false}) async {
     message.status = status;
-    bool success = await _messageStorage.updateStatus(message.msgId, status);
+    bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success && notify) _onUpdateSink.add(message);
     // delete later
     if (message.isDelete && message.content != null) {
-      if (status == MessageStatus.SendReceipt) {
+      if (status == MessageStatus.SendReceipt || status == MessageStatus.Read) {
         logger.i("$TAG - updateMessageStatus - delete later yes - message:$message");
         _messageStorage.updateIsDelete(message.msgId, true, clearContent: true); // await
       } else {
@@ -262,24 +273,19 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future<int> unreadCount() {
-    return _messageStorage.unReadCount();
-  }
-
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
-    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
-  }
-
-  Future<bool> readMessages(String? targetId, {bool badgeDown = false}) async {
-    // TODO:GG read message
-    // read
-    int count = await _messageStorage.updateStatusReadByTargetIdWho(targetId, true);
-    logger.i("$TAG - readMessages - count:$count");
-    // badge
-    if (badgeDown) {
-      int badgeDown = await _messageStorage.unReadCountByTargetId(targetId);
-      Badge.onCountDown(badgeDown); // await
-    }
-    return true;
+  Future readMessages(String? clientAddress, String? targetId, {bool badgeDown = false}) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    if (targetId == null || targetId.isEmpty) return;
+    // update messages
+    List<String> msgIds = [];
+    List<Future> futures = [];
+    List<MessageSchema> unreadList = await _messageStorage.queryListByTargetIdWithUnRead(targetId);
+    unreadList.forEach((element) {
+      msgIds.add(element.msgId);
+      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false));
+    });
+    await Future.wait(futures);
+    // send messages
+    await chatOutCommon.sendRead(clientAddress, msgIds);
   }
 }
