@@ -82,7 +82,7 @@ class Global {
     return list;
   }
 
-  static Future<int?> getNonce({String? walletAddress}) async {
+  static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
     int? nonce;
 
     // walletAddress
@@ -99,7 +99,7 @@ class Global {
     }
 
     // rpc
-    if (nonce == null || nonce == 0) {
+    if (forceFetch || nonce == null || nonce == 0) {
       if (walletAddress?.isNotEmpty == true) {
         List<String> seedRpcList = await Global.getSeedRpcList(walletAddress);
         nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));

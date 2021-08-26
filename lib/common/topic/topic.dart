@@ -6,6 +6,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -275,11 +276,11 @@ class TopicCommon with Tag {
   }
 
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
-  Future<bool> _clientSubscribe(String? topicName, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta}) async {
+  Future<bool> _clientSubscribe(String? topicName, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta, int? nonce}) async {
     if (topicName == null || topicName.isEmpty) return false;
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
-    int? nonce = await Global.getNonce();
+    nonce = nonce ?? await Global.getNonce();
 
     bool success;
     try {
@@ -298,10 +299,16 @@ class TopicCommon with Tag {
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block')) {
+      if (e.toString().contains("nonce is not continuous")) {
+        // can not append tx to txpool: nonce is not continuous
+        int? nonce = await Global.getNonce(forceFetch: true);
+        return _clientSubscribe(topicName, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce);
+      } else if (e.toString().contains('duplicate subscription exist in block')) {
+        // can not append tx to txpool: duplicate subscription exist in block
         success = true;
       } else {
         success = false;
+        handleError(e);
       }
     }
     return success;
@@ -343,10 +350,10 @@ class TopicCommon with Tag {
     return exists;
   }
 
-  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0}) async {
+  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? nonce}) async {
     if (topicName == null || topicName.isEmpty) return false;
     // String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
-    int? nonce = await Global.getNonce();
+    nonce = nonce ?? await Global.getNonce();
 
     bool success;
     try {
@@ -363,10 +370,16 @@ class TopicCommon with Tag {
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
-      if (e.toString().contains('duplicate subscription exist in block') || e.toString().contains('can not append tx to txpool')) {
+      if (e.toString().contains("nonce is not continuous")) {
+        // can not append tx to txpool: nonce is not continuous
+        int? nonce = await Global.getNonce(forceFetch: true);
+        return _clientUnsubscribe(topicName, fee: fee, nonce: nonce);
+      } else if (e.toString().contains('duplicate subscription exist in block')) {
+        // can not append tx to txpool: duplicate subscription exist in block
         success = true;
       } else {
         success = false;
+        handleError(e);
       }
     }
     return success;

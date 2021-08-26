@@ -263,7 +263,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     }
   }
 
-  Future<bool> _transferNKN(String name, String keystore, String password) async {
+  Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce}) async {
     S _localizations = S.of(context);
     Loading.show();
     try {
@@ -290,7 +290,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return false;
       }
 
-      int? nonce = await Global.getNonce(walletAddress: nkn.address);
+      nonce = nonce ?? await Global.getNonce(walletAddress: nkn.address);
       String? txHash = await nkn.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
       if (txHash != null) {
         walletCommon.queryBalance(); // await
@@ -299,6 +299,11 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       Toast.show(_localizations.failure);
       return false;
     } catch (e) {
+      if (e.toString().contains("nonce is not continuous")) {
+        // can not append tx to txpool: nonce is not continuous
+        int? nonce = await Global.getNonce(forceFetch: true);
+        return _transferNKN(name, keystore, password, nonce: nonce);
+      }
       handleError(e, toast: _localizations.failure);
       return false;
     } finally {
