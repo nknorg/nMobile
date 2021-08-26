@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -111,7 +112,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (states.length > 0) {
         if (states[states.length - 1] == AppLifecycleState.resumed) {
-          _readMessages(); // await
+          _readMessages(true, true); // await
         }
       }
     });
@@ -179,7 +180,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicJoined(); // await
 
     // read
-    _readMessages(); // await
+    _readMessages(true, true); // await
   }
 
   @override
@@ -221,7 +222,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (added == null) return;
     // read
     if (!added.isOutbound && application.appLifecycleState == AppLifecycleState.resumed) {
-      _readMessage(added); // await
+      _readMessages(false, false); // await
     }
     // state
     setState(() {
@@ -252,17 +253,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _readMessages() async {
-    await sessionCommon.setUnReadCount(this.targetId, 0, notify: true);
-    await chatCommon.readMessages(this.targetId, badgeDown: true);
-  }
-
-  _readMessage(MessageSchema? added) async {
-    if (added == null) return;
-    added.status = MessageStatus.Read;
-    chatCommon.updateMessageStatus(added, added.status); // await
-    // sessionCommon.setUnReadCount(this.targetId, 0, notify: true); // await // count not up in chatting
-    chatCommon.readMessages(added.targetId, badgeDown: false); // await
+  _readMessages(bool sessionUnreadClear, bool badgeDown) async {
+    if (sessionUnreadClear) {
+      // count not up in chatting
+      await sessionCommon.setUnReadCount(this.targetId, 0, notify: true);
+    }
+    if (badgeDown) {
+      // count not up in chatting
+      chatCommon.unReadCountByTargetId(targetId).then((value) {
+        Badge.onCountDown(value); // await
+      });
+    }
+    if (this._topic == null && this._contact != null) {
+      await chatCommon.readMessages(this._contact?.clientAddress, this.targetId, badgeDown: badgeDown);
+    }
   }
 
   _toggleBottomMenu() async {
