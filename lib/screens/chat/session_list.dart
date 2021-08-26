@@ -33,6 +33,7 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 }
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
+  StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
@@ -60,6 +61,19 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   void initState() {
     super.initState();
+
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      if (states.length > 0) {
+        if (states[states.length - 1] == AppLifecycleState.resumed) {
+          // badge
+          chatCommon.unreadCount().then((value) {
+            Badge.refreshCount(count: value);
+          });
+        }
+      }
+    });
+
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
       if (_sessionList.where((element) => element.targetId == event.targetId).toList().isEmpty) {
@@ -119,16 +133,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       });
     });
 
-    // badge
-    chatCommon.unreadCount().then((value) {
-      Badge.refreshCount(count: value);
-    });
-
     // TODO:GG auth
   }
 
   @override
   void dispose() {
+    _appLifeChangeSubscription?.cancel();
     _contactCurrentUpdateSubscription?.cancel();
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
