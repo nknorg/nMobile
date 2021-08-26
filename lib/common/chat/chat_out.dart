@@ -9,6 +9,7 @@ import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -18,6 +19,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -719,8 +721,15 @@ class ChatOutCommon with Tag {
 
   bool _handleSendError(dynamic e, int tryCount) {
     if (e.toString().contains("write: broken pipe")) {
-      // TODO:GG 知道为啥老版本没这个问题了，因为后台过段时间会开启验证！！！
-      clientCommon.signOut().then((value) => AppScreen.go(Global.appContext));
+      clientCommon.signOut().then((value) {
+        // go home
+        AppScreen.go(Global.appContext);
+        // sign in
+        Future.delayed(Duration(milliseconds: 500), () async {
+          WalletSchema? wallet = await walletCommon.getDefault();
+          clientCommon.signIn(wallet, walletDefault: true, dialogVisible: (show) => show ? Loading.show() : Loading.dismiss());
+        });
+      });
       return true;
     } else if (tryCount >= 3) {
       handleError(e);
