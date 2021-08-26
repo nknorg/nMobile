@@ -52,7 +52,11 @@ class ChatInCommon with Tag {
 
   Future start() async {
     await for (MessageSchema received in _onReceiveStream) {
-      await _messageHandle(received);
+      try {
+        await _messageHandle(received);
+      } catch (e) {
+        handleError(e);
+      }
     }
   }
 
@@ -94,10 +98,10 @@ class ChatInCommon with Tag {
         _receivePing(received); // await
         break;
       case MessageContentType.receipt:
-        _receiveReceipt(received); // await
+        receiveOk = await _receiveReceipt(received);
         break;
       case MessageContentType.read:
-        _receiveRead(received); // await
+        receiveOk = await _receiveRead(received);
         break;
       case MessageContentType.contact:
         _receiveContact(received, contact: contact); // await
@@ -145,13 +149,11 @@ class ChatInCommon with Tag {
     }
     // status (not handle in messages screen)
     if (received.isTopic) {
-      if (received.contentType != MessageContentType.piece) {
-        //  && received.status != MessageStatus.Read
+      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     } else if (!received.canRead) {
-      if (received.contentType != MessageContentType.piece) {
-        //  && received.status != MessageStatus.Read
+      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     }
@@ -182,8 +184,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check  received.sendAt
-      // TODO:GG other  client status
+      // TODO:GG check received.sendAt
+      // TODO:GG other client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -198,17 +200,21 @@ class ChatInCommon with Tag {
     if (exists == null) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
-    } else if (received.status == MessageStatus.SendReceipt || received.status == MessageStatus.Read) {
-      logger.d("$TAG - receiveReceipt - duplicated - received:$received");
+    } else if (exists.status == MessageStatus.SendReceipt || exists.status == MessageStatus.Read) {
+      logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
     }
 
+    // deviceInfo
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(received.from);
+    bool readEnable = deviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
+
     // status
-    int status = (exists.isTopic || received.receiveAt != null) ? MessageStatus.Read : MessageStatus.SendReceipt;
+    int status = (exists.isTopic || received.receiveAt != null || !readEnable) ? MessageStatus.Read : MessageStatus.SendReceipt;
     exists = await chatCommon.updateMessageStatus(exists, status, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
 
     // topicInvitation
-    if (received.contentType == MessageContentType.topicInvitation) {
+    if (exists.contentType == MessageContentType.topicInvitation) {
       subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
     }
     return true;
