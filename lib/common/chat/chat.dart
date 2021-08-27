@@ -34,9 +34,21 @@ class ChatCommon with Tag {
     return await clientCommon.client?.sendText([dest], data);
   }
 
-  Future<OnMessage?> clientPublishData(String? topic, String data, {bool txPool = true}) async {
-    if (topic == null || topic.isEmpty) return null; // TODO:GG offset + limit
-    return await clientCommon.client?.publishText(topic, data, txPool: txPool);
+  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total}) async {
+    if (topic == null || topic.isEmpty || clientCommon.client == null) return [];
+    // once
+    if (total == null || total <= 1000) {
+      OnMessage result = await clientCommon.client!.publishText(topic, data, txPool: txPool, offset: 0, limit: 1000);
+      return [result];
+    }
+    // split
+    List<Future<OnMessage>> futures = [];
+    for (int i = 0; i < total; i += 1000) {
+      futures.add(clientCommon.client!.publishText(topic, data, txPool: txPool, offset: i, limit: i + 1000));
+    }
+    List<OnMessage> onMessageList = await Future.wait(futures);
+    logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
+    return onMessageList;
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
