@@ -89,10 +89,11 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
           _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
         } else {
-          final eth = Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
+          final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
           String ethAddress = (await eth.address).hex;
-          logger.i("$TAG - import_nkn - eth:${eth.toString()}");
-          if (ethAddress.isEmpty || eth.keystore.isEmpty) {
+          String ethKeystore = await eth.keystore();
+          logger.i("$TAG - import_eth - address:$ethAddress - keystore:$ethKeystore - eth:${eth.toString()}");
+          if (ethAddress.isEmpty || ethKeystore.isEmpty) {
             Loading.dismiss();
             return;
           }
@@ -100,7 +101,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           WalletSchema wallet = WalletSchema(name: name, address: ethAddress, type: WalletType.eth);
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, eth.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, ethKeystore, password: password));
         }
         Future.delayed(Duration(seconds: 3), () => walletCommon.queryBalance());
 

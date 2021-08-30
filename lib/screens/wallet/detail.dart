@@ -14,6 +14,7 @@ import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/dialog/notification.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -329,10 +330,14 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
           if (password == null || password.isEmpty) return;
           String keystore = await walletCommon.getKeystoreByAddress(_wallet?.address);
 
+          Loading.show();
           if (_wallet?.type == WalletType.eth) {
-            final eth = Ethereum.restoreByKeyStore(name: _wallet?.name ?? "", keystore: keystore, password: password);
+            final eth = await Ethereum.restoreByKeyStore(name: _wallet?.name ?? "", keystore: keystore, password: password);
             String ethAddress = (await eth.address).hex;
-            if (ethAddress.isEmpty || ethAddress != _wallet?.address) {
+            String ethKeystore = await eth.keystore();
+            Loading.dismiss();
+
+            if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != _wallet?.address) {
               Toast.show(_localizations.password_wrong);
               return;
             }
@@ -346,11 +351,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               ethAddress,
               eth.pubkeyHex,
               eth.privateKeyHex,
-              eth.keystore,
+              ethKeystore,
             );
           } else {
             List<String> seedRpcList = await Global.getSeedRpcList(_wallet?.address);
             Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+            Loading.dismiss();
+
             if (nkn.address.isEmpty || nkn.address != _wallet?.address) {
               Toast.show(_localizations.password_wrong);
               return;
@@ -358,7 +365,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
             // TimerAuth.instance.enableAuth(); // TODO:GG auth
 
-            if (_wallet == null) return;
             WalletExportScreen.go(
               context,
               WalletType.nkn,
@@ -370,6 +376,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             );
           }
         }).onError((error, stackTrace) {
+          Loading.dismiss();
           handleError(error, stackTrace: stackTrace);
         });
         break;
