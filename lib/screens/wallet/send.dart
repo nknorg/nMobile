@@ -587,7 +587,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               width: 20,
                                               alignment: Alignment.centerRight,
                                               child: Label(
-                                                _localizations.eth,
+                                                _wallet.type == WalletType.eth ? _localizations.eth : _localizations.nkn,
                                                 type: LabelType.label,
                                               ),
                                             ),
