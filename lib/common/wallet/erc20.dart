@@ -17,7 +17,7 @@ class WalletEth with Tag {
 
   WalletEth(this.name, this.raw);
 
-  Future<EthereumAddress> get address => Ethereum.deriveAddressByCredt(credt);
+  Future<EthereumAddress> get address => credt.extractAddress();
 
   Credentials get credt => raw.privateKey;
 
@@ -126,11 +126,6 @@ class Ethereum {
     return (kdf == 'pbkdf2' && crypto['kdfparams'] is Map) || (kdf == 'scrypt' && crypto['kdfparams'] is Map);
   }
 
-  static Future<EthereumAddress> deriveAddressByCredt(Credentials credentials) async {
-    final address = await credentials.extractAddress();
-    return address;
-  }
-
   static EtherAmount etherToWei(num amount) {
     final amoStr = amount.toString();
     final dot = amoStr.lastIndexOf('.');
@@ -200,7 +195,7 @@ class EthErc20Client with Tag {
   static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
   // ignore: non_constant_identifier_names
-  StreamSubscription<FilterEvent>? _subscription;
+  // StreamSubscription<FilterEvent>? _subscription;
   late Web3Client _web3client;
 
   EthErc20Client() {
@@ -247,14 +242,16 @@ class EthErc20Client with Tag {
   }) {
     try {
       return _web3client.sendTransaction(
-          credt,
-          Transaction(
-            to: EthereumAddress.fromHex(address),
-            maxGas: gasLimit,
-            gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
-            value: amountEth.ETH,
-          ),
-          fetchChainIdFromNetworkId: true);
+        credt,
+        Transaction(
+          to: EthereumAddress.fromHex(address),
+          maxGas: gasLimit,
+          gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
+          value: amountEth.ETH,
+        ),
+        chainId: null,
+        fetchChainIdFromNetworkId: true,
+      );
     } catch (e) {
       handleError(e);
       rethrow;
@@ -270,19 +267,21 @@ class EthErc20Client with Tag {
   }) async {
     try {
       return _web3client.sendTransaction(
-          credt,
-          Transaction.callContract(
-            contract: Erc20Nkn.contract,
-            function: Erc20Nkn.transferFunc,
-            parameters: [
-              // {"name":"_to","type":"address"},{"name":"_value","type":"uint256"}
-              EthereumAddress.fromHex(address), // _to
-              amountNkn.NKN.getInWei // _value: BigInt.
-            ],
-            maxGas: gasLimit,
-            gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
-          ),
-          fetchChainIdFromNetworkId: true);
+        credt,
+        Transaction.callContract(
+          contract: Erc20Nkn.contract,
+          function: Erc20Nkn.transferFunc,
+          parameters: [
+            // {"name":"_to","type":"address"},{"name":"_value","type":"uint256"}
+            EthereumAddress.fromHex(address), // _to
+            amountNkn.NKN.getInWei // _value: BigInt.
+          ],
+          maxGas: gasLimit,
+          gasPrice: gasPriceInGwei == null ? null : EtherAmount.fromUnitAndValue(EtherUnit.gwei, gasPriceInGwei),
+        ),
+        chainId: null,
+        fetchChainIdFromNetworkId: true,
+      );
     } catch (e) {
       handleError(e);
       rethrow;
@@ -309,7 +308,7 @@ class EthErc20Client with Tag {
   // }
 
   Future<void> close() {
-    _subscription?.cancel();
+    // _subscription?.cancel();
     return _web3client.dispose();
   }
 }

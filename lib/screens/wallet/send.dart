@@ -97,6 +97,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     walletCommon.queryBalance(); // await
     // init
     _init(this._wallet.type == WalletType.eth);
+    _updateFee(this._wallet.type == WalletType.eth);
   }
 
   @override
