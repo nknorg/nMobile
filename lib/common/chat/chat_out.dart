@@ -407,7 +407,7 @@ class ChatOutCommon with Tag {
     TopicSchema? topic,
   }) async {
     if (message == null) return null;
-    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, notify: false);
+    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: false);
     String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
@@ -468,7 +468,7 @@ class ChatOutCommon with Tag {
     // pid
     if (pid == null || pid.isEmpty) {
       logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
-      message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true);
+      message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
     } else {
       message.pid = pid;
       _messageStorage.updatePid(message.msgId, message.pid); // await
