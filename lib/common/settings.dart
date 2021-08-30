@@ -31,7 +31,7 @@ class Settings {
 
   // duration
   static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h
-  static late int deviceInfoExpireMs = 1 * 60 * 60 * 1000; // 1h
+  static late int deviceInfoExpireMs = 30 * 60 * 1000; // 30m
   static late int txPoolDelayMs = 3 * 60 * 1000; // 3m
 
   static init() async {

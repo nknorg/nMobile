@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
@@ -283,11 +282,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   _getClientStatusView() {
-    return StreamBuilder<int>(
-      stream: clientCommon.statusStream,
-      initialData: clientCommon.status,
-      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-        if (snapshot.data != ClientConnectStatus.connecting) {
+    return StreamBuilder<bool>(
+      stream: clientCommon.connectingVisibleStream,
+      initialData: false,
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        if (snapshot.data == false) {
           return SizedBox.shrink();
         }
         return Container(
