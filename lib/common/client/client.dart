@@ -48,6 +48,11 @@ class ClientCommon with Tag {
   Stream<int> get statusStream => _statusController.stream;
 
   // ignore: close_sinks
+  StreamController<bool> _connectingVisibleController = StreamController<bool>.broadcast();
+  StreamSink<bool> get _connectingVisibleSink => _connectingVisibleController.sink;
+  Stream<bool> get connectingVisibleStream => _connectingVisibleController.stream;
+
+  // ignore: close_sinks
   StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
   StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
   Stream<dynamic> get onErrorStream => _onErrorController.stream;
@@ -183,6 +188,7 @@ class ClientCommon with Tag {
     // loop
     Future.delayed(Duration(seconds: 1), () {
       if ((status == ClientConnectStatus.connecting) && (application.appLifecycleState == AppLifecycleState.resumed)) {
+        _connectingVisibleSink.add(true);
         connectCheck();
       }
     });
@@ -191,5 +197,9 @@ class ClientCommon with Tag {
   Future pingSuccess() async {
     if (client == null || status != ClientConnectStatus.connecting) return;
     _statusSink.add(ClientConnectStatus.connected);
+    // visible
+    Future.delayed(Duration(milliseconds: 500), () {
+      _connectingVisibleSink.add(false);
+    });
   }
 }
