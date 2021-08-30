@@ -269,7 +269,8 @@ class ChatCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool notify = false}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false}) async {
+    if (status <= message.status && !force) return message;
     message.status = status;
     bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success && notify) _onUpdateSink.add(message);
