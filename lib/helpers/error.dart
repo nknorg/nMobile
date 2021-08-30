@@ -57,23 +57,23 @@ String? getErrorShow(dynamic error) {
   S _localizations = S.of(Global.appContext);
 
   String loginError = "failed to create client";
-  if (error.message == loginError || error.toString() == loginError) {
+  if (error?.toString().contains(loginError) == true) {
     return loginError;
   }
   String rpcError = 'all rpc request failed';
-  if (error.message == rpcError || error.toString() == rpcError) {
+  if (error?.toString().contains(rpcError) == true) {
     return rpcError;
   }
   String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
-  if (error.message == txError || error.toString() == txError) {
+  if (error?.toString().contains(txError) == true) {
     return txError;
   }
   String pwdWrong = "wrong password";
-  if (error.message == pwdWrong || error.toString() == pwdWrong) {
+  if (error?.toString().contains(pwdWrong) == true) {
     return _localizations.tip_password_error;
   }
   String ksError = "keystore not exits";
-  if (error.message == ksError || error.toString() == ksError) {
+  if (error?.toString().contains(ksError) == true) {
     return ksError;
   }
   return Settings.debug ? error.message : _localizations.something_went_wrong;
