@@ -214,7 +214,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     S _localizations = S.of(context);
     Loading.show();
     try {
-      final eth = Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
+      final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
       String ethAddress = (await eth.address).hex;
       if (ethAddress.isEmpty || ethAddress != _wallet.address) {
         Toast.show(_localizations.password_wrong);

@@ -13,6 +13,7 @@ import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -112,10 +113,14 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
       if (password == null || password.isEmpty) return;
       String keystore = await walletCommon.getKeystoreByAddress(schema.address);
 
+      Loading.show();
       if (schema.type == WalletType.eth) {
-        final eth = Ethereum.restoreByKeyStore(name: schema.name ?? "", keystore: keystore, password: password);
+        final eth = await Ethereum.restoreByKeyStore(name: schema.name ?? "", keystore: keystore, password: password);
         String ethAddress = (await eth.address).hex;
-        if (ethAddress.isEmpty || ethAddress != schema.address) {
+        String ethKeystore = await eth.keystore();
+        Loading.dismiss();
+
+        if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != schema.address) {
           Toast.show(_localizations.password_wrong);
           return;
         }
@@ -127,11 +132,13 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
           ethAddress,
           eth.pubkeyHex,
           eth.privateKeyHex,
-          eth.keystore,
+          ethKeystore,
         );
       } else {
         List<String> seedRpcList = await Global.getSeedRpcList(schema.address);
         Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+        Loading.dismiss();
+
         if (nkn.address.isEmpty || nkn.address != schema.address) {
           Toast.show(_localizations.password_wrong);
           return;
@@ -148,6 +155,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         );
       }
     }).onError((error, stackTrace) {
+      Loading.dismiss();
       handleError(error, stackTrace: stackTrace);
     });
   }

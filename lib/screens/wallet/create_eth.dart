@@ -63,8 +63,9 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
       final eth = Ethereum.create(name: name, password: password);
       String ethAddress = (await eth.address).hex;
-      logger.i("$TAG - wallet create - eth:${eth.toString()}");
-      if (ethAddress.isEmpty || eth.keystore.isEmpty) {
+      String ethKeystore = await eth.keystore();
+      logger.i("$TAG - wallet create - address:$ethAddress - keystore:$ethKeystore - eth:${eth.toString()}");
+      if (ethAddress.isEmpty || ethKeystore.isEmpty) {
         Loading.dismiss();
         return;
       }
@@ -72,7 +73,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
       WalletSchema wallet = WalletSchema(name: eth.name, address: ethAddress, type: WalletType.eth);
       logger.i("$TAG - wallet create - ${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, eth.keystore, password: password));
+      _walletBloc.add(AddWallet(wallet, ethKeystore, password: password));
 
       Loading.dismiss();
       AppScreen.go(context);

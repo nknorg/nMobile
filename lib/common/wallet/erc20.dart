@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math'; // used for the random number generator
 import 'dart:typed_data';
 
@@ -35,8 +36,43 @@ class WalletEth with Tag {
 
   BigInt get pubkeyInt => bytesToInt(pubkeyBytes);
 
-  // FUTURE:some stuck
-  String get keystore => raw.toJson();
+  // String get keystore => raw.toJson();
+
+  Future<String> keystore() async {
+    ReceivePort receivePort = ReceivePort();
+
+    await Isolate.spawn(_loadKeystore, receivePort.sendPort);
+
+    // The 'echo' isolate sends its SendPort as the first message
+    SendPort sendPort = await receivePort.first;
+
+    // send message to isolate thread
+    ReceivePort response = ReceivePort();
+    sendPort.send([response.sendPort, raw]);
+
+    // get result from UI thread port
+    String? result = await response.first;
+    return result ?? "";
+  }
+}
+
+_loadKeystore(SendPort sendPort) async {
+  // Open the ReceivePort for incoming messages.
+  ReceivePort port = ReceivePort();
+  // Notify any other isolates what port this isolate listens to.
+  sendPort.send(port.sendPort);
+
+  // get response
+  var msg = (await port.first) as List;
+  SendPort replyTo = msg[0];
+  Wallet wallet = msg[1];
+
+  // get keystore
+  String keystore = wallet.toJson();
+  replyTo.send(keystore);
+
+  // close
+  port.close();
 }
 
 class Ethereum {
@@ -46,11 +82,27 @@ class Ethereum {
     return WalletEth(name, raw);
   }
 
-  // FUTURE:some stuck
-  static WalletEth restoreByKeyStore({required String name, required String keystore, required String password}) {
+  static Future<WalletEth> restoreByKeyStore({required String name, required String keystore, required String password}) async {
     try {
-      Wallet wallet = Wallet.fromJson(keystore, password);
-      return WalletEth(name, wallet);
+      ReceivePort receivePort = ReceivePort();
+
+      await Isolate.spawn(_loadRestoreByKeyStore, receivePort.sendPort);
+
+      // The 'echo' isolate sends its SendPort as the first message
+      SendPort sendPort = await receivePort.first;
+
+      // send message to isolate thread
+      ReceivePort response = ReceivePort();
+      sendPort.send([response.sendPort, name, keystore, password]);
+
+      // final ethWallet = WalletEth(name, wallet);
+
+      // get result from UI thread port
+      List result = await response.first;
+      if (result[1] != null) {
+        throw result[1];
+      }
+      return result[0];
     } catch (e) {
       throw e;
     }
@@ -91,6 +143,32 @@ class Ethereum {
       return EtherAmount.inWei((BigInt.from(10).pow(18) * intPart) + ((BigInt.from(10).pow(18) * floatPart) ~/ BigInt.from(10).pow(len)));
     }
   }
+}
+
+_loadRestoreByKeyStore(SendPort sendPort) async {
+  // Open the ReceivePort for incoming messages.
+  ReceivePort port = ReceivePort();
+  // Notify any other isolates what port this isolate listens to.
+  sendPort.send(port.sendPort);
+
+  // get response
+  var msg = (await port.first) as List;
+  SendPort replyTo = msg[0];
+  String name = msg[1];
+  String keystore = msg[2];
+  String password = msg[3];
+
+  // get wallet
+  try {
+    Wallet wallet = Wallet.fromJson(keystore, password);
+    final ethWallet = WalletEth(name, wallet);
+    replyTo.send([ethWallet, null]);
+  } catch (e) {
+    replyTo.send([null, e.toString()]);
+  }
+
+  // close
+  port.close();
 }
 
 class Erc20Nkn {
