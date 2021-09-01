@@ -27,11 +27,11 @@ class WalletSchema {
     return WalletSchema(
       type: map['type'] ?? "",
       address: map['address'] ?? "",
-      publicKey: map['public_key'] ?? "",
+      publicKey: map['publicKey'] ?? "",
       balance: map['balance'] ?? 0,
       balanceEth: map['balanceEth'] ?? 0,
       name: map['name'],
-      isBackedUp: map['is_backed_up'],
+      isBackedUp: map['isBackedUp'],
     );
   }
 
@@ -39,11 +39,11 @@ class WalletSchema {
     return {
       'type': type,
       'address': address,
-      'public_key': publicKey,
+      'publicKey': publicKey,
       'balance': balance ?? 0,
       'balanceEth': balanceEth ?? 0,
       'name': name,
-      'is_backed_up': isBackedUp,
+      'isBackedUp': isBackedUp,
     };
   }
 
