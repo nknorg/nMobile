@@ -7,8 +7,8 @@ class WalletSchema {
   String type;
   String address;
   String publicKey;
-  double? balance = 0;
-  double? balanceEth = 0;
+  double balance = 0;
+  double balanceEth = 0;
 
   String? name;
   bool isBackedUp = false;
@@ -31,7 +31,7 @@ class WalletSchema {
       balance: map['balance'] ?? 0,
       balanceEth: map['balanceEth'] ?? 0,
       name: map['name'],
-      isBackedUp: map['isBackedUp'],
+      isBackedUp: map['isBackedUp'] ?? false,
     );
   }
 
@@ -40,8 +40,8 @@ class WalletSchema {
       'type': type,
       'address': address,
       'publicKey': publicKey,
-      'balance': balance ?? 0,
-      'balanceEth': balanceEth ?? 0,
+      'balance': balance,
+      'balanceEth': balanceEth,
       'name': name,
       'isBackedUp': isBackedUp,
     };
