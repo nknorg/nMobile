@@ -8,16 +8,16 @@ import 'package:nmobile/utils/logger.dart';
 
 class WalletStorage with Tag {
   static const String KEY_WALLET = 'WALLETS';
+  static const String KEY_PUBKEY = 'PUBKEYS';
   static const String KEY_KEYSTORE = 'KEYSTORES';
   static const String KEY_PASSWORD = 'PASSWORDS';
   static const String KEY_SEEDS = 'SEEDS';
-  static const String KEY_BACKUP = 'BACKUP';
-  static const String KEY_DEFAULT_ADDRESS = 'WALLET_DEFAULT_ADDRESS'; // not support 'default_d_chat_wallet_address'
+  static const String KEY_DEFAULT_ADDRESS = 'default_d_chat_wallet_address';
 
   final LocalStorage _localStorage = LocalStorage();
   final SecureStorage _secureStorage = SecureStorage();
 
-  Future add(WalletSchema wallet, String? keystore, {String? password, String? seed}) async {
+  Future add(WalletSchema wallet, String keystore, String password, String seed) async {
     List<Future> futures = <Future>[];
     // index
     List<WalletSchema> wallets = await getAll();
@@ -28,23 +28,15 @@ class WalletStorage with Tag {
       futures.add(_localStorage.setItem(KEY_WALLET, index, wallet.toMap()));
     }
     // keystore
-    if (keystore != null && keystore.isNotEmpty) {
-      if (Platform.isAndroid) {
-        futures.add(_localStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
-      } else {
-        futures.add(_secureStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
-      }
+    if (Platform.isAndroid) {
+      futures.add(_localStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
+    } else {
+      futures.add(_secureStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
     }
     // password
-    if (password != null && password.isNotEmpty) {
-      futures.add(_secureStorage.set('$KEY_PASSWORD:${wallet.address}', password));
-    }
+    futures.add(_secureStorage.set('$KEY_PASSWORD:${wallet.address}', password));
     // seed
-    if (seed != null && seed.isNotEmpty) {
-      futures.add(_secureStorage.set('$KEY_SEEDS:${wallet.address}', seed));
-    }
-    // backup
-    futures.add(_localStorage.set('$KEY_BACKUP:${wallet.address}', false));
+    futures.add(_secureStorage.set('$KEY_SEEDS:${wallet.address}', seed));
     await Future.wait(futures);
 
     logger.v("$TAG - add - index:$index - wallet:$wallet - keystore:$keystore - password:$password");
@@ -64,8 +56,7 @@ class WalletStorage with Tag {
       // pwd + seed
       futures.add(_secureStorage.delete('$KEY_PASSWORD:$address'));
       futures.add(_secureStorage.delete('$KEY_SEEDS:$address'));
-      // backup + default
-      futures.add(_localStorage.remove('$KEY_BACKUP:$address'));
+      // default
       if (await getDefaultAddress() == address) {
         futures.add(_localStorage.remove('$KEY_DEFAULT_ADDRESS'));
       }
@@ -76,25 +67,25 @@ class WalletStorage with Tag {
     return;
   }
 
-  Future update(int index, WalletSchema? wallet, {String? keystore, String? password, String? seed}) async {
+  Future update(int index, WalletSchema wallet, {String? keystore, String? password, String? seed}) async {
     List<Future> futures = <Future>[];
     if (index >= 0) {
-      futures.add(_localStorage.setItem(KEY_WALLET, index, wallet?.toMap()));
+      futures.add(_localStorage.setItem(KEY_WALLET, index, wallet.toMap()));
       // keystore
       if (keystore != null && keystore.isNotEmpty) {
         if (Platform.isAndroid) {
-          futures.add(_localStorage.set('$KEY_KEYSTORE:${wallet?.address}', keystore));
+          futures.add(_localStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
         } else {
-          futures.add(_secureStorage.set('$KEY_KEYSTORE:${wallet?.address}', keystore));
+          futures.add(_secureStorage.set('$KEY_KEYSTORE:${wallet.address}', keystore));
         }
       }
       // password
       if (password != null && password.isNotEmpty) {
-        futures.add(_secureStorage.set('$KEY_PASSWORD:${wallet?.address}', password));
+        futures.add(_secureStorage.set('$KEY_PASSWORD:${wallet.address}', password));
       }
       // seed
       if (seed != null && seed.isNotEmpty) {
-        futures.add(_secureStorage.set('$KEY_SEEDS:${wallet?.address}', seed));
+        futures.add(_secureStorage.set('$KEY_SEEDS:${wallet.address}', seed));
       }
     }
     await Future.wait(futures);
@@ -120,9 +111,7 @@ class WalletStorage with Tag {
   }
 
   Future getKeystore(String? address) async {
-    if (address == null || address.isEmpty) {
-      return null;
-    }
+    if (address == null || address.isEmpty) return null;
     var keystore;
     if (Platform.isAndroid) {
       keystore = await _localStorage.get('$KEY_KEYSTORE:$address');
@@ -173,18 +162,6 @@ class WalletStorage with Tag {
   Future getSeed(String? address) async {
     if (address == null || address.isEmpty) return null;
     return _secureStorage.get('$KEY_SEEDS:$address');
-  }
-
-  // backup
-  Future setBackup(String? address, bool backup) async {
-    if (address == null || address.isEmpty) return null;
-    logger.v("$TAG - setBackup - address:$address - backup:$backup");
-    return Future(() => _localStorage.set('$KEY_BACKUP:$address', backup));
-  }
-
-  Future isBackup(String? address) async {
-    if (address == null || address.isEmpty) return null;
-    return _localStorage.get('$KEY_BACKUP:$address');
   }
 
   // default

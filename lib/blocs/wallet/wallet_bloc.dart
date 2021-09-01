@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -36,66 +35,63 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> with Tag {
   }
 
   Stream<WalletState> _mapLoadWalletsToState() async* {
-    List<WalletSchema> wallets = await _walletStorage.getWallets();
-    yield WalletLoaded(wallets);
+    List<WalletSchema> wallets = await _walletStorage.getAll();
+    String? defaultAddress = await _walletStorage.getDefaultAddress();
+    yield WalletLoaded(wallets, defaultAddress);
   }
 
   Stream<WalletState> _mapAddWalletToState(AddWallet event) async* {
-    if (state is WalletLoaded) {
-      await _walletStorage.add(event.wallet, event.keystore, password: event.password);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      int index = list.indexWhere((x) => x.address == event.wallet.address);
-      if (index >= 0) {
-        list[index] = event.wallet;
-      } else {
-        list.add(event.wallet);
-      }
-      yield WalletLoaded(list);
+    await _walletStorage.add(event.wallet, event.keystore, event.password, event.seed);
+    List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+    int index = list.indexWhere((x) => x.address == event.wallet.address); // int index = list.indexOf(wallet);
+    if (index >= 0) {
+      list[index] = event.wallet;
+    } else {
+      list.add(event.wallet);
     }
+    String? defaultAddress = await _walletStorage.getDefaultAddress();
+    yield WalletLoaded(list, defaultAddress);
   }
 
   Stream<WalletState> _mapDeleteWalletToState(DeleteWallet event) async* {
-    WalletSchema wallet = event.wallet;
-    if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      // int index = list.indexOf(wallet);
-      int index = list.indexWhere((w) => w.address == wallet.address);
-      if (index >= 0) {
-        list.removeAt(index);
-        await _walletStorage.delete(index, wallet);
-      }
-      yield WalletLoaded(list);
+    String deleteAddress = event.address;
+    List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+    int index = list.indexWhere((w) => w.address == deleteAddress); // int index = list.indexOf(wallet);
+    if (index >= 0) {
+      list.removeAt(index);
+      await _walletStorage.delete(index, deleteAddress);
     }
+    String? defaultAddress = await _walletStorage.getDefaultAddress();
+    yield WalletLoaded(list, defaultAddress);
   }
 
   Stream<WalletState> _mapUpdateWalletToState(UpdateWallet event) async* {
     WalletSchema wallet = event.wallet;
-    if (state is WalletLoaded) {
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      // int index = list.indexOf(wallet);
-      int index = list.indexWhere((w) => w.address == wallet.address);
-      if (index >= 0) {
-        list[index] = wallet;
-        await _walletStorage.update(index, wallet);
-      }
-      yield WalletLoaded(list);
+    final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+    int index = list.indexWhere((w) => w.address == wallet.address); // int index = list.indexOf(wallet);
+    if (index >= 0) {
+      list[index] = wallet;
+      await _walletStorage.update(index, wallet);
     }
+    String? defaultAddress = await _walletStorage.getDefaultAddress();
+    yield WalletLoaded(list, defaultAddress);
   }
 
   Stream<WalletState> _mapBackupWalletToState(BackupWallet event) async* {
-    if (state is WalletLoaded) {
-      await _walletStorage.setBackup(event.address, event.backup);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      bool allBackup = await walletCommon.isBackup(original: list);
-      yield WalletBackup(list, event.address, allBackup);
+    String backupAddress = event.address;
+    final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+    int index = list.indexWhere((w) => w.address == backupAddress); // int index = list.indexOf(wallet);
+    if (index >= 0) {
+      list[index].isBackedUp = event.backup;
+      await _walletStorage.update(index, list[index]);
     }
+    String? defaultAddress = await _walletStorage.getDefaultAddress();
+    yield WalletLoaded(list, defaultAddress);
   }
 
   Stream<WalletState> _mapDefaultWalletToState(DefaultWallet event) async* {
-    if (state is WalletLoaded) {
-      await _walletStorage.setDefaultAddress(event.address);
-      final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
-      yield WalletDefault(list, event.address);
-    }
+    await _walletStorage.setDefaultAddress(event.address);
+    final List<WalletSchema> list = List.from((state as WalletLoaded).wallets);
+    yield WalletDefault(list, event.address);
   }
 }
