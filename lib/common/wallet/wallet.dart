@@ -16,28 +16,23 @@ class WalletCommon with Tag {
 
   WalletCommon();
 
-  Future<WalletSchema?> getInStorageByAddress(String? address) async {
-    if (address == null || address.length == 0) return null;
-    List<WalletSchema> wallets = await _walletStorage.getWallets();
+  Future<List<WalletSchema>> getWallets() {
+    return _walletStorage.getAll();
+  }
+
+  Future<String?> getDefaultAddress() {
+    return _walletStorage.getDefaultAddress();
+  }
+
+  Future<WalletSchema?> getDefault() async {
+    String? address = await getDefaultAddress();
+    if (address == null || address.isEmpty) return null;
+    List<WalletSchema> wallets = await getWallets();
     if (wallets.isEmpty) return null;
-    try {
-      return wallets.firstWhere((x) => x.address == address);
-    } catch (e) {
-      return null;
-    }
+    return wallets.firstWhere((w) => w.address == address);
   }
 
-  WalletSchema? getInOriginalByAddress(List<WalletSchema>? wallets, String? address) {
-    if (address == null || address.length == 0) return null;
-    if (wallets == null || wallets.isEmpty) return null;
-    try {
-      return wallets.firstWhere((x) => x.address == address);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<String> getKeystoreByAddress(String? address) async {
+  Future<String> getKeystore(String? address) async {
     String? keystore = await _walletStorage.getKeystore(address);
     if (keystore == null || keystore.isEmpty) {
       throw new Exception("keystore not exits");
@@ -49,36 +44,8 @@ class WalletCommon with Tag {
     return _walletStorage.getPassword(walletAddress);
   }
 
-  Future<bool> isBackup({List? original}) async {
-    List wallets = original ?? await _walletStorage.getWallets();
-    // backups
-    List<Future> futures = <Future>[];
-    wallets.forEach((value) {
-      futures.add(_walletStorage.isBackupByAddress(value?.address));
-    });
-    List backups = await Future.wait(futures);
-    // allBackup
-    bool? find = backups.firstWhere((backup) => backup == null || backup == false, orElse: () => true);
-    bool allBackup = (find != null && find == true) ? true : false;
-    return allBackup;
-  }
-
-  Future<WalletSchema?> getDefault() async {
-    String? address = await getDefaultAddress();
-    WalletSchema? result = await getInStorageByAddress(address);
-    if (result == null) {
-      List<WalletSchema> wallets = await _walletStorage.getWallets();
-      if (wallets.isNotEmpty) {
-        address = wallets[0].address;
-        await _walletStorage.setDefaultAddress(address);
-        result = await getInStorageByAddress(address);
-      }
-    }
-    return result;
-  }
-
-  Future<String?> getDefaultAddress() {
-    return _walletStorage.getDefaultAddress();
+  Future getSeed(String walletAddress) {
+    return _walletStorage.getSeed(walletAddress);
   }
 
   bool isBalanceSame(WalletSchema? w1, WalletSchema? w2) {
@@ -94,23 +61,23 @@ class WalletCommon with Tag {
       state.wallets.forEach((w) async {
         if (w.type == WalletType.eth) {
           _erc20client.getBalanceEth(address: w.address).then((balance) {
-            logger.d("$TAG - queryBalance: END - eth - balance_old:${w.balanceEth} - balance_new:${balance?.ether} - wallet_address:${w.address}");
+            logger.d("$TAG - queryBalance: END - eth - old:${w.balanceEth} - new:${balance?.ether} - wallet_address:${w.address}");
             if (balance != null && w.balanceEth != (balance.ether as double?)) {
-              w.balanceEth = balance.ether as double?;
+              w.balanceEth = (balance.ether as double?) ?? 0;
               _walletBloc.add(UpdateWallet(w));
             }
           });
           _erc20client.getBalanceNkn(address: w.address).then((balance) {
-            logger.d("$TAG - queryBalance: END - eth_nkn - balance_old:${w.balanceEth} - balance_new:${balance?.ether} - wallet_address:${w.address}");
+            logger.d("$TAG - queryBalance: END - eth_nkn - old:${w.balanceEth} - new:${balance?.ether} - wallet_address:${w.address}");
             if (balance != null && w.balanceEth != (balance.ether as double?)) {
-              w.balance = balance.ether as double?;
+              w.balance = (balance.ether as double?) ?? 0;
               _walletBloc.add(UpdateWallet(w));
             }
           });
         } else {
           final seedRpcList = await Global.getSeedRpcList(w.address);
           Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: seedRpcList)).then((balance) {
-            logger.d("$TAG - queryBalance: END - nkn - balance_old:${w.balance} - balance_new:$balance - wallet_address:${w.address}");
+            logger.d("$TAG - queryBalance: END - nkn - old:${w.balance} - new:$balance - wallet_address:${w.address}");
             if (w.balance != balance) {
               w.balance = balance;
               _walletBloc.add(UpdateWallet(w));
