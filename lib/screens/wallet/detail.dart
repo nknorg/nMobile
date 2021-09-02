@@ -76,7 +76,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
     _walletSubscription = _walletBloc?.stream.listen((state) {
       if (state is WalletDefault) {
         setState(() {
-          isDefault = state.walletAddress == _wallet?.address;
+          isDefault = state.defaultAddress == _wallet?.address;
         });
       }
     });
@@ -86,13 +86,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       });
     });
 
-    // TimerAuth.onOtherPage = true; // TODO:GG auth wallet lock
+    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet lock
   }
 
   @override
   void dispose() {
     _walletSubscription?.cancel();
-    // TimerAuth.onOtherPage = false; // TODO:GG auth wallet unlock
+    // TimerAuth.onOtherPage = false; // TODO:GG auth  wallet unlock
     super.dispose();
   }
 
@@ -163,7 +163,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             BlocBuilder<WalletBloc, WalletState>(
               builder: (context, state) {
                 if (state is WalletLoaded) {
-                  this._wallet = walletCommon.getInOriginalByAddress(state.wallets, this._wallet?.address);
+                  // refresh balance
+                  List<WalletSchema> finds = state.wallets.where((w) => w.address == this._wallet?.address).toList();
+                  if (finds.isNotEmpty) {
+                    this._wallet = finds[0];
+                  } else {
+                    Navigator.pop(this.context);
+                  }
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -312,7 +318,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       actionText: _localizations.save,
       maxLength: 20,
     );
-    if (newName == null || newName.isEmpty) return;
+    if (this._wallet == null || newName == null || newName.isEmpty) return;
     setState(() {
       this._wallet?.name = newName; // update appBar title
     });
@@ -328,7 +334,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       case 0: // export
         authorization.getWalletPassword(_wallet?.address, context: context).then((String? password) async {
           if (password == null || password.isEmpty) return;
-          String keystore = await walletCommon.getKeystoreByAddress(_wallet?.address);
+          String keystore = await walletCommon.getKeystore(_wallet?.address);
 
           Loading.show();
           if (_wallet?.type == WalletType.eth) {
@@ -342,14 +348,14 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               return;
             }
 
-            // TimerAuth.instance.enableAuth(); // TODO:GG auth
+            // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
 
             WalletExportScreen.go(
               context,
               WalletType.eth,
               _wallet?.name ?? "",
               ethAddress,
-              eth.pubkeyHex,
+              eth.pubKeyHex,
               eth.privateKeyHex,
               ethKeystore,
             );
@@ -363,7 +369,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               return;
             }
 
-            // TimerAuth.instance.enableAuth(); // TODO:GG auth
+            // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
 
             WalletExportScreen.go(
               context,
@@ -381,7 +387,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         });
         break;
       case 1: // delete
-        if (_wallet == null) return;
         ModalDialog.of(this.context).confirm(
           title: _localizations.delete_wallet_confirm_title,
           content: _localizations.delete_wallet_confirm_text,
@@ -390,14 +395,17 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             text: _localizations.delete_wallet,
             backgroundColor: application.theme.strongColor,
             onPressed: () async {
-              _walletBloc?.add(DeleteWallet(this._wallet!));
+              if (_wallet == null || _wallet!.address.isEmpty) return;
+              _walletBloc?.add(DeleteWallet(this._wallet!.address));
               // client close
               try {
                 String? clientAddress = clientCommon.address;
                 if (clientAddress == null || clientAddress.isEmpty) return;
-                String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-                if (this._wallet?.address == walletAddress) {
-                  await clientCommon.signOut();
+                String? connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+                String? defaultAddress = await walletCommon.getDefaultAddress();
+                if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
+                  _walletBloc?.add(DefaultWallet(null));
+                  await clientCommon.signOut(closeDB: true);
                 }
               } catch (e) {
                 handleError(e);

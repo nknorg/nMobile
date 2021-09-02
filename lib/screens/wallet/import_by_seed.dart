@@ -89,10 +89,10 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
             return;
           }
 
-          WalletSchema wallet = WalletSchema(name: name, address: nkn.address, type: WalletType.nkn);
+          WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
           logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
         } else {
           final eth = Ethereum.restoreByPrivateKey(name: name, privateKey: seed, password: password);
           String ethAddress = (await eth.address).hex;
@@ -103,10 +103,10 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
             return;
           }
 
-          WalletSchema wallet = WalletSchema(name: name, address: ethAddress, type: WalletType.eth);
+          WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: name);
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, ethKeystore, password: password));
+          _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
         }
         Future.delayed(Duration(seconds: 3), () => walletCommon.queryBalance());
 

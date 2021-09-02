@@ -70,10 +70,10 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
         return;
       }
 
-      WalletSchema wallet = WalletSchema(name: eth.name, address: ethAddress, type: WalletType.eth);
+      WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: eth.name);
       logger.i("$TAG - wallet create - ${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, ethKeystore, password: password));
+      _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
 
       Loading.dismiss();
       AppScreen.go(context);

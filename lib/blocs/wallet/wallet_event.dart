@@ -11,17 +11,17 @@ class LoadWallet extends WalletEvent {}
 class AddWallet extends WalletEvent {
   final WalletSchema wallet;
   final String keystore;
-  final String? password;
-  final String? seed;
+  final String password;
+  final String seed;
 
-  AddWallet(this.wallet, this.keystore, {this.password, this.seed});
+  AddWallet(this.wallet, this.keystore, this.password, this.seed);
 }
 
 // delete
 class DeleteWallet extends WalletEvent {
-  final WalletSchema wallet;
+  final String address;
 
-  DeleteWallet(this.wallet);
+  DeleteWallet(this.address);
 }
 
 // update
@@ -41,7 +41,7 @@ class BackupWallet extends WalletEvent {
 
 // default
 class DefaultWallet extends WalletEvent {
-  final String address;
+  final String? address;
 
   DefaultWallet(this.address);
 }

@@ -40,7 +40,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   WalletBloc? _walletBloc;
   StreamSubscription? _walletSubscription;
 
-  bool _allBackedUp = false;
+  bool _allBackedUp = true;
 
   @override
   void onRefreshArguments() {}
@@ -55,32 +55,29 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
     // backup
     _walletSubscription = _walletBloc?.stream.listen((state) async {
-      // if (state is WalletBackup) {
-      //   setState(() {
-      //     _allBackedUp = state.allBackup ?? false;
-      //   });
-      // }
       if (state is WalletLoaded) {
-        bool allBackedUp = await walletCommon.isBackup();
-        if (_allBackedUp != allBackedUp) {
-          setState(() {
-            _allBackedUp = allBackedUp;
-          });
-        }
+        _refreshBackedUp();
       }
     });
     // init
-    walletCommon.isBackup().then((value) {
-      setState(() {
-        _allBackedUp = value;
-      });
-    });
+    _refreshBackedUp();
   }
 
   @override
   void dispose() {
     _walletSubscription?.cancel();
     super.dispose();
+  }
+
+  _refreshBackedUp() async {
+    List<WalletSchema> wallets = await walletCommon.getWallets();
+    List<WalletSchema> noBackedUpList = wallets.where((element) => element.isBackedUp == false).toList();
+    bool allBackedUp = noBackedUpList.isEmpty;
+    if (allBackedUp != _allBackedUp) {
+      setState(() {
+        _allBackedUp = allBackedUp;
+      });
+    }
   }
 
   _onNotBackedUpTipClicked() {
@@ -111,7 +108,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
     authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
       if (password == null || password.isEmpty) return;
-      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
+      String keystore = await walletCommon.getKeystore(schema.address);
 
       Loading.show();
       if (schema.type == WalletType.eth) {
@@ -130,7 +127,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
           WalletType.eth,
           schema.name ?? "",
           ethAddress,
-          eth.pubkeyHex,
+          eth.pubKeyHex,
           eth.privateKeyHex,
           ethKeystore,
         );

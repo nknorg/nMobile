@@ -178,9 +178,12 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               child: BlocBuilder<WalletBloc, WalletState>(
                 builder: (context, state) {
                   if (state is WalletLoaded) {
-                    WalletSchema? schema = walletCommon.getInOriginalByAddress(state.wallets, _wallet.address);
-                    if (schema != null) {
-                      _wallet = schema;
+                    // refresh balance
+                    List<WalletSchema> finds = state.wallets.where((w) => w.address == _wallet.address).toList();
+                    if (finds.isNotEmpty) {
+                      _wallet = finds[0];
+                    } else {
+                      Navigator.pop(this.context);
                     }
                   }
                   return Column(

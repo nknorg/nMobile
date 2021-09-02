@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -69,10 +70,10 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
         return;
       }
 
-      WalletSchema wallet = WalletSchema(name: name, address: nkn.address, type: WalletType.nkn);
+      WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
       logger.i("$TAG - wallet create - wallet:${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
+      _walletBloc.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
 
       Loading.dismiss();
       AppScreen.go(context);

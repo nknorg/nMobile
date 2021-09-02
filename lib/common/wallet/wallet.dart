@@ -32,19 +32,21 @@ class WalletCommon with Tag {
     return wallets.firstWhere((w) => w.address == address);
   }
 
-  Future<String> getKeystore(String? address) async {
-    String? keystore = await _walletStorage.getKeystore(address);
+  Future<String> getKeystore(String? walletAddress) async {
+    String? keystore = await _walletStorage.getKeystore(walletAddress);
     if (keystore == null || keystore.isEmpty) {
       throw new Exception("keystore not exits");
     }
     return keystore;
   }
 
-  Future getPassword(String walletAddress) {
+  Future getPassword(String? walletAddress) async {
+    if (walletAddress == null || walletAddress.isEmpty) return null;
     return _walletStorage.getPassword(walletAddress);
   }
 
-  Future getSeed(String walletAddress) {
+  Future getSeed(String? walletAddress) async {
+    if (walletAddress == null || walletAddress.isEmpty) return null;
     return _walletStorage.getSeed(walletAddress);
   }
 
