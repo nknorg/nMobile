@@ -29,7 +29,9 @@ class WalletCommon with Tag {
     if (address == null || address.isEmpty) return null;
     List<WalletSchema> wallets = await getWallets();
     if (wallets.isEmpty) return null;
-    return wallets.firstWhere((w) => w.address == address);
+    final finds = wallets.where((w) => w.address == address).toList();
+    if (finds.isNotEmpty) return finds[0];
+    return null;
   }
 
   Future<String> getKeystore(String? walletAddress) async {

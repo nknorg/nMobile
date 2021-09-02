@@ -19,7 +19,9 @@ class WalletLoaded extends WalletState {
   }
 
   WalletSchema? defaultWallet() {
-    return this.wallets.firstWhere((element) => element.address == defaultAddress);
+    final finds = this.wallets.where((element) => element.address == defaultAddress).toList();
+    if (finds.isNotEmpty) return finds[0];
+    return null;
   }
 }
 
