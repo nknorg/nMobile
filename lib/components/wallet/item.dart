@@ -78,7 +78,7 @@ class WalletItem extends StatelessWidget {
                   type: LabelType.h3,
                 ),
                 Label(
-                  nknFormat(this.wallet.balance ?? 0, decimalDigits: 4, symbol: 'NKN'),
+                  nknFormat(this.wallet.balance, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],

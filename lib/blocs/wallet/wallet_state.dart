@@ -10,29 +10,23 @@ class WalletLoading extends WalletState {}
 // loaded
 class WalletLoaded extends WalletState {
   final List<WalletSchema> wallets;
+  final String? defaultAddress;
 
-  WalletLoaded(this.wallets);
+  WalletLoaded(this.wallets, this.defaultAddress);
 
   bool isWalletsEmpty() {
     return wallets.isEmpty;
   }
-}
 
-// backup
-class WalletBackup extends WalletLoaded {
-  final List<WalletSchema> wallets;
-
-  final String walletAddress;
-  final bool allBackup;
-
-  WalletBackup(this.wallets, this.walletAddress, this.allBackup) : super(wallets);
+  WalletSchema? defaultWallet() {
+    return this.wallets.firstWhere((element) => element.address == defaultAddress);
+  }
 }
 
 // default
 class WalletDefault extends WalletLoaded {
   final List<WalletSchema> wallets;
+  final String? defaultAddress;
 
-  final String walletAddress;
-
-  WalletDefault(this.wallets, this.walletAddress) : super(wallets);
+  WalletDefault(this.wallets, this.defaultAddress) : super(wallets, defaultAddress);
 }
