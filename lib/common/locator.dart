@@ -8,6 +8,7 @@ import 'package:nmobile/common/chat/session.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/contact/device_info.dart';
+import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
 import 'package:nmobile/common/topic/topic.dart';
@@ -26,6 +27,7 @@ late LocalNotification localNotification;
 late AudioHelper audioHelper;
 late MemoryCache memoryCache;
 
+late DB dbCommon;
 late WalletCommon walletCommon;
 late ClientCommon clientCommon;
 late ContactCommon contactCommon;
@@ -47,6 +49,7 @@ void setupLocator() {
   locator.registerSingleton(AudioHelper());
   locator.registerSingleton(MemoryCache());
 
+  locator.registerSingleton(DB());
   locator.registerSingleton(WalletCommon());
   locator.registerSingleton(ClientCommon());
   locator.registerSingleton(ContactCommon());
@@ -67,6 +70,7 @@ void setupLocator() {
   audioHelper = locator.get<AudioHelper>();
   memoryCache = locator.get<MemoryCache>();
 
+  dbCommon = locator.get<DB>();
   walletCommon = locator.get<WalletCommon>();
   clientCommon = locator.get<ClientCommon>();
   contactCommon = locator.get<ContactCommon>();
