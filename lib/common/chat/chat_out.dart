@@ -639,8 +639,9 @@ class ChatOutCommon with Tag {
     }
     logger.i("$TAG - _sendByPiecesIfNeed:SUCCESS - count:${successList.length}");
 
-    MessageSchema? firstSuccess = returnList.firstWhere((element) => element?.pid != null);
-    return firstSuccess?.pid;
+    List<MessageSchema?> finds = returnList.where((element) => element?.pid != null).toList();
+    if (finds.isNotEmpty) return finds[0]?.pid;
+    return null;
   }
 
   Future<List<dynamic>> _convert2Pieces(MessageSchema message) async {

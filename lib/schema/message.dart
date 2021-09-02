@@ -203,8 +203,10 @@ class MessageSchema extends Equatable {
     return schema;
   }
 
-  static MessageSchema fromPiecesReceive(List<MessageSchema> sortPieces, String base64String) {
-    MessageSchema piece = sortPieces.firstWhere((element) => element.pid != null);
+  static MessageSchema? fromPiecesReceive(List<MessageSchema> sortPieces, String base64String) {
+    List<MessageSchema> finds = sortPieces.where((element) => element.pid != null).toList();
+    if (finds.isEmpty) return null;
+    MessageSchema piece = finds[0];
 
     MessageSchema schema = MessageSchema(
       pid: piece.pid,
