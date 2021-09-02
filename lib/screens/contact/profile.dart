@@ -7,9 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
-import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
@@ -112,9 +112,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   ContactSchema? _contactSchema;
   WalletSchema? _walletDefault;
 
-  WalletBloc? _walletBloc;
   StreamSubscription? _updateContactSubscription;
-  StreamSubscription? _changeWalletSubscription;
 
   bool _initBurnOpen = false;
   int _initBurnProgress = -1;
@@ -131,21 +129,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   @override
   initState() {
     super.initState();
-
-    _walletBloc = BlocProvider.of<WalletBloc>(this.context);
-
     // listen
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contactSchema?.id).listen((ContactSchema event) {
       setState(() {
         _contactSchema = event;
       });
-    });
-    _changeWalletSubscription = _walletBloc?.stream.listen((event) {
-      if (event is WalletDefault) {
-        if (_contactSchema?.type == ContactType.me) {
-          _onDefaultWalletChange();
-        }
-      }
     });
 
     // init
@@ -156,7 +144,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   void dispose() {
     _updateBurnIfNeed();
     _updateContactSubscription?.cancel();
-    _changeWalletSubscription?.cancel();
     super.dispose();
   }
 
@@ -209,68 +196,53 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     setState(() {});
   }
 
-  Future _refreshDefaultWallet({WalletSchema? wallet}) async {
-    WalletSchema? schema = wallet ?? await walletCommon.getDefault();
+  Future<bool> _refreshDefaultWallet({WalletSchema? wallet}) async {
+    wallet = wallet ?? await walletCommon.getDefault();
+    if (wallet == null) {
+      AppScreen.go(this.context);
+      return false;
+    }
     setState(() {
-      _walletDefault = schema;
+      _walletDefault = wallet;
     });
-  }
-
-  _onDefaultWalletChange() async {
-    WalletSchema? walletDefault = await walletCommon.getDefault();
-    if (walletDefault?.address == this._walletDefault?.address) return;
-    await _refreshDefaultWallet(wallet: walletDefault);
-
-    //Loading.show(); // set on func _selectDefaultWallet
-    try {
-      // client exit
-      await clientCommon.signOut();
-      await Future.delayed(Duration(seconds: 1)); // wait client close
-      Loading.dismiss();
-
-      // client entry
-      if (walletDefault == null) {
-        Navigator.pop(this.context);
-        return;
-      }
-      var client = await clientCommon.signIn(walletDefault, dialogVisible: (show) => show ? Loading.show() : Loading.dismiss());
-      await Future.delayed(Duration(seconds: 1)); // wait client create
-
-      if (client != null) {
-        // refresh state
-        ContactSchema? _me = await contactCommon.getMe(canAdd: true);
-        _refreshContactSchema(schema: _me); // await
-        Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
-      } else {
-        // pop
-        Navigator.pop(this.context);
-      }
-
-      // TimerAuth.instance.enableAuth(); // TODO:GG auth
-    } catch (e) {
-      handleError(e);
-      Navigator.pop(this.context);
-    }
-  }
-
-  String _getClientAddressShow() {
-    if (_contactSchema?.clientAddress != null) {
-      if (_contactSchema!.clientAddress.length > 10) {
-        return _contactSchema!.clientAddress.substring(0, 10) + '...';
-      }
-      return _contactSchema!.clientAddress;
-    }
-    return '';
+    return true;
   }
 
   _selectDefaultWallet() async {
     S _localizations = S.of(this.context);
-    WalletSchema? result = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
-    if (result == null || result.address == _contactSchema?.nknWalletAddress) return;
-    _walletBloc?.add(DefaultWallet(result.address));
+    WalletSchema? selected = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
+    if (selected == null || selected.address.isEmpty || selected.address == _contactSchema?.nknWalletAddress) return;
+
     Loading.show();
-    // no change chat immediately because wallet default maybe failure
-    // Loading.dismiss();
+    try {
+      // client signOut
+      await clientCommon.signOut(closeDB: true);
+      await Future.delayed(Duration(milliseconds: 500)); // wait client close
+      Loading.dismiss();
+
+      // client signIn TODO:GG 测试输错密码会怎么样
+      var client = await clientCommon.signIn(selected, walletFetch: true, dialogVisible: (show) => show ? Loading.show() : Loading.dismiss());
+      await Future.delayed(Duration(milliseconds: 500)); // wait client create
+
+      if (client != null) {
+        Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
+        // default wallet
+        BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(selected.address));
+        // contact me
+        ContactSchema? _me = await contactCommon.getMe(canAdd: true);
+        await _refreshContactSchema(schema: _me);
+      } else {
+        BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(null));
+        // pop
+        Navigator.pop(this.context);
+      }
+
+      // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
+    } catch (e) {
+      handleError(e);
+      BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(null));
+      Navigator.pop(this.context);
+    }
   }
 
   _selectAvatarPicture() async {
@@ -381,6 +353,16 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         onPressed: () => Navigator.pop(this.context),
       ),
     );
+  }
+
+  String _getClientAddressShow() {
+    if (_contactSchema?.clientAddress != null) {
+      if (_contactSchema!.clientAddress.length > 10) {
+        return _contactSchema!.clientAddress.substring(0, 10) + '...';
+      }
+      return _contactSchema!.clientAddress;
+    }
+    return '';
   }
 
   @override

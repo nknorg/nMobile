@@ -295,7 +295,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
         onTap: () {
-          // TODO:GG auth
+          // TODO:GG auth ?
           // if (TimerAuth.authed) {
           createOrJoinTopic(item.topic, 0);
           // } else {
