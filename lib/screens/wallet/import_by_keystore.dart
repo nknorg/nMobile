@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
@@ -53,12 +54,12 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
     super.initState();
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 
-    // TimerAuth.onOtherPage = true; // TODO:GG auth wallet lock
+    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet lock
   }
 
   @override
   void dispose() {
-    // TimerAuth.onOtherPage = true; // TODO:GG auth wallet unlock
+    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet unlock
     super.dispose();
   }
 
@@ -84,10 +85,10 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
             return;
           }
 
-          WalletSchema wallet = WalletSchema(name: name, address: nkn.address, type: WalletType.nkn);
+          WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
           logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, nkn.keystore, password: password));
+          _walletBloc.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
         } else {
           final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
           String ethAddress = (await eth.address).hex;
@@ -98,10 +99,10 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
             return;
           }
 
-          WalletSchema wallet = WalletSchema(name: name, address: ethAddress, type: WalletType.eth);
+          WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: name);
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, ethKeystore, password: password));
+          _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
         }
         Future.delayed(Duration(seconds: 3), () => walletCommon.queryBalance());
 

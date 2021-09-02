@@ -21,20 +21,13 @@ class WalletEth with Tag {
 
   Credentials get credt => raw.privateKey;
 
-  @Deprecated('Be careful, not needed in general.')
+  Uint8List get pubKeyBytes => privateKeyBytesToPublic(privateKeyBytes);
+  String get pubKeyHex => hexEncode(pubKeyBytes);
+  BigInt get pubKeyInt => bytesToInt(pubKeyBytes);
+
   Uint8List get privateKeyBytes => raw.privateKey.privateKey;
-
-  @Deprecated('Be careful, not needed in general.')
   String get privateKeyHex => hexEncode(privateKeyBytes);
-
-  @Deprecated('Be careful, not needed in general.')
   BigInt get privateKeyInt => bytesToInt(privateKeyBytes);
-
-  Uint8List get pubkeyBytes => privateKeyBytesToPublic(privateKeyBytes);
-
-  String get pubkeyHex => hexEncode(pubkeyBytes);
-
-  BigInt get pubkeyInt => bytesToInt(pubkeyBytes);
 
   // String get keystore => raw.toJson();
 
