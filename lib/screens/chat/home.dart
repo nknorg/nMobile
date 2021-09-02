@@ -8,6 +8,7 @@ import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
@@ -38,12 +39,14 @@ class ChatHomeScreen extends BaseStateFulWidget {
 class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware {
   GlobalKey _floatingActionKey = GlobalKey();
 
+  ContactSchema? _contactMe;
+  StreamSubscription? _contactMeUpdateSubscription;
+
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
 
-  ContactSchema? _contactMe;
-
   bool firstConnected = true;
+  int? appBackgroundAt;
 
   @override
   void onRefreshArguments() {}
@@ -51,13 +54,28 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
-    // appLife
+
+    // contactMe
+    _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
+      setState(() {
+        _contactMe = event;
+      });
+    });
+
+    // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (states.length > 0) {
         if (states[states.length - 1] == AppLifecycleState.resumed) {
           if (!firstConnected) {
-            clientCommon.connectCheck();
+            int between = DateTime.now().millisecondsSinceEpoch - (appBackgroundAt ?? 0);
+            if (between >= Settings.clientReAuthGapMs) {
+              // TODO:GG auth 要密码，再推出登录？再登录
+            } else {
+              clientCommon.connectCheck();
+            }
           }
+        } else {
+          appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
         }
       }
     });
@@ -70,17 +88,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       }
     });
 
-    // listen
-    contactCommon.meUpdateStream.listen((event) {
-      setState(() {
-        _contactMe = event;
-      });
-    });
-
     // me
     _refreshContactMe();
 
-    // TODO:GG auth
+    // TODO:GG auth ?
   }
 
   @override
@@ -107,13 +118,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     super.didPop();
   }
 
-  _refreshContactMe() async {
-    ContactSchema? contact = await contactCommon.getMe();
-    setState(() {
-      _contactMe = contact;
-    });
-  }
-
   @override
   void didChangeDependencies() {
     Routes.routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
@@ -122,6 +126,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   @override
   void dispose() {
+    _contactMeUpdateSubscription?.cancel();
     _appLifeChangeSubscription?.cancel();
     _clientStatusChangeSubscription?.cancel();
     Routes.routeObserver.unsubscribe(this);
@@ -131,116 +136,129 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
+  _refreshContactMe() async {
+    ContactSchema? contact = await contactCommon.getMe();
+    setState(() {
+      _contactMe = contact;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    S _localizations = S.of(context);
 
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         if (state is WalletLoaded) {
           if (state.isWalletsEmpty()) {
             return ChatNoWalletLayout();
+          } else if (state.defaultWallet() == null) {
+            return ChatNoConnectLayout();
+          } else if (!dbCommon.isOpen()) {
+            return Container(color: Colors.red[200]); // TODO:GG 测试
           }
         }
-        return StreamBuilder<int>(
-          stream: clientCommon.statusStream,
-          initialData: clientCommon.status,
-          builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-            if (clientCommon.client == null || snapshot.data == ClientConnectStatus.disconnected) {
-              return ChatNoConnectLayout();
-            }
-            late Widget statusWidget;
-            switch (snapshot.data) {
-              case ClientConnectStatus.disconnected:
-                statusWidget = Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Label(
-                      _localizations.disconnect,
-                      type: LabelType.h4,
-                      color: application.theme.strongColor,
-                    ),
-                  ],
-                );
-                break;
-              case ClientConnectStatus.connected:
-                statusWidget = Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Label(
-                      _localizations.connected,
-                      type: LabelType.h4,
-                      color: application.theme.successColor,
-                    ),
-                  ],
-                );
-                break;
-              default:
-                statusWidget = Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Label(
-                      _localizations.connecting,
-                      type: LabelType.h4,
-                      color: application.theme.fontLightColor.withAlpha(200),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2, left: 4),
-                      child: SpinKitThreeBounce(
-                        color: application.theme.fontLightColor.withAlpha(200),
-                        size: 10,
-                      ),
-                    ),
-                  ],
-                );
-                break;
-            }
-            return Layout(
-              headerColor: application.theme.primaryColor,
-              bodyColor: application.theme.backgroundLightColor,
-              header: Header(
-                titleChild: Container(
-                  margin: EdgeInsets.only(left: 20),
-                  child: _contactMe != null
-                      ? ContactHeader(
-                          contact: _contactMe!,
-                          onTap: () {
-                            ContactProfileScreen.go(context, contactId: _contactMe!.id);
-                          },
-                          body: statusWidget,
-                        )
-                      : SizedBox.shrink(),
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: IconButton(
-                      icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
-                      onPressed: () {
-                        ContactHomeScreen.go(context);
+        return Layout(
+          headerColor: application.theme.primaryColor,
+          bodyColor: application.theme.backgroundLightColor,
+          header: Header(
+            titleChild: Container(
+              margin: EdgeInsets.only(left: 20),
+              child: _contactMe != null
+                  ? ContactHeader(
+                      contact: _contactMe!,
+                      onTap: () {
+                        ContactProfileScreen.go(context, contactId: _contactMe!.id);
                       },
-                    ),
-                  )
-                ],
-              ),
-              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-              floatingActionButton: Padding(
-                padding: EdgeInsets.only(bottom: 60, right: 4),
-                child: FloatingActionButton(
-                  key: _floatingActionKey,
-                  elevation: 12,
-                  backgroundColor: application.theme.primaryColor,
-                  child: Asset.iconSvg('pencil', width: 24),
+                      body: _headerBody(),
+                    )
+                  : SizedBox.shrink(),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: IconButton(
+                  icon: Asset.iconSvg('addbook', color: Colors.white, width: 24),
                   onPressed: () {
-                    _showFloatActionMenu();
+                    ContactHomeScreen.go(context);
                   },
                 ),
-              ),
-              body: _contactMe != null ? ChatSessionListLayout(_contactMe!) : SizedBox.shrink(),
-            );
-          },
+              )
+            ],
+          ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: Padding(
+            padding: EdgeInsets.only(bottom: 60, right: 4),
+            child: FloatingActionButton(
+              key: _floatingActionKey,
+              elevation: 12,
+              backgroundColor: application.theme.primaryColor,
+              child: Asset.iconSvg('pencil', width: 24),
+              onPressed: () {
+                _showFloatActionMenu();
+              },
+            ),
+          ),
+          body: _contactMe != null ? ChatSessionListLayout(_contactMe!) : SizedBox.shrink(),
         );
+      },
+    );
+  }
+
+  Widget _headerBody() {
+    S _localizations = S.of(context);
+
+    return StreamBuilder<int>(
+      stream: clientCommon.statusStream,
+      initialData: clientCommon.status,
+      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+        late Widget statusWidget;
+        switch (snapshot.data) {
+          case ClientConnectStatus.disconnected:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  _localizations.disconnect,
+                  type: LabelType.h4,
+                  color: application.theme.strongColor,
+                ),
+              ],
+            );
+            break;
+          case ClientConnectStatus.connected:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  _localizations.connected,
+                  type: LabelType.h4,
+                  color: application.theme.successColor,
+                ),
+              ],
+            );
+            break;
+          default:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  _localizations.connecting,
+                  type: LabelType.h4,
+                  color: application.theme.fontLightColor.withAlpha(200),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2, left: 4),
+                  child: SpinKitThreeBounce(
+                    color: application.theme.fontLightColor.withAlpha(200),
+                    size: 10,
+                  ),
+                ),
+              ],
+            );
+            break;
+        }
+        return statusWidget;
       },
     );
   }
