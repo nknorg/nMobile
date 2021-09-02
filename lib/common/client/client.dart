@@ -2,16 +2,12 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -40,7 +36,7 @@ class ClientCommon with Tag {
 
   late int status;
 
-  int signInAt = 0;
+  int signInAt = 0; // TODO:GG 用处？
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -66,10 +62,7 @@ class ClientCommon with Tag {
     statusStream.listen((int event) {
       status = event;
       if (client != null && event == ClientConnectStatus.connected) {
-        int nowAt = DateTime.now().millisecondsSinceEpoch;
-        if ((nowAt - signInAt) > 1 * 60 * 60 * 1000) {
-          signInAt = nowAt;
-        }
+        signInAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
     onErrorStream.listen((dynamic event) {
@@ -79,96 +72,112 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  // need close
-  Future<Client?> signIn(WalletSchema? schema, {bool walletDefault = false, Function(bool)? dialogVisible, String? pwd}) async {
-    if (schema == null) return null;
+  // need close TODO:GG wallet default没有了
+  Future<Client?> signIn(
+    WalletSchema? wallet, {
+    String? walletPwd,
+    bool walletFetch = true,
+    Function(bool)? dialogVisible,
+    int tryCount = 1,
+  }) async {
+    if (wallet == null || wallet.address.isEmpty) return null;
     // if (client != null) await close(); // async boom!!!
     try {
-      pwd = pwd ?? (await authorization.getWalletPassword(schema.address));
-      if (pwd == null || pwd.isEmpty) return null;
-
+      // login password
+      walletPwd = walletPwd ?? (await authorization.getWalletPassword(wallet.address));
+      if (walletPwd == null || walletPwd.isEmpty) return null;
       dialogVisible?.call(true);
 
-      List<String> seedRpcList = await Global.getSeedRpcList(schema.address);
-      String keystore = await walletCommon.getKeystoreByAddress(schema.address);
-
-      Wallet wallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
-      if (wallet.address.isEmpty || wallet.keystore.isEmpty) {
+      // pubKey + seed
+      List<String>? seedRpcList;
+      String? pubKey;
+      String? seed;
+      if (walletFetch) {
+        String keystore = await walletCommon.getKeystore(wallet.address);
+        seedRpcList = await Global.getSeedRpcList(wallet.address);
+        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
+        pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
+        seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
+      } else {
+        if (walletPwd != await walletCommon.getPassword(wallet.address)) {
+          throw Exception("wrong password"); // TODO:GG 测试
+        }
+        pubKey = wallet.publicKey;
+        seed = await walletCommon.getSeed(wallet.address);
+      }
+      if (pubKey == null || pubKey.isEmpty || seed == null || seed.isEmpty) {
         dialogVisible?.call(false);
+        if (!walletFetch) {
+          logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+          return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+        }
         return null;
       }
 
-      if (walletDefault) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(schema.address));
-
-      String pubKey = hexEncode(wallet.publicKey);
-      String password = hexEncode(Uint8List.fromList(sha256(wallet.seed)));
-      if (pubKey.isEmpty || password.isEmpty) {
-        dialogVisible?.call(false);
-        return null;
+      // database open
+      if (!(db?.isOpen() == true)) {
+        String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
+        db = await DB.open(pubKey, databasePwd);
       }
 
-      // open DB
-      db = await DB.open(pubKey, password);
+      // contact me
       ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
       contactCommon.meUpdateSink.add(me);
 
-      // start client connect (no await)
-      return await _connect(wallet, dialogVisible: dialogVisible, seedRpcList: seedRpcList);
+      // client status
+      _statusSink.add(ClientConnectStatus.connecting);
+
+      // client create
+      seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address));
+      client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
+
+      dialogVisible?.call(false);
+
+      // client error
+      _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
+        logger.e("$TAG - signIn - onError -> event:${event.toString()}");
+        _onErrorSink.add(event);
+      });
+
+      // client connect (just listen once)
+      Completer completer = Completer();
+      _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
+        logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
+        SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
+        _statusSink.add(ClientConnectStatus.connected);
+        if (!completer.isCompleted) completer.complete();
+      });
+
+      // client receive (looper)
+      _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
+        logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
+        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失？
+      });
+
+      // await completer.future;
+      return client;
     } catch (e) {
       String? error = handleError(e);
-      if ((error?.contains(S.of(Global.appContext).tip_password_error) == true) || (error?.contains("password") == true) || (error?.contains("keystore") == true)) {
+      if ((error?.contains("password") == true) || (error?.contains("keystore") == true)) {
         dialogVisible?.call(false);
+        if (!walletFetch) {
+          logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
+          return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+        }
         return null;
       }
       // loop
-      await SettingsStorage.setSeedRpcServers([], prefix: schema.address);
-      await Future.delayed(Duration(seconds: 1));
-      return signIn(schema, walletDefault: walletDefault, dialogVisible: dialogVisible, pwd: pwd);
-    }
-    // return null;
-  }
-
-  Future<Client?> _connect(Wallet? wallet, {Function(bool)? dialogVisible, List<String>? seedRpcList}) async {
-    if (wallet == null || wallet.seed.isEmpty) {
-      dialogVisible?.call(false);
+      if (tryCount <= 3) {
+        await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
+        await Future.delayed(Duration(seconds: 1));
+        return signIn(wallet, walletPwd: walletPwd, walletFetch: walletFetch, dialogVisible: dialogVisible, tryCount: ++tryCount);
+      }
       return null;
     }
-    // status
-    _statusSink.add(ClientConnectStatus.connecting);
-
-    // client create
-    seedRpcList = seedRpcList ?? await Global.getSeedRpcList(wallet.address);
-    ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList);
-    client = await Client.create(wallet.seed, config: config);
-
-    dialogVisible?.call(false);
-
-    // client error
-    _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
-      logger.e("$TAG - onError -> event:${event.toString()}");
-      _onErrorSink.add(event);
-    });
-
-    // client connect (just listen once)
-    Completer completer = Completer();
-    _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
-      logger.i("$TAG - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-      SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
-      _statusSink.add(ClientConnectStatus.connected);
-      if (!completer.isCompleted) completer.complete();
-    });
-
-    // client messages_receive
-    _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
-      logger.i("$TAG - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-      await chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
-    });
-
-    // await completer.future;
-    return client;
   }
 
-  Future signOut() async {
+  // TODO:GG 加了DB
+  Future signOut({bool closeDB = true}) async {
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
     // client
@@ -178,7 +187,26 @@ class ClientCommon with Tag {
     await client?.close();
     client = null;
     // close DB
-    await db?.close();
+    if (closeDB) await db?.close();
+  }
+
+  // TODO:GG 1.client出错，登出在登录
+  // TODO:GG 2.client没出错，时效性重新登录
+  Future<Client?> reSignIn(bool needPwd, {int delayMs = 0}) async {
+    if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
+
+    // wallet + db
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null || wallet.address.isEmpty) {
+      await signOut(closeDB: true);
+      return null;
+    }
+    await signOut(closeDB: false);
+    await Future.delayed(Duration(milliseconds: 500));
+
+    // client
+    String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
+    return await signIn(wallet, walletPwd: walletPwd, walletFetch: false);
   }
 
   Future connectCheck() async {
