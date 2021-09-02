@@ -147,7 +147,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     if (eth) {
       _feeController.text = nknFormat((_gasPriceInGwei.gwei.ether * _maxGas), decimalDigits: 8).trim();
       if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
-        _amountController.text = nknFormat(((_wallet.balanceEth ?? 0) - (_gasPriceInGwei.gwei.ether * _maxGas)), decimalDigits: 8).trim();
+        _amountController.text = nknFormat((_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)), decimalDigits: 8).trim();
       }
       setState(() {
         if (gasFee != null) {
@@ -169,9 +169,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _setAmountToMax(bool eth) {
     if (eth) {
-      _amountController.text = nknFormat(_ethTrueTokenFalse ? ((_wallet.balanceEth ?? 0) - (_gasPriceInGwei.gwei.ether * _maxGas)) : _wallet.balance, decimalDigits: 8).trim();
+      _amountController.text = nknFormat(_ethTrueTokenFalse ? (_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)) : _wallet.balance, decimalDigits: 8).trim();
     } else {
-      _amountController.text = (_wallet.balance ?? 0).toString();
+      _amountController.text = _wallet.balance.toString();
     }
   }
 
@@ -192,7 +192,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       authorization.getWalletPassword(_wallet.address, context: context).then((String? password) async {
         if (password == null || password.isEmpty) return;
-        String keystore = await walletCommon.getKeystoreByAddress(_wallet.address);
+        String keystore = await walletCommon.getKeystore(_wallet.address);
         if (keystore.isEmpty || password.isEmpty) {
           Toast.show(S.of(context).password_wrong);
           return;
@@ -393,9 +393,12 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 child: BlocBuilder<WalletBloc, WalletState>(
                   builder: (context, state) {
                     if (state is WalletLoaded) {
-                      WalletSchema? find = walletCommon.getInOriginalByAddress(state.wallets, _wallet.address);
-                      if (find != null) {
-                        _wallet = find;
+                      // refresh balance
+                      List<WalletSchema> finds = state.wallets.where((w) => w.address == _wallet.address).toList();
+                      if (finds.isNotEmpty) {
+                        _wallet = finds[0];
+                      } else {
+                        Navigator.pop(this.context);
                       }
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
