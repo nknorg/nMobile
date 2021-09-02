@@ -1,4 +1,4 @@
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -7,7 +7,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class SubscriberStorage with Tag {
   static String get tableName => 'subscriber';
 
-  Database? get db => DB.currentDatabase;
+  Database? get db => dbCommon.database;
 
   // create_at // TODO:GG rename field
   // update_at // TODO:GG new field

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -11,7 +11,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class MessageStorage with Tag {
   static String get tableName => 'Messages';
 
-  Database? get db => DB.currentDatabase;
+  Database? get db => dbCommon.database;
 
   MessageStorage();
 

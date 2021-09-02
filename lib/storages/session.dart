@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -9,7 +9,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class SessionStorage with Tag {
   static String get tableName => 'Session';
 
-  Database? get db => DB.currentDatabase;
+  Database? get db => dbCommon.database;
 
   SessionStorage();
 
