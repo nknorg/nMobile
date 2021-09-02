@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -9,7 +9,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class TopicStorage with Tag {
   static String get tableName => 'Topic';
 
-  Database? get db => DB.currentDatabase;
+  Database? get db => dbCommon.database;
 
   // theme_id INTEGER, // TODO:GG replace by options
   // accept_all BOOLEAN // TODO:GG delete
@@ -87,7 +87,7 @@ class TopicStorage with Tag {
         }
       }
     } catch (e) {
-        handleError(e);
+      handleError(e);
     }
     return null;
   }
