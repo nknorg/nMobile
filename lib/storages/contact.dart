@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
@@ -11,7 +11,7 @@ import 'package:uuid/uuid.dart';
 class ContactStorage with Tag {
   static String get tableName => 'Contact';
 
-  Database? get db => DB.currentDatabase;
+  Database? get db => dbCommon.database;
 
   // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
   // created_time INTEGER, // TODO:GG rename
