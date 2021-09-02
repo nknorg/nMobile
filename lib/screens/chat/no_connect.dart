@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -163,11 +164,16 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                               width: double.infinity,
                               text: _localizations.connect,
                               onPressed: () async {
-                                await clientCommon.signIn(
+                                var client = await clientCommon.signIn(
                                   this._selectWallet,
-                                  walletDefault: true,
+                                  walletFetch: true,
                                   dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
                                 );
+                                if (client != null) {
+                                  BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(this._selectWallet?.address));
+                                } else {
+                                  BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
+                                }
                               },
                             ),
                           )

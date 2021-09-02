@@ -71,21 +71,25 @@ class ChatInCommon with Tag {
       if (topic.joined != true) {
         logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
         return;
-      } else if (subscriber.status == SubscriberStatus.Subscribed) {
-        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
-        // SUPPORT:START
-        if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-          if (subscriber.status == SubscriberStatus.None) {
-            logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic");
+        if (!received.isTopicAction) {
+          if (subscriber.status == SubscriberStatus.Subscribed) {
+            logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
           } else {
-            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
-            return;
+            // SUPPORT:START
+            if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+              if (subscriber.status == SubscriberStatus.None) {
+                logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic");
+              } else {
+                logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
+                return;
+              }
+            } else {
+              // SUPPORT:END
+              logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
+              return;
+            }
           }
-        } else {
-          // SUPPORT:END
-          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
-          return;
         }
       }
     }
@@ -184,8 +188,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check received.sendAt
-      // TODO:GG other client status
+      // TODO:GG check  received.sendAt
+      // TODO:GG other  client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
