@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/common/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -24,8 +23,6 @@ class ClientConnectStatus {
 }
 
 class ClientCommon with Tag {
-  DB? db;
-
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
@@ -115,9 +112,9 @@ class ClientCommon with Tag {
       }
 
       // database open
-      if (!(db?.isOpen() == true)) {
+      if (!(dbCommon.isOpen() == true)) {
         String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
-        db = await DB.open(pubKey, databasePwd);
+        await dbCommon.open(pubKey, databasePwd);
       }
 
       // contact me
@@ -187,7 +184,7 @@ class ClientCommon with Tag {
     await client?.close();
     client = null;
     // close DB
-    if (closeDB) await db?.close();
+    if (closeDB) await dbCommon.close();
   }
 
   // TODO:GG 1.client出错，登出在登录

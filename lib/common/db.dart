@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -11,13 +13,17 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
   static int currentDatabaseVersion = 4;
-  static Database? currentDatabase;
 
-  String publicKey;
+  // ignore: close_sinks
+  StreamController<bool> _openedController = StreamController<bool>.broadcast();
+  StreamSink<bool> get _openedSink => _openedController.sink;
+  Stream<bool> get openedStream => _openedController.stream;
 
-  DB({required this.publicKey});
+  Database? database;
 
-  static Future<Database> _openDB(String publicKey, String password) async {
+  DB();
+
+  Future<Database> _openDB(String publicKey, String password) async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
     logger.i("DB - path:$path - pwd:$password");
@@ -37,6 +43,7 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
+        // Loading.show(); // TODO:GG loading(tip)
         // TODO:GG index sync
         // TODO:GG deviceInfo create
         // TODO:GG session data move
@@ -54,6 +61,7 @@ class DB {
         if (oldVersion < 4 && newVersion >= 4) {
           await SessionStorage.create(db, newVersion);
         }
+        // Loading.dismiss(); // TODO:GG loading(tip)
       },
       onOpen: (Database db) async {
         logger.i("DB - open");
@@ -66,23 +74,29 @@ class DB {
     return db;
   }
 
-  static open(String publicKey, String password) async {
-    //if (currentDatabase != null) return; // bug!
-    currentDatabase = await _openDB(publicKey, password);
+  Future open(String publicKey, String password) async {
+    //if (database != null) return; // bug!
+    database = await _openDB(publicKey, password);
+    _openedSink.add(true);
   }
 
-  close() async {
-    await currentDatabase?.close();
-    currentDatabase = null;
+  Future close() async {
+    await database?.close();
+    database = null;
+    _openedSink.add(false);
   }
 
-  delete() async {
-    var databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
-    try {
-      await deleteDatabase(path);
-    } catch (e) {
-      logger.e('DB - Close db error', e);
-    }
+  bool isOpen() {
+    return database != null && database!.isOpen;
   }
+
+  // delete() async {
+  //   var databasesPath = await getDatabasesPath();
+  //   String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
+  //   try {
+  //     await deleteDatabase(path);
+  //   } catch (e) {
+  //     logger.e('DB - Close db error', e);
+  //   }
+  // }
 }
