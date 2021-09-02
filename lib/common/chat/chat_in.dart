@@ -525,7 +525,11 @@ class ChatInCommon with Tag {
       logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
       return false;
     }
-    MessageSchema combine = MessageSchema.fromPiecesReceive(pieces, base64String);
+    MessageSchema? combine = MessageSchema.fromPiecesReceive(pieces, base64String);
+    if (combine == null) {
+      logger.e("$TAG - receivePiece - COMBINE:FAIL - message combine is empty");
+      return false;
+    }
     // combine.content - handle later
     logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
     await onClientMessage(combine, needWait: true);
