@@ -173,7 +173,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
               ),
               child: InkWell(
                 onTap: () {
-                  // TODO:GG auth
+                  // TODO:GG auth ?
                   // if (TimerAuth.authed) {
                   subscribePopularTopic(model.topic);
                   // } else {

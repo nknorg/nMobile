@@ -65,7 +65,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (states.length > 0) {
         if (states[states.length - 1] == AppLifecycleState.resumed) {
-          // badge
+          // badge TODO:GG 刚进来会触发吗?
           chatCommon.unreadCount().then((value) {
             Badge.refreshCount(count: value);
           });
@@ -132,7 +132,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       });
     });
 
-    // TODO:GG auth
+    // TODO:GG auth ?
   }
 
   @override

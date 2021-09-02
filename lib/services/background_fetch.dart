@@ -4,7 +4,6 @@ import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
 
 @deprecated
@@ -84,13 +83,8 @@ class BackgroundFetchService with Tag {
     }
     logger.i("$TAG - _onBackgroundFetch - todo - taskId:$taskId");
     // signOut
-    await Future.delayed(Duration(seconds: 1));
-    await clientCommon.signOut();
-    // signIn
-    await Future.delayed(Duration(seconds: 1));
-    WalletSchema? wallet = await walletCommon.getDefault();
-    await clientCommon.signIn(wallet);
-
+    await clientCommon.reSignIn(false, delayMs: 100);
+    // finish
     BackgroundFetch.finish(taskId);
   }
 }

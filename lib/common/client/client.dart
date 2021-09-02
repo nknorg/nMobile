@@ -69,19 +69,13 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  // need close TODO:GG wallet default没有了
-  Future<Client?> signIn(
-    WalletSchema? wallet, {
-    String? walletPwd,
-    bool walletFetch = true,
-    Function(bool)? dialogVisible,
-    int tryCount = 1,
-  }) async {
+  // need close
+  Future<Client?> signIn(WalletSchema? wallet, {String? walletPwd, bool walletFetch = true, Function(bool)? dialogVisible, int tryCount = 1}) async {
     if (wallet == null || wallet.address.isEmpty) return null;
     // if (client != null) await close(); // async boom!!!
     try {
       // login password
-      walletPwd = walletPwd ?? (await authorization.getWalletPassword(wallet.address));
+      walletPwd = (walletPwd?.isNotEmpty == true) ? walletPwd : (await authorization.getWalletPassword(wallet.address));
       if (walletPwd == null || walletPwd.isEmpty) return null;
       dialogVisible?.call(true);
 
@@ -97,7 +91,13 @@ class ClientCommon with Tag {
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
       } else {
         if (walletPwd != await walletCommon.getPassword(wallet.address)) {
-          throw Exception("wrong password"); // TODO:GG 测试
+          dialogVisible?.call(false);
+          if (!walletFetch) {
+            logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+            return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+          } else {
+            throw Exception("wrong password"); // TODO:GG 测试
+          }
         }
         pubKey = wallet.publicKey;
         seed = await walletCommon.getSeed(wallet.address);
@@ -169,6 +169,7 @@ class ClientCommon with Tag {
         await Future.delayed(Duration(seconds: 1));
         return signIn(wallet, walletPwd: walletPwd, walletFetch: walletFetch, dialogVisible: dialogVisible, tryCount: ++tryCount);
       }
+      logger.e("$TAG - signIn - fail - error:$error");
       return null;
     }
   }

@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100; // TODO:GG 长时间就fail
+  static const int Sending = 100; // TODO:GG status 长时间就fail，配合重新发送机制？
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
