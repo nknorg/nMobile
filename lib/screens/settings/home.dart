@@ -253,8 +253,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                     validator: Validator.of(context).password(),
                                     password: true,
                                   );
-                                  String? pwd = await walletCommon.getPassword(_wallet.address);
-                                  if (input == null || input != pwd) {
+                                  if (!(await walletCommon.isPasswordRight(_wallet.address, input))) {
                                     Toast.show(S.of(context).tip_password_error);
                                     return;
                                   }
