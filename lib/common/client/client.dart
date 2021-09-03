@@ -2,9 +2,13 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/app.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -33,7 +37,7 @@ class ClientCommon with Tag {
 
   late int status;
 
-  int signInAt = 0; // TODO:GG 用处？
+  int signInAt = 0; // TODO:GG 用处 ？
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -90,14 +94,9 @@ class ClientCommon with Tag {
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
       } else {
-        if (walletPwd != await walletCommon.getPassword(wallet.address)) {
-          dialogVisible?.call(false);
-          if (!walletFetch) {
-            logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-            return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
-          } else {
-            throw Exception("wrong password"); // TODO:GG 测试
-          }
+        if (!(await walletCommon.isPasswordRight(wallet.address, walletPwd))) {
+          logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+          throw Exception("wrong password");
         }
         pubKey = wallet.publicKey;
         seed = await walletCommon.getSeed(wallet.address);
@@ -107,19 +106,22 @@ class ClientCommon with Tag {
         if (!walletFetch) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+        } else {
+          logger.w("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+          return null;
         }
-        return null;
       }
 
       // database open
       if (!(dbCommon.isOpen() == true)) {
         String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
         await dbCommon.open(pubKey, databasePwd);
+        // wallet
+        BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
+        // contact
+        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
+        contactCommon.meUpdateSink.add(me);
       }
-
-      // contact me
-      ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
-      contactCommon.meUpdateSink.add(me);
 
       // client status
       _statusSink.add(ClientConnectStatus.connecting);
@@ -148,33 +150,32 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失？
+        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失?
       });
 
       // await completer.future;
       return client;
     } catch (e) {
-      String? error = handleError(e);
-      if ((error?.contains("password") == true) || (error?.contains("keystore") == true)) {
-        dialogVisible?.call(false);
+      dialogVisible?.call(false);
+      if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!walletFetch) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
           return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
         }
+        handleError(e);
         return null;
       }
       // loop
-      if (tryCount <= 3) {
+      if (tryCount < 3) {
         await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
         await Future.delayed(Duration(seconds: 1));
         return signIn(wallet, walletPwd: walletPwd, walletFetch: walletFetch, dialogVisible: dialogVisible, tryCount: ++tryCount);
       }
-      logger.e("$TAG - signIn - fail - error:$error");
+      handleError(e);
       return null;
     }
   }
 
-  // TODO:GG 加了DB
   Future signOut({bool closeDB = true}) async {
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
@@ -185,17 +186,21 @@ class ClientCommon with Tag {
     await client?.close();
     client = null;
     // close DB
-    if (closeDB) await dbCommon.close();
+    if (closeDB) {
+      await dbCommon.close();
+      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
+    }
   }
 
-  // TODO:GG 1.client出错，登出在登录
-  // TODO:GG 2.client没出错，时效性重新登录
+  // TODO:GG 1. client出错，登出在登录
+  // TODO:GG 2. client没出错，时效性重新登录
   Future<Client?> reSignIn(bool needPwd, {int delayMs = 0}) async {
     if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
 
     // wallet + db
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
+      AppScreen.go(Global.appContext);
       await signOut(closeDB: true);
       return null;
     }

@@ -47,6 +47,25 @@ class WalletCommon with Tag {
     return _walletStorage.getPassword(walletAddress);
   }
 
+  Future<bool> isPasswordRight(String? walletAddress, String? password) async {
+    if (walletAddress == null || walletAddress.isEmpty) return false;
+    if (password == null || password.isEmpty) return false;
+    String? storagePassword = await getPassword(walletAddress);
+    if (storagePassword?.isNotEmpty == true) {
+      return password == storagePassword;
+    } else {
+      try {
+        final keystore = await getKeystore(walletAddress);
+        final seedRpcList = await Global.getSeedRpcList(walletAddress);
+        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+        if (nknWallet.address.isNotEmpty) return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  }
+
   Future getSeed(String? walletAddress) async {
     if (walletAddress == null || walletAddress.isEmpty) return null;
     return _walletStorage.getSeed(walletAddress);
