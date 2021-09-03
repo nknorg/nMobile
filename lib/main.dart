@@ -48,10 +48,10 @@ void main() async {
 
   // mounted
   application.registerMounted(() async {
-    taskService.init();
+    await dbCommon.openByDefault();
+    await taskService.init();
     await localNotification.init();
     // await backgroundFetchService.install();
-
     BlocProvider.of<WalletBloc>(Global.appContext).add(LoadWallet());
   });
 
