@@ -4,11 +4,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nmobile/common/client/client.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
-import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
@@ -17,6 +17,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -49,13 +50,16 @@ class ChatOutCommon with Tag {
 
   Future sendPing(String? clientAddress, bool isPing, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendPing(clientAddress, isPing), null);
+    }
     try {
       String data = MessageData.getPing(isPing);
       await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendPing - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendPing - fail - tryCount:$tryCount - clientAddress:$clientAddress - isPing:$isPing");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendPing(clientAddress, isPing, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendPing(clientAddress, isPing, tryCount: ++tryCount);
       });
@@ -65,6 +69,9 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendReceipt(received), null);
+    }
     try {
       received = (await _messageStorage.query(received.msgId)) ?? received; // get receiveAt
       String data = MessageData.getReceipt(received.msgId, received.receiveAt);
@@ -72,7 +79,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendReceipt - fail - tryCount:$tryCount - received:$received");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendReceipt(received, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendReceipt(received, tryCount: ++tryCount);
       });
@@ -82,13 +89,16 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendRead(String? clientAddress, List<String> msgIds, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendRead(clientAddress, msgIds), null);
+    }
     try {
       String data = MessageData.getRead(msgIds);
       await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendRead - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendRead - fail - tryCount:$tryCount - clientAddress:$clientAddress - msgIds:$msgIds");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendRead(clientAddress, msgIds, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendRead(clientAddress, msgIds, tryCount: ++tryCount);
       });
@@ -98,6 +108,9 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendContactRequest(target, requestType), null);
+    }
     try {
       int updateAt = DateTime.now().millisecondsSinceEpoch;
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
@@ -105,7 +118,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendContactRequest(target, requestType, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactRequest(target, requestType, tryCount: ++tryCount);
       });
@@ -115,6 +128,9 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactResponse(ContactSchema? target, String requestType, {ContactSchema? me, int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendContactResponse(target, requestType, me: me), null);
+    }
     ContactSchema? _me = me ?? await contactCommon.getMe();
     try {
       int updateAt = DateTime.now().millisecondsSinceEpoch;
@@ -128,7 +144,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
       logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount);
       });
@@ -137,7 +153,10 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt), null);
+    }
     try {
       MessageSchema send = MessageSchema.fromSend(
         msgId: Uuid().v4(),
@@ -152,7 +171,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactOptionsBurn - success - data:${send.content}");
     } catch (e) {
       logger.w("$TAG - sendContactOptionsBurn - fail - tryCount:$tryCount - clientAddress:$clientAddress - deleteSeconds:$deleteSeconds");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt, tryCount: ++tryCount);
       });
@@ -161,7 +180,10 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || clientAddress == null || clientAddress.isEmpty) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendContactOptionsToken(clientAddress, deviceToken), null);
+    }
     try {
       MessageSchema send = MessageSchema.fromSend(
         msgId: Uuid().v4(),
@@ -175,7 +197,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendContactOptionsToken - success - data:${send.content}");
     } catch (e) {
       logger.w("$TAG - sendContactOptionsToken - fail - tryCount:$tryCount - clientAddress:$clientAddress - deviceToken:$deviceToken");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendContactOptionsToken(clientAddress, deviceToken, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactOptionsToken(clientAddress, deviceToken, tryCount: ++tryCount);
       });
@@ -185,13 +207,16 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceRequest(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendDeviceRequest(clientAddress), null);
+    }
     try {
       String data = MessageData.getDeviceRequest();
       await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendDeviceRequest - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendDeviceRequest - fail - tryCount:$tryCount - clientAddress:$clientAddress");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendDeviceRequest(clientAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceRequest(clientAddress, tryCount: ++tryCount);
       });
@@ -201,13 +226,16 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceInfo(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendDeviceInfo(clientAddress), null);
+    }
     try {
       String data = MessageData.getDeviceInfo();
       await chatCommon.clientSendData(clientAddress, data);
       logger.d("$TAG - sendDeviceInfo - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendDeviceInfo - fail - tryCount:$tryCount - clientAddress:$clientAddress");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendDeviceInfo(clientAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceInfo(clientAddress, tryCount: ++tryCount);
       });
@@ -217,9 +245,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || content.isEmpty) return null;
-    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      Toast.show("连接已断开"); // TODO:GG locale signIn
-      return null;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return (await _tryLogin(() => sendText(content, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
@@ -239,9 +266,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      Toast.show("连接已断开"); // TODO:GG locale signIn
-      return null;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return (await _tryLogin(() => sendImage(content, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
     String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
@@ -262,9 +288,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if ((clientCommon.status != ClientConnectStatus.connected && clientCommon.status != ClientConnectStatus.connecting) || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      Toast.show("连接已断开"); // TODO:GG locale signIn
-      return null;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return (await _tryLogin(() => sendAudio(content, durationS, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -283,6 +308,9 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display
   Future<MessageSchema?> sendPiece(MessageSchema message, {int tryCount = 1}) async {
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return (await _tryLogin(() => sendPiece(message), null)) as MessageSchema?;
+    }
     try {
       int timeNowAt = DateTime.now().millisecondsSinceEpoch;
       await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
@@ -305,7 +333,7 @@ class ChatOutCommon with Tag {
       return message;
     } catch (e) {
       logger.w("$TAG - sendPiece - fail - tryCount:$tryCount - message:$message");
-      if (_handleSendError(e, tryCount)) return null;
+      if (await _handleSendError(e, tryCount, () => sendPiece(message, tryCount: ++tryCount))) return null;
       return await Future.delayed(Duration(seconds: 2), () {
         return sendPiece(message, tryCount: ++tryCount);
       });
@@ -314,7 +342,10 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
+    if (topic == null || topic.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendTopicSubscribe(topic), null);
+    }
     try {
       MessageSchema send = MessageSchema.fromSend(
         msgId: Uuid().v4(),
@@ -327,7 +358,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicSubscribe - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicSubscribe - fail - tryCount:$tryCount - topic:$topic");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendTopicSubscribe(topic, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicSubscribe(topic, tryCount: ++tryCount);
       });
@@ -336,7 +367,10 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty || topic == null || topic.isEmpty) return;
+    if (topic == null || topic.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendTopicUnSubscribe(topic), null);
+    }
     try {
       MessageSchema send = MessageSchema.fromSend(
         msgId: Uuid().v4(),
@@ -349,7 +383,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendTopicUnSubscribe(topic, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicUnSubscribe(topic, tryCount: ++tryCount);
       });
@@ -359,9 +393,8 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
-    if (clientCommon.status != ClientConnectStatus.connected || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      Toast.show("连接已断开"); // TODO:GG locale signIn
-      return null;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendTopicInvitee(clientAddress, topic), null) as MessageSchema?;
     }
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -376,7 +409,10 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicKickOut(String? topic, String? targetAddress, {int tryCount = 1}) async {
-    if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
+    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
+      return _tryLogin(() => sendTopicKickOut(topic, targetAddress), null);
+    }
     try {
       MessageSchema send = MessageSchema.fromSend(
         msgId: Uuid().v4(),
@@ -390,7 +426,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
       logger.w("$TAG - sendTopicKickOut - fail - tryCount:$tryCount - topic:$topic");
-      if (_handleSendError(e, tryCount)) return;
+      if (await _handleSendError(e, tryCount, () => sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount);
       });
@@ -460,7 +496,7 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _sendAndDisplay - with_null - message:$message");
       }
     } catch (e) {
-      _handleSendError(e, 3);
+      _handleSendError(e, 3, null);
     }
     // pid
     if (pid == null || pid.isEmpty) {
@@ -719,10 +755,37 @@ class ChatOutCommon with Tag {
     await SendPush.send(deviceToken, title, content);
   }
 
-  bool _handleSendError(dynamic e, int tryCount) {
+  Future _tryLogin(Function? callback, dynamic defaultReturn) async {
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null || wallet.address.isEmpty) {
+      AppScreen.go(Global.appContext);
+      return defaultReturn;
+    }
+    final client = await clientCommon.signIn(
+      wallet,
+      walletFetch: false,
+      dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
+    );
+    if (client != null && (client.address.isNotEmpty == true)) {
+      logger.i("$TAG - _tryLogin - callback - callback:${callback.toString()}");
+      return callback?.call();
+    }
+    logger.w("$TAG - _tryLogin - fail - wallet:$wallet");
+    return defaultReturn;
+  }
+
+  Future<bool> _handleSendError(dynamic e, int tryCount, Function? callback) async {
     if (e.toString().contains("write: broken pipe")) {
-      clientCommon.reSignIn(false, delayMs: 100); // await
-      return true;
+      final client = await clientCommon.reSignIn(false, delayMs: 100);
+      if (client != null && (client.address.isNotEmpty == true)) {
+        logger.i("$TAG - _handleSendError - callback - callback:${callback?.toString()}");
+        await callback?.call();
+        return true;
+      } else {
+        final wallet = await walletCommon.getDefault();
+        logger.w("$TAG - _handleSendError - reSignIn fail - wallet:$wallet");
+        return false;
+      }
     } else if (tryCount >= 3) {
       handleError(e);
       return true;
