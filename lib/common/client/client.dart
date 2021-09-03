@@ -37,7 +37,9 @@ class ClientCommon with Tag {
 
   late int status;
 
-  int signInAt = 0; // TODO:GG 用处 ？
+  bool get isClientCreated => (client != null) && (client!.address.isNotEmpty == true);
+
+  int signInAt = 0; // TODO:GG 用处？
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -73,28 +75,28 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  // need close
-  Future<Client?> signIn(WalletSchema? wallet, {String? walletPwd, bool walletFetch = true, Function(bool)? dialogVisible, int tryCount = 1}) async {
-    if (wallet == null || wallet.address.isEmpty) return null;
+  // need close TODO:GG 所有的signIn都必须先out
+  Future<List> signIn(WalletSchema? wallet, {String? password, bool fetchRemote = true, Function(bool)? dialogVisible, int tryCount = 1}) async {
+    if (wallet == null || wallet.address.isEmpty) return [null, false];
     // if (client != null) await close(); // async boom!!!
     try {
-      // login password
-      walletPwd = (walletPwd?.isNotEmpty == true) ? walletPwd : (await authorization.getWalletPassword(wallet.address));
-      if (walletPwd == null || walletPwd.isEmpty) return null;
+      // password
+      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
+      if (password == null || password.isEmpty) return [null, false];
       dialogVisible?.call(true);
 
-      // pubKey + seed
+      // pubKey/seed
       List<String>? seedRpcList;
       String? pubKey;
       String? seed;
-      if (walletFetch) {
+      if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
         seedRpcList = await Global.getSeedRpcList(wallet.address);
-        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
+        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
       } else {
-        if (!(await walletCommon.isPasswordRight(wallet.address, walletPwd))) {
+        if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
           logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           throw Exception("wrong password");
         }
@@ -103,16 +105,16 @@ class ClientCommon with Tag {
       }
       if (pubKey == null || pubKey.isEmpty || seed == null || seed.isEmpty) {
         dialogVisible?.call(false);
-        if (!walletFetch) {
+        if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+          return signIn(wallet, password: password, fetchRemote: true, dialogVisible: dialogVisible);
         } else {
           logger.w("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return null;
+          return [null, false];
         }
       }
 
-      // database open
+      // database
       if (!(dbCommon.isOpen() == true)) {
         String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
         await dbCommon.open(pubKey, databasePwd);
@@ -150,29 +152,27 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失?
+        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失 ?
       });
 
       // await completer.future;
-      return client;
+      return [client, false];
     } catch (e) {
+      if (tryCount >= 3) handleError(e);
       dialogVisible?.call(false);
+      // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
-        if (!walletFetch) {
+        if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return signIn(wallet, walletPwd: walletPwd, walletFetch: true, dialogVisible: dialogVisible);
+          return signIn(wallet, password: password, fetchRemote: true, dialogVisible: dialogVisible);
         }
         handleError(e);
-        return null;
+        return [null, true];
       }
-      // loop
-      if (tryCount < 3) {
-        await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
-        await Future.delayed(Duration(seconds: 1));
-        return signIn(wallet, walletPwd: walletPwd, walletFetch: walletFetch, dialogVisible: dialogVisible, tryCount: ++tryCount);
-      }
-      handleError(e);
-      return null;
+      // loop login
+      await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
+      await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
+      return signIn(wallet, password: password, fetchRemote: fetchRemote, dialogVisible: dialogVisible, tryCount: ++tryCount);
     }
   }
 
@@ -192,24 +192,22 @@ class ClientCommon with Tag {
     }
   }
 
-  // TODO:GG 1. client出错，登出在登录
-  // TODO:GG 2. client没出错，时效性重新登录
-  Future<Client?> reSignIn(bool needPwd, {int delayMs = 0}) async {
+  Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
     if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
 
-    // wallet + db
+    // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
       AppScreen.go(Global.appContext);
       await signOut(closeDB: true);
-      return null;
+      return [null, false];
     }
     await signOut(closeDB: false);
     await Future.delayed(Duration(milliseconds: 500));
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    return await signIn(wallet, walletPwd: walletPwd, walletFetch: false);
+    return await signIn(wallet, password: walletPwd, fetchRemote: false);
   }
 
   Future connectCheck() async {
