@@ -166,9 +166,7 @@ class WalletStorage with Tag {
 
   // default
   Future setDefaultAddress(String? address) async {
-    if (address == null || address.isEmpty) return null;
-    logger.v("$TAG - setDefaultAddress - address:$address");
-    return _localStorage.set('$KEY_DEFAULT_ADDRESS', address);
+    return _localStorage.set('$KEY_DEFAULT_ADDRESS', address ?? "");
   }
 
   Future<String?> getDefaultAddress() async {
@@ -189,6 +187,6 @@ class WalletStorage with Tag {
     //   return firstAddress;
     // }
     logger.v("$TAG - getDefaultAddress - address:$address");
-    return address;
+    return address?.isNotEmpty == true ? address : null;
   }
 }

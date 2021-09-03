@@ -21,6 +21,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_connect.dart';
 import 'package:nmobile/screens/chat/no_wallet.dart';
@@ -28,6 +29,7 @@ import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
@@ -36,11 +38,16 @@ class ChatHomeScreen extends BaseStateFulWidget {
   _ChatHomeScreenState createState() => _ChatHomeScreenState();
 }
 
-class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware {
+class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
+
+  bool dbOpen = false;
+  StreamSubscription? _dbOpenedSubscription;
 
   ContactSchema? _contactMe;
   StreamSubscription? _contactMeUpdateSubscription;
+
+  bool isLoginProgress = false;
 
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
@@ -54,6 +61,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
+
+    _dbOpenedSubscription = dbCommon.openedStream.listen((event) {
+      setState(() {
+        dbOpen = event;
+        _tryLogin();
+      });
+    });
 
     // contactMe
     _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
@@ -69,7 +83,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           if (!firstConnected) {
             int between = DateTime.now().millisecondsSinceEpoch - (appBackgroundAt ?? 0);
             if (between >= Settings.clientReAuthGapMs) {
-              // TODO:GG auth 要密码，再推出登录？再登录
+              _authAgain();
             } else {
               clientCommon.connectCheck();
             }
@@ -88,10 +102,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       }
     });
 
-    // me
-    _refreshContactMe();
+    // init
+    dbOpen = dbCommon.isOpen();
+    _tryLogin();
 
-    // TODO:GG auth ?
+    // TODO:GG auth?
   }
 
   @override
@@ -126,6 +141,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   @override
   void dispose() {
+    _dbOpenedSubscription?.cancel();
     _contactMeUpdateSubscription?.cancel();
     _appLifeChangeSubscription?.cancel();
     _clientStatusChangeSubscription?.cancel();
@@ -136,7 +152,63 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
+  // TODO:GG 没网可以进入，输错密码不能进入
+  // TODO:GG 1.首次进入的时候
+  // TODO:GG 2.非首次进入的时候
+  // TODO:GG 3.后台切前台的时候
+  // TODO:GG 4.连接异常的时候？
+  Future _tryLogin() async {
+    if (dbOpen) _refreshContactMe(); // await
+
+    if (isLoginProgress) return;
+    isLoginProgress = true;
+
+    // wallet
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null) {
+      // ui handle, ChatNoWalletLayout()
+      logger.i("$TAG - _tryLogin - wallet default is empty");
+      return;
+    }
+
+    // client
+    List result = await clientCommon.signIn(wallet, fetchRemote: false);
+    final client = result[0];
+    final isPwdError = result[1];
+    if (client == null) {
+      if (isPwdError) {
+        logger.i("$TAG - _tryLogin - signIn - password error, close all");
+        clientCommon.signOut(closeDB: true);
+      } else {
+        logger.w("$TAG - _tryLogin - signIn - other error, should be not go here");
+        clientCommon.signOut(closeDB: false);
+      }
+    }
+
+    isLoginProgress = false;
+  }
+
+  _authAgain() async {
+    // wallet
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null) {
+      // ui handle, ChatNoWalletLayout()
+      logger.i("$TAG - _tryLogin - wallet default is empty");
+      return;
+    }
+    // password
+    String? password = await authorization.getWalletPassword(wallet.address);
+    if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
+      logger.i("$TAG - _tryLogin - signIn - password error, close all");
+      clientCommon.signOut(closeDB: true);
+      return;
+    }
+    // connect
+    await clientCommon.connectCheck();
+  }
+
   _refreshContactMe() async {
+    if (!dbOpen) return;
     ContactSchema? contact = await contactCommon.getMe();
     setState(() {
       _contactMe = contact;
@@ -154,10 +226,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             return ChatNoWalletLayout();
           } else if (state.defaultWallet() == null) {
             return ChatNoConnectLayout();
-          } else if (!dbCommon.isOpen()) {
-            return Container(color: Colors.red[200]); // TODO:GG 测试
           }
         }
+
         return Layout(
           headerColor: application.theme.primaryColor,
           bodyColor: application.theme.backgroundLightColor,
@@ -199,7 +270,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               },
             ),
           ),
-          body: _contactMe != null ? ChatSessionListLayout(_contactMe!) : SizedBox.shrink(),
+          body: (_contactMe != null) && dbOpen
+              ? ChatSessionListLayout(_contactMe!)
+              : Container(
+                  child: SpinKitThreeBounce(
+                    color: application.theme.primaryColor,
+                    size: Global.screenWidth() / 15,
+                  ),
+                ),
         );
       },
     );
