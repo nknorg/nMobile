@@ -485,7 +485,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                           Label(_localizations.available + ': '),
                                           Label(
                                             nknFormat(
-                                              (useETH ? _wallet.balanceEth : _wallet.balance) ?? 0,
+                                              useETH ? _wallet.balanceEth : _wallet.balance,
                                               decimalDigits: 8,
                                               symbol: useETH ? 'ETH' : 'NKN',
                                             ),

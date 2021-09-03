@@ -12,6 +12,7 @@ class WalletDropdown extends StatelessWidget with Tag {
   final Function(WalletSchema)? onSelected;
   final Color? bgColor;
   final bool onTapWave;
+  final bool onlyNKN;
 
   WalletDropdown({
     required this.wallet,
@@ -19,6 +20,7 @@ class WalletDropdown extends StatelessWidget with Tag {
     this.onSelected,
     this.bgColor,
     this.onTapWave = true,
+    this.onlyNKN = false,
   });
 
   @override
@@ -39,6 +41,7 @@ class WalletDropdown extends StatelessWidget with Tag {
       onTap: () async {
         WalletSchema? result = await BottomDialog.of(context).showWalletSelect(
           title: this.selectTitle ?? _localizations.select_another_wallet,
+          onlyNKN: this.onlyNKN,
         );
         logger.i("$TAG - wallet dropdown select - wallet:$result");
         if (result != null) {
