@@ -1,11 +1,17 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
+import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
@@ -72,6 +78,26 @@ class DB {
     // await NKNDataManager.updateSubscriberV3ToV4(db);
 
     return db;
+  }
+
+  Future<bool> openByDefault() async {
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null || wallet.address.isEmpty) {
+      logger.i("DB - openByDefault - wallet default is empty");
+      return false;
+    }
+    String publicKey = wallet.publicKey;
+    String? seed = await walletCommon.getSeed(wallet.address);
+    if (publicKey.isEmpty || seed == null || seed.isEmpty) {
+      logger.w("DB - openByDefault - publicKey/seed error");
+      return false;
+    }
+    String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
+    await open(publicKey, databasePwd);
+
+    ContactSchema? me = await contactCommon.getMe(clientAddress: publicKey, canAdd: true);
+    contactCommon.meUpdateSink.add(me);
+    return true;
   }
 
   Future open(String publicKey, String password) async {
