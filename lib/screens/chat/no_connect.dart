@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -53,14 +52,17 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
     super.dispose();
   }
 
-  _refreshWalletDefault() {
-    walletCommon.getDefault().then((value) {
-      setState(() {
-        loaded = true;
-        if (value != null) {
-          _selectWallet = value;
-        }
-      });
+  _refreshWalletDefault() async {
+    WalletSchema? _defaultSelect = await walletCommon.getDefault();
+    if (_defaultSelect == null) {
+      List<WalletSchema> wallets = await walletCommon.getWallets();
+      if (wallets.isNotEmpty) {
+        _defaultSelect = wallets[0];
+      }
+    }
+    setState(() {
+      loaded = true;
+      _selectWallet = _defaultSelect;
     });
   }
 
@@ -121,6 +123,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                         });
                       },
                       wallet: this._selectWallet!,
+                      onlyNKN: true,
                     ),
                   ),
             SizedBox(height: 20),
@@ -164,16 +167,11 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                               width: double.infinity,
                               text: _localizations.connect,
                               onPressed: () async {
-                                var client = await clientCommon.signIn(
+                                await clientCommon.signIn(
                                   this._selectWallet,
-                                  walletFetch: true,
+                                  fetchRemote: true,
                                   dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
                                 );
-                                if (client != null) {
-                                  BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(this._selectWallet?.address));
-                                } else {
-                                  BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
-                                }
                               },
                             ),
                           )
