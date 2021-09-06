@@ -77,14 +77,14 @@ class ClientCommon with Tag {
 
   // need signOut
   // return [client, pwdError]
-  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool)? dialogVisible, String? password, int tryCount = 1}) async {
+  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? dialogVisible, String? password, int tryCount = 1}) async {
     if (wallet == null || wallet.address.isEmpty) return [null, false];
     // if (client != null) await close(); // async boom!!!
     try {
       // password
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
       if (password == null || password.isEmpty) return [null, true];
-      dialogVisible?.call(true);
+      dialogVisible?.call(true, tryCount);
 
       // pubKey/seed
       List<String>? seedRpcList;
@@ -105,7 +105,7 @@ class ClientCommon with Tag {
         seed = await walletCommon.getSeed(wallet.address);
       }
       if (pubKey == null || pubKey.isEmpty || seed == null || seed.isEmpty) {
-        dialogVisible?.call(false);
+        dialogVisible?.call(false, tryCount);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
@@ -133,7 +133,7 @@ class ClientCommon with Tag {
       seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address));
       client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
-      dialogVisible?.call(false);
+      dialogVisible?.call(false, tryCount);
 
       // client error
       _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
@@ -153,14 +153,14 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失 ?
+        // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失?
         chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
       });
 
       // await completer.future;
       return [client, false];
     } catch (e) {
-      dialogVisible?.call(false);
+      dialogVisible?.call(false, tryCount);
       // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
