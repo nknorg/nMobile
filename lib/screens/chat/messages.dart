@@ -87,6 +87,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   bool _showRecordLock = false;
   bool _showRecordLockLocked = false;
 
+  bool isPopIng = false;
+
   @override
   void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
@@ -118,8 +120,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // topic
+    isPopIng = false;
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
-      if (!event.joined) {
+      if (!event.joined && !isPopIng) {
+        isPopIng = true;
         Navigator.pop(this.context);
         return;
       }

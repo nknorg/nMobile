@@ -61,6 +61,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   bool? _isJoined;
 
+  bool isPopIng = false;
+
   @override
   void onRefreshArguments() {
     _refreshTopicSchema();
@@ -70,8 +72,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   initState() {
     super.initState();
     // listen
+    isPopIng = false;
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
-      if (!event.joined) {
+      if (!event.joined && !isPopIng) {
+        isPopIng = true;
         Navigator.pop(this.context);
         return;
       }

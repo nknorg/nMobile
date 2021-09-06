@@ -61,6 +61,8 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   int? _invitedReceiptCount;
   int? _subscriberCount;
 
+  bool isPopIng = false;
+
   @override
   void onRefreshArguments() {
     _refreshTopicSchema();
@@ -70,8 +72,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   initState() {
     super.initState();
     // topic listen
+    isPopIng = false;
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
-      if (!event.joined) {
+      if (!event.joined && !isPopIng) {
+        isPopIng = true;
         Navigator.pop(this.context);
         return;
       }
