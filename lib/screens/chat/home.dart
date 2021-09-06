@@ -110,7 +110,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // login
     _tryLogin();
 
-    // TODO:GG auth ?
+    // TODO:GG auth?
   }
 
   @override
@@ -180,16 +180,17 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (client == null) {
       if (isPwdError) {
         logger.i("$TAG - _tryLogin - signIn - password error, close all");
-        clientCommon.signOut(closeDB: true);
+        await clientCommon.signOut(closeDB: true);
       } else {
         logger.w("$TAG - _tryLogin - signIn - other error, should be not go here");
-        clientCommon.signOut(closeDB: false);
+        await clientCommon.signOut(closeDB: false);
       }
     }
 
     isLoginProgress = false;
   }
 
+  // TODO:GG 还差调用的页面
   Future _tryAuth() async {
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
