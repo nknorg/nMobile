@@ -164,9 +164,10 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                   List<WalletSchema> finds = state.wallets.where((w) => w.address == this._wallet?.address).toList();
                   if (finds.isNotEmpty) {
                     this._wallet = finds[0];
-                  } else {
-                    Navigator.pop(this.context);
                   }
+                  // else {
+                  //   Navigator.pop(this.context);
+                  // }
                 }
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
