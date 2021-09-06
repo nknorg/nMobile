@@ -3,13 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/app.dart';
-import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
@@ -220,28 +217,26 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       await Future.delayed(Duration(milliseconds: 500)); // wait client close
       Loading.dismiss();
 
-      // client signIn TODO:GG 测试输错密码会怎么样
-      var client = await clientCommon.signIn(selected, walletFetch: true, dialogVisible: (show) => show ? Loading.show() : Loading.dismiss());
+      // client signIn
+      var client = (await clientCommon.signIn(selected, fetchRemote: true, dialogVisible: (show, tryCount) {
+        if (tryCount > 1) return;
+        show ? Loading.show() : Loading.dismiss();
+      }))[0];
       await Future.delayed(Duration(milliseconds: 500)); // wait client create
 
       if (client != null) {
         Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
-        // default wallet
-        BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(selected.address));
-        // contact me
+        // contact
         ContactSchema? _me = await contactCommon.getMe(canAdd: true);
         await _refreshContactSchema(schema: _me);
       } else {
-        BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(null));
-        // pop
-        Navigator.pop(this.context);
+        AppScreen.go(this.context);
       }
 
-      // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
+      // TimerAuth.instance.enableAuth(); // TODO:GG auth?
     } catch (e) {
       handleError(e);
-      BlocProvider.of<WalletBloc>(this.context).add(DefaultWallet(null));
-      Navigator.pop(this.context);
+      AppScreen.go(this.context);
     }
   }
 
