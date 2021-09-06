@@ -83,7 +83,7 @@ class BackgroundFetchService with Tag {
     }
     logger.i("$TAG - _onBackgroundFetch - todo - taskId:$taskId");
     // signOut
-    await clientCommon.reSignIn(false, delayMs: 100);
+    await clientCommon.reSignIn(false);
     // finish
     BackgroundFetch.finish(taskId);
   }
