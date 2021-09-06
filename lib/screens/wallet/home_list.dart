@@ -69,7 +69,6 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     super.dispose();
   }
 
-  // TODO:GG 测试
   _refreshBackedUp() async {
     List<WalletSchema> wallets = await walletCommon.getWallets();
     List<WalletSchema> noBackedUpList = wallets.where((element) => element.isBackedUp == false).toList();
