@@ -65,6 +65,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _dbOpenedSubscription = dbCommon.openedStream.listen((event) {
       setState(() {
         dbOpen = event;
+        _refreshContactMe();
         _tryLogin();
       });
     });
@@ -83,7 +84,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           if (!firstConnected) {
             int between = DateTime.now().millisecondsSinceEpoch - (appBackgroundAt ?? 0);
             if (between >= Settings.clientReAuthGapMs) {
-              _authAgain();
+              _tryAuth();
             } else {
               clientCommon.connectCheck();
             }
@@ -104,9 +105,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // init
     dbOpen = dbCommon.isOpen();
+    _refreshContactMe();
+
+    // login
     _tryLogin();
 
-    // TODO:GG auth?
+    // TODO:GG auth ?
   }
 
   @override
@@ -152,14 +156,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
-  // TODO:GG 没网可以进入，输错密码不能进入
-  // TODO:GG 1.首次进入的时候
-  // TODO:GG 2.非首次进入的时候
-  // TODO:GG 3.后台切前台的时候
-  // TODO:GG 4.连接异常的时候？
   Future _tryLogin() async {
-    if (dbOpen) _refreshContactMe(); // await
-
     if (isLoginProgress) return;
     isLoginProgress = true;
 
@@ -168,6 +165,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryLogin - wallet default is empty");
+      return;
+    }
+
+    if (clientCommon.client != null) {
+      clientCommon.connectCheck();
       return;
     }
 
@@ -188,23 +190,27 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     isLoginProgress = false;
   }
 
-  _authAgain() async {
+  Future _tryAuth() async {
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
-      logger.i("$TAG - _tryLogin - wallet default is empty");
+      logger.i("$TAG - _authAgain - wallet default is empty");
       return;
     }
     // password
     String? password = await authorization.getWalletPassword(wallet.address);
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
-      logger.i("$TAG - _tryLogin - signIn - password error, close all");
-      clientCommon.signOut(closeDB: true);
+      logger.i("$TAG - _authAgain - signIn - password error, close all");
+      await clientCommon.signOut(closeDB: true);
       return;
     }
     // connect
-    await clientCommon.connectCheck();
+    if (clientCommon.isClientCreated) {
+      await clientCommon.connectCheck();
+    } else {
+      await _tryLogin();
+    }
   }
 
   _refreshContactMe() async {
