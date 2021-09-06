@@ -85,14 +85,11 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         isDefault = value == _wallet?.address;
       });
     });
-
-    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet lock
   }
 
   @override
   void dispose() {
     _walletSubscription?.cancel();
-    // TimerAuth.onOtherPage = false; // TODO:GG auth  wallet unlock
     super.dispose();
   }
 
@@ -348,8 +345,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               return;
             }
 
-            // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
-
             WalletExportScreen.go(
               context,
               WalletType.eth,
@@ -368,8 +363,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               Toast.show(_localizations.password_wrong);
               return;
             }
-
-            // TimerAuth.instance.enableAuth(); // TODO:GG auth ?
 
             WalletExportScreen.go(
               context,
@@ -404,7 +397,6 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 String? connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
                 String? defaultAddress = await walletCommon.getDefaultAddress();
                 if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
-                  _walletBloc?.add(DefaultWallet(null));
                   await clientCommon.signOut(closeDB: true);
                 }
               } catch (e) {
