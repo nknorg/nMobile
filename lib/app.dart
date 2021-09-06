@@ -15,7 +15,7 @@ class AppScreen extends StatefulWidget {
   static const String routeName = '/';
   static final String argIndex = "index";
 
-  static go(BuildContext context, {int index = 0}) {
+  static go(BuildContext context) {
     // return Navigator.pushNamed(context, routeName, arguments: {
     //   argIndex: index,
     // });

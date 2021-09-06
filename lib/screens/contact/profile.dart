@@ -232,8 +232,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       } else {
         AppScreen.go(this.context);
       }
-
-      // TimerAuth.instance.enableAuth(); // TODO:GG auth?
     } catch (e) {
       handleError(e);
       AppScreen.go(this.context);
