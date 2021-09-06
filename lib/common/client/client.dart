@@ -39,7 +39,7 @@ class ClientCommon with Tag {
 
   bool get isClientCreated => (client != null) && (client!.address.isNotEmpty == true);
 
-  int signInAt = 0; // TODO:GG 用处？
+  int signInAt = 0; // TODO:GG 用处 ？
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -75,14 +75,15 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  // need close TODO:GG 所有的signIn都必须先out
-  Future<List> signIn(WalletSchema? wallet, {String? password, bool fetchRemote = true, Function(bool)? dialogVisible, int tryCount = 1}) async {
+  // need signOut
+  // return [client, pwdError]
+  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool)? dialogVisible, String? password, int tryCount = 1}) async {
     if (wallet == null || wallet.address.isEmpty) return [null, false];
     // if (client != null) await close(); // async boom!!!
     try {
       // password
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
-      if (password == null || password.isEmpty) return [null, false];
+      if (password == null || password.isEmpty) return [null, true];
       dialogVisible?.call(true);
 
       // pubKey/seed
@@ -107,9 +108,9 @@ class ClientCommon with Tag {
         dialogVisible?.call(false);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return signIn(wallet, password: password, fetchRemote: true, dialogVisible: dialogVisible);
+          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
         } else {
-          logger.w("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+          logger.e("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           return [null, false];
         }
       }
@@ -152,27 +153,28 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失 ?
+        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失?
       });
 
       // await completer.future;
       return [client, false];
     } catch (e) {
-      if (tryCount >= 3) handleError(e);
       dialogVisible?.call(false);
       // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return signIn(wallet, password: password, fetchRemote: true, dialogVisible: dialogVisible);
+          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
         }
         handleError(e);
         return [null, true];
       }
+      // toast
+      if ((tryCount != 0) && (tryCount % 10 == 0)) handleError(e);
       // loop login
       await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return signIn(wallet, password: password, fetchRemote: fetchRemote, dialogVisible: dialogVisible, tryCount: ++tryCount);
+      return signIn(wallet, fetchRemote: fetchRemote, dialogVisible: dialogVisible, password: password, tryCount: ++tryCount);
     }
   }
 
@@ -192,9 +194,7 @@ class ClientCommon with Tag {
     }
   }
 
-  Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
-    if (delayMs > 0) await Future.delayed(Duration(milliseconds: delayMs));
-
+  Future<List> reSignIn(bool needPwd) async {
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
@@ -207,7 +207,7 @@ class ClientCommon with Tag {
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    return await signIn(wallet, password: walletPwd, fetchRemote: false);
+    return await signIn(wallet, fetchRemote: false, password: walletPwd);
   }
 
   Future connectCheck() async {
