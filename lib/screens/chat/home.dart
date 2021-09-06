@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
@@ -17,6 +18,7 @@ import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
@@ -109,8 +111,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // login
     _tryLogin();
-
-    // TODO:GG auth?
   }
 
   @override
@@ -157,8 +157,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future _tryLogin() async {
-    if (isLoginProgress) return;
-    isLoginProgress = true;
+    if (clientCommon.client != null) {
+      clientCommon.connectCheck();
+      return;
+    }
 
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
@@ -168,12 +170,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return;
     }
 
-    if (clientCommon.client != null) {
-      clientCommon.connectCheck();
-      return;
-    }
-
     // client
+    if (isLoginProgress) return;
+    isLoginProgress = true;
     List result = await clientCommon.signIn(wallet, fetchRemote: false);
     final client = result[0];
     final isPwdError = result[1];
@@ -186,12 +185,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         await clientCommon.signOut(closeDB: false);
       }
     }
-
     isLoginProgress = false;
   }
 
-  // TODO:GG 还差调用的页面
   Future _tryAuth() async {
+    if (!clientCommon.isClientCreated) return;
+
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
@@ -203,15 +202,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     String? password = await authorization.getWalletPassword(wallet.address);
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
+      Toast.show(S.of(this.context).tip_password_error);
       await clientCommon.signOut(closeDB: true);
+      AppScreen.go(this.context);
       return;
     }
     // connect
-    if (clientCommon.isClientCreated) {
-      await clientCommon.connectCheck();
-    } else {
-      await _tryLogin();
-    }
+    await clientCommon.connectCheck();
   }
 
   _refreshContactMe() async {
