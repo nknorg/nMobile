@@ -39,7 +39,7 @@ class ClientCommon with Tag {
 
   bool get isClientCreated => (client != null) && (client!.address.isNotEmpty == true);
 
-  int signInAt = 0; // TODO:GG 用处 ？
+  int connectedAt = 0;
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -65,7 +65,7 @@ class ClientCommon with Tag {
     statusStream.listen((int event) {
       status = event;
       if (client != null && event == ClientConnectStatus.connected) {
-        signInAt = DateTime.now().millisecondsSinceEpoch;
+        connectedAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
     onErrorStream.listen((dynamic event) {
@@ -153,7 +153,8 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        chatInCommon.onClientMessage(MessageSchema.fromReceive(event)); // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失?
+        // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失 ?
+        chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
       });
 
       // await completer.future;
@@ -189,8 +190,8 @@ class ClientCommon with Tag {
     client = null;
     // close DB
     if (closeDB) {
+      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null)); // should first
       await dbCommon.close();
-      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
     }
   }
 
