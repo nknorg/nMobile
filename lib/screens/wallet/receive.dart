@@ -182,9 +182,10 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                     List<WalletSchema> finds = state.wallets.where((w) => w.address == _wallet.address).toList();
                     if (finds.isNotEmpty) {
                       _wallet = finds[0];
-                    } else {
-                      Navigator.pop(this.context);
                     }
+                    // else {
+                    //   Navigator.pop(this.context);
+                    // }
                   }
                   return Column(
                     children: <Widget>[

@@ -397,9 +397,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                       List<WalletSchema> finds = state.wallets.where((w) => w.address == _wallet.address).toList();
                       if (finds.isNotEmpty) {
                         _wallet = finds[0];
-                      } else {
-                        Navigator.pop(this.context);
                       }
+                      // else {
+                      //   Navigator.pop(this.context);
+                      // }
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;
                       }
