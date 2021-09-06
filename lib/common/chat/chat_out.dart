@@ -4,11 +4,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
-import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
@@ -17,7 +16,6 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -50,8 +48,8 @@ class ChatOutCommon with Tag {
 
   Future sendPing(String? clientAddress, bool isPing, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendPing(clientAddress, isPing), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendPing(clientAddress, isPing), null);
     }
     try {
       String data = MessageData.getPing(isPing);
@@ -69,8 +67,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendReceipt(received), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendReceipt(received), null);
     }
     try {
       received = (await _messageStorage.query(received.msgId)) ?? received; // get receiveAt
@@ -89,8 +87,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendRead(String? clientAddress, List<String> msgIds, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendRead(clientAddress, msgIds), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendRead(clientAddress, msgIds), null);
     }
     try {
       String data = MessageData.getRead(msgIds);
@@ -108,8 +106,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendContactRequest(target, requestType), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendContactRequest(target, requestType), null);
     }
     try {
       int updateAt = DateTime.now().millisecondsSinceEpoch;
@@ -128,8 +126,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactResponse(ContactSchema? target, String requestType, {ContactSchema? me, int tryCount = 1}) async {
     if (target == null || target.clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendContactResponse(target, requestType, me: me), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendContactResponse(target, requestType, me: me), null);
     }
     ContactSchema? _me = me ?? await contactCommon.getMe();
     try {
@@ -154,8 +152,8 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendContactOptionsBurn(clientAddress, deleteSeconds, updateAt), null);
     }
     try {
       MessageSchema send = MessageSchema.fromSend(
@@ -181,8 +179,8 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendContactOptionsToken(clientAddress, deviceToken), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendContactOptionsToken(clientAddress, deviceToken), null);
     }
     try {
       MessageSchema send = MessageSchema.fromSend(
@@ -207,8 +205,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceRequest(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendDeviceRequest(clientAddress), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendDeviceRequest(clientAddress), null);
     }
     try {
       String data = MessageData.getDeviceRequest();
@@ -226,8 +224,8 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceInfo(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendDeviceInfo(clientAddress), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendDeviceInfo(clientAddress), null);
     }
     try {
       String data = MessageData.getDeviceInfo();
@@ -245,8 +243,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || content.isEmpty) return null;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return (await _tryLogin(() => sendText(content, contact: contact, topic: topic), null)) as MessageSchema?;
+    if (!clientCommon.isClientCreated) {
+      return (await _checkClient(() => sendText(content, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
@@ -266,8 +264,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return (await _tryLogin(() => sendImage(content, contact: contact, topic: topic), null)) as MessageSchema?;
+    if (!clientCommon.isClientCreated) {
+      return (await _checkClient(() => sendImage(content, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
     String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
@@ -288,8 +286,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return (await _tryLogin(() => sendAudio(content, durationS, contact: contact, topic: topic), null)) as MessageSchema?;
+    if (!clientCommon.isClientCreated) {
+      return (await _checkClient(() => sendAudio(content, durationS, contact: contact, topic: topic), null)) as MessageSchema?;
     }
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -308,8 +306,8 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display
   Future<MessageSchema?> sendPiece(MessageSchema message, {int tryCount = 1}) async {
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return (await _tryLogin(() => sendPiece(message), null)) as MessageSchema?;
+    if (!clientCommon.isClientCreated) {
+      return (await _checkClient(() => sendPiece(message), null)) as MessageSchema?;
     }
     try {
       int timeNowAt = DateTime.now().millisecondsSinceEpoch;
@@ -343,8 +341,8 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendTopicSubscribe(topic), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendTopicSubscribe(topic), null);
     }
     try {
       MessageSchema send = MessageSchema.fromSend(
@@ -368,8 +366,8 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendTopicUnSubscribe(topic), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendTopicUnSubscribe(topic), null);
     }
     try {
       MessageSchema send = MessageSchema.fromSend(
@@ -393,8 +391,8 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendTopicInvitee(clientAddress, topic), null) as MessageSchema?;
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendTopicInvitee(clientAddress, topic), null) as MessageSchema?;
     }
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -410,8 +408,8 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicKickOut(String? topic, String? targetAddress, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
-    if (clientCommon.client == null || clientCommon.address == null || clientCommon.address!.isEmpty) {
-      return _tryLogin(() => sendTopicKickOut(topic, targetAddress), null);
+    if (!clientCommon.isClientCreated) {
+      return _checkClient(() => sendTopicKickOut(topic, targetAddress), null);
     }
     try {
       MessageSchema send = MessageSchema.fromSend(
@@ -755,32 +753,47 @@ class ChatOutCommon with Tag {
     await SendPush.send(deviceToken, title, content);
   }
 
-  Future _tryLogin(Function? callback, dynamic defaultReturn) async {
-    WalletSchema? wallet = await walletCommon.getDefault();
-    if (wallet == null || wallet.address.isEmpty) {
-      AppScreen.go(Global.appContext);
-      return defaultReturn;
-    }
-    final client = await clientCommon.signIn(
-      wallet,
-      walletFetch: false,
-      dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
-    );
-    if (client != null && (client.address.isNotEmpty == true)) {
-      logger.i("$TAG - _tryLogin - callback - callback:${callback.toString()}");
-      return callback?.call();
-    }
-    logger.w("$TAG - _tryLogin - fail - wallet:$wallet");
+  Future _checkClient(Function? callback, dynamic defaultReturn) async {
+    // TODO:GG 按理说应该等创建好了再发送，这里要不要把这些消息挂起来
+    Toast.show("client为null，后续会处理");
+    // WalletSchema? wallet = await walletCommon.getDefault();
+    // if (wallet == null || wallet.address.isEmpty) {
+    //   AppScreen.go(Global.appContext);
+    //   return defaultReturn;
+    // }
+    // if (clientCommon.status != ClientConnectStatus.disconnected) {
+    //   // for no duplicated
+    //   return defaultReturn;
+    // }
+    // final client = (await clientCommon.signIn(
+    //   wallet,
+    //   fetchRemote: false,
+    //   dialogVisible: (show) => show ? Loading.show() : Loading.dismiss(),
+    // ))[0];
+    // if (client != null && (client.address.isNotEmpty == true)) {
+    //   logger.i("$TAG - _tryLogin - callback - callback:${callback.toString()}");
+    //   return callback?.call();
+    // }
+    logger.w("$TAG - _tryLogin - fail");
     return defaultReturn;
   }
 
   Future<bool> _handleSendError(dynamic e, int tryCount, Function? callback) async {
     if (e.toString().contains("write: broken pipe")) {
-      final client = await clientCommon.reSignIn(false, delayMs: 100);
+      await Future.delayed(Duration(milliseconds: 100));
+      final client = (await clientCommon.reSignIn(false))[0];
       if (client != null && (client.address.isNotEmpty == true)) {
         logger.i("$TAG - _handleSendError - callback - callback:${callback?.toString()}");
-        await callback?.call();
-        return true;
+        try {
+          await callback?.call();
+          return true;
+        } catch (e) {
+          if (tryCount >= 3) {
+            handleError(e);
+            return true;
+          }
+          return false;
+        }
       } else {
         final wallet = await walletCommon.getDefault();
         logger.w("$TAG - _handleSendError - reSignIn fail - wallet:$wallet");
