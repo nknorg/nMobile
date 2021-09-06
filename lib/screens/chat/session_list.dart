@@ -42,11 +42,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   ContactSchema? _current;
 
-  ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
+  ScrollController _scrollController = ScrollController();
   List<SessionSchema> _sessionList = [];
 
-  bool _isShowTip = true;
+  bool _isLoaded = false;
+  bool _isShowTip = false;
 
   @override
   void onRefreshArguments() {
@@ -65,10 +66,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (states.length > 0) {
         if (states[states.length - 1] == AppLifecycleState.resumed) {
-          // badge TODO:GG 刚进来会触发吗?
-          chatCommon.unreadCount().then((value) {
-            Badge.refreshCount(count: value);
-          });
+          _refreshBadge();
         }
       }
     });
@@ -126,13 +124,16 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // tip
     SettingsStorage.getSettings(SettingsStorage.CHAT_TIP_STATUS).then((value) {
-      bool showed = value != null && value != "false" && value != false;
+      bool dismiss = (value.toString() == "true") || (value == true);
       setState(() {
-        _isShowTip = !showed;
+        _isShowTip = !dismiss;
       });
     });
 
-    // TODO:GG auth ?
+    // unread
+    _refreshBadge();
+
+    // TODO:GG auth?
   }
 
   @override
@@ -147,6 +148,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     super.dispose();
   }
 
+  _refreshBadge() async {
+    int unread = await chatCommon.unreadCount();
+    Badge.refreshCount(count: unread);
+  }
+
   _getDataSessions(bool refresh) async {
     int _offset = 0;
     if (refresh) {
@@ -156,6 +162,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     }
     var messages = await sessionCommon.queryListRecent(offset: _offset, limit: 20);
     setState(() {
+      _isLoaded = true;
       _sessionList += messages;
     });
   }
@@ -267,7 +274,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   @override
   Widget build(BuildContext context) {
-    if (_sessionList.isEmpty) {
+    if (_isLoaded && _sessionList.isEmpty) {
       return ChatNoMessageLayout();
     }
     return Column(
