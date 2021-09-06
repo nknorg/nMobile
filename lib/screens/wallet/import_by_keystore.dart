@@ -53,14 +53,6 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
   void initState() {
     super.initState();
     _walletBloc = BlocProvider.of<WalletBloc>(context);
-
-    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet lock
-  }
-
-  @override
-  void dispose() {
-    // TimerAuth.onOtherPage = true; // TODO:GG auth  wallet unlock
-    super.dispose();
   }
 
   _import() async {
