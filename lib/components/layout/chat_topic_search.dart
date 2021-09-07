@@ -53,8 +53,12 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     Loading.show();
 
     if (_privateSelected) {
-      if (!isPrivateTopicReg(topicName)) {
-        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
+      if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
+      if (isPrivateTopicReg(topicName)) {
+        int index = topicName.lastIndexOf('.');
+        String owner = topicName.substring(index + 1);
+        if (owner != hexEncode(clientCommon.publicKey!)) return false;
+      } else {
         topicName = '$topicName.${hexEncode(clientCommon.publicKey!)}';
       }
     }
