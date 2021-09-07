@@ -305,6 +305,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         int? nonce = await Global.getNonce(forceFetch: true);
         return _transferNKN(name, keystore, password, nonce: nonce);
       }
+      Global.getNonce(forceFetch: true); // await
       handleError(e, toast: _localizations.failure);
       return false;
     } finally {

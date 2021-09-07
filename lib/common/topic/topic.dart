@@ -158,7 +158,7 @@ class TopicCommon with Tag {
       _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
       meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
-      bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta);
+      bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta, toast: true);
       if (!permissionSuccess) {
         logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
         // await subscriberCommon.deleteByTopic(exists.topic);
@@ -184,6 +184,7 @@ class TopicCommon with Tag {
     bool forceSubscribe = false,
     bool enableFirst = false,
     double fee = 0,
+    int tryCount = 1,
   }) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
@@ -251,8 +252,13 @@ class TopicCommon with Tag {
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
-        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
-        return null;
+        if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+          logger.e("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
+          return null;
+        }
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists - tryCount:$tryCount");
+        await Future.delayed(Duration(seconds: 5));
+        return checkExpireAndSubscribe(topicName, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount);
       }
 
       // db update
@@ -276,7 +282,7 @@ class TopicCommon with Tag {
   }
 
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
-  Future<bool> _clientSubscribe(String? topicName, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta, int? nonce}) async {
+  Future<bool> _clientSubscribe(String? topicName, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta, int? nonce, bool toast = false}) async {
     if (topicName == null || topicName.isEmpty) return false;
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
@@ -293,22 +299,26 @@ class TopicCommon with Tag {
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientSubscribe - success - topicHash:$topicHash");
+        logger.d("$TAG - _clientSubscribe - success - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
       } else {
-        logger.e("$TAG - _clientSubscribe - fail - topicHash:$topicHash");
+        logger.e("$TAG - _clientSubscribe - fail - nonce:$nonce - identifier:$identifier - metaString:$metaString");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         int? nonce = await Global.getNonce(forceFetch: true);
-        return _clientSubscribe(topicName, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce);
-      } else if (e.toString().contains('duplicate subscription exist in block')) {
-        // can not append tx to txpool: duplicate subscription exist in block
-        success = true;
+        return _clientSubscribe(topicName, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, toast: toast);
       } else {
+        Global.getNonce(forceFetch: true); // await
+        if (e.toString().contains('duplicate subscription exist in block')) {
+          // can not append tx to txpool: duplicate subscription exist in block
+          logger.i("$TAG - _clientSubscribe - duplicated - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+          if (toast) Toast.show("上一个请求还在处理中，请稍后再试"); // TODO:GG locale subscribe
+        } else {
+          handleError(e);
+        }
         success = false;
-        handleError(e);
       }
     }
     return success;
@@ -324,7 +334,7 @@ class TopicCommon with Tag {
     // permission modify in owners message received by owner
 
     // client unsubscribe
-    bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee);
+    bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, toast: true);
     if (!exitSuccess) return null;
     await Future.delayed(Duration(seconds: 1));
 
@@ -350,7 +360,7 @@ class TopicCommon with Tag {
     return exists;
   }
 
-  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? nonce}) async {
+  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? nonce, bool toast = false}) async {
     if (topicName == null || topicName.isEmpty) return false;
     // String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     nonce = nonce ?? await Global.getNonce();
@@ -364,22 +374,26 @@ class TopicCommon with Tag {
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientUnsubscribe - success - topicHash:$topicHash");
+        logger.d("$TAG - _clientUnsubscribe - success - nonce:$nonce - topicHash:$topicHash");
       } else {
-        logger.e("$TAG - _clientUnsubscribe - fail - topicHash:$topicHash");
+        logger.e("$TAG - _clientUnsubscribe - fail - nonce:$nonce - topicHash:$topicHash");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         int? nonce = await Global.getNonce(forceFetch: true);
-        return _clientUnsubscribe(topicName, fee: fee, nonce: nonce);
-      } else if (e.toString().contains('duplicate subscription exist in block')) {
-        // can not append tx to txpool: duplicate subscription exist in block
-        success = true;
+        return _clientUnsubscribe(topicName, fee: fee, nonce: nonce, toast: toast);
       } else {
+        Global.getNonce(forceFetch: true); // await
+        if (e.toString().contains('duplicate subscription exist in block')) {
+          // can not append tx to txpool: duplicate subscription exist in block
+          logger.i("$TAG - _clientUnsubscribe - duplicated - nonce:$nonce");
+          if (toast) Toast.show("上一个请求还在处理中，请稍后再试"); // TODO:GG locale unsubscribe
+        } else {
+          handleError(e);
+        }
         success = false;
-        handleError(e);
       }
     }
     return success;
@@ -493,7 +507,7 @@ class TopicCommon with Tag {
     if (isPrivate && isOwner && (acceptAll != true) && (appendPermPage != null)) {
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, appendPermPage);
       meta = await _buildMetaByAppend(topicName, meta, _subscriber);
-      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: appendPermPage, meta: meta);
+      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: appendPermPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - invitee - clientSubscribe error - permPage:$appendPermPage - meta:$meta");
         await subscriberCommon.delete(_subscriber.id, notify: true);
@@ -537,12 +551,11 @@ class TopicCommon with Tag {
     if (acceptAll != true) {
       Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
       meta = await _buildMetaByAppend(topicName, meta, _subscriber);
-      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
+      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
         _subscriber.status = oldStatus;
-        _subscriber.permPage = permPage;
-        await subscriberCommon.add(_subscriber);
+        await subscriberCommon.setStatus(_subscriber.id, _subscriber.status, notify: true);
         return null;
       }
     }
@@ -633,6 +646,8 @@ class TopicCommon with Tag {
       return null;
     }
 
+    // TODO:GG 防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
+
     // permission modify in invitee action by owner
 
     // subscriber update
@@ -647,7 +662,7 @@ class TopicCommon with Tag {
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress) async {
+  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int tryCount = 1}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
@@ -687,8 +702,13 @@ class TopicCommon with Tag {
         _subscriber.status = SubscriberStatus.Unsubscribed;
         bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {
-          logger.w("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
-          return null;
+          if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+            logger.e("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
+            return null;
+          }
+          logger.w("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta - tryCount:$tryCount");
+          await Future.delayed(Duration(seconds: 5));
+          return onUnsubscribe(topicName, clientAddress, tryCount: ++tryCount);
         }
       }
     }
@@ -711,12 +731,15 @@ class TopicCommon with Tag {
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onKickOut(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+  Future<SubscriberSchema?> onKickOut(String? topicName, String? senderAddress, String? clientAddress, {int tryCount = 1}) async {
+    if (topicName == null || topicName.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
     if (_topic == null) {
       logger.w("$TAG - onKickOut - null - topicName:$topicName");
+      return null;
+    } else if (!_topic.isOwner(senderAddress)) {
+      logger.w("$TAG - onKickOut - sender error - topicName:$topicName - senderAddress:$senderAddress");
       return null;
     }
 
@@ -733,8 +756,13 @@ class TopicCommon with Tag {
     if (clientAddress == clientCommon.address) {
       bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
       if (!exitSuccess) {
-        logger.w("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
-        return null;
+        if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+          logger.e("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
+          return null;
+        }
+        logger.w("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber - tryCount:$tryCount");
+        await Future.delayed(Duration(seconds: 5));
+        return onKickOut(topicName, senderAddress, clientAddress, tryCount: ++tryCount);
       }
       bool setSuccess = await setJoined(_topic.id, false, notify: true);
       if (setSuccess) {
