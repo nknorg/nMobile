@@ -71,25 +71,24 @@ class ChatInCommon with Tag {
       if (topic.joined != true) {
         logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
         return;
+      } else if (received.isTopicAction) {
+        logger.i("$TAG - _messageHandle - accept message - just action - subscriber:$subscriber - topic:$topic");
+      } else if (subscriber.status == SubscriberStatus.Subscribed) {
+        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
-        if (!received.isTopicAction) {
-          if (subscriber.status == SubscriberStatus.Subscribed) {
-            logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
+        // joined + message(content) + noSubscribe
+        // SUPPORT:START
+        if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+          if (subscriber.status == SubscriberStatus.None) {
+            logger.i("$TAG - _messageHandle - accept message - subscriber maybe ok permission (old version) - subscriber:$subscriber - topic:$topic");
           } else {
-            // SUPPORT:START
-            if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              if (subscriber.status == SubscriberStatus.None) {
-                logger.i("$TAG - _messageHandle - accept message - subscriber ok permission (old version) - subscriber:$subscriber - topic:$topic");
-              } else {
-                logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
-                return;
-              }
-            } else {
-              // SUPPORT:END
-              logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
-              return;
-            }
+            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
+            return;
           }
+        } else {
+          // SUPPORT:END
+          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
+          return;
         }
       }
     }
@@ -188,8 +187,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check  received.sendAt
-      // TODO:GG other  client status
+      // TODO:GG check received.sendAt
+      // TODO:GG other client status
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -602,7 +601,7 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
-    SubscriberSchema? _subscriber = await topicCommon.onKickOut(received.topic, received.content);
+    SubscriberSchema? _subscriber = await topicCommon.onKickOut(received.topic, received.from, received.content);
     return _subscriber != null;
   }
 }
