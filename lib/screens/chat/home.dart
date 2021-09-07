@@ -9,7 +9,6 @@ import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
@@ -85,7 +84,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         if (states[states.length - 1] == AppLifecycleState.resumed) {
           if (!firstConnected) {
             int between = DateTime.now().millisecondsSinceEpoch - (appBackgroundAt ?? 0);
-            if (between >= Settings.clientReAuthGapMs) {
+            if (between >= Global.clientReAuthGapMs) {
               _tryAuth();
             } else {
               clientCommon.connectCheck();
