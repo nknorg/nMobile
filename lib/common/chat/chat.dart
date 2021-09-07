@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -62,11 +62,11 @@ class ChatCommon with Tag {
       exist = await contactCommon.addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
     } else {
       // profile
-      if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Settings.profileExpireMs)) {
+      if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs)) {
         logger.d("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
-        double between = ((exist.profileUpdateAt! + Settings.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
       }
     }
@@ -108,11 +108,11 @@ class ChatCommon with Tag {
       logger.i("$TAG - deviceInfoHandle - new - request - contact:$contact");
       chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     } else {
-      if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Settings.deviceInfoExpireMs)) {
+      if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs)) {
         logger.d("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
       } else {
-        double between = ((latest.updateAt! + Settings.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
+        double between = ((latest.updateAt! + Global.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
       }
     }

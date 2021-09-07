@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -111,7 +110,7 @@ class TopicCommon with Tag {
     SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
     if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
       int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
         Toast.show("刚离开本群，请稍后再试"); // TODO:GG locale reject
         return null;
       }
@@ -145,6 +144,7 @@ class TopicCommon with Tag {
     }
 
     // check expire + pull subscribers
+    bool historyJoined = exists.joined;
     exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: true, fee: fee);
     if (exists == null) {
       Toast.show(S.of(Global.appContext).failure);
@@ -162,7 +162,10 @@ class TopicCommon with Tag {
       if (!permissionSuccess) {
         logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
         // await subscriberCommon.deleteByTopic(exists.topic);
-        await delete(exists.id, notify: true);
+        if (!historyJoined) {
+          // need delete by subscribed first when permission push
+          await delete(exists.id, notify: true);
+        }
         return null;
       }
     } else {
@@ -203,7 +206,7 @@ class TopicCommon with Tag {
         // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Global.txPoolDelayMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -226,7 +229,7 @@ class TopicCommon with Tag {
         // DB is joined + node no joined
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Global.txPoolDelayMs) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) {
@@ -252,7 +255,7 @@ class TopicCommon with Tag {
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
-        if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+        if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
           logger.e("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
           return null;
         }
@@ -408,7 +411,7 @@ class TopicCommon with Tag {
     if (topicName == null || topicName.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topicName);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.txPoolDelayMs) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topicName:$topicName - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
@@ -599,7 +602,7 @@ class TopicCommon with Tag {
     subscribers.forEach((SubscriberSchema element) {
       if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
           if (element.status == SubscriberStatus.InvitedSend || element.status == SubscriberStatus.InvitedReceipt || element.status == SubscriberStatus.Subscribed) {
             // add to accepts
@@ -646,7 +649,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // TODO:GG 防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
+    // TODO:GG  防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
 
     // permission modify in invitee action by owner
 
@@ -702,7 +705,7 @@ class TopicCommon with Tag {
         _subscriber.status = SubscriberStatus.Unsubscribed;
         bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {
-          if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+          if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
             logger.e("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
             return null;
           }
@@ -756,7 +759,7 @@ class TopicCommon with Tag {
     if (clientAddress == clientCommon.address) {
       bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
       if (!exitSuccess) {
-        if (tryCount >= (Settings.txPoolDelayMs / (5 * 1000))) {
+        if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
           logger.e("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
           return null;
         }

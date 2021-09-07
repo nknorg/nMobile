@@ -89,10 +89,10 @@ class Path {
   }
 
   /// eg:{localPath}
-  static String? getLocalFile(String? filePath) {
-    if (filePath == null || filePath.isEmpty) return null;
+  static String? getLocalFile(String? completePath) {
+    if (completePath == null || completePath.isEmpty) return null;
     String rootDir = Global.applicationRootDirectory.path.endsWith("/") ? Global.applicationRootDirectory.path : (Global.applicationRootDirectory.path + "/");
-    return filePath.split(rootDir).last;
+    return completePath.split(rootDir).last;
   }
 
   /// eg:{mPubKey}/{dirType}/{chatTarget}/{fileName}

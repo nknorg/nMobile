@@ -111,6 +111,119 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
     });
   }
 
+  _showChangeNameDialog() async {
+    S _localizations = S.of(context);
+    String? newName = await BottomDialog.of(context).showInput(
+      title: _localizations.wallet_name,
+      inputTip: _localizations.hint_enter_wallet_name,
+      inputHint: _localizations.hint_enter_wallet_name,
+      value: this._wallet?.name ?? "",
+      actionText: _localizations.save,
+      maxLength: 20,
+    );
+    if (this._wallet == null || newName == null || newName.isEmpty) return;
+    setState(() {
+      this._wallet?.name = newName; // update appBar title
+    });
+    if (this._wallet != null) {
+      _walletBloc?.add(UpdateWallet(this._wallet!));
+    }
+  }
+
+  _onAppBarActionSelected(int result) async {
+    S _localizations = S.of(context);
+
+    switch (result) {
+      case 0: // export
+        authorization.getWalletPassword(_wallet?.address, context: context).then((String? password) async {
+          if (password == null || password.isEmpty) return;
+          String keystore = await walletCommon.getKeystore(_wallet?.address);
+
+          Loading.show();
+          if (_wallet?.type == WalletType.eth) {
+            final eth = await Ethereum.restoreByKeyStore(name: _wallet?.name ?? "", keystore: keystore, password: password);
+            String ethAddress = (await eth.address).hex;
+            String ethKeystore = await eth.keystore();
+            Loading.dismiss();
+
+            if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != _wallet?.address) {
+              Toast.show(_localizations.password_wrong);
+              return;
+            }
+
+            WalletExportScreen.go(
+              context,
+              WalletType.eth,
+              _wallet?.name ?? "",
+              ethAddress,
+              eth.pubKeyHex,
+              eth.privateKeyHex,
+              ethKeystore,
+            );
+          } else {
+            List<String> seedRpcList = await Global.getSeedRpcList(_wallet?.address);
+            Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+            Loading.dismiss();
+
+            if (nkn.address.isEmpty || nkn.address != _wallet?.address) {
+              Toast.show(_localizations.password_wrong);
+              return;
+            }
+
+            WalletExportScreen.go(
+              context,
+              WalletType.nkn,
+              _wallet?.name ?? "",
+              nkn.address,
+              hexEncode(nkn.publicKey),
+              hexEncode(nkn.seed),
+              nkn.keystore,
+            );
+          }
+        }).onError((error, stackTrace) {
+          Loading.dismiss();
+          handleError(error, stackTrace: stackTrace);
+        });
+        break;
+      case 1: // delete
+        ModalDialog.of(this.context).confirm(
+          title: _localizations.delete_wallet_confirm_title,
+          content: _localizations.delete_wallet_confirm_text,
+          agree: Button(
+            width: double.infinity,
+            text: _localizations.delete_wallet,
+            backgroundColor: application.theme.strongColor,
+            onPressed: () async {
+              if (_wallet == null || _wallet!.address.isEmpty) return;
+              _walletBloc?.add(DeleteWallet(this._wallet!.address));
+              // client close
+              try {
+                String? clientAddress = clientCommon.address;
+                if (clientAddress == null || clientAddress.isEmpty) return;
+                String? connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+                String? defaultAddress = await walletCommon.getDefaultAddress();
+                if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
+                  await clientCommon.signOut(closeDB: true);
+                }
+              } catch (e) {
+                handleError(e);
+              } finally {
+                AppScreen.go(context);
+              }
+            },
+          ),
+          reject: Button(
+            width: double.infinity,
+            text: _localizations.cancel,
+            fontColor: application.theme.fontColor2,
+            backgroundColor: application.theme.backgroundLightColor,
+            onPressed: () => Navigator.pop(this.context),
+          ),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     S _localizations = S.of(context);
@@ -304,118 +417,5 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         ),
       ),
     );
-  }
-
-  _showChangeNameDialog() async {
-    S _localizations = S.of(context);
-    String? newName = await BottomDialog.of(context).showInput(
-      title: _localizations.wallet_name,
-      inputTip: _localizations.hint_enter_wallet_name,
-      inputHint: _localizations.hint_enter_wallet_name,
-      value: this._wallet?.name ?? "",
-      actionText: _localizations.save,
-      maxLength: 20,
-    );
-    if (this._wallet == null || newName == null || newName.isEmpty) return;
-    setState(() {
-      this._wallet?.name = newName; // update appBar title
-    });
-    if (this._wallet != null) {
-      _walletBloc?.add(UpdateWallet(this._wallet!));
-    }
-  }
-
-  _onAppBarActionSelected(int result) async {
-    S _localizations = S.of(context);
-
-    switch (result) {
-      case 0: // export
-        authorization.getWalletPassword(_wallet?.address, context: context).then((String? password) async {
-          if (password == null || password.isEmpty) return;
-          String keystore = await walletCommon.getKeystore(_wallet?.address);
-
-          Loading.show();
-          if (_wallet?.type == WalletType.eth) {
-            final eth = await Ethereum.restoreByKeyStore(name: _wallet?.name ?? "", keystore: keystore, password: password);
-            String ethAddress = (await eth.address).hex;
-            String ethKeystore = await eth.keystore();
-            Loading.dismiss();
-
-            if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != _wallet?.address) {
-              Toast.show(_localizations.password_wrong);
-              return;
-            }
-
-            WalletExportScreen.go(
-              context,
-              WalletType.eth,
-              _wallet?.name ?? "",
-              ethAddress,
-              eth.pubKeyHex,
-              eth.privateKeyHex,
-              ethKeystore,
-            );
-          } else {
-            List<String> seedRpcList = await Global.getSeedRpcList(_wallet?.address);
-            Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
-            Loading.dismiss();
-
-            if (nkn.address.isEmpty || nkn.address != _wallet?.address) {
-              Toast.show(_localizations.password_wrong);
-              return;
-            }
-
-            WalletExportScreen.go(
-              context,
-              WalletType.nkn,
-              _wallet?.name ?? "",
-              nkn.address,
-              hexEncode(nkn.publicKey),
-              hexEncode(nkn.seed),
-              nkn.keystore,
-            );
-          }
-        }).onError((error, stackTrace) {
-          Loading.dismiss();
-          handleError(error, stackTrace: stackTrace);
-        });
-        break;
-      case 1: // delete
-        ModalDialog.of(this.context).confirm(
-          title: _localizations.delete_wallet_confirm_title,
-          content: _localizations.delete_wallet_confirm_text,
-          agree: Button(
-            width: double.infinity,
-            text: _localizations.delete_wallet,
-            backgroundColor: application.theme.strongColor,
-            onPressed: () async {
-              if (_wallet == null || _wallet!.address.isEmpty) return;
-              _walletBloc?.add(DeleteWallet(this._wallet!.address));
-              // client close
-              try {
-                String? clientAddress = clientCommon.address;
-                if (clientAddress == null || clientAddress.isEmpty) return;
-                String? connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-                String? defaultAddress = await walletCommon.getDefaultAddress();
-                if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
-                  await clientCommon.signOut(closeDB: true);
-                }
-              } catch (e) {
-                handleError(e);
-              } finally {
-                AppScreen.go(context);
-              }
-            },
-          ),
-          reject: Button(
-            width: double.infinity,
-            text: _localizations.cancel,
-            fontColor: application.theme.fontColor2,
-            backgroundColor: application.theme.backgroundLightColor,
-            onPressed: () => Navigator.pop(this.context),
-          ),
-        );
-        break;
-    }
   }
 }
