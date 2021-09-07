@@ -239,6 +239,10 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                 onChanged: (bool value) async {
                                   WalletSchema? _wallet = await walletCommon.getDefault();
                                   if (_wallet == null || _wallet.address.isEmpty) {
+                                    final wallets = await walletCommon.getWallets();
+                                    if (wallets.isNotEmpty) _wallet = wallets[0];
+                                  }
+                                  if (_wallet == null || _wallet.address.isEmpty) {
                                     ModalDialog.of(this.context).confirm(
                                       title: 'Wallet Info missing, Quit and ReImport', // TODO:GG locale wallet empty
                                       hasCloseButton: true,
