@@ -299,13 +299,13 @@ class MediaPicker {
     String compressPath = await Path.getCacheFile("cache", fileExt: fileExt);
     // format
     CompressFormat? format;
-    if (compressPath.endsWith(".jpg") || compressPath.endsWith(".jpeg")) {
+    if (compressPath.toLowerCase().endsWith(".jpg") || compressPath.toLowerCase().endsWith(".jpeg")) {
       format = CompressFormat.jpeg;
-    } else if (compressPath.endsWith(".png")) {
+    } else if (compressPath.toLowerCase().endsWith(".png")) {
       format = CompressFormat.png;
-    } else if (compressPath.endsWith(".heic")) {
+    } else if (compressPath.toLowerCase().endsWith(".heic")) {
       format = CompressFormat.heic;
-    } else if (compressPath.endsWith(".webp")) {
+    } else if (compressPath.toLowerCase().endsWith(".webp")) {
       format = CompressFormat.webp;
     }
     if (format == null) {
