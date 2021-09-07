@@ -154,7 +154,6 @@ class ClientCommon with Tag {
       // client receive (looper)
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        // TODO:GG 最好也是队列，否则取出来后，后面的队列没有处理，会造成消息丢失 ?
         chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
       });
 

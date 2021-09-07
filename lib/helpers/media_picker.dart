@@ -32,7 +32,7 @@ class MediaPicker {
     String? returnPath,
     Duration? maxDuration,
   }) async {
-    if (source == ImageSource.camera) {
+    if (true) {
       return pickImageAndVideoBySystem(
         source: source,
         mediaType: mediaType,
