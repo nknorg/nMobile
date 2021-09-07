@@ -16,8 +16,7 @@ class FileHelper {
       var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
       var mimeType = match?.group(1) ?? "";
       var fileBase64 = match?.group(2);
-      if (fileBase64 == null || fileBase64.isEmpty) return null;
-
+      // mimeType
       if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
         extension = 'jpg';
       } else if (mimeType.indexOf('image/png') > -1) {
@@ -33,7 +32,13 @@ class FileHelper {
       } else {
         logger.w('FileHelper - convertBase64toFile - no_extension');
       }
-      base64Data = fileBase64;
+      // fileBase64
+      if (fileBase64 != null && fileBase64.isNotEmpty) {
+        base64Data = fileBase64;
+      } else {
+        logger.w('FileHelper - convertBase64toFile - fileBase64 == null');
+        return null;
+      }
     }
 
     Uint8List? bytes;
