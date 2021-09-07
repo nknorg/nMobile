@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
@@ -51,7 +51,7 @@ class SubscriberCommon with Tag {
     for (SubscriberSchema dbItem in dbSubscribers) {
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((dbItem.status != SubscriberStatus.None) && ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs)) {
+      if ((dbItem.status != SubscriberStatus.None) && ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs)) {
         logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
         continue;
       } else {
@@ -72,7 +72,7 @@ class SubscriberCommon with Tag {
       } else {
         if (findNode.status == SubscriberStatus.Unsubscribed) {
           logger.i("$TAG - refreshSubscribers - DB has,but node is unsubscribe - DB:$dbItem - node:$findNode");
-          futures.add(delete(dbItem.id, notify: true));
+          futures.add(delete(dbItem.id, notify: true)); // TODO:GG 需要delete吗？
         } else {
           // status
           if (dbItem.status != findNode.status) {

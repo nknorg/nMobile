@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:nmobile/theme/theme.dart';
 
+// FUTURE: refactor
 class LightTheme implements SkinTheme {
   @override
   Brightness brightness = Brightness.light;

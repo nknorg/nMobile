@@ -29,12 +29,6 @@ class Settings {
   static late int notificationType;
   static late bool biometricsAuthentication;
 
-  // duration
-  static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h
-  static late int deviceInfoExpireMs = 30 * 60 * 1000; // 30m
-  static late int txPoolDelayMs = 3 * 60 * 1000; // 3m
-
   static init() async {
     // load language
     Settings.locale = (await SettingsStorage.getSettings(SettingsStorage.LOCALE_KEY)) ?? 'auto';

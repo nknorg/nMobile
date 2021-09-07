@@ -35,6 +35,11 @@ class Global {
   static int topicDefaultSubscribeHeight = 400000;
   static int topicWarnBlockExpireHeight = 100000;
 
+  static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
+  static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h
+  static late int deviceInfoExpireMs = 30 * 60 * 1000; // 30m
+  static late int txPoolDelayMs = 3 * 60 * 1000; // 3m
+
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',

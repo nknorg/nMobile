@@ -6,10 +6,10 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
-  bool receiveOpen;
-  bool notificationOpen;
+  bool receiveOpen; // FUTURE: unread + notification
+  bool notificationOpen; // FUTURE: topic
 
-  int? deleteAfterSeconds;
+  int? deleteAfterSeconds; // FUTURE: topic
   int? updateBurnAfterAt;
 
   String? soundResource;
