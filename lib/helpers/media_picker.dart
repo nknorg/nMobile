@@ -6,14 +6,13 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+// import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaType {
   static const int image = 0;
@@ -32,107 +31,107 @@ class MediaPicker {
     String? returnPath,
     Duration? maxDuration,
   }) async {
-    if (true) {
-      return pickImageAndVideoBySystem(
-        source: source,
-        mediaType: mediaType,
-        cropStyle: cropStyle,
-        cropRatio: cropRatio,
-        compressQuality: compressQuality,
-        returnPath: returnPath,
-        maxDuration: maxDuration,
-      );
-    }
-    // permission
-    // PermissionStatus permissionLibrary = await Permission.mediaLibrary.request();
-    // if (permissionLibrary != PermissionStatus.granted) {
+    // if (source == ImageSource.camera) {
+    return pickImageAndVideoBySystem(
+      source: source,
+      mediaType: mediaType,
+      cropStyle: cropStyle,
+      cropRatio: cropRatio,
+      compressQuality: compressQuality,
+      returnPath: returnPath,
+      maxDuration: maxDuration,
+    );
+    // }
+    // // permission
+    // // PermissionStatus permissionLibrary = await Permission.mediaLibrary.request();
+    // // if (permissionLibrary != PermissionStatus.granted) {
+    // //   return null;
+    // // }
+    // PermissionStatus permissionCamera = await Permission.camera.request();
+    // if (permissionCamera != PermissionStatus.granted) {
     //   return null;
     // }
-    PermissionStatus permissionCamera = await Permission.camera.request();
-    if (permissionCamera != PermissionStatus.granted) {
-      return null;
-    }
-    // pick
-    RequestType requestType = RequestType.common;
-    if (mediaType == MediaType.video) {
-      requestType = RequestType.video;
-    } else if (mediaType == MediaType.audio) {
-      requestType = RequestType.audio;
-    } else if (mediaType == MediaType.image) {
-      requestType = RequestType.image;
-    } else if (mediaType == MediaType.common) {
-      requestType = RequestType.common;
-    }
-    List<AssetEntity>? pickedResults = await AssetPicker.pickAssets(
-      Global.appContext,
-      requestType: requestType,
-      maxAssets: 1,
-      themeColor: application.theme.primaryColor,
-      gridCount: 3,
-      pageSize: 60,
-    );
-    if (pickedResults == null || pickedResults.isEmpty) {
-      logger.w("MediaPicker - pickSingle - pickedResults = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
-      return null;
-    }
-
-    // convert
-    File? pickedFile = (await pickedResults[0].originFile) ?? (await pickedResults[0].loadFile(isOrigin: false));
-    if (pickedFile == null || pickedFile.path.isEmpty) {
-      logger.w("MediaPicker - pickSingle - pickedFile = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
-      return null;
-    }
-    logger.i("MediaPicker - pickSingle - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
-    pickedFile.length().then((value) {
-      logger.i('MediaPicker - pickSingle - picked - size:${formatFlowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-    });
-
-    // crop
-    File? croppedFile = await _cropFile(pickedFile, mediaType, cropStyle, cropRatio);
-    if (croppedFile == null) {
-      logger.w('MediaPicker - pickSingle - croppedFile = null}');
-      return null;
-    }
-
-    // compress
-    File? compressFile = await _compressFile(croppedFile, mediaType, compressQuality);
-    if (compressFile == null) {
-      logger.w('MediaPicker - pickSingle - compress = null}');
-      return null;
-    }
-
-    // return
-    File returnFile;
-    if (returnPath != null && returnPath.isNotEmpty) {
-      returnFile = File(returnPath);
-      if (!await returnFile.exists()) {
-        await returnFile.create(recursive: true);
-      }
-      returnFile = await compressFile.copy(returnPath);
-    } else {
-      String? fileExt = Path.getFileExt(pickedFile);
-      if (fileExt == null || fileExt.isEmpty) {
-        switch (mediaType) {
-          case MediaType.image:
-            fileExt = 'jpeg';
-            break;
-          case MediaType.audio:
-            fileExt = 'mp3';
-            break;
-          case MediaType.video:
-            fileExt = 'mp4';
-            break;
-        }
-      }
-      String randomPath = await Path.getCacheFile("cache", fileExt: fileExt);
-      returnFile = File(randomPath);
-      if (!await returnFile.exists()) {
-        await returnFile.create(recursive: true);
-      }
-      returnFile = await compressFile.copy(randomPath);
-    }
-    logger.i('MediaPicker - pickSingle - return - path:${returnFile.path}');
-    return returnFile;
+    // // pick
+    // RequestType requestType = RequestType.common;
+    // if (mediaType == MediaType.video) {
+    //   requestType = RequestType.video;
+    // } else if (mediaType == MediaType.audio) {
+    //   requestType = RequestType.audio;
+    // } else if (mediaType == MediaType.image) {
+    //   requestType = RequestType.image;
+    // } else if (mediaType == MediaType.common) {
+    //   requestType = RequestType.common;
+    // }
+    // List<AssetEntity>? pickedResults = await AssetPicker.pickAssets(
+    //   Global.appContext,
+    //   requestType: requestType,
+    //   maxAssets: 1,
+    //   themeColor: application.theme.primaryColor,
+    //   gridCount: 3,
+    //   pageSize: 60,
+    // );
+    // if (pickedResults == null || pickedResults.isEmpty) {
+    //   logger.w("MediaPicker - pickSingle - pickedResults = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    //   return null;
+    // }
+    //
+    // // convert
+    // File? pickedFile = (await pickedResults[0].originFile) ?? (await pickedResults[0].loadFile(isOrigin: false));
+    // if (pickedFile == null || pickedFile.path.isEmpty) {
+    //   logger.w("MediaPicker - pickSingle - pickedFile = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    //   return null;
+    // }
+    // logger.i("MediaPicker - pickSingle - picked - path:${pickedFile.path}"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
+    // pickedFile.length().then((value) {
+    //   logger.i('MediaPicker - pickSingle - picked - size:${formatFlowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    // });
+    //
+    // // crop
+    // File? croppedFile = await _cropFile(pickedFile, mediaType, cropStyle, cropRatio);
+    // if (croppedFile == null) {
+    //   logger.w('MediaPicker - pickSingle - croppedFile = null}');
+    //   return null;
+    // }
+    //
+    // // compress
+    // File? compressFile = await _compressFile(croppedFile, mediaType, compressQuality);
+    // if (compressFile == null) {
+    //   logger.w('MediaPicker - pickSingle - compress = null}');
+    //   return null;
+    // }
+    //
+    // // return
+    // File returnFile;
+    // if (returnPath != null && returnPath.isNotEmpty) {
+    //   returnFile = File(returnPath);
+    //   if (!await returnFile.exists()) {
+    //     await returnFile.create(recursive: true);
+    //   }
+    //   returnFile = await compressFile.copy(returnPath);
+    // } else {
+    //   String? fileExt = Path.getFileExt(pickedFile);
+    //   if (fileExt == null || fileExt.isEmpty) {
+    //     switch (mediaType) {
+    //       case MediaType.image:
+    //         fileExt = 'jpeg';
+    //         break;
+    //       case MediaType.audio:
+    //         fileExt = 'mp3';
+    //         break;
+    //       case MediaType.video:
+    //         fileExt = 'mp4';
+    //         break;
+    //     }
+    //   }
+    //   String randomPath = await Path.getCacheFile("cache", fileExt: fileExt);
+    //   returnFile = File(randomPath);
+    //   if (!await returnFile.exists()) {
+    //     await returnFile.create(recursive: true);
+    //   }
+    //   returnFile = await compressFile.copy(randomPath);
+    // }
+    // logger.i('MediaPicker - pickSingle - return - path:${returnFile.path}');
+    // return returnFile;
   }
 
   static Future<File?> pickImageAndVideoBySystem({
