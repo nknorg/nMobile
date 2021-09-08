@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class TaskService with Tag {
   static const KEY_WALLET_BALANCE = "wallet_balance";
   static const KEY_CLIENT_CONNECT = "client_connect";
+  static const KEY_NONCE_REFRESH = "nonce_refresh";
   static const KEY_TOPIC_CHECK = "topic_check";
   static const KEY_MSG_BURNING = "message_burning";
 
@@ -65,6 +67,7 @@ class TaskService with Tag {
     // task
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), callNow: true);
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
+    addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(), callNow: true);
     addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(), callNow: false);
   }
 
