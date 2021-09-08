@@ -41,6 +41,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("已完成账户切换"),
         "add_contact": MessageLookupByLibrary.simpleMessage("添加联系人"),
         "add_new_contact": MessageLookupByLibrary.simpleMessage("添加联系人"),
+        "add_user_duplicated": MessageLookupByLibrary.simpleMessage("已添加该用户"),
         "address_book": MessageLookupByLibrary.simpleMessage("查看地址簿"),
         "advanced": MessageLookupByLibrary.simpleMessage("高级"),
         "agree": MessageLookupByLibrary.simpleMessage("同意"),
@@ -54,7 +55,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "available": MessageLookupByLibrary.simpleMessage("可用"),
         "average": MessageLookupByLibrary.simpleMessage("平均"),
         "back": MessageLookupByLibrary.simpleMessage("后退"),
+        "balance_not_enough": MessageLookupByLibrary.simpleMessage("余额不足"),
         "biometrics": MessageLookupByLibrary.simpleMessage("生物识别"),
+        "blocked_user_disallow_invite":
+            MessageLookupByLibrary.simpleMessage("改用户已经被拉黑，不允许普通成员邀请"),
         "burn_10_minutes": MessageLookupByLibrary.simpleMessage("10 分钟"),
         "burn_10_seconds": MessageLookupByLibrary.simpleMessage("10 秒"),
         "burn_12_hour": MessageLookupByLibrary.simpleMessage("12 小时"),
@@ -103,10 +107,15 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("禁用了阅后即焚"),
         "coming_soon": MessageLookupByLibrary.simpleMessage("敬请期待..."),
         "confirm_password": MessageLookupByLibrary.simpleMessage("确认密码"),
+        "confirm_resend": MessageLookupByLibrary.simpleMessage("确认重新发送？"),
+        "confirm_unsubscribe_group":
+            MessageLookupByLibrary.simpleMessage("确定要退出群聊吗？"),
         "connect": MessageLookupByLibrary.simpleMessage("连接"),
         "connected": MessageLookupByLibrary.simpleMessage("已连接"),
         "connecting": MessageLookupByLibrary.simpleMessage("连接中"),
         "contact": MessageLookupByLibrary.simpleMessage("联系我们"),
+        "contact_invite_group_tip":
+            MessageLookupByLibrary.simpleMessage("请联系群主邀请您"),
         "contact_no_contact_desc":
             MessageLookupByLibrary.simpleMessage("使用您的联系人列表快速发送消息和资金。"),
         "contact_no_contact_title":
@@ -205,6 +214,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "group_member_already":
             MessageLookupByLibrary.simpleMessage("该成员已经加入本群"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
+        "has_left_the_group": MessageLookupByLibrary.simpleMessage("已退出群组"),
         "help": MessageLookupByLibrary.simpleMessage("帮助"),
         "hint_enter_wallet_name": MessageLookupByLibrary.simpleMessage("账户名称"),
         "hours": MessageLookupByLibrary.simpleMessage("小时"),
@@ -254,6 +264,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "learn_more": MessageLookupByLibrary.simpleMessage("了解更多"),
         "leave_group_confirm_title":
             MessageLookupByLibrary.simpleMessage("您确定要退出该群吗？"),
+        "left_group_tip": MessageLookupByLibrary.simpleMessage("已离开群组，请稍后再试。"),
         "loading": MessageLookupByLibrary.simpleMessage("加载中"),
         "local_notification": MessageLookupByLibrary.simpleMessage("本地通知"),
         "local_notification_both_name_message":
@@ -313,6 +324,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "password_wrong":
             MessageLookupByLibrary.simpleMessage("账户密码或keystore错误"),
         "pending": MessageLookupByLibrary.simpleMessage("待定"),
+        "picture_too_big": MessageLookupByLibrary.simpleMessage("图片尺寸过大"),
         "pictures": MessageLookupByLibrary.simpleMessage("图片"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[草稿]"),
         "popular_channels": MessageLookupByLibrary.simpleMessage("推荐群组"),
@@ -328,10 +340,16 @@ class MessageLookup extends MessageLookupByLibrary {
         "receive": MessageLookupByLibrary.simpleMessage("接收"),
         "recent": MessageLookupByLibrary.simpleMessage("最近"),
         "reject": MessageLookupByLibrary.simpleMessage("拒绝"),
+        "reject_user_tip": MessageLookupByLibrary.simpleMessage("确定要移除该用户吗？"),
         "rejected": MessageLookupByLibrary.simpleMessage("已踢出"),
+        "release_to_cancel": MessageLookupByLibrary.simpleMessage("松开取消"),
         "remark": MessageLookupByLibrary.simpleMessage("备注"),
         "remote_notification": MessageLookupByLibrary.simpleMessage("消息通知"),
+        "removed_group_tip":
+            MessageLookupByLibrary.simpleMessage("你已被移出该群，请联系群主邀请您"),
         "rename": MessageLookupByLibrary.simpleMessage("修改"),
+        "request_processed":
+            MessageLookupByLibrary.simpleMessage("还在正在处理的请求，请稍后再试"),
         "save": MessageLookupByLibrary.simpleMessage("保存"),
         "save_contact": MessageLookupByLibrary.simpleMessage("保存联系人"),
         "save_to_album": MessageLookupByLibrary.simpleMessage("保存到相册"),
