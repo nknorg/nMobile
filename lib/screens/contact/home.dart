@@ -485,7 +485,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           icon: Icons.delete,
           onTap: () => {
             ModalDialog.of(this.context).confirm(
-              title: "退订群聊吗?", // TODO:GG locale delete topic
+              title: _localizations.confirm_unsubscribe_group,
               contentWidget: TopicItem(
                 topic: item,
                 bodyTitle: item.topicShort,
