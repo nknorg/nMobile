@@ -100,7 +100,7 @@ class Validator {
 
   seedETH() {
     return (value) {
-      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 67 ? _localizations?.error_seed_format : null);
+      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length < 50 ? _localizations?.error_seed_format : null);
     };
   }
 
