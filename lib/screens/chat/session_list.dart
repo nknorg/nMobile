@@ -98,11 +98,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // topic
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.listen((TopicSchema event) {
-      if (!event.joined) {
-        setState(() {
-          _sessionList = _sessionList.where((element) => element.targetId != event.topic).toList();
-        });
-      }
+      // if (!event.joined) {
+      //   setState(() {
+      //     _sessionList = _sessionList.where((element) => element.targetId != event.topic).toList();
+      //   });
+      // }
     });
 
     // message

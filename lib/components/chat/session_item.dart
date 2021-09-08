@@ -161,6 +161,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                                   child: Label(
                                     _topic?.topicShort ?? " ",
                                     type: LabelType.h3,
+                                    color: (_topic?.joined == true) ? null : application.theme.fontColor3,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

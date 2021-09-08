@@ -61,7 +61,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   int? _invitedReceiptCount;
   int? _subscriberCount;
 
-  bool isPopIng = false;
+  // bool isPopIng = false;
 
   @override
   void onRefreshArguments() {
@@ -72,13 +72,13 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   initState() {
     super.initState();
     // topic listen
-    isPopIng = false;
+    // isPopIng = false;
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
-      if (!event.joined && !isPopIng) {
-        isPopIng = true;
-        Navigator.pop(this.context);
-        return;
-      }
+      // if (!event.joined && !isPopIng) {
+      //   isPopIng = true;
+      //   Navigator.pop(this.context);
+      //   return;
+      // }
       setState(() {
         _topicSchema = event;
       });
@@ -186,7 +186,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     } else {
       _offset = _subscriberList.length;
     }
-    var messages = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, offset: _offset, limit: 20);
+    bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
+    int? status = isOwner ? null : SubscriberStatus.Subscribed;
+    var messages = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, status: status, offset: _offset, limit: 20);
     messages.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
     setState(() {
       _subscriberList = refresh ? messages : _subscriberList + messages; // maybe addStream

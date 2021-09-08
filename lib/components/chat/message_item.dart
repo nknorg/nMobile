@@ -300,7 +300,7 @@ class ChatMessageItem extends StatelessWidget {
                     );
                     if (topic?.isNotEmpty == true) {
                       Loading.show();
-                      int sendAt = message.sendAt ?? 0;
+                      int sendAt = MessageOptions.getSendAt(message) ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, skipPermission: isJustNow);
                       Loading.dismiss();
