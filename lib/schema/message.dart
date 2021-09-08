@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100; // TODO:GG status 长时间就fail，配合重新发送机制？
+  static const int Sending = 100; // TODO:GG status  长时间就fail，配合重新发送机制？
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
@@ -198,6 +198,11 @@ class MessageSchema extends Equatable {
       schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
       schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
       schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
+    }
+
+    // sendAt
+    if (data['timestamp'] != null && data['timestamp'] is int) {
+      schema = MessageOptions.setSendAt(schema, data['timestamp']);
     }
 
     return schema;
@@ -425,6 +430,8 @@ class MessageOptions {
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
+  static const KEY_SEND_AT = "send_at";
+
   static const KEY_FROM_PIECE = "from_piece";
 
   static const KEY_PIECE = 'piece';
@@ -471,8 +478,18 @@ class MessageOptions {
 
   static String? getDeviceToken(MessageSchema? message) {
     if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    var deviceToken = message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
-    return deviceToken;
+    return message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+  }
+
+  static MessageSchema setSendAt(MessageSchema message, int sendAt) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_SEND_AT] = sendAt;
+    return message;
+  }
+
+  static int? getSendAt(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    return message.options![MessageOptions.KEY_SEND_AT] ?? 0;
   }
 }
 
@@ -571,7 +588,7 @@ class MessageData {
     int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contactOptions,
       'optionType': '0',
       'content': {
@@ -625,7 +642,7 @@ class MessageData {
   static String getText(MessageSchema message) {
     Map map = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
     };
@@ -644,7 +661,7 @@ class MessageData {
     String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
     };
@@ -665,7 +682,7 @@ class MessageData {
     String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
     };
@@ -681,7 +698,7 @@ class MessageData {
   static String getPiece(MessageSchema message) {
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
       'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
@@ -702,7 +719,7 @@ class MessageData {
   static String getTopicSubscribe(MessageSchema message) {
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicSubscribe,
     };

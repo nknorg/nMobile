@@ -87,7 +87,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   bool _showRecordLock = false;
   bool _showRecordLockLocked = false;
 
-  bool isPopIng = false;
+  // bool isPopIng = false;
 
   @override
   void onRefreshArguments() {
@@ -120,13 +120,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // topic
-    isPopIng = false;
+    // isPopIng = false;
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
-      if (!event.joined && !isPopIng) {
-        isPopIng = true;
-        Navigator.pop(this.context);
-        return;
-      }
+      // if (!event.joined && !isPopIng) {
+      //   isPopIng = true;
+      //   Navigator.pop(this.context);
+      //   return;
+      // }
       setState(() {
         _topic = event;
       });
