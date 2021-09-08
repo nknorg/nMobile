@@ -81,7 +81,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
       try {
         if (widget.walletType == WalletType.nkn) {
-          List<String> seedRpcList = await Global.getSeedRpcList(null);
+          List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
           Wallet nkn = await Wallet.create(hexDecode(seed), config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
           logger.i("$TAG - import_nkn - nkn:${nkn.toString()}");
           if (nkn.address.isEmpty || nkn.keystore.isEmpty) {

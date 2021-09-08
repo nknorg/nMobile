@@ -93,7 +93,7 @@ class ClientCommon with Tag {
       String? seed;
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
-        seedRpcList = await Global.getSeedRpcList(wallet.address);
+        seedRpcList = await Global.getSeedRpcList(wallet.address, measure: true);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
@@ -131,7 +131,7 @@ class ClientCommon with Tag {
       _statusSink.add(ClientConnectStatus.connecting);
 
       // client create
-      seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address));
+      seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
       client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
       dialogVisible?.call(false, tryCount);
