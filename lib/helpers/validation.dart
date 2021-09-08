@@ -22,12 +22,6 @@ class Validator {
     };
   }
 
-  pubKey() {
-    return (value) {
-      return value.trim().length > 0 ? null : _localizations?.error_required;
-    };
-  }
-
   contactName() {
     return (value) {
       return value.trim().length > 0 ? null : _localizations?.error_required;
@@ -58,9 +52,9 @@ class Validator {
     };
   }
 
-  seed() {
+  pubKeyNKN() {
     return (value) {
-      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_seed_format : null);
+      return value.trim().length > 0 ? null : _localizations?.error_required;
     };
   }
 
@@ -95,6 +89,18 @@ class Validator {
         }
       }
       return value.trim().length == 0 ? _localizations?.error_required : (!isValid ? _localizations?.error_keystore_format : null);
+    };
+  }
+
+  seedNKN() {
+    return (value) {
+      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_seed_format : null);
+    };
+  }
+
+  seedETH() {
+    return (value) {
+      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 67 ? _localizations?.error_seed_format : null);
     };
   }
 
