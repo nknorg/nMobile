@@ -168,7 +168,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                     controller: _seedController,
                     focusNode: _seedFocusNode,
                     hintText: _localizations.input_seed,
-                    validator: Validator.of(context).seed(),
+                    validator: widget.walletType == WalletType.nkn ? Validator.of(context).seedNKN() : Validator.of(context).seedETH(),
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
                     maxLines: 10,
