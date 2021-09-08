@@ -111,7 +111,7 @@ class TopicCommon with Tag {
     if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
       int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
-        Toast.show("刚离开本群，请稍后再试"); // TODO:GG locale reject
+        Toast.show(S.of(Global.appContext).left_group_tip);
         return null;
       }
     }
@@ -129,10 +129,10 @@ class TopicCommon with Tag {
       } else {
         if ((acceptAll != true)) {
           if (isReject == true) {
-            Toast.show("你已被踢出该群，请联系群主重新邀请您"); // TODO:GG locale kick
+            Toast.show(S.of(Global.appContext).removed_group_tip);
             return null;
           } else if (isAccept != true) {
-            Toast.show("请联系群主重新邀请您"); // TODO:GG locale invitee
+            Toast.show(S.of(Global.appContext).contact_invite_group_tip);
             return null;
           } else {
             logger.d("$TAG - subscribe - is_accept ok - schema:$exists");
@@ -317,7 +317,7 @@ class TopicCommon with Tag {
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientSubscribe - duplicated - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast) Toast.show("上一个请求还在处理中，请稍后再试"); // TODO:GG locale subscribe
+          if (toast) Toast.show(S.of(Global.appContext).request_processed);
         } else {
           handleError(e);
         }
@@ -392,7 +392,7 @@ class TopicCommon with Tag {
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientUnsubscribe - duplicated - nonce:$nonce");
-          if (toast) Toast.show("上一个请求还在处理中，请稍后再试"); // TODO:GG locale unsubscribe
+          if (toast) Toast.show(S.of(Global.appContext).request_processed);
         } else {
           handleError(e);
         }
@@ -497,7 +497,7 @@ class TopicCommon with Tag {
       bool? isReject = permission[3];
       if ((acceptAll != true) && !isOwner && (isReject == true)) {
         // just owner can invitee reject item
-        Toast.show("此人已经被拉黑，不允许普通成员邀请"); // TODO:GG locale invitee
+        Toast.show(S.of(Global.appContext).blocked_user_disallow_invite);
         return null;
       }
     }

@@ -6,8 +6,10 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -268,7 +270,7 @@ class MediaPicker {
 
     if (isGif || !isImage) {
       if (overMaxSize) {
-        Toast.show("图片太大了"); // TODO:GG locale maxSIze
+        Toast.show(S.of(Global.appContext).picture_too_big);
         return null;
       }
       return original;

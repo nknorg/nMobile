@@ -348,5 +348,18 @@
   "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
   "tip_open_send_device_token": "Send your device token to him?\nThen he can send you remote notification!",
   "tip_switch_success": "Switch Success!",
-  "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission"
+  "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission",
+  "left_group_tip": "Left the group, please try again later.",
+  "removed_group_tip": "You have been removed from the group, please contact the owner to invite you",
+  "contact_invite_group_tip": "Please contact the owner to invite you",
+  "request_processed": "Requests still being processed, please try again later",
+  "blocked_user_disallow_invite": "The user has been blocked, and ordinary members are not allowed to invite",
+  "confirm_resend": "Confirm resend?",
+  "release_to_cancel": "Release to cancel",
+  "has_left_the_group": "Has left the group",
+  "reject_user_tip": "Are you sure you want to remove this user?",
+  "picture_too_big": "The picture is too big",
+  "add_user_duplicated": "The user has been added",
+  "confirm_unsubscribe_group": "Are you sure you want to leave the group chat?",
+  "balance_not_enough": "Balance not enough"
 }

@@ -179,7 +179,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
       } else if (status == SubscriberStatus.Subscribed) {
         marks.add(_localizations.accepted);
       } else if (status == SubscriberStatus.Unsubscribed) {
-        marks.add("已离群"); // TODO:GG locale unsubscribe
+        marks.add(_localizations.has_left_the_group);
       } else {
         marks.add(_localizations.join_but_not_invite);
       }
@@ -249,7 +249,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
           S _localizations = S.of(context);
           if (subscriber.canBeKick) {
             ModalDialog.of(this.context).confirm(
-              title: "确定要踢掉她吗", // TODO:GG locale kick
+              title: _localizations.reject_user_tip,
               contentWidget: contact != null
                   ? ContactItem(
                       contact: contact,

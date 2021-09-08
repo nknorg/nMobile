@@ -3359,6 +3359,136 @@ class S {
       args: [],
     );
   }
+
+  /// `Left the group, please try again later.`
+  String get left_group_tip {
+    return Intl.message(
+      'Left the group, please try again later.',
+      name: 'left_group_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You have been removed from the group, please contact the owner to invite you`
+  String get removed_group_tip {
+    return Intl.message(
+      'You have been removed from the group, please contact the owner to invite you',
+      name: 'removed_group_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please contact the owner to invite you`
+  String get contact_invite_group_tip {
+    return Intl.message(
+      'Please contact the owner to invite you',
+      name: 'contact_invite_group_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Requests still being processed, please try again later`
+  String get request_processed {
+    return Intl.message(
+      'Requests still being processed, please try again later',
+      name: 'request_processed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The user has been blocked, and ordinary members are not allowed to invite`
+  String get blocked_user_disallow_invite {
+    return Intl.message(
+      'The user has been blocked, and ordinary members are not allowed to invite',
+      name: 'blocked_user_disallow_invite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm resend?`
+  String get confirm_resend {
+    return Intl.message(
+      'Confirm resend?',
+      name: 'confirm_resend',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Release to cancel`
+  String get release_to_cancel {
+    return Intl.message(
+      'Release to cancel',
+      name: 'release_to_cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Has left the group`
+  String get has_left_the_group {
+    return Intl.message(
+      'Has left the group',
+      name: 'has_left_the_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to remove this user?`
+  String get reject_user_tip {
+    return Intl.message(
+      'Are you sure you want to remove this user?',
+      name: 'reject_user_tip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The picture is too big`
+  String get picture_too_big {
+    return Intl.message(
+      'The picture is too big',
+      name: 'picture_too_big',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The user has been added`
+  String get add_user_duplicated {
+    return Intl.message(
+      'The user has been added',
+      name: 'add_user_duplicated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to leave the group chat?`
+  String get confirm_unsubscribe_group {
+    return Intl.message(
+      'Are you sure you want to leave the group chat?',
+      name: 'confirm_unsubscribe_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance not enough`
+  String get balance_not_enough {
+    return Intl.message(
+      'Balance not enough',
+      name: 'balance_not_enough',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

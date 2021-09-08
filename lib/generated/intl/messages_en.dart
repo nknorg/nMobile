@@ -45,6 +45,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "add_contact": MessageLookupByLibrary.simpleMessage("Add Contact"),
         "add_new_contact":
             MessageLookupByLibrary.simpleMessage("Add New Contact"),
+        "add_user_duplicated":
+            MessageLookupByLibrary.simpleMessage("The user has been added"),
         "address_book": MessageLookupByLibrary.simpleMessage("Address Book"),
         "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
         "agree": MessageLookupByLibrary.simpleMessage("Agree"),
@@ -58,7 +60,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "available": MessageLookupByLibrary.simpleMessage("Available"),
         "average": MessageLookupByLibrary.simpleMessage("Average"),
         "back": MessageLookupByLibrary.simpleMessage("Back"),
+        "balance_not_enough":
+            MessageLookupByLibrary.simpleMessage("Balance not enough"),
         "biometrics": MessageLookupByLibrary.simpleMessage("Biometrics"),
+        "blocked_user_disallow_invite": MessageLookupByLibrary.simpleMessage(
+            "The user has been blocked, and ordinary members are not allowed to invite"),
         "burn_10_minutes": MessageLookupByLibrary.simpleMessage("10 minutes"),
         "burn_10_seconds": MessageLookupByLibrary.simpleMessage("10 seconds"),
         "burn_12_hour": MessageLookupByLibrary.simpleMessage("12 hours"),
@@ -119,10 +125,16 @@ class MessageLookup extends MessageLookupByLibrary {
         "coming_soon": MessageLookupByLibrary.simpleMessage("Coming Soon..."),
         "confirm_password":
             MessageLookupByLibrary.simpleMessage("Confirm Password"),
+        "confirm_resend":
+            MessageLookupByLibrary.simpleMessage("Confirm resend?"),
+        "confirm_unsubscribe_group": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to leave the group chat?"),
         "connect": MessageLookupByLibrary.simpleMessage("Connect"),
         "connected": MessageLookupByLibrary.simpleMessage("Connected"),
         "connecting": MessageLookupByLibrary.simpleMessage("Connecting"),
         "contact": MessageLookupByLibrary.simpleMessage("Contact"),
+        "contact_invite_group_tip": MessageLookupByLibrary.simpleMessage(
+            "Please contact the owner to invite you"),
         "contact_no_contact_desc": MessageLookupByLibrary.simpleMessage(
             "Use your contact list to quickly message and\n send funds to your friends."),
         "contact_no_contact_title": MessageLookupByLibrary.simpleMessage(
@@ -234,6 +246,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "group_member_already": MessageLookupByLibrary.simpleMessage(
             "The member is in group already"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
+        "has_left_the_group":
+            MessageLookupByLibrary.simpleMessage("Has left the group"),
         "help": MessageLookupByLibrary.simpleMessage("Help"),
         "hint_enter_wallet_name":
             MessageLookupByLibrary.simpleMessage("Enter wallet name"),
@@ -297,6 +311,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "learn_more": MessageLookupByLibrary.simpleMessage("Learn More"),
         "leave_group_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to leave this group?"),
+        "left_group_tip": MessageLookupByLibrary.simpleMessage(
+            "Left the group, please try again later."),
         "loading": MessageLookupByLibrary.simpleMessage("Loading"),
         "local_notification":
             MessageLookupByLibrary.simpleMessage("Local Notification"),
@@ -363,6 +379,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
         "pending": MessageLookupByLibrary.simpleMessage("pending"),
+        "picture_too_big":
+            MessageLookupByLibrary.simpleMessage("The picture is too big"),
         "pictures": MessageLookupByLibrary.simpleMessage("Pictures"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[Draft]"),
         "popular_channels":
@@ -381,11 +399,19 @@ class MessageLookup extends MessageLookupByLibrary {
         "receive": MessageLookupByLibrary.simpleMessage("Receive"),
         "recent": MessageLookupByLibrary.simpleMessage("Recently"),
         "reject": MessageLookupByLibrary.simpleMessage("Reject"),
+        "reject_user_tip": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to remove this user?"),
         "rejected": MessageLookupByLibrary.simpleMessage("rejected"),
+        "release_to_cancel":
+            MessageLookupByLibrary.simpleMessage("Release to cancel"),
         "remark": MessageLookupByLibrary.simpleMessage("Remark"),
         "remote_notification":
             MessageLookupByLibrary.simpleMessage("Message Notification"),
+        "removed_group_tip": MessageLookupByLibrary.simpleMessage(
+            "You have been removed from the group, please contact the owner to invite you"),
         "rename": MessageLookupByLibrary.simpleMessage("Rename"),
+        "request_processed": MessageLookupByLibrary.simpleMessage(
+            "Requests still being processed, please try again later"),
         "save": MessageLookupByLibrary.simpleMessage("Save"),
         "save_contact": MessageLookupByLibrary.simpleMessage("Save Contact"),
         "save_to_album": MessageLookupByLibrary.simpleMessage("Save To Album"),

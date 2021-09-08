@@ -348,5 +348,18 @@
   "member_no_auth_invite": "私有群聊群成員暫不能支持邀請他人，聯系群主邀請他人",
   "tip_open_send_device_token": "發送你的設備token給他?\n他將可以給你發送遠程推送!",
   "tip_switch_success": "切換成功!",
-  "tip_ask_group_owner_permission": "您已不在此群，聯繫群主邀請您"
+  "tip_ask_group_owner_permission": "您已不在此群，聯繫群主邀請您",
+  "left_group_tip": "已離開群組，請稍後再試。",
+  "removed_group_tip": "你已被移出該群，請聯繫群主邀請您",
+  "contact_invite_group_tip": "請聯繫群主邀請您",
+  "request_processed": "還在正在處理的請求，請稍後再試",
+  "blocked_user_disallow_invite": "改用戶已經被拉黑，不允許普通成員邀請",
+  "confirm_resend": "確認重新發送？",
+  "release_to_cancel": "鬆開取消",
+  "has_left_the_group": "已退出群組",
+  "reject_user_tip": "確定要移除該用戶嗎？",
+  "picture_too_big": "圖片尺寸過大",
+  "add_user_duplicated": "已添加該用戶",
+  "confirm_unsubscribe_group": "確定要退出群聊嗎？",
+  "balance_not_enough": "餘額不足"
 }

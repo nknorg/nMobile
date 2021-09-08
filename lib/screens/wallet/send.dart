@@ -236,7 +236,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       // double tradeFee = (double.tryParse(fee) ?? 0);
       double tradeTotal = tradeAmount; // + tradeFee
       if (tradeAmount <= 0 || balance == null || balance < tradeTotal) {
-        Toast.show("余额不足"); // TODO:GG locale balance
+        Toast.show(_localizations.balance_not_enough);
         return false;
       }
 
@@ -287,7 +287,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       double tradeFee = (double.tryParse(fee) ?? 0);
       double tradeTotal = tradeAmount + tradeFee;
       if (tradeAmount <= 0 || balance < tradeTotal) {
-        Toast.show("余额不足"); // TODO:GG locale balance
+        Toast.show(_localizations.balance_not_enough);
         return false;
       }
 

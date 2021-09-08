@@ -348,5 +348,18 @@
   "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
   "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
   "tip_switch_success": "切换成功!",
-  "tip_ask_group_owner_permission": "您已不在此群，联系群主邀请您"
+  "tip_ask_group_owner_permission": "您已不在此群，联系群主邀请您",
+  "left_group_tip": "已离开群组，请稍后再试。",
+  "removed_group_tip": "你已被移出该群，请联系群主邀请您",
+  "contact_invite_group_tip": "请联系群主邀请您",
+  "request_processed": "还在正在处理的请求，请稍后再试",
+  "blocked_user_disallow_invite": "改用户已经被拉黑，不允许普通成员邀请",
+  "confirm_resend": "确认重新发送？",
+  "release_to_cancel": "松开取消",
+  "has_left_the_group": "已退出群组",
+  "reject_user_tip": "确定要移除该用户吗？",
+  "picture_too_big": "图片尺寸过大",
+  "add_user_duplicated": "已添加该用户",
+  "confirm_unsubscribe_group": "确定要退出群聊吗？",
+  "balance_not_enough": "余额不足"
 }
