@@ -423,7 +423,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     height: ActionHeight,
                                     child: Center(
                                       child: Label(
-                                        _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? "松开取消" : S.of(context).slide_to_cancel), // TODO:GG locale record cancel
+                                        _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? S.of(context).release_to_cancel : S.of(context).slide_to_cancel),
                                         type: LabelType.bodyLarge,
                                         textAlign: TextAlign.center,
                                         color: recordWidgetColor,
