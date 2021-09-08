@@ -302,9 +302,9 @@ class TopicCommon with Tag {
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientSubscribe - success - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
+        logger.d("$TAG - _clientSubscribe - success - topicName:$topicName - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
       } else {
-        logger.e("$TAG - _clientSubscribe - fail - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        logger.e("$TAG - _clientSubscribe - fail - topicName:$topicName - nonce:$nonce - identifier:$identifier - metaString:$metaString");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
@@ -313,7 +313,7 @@ class TopicCommon with Tag {
         int? nonce = await Global.getNonce(forceFetch: true);
         return _clientSubscribe(topicName, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, toast: toast);
       } else {
-        Global.getNonce(forceFetch: true); // await
+        await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientSubscribe - duplicated - nonce:$nonce - identifier:$identifier - metaString:$metaString");
@@ -377,9 +377,9 @@ class TopicCommon with Tag {
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientUnsubscribe - success - nonce:$nonce - topicHash:$topicHash");
+        logger.d("$TAG - _clientUnsubscribe - success - topicName:$topicName - nonce:$nonce - topicHash:$topicHash");
       } else {
-        logger.e("$TAG - _clientUnsubscribe - fail - nonce:$nonce - topicHash:$topicHash");
+        logger.e("$TAG - _clientUnsubscribe - fail - topicName:$topicName - nonce:$nonce - topicHash:$topicHash");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
@@ -388,7 +388,7 @@ class TopicCommon with Tag {
         int? nonce = await Global.getNonce(forceFetch: true);
         return _clientUnsubscribe(topicName, fee: fee, nonce: nonce, toast: toast);
       } else {
-        Global.getNonce(forceFetch: true); // await
+        await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientUnsubscribe - duplicated - nonce:$nonce");
@@ -649,7 +649,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // TODO:GG  防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
+    // TODO:GG 防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
 
     // permission modify in invitee action by owner
 
