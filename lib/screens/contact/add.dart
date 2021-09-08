@@ -259,7 +259,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                           controller: _clientAddressController,
                           focusNode: _clientAddressFocusNode,
                           hintText: _localizations.input_d_chat_address,
-                          validator: Validator.of(context).pubKey(),
+                          validator: Validator.of(context).pubKeyNKN(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) {
                             FocusScope.of(context).requestFocus(_walletAddressFocusNode);
