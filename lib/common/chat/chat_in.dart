@@ -187,8 +187,8 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive others ping - received:$received");
-      // TODO:GG check received.sendAt
-      // TODO:GG other client status
+      // TODO:GG check received.sendAt?
+      // TODO:GG other client status?
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -482,6 +482,12 @@ class ChatInCommon with Tag {
       received.receiveAt = DateTime.now().millisecondsSinceEpoch;
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
+    } else {
+      int existIndex = piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
+      if (existIndex == index) {
+        logger.d("$TAG - receivePiece - duplicated - receive:$received - exist:$piece");
+        return false;
+      }
     }
     if (piece == null) {
       logger.w("$TAG - receivePiece - piece is null - message:$received");
@@ -566,20 +572,22 @@ class ChatInCommon with Tag {
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
-    await topicCommon.onSubscribe(received.topic, received.from); // await
-    if (historySubscribed) return false;
-    // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
-    if (inserted == null) return false;
-    // display
-    _onSavedSink.add(inserted);
+    topicCommon.onSubscribe(received.topic, received.from).then((value) async {
+      if (!historySubscribed && value != null) {
+        // DB
+        MessageSchema? inserted = await _messageStorage.insert(received);
+        if (inserted == null) return false;
+        // display
+        _onSavedSink.add(inserted);
+      }
+    });
     return true;
   }
 
   // NO single
   Future<bool> _receiveTopicUnsubscribe(MessageSchema received) async {
-    SubscriberSchema? _subscriber = await topicCommon.onUnsubscribe(received.topic, received.from);
-    return _subscriber != null;
+    topicCommon.onUnsubscribe(received.topic, received.from); // await
+    return true;
   }
 
   // NO topic (1 to 1)
@@ -601,7 +609,7 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
-    SubscriberSchema? _subscriber = await topicCommon.onKickOut(received.topic, received.from, received.content);
-    return _subscriber != null;
+    topicCommon.onKickOut(received.topic, received.from, received.content); // await
+    return true;
   }
 }

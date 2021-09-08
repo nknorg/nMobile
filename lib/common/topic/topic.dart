@@ -640,7 +640,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress) async {
+  Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress, {int tryCount = 1}) async {
     if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // topic exist
     TopicSchema? _topic = await queryByTopic(topicName);
@@ -649,7 +649,33 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // TODO:GG 防止别人跳过permission订阅？但是老版本怎么办，暂时没好办法，因为缓存权限都在masters那里，node权限具有延迟性，没法参考
+    // permission check
+    if (_topic.isPrivate) {
+      List permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
+      // int? permPage = permission[0];
+      bool? acceptAll = permission[1];
+      bool? isAccept = permission[2];
+      bool? isReject = permission[3];
+      if (!_topic.isOwner(clientAddress)) {
+        if (acceptAll == null || acceptAll != true) {
+          if (isReject == true || isAccept != true) {
+            if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
+              logger.e("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+              return null;
+            }
+            logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryCount:$tryCount - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+            await Future.delayed(Duration(seconds: 5));
+            return onSubscribe(topicName, clientAddress, tryCount: ++tryCount);
+          } else {
+            logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+          }
+        } else {
+          logger.i("$TAG - onSubscribe - topic is accept all - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+        }
+      } else {
+        logger.i("$TAG - onSubscribe - subscribe is owner - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+      }
+    }
 
     // permission modify in invitee action by owner
 
@@ -709,7 +735,7 @@ class TopicCommon with Tag {
             logger.e("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
             return null;
           }
-          logger.w("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta - tryCount:$tryCount");
+          logger.w("$TAG - onUnsubscribe - clientSubscribe error - tryCount:$tryCount - permPage:$permPage - meta:$meta");
           await Future.delayed(Duration(seconds: 5));
           return onUnsubscribe(topicName, clientAddress, tryCount: ++tryCount);
         }
@@ -763,7 +789,7 @@ class TopicCommon with Tag {
           logger.e("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
           return null;
         }
-        logger.w("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber - tryCount:$tryCount");
+        logger.w("$TAG - onKickOut - clientUnsubscribe error - tryCount:$tryCount - topicName:$topicName - subscriber:$_subscriber");
         await Future.delayed(Duration(seconds: 5));
         return onKickOut(topicName, senderAddress, clientAddress, tryCount: ++tryCount);
       }

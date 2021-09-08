@@ -72,7 +72,9 @@ class SubscriberCommon with Tag {
       } else {
         if (findNode.status == SubscriberStatus.Unsubscribed) {
           logger.i("$TAG - refreshSubscribers - DB has,but node is unsubscribe - DB:$dbItem - node:$findNode");
-          futures.add(delete(dbItem.id, notify: true)); // TODO:GG 需要delete吗？
+          if (dbItem.status != findNode.status) {
+            futures.add(setStatus(dbItem.id, findNode.status, notify: true));
+          }
         } else {
           // status
           if (dbItem.status != findNode.status) {
