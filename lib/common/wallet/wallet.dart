@@ -56,7 +56,7 @@ class WalletCommon with Tag {
     } else {
       try {
         final keystore = await getKeystore(walletAddress);
-        final seedRpcList = await Global.getSeedRpcList(walletAddress);
+        final seedRpcList = await Global.getSeedRpcList(walletAddress, measure: false);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         if (nknWallet.address.isNotEmpty) return true;
       } catch (e) {
@@ -98,7 +98,7 @@ class WalletCommon with Tag {
             }
           });
         } else {
-          final seedRpcList = await Global.getSeedRpcList(w.address);
+          final seedRpcList = await Global.getSeedRpcList(w.address, measure: false);
           Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: seedRpcList)).then((balance) {
             logger.d("$TAG - queryBalance: END - nkn - old:${w.balance} - new:$balance - wallet_address:${w.address}");
             if (w.balance != balance) {
