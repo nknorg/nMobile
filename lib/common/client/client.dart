@@ -225,7 +225,8 @@ class ClientCommon with Tag {
   }
 
   Future pingSuccess() async {
-    if (client == null || status != ClientConnectStatus.connecting) return;
+    if (client == null) return;
+    if (status != ClientConnectStatus.connecting) return;
     _statusSink.add(ClientConnectStatus.connected);
     // visible
     Future.delayed(Duration(milliseconds: 500), () {
