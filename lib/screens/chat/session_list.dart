@@ -71,6 +71,15 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       }
     });
 
+    // topic
+    _onTopicUpdateStreamSubscription = topicCommon.updateStream.listen((TopicSchema event) {
+      // if (!event.joined) {
+      //   setState(() {
+      //     _sessionList = _sessionList.where((element) => element.targetId != event.topic).toList();
+      //   });
+      // }
+    });
+
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
       if (_sessionList.where((element) => element.targetId == event.targetId).toList().isEmpty) {
@@ -94,15 +103,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
       }
       _sortMessages();
-    });
-
-    // topic
-    _onTopicUpdateStreamSubscription = topicCommon.updateStream.listen((TopicSchema event) {
-      // if (!event.joined) {
-      //   setState(() {
-      //     _sessionList = _sessionList.where((element) => element.targetId != event.topic).toList();
-      //   });
-      // }
     });
 
     // message

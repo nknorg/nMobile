@@ -62,11 +62,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   ContactSchema? _contact;
   String? targetId;
 
+  bool isClientOk = clientCommon.isClientCreated;
+
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
   StreamSubscription? _appLifeChangeSubscription;
+  StreamSubscription? _clientStatusSubscription;
 
   StreamSubscription? _onTopicUpdateStreamSubscription;
   // StreamSubscription? _onTopicDeleteStreamSubscription;
@@ -117,6 +120,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
           _readMessages(true, true); // await
         }
       }
+    });
+
+    // client
+    _clientStatusSubscription = clientCommon.statusStream.listen((int status) {
+      Future.delayed(Duration(seconds: 1), () {
+        setState(() {
+          isClientOk = clientCommon.isClientCreated;
+        });
+      });
     });
 
     // topic
@@ -195,6 +207,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     audioHelper.recordRelease(); // await
 
     _appLifeChangeSubscription?.cancel();
+    _clientStatusSubscription?.cancel();
 
     _onTopicUpdateStreamSubscription?.cancel();
     // _onTopicDeleteStreamSubscription?.cancel();
@@ -376,7 +389,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            _localizations.click_to_settings, // TODO:GG topic + locale
+                            _localizations.click_to_settings, // TODO:GG locale or topic
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
@@ -511,7 +524,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               Divider(height: 1, color: _theme.backgroundColor2),
               ChatSendBar(
                 targetId: this.targetId,
-                enable: _isJoined,
+                disableTip: (_isJoined == false) ? S.of(this.context).tip_ask_group_owner_permission : (!isClientOk ? S.of(this.context).d_chat_not_login : null),
                 onMenuPressed: () {
                   _toggleBottomMenu();
                 },
@@ -580,31 +593,33 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 },
                 onChangeStream: _onInputChangeStream,
               ),
-              ChatBottomMenu(
-                show: _showBottomMenu,
-                onPickedImage: (File picked) async {
-                  FocusScope.of(context).requestFocus(FocusNode());
-                  // save
-                  if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-                  String? imagePath = Path.getCompleteFile(Path.createLocalFile(
-                    hexEncode(clientCommon.publicKey!),
-                    SubDirType.chat,
-                    "${Uuid().v4()}.${Path.getFileExt(picked) ?? "jpg"}",
-                    chatTarget: this.targetId ?? "",
-                  ));
-                  if (imagePath == null || imagePath.isEmpty) return null;
-                  var outputFile = File(imagePath);
-                  if (await outputFile.exists()) {
-                    await outputFile.delete();
-                  }
-                  outputFile = await outputFile.create(recursive: true);
-                  outputFile = await picked.copy(outputFile.path);
-                  picked.delete(); // await
-                  logger.i("$TAG - onPickedImage - create chat file - path:${outputFile.path}");
-                  // send message
-                  return await chatOutCommon.sendImage(outputFile, topic: _topic, contact: _contact);
-                },
-              ),
+              isClientOk && (_isJoined != false)
+                  ? ChatBottomMenu(
+                      show: _showBottomMenu,
+                      onPickedImage: (File picked) async {
+                        FocusScope.of(context).requestFocus(FocusNode());
+                        // save
+                        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
+                        String? imagePath = Path.getCompleteFile(Path.createLocalFile(
+                          hexEncode(clientCommon.publicKey!),
+                          SubDirType.chat,
+                          "${Uuid().v4()}.${Path.getFileExt(picked) ?? "jpg"}",
+                          chatTarget: this.targetId ?? "",
+                        ));
+                        if (imagePath == null || imagePath.isEmpty) return null;
+                        var outputFile = File(imagePath);
+                        if (await outputFile.exists()) {
+                          await outputFile.delete();
+                        }
+                        outputFile = await outputFile.create(recursive: true);
+                        outputFile = await picked.copy(outputFile.path);
+                        picked.delete(); // await
+                        logger.i("$TAG - onPickedImage - create chat file - path:${outputFile.path}");
+                        // send message
+                        return await chatOutCommon.sendImage(outputFile, topic: _topic, contact: _contact);
+                      },
+                    )
+                  : SizedBox.shrink(),
             ],
           ),
         ),

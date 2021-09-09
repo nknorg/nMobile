@@ -63,18 +63,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   void initState() {
     super.initState();
 
+    // db
     _dbOpenedSubscription = dbCommon.openedStream.listen((event) {
       setState(() {
         dbOpen = event;
         _refreshContactMe();
         _tryLogin();
-      });
-    });
-
-    // contactMe
-    _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
-      setState(() {
-        _contactMe = event;
       });
     });
 
@@ -102,6 +96,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
         firstConnected = false;
       }
+    });
+
+    // contactMe
+    _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
+      setState(() {
+        _contactMe = event;
+      });
     });
 
     // init
