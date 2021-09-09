@@ -19,7 +19,7 @@ class ChatSendBar extends BaseStateFulWidget {
   static const double LockActionMargin = 20;
 
   final String? targetId;
-  final bool? enable;
+  final String? disableTip;
   final VoidCallback? onMenuPressed;
   final Function(String)? onSendPress;
   final Function(bool)? onInputFocus;
@@ -30,7 +30,7 @@ class ChatSendBar extends BaseStateFulWidget {
   ChatSendBar({
     Key? key,
     required this.targetId,
-    this.enable,
+    this.disableTip,
     this.onMenuPressed,
     this.onSendPress,
     this.onInputFocus,
@@ -273,12 +273,12 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
     String recordSec = "${recordDuration.inSeconds < 10 ? 0 : ""}${recordDuration.inSeconds}";
     String recordDurationText = "$recordMin:$recordSec";
 
-    if (widget.enable == false) {
+    if (widget.disableTip?.isNotEmpty == true) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: Button(
           child: Label(
-            S.of(context).tip_ask_group_owner_permission,
+            widget.disableTip ?? " ",
             type: LabelType.h4,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
