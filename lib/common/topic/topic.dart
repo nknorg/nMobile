@@ -90,7 +90,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> subscribe(String? topicName, {bool skipPermission = false, double fee = 0}) async {
+  Future<TopicSchema?> subscribe(String? topicName, {bool justNow = false, double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
@@ -124,22 +124,26 @@ class TopicCommon with Tag {
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
       bool? isReject = permission[3];
-      if (skipPermission) {
-        logger.d("$TAG - subscribe - skipPermission - schema:$exists");
-      } else {
-        if ((acceptAll != true)) {
-          if (isReject == true) {
-            Toast.show(S.of(Global.appContext).removed_group_tip);
-            return null;
-          } else if (isAccept != true) {
-            Toast.show(S.of(Global.appContext).contact_invite_group_tip);
-            return null;
+      if ((acceptAll != true)) {
+        if (isReject == true) {
+          if (justNow) {
+            Toast.show("暂时获查询不到您的入群权限，请稍后再试"); // TODO:GG locale kick
           } else {
-            logger.d("$TAG - subscribe - is_accept ok - schema:$exists");
+            Toast.show(S.of(Global.appContext).removed_group_tip);
           }
+          return null;
+        } else if (isAccept != true) {
+          if (justNow) {
+            Toast.show("暂时获查询不到您的入群权限，请稍后再试"); // TODO:GG locale invitee
+          } else {
+            Toast.show(S.of(Global.appContext).contact_invite_group_tip);
+          }
+          return null;
         } else {
-          logger.d("$TAG - subscribe - accept all - schema:$exists");
+          logger.d("$TAG - subscribe - is_accept ok - schema:$exists");
         }
+      } else {
+        logger.d("$TAG - subscribe - accept all - schema:$exists");
       }
     }
 
