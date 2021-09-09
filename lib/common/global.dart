@@ -83,6 +83,7 @@ class Global {
     if (measure) {
       list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
       logger.i("Global - getSeedRpcList - measureSeedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
+      SettingsStorage.setSeedRpcServers(list, prefix: prefix); // await
     }
     return list;
   }
@@ -127,7 +128,7 @@ class Global {
 
     // rpc
     if (walletAddress?.isNotEmpty == true) {
-      List<String> seedRpcList = await Global.getSeedRpcList(walletAddress, measure: true);
+      List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
       nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
     } else {
       nonce = await clientCommon.client?.getNonce(txPool: true);
