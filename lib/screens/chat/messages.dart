@@ -282,7 +282,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       });
     }
     if (this._topic == null && this._contact != null) {
-      await chatCommon.readMessages(this._contact?.clientAddress, this.targetId, badgeDown: badgeDown);
+      await chatCommon.readMessagesBySelf(this._contact?.clientAddress, this.targetId, badgeDown: badgeDown);
     }
   }
 
