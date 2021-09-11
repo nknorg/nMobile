@@ -155,8 +155,8 @@ class ContactStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: contactType != null ? 'type = ?' : null,
-        whereArgs: contactType != null ? [contactType] : null,
+        where: (contactType?.isNotEmpty == true) ? 'type = ?' : null,
+        whereArgs: (contactType?.isNotEmpty == true) ? [contactType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy,
