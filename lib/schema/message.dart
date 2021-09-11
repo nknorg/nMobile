@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 
 class MessageStatus {
   // send
-  static const int Sending = 100; // TODO:GG status  长时间就fail，配合重新发送机制？
+  static const int Sending = 100;
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
@@ -63,8 +63,8 @@ class MessageSchema extends Equatable {
   bool isOutbound; // <-> is_outbound
   bool isDelete; // <-> is_delete
 
-  int? sendAt; // <-> send_at
-  int? receiveAt; // <-> receive_at
+  int? sendAt; // <-> send_at (== create_at/receive_at)
+  int? receiveAt; // <-> receive_at (== ack_at/read_at)
   int? deleteAt; // <-> delete_at
 
   String contentType; // (required) <-> type
@@ -126,9 +126,10 @@ class MessageSchema extends Equatable {
   ContactSchema? contact;
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     if (contact != null) return contact;
-    contact = await contactCommon.queryByClientAddress(from);
+    contact = await contactCommon.queryByClientAddress(from); // TODO:GG 测试，会走这里吗？
     if (contact != null || !emptyAdd) return contact;
-    return await contactCommon.addByType(from, ContactType.stranger, notify: true, checkDuplicated: false);
+    contact = await contactCommon.addByType(from, ContactType.stranger, notify: true, checkDuplicated: false);
+    return contact;
   }
 
   /// from receive
@@ -179,6 +180,7 @@ class MessageSchema extends Equatable {
       // case MessageContentType.topicSubscribe:
       // case MessageContentType.topicUnsubscribe:
       // case MessageContentType.topicInvitation:
+      // case MessageContentType.topicKickOut:
       default:
         schema.content = data['content'];
         break;
@@ -347,11 +349,13 @@ class MessageSchema extends Equatable {
         break;
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
+      // case MessageContentType.read:
       // case MessageContentType.text:
       // case MessageContentType.textExtension:
       // case MessageContentType.topicSubscribe:
       // case MessageContentType.topicUnsubscribe:
       // case MessageContentType.topicInvitation:
+      // case MessageContentType.topicKickOut:
       default:
         map['content'] = content;
         break;
@@ -407,6 +411,7 @@ class MessageSchema extends Equatable {
       // case MessageContentType.topicSubscribe:
       // case MessageContentType.topicUnsubscribe:
       // case MessageContentType.topicInvitation:
+      // case MessageContentType.topicKickOut:
       default:
         schema.content = e['content'];
         break;
@@ -489,7 +494,7 @@ class MessageOptions {
 
   static int? getSendAt(MessageSchema? message) {
     if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_SEND_AT] ?? 0;
+    return message.options![MessageOptions.KEY_SEND_AT];
   }
 }
 
