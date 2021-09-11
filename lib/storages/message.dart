@@ -47,6 +47,7 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
     await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
+    await db.execute('CREATE INDEX index_messages_status_target_id ON $tableName (status, target_id)');
     await db.execute('CREATE INDEX index_messages_status_is_delete_target_id ON $tableName (status, is_delete, target_id)');
     await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
   }
@@ -412,6 +413,36 @@ class MessageStorage with Tag {
         result.add(item);
       });
       logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+  }
+
+  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int offset = 0, int limit = 20}) async {
+    if (status == null) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.query(
+        tableName,
+        columns: ['*'],
+        where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ?' : 'status = ?',
+        whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId] : [status],
+        offset: offset,
+        limit: limit,
+      );
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "    \n$item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e) {
       handleError(e);

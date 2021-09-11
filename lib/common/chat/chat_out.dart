@@ -43,17 +43,128 @@ class ChatOutCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
+  Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
+
   ChatOutCommon();
 
+  Future<int> checkSending() async {
+    if (!dbCommon.isOpen()) return 0;
+    List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
+    List<Future> futures = [];
+    sendingList.forEach((message) {
+      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      if (DateTime.now().millisecondsSinceEpoch - msgSendAt < (60 * 1000)) {
+        logger.d("$TAG - checkSending - sendAt justNow - targetId:${message.targetId} - message:$message");
+      } else {
+        logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
+        futures.add(chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true));
+      }
+    });
+    await Future.wait(futures);
+    logger.i("$TAG - checkSending - checkCount:${sendingList.length}");
+    return sendingList.length;
+  }
+
+  void setCheckNoAckTimer(String? targetId, {bool refresh = false}) {
+    if (!clientCommon.isClientCreated) return;
+    if (targetId == null || targetId.isEmpty) return;
+    if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
+    Timer? timer = checkNoAckTimers[targetId]?["timer"];
+    // delay
+    int? delay = checkNoAckTimers[targetId]?["delay"];
+    if (refresh || delay == null || delay == 0 || timer == null) {
+      checkNoAckTimers[targetId]?["delay"] = 10;
+      logger.i("$TAG - setCheckNoAckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+    } else if (timer.isActive != true) {
+      checkNoAckTimers[targetId]?["delay"] = (delay * 3) > (10 * 60) ? ((10 * 60)) : (delay * 3);
+      logger.i("$TAG - setCheckNoAckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+    } else {
+      logger.i("$TAG - setCheckNoAckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+    }
+    // timer
+    if (timer?.isActive == true) timer?.cancel();
+    // start
+    checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 10), () async {
+      logger.i("$TAG - setCheckNoAckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      int count = await chatOutCommon._checkNoACK(targetId); // await
+      if (count == 0) checkNoAckTimers[targetId]?["delay"] = 0;
+      checkNoAckTimers[targetId]?["timer"]?.cancel();
+    });
+  }
+
+  Future<int> _checkNoACK(String? targetId, {int offset = 0, int limit = 20}) async {
+    if (!clientCommon.isClientCreated) return 0;
+    if (targetId == null || targetId.isEmpty) return 0;
+    List<MessageSchema> noACKList = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
+    // resend
+    List<Future> futures = [];
+    noACKList.forEach((message) async {
+      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+      if (between < (60 * 1000)) {
+        logger.d("$TAG - _checkNoACK - sendAt justNow - targetId:$targetId - message:$message");
+      } else {
+        logger.i("$TAG - _checkNoACK - resend start - targetId:${message.targetId} - message:$message");
+        // msgData
+        String? msgData;
+        switch (message.contentType) {
+          case MessageContentType.text:
+          case MessageContentType.textExtension:
+            msgData = MessageData.getText(message);
+            break;
+          case MessageContentType.media:
+          case MessageContentType.image:
+            msgData = await MessageData.getImage(message);
+            break;
+          case MessageContentType.audio:
+            msgData = await MessageData.getAudio(message);
+            break;
+          default:
+            logger.w("$TAG - _checkNoACK - noBurning no receipt/read - targetId:$targetId - message:$message");
+            await chatCommon.updateMessageStatus(message, MessageStatus.Read);
+            break;
+        }
+        // send
+        Uint8List? pid;
+        if (msgData?.isNotEmpty == true) {
+          bool notification = between > (60 * 60 * 1000); // 1h
+          if (message.isTopic) {
+            final topic = await chatCommon.topicHandle(message);
+            pid = await _sendWithTopic(topic, message, msgData, notification: notification);
+          } else if (message.to?.isNotEmpty == true) {
+            final contact = await chatCommon.contactHandle(message);
+            pid = await _sendWithContact(contact, message, msgData, notification: notification);
+          }
+        }
+        // result
+        if (pid?.isNotEmpty == true) {
+          logger.i("$TAG - _checkNoACK - resend result - pid:$pid - message:$message");
+          message.pid = pid;
+          _messageStorage.updatePid(message.msgId, message.pid); // await
+        } else {
+          logger.w("$TAG - _checkNoACK - resend fail - message:$message");
+        }
+      }
+    });
+    await Future.wait(futures);
+
+    // loop
+    if (noACKList.length >= limit) return _checkNoACK(targetId, offset: offset + limit, limit: limit);
+    logger.i("$TAG - _checkNoACK - checkCount:${offset + noACKList.length} - targetId:$targetId");
+    return offset + noACKList.length;
+  }
+
+  // NO DB NO display NO topic (1 to 1)
   Future sendPing(String? clientAddress, bool isPing, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     try {
       String data = MessageData.getPing(isPing);
-      await chatCommon.clientSendData(clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendPing - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendPing - fail - tryCount:$tryCount - clientAddress:$clientAddress - isPing:$isPing");
+      logger.w("$TAG - sendPing - fail - error:$e - tryCount:$tryCount - clientAddress:$clientAddress - isPing:$isPing");
       if (await _handleSendError(e, tryCount, () => sendPing(clientAddress, isPing, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendPing(clientAddress, isPing, tryCount: ++tryCount);
@@ -68,10 +179,11 @@ class ChatOutCommon with Tag {
     try {
       received = (await _messageStorage.query(received.msgId)) ?? received; // get receiveAt
       String data = MessageData.getReceipt(received.msgId, received.receiveAt);
-      await chatCommon.clientSendData(received.from, data);
+      OnMessage? onResult = await chatCommon.clientSendData(received.from, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendReceipt - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendReceipt - fail - tryCount:$tryCount - received:$received");
+      logger.w("$TAG - sendReceipt - fail - error:$e - tryCount:$tryCount - received:$received");
       if (await _handleSendError(e, tryCount, () => sendReceipt(received, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendReceipt(received, tryCount: ++tryCount);
@@ -85,10 +197,11 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     try {
       String data = MessageData.getRead(msgIds);
-      await chatCommon.clientSendData(clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendRead - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendRead - fail - tryCount:$tryCount - clientAddress:$clientAddress - msgIds:$msgIds");
+      logger.w("$TAG - sendRead - fail - error:$e - tryCount:$tryCount - clientAddress:$clientAddress - msgIds:$msgIds");
       if (await _handleSendError(e, tryCount, () => sendRead(clientAddress, msgIds, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendRead(clientAddress, msgIds, tryCount: ++tryCount);
@@ -103,10 +216,11 @@ class ChatOutCommon with Tag {
     try {
       int updateAt = DateTime.now().millisecondsSinceEpoch;
       String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-      await chatCommon.clientSendData(target.clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(target.clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendContactRequest - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendContactRequest - fail - tryCount:$tryCount - requestType:$requestType - target:$target");
+      logger.w("$TAG - sendContactRequest - fail - error:$e - tryCount:$tryCount - requestType:$requestType - target:$target");
       if (await _handleSendError(e, tryCount, () => sendContactRequest(target, requestType, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactRequest(target, requestType, tryCount: ++tryCount);
@@ -127,10 +241,11 @@ class ChatOutCommon with Tag {
       } else {
         data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
       }
-      await chatCommon.clientSendData(target.clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(target.clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendContactResponse - success - requestType:$requestType - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendContactResponse - fail - tryCount:$tryCount - requestType:$requestType");
+      logger.w("$TAG - sendContactResponse - fail - error:$e - tryCount:$tryCount - requestType:$requestType");
       if (await _handleSendError(e, tryCount, () => sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendContactResponse(target, requestType, me: _me, tryCount: ++tryCount);
@@ -193,10 +308,11 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     try {
       String data = MessageData.getDeviceRequest();
-      await chatCommon.clientSendData(clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendDeviceRequest - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendDeviceRequest - fail - tryCount:$tryCount - clientAddress:$clientAddress");
+      logger.w("$TAG - sendDeviceRequest - fail - error:$e - tryCount:$tryCount - clientAddress:$clientAddress");
       if (await _handleSendError(e, tryCount, () => sendDeviceRequest(clientAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceRequest(clientAddress, tryCount: ++tryCount);
@@ -210,10 +326,11 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     try {
       String data = MessageData.getDeviceInfo();
-      await chatCommon.clientSendData(clientAddress, data);
+      OnMessage? onResult = await chatCommon.clientSendData(clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendDeviceInfo - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendDeviceInfo - fail - tryCount:$tryCount - clientAddress:$clientAddress");
+      logger.w("$TAG - sendDeviceInfo - fail - error:$e - tryCount:$tryCount - clientAddress:$clientAddress");
       if (await _handleSendError(e, tryCount, () => sendDeviceInfo(clientAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendDeviceInfo(clientAddress, tryCount: ++tryCount);
@@ -288,7 +405,8 @@ class ChatOutCommon with Tag {
       String data = MessageData.getPiece(message);
       if (message.to?.isNotEmpty == true) {
         OnMessage? onResult = await chatCommon.clientSendData(message.to, data);
-        message.pid = onResult?.messageId;
+        if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
+        message.pid = onResult.messageId;
       } else {
         logger.w("$TAG - sendPiece - message target is empty - message:$message");
         return null;
@@ -303,7 +421,7 @@ class ChatOutCommon with Tag {
       }
       return message;
     } catch (e) {
-      logger.w("$TAG - sendPiece - fail - tryCount:$tryCount - message:$message");
+      logger.w("$TAG - sendPiece - fail - error:$e - tryCount:$tryCount - message:$message");
       if (await _handleSendError(e, tryCount, () => sendPiece(message, tryCount: ++tryCount))) return null;
       return await Future.delayed(Duration(seconds: 2), () {
         return sendPiece(message, tryCount: ++tryCount);
@@ -345,11 +463,13 @@ class ChatOutCommon with Tag {
         contentType: MessageContentType.topicUnsubscribe,
         topic: topic,
       );
+      TopicSchema? _schema = await chatCommon.topicHandle(send);
       String data = MessageData.getTopicUnSubscribe(send);
-      await _sendAndDB(send, data, displaySelf: false);
+      Uint8List? pid = await _sendWithTopic(_schema, send, data);
+      if (pid == null || pid.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendTopicUnSubscribe - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendTopicUnSubscribe - fail - tryCount:$tryCount - topic:$topic");
+      logger.w("$TAG - sendTopicUnSubscribe - fail - error:$e - tryCount:$tryCount - topic:$topic");
       if (await _handleSendError(e, tryCount, () => sendTopicUnSubscribe(topic, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicUnSubscribe(topic, tryCount: ++tryCount);
@@ -384,11 +504,13 @@ class ChatOutCommon with Tag {
         topic: topic,
         content: targetAddress,
       );
+      TopicSchema? _schema = await chatCommon.topicHandle(send);
       String data = MessageData.getTopicKickOut(send);
-      await _sendAndDB(send, data, displaySelf: false);
+      Uint8List? pid = await _sendWithTopic(_schema, send, data);
+      if (pid == null || pid.isEmpty) throw Exception("wrong pid");
       logger.d("$TAG - sendTopicKickOut - success - data:$data");
     } catch (e) {
-      logger.w("$TAG - sendTopicKickOut - fail - tryCount:$tryCount - topic:$topic");
+      logger.w("$TAG - sendTopicKickOut - fail - error:$e - tryCount:$tryCount - topic:$topic");
       if (await _handleSendError(e, tryCount, () => sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendTopicKickOut(topic, targetAddress, tryCount: ++tryCount);
@@ -403,7 +525,7 @@ class ChatOutCommon with Tag {
     TopicSchema? topic,
   }) async {
     if (message == null) return null;
-    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: false);
+    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
     String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
@@ -427,11 +549,11 @@ class ChatOutCommon with Tag {
     ContactSchema? contact,
     TopicSchema? topic,
     bool resend = false,
-    bool displaySelf = true,
+    bool notification = true,
   }) async {
     if (message == null || msgData == null) return null;
     // DB
-    if (!resend && displaySelf) {
+    if (!resend) {
       message = await _messageStorage.insert(message);
     } else if (resend) {
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
@@ -439,40 +561,49 @@ class ChatOutCommon with Tag {
     }
     if (message == null) return null;
     // display
-    if (!resend && displaySelf) _onSavedSink.add(message); // resend just update sendTime
+    if (!resend) _onSavedSink.add(message); // resend just update sendTime
     // contact
     contact = contact ?? await chatCommon.contactHandle(message);
     // topic
     topic = topic ?? await chatCommon.topicHandle(message);
     // session
-    if (displaySelf) chatCommon.sessionHandle(message); // await
+    chatCommon.sessionHandle(message); // await
     // SDK
     Uint8List? pid;
     try {
       if (message.isTopic) {
-        pid = await _sendWithTopic(topic, message, msgData);
+        pid = await _sendWithTopic(topic, message, msgData, notification: notification);
         logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
       } else if (message.to?.isNotEmpty == true) {
-        pid = await _sendWithContact(contact, message, msgData);
+        pid = await _sendWithContact(contact, message, msgData, notification: notification);
         logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
-      } else {
-        logger.e("$TAG - _sendAndDisplay - with_null - message:$message");
       }
+      if (pid == null || pid.isEmpty) throw Exception("wrong pid");
     } catch (e) {
       _handleSendError(e, 3, null);
     }
     // pid
     if (pid == null || pid.isEmpty) {
       logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
-      message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+      if (message.canBurning) {
+        message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+      } else {
+        // noBurning just delete
+        await _messageStorage.deleteByContentType(message.msgId, message.contentType);
+        return null;
+      }
     } else {
       message.pid = pid;
       _messageStorage.updatePid(message.msgId, message.pid); // await
+      // noBurning no need receipt/read
+      if (!message.canBurning) {
+        chatCommon.updateMessageStatus(message, MessageStatus.Read); // await
+      }
     }
     return message;
   }
 
-  Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData) async {
+  Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = true}) async {
     if (message == null || msgData == null) return null;
     // deviceInfo
     DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(message, contact);
@@ -488,12 +619,12 @@ class ChatOutCommon with Tag {
     // success
     if (pid?.isNotEmpty == true) {
       chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
-      _sendPush(message, contact?.deviceToken); // await
+      if (notification) _sendPush(message, contact?.deviceToken); // await
     }
     return pid;
   }
 
-  Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData) async {
+  Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = true}) async {
     if (topic == null || message == null || msgData == null) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
@@ -579,7 +710,8 @@ class ChatOutCommon with Tag {
         return Future.value(null);
       }).then((ContactSchema? contact) {
         // notification
-        return _sendPush(message, contact?.deviceToken);
+        if (notification) return _sendPush(message, contact?.deviceToken);
+        return Future.value(null);
       }));
     });
     await Future.wait(futures);
@@ -683,7 +815,7 @@ class ChatOutCommon with Tag {
     return [base64Data, bytesLength, total, parity];
   }
 
-  _sendPush(MessageSchema message, String? deviceToken) async {
+  Future _sendPush(MessageSchema message, String? deviceToken) async {
     if (!message.canRead) return;
     if (deviceToken == null || deviceToken.isEmpty == true) return;
 
@@ -712,6 +844,7 @@ class ChatOutCommon with Tag {
     //   case MessageContentType.topicSubscribe:
     //   case MessageContentType.topicUnsubscribe:
     //   case MessageContentType.topicInvitation:
+    //   case MessageContentType.topicKickOut:
     //     break;
     // }
 
