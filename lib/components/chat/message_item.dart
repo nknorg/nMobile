@@ -72,6 +72,7 @@ class ChatMessageItem extends StatelessWidget {
     switch (this.message.contentType) {
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
+      // case MessageContentType.read:
       // case MessageContentType.contact:
       case MessageContentType.contactOptions:
         contentsWidget.add(_contactOptionsWidget(context));
@@ -94,7 +95,7 @@ class ChatMessageItem extends StatelessWidget {
           ),
         );
         break;
-      // case MessageContentType.piece:
+      // case MessageContentType.nknOnePiece:
       case MessageContentType.topicSubscribe:
         contentsWidget.add(_topicSubscribeWidget(context));
         break;

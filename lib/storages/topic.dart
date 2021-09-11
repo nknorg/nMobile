@@ -158,8 +158,8 @@ class TopicStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: topicType != null ? 'type = ?' : null,
-        whereArgs: topicType != null ? [topicType] : null,
+        where: (topicType?.isNotEmpty == true) ? 'type = ?' : null,
+        whereArgs: (topicType?.isNotEmpty == true) ? [topicType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy ?? 'create_at DESC',
@@ -188,8 +188,8 @@ class TopicStorage with Tag {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: topicType != null ? 'joined = ? AND type = ?' : 'joined = ?',
-        whereArgs: topicType != null ? [1, topicType] : [1],
+        where: (topicType?.isNotEmpty == true) ? 'joined = ? AND type = ?' : 'joined = ?',
+        whereArgs: (topicType?.isNotEmpty == true) ? [1, topicType] : [1],
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy ?? 'create_at DESC',
