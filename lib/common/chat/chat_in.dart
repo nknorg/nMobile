@@ -50,7 +50,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  // TODO:GG tyr catch 移到外面？
+  // TODO:GG tyr catch 移到外面?
   Future start() async {
     await for (MessageSchema received in _onReceiveStream) {
       try {
@@ -204,8 +204,10 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
     } else if (exists.status == MessageStatus.SendReceipt || exists.status == MessageStatus.Read) {
-      logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
-      return false;
+      if (exists.contentType != MessageContentType.topicInvitation) {
+        logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
+        return false;
+      }
     }
 
     // deviceInfo
