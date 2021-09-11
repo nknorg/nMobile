@@ -197,6 +197,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // read
     _readMessages(true, true); // await
+
+    // ping
+    if (this._contact != null && this._topic == null) {
+      chatOutCommon.sendPing(this.targetId, true); // await
+    }
   }
 
   @override
@@ -281,7 +286,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         Badge.onCountDown(value); // await
       });
     }
-    if (this._topic == null && this._contact != null) {
+    if (this._contact != null && this._topic == null) {
       await chatCommon.readMessagesBySelf(this._contact?.clientAddress, this.targetId, badgeDown: badgeDown);
     }
   }

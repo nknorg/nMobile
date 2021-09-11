@@ -60,7 +60,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   late bool _hideProfile;
   ContactSchema? _contact;
 
-  double _uploadProgress = 1;
+  double _uploadProgress = 1; // TODO:GG 多个uploading的显示问题
 
   PlayerState _playState = PlayerState.STOPPED;
   double _playProgress = 0;
@@ -156,10 +156,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _message = chatCommon.burningHandle(_message);
     }
     if (_message.deleteAt != null) {
-      if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (clientCommon.address?.isNotEmpty == true)) {
-        String taskKey = "${TaskService.KEY_MSG_BURNING}:${clientCommon.address}:${_message.msgId}";
+      String? senderKey = _message.isOutbound ? _message.from : (_message.to ?? _message.topic);
+      if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (senderKey?.isNotEmpty == true)) {
+        String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${_message.msgId}";
         taskService.addTask1(taskKey, (String key) {
-          if (clientCommon.address?.isNotEmpty == true && !key.contains(clientCommon.address!)) {
+          if (senderKey?.isNotEmpty == true && !key.contains(senderKey!)) {
             taskService.removeTask1(key);
             // onRefreshArguments(); // refresh task (will dead loop)
             return;

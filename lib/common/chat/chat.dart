@@ -10,6 +10,7 @@ import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class ChatCommon with Tag {
@@ -63,7 +64,7 @@ class ChatCommon with Tag {
     } else {
       // profile
       if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs)) {
-        logger.d("$TAG - contactHandle - sendRequestHeader - contact:$exist");
+        logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
         double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
@@ -109,8 +110,9 @@ class ChatCommon with Tag {
       chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     } else {
       if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs)) {
-        logger.d("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
+        logger.i("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
+        chatOutCommon.sendPing(contact.clientAddress, true); // await
       } else {
         double between = ((latest.updateAt! + Global.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
@@ -283,10 +285,11 @@ class ChatCommon with Tag {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
     }
+    // TODO:GG sendFail需要给一个sessionItem的提示吗？
     return message;
   }
 
-  Future readMessages(String? clientAddress, String? targetId, {bool badgeDown = false}) async {
+  Future readMessagesBySelf(String? clientAddress, String? targetId, {bool badgeDown = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (targetId == null || targetId.isEmpty) return;
     // update messages
@@ -300,5 +303,22 @@ class ChatCommon with Tag {
     await Future.wait(futures);
     // send messages
     await chatOutCommon.sendRead(clientAddress, msgIds);
+  }
+
+  Future<int> readMessageBySide(String? targetId, int? sendAt, {int offset = 0, int limit = 20}) async {
+    if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
+    // noReads
+    List<MessageSchema> noReads = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+    List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
+    // read
+    List<Future> futures = [];
+    shouldReads.forEach((element) {
+      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true));
+    });
+    await Future.wait(futures);
+    // loop
+    if (noReads.length >= limit) return readMessageBySide(targetId, sendAt, offset: offset + limit, limit: limit);
+    logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${timeFormat(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
+    return offset + noReads.length;
   }
 }

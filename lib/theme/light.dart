@@ -180,9 +180,9 @@ class LightTheme implements SkinTheme {
     Color(0x19FF0F0F),
     Color(0x19F5B800),
     Color(0x19FC5D68),
-    Color(0x195458F7),
-    Color(0x1900CC96),
-    Color(0x199013FE),
+    Color(0x19e306c9),
+    Color(0x1913c898),
+    Color(0x1905f30d),
   ];
 
   @override
@@ -190,8 +190,8 @@ class LightTheme implements SkinTheme {
     Color(0xFFFF0F0F),
     Color(0xFFF5B800),
     Color(0xFFFC5D68),
-    Color(0xff5458F7),
-    Color(0xff00CC96),
-    Color(0xff9013FE),
+    Color(0xffe306c9),
+    Color(0xff13c898),
+    Color(0xff05f30d),
   ];
 }
