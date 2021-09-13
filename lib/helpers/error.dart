@@ -41,7 +41,7 @@ String? handleError(
 }) {
   if (!Global.isRelease) {
     logger.e(error);
-    if (Settings.debug) debugPrintStack(maxFrames: 100);
+    debugPrintStack(maxFrames: 100);
   }
   String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {
@@ -76,5 +76,5 @@ String? getErrorShow(dynamic error) {
   if (error?.toString().contains(ksError) == true) {
     return ksError;
   }
-  return Settings.debug ? error.message : _localizations.something_went_wrong;
+  return Settings.debug ? error.toString() : _localizations.something_went_wrong;
 }
