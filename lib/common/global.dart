@@ -120,8 +120,12 @@ class Global {
 
   static Future<int?> refreshNonce({String? walletAddress, bool useNow = false}) async {
     // walletAddress
-    if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
-      walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+    if (walletAddress == null || walletAddress.isEmpty) {
+      if (clientCommon.client?.publicKey.isNotEmpty == true) {
+        walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+      } else {
+        return null;
+      }
     }
 
     int? nonce;

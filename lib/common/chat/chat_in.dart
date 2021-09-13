@@ -50,7 +50,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  // TODO:GG tyr catch 移到外面?
+  // TODO:GG tyr catch 移到外面？
   Future start() async {
     await for (MessageSchema received in _onReceiveStream) {
       try {
@@ -107,6 +107,9 @@ class ChatInCommon with Tag {
       case MessageContentType.read:
         await _receiveRead(received); // await
         break;
+      case MessageContentType.msgStatus:
+        await _receiveMsgStatus(received); // await
+        break;
       case MessageContentType.contact:
         _receiveContact(received, contact: contact); // await
         break;
@@ -152,11 +155,7 @@ class ChatInCommon with Tag {
       chatOutCommon.sendReceipt(received); // await
     }
     // status (not handle in messages screen)
-    if (received.isTopic) {
-      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
-        chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
-      }
-    } else if (!received.canRead) {
+    if (received.isTopic || !received.canRead) {
       if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
@@ -188,7 +187,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatOutCommon.setCheckNoAckTimer(received.targetId); // await
+      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true); // await
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -231,7 +230,7 @@ class ChatInCommon with Tag {
     }
 
     // check resend
-    chatOutCommon.setCheckNoAckTimer(received.targetId, refresh: true); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true); // await
 
     return true;
   }
@@ -278,8 +277,77 @@ class ChatInCommon with Tag {
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
     // check resend
-    chatOutCommon.setCheckNoAckTimer(received.targetId, refresh: true); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true); // await
 
+    return true;
+  }
+
+  // NO DB NO display NO topic (1 to 1)
+  Future<bool> _receiveMsgStatus(MessageSchema received) async {
+    // if (received.isTopic) return; (limit in out)
+    if (received.content == null) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? requestType = data['requestType']?.toString();
+    List messageIds = data['messageIds'] ?? [];
+    if (messageIds.isEmpty) {
+      logger.w("$TAG - _receiveMsgStatus - messageIds empty - requestType:$requestType - messageIds:$messageIds - received:$received");
+      return false;
+    }
+
+    if (requestType == "ask") {
+      // receive ask
+      List<String> msgStatusList = [];
+      List<Future> futures = [];
+      messageIds.forEach((msgId) {
+        if (msgId.isNotEmpty) {
+          futures.add(_messageStorage.query(msgId).then((message) {
+            if (message != null) {
+              msgStatusList.add("$msgId:${message.status}");
+            } else {
+              msgStatusList.add("$msgId:${null}");
+            }
+            return;
+          }));
+        }
+      });
+      await Future.wait(futures);
+      // send reply
+      String? clientAddress = received.isTopic ? received.topic : received.from;
+      await chatOutCommon.sendMsgStatus(clientAddress, false, msgStatusList);
+    } else if (requestType == "reply") {
+      // receive reply
+      List<Future> futures = [];
+      messageIds.forEach((value) {
+        if (value.isNotEmpty) {
+          List<String> splits = value.split(":");
+          String msgId = splits[0];
+          int? status = int.tryParse(splits[1]);
+          if (status == null || status == 0) {
+            // resend msg
+            futures.add(_messageStorage.query(msgId).then((message) {
+              return chatOutCommon.resendMute(message);
+            }));
+          } else {
+            // update status
+            futures.add(_messageStorage.query(msgId).then((message) {
+              if (message != null) {
+                int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
+                int? receiveAt = (reallyStatus == MessageStatus.Read) ? DateTime.now().millisecondsSinceEpoch : null;
+                logger.i("$TAG - _receiveMsgStatus - msg update status - status:$reallyStatus - receiveAt:$receiveAt - received:$received");
+                return chatCommon.updateMessageStatus(message, reallyStatus, receiveAt: receiveAt, notify: true);
+              } else {
+                logger.w("$TAG - _receiveMsgStatus - msg no exists when update status - msgId:$msgId");
+                return null;
+              }
+            }));
+          }
+        }
+      });
+      await Future.wait(futures);
+    } else {
+      logger.w("$TAG - _receiveMsgStatus - requestType error - requestType:$requestType - messageIds:$messageIds - received:$received");
+      return false;
+    }
     return true;
   }
 
