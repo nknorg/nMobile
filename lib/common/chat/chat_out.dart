@@ -55,10 +55,10 @@ class ChatOutCommon with Tag {
     // delay
     int? delay = checkNoAckTimers[targetId]?["delay"];
     if (refresh || delay == null || delay == 0 || timer == null) {
-      checkNoAckTimers[targetId]?["delay"] = 10;
+      checkNoAckTimers[targetId]?["delay"] = 5;
       logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else if (timer.isActive != true) {
-      checkNoAckTimers[targetId]?["delay"] = (delay * 3) > (10 * 60) ? ((10 * 60)) : (delay * 3);
+      checkNoAckTimers[targetId]?["delay"] = ((delay * 2) > (10 * 60)) ? (10 * 60) : (delay * 2);
       logger.i("$TAG - setMsgStatusCheckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else {
       logger.i("$TAG - setMsgStatusCheckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
@@ -66,7 +66,7 @@ class ChatOutCommon with Tag {
     // timer
     if (timer?.isActive == true) timer?.cancel();
     // start
-    checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 10), () async {
+    checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 5), () async {
       logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
       int count = await chatOutCommon._checkMsgStatus(targetId, isTopic); // await
       if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;

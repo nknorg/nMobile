@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -46,7 +47,11 @@ class ChatInCommon with Tag {
 
     // message
     if (needWait) {
-      await _messageHandle(message);
+      try {
+        await _messageHandle(message);
+      } catch (e) {
+        handleError(e);
+      }
     } else {
       onMessageReceive(message.targetId, message);
     }
@@ -62,8 +67,12 @@ class ChatInCommon with Tag {
     }
 
     // init
-    if (receiveLoops[targetId] == null) receiveLoops[targetId] = false;
-    if (receiveMessages[targetId] == null) receiveMessages[targetId] = [];
+    if (receiveMessages[targetId] == null) {
+      receiveMessages[targetId] = [];
+      receiveLoops[targetId] = false;
+    } else if (receiveMessages[targetId]!.isEmpty || receiveLoops[targetId] == null) {
+      receiveLoops[targetId] = false;
+    }
 
     // handle
     receiveMessages[targetId]?.add(received);
@@ -93,21 +102,7 @@ class ChatInCommon with Tag {
       try {
         await _messageHandle(received);
       } catch (e) {
-        // handleError(e); // can not be write here
-        logger.e("$TAG - _loopReceiveMessage - error:${e.toString()}");
-
-        // pop
-        if ((receiveMessages[targetId]?.length ?? 0) > 0) {
-          receiveMessages[targetId]?.removeAt(0);
-        } else {
-          logger.w("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
-        }
-
-        // unlock
-        receiveLoops[targetId] = false;
-
-        // loop
-        return _loopReceiveMessage(targetId);
+        handleError(e);
       }
     } else {
       logger.w("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
@@ -131,6 +126,7 @@ class ChatInCommon with Tag {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(received);
     DeviceInfoSchema? deviceInfo = await chatCommon.deviceInfoHandle(received, contact);
+
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
     SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
@@ -159,8 +155,7 @@ class ChatInCommon with Tag {
         }
       }
     }
-    // session
-    await chatCommon.sessionHandle(received); // must await
+
     // message
     bool receiveOk = false;
     switch (received.contentType) {
@@ -216,16 +211,23 @@ class ChatInCommon with Tag {
         break;
     }
 
+    // session
+    if (receiveOk) {
+      await chatCommon.sessionHandle(received); // must await
+    }
+
     // receipt
     if (!received.isTopic && received.canDisplay) {
       chatOutCommon.sendReceipt(received); // await
     }
+
     // status (not handle in messages screen)
     if (received.isTopic || !received.canRead) {
       if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     }
+
     // badge
     if (received.canRead) {
       bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
