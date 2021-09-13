@@ -47,24 +47,6 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
-  Future<int> checkSending() async {
-    if (!dbCommon.isOpen()) return 0;
-    List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
-    List<Future> futures = [];
-    sendingList.forEach((message) {
-      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-      if (DateTime.now().millisecondsSinceEpoch - msgSendAt < (60 * 1000)) {
-        logger.d("$TAG - checkSending - sendAt justNow - targetId:${message.targetId} - message:$message");
-      } else {
-        logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
-        futures.add(chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true));
-      }
-    });
-    await Future.wait(futures);
-    logger.i("$TAG - checkSending - checkCount:${sendingList.length}");
-    return sendingList.length;
-  }
-
   void setCheckNoAckTimer(String? targetId, {bool refresh = false}) {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;

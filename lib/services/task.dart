@@ -69,7 +69,7 @@ class TaskService with Tag {
     // task
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), callNow: true);
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
-    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatOutCommon.checkSending(), callNow: false);
+    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(), callNow: false);
     addTask600(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true), callNow: true);
     addTask600(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(), callNow: true);
     addTask600(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(), callNow: false);

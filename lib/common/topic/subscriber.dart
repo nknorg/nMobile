@@ -108,7 +108,7 @@ class SubscriberCommon with Tag {
         }
       }
       // different with DB in node
-      if (!findDB && nodeItem.status != SubscriberStatus.Unsubscribed) {
+      if (!findDB) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
         futures.add(add(nodeItem, notify: true));
       }
