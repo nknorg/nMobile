@@ -108,13 +108,13 @@ class TopicCommon with Tag {
 
     // subscriber me
     SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
-    if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
-      int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
-        Toast.show(S.of(Global.appContext).left_group_tip);
-        return null;
-      }
-    }
+    // if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
+    //   int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+    //   if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
+    //     Toast.show(S.of(Global.appContext).left_group_tip);
+    //     return null;
+    //   }
+    // }
 
     // permission(private + normal)
     int? permPage;
