@@ -31,6 +31,7 @@ class MessageContentType {
   // static const String system = 'system';
   static const String receipt = 'receipt'; // status
   static const String read = 'read'; // status
+  static const String msgStatus = 'msgStatus'; // status + resend
 
   static const String contact = 'contact'; // .
   static const String contactOptions = 'event:contactOptions'; // db + visible
@@ -164,6 +165,7 @@ class MessageSchema extends Equatable {
       case MessageContentType.read:
         schema.content = data['readIds'];
         break;
+      case MessageContentType.msgStatus:
       case MessageContentType.contact:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceInfo:
@@ -350,6 +352,7 @@ class MessageSchema extends Equatable {
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
       // case MessageContentType.read:
+      // case MessageContentType.msgStatus:
       // case MessageContentType.text:
       // case MessageContentType.textExtension:
       // case MessageContentType.topicSubscribe:
@@ -406,6 +409,7 @@ class MessageSchema extends Equatable {
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
       // case MessageContentType.read:
+      // case MessageContentType.msgStatus:
       // case MessageContentType.text:
       // case MessageContentType.textExtension:
       // case MessageContentType.topicSubscribe:
@@ -526,6 +530,17 @@ class MessageData {
       'timestamp': DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.read,
       'readIds': msgIdList,
+    };
+    return jsonEncode(map);
+  }
+
+  static String getMsgStatus(bool ask, List<String>? msgIdList) {
+    Map map = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'contentType': MessageContentType.msgStatus,
+      'requestType': ask ? "ask" : "reply",
+      'messageIds': msgIdList,
     };
     return jsonEncode(map);
   }
