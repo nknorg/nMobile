@@ -112,7 +112,6 @@ class ChatCommon with Tag {
       if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs)) {
         logger.i("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
-        chatOutCommon.sendPing(contact.clientAddress, true); // await
       } else {
         double between = ((latest.updateAt! + Global.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
@@ -179,7 +178,7 @@ class ChatCommon with Tag {
                 exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
                 logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version nee refresh
+              // some subscriber status wrong in new version nee refresh TODO:GG 有用吗
               subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           } else {
@@ -197,7 +196,7 @@ class ChatCommon with Tag {
                 exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
                 logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version nee refresh
+              // some subscriber status wrong in new version nee refresh TODO:GG 有用吗
               subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           }
@@ -285,7 +284,7 @@ class ChatCommon with Tag {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
     }
-    // TODO:GG sendFail需要给一个sessionItem的提示吗？
+    // TODO:GG sendFail需要给一个sessionItem的提示吗?
     return message;
   }
 
@@ -320,5 +319,23 @@ class ChatCommon with Tag {
     if (noReads.length >= limit) return readMessageBySide(targetId, sendAt, offset: offset + limit, limit: limit);
     logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${timeFormat(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
     return offset + noReads.length;
+  }
+
+  Future<int> checkSending() async {
+    if (!dbCommon.isOpen()) return 0;
+    List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
+    List<Future> futures = [];
+    sendingList.forEach((message) {
+      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      if (DateTime.now().millisecondsSinceEpoch - msgSendAt < (60 * 1000)) {
+        logger.d("$TAG - checkSending - sendAt justNow - targetId:${message.targetId} - message:$message");
+      } else {
+        logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
+        futures.add(chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true));
+      }
+    });
+    await Future.wait(futures);
+    logger.i("$TAG - checkSending - checkCount:${sendingList.length}");
+    return sendingList.length;
   }
 }
