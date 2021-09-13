@@ -73,6 +73,7 @@ class ChatMessageItem extends StatelessWidget {
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
       // case MessageContentType.read:
+      // case MessageContentType.msgStatus:
       // case MessageContentType.contact:
       case MessageContentType.contactOptions:
         contentsWidget.add(_contactOptionsWidget(context));

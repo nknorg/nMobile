@@ -47,7 +47,7 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
-  void setCheckNoAckTimer(String? targetId, {bool refresh = false}) {
+  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false}) {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
     if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
@@ -56,84 +56,82 @@ class ChatOutCommon with Tag {
     int? delay = checkNoAckTimers[targetId]?["delay"];
     if (refresh || delay == null || delay == 0 || timer == null) {
       checkNoAckTimers[targetId]?["delay"] = 10;
-      logger.i("$TAG - setCheckNoAckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else if (timer.isActive != true) {
       checkNoAckTimers[targetId]?["delay"] = (delay * 3) > (10 * 60) ? ((10 * 60)) : (delay * 3);
-      logger.i("$TAG - setCheckNoAckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      logger.i("$TAG - setMsgStatusCheckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else {
-      logger.i("$TAG - setCheckNoAckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      logger.i("$TAG - setMsgStatusCheckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     }
     // timer
     if (timer?.isActive == true) timer?.cancel();
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 10), () async {
-      logger.i("$TAG - setCheckNoAckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await chatOutCommon._checkNoACK(targetId); // await
-      if (count == 0) checkNoAckTimers[targetId]?["delay"] = 0;
+      logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic); // await
+      if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
       checkNoAckTimers[targetId]?["timer"]?.cancel();
     });
   }
 
-  Future<int> _checkNoACK(String? targetId, {int offset = 0, int limit = 20}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false}) async {
     if (!clientCommon.isClientCreated) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
-    List<MessageSchema> noACKList = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
-    // resend
-    List<Future> futures = [];
-    noACKList.forEach((message) async {
-      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+
+    int limit = 20;
+    List<MessageSchema> checkList = [];
+
+    // noAck
+    for (int offset = 0; true; offset += limit) {
+      final result = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
+      checkList.addAll(result);
+      logger.i("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      if (result.length < limit) break;
+    }
+
+    // noRead
+    for (int offset = 0; true; offset += limit) {
+      final result = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+      checkList.addAll(result);
+      logger.i("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      if (result.length < limit) break;
+    }
+
+    // filter
+    checkList = checkList.where((element) {
+      int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       if (between < (60 * 1000)) {
-        logger.d("$TAG - _checkNoACK - sendAt justNow - targetId:$targetId - message:$message");
-      } else {
-        logger.i("$TAG - _checkNoACK - resend start - targetId:${message.targetId} - message:$message");
-        // msgData
-        String? msgData;
-        switch (message.contentType) {
-          case MessageContentType.text:
-          case MessageContentType.textExtension:
-            msgData = MessageData.getText(message);
-            break;
-          case MessageContentType.media:
-          case MessageContentType.image:
-            msgData = await MessageData.getImage(message);
-            break;
-          case MessageContentType.audio:
-            msgData = await MessageData.getAudio(message);
-            break;
-          default:
-            logger.w("$TAG - _checkNoACK - noBurning no receipt/read - targetId:$targetId - message:$message");
-            await chatCommon.updateMessageStatus(message, MessageStatus.Read);
-            break;
-        }
-        // send
-        Uint8List? pid;
-        if (msgData?.isNotEmpty == true) {
-          bool notification = between > (60 * 60 * 1000); // 1h
-          if (message.isTopic) {
-            final topic = await chatCommon.topicHandle(message);
-            pid = await _sendWithTopic(topic, message, msgData, notification: notification);
-          } else if (message.to?.isNotEmpty == true) {
-            final contact = await chatCommon.contactHandle(message);
-            pid = await _sendWithContact(contact, message, msgData, notification: notification);
-          }
-        }
-        // result
-        if (pid?.isNotEmpty == true) {
-          logger.i("$TAG - _checkNoACK - resend result - pid:$pid - message:$message");
-          message.pid = pid;
-          _messageStorage.updatePid(message.msgId, message.pid); // await
-        } else {
-          logger.w("$TAG - _checkNoACK - resend fail - message:$message");
-        }
+        logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
+        return false;
       }
-    });
-    await Future.wait(futures);
+      return true;
+    }).toList();
 
-    // loop
-    if (noACKList.length >= limit) return _checkNoACK(targetId, offset: offset + limit, limit: limit);
-    logger.i("$TAG - _checkNoACK - checkCount:${offset + noACKList.length} - targetId:$targetId");
-    return offset + noACKList.length;
+    if (checkList.isEmpty) {
+      logger.i("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
+      return 0;
+    }
+
+    // resend
+    if (isTopic || forceResend) {
+      List<Future> futures = [];
+      checkList.forEach((element) {
+        futures.add(resendMute(element));
+      });
+      await Future.wait(futures);
+    } else {
+      List<String> msgIds = [];
+      checkList.forEach((element) {
+        if (element.msgId.isNotEmpty) {
+          msgIds.add(element.msgId);
+        }
+      });
+      await sendMsgStatus(targetId, true, msgIds);
+    }
+
+    logger.i("$TAG - _checkMsgStatus - checkCount:${checkList.length} - targetId:$targetId - isTopic:$isTopic");
+    return checkList.length;
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -187,6 +185,24 @@ class ChatOutCommon with Tag {
       if (await _handleSendError(e, tryCount, () => sendRead(clientAddress, msgIds, tryCount: ++tryCount))) return;
       await Future.delayed(Duration(seconds: 2), () {
         return sendRead(clientAddress, msgIds, tryCount: ++tryCount);
+      });
+    }
+  }
+
+  // NO DB NO display NO topic (1 to 1)
+  Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds, {int tryCount = 1}) async {
+    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
+    if (!clientCommon.isClientCreated) return;
+    try {
+      String data = MessageData.getMsgStatus(ask, msgIds);
+      OnMessage? onResult = await chatCommon.clientSendData(clientAddress, data);
+      if (onResult?.messageId == null || onResult!.messageId.isEmpty) throw Exception("wrong pid");
+      logger.d("$TAG - sendMsgStatus - success - data:$data");
+    } catch (e) {
+      logger.w("$TAG - sendMsgStatus - fail - error:$e - tryCount:$tryCount - clientAddress:$clientAddress - msgIds:$msgIds");
+      if (await _handleSendError(e, tryCount, () => sendMsgStatus(clientAddress, ask, msgIds, tryCount: ++tryCount))) return;
+      await Future.delayed(Duration(seconds: 2), () {
+        return sendMsgStatus(clientAddress, ask, msgIds, tryCount: ++tryCount);
       });
     }
   }
@@ -500,12 +516,7 @@ class ChatOutCommon with Tag {
     }
   }
 
-  Future<MessageSchema?> resend(
-    MessageSchema? message, {
-    ContactSchema? contact,
-    DeviceInfoSchema? deviceInfo,
-    TopicSchema? topic,
-  }) async {
+  Future<MessageSchema?> resend(MessageSchema? message, {ContactSchema? contact, DeviceInfoSchema? deviceInfo, TopicSchema? topic}) async {
     if (message == null) return null;
     message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
     String? msgData;
@@ -523,6 +534,55 @@ class ChatOutCommon with Tag {
         break;
     }
     return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
+  }
+
+  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) async {
+    if (message == null) return null;
+    // msgData
+    String? msgData;
+    switch (message.contentType) {
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
+        msgData = MessageData.getText(message);
+        logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.media:
+      case MessageContentType.image:
+        msgData = await MessageData.getImage(message);
+        logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.audio:
+        msgData = await MessageData.getAudio(message);
+        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      default:
+        message = await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
+        logger.w("$TAG - resendMute - noBurning no receipt/read - targetId:${message.targetId} - message:$message");
+        break;
+    }
+    // send
+    Uint8List? pid;
+    if (msgData?.isNotEmpty == true) {
+      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+      notification = notification ?? (between > (60 * 60 * 1000)); // 1h
+      if (message.isTopic) {
+        final topic = await chatCommon.topicHandle(message);
+        pid = await _sendWithTopic(topic, message, msgData, notification: notification);
+      } else if (message.to?.isNotEmpty == true) {
+        final contact = await chatCommon.contactHandle(message);
+        pid = await _sendWithContact(contact, message, msgData, notification: notification);
+      }
+    }
+    // result
+    if (pid?.isNotEmpty == true) {
+      logger.i("$TAG - resendMute - resend result - pid:$pid - message:$message");
+      message.pid = pid;
+      _messageStorage.updatePid(message.msgId, message.pid); // await
+    } else {
+      logger.w("$TAG - resendMute - resend fail - message:$message");
+    }
+    return message;
   }
 
   Future<MessageSchema?> _sendAndDB(
@@ -579,7 +639,7 @@ class ChatOutCommon with Tag {
       _messageStorage.updatePid(message.msgId, message.pid); // await
       // noBurning no need receipt/read
       if (!message.canBurning) {
-        chatCommon.updateMessageStatus(message, MessageStatus.Read); // await
+        chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch); // await
       }
     }
     return message;

@@ -201,6 +201,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // ping
     if (this._contact != null && this._topic == null) {
       chatOutCommon.sendPing(this.targetId, true); // await
+      chatOutCommon.sendPing(this.targetId, false); // await
     }
   }
 
