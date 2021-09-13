@@ -41,7 +41,7 @@ String? handleError(
 }) {
   if (!Global.isRelease) {
     logger.e(error);
-    debugPrintStack(maxFrames: 100);
+    if (Settings.debug) debugPrintStack(maxFrames: 100);
   }
   String? show = getErrorShow(error);
   if (show != null && show.isNotEmpty) {

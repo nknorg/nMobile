@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -20,9 +19,9 @@ import 'package:nmobile/utils/path.dart';
 
 class ChatInCommon with Tag {
   // ignore: close_sinks
-  StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>(); //.broadcast();
-  StreamSink<MessageSchema> get _onReceiveSink => _onReceiveController.sink;
-  Stream<MessageSchema> get _onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
+  // StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>(); //.broadcast();
+  // StreamSink<MessageSchema> get _onReceiveSink => _onReceiveController.sink;
+  // Stream<MessageSchema> get _onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -31,34 +30,101 @@ class ChatInCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  ChatInCommon() {
-    start();
-  }
+  Map<String, bool> receiveLoops = Map();
+  Map<String, List<MessageSchema>> receiveMessages = Map();
+
+  ChatInCommon();
 
   Future onClientMessage(MessageSchema? message, {bool needWait = false}) async {
     if (message == null) return;
+
     // topic msg published callback can be used receipt
     if (message.isTopic && !message.isOutbound && (message.from == message.to || message.from == clientCommon.address)) {
       message.contentType = MessageContentType.receipt;
       message.content = message.msgId;
     }
+
     // message
     if (needWait) {
       await _messageHandle(message);
     } else {
-      _onReceiveSink.add(message);
+      onMessageReceive(message.targetId, message);
     }
   }
 
-  // TODO:GG tyr catch 移到外面？
-  Future start() async {
-    await for (MessageSchema received in _onReceiveStream) {
+  void onMessageReceive(String? targetId, MessageSchema? received) {
+    if (targetId == null || targetId.isEmpty) {
+      logger.w("$TAG - onMessageReceive - targetId is empty - received:$received");
+      return;
+    } else if (received == null) {
+      logger.w("$TAG - onMessageReceive - received is empty - targetId:$targetId");
+      return;
+    }
+
+    // init
+    if (receiveLoops[targetId] == null) receiveLoops[targetId] = false;
+    if (receiveMessages[targetId] == null) receiveMessages[targetId] = [];
+
+    // handle
+    receiveMessages[targetId]?.add(received);
+    _loopReceiveMessage(targetId); // await
+  }
+
+  Future _loopReceiveMessage(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) {
+      logger.w("$TAG - loopReceiveMessage - targetId is empty");
+      return;
+    }
+
+    // lock
+    if (receiveLoops[targetId] == true) return;
+    receiveLoops[targetId] = true;
+
+    // empty
+    if (receiveMessages[targetId] == null || receiveMessages[targetId]!.isEmpty) {
+      logger.i("$TAG - loopReceiveMessage - receives is empty - targetId:$targetId");
+      receiveLoops[targetId] = false;
+      return;
+    }
+
+    // handle
+    MessageSchema? received = receiveMessages[targetId]?[0];
+    if (received != null) {
       try {
         await _messageHandle(received);
       } catch (e) {
-        handleError(e);
+        // handleError(e); // can not be write here
+        logger.e("$TAG - _loopReceiveMessage - error:${e.toString()}");
+
+        // pop
+        if ((receiveMessages[targetId]?.length ?? 0) > 0) {
+          receiveMessages[targetId]?.removeAt(0);
+        } else {
+          logger.w("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
+        }
+
+        // unlock
+        receiveLoops[targetId] = false;
+
+        // loop
+        return _loopReceiveMessage(targetId);
       }
+    } else {
+      logger.w("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
     }
+
+    // pop
+    if ((receiveMessages[targetId]?.length ?? 0) > 0) {
+      receiveMessages[targetId]?.removeAt(0);
+    } else {
+      logger.w("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
+    }
+
+    // unlock
+    receiveLoops[targetId] = false;
+
+    // loop
+    return _loopReceiveMessage(targetId);
   }
 
   Future _messageHandle(MessageSchema received) async {
