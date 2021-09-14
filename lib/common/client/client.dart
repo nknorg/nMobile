@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
@@ -98,7 +97,7 @@ class ClientCommon with Tag {
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
       } else {
-        if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
+        if (!(await walletCommon.isPasswordRight(wallet.address, password, seedRpcList: seedRpcList))) {
           logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           throw Exception("wrong password");
         }
@@ -217,14 +216,14 @@ class ClientCommon with Tag {
     await chatOutCommon.sendPing(address, true);
     // loop
     Future.delayed(Duration(seconds: 1), () {
-      if ((status == ClientConnectStatus.connecting) && (application.appLifecycleState == AppLifecycleState.resumed)) {
+      if (status == ClientConnectStatus.connecting) {
         _connectingVisibleSink.add(true);
         connectCheck();
       }
     });
   }
 
-  Future pingSuccess() async {
+  Future pingSelfSuccess() async {
     if (client == null) return;
     if (status != ClientConnectStatus.connecting) return;
     _statusSink.add(ClientConnectStatus.connected);

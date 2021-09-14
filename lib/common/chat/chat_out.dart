@@ -85,7 +85,7 @@ class ChatOutCommon with Tag {
     for (int offset = 0; true; offset += limit) {
       final result = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
       checkList.addAll(result);
-      logger.i("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
     }
 
@@ -93,7 +93,7 @@ class ChatOutCommon with Tag {
     for (int offset = 0; true; offset += limit) {
       final result = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
       checkList.addAll(result);
-      logger.i("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
     }
 
@@ -109,7 +109,7 @@ class ChatOutCommon with Tag {
     }).toList();
 
     if (checkList.isEmpty) {
-      logger.i("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
+      logger.d("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
       return 0;
     }
 
@@ -556,7 +556,8 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
       default:
-        message = await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
+        int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
+        message = await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         logger.w("$TAG - resendMute - noBurning no receipt/read - targetId:${message.targetId} - message:$message");
         break;
     }
@@ -627,7 +628,7 @@ class ChatOutCommon with Tag {
     // pid
     if (pid == null || pid.isEmpty) {
       logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
-      if (message.canBurning) {
+      if (message.canReceipt) {
         message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
       } else {
         // noBurning just delete
@@ -638,8 +639,9 @@ class ChatOutCommon with Tag {
       message.pid = pid;
       _messageStorage.updatePid(message.msgId, message.pid); // await
       // noBurning no need receipt/read
-      if (!message.canBurning) {
-        chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch); // await
+      if (!message.canReceipt) {
+        int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
+        chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
       }
     }
     return message;
