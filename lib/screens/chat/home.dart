@@ -54,7 +54,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _clientStatusChangeSubscription;
 
   bool firstConnected = true;
-  int? appBackgroundAt;
+  int appBackgroundAt = 0;
+  int lastSendPangsAt = 0;
 
   @override
   void onRefreshArguments() {}
@@ -77,14 +78,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       if (states.length > 0) {
         if (states[states.length - 1] == AppLifecycleState.resumed) {
           if (!firstConnected) {
-            int between = DateTime.now().millisecondsSinceEpoch - (appBackgroundAt ?? 0);
+            int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
             if (between >= Global.clientReAuthGapMs) {
-              _tryAuth();
+              _tryAuth(); // await
             } else {
-              clientCommon.connectCheck();
+              clientCommon.connectCheck(); // await
             }
           }
-        } else {
+        } else if (states[states.length - 1] == AppLifecycleState.paused) {
           appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
         }
       }
@@ -93,7 +94,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(refreshSubscribers: firstConnected);
+        if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
+          lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
+          chatCommon.sendPang2SessionsContact(); // await
+        }
+      }
+      if (clientCommon.client != null && status == ClientConnectStatus.connected) {
+        topicCommon.checkAllTopics(refreshSubscribers: firstConnected); // await TODO:GG 要有吗？
         firstConnected = false;
       }
     });
