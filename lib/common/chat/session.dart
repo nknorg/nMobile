@@ -51,7 +51,7 @@ class SessionCommon with Tag {
     // unReadCount
     if (schema.unReadCount <= 0) {
       if (lastMsg != null) {
-        schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canRead) ? 0 : 1;
+        schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canNotification) ? 0 : 1;
       } else {
         schema.unReadCount = await chatCommon.unReadCountByTargetId(schema.targetId);
       }
