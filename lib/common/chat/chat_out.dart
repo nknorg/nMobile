@@ -411,11 +411,13 @@ class ChatOutCommon with Tag {
       }
       int? total = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL];
       int? index = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
-      // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
       // callback
       if (!message.isTopic) {
         double percent = (index ?? 0) / (total ?? 1);
-        _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+        if (percent <= 1.05) {
+          // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+          _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+        }
       }
       return message;
     } catch (e) {

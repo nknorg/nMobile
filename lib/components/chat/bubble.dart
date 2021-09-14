@@ -60,7 +60,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   late bool _hideProfile;
   ContactSchema? _contact;
 
-  double _uploadProgress = 1; // TODO:GG 多个uploading的显示问题
+  double _uploadProgress = 1;
 
   PlayerState _playState = PlayerState.STOPPED;
   double _playProgress = 0;
@@ -72,7 +72,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
-      if (msgId == null || msgId != this._message.msgId || percent == null || _message.status != MessageStatus.Sending || !(_message.content is File)) {
+      if (msgId == null || percent == null || _message.status != MessageStatus.Sending || !(_message.content is File)) {
         // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
         if (_uploadProgress != 1) {
           setState(() {
@@ -80,11 +80,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           });
         }
         return;
+      } else if (msgId != this._message.msgId) {
+        // just skip
+      } else {
+        this.setState(() {
+          _uploadProgress = percent;
+        });
       }
-      if (percent <= _uploadProgress) return;
-      this.setState(() {
-        _uploadProgress = percent;
-      });
     });
     // player
     _onPlayStateChangedSubscription = audioHelper.onPlayStateChangedStream.listen((Map<String, dynamic> event) {
@@ -161,6 +163,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${_message.msgId}";
         taskService.addTask1(taskKey, (String key) {
           if (senderKey?.isNotEmpty == true && !key.contains(senderKey!)) {
+            // remove others client burning
             taskService.removeTask1(key);
             // onRefreshArguments(); // refresh task (will dead loop)
             return;
@@ -305,10 +308,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
     bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
 
-    bool hasProgress = (_message.content is File) && !_message.isTopic;
+    bool canProgress = (_message.content is File) && !_message.isTopic;
 
-    bool showSending = isSending && !hasProgress;
-    bool showProgress = isSending && hasProgress && _uploadProgress < 1;
+    bool showSending = isSending && !canProgress;
+    bool showProgress = isSending && canProgress && _uploadProgress < 1;
 
     if (showSending) {
       return Padding(
