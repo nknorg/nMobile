@@ -57,6 +57,8 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 }
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
+  static final Map<String, int> topicsCheck = Map();
+
   TopicSchema? _topic;
   bool? _isJoined;
   ContactSchema? _contact;
@@ -193,6 +195,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _getDataMessages(true);
 
     // topic
+    _refreshTopicSubscribers(); // await
     _refreshTopicJoined(); // await
 
     // read
@@ -256,6 +259,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
   }
 
+  _refreshTopicSubscribers() async {
+    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
+    // less 1h
+    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
+      logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
+      return;
+    }
+    await Future.delayed(Duration(milliseconds: 300));
+    logger.i("$TAG - _refreshTopicSubscribers - start");
+    await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
+    topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
+  }
+
   _refreshTopicJoined() async {
     if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
     bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
@@ -265,8 +282,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       joined = _me?.status == SubscriberStatus.Subscribed;
     }
     if (!joined && mounted) {
-      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: true).then((value) async {
-        await Future.delayed(Duration(seconds: 5), () => _refreshTopicJoined());
+      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: false).then((value) async {
+        await Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
       });
     }
     if (_isJoined != joined) {
