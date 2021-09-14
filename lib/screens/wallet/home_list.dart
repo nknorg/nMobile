@@ -49,7 +49,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   void initState() {
     super.initState();
     // balance query
-    walletCommon.queryBalance(); // await
+    walletCommon.queryBalance(delayMs: 2000); // await
 
     _walletBloc = BlocProvider.of<WalletBloc>(context);
 

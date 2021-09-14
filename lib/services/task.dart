@@ -66,12 +66,14 @@ class TaskService with Tag {
           });
         });
 
-    // task
-    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), callNow: true);
+    // immediate
+    addTask600(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 1000), callNow: true);
+    addTask600(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1500), callNow: true);
+    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 2000), callNow: true);
+
+    // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
     addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(), callNow: false);
-    addTask600(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true), callNow: true);
-    addTask600(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(), callNow: true);
     addTask600(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(), callNow: false);
   }
 

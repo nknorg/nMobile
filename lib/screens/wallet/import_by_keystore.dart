@@ -96,7 +96,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
           _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
         }
-        Future.delayed(Duration(seconds: 3), () => walletCommon.queryBalance());
+        walletCommon.queryBalance(delayMs: 3000); // await
 
         Loading.dismiss();
         Toast.show(_localizations.success);

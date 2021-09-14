@@ -46,14 +46,14 @@ class ChatInCommon with Tag {
     }
 
     // message
-    if (needWait) {
-      try {
+    try {
+      if (needWait) {
         await _messageHandle(message);
-      } catch (e) {
-        handleError(e);
+      } else {
+        onMessageReceive(message.targetId, message);
       }
-    } else {
-      onMessageReceive(message.targetId, message);
+    } catch (e) {
+      handleError(e);
     }
   }
 
@@ -134,10 +134,12 @@ class ChatInCommon with Tag {
       if (topic.joined != true) {
         logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
         return;
+      } else if (!topic.isPrivate) {
+        logger.v("$TAG - _messageHandle - accept message - public topic - subscriber:$subscriber - topic:$topic");
       } else if (received.isTopicAction) {
         logger.i("$TAG - _messageHandle - accept message - just action - subscriber:$subscriber - topic:$topic");
       } else if (subscriber.status == SubscriberStatus.Subscribed) {
-        logger.v("$TAG - _messageHandle - receive message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
+        logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
         // joined + message(content) + noSubscribe
         // SUPPORT:START
@@ -217,7 +219,7 @@ class ChatInCommon with Tag {
     }
 
     // receipt
-    if (!received.isTopic && received.canDisplay) {
+    if (!received.isTopic && received.canReceipt) {
       chatOutCommon.sendReceipt(received); // await
     }
 
@@ -242,7 +244,7 @@ class ChatInCommon with Tag {
     // if (received.isTopic) return; (limit in out)
     if (received.from == received.to || received.from == clientCommon.address) {
       logger.i("$TAG - _receivePing - ping self receive - received:$received");
-      await clientCommon.pingSuccess();
+      await clientCommon.pingSelfSuccess();
       return true;
     }
     if (!(received.content! is String)) {
@@ -289,7 +291,7 @@ class ChatInCommon with Tag {
         chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
       }
     } else {
-      await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, notify: true);
+      await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
     }
 
     // topicInvitation
@@ -297,7 +299,7 @@ class ChatInCommon with Tag {
       subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
     }
 
-    // check resend
+    // check msgStatus
     chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true); // await
 
     return true;
@@ -335,7 +337,8 @@ class ChatInCommon with Tag {
     // status
     futures.clear();
     msgList.forEach((element) {
-      futures.add(chatCommon.updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true));
+      int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
+      futures.add(chatCommon.updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true));
     });
     await Future.wait(futures);
 
@@ -344,7 +347,7 @@ class ChatInCommon with Tag {
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
-    // check resend
+    // check msgStatus
     chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true); // await
 
     return true;
@@ -400,7 +403,7 @@ class ChatInCommon with Tag {
             futures.add(_messageStorage.query(msgId).then((message) {
               if (message != null) {
                 int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
-                int? receiveAt = (reallyStatus == MessageStatus.Read) ? DateTime.now().millisecondsSinceEpoch : null;
+                int? receiveAt = ((reallyStatus == MessageStatus.Read) || (message.receiveAt == null)) ? DateTime.now().millisecondsSinceEpoch : null;
                 logger.i("$TAG - _receiveMsgStatus - msg update status - status:$reallyStatus - receiveAt:$receiveAt - received:$received");
                 return chatCommon.updateMessageStatus(message, reallyStatus, receiveAt: receiveAt, notify: true);
               } else {
