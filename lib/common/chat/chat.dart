@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/global.dart';
@@ -227,7 +228,7 @@ class ChatCommon with Tag {
       return added;
     }
     // update
-    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canRead ? exist.unReadCount + 1 : exist.unReadCount);
+    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? exist.unReadCount + 1 : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
     exist.lastMessageAt = message.sendAt;
     exist.lastMessageOptions = message.toMap();
@@ -272,6 +273,16 @@ class ChatCommon with Tag {
 
   Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false}) async {
     if (status <= message.status && !force) return message;
+    // pieces will set sendReceipt fast, set sendSuccess lowly
+    if (message.content is File?) {
+      if (message.status == MessageStatus.Sending && status != MessageStatus.SendSuccess) {
+        logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
+        await Future.delayed(Duration(seconds: 1));
+        MessageSchema? _message = await _messageStorage.query(message.msgId);
+        if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify);
+      }
+    }
+    // update
     message.status = status;
     bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success && notify) _onUpdateSink.add(message);
