@@ -339,7 +339,9 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  Future sendPang2SessionsContact() async {
+  Future sendPang2SessionsContact({int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+
     int max = 100;
     int limit = 20;
     List<SessionSchema> sessions = [];
