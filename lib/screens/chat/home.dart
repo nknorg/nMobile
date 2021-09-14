@@ -55,6 +55,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   bool firstConnected = true;
   int appBackgroundAt = 0;
+  int lastCheckTopicsAt = 0;
   int lastSendPangsAt = 0;
 
   @override
@@ -93,17 +94,19 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      // check topics
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(refreshSubscribers: firstConnected, delayMs: 5 * 1000); // await
-        firstConnected = false;
-      }
-      // send pangs
-      if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
-          lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
-          chatCommon.sendPang2SessionsContact(); // await
+        // check topics (1h)
+        if ((DateTime.now().millisecondsSinceEpoch - lastCheckTopicsAt) > (1 * 60 * 60 * 1000)) {
+          topicCommon.checkAllTopics(refreshSubscribers: false, delayMs: 2000); // await
+          lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
         }
+        // send pangs (3h)
+        if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
+          chatCommon.sendPang2SessionsContact(delayMs: 1000); // await
+          lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
+        }
+        // firstConnected
+        firstConnected = false;
       }
     });
 

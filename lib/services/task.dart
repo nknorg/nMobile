@@ -20,8 +20,8 @@ class TaskService with Tag {
   Timer? _timer60;
   Map<String, Function(String)> tasks60 = Map<String, Function(String)>();
 
-  Timer? _timer600;
-  Map<String, Function(String)> _tasks600 = Map<String, Function(String)>();
+  Timer? _timer300;
+  Map<String, Function(String)> _tasks300 = Map<String, Function(String)>();
 
   TaskService();
 
@@ -57,24 +57,24 @@ class TaskService with Tag {
           });
         });
 
-    // timer 600s
-    _timer600 = _timer600 ??
-        Timer.periodic(Duration(seconds: 600), (timer) {
-          _tasks600.keys.forEach((String key) {
+    // timer 300s
+    _timer300 = _timer300 ??
+        Timer.periodic(Duration(seconds: 300), (timer) {
+          _tasks300.keys.forEach((String key) {
             // logger.d("TickHelper - tick");
-            _tasks600[key]?.call(key);
+            _tasks300[key]?.call(key);
           });
         });
 
     // immediate
-    addTask600(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 1000), callNow: true);
-    addTask600(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1500), callNow: true);
-    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 2000), callNow: true);
+    addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
+    addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1500), callNow: true);
+    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 2500), callNow: true);
 
     // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
     addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(), callNow: false);
-    addTask600(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(), callNow: false);
+    // addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false), callNow: false);
   }
 
   uninstall() {
@@ -82,8 +82,8 @@ class TaskService with Tag {
     _timer1 = null;
     _timer60?.cancel();
     _timer60 = null;
-    _timer600?.cancel();
-    _timer600 = null;
+    _timer300?.cancel();
+    _timer300 = null;
   }
 
   void addTask1(String key, Function(String) func, {bool callNow = true}) {
@@ -120,20 +120,20 @@ class TaskService with Tag {
     tasks60 = temp;
   }
 
-  void addTask600(String key, Function(String) func, {bool callNow = true}) {
-    logger.d("$Tag - addTask600 - key:$key - func:${func.toString()}");
+  void addTask300(String key, Function(String) func, {bool callNow = true}) {
+    logger.d("$Tag - addTask300 - key:$key - func:${func.toString()}");
     if (callNow) func.call(key);
-    _tasks600[key] = func;
+    _tasks300[key] = func;
   }
 
-  void removeTask600(String key) {
-    if (!_tasks600.keys.contains(key)) return;
+  void removeTask300(String key) {
+    if (!_tasks300.keys.contains(key)) return;
     Map<String, Function(String)> temp = Map();
-    _tasks600.forEach((k, v) {
+    _tasks300.forEach((k, v) {
       if (k != key) {
         temp[k] = v;
       }
     });
-    _tasks600 = temp;
+    _tasks300 = temp;
   }
 }
