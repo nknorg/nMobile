@@ -47,7 +47,7 @@ class WalletCommon with Tag {
     return _walletStorage.getPassword(walletAddress);
   }
 
-  Future<bool> isPasswordRight(String? walletAddress, String? password) async {
+  Future<bool> isPasswordRight(String? walletAddress, String? password, {List<String>? seedRpcList}) async {
     if (walletAddress == null || walletAddress.isEmpty) return false;
     if (password == null || password.isEmpty) return false;
     String? storagePassword = await getPassword(walletAddress);
@@ -56,7 +56,7 @@ class WalletCommon with Tag {
     } else {
       try {
         final keystore = await getKeystore(walletAddress);
-        final seedRpcList = await Global.getSeedRpcList(null, measure: false);
+        seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(null, measure: true));
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         if (nknWallet.address.isNotEmpty) return true;
       } catch (e) {
@@ -76,7 +76,8 @@ class WalletCommon with Tag {
     return w1.balance == w2.balance && w1.balanceEth == w2.balanceEth;
   }
 
-  queryBalance() async {
+  queryBalance({int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {

@@ -72,7 +72,7 @@ class ChatCommon with Tag {
       }
     }
     // burning
-    if (exist != null && message.canBurning && !message.isTopic && message.contentType != MessageContentType.contactOptions) {
+    if (exist != null && message.canBurning && message.contentType != MessageContentType.contactOptions) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
@@ -91,7 +91,7 @@ class ChatCommon with Tag {
                 exist.clientAddress,
                 exist.options!.deleteAfterSeconds!,
                 exist.options!.updateBurnAfterAt!,
-              );
+              ); // await
             }
           });
         }
@@ -178,7 +178,7 @@ class ChatCommon with Tag {
                 exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
                 logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version nee refresh TODO:GG 有用吗
+              // some subscriber status wrong in new version need refresh TODO:GG 有用吗?
               subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           } else {
@@ -196,7 +196,7 @@ class ChatCommon with Tag {
                 exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
                 logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version nee refresh TODO:GG 有用吗
+              // some subscriber status wrong in new version need refresh TODO:GG 有用吗?
               subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           }
@@ -236,7 +236,7 @@ class ChatCommon with Tag {
   }
 
   MessageSchema burningHandle(MessageSchema message) {
-    if (!message.canBurning || message.isTopic) return message;
+    if (!message.canBurning) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if (burnAfterSeconds != null && burnAfterSeconds > 0) {
@@ -284,7 +284,7 @@ class ChatCommon with Tag {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
     }
-    // TODO:GG sendFail需要给一个sessionItem的提示吗?
+    // TODO:GG sendFail需要给一个sessionItem的提示吗？
     return message;
   }
 
@@ -312,7 +312,8 @@ class ChatCommon with Tag {
     // read
     List<Future> futures = [];
     shouldReads.forEach((element) {
-      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true));
+      int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
+      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true));
     });
     await Future.wait(futures);
     // loop
@@ -337,5 +338,28 @@ class ChatCommon with Tag {
     await Future.wait(futures);
     logger.i("$TAG - checkSending - checkCount:${sendingList.length}");
     return sendingList.length;
+  }
+
+  Future sendPang2SessionsContact() async {
+    int max = 100;
+    int limit = 20;
+    List<SessionSchema> sessions = [];
+
+    // sessions
+    for (int offset = 0; true; offset += limit) {
+      List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
+      result.forEach((element) {
+        if (element.isContact) sessions.add(element);
+      });
+      logger.d("$TAG - sendPang2SessionsContact - offset:$offset - current_len:${result.length} - total_len:${sessions.length}");
+      if ((result.length < limit) || (sessions.length >= max)) break;
+    }
+
+    List<Future> futures = [];
+    sessions.forEach((session) {
+      logger.d("$TAG - sendPang2SessionsContact - send pang - session:$session");
+      futures.add(chatOutCommon.sendPing(session.targetId, false));
+    });
+    await Future.wait(futures);
   }
 }
