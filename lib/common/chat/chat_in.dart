@@ -224,14 +224,14 @@ class ChatInCommon with Tag {
     }
 
     // status (not handle in messages screen)
-    if (received.isTopic || !received.canRead) {
-      if (received.contentType != MessageContentType.piece && received.status != MessageStatus.Read) {
+    if (received.isTopic || (!received.canReceipt && received.canDisplay)) {
+      if (received.status != MessageStatus.Read) {
         chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
       }
     }
 
     // badge
-    if (received.canRead) {
+    if (received.canNotification) {
       bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
       if (receiveOk && !skipBadgeUp) {
         Badge.onCountUp(1); // await

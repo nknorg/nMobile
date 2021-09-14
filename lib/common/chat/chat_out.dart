@@ -862,7 +862,7 @@ class ChatOutCommon with Tag {
   }
 
   Future _sendPush(MessageSchema message, String? deviceToken) async {
-    if (!message.canRead) return;
+    if (!message.canNotification) return;
     if (deviceToken == null || deviceToken.isEmpty == true) return;
 
     S localizations = S.of(Global.appContext);

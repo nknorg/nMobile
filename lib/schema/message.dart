@@ -110,19 +110,19 @@ class MessageSchema extends Equatable {
 
   // == Burning
   bool get canReceipt {
-    return canBurning;
+    bool isEvent = contentType == MessageContentType.topicInvitation;
+    return canBurning || isEvent;
   }
 
   // ++ UnReadCount / Notification
-  bool get canRead {
-    bool isEvent = contentType == MessageContentType.topicInvitation;
-    return canReceipt || isEvent;
+  bool get canNotification {
+    return canReceipt;
   }
 
   // ++ Session
   bool get canDisplay {
     bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
-    return canRead || isEvent;
+    return canNotification || isEvent;
   }
 
   bool get isTopicAction {
