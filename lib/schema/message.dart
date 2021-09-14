@@ -108,10 +108,15 @@ class MessageSchema extends Equatable {
     return isText || isImage || isAudio;
   }
 
+  // == Burning
+  bool get canReceipt {
+    return canBurning;
+  }
+
   // ++ UnReadCount / Notification
   bool get canRead {
     bool isEvent = contentType == MessageContentType.topicInvitation;
-    return canBurning || isEvent;
+    return canReceipt || isEvent;
   }
 
   // ++ Session

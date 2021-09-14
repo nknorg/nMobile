@@ -75,11 +75,16 @@ class Global {
     }
   }
 
-  static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = true}) async {
+  static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = true, int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+
+    // get
     List<String> list = await SettingsStorage.getSeedRpcServers(prefix: prefix);
     list.addAll(defaultSeedRpcList);
     list = LinkedHashSet<String>.from(list).toList();
     logger.d("Global - getSeedRpcList - seedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
+
+    // measure
     if (measure) {
       list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
       logger.i("Global - getSeedRpcList - measureSeedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
@@ -118,7 +123,9 @@ class Global {
     return nonce;
   }
 
-  static Future<int?> refreshNonce({String? walletAddress, bool useNow = false}) async {
+  static Future<int?> refreshNonce({String? walletAddress, bool useNow = false, int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+
     // walletAddress
     if (walletAddress == null || walletAddress.isEmpty) {
       if (clientCommon.client?.publicKey.isNotEmpty == true) {
