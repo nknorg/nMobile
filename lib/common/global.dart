@@ -32,8 +32,8 @@ class Global {
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
-  static int topicDefaultSubscribeHeight = 400000;
-  static int topicWarnBlockExpireHeight = 100000;
+  static int topicDefaultSubscribeHeight = 400000; // 93day
+  static int topicWarnBlockExpireHeight = 100000; // 23day
 
   static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
   static late int profileExpireMs = 1 * 60 * 60 * 1000; // 1h

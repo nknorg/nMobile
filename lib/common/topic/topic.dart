@@ -690,11 +690,11 @@ class TopicCommon with Tag {
     if (_subscriber == null) return null;
 
     // subscribers sync
-    if (_topic.isPrivate) {
-      Future.delayed(Duration(seconds: 1), () {
-        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-      });
-    }
+    // if (_topic.isPrivate) {
+    //   Future.delayed(Duration(seconds: 1), () {
+    //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    //   });
+    // }
     return _subscriber;
   }
 
@@ -761,11 +761,11 @@ class TopicCommon with Tag {
     // await subscriberCommon.delete(_subscriber.id, notify: true);
 
     // subscribers sync
-    if (_topic.isPrivate) {
-      Future.delayed(Duration(seconds: 1), () {
-        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-      });
-    }
+    // if (_topic.isPrivate) {
+    //   Future.delayed(Duration(seconds: 1), () {
+    //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    //   });
+    // }
     return _subscriber;
   }
 
@@ -818,11 +818,11 @@ class TopicCommon with Tag {
       // await subscriberCommon.delete(_subscriber.id, notify: true);
 
       // subscribers sync
-      if (_topic.isPrivate) {
-        Future.delayed(Duration(seconds: 1), () {
-          subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-        });
-      }
+      // if (_topic.isPrivate) {
+      //   Future.delayed(Duration(seconds: 1), () {
+      //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+      //   });
+      // }
     }
     return _subscriber;
   }
