@@ -36,8 +36,10 @@ class TopicCommon with Tag {
     _updateController.close();
   }
 
-  Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true}) async {
+  Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+
     List<TopicSchema> topics = await queryList();
     List<Future> futures = [];
     topics.forEach((TopicSchema topic) {
@@ -688,9 +690,11 @@ class TopicCommon with Tag {
     if (_subscriber == null) return null;
 
     // subscribers sync
-    Future.delayed(Duration(seconds: 1), () {
-      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-    });
+    if (_topic.isPrivate) {
+      Future.delayed(Duration(seconds: 1), () {
+        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+      });
+    }
     return _subscriber;
   }
 
@@ -757,9 +761,11 @@ class TopicCommon with Tag {
     // await subscriberCommon.delete(_subscriber.id, notify: true);
 
     // subscribers sync
-    Future.delayed(Duration(seconds: 1), () {
-      subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-    });
+    if (_topic.isPrivate) {
+      Future.delayed(Duration(seconds: 1), () {
+        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+      });
+    }
     return _subscriber;
   }
 
@@ -812,9 +818,11 @@ class TopicCommon with Tag {
       // await subscriberCommon.delete(_subscriber.id, notify: true);
 
       // subscribers sync
-      Future.delayed(Duration(seconds: 1), () {
-        subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
-      });
+      if (_topic.isPrivate) {
+        Future.delayed(Duration(seconds: 1), () {
+          subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+        });
+      }
     }
     return _subscriber;
   }

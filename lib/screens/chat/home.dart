@@ -93,15 +93,17 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      // check topics
+      if (clientCommon.client != null && status == ClientConnectStatus.connected) {
+        topicCommon.checkAllTopics(refreshSubscribers: firstConnected, delayMs: 5 * 1000); // await
+        firstConnected = false;
+      }
+      // send pangs
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
           lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
           chatCommon.sendPang2SessionsContact(); // await
         }
-      }
-      if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        topicCommon.checkAllTopics(refreshSubscribers: firstConnected); // await TODO:GG 要有吗？
-        firstConnected = false;
       }
     });
 
