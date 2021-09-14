@@ -178,8 +178,8 @@ class ChatCommon with Tag {
                 exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
                 logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version need refresh TODO:GG 有用吗?
-              subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+              // some subscriber status wrong in new version need refresh
+              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           } else {
             // SUPPORT:START
@@ -196,8 +196,8 @@ class ChatCommon with Tag {
                 exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
                 logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               }
-              // some subscriber status wrong in new version need refresh TODO:GG 有用吗?
-              subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+              // some subscriber status wrong in new version need refresh
+              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             }
           }
         }
@@ -284,7 +284,6 @@ class ChatCommon with Tag {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
     }
-    // TODO:GG sendFail需要给一个sessionItem的提示吗？
     return message;
   }
 
