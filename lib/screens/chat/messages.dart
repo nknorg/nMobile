@@ -267,10 +267,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
       return;
     }
+    topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: 300));
     logger.i("$TAG - _refreshTopicSubscribers - start");
     await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
-    topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
   }
 
   _refreshTopicJoined() async {

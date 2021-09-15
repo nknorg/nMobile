@@ -75,7 +75,7 @@ class Global {
     }
   }
 
-  static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = true, int? delayMs}) async {
+  static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     // get
@@ -139,7 +139,7 @@ class Global {
 
     // rpc
     if (walletAddress?.isNotEmpty == true) {
-      List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
+      List<String> seedRpcList = await Global.getSeedRpcList(null);
       nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
     } else {
       nonce = await clientCommon.client?.getNonce(txPool: true);
