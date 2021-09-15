@@ -56,7 +56,7 @@ class WalletCommon with Tag {
     } else {
       try {
         final keystore = await getKeystore(walletAddress);
-        seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(null, measure: true));
+        seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(null));
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         if (nknWallet.address.isNotEmpty) return true;
       } catch (e) {
