@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 
 /// hexEncode returns the hexadecimal encoding of raw.
-String hexEncode(Uint8List raw) {
+String hexEncode(dynamic raw) {
   return hex.encode(raw).toLowerCase();
 }
 

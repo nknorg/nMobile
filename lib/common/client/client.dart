@@ -15,7 +15,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/settings.dart';
-import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class ClientConnectStatus {
@@ -117,8 +116,7 @@ class ClientCommon with Tag {
 
       // database
       if (!(dbCommon.isOpen() == true)) {
-        String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
-        await dbCommon.open(pubKey, databasePwd);
+        await dbCommon.open(pubKey, seed);
         // wallet
         BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
         // contact

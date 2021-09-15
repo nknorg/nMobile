@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
@@ -29,10 +28,12 @@ class DB {
 
   DB();
 
-  Future<Database> _openDB(String publicKey, String password) async {
+  Future<Database> _openDB(String publicKey, String seed) async {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
-    logger.i("DB - path:$path - pwd:$password");
+    String password = hexEncode(sha256(seed));
+    logger.i("DB - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
+
     var db = await openDatabase(
       path,
       password: password,
@@ -92,17 +93,16 @@ class DB {
       logger.w("DB - openByDefault - publicKey/seed error");
       return false;
     }
-    String databasePwd = hexEncode(Uint8List.fromList(sha256(hexDecode(seed))));
-    await open(publicKey, databasePwd);
+    await open(publicKey, seed);
 
     ContactSchema? me = await contactCommon.getMe(clientAddress: publicKey, canAdd: true);
     contactCommon.meUpdateSink.add(me);
     return true;
   }
 
-  Future open(String publicKey, String password) async {
+  Future open(String publicKey, String seed) async {
     //if (database != null) return; // bug!
-    database = await _openDB(publicKey, password);
+    database = await _openDB(publicKey, seed);
     _openedSink.add(true);
   }
 
