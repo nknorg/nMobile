@@ -196,23 +196,27 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
 
-        guard let client = self.createClient(account: account, identifier: identifier, config: config) else {
-            self.resultError(result: result, code: "", message: "connect fail")
-            return
-        }
+        // var client :NknMultiClient?;
 
         clientWorkItem = DispatchWorkItem {
+            guard let client = self.createClient(account: account, identifier: identifier, config: config) else {
+                self.resultError(result: result, code: "", message: "connect fail")
+                return
+            }
+
             var resp:[String:Any] = [String:Any]()
             resp["address"] = client.address()
             resp["publicKey"] = client.pubKey()
             resp["seed"] = client.seed()
             self.resultSuccess(result: result, resp: resp)
+
+            self.onConnect(client: client)
+            self.onMessage(client: client)
         }
         clientQueue.async(execute: clientWorkItem!)
 
-        self.addClientConnectQueue(client: client)
-
-        self.addMessageReceiveQueue(client: client)
+        // self.addClientConnectQueue(client: client!)
+        // self.addMessageReceiveQueue(client: client!)
     }
 
     private func close(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
