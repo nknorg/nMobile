@@ -351,7 +351,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("你已被移出该群，请联系群主邀请您"),
         "rename": MessageLookupByLibrary.simpleMessage("修改"),
         "request_processed":
-            MessageLookupByLibrary.simpleMessage("还在正在处理的请求，请稍后再试"),
+            MessageLookupByLibrary.simpleMessage("还有正在处理的请求，请稍后再试"),
         "save": MessageLookupByLibrary.simpleMessage("保存"),
         "save_contact": MessageLookupByLibrary.simpleMessage("保存联系人"),
         "save_to_album": MessageLookupByLibrary.simpleMessage("保存到相册"),

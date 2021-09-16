@@ -352,7 +352,7 @@
   "left_group_tip": "已离开群组，请稍后再试。",
   "removed_group_tip": "你已被移出该群，请联系群主邀请您",
   "contact_invite_group_tip": "请联系群主邀请您",
-  "request_processed": "还在正在处理的请求，请稍后再试",
+  "request_processed": "还有正在处理的请求，请稍后再试",
   "blocked_user_disallow_invite": "改用户已经被拉黑，不允许普通成员邀请",
   "confirm_resend": "确认重新发送？",
   "release_to_cancel": "松开取消",
