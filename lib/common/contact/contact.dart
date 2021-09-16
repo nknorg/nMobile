@@ -51,7 +51,7 @@ class ContactCommon with Tag {
     return contact;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, String contactType, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<ContactSchema?> addByType(String? clientAddress, int contactType, {bool notify = false, bool checkDuplicated = true}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? schema = await ContactSchema.createByType(clientAddress, type: contactType);
     return add(schema, notify: notify, checkDuplicated: checkDuplicated);
@@ -94,7 +94,7 @@ class ContactCommon with Tag {
     return await _contactStorage.queryByClientAddress(clientAddress);
   }
 
-  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? offset, int? limit}) {
+  Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int? offset, int? limit}) {
     return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
@@ -103,7 +103,7 @@ class ContactCommon with Tag {
     return _contactStorage.queryCountByClientAddress(clientAddress);
   }
 
-  Future<bool> setType(int? contactId, String? contactType, {bool notify = false}) async {
+  Future<bool> setType(int? contactId, int? contactType, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
     bool success = await _contactStorage.setType(contactId, contactType);
     if (success && notify) queryAndNotify(contactId);
