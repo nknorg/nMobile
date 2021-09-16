@@ -304,6 +304,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "nkn": MessageLookupByLibrary.simpleMessage("NKN"),
         "nkn_mainnet": MessageLookupByLibrary.simpleMessage("NKN 主网"),
         "no": MessageLookupByLibrary.simpleMessage("不"),
+        "no_permission_join_group":
+            MessageLookupByLibrary.simpleMessage("还未获得入群权限，请稍后再试。"),
         "no_wallet_create": MessageLookupByLibrary.simpleMessage("创建新账户"),
         "no_wallet_desc":
             MessageLookupByLibrary.simpleMessage("使用我们的智能账户管理器管理您的主网和\nNKN通证。"),
