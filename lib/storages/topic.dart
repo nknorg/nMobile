@@ -23,32 +23,30 @@ class TopicStorage with Tag {
   static create(Database db, int version) async {
     // create table
     await db.execute('''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        topic TEXT,
-        type INTEGER,
-        create_at INTEGER,
-        update_at INTEGER,
-        joined BOOLEAN DEFAULT 0,
-        subscribe_at INTEGER,
-        expire_height INTEGER,
-        avatar TEXT,
-        count INTEGER,
-        is_top BOOLEAN DEFAULT 0,
-        options TEXT,
-        data TEXT
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `topic` VARCHAR(200),
+        `type` INT,
+        `create_at` BIGINT,
+        `update_at` BIGINT,
+        `joined` BOOLEAN DEFAULT 0,
+        `subscribe_at` BIGINT,
+        `expire_height` BIGINT,
+        `avatar` TEXT,
+        `count` INT,
+        `is_top` BOOLEAN DEFAULT 0,
+        `options` TEXT,
+        `data` TEXT
       )''');
+
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_topic_topic ON $tableName (topic)');
-    await db.execute('CREATE INDEX index_topic_create_at ON $tableName (create_at)');
-    await db.execute('CREATE INDEX index_topic_update_at ON $tableName (update_at)');
-    await db.execute('CREATE INDEX index_topic_subscribe_at ON $tableName (subscribe_at)');
-    await db.execute('CREATE INDEX index_topic_type_create_at ON $tableName (type, create_at)');
-    await db.execute('CREATE INDEX index_topic_type_update_at ON $tableName (type, update_at)');
-    await db.execute('CREATE INDEX index_topic_type_subscribe_at ON $tableName (type, subscribe_at)');
-    await db.execute('CREATE INDEX index_topic_joined_type_create_at ON $tableName (joined, type, create_at)');
-    await db.execute('CREATE INDEX index_topic_joined_type_update_at ON $tableName (joined, type, update_at)');
-    await db.execute('CREATE INDEX index_topic_joined_type_subscribe_at ON $tableName (joined, type, subscribe_at)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic` ON `$tableName` (`topic`)');
+    await db.execute('CREATE INDEX `index_topic_create_at` ON `$tableName` (`create_at`)');
+    await db.execute('CREATE INDEX `index_topic_update_at` ON `$tableName` (`update_at`)');
+    await db.execute('CREATE INDEX `index_topic_type_create_at` ON `$tableName` (`type`, `create_at`)');
+    await db.execute('CREATE INDEX `index_topic_type_update_at` ON `$tableName` (`type`, `update_at`)');
+    await db.execute('CREATE INDEX `index_topic_joined_type_create_at` ON `$tableName` (`joined`, `type`, `create_at`)');
+    await db.execute('CREATE INDEX `index_topic_joined_type_update_at` ON `$tableName` (`joined`, `type`, `update_at`)');
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
@@ -153,13 +151,13 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? limit, int? offset}) async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: (topicType?.isNotEmpty == true) ? 'type = ?' : null,
-        whereArgs: (topicType?.isNotEmpty == true) ? [topicType] : null,
+        where: (topicType != null) ? 'type = ?' : null,
+        whereArgs: (topicType != null) ? [topicType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy ?? 'create_at DESC',
@@ -183,13 +181,13 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<List<TopicSchema>> queryListJoined({String? topicType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int? limit, int? offset}) async {
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: (topicType?.isNotEmpty == true) ? 'joined = ? AND type = ?' : 'joined = ?',
-        whereArgs: (topicType?.isNotEmpty == true) ? [1, topicType] : [1],
+        where: (topicType != null) ? 'joined = ? AND type = ?' : 'joined = ?',
+        whereArgs: (topicType != null) ? [1, topicType] : [1],
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy ?? 'create_at DESC',

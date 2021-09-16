@@ -1,6 +1,6 @@
 class WalletType {
-  static const String nkn = 'nkn';
-  static const String eth = 'eth';
+  static const nkn = 'nkn';
+  static const eth = 'eth';
 }
 
 class WalletSchema {
