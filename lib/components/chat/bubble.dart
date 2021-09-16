@@ -236,6 +236,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : (_hideProfile ? 0 : 8)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           isSendOut ? SizedBox.shrink() : _getAvatar(),
           SizedBox(width: 8),
