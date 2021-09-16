@@ -361,5 +361,6 @@
   "picture_too_big": "圖片尺寸過大",
   "add_user_duplicated": "已添加該用戶",
   "confirm_unsubscribe_group": "確定要退出群聊嗎？",
-  "balance_not_enough": "餘額不足"
+  "balance_not_enough": "餘額不足",
+  "no_permission_join_group": "還未獲得入群權限，請稍後再試。"
 }

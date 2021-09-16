@@ -361,5 +361,6 @@
   "picture_too_big": "The picture is too big",
   "add_user_duplicated": "The user has been added",
   "confirm_unsubscribe_group": "Are you sure you want to leave the group chat?",
-  "balance_not_enough": "Balance not enough"
+  "balance_not_enough": "Balance not enough",
+  "no_permission_join_group": "Have not been granted permission to join the group, please try again later."
 }
