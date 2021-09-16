@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:nmobile/storages/settings.dart';
 
 class NotificationType {
-  static const int only_name = 0;
-  static const int name_and_message = 1;
-  static const int none = 2;
+  static const only_name = 0;
+  static const name_and_message = 1;
+  static const none = 2;
 }
 
 class PlatformName {
-  static const String web = "web";
-  static const String android = "android";
-  static const String ios = "ios";
+  static const web = "web";
+  static const android = "android";
+  static const ios = "ios";
 
   static String get() {
     return Platform.isAndroid ? android : (Platform.isIOS ? ios : "");

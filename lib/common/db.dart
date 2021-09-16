@@ -32,7 +32,7 @@ class DB {
     var databasesPath = await getDatabasesPath();
     String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
     String password = hexEncode(sha256(seed));
-    logger.i("DB - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
+    logger.i("DB - ready - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
 
     var db = await openDatabase(
       path,
@@ -40,13 +40,13 @@ class DB {
       version: currentDatabaseVersion,
       singleInstance: true,
       onCreate: (Database db, int version) async {
-        logger.i("DB - create - version:$version");
+        logger.i("DB - create - version:$version - path:${db.path}");
         await ContactStorage.create(db, version);
         await DeviceInfoStorage.create(db, version);
         await TopicStorage.create(db, version);
         await SubscriberStorage.create(db, version);
-        await SessionStorage.create(db, version);
         await MessageStorage.create(db, version);
+        await SessionStorage.create(db, version);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
@@ -71,7 +71,7 @@ class DB {
         // Loading.dismiss(); // TODO:GG loading(tip)
       },
       onOpen: (Database db) async {
-        logger.i("DB - open");
+        logger.i("DB - opened");
       },
     );
     // await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);

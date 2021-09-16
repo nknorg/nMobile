@@ -16,18 +16,20 @@ class SessionStorage with Tag {
   static create(Database db, int version) async {
     // create table
     await db.execute('''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        target_id TEXT,
-        type TEXT,
-        last_message_at INTEGER,
-        last_message_options TEXT,
-        un_read_count INTEGER,
-        is_top BOOLEAN DEFAULT 0
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `target_id` VARCHAR(200),
+        `type` INT,
+        `last_message_at` BIGINT,
+        `last_message_options` TEXT,
+        `un_read_count` INT,
+        `is_top` BOOLEAN DEFAULT 0
       )''');
+
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_session_target_id ON $tableName (target_id)');
-    await db.execute('CREATE INDEX index_session_top_last_message_at ON $tableName (is_top, last_message_at)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_session_target_id` ON `$tableName` (`target_id`)');
+    await db.execute('CREATE INDEX `index_session_is_top_last_message_at` ON `$tableName` (`is_top`, `last_message_at`)');
+    await db.execute('CREATE INDEX `index_session_type_is_top_last_message_at` ON `$tableName` (`type`, `is_top`, `last_message_at`)');
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {

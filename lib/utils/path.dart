@@ -8,10 +8,10 @@ import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 class SubDirType {
-  static const String cache = "cache";
-  static const String chat = "chat";
-  static const String contact = "contact";
-  static const String topic = "topic";
+  static const cache = "cache";
+  static const chat = "chat";
+  static const contact = "contact";
+  static const topic = "topic";
 }
 
 class Path {

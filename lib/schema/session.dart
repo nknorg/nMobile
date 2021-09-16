@@ -4,14 +4,14 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class SessionType {
-  static const CONTACT = "contact";
-  static const TOPIC = "topic";
+  static const CONTACT = 1;
+  static const TOPIC = 2;
 }
 
 class SessionSchema {
   int? id; // <-> id
   String targetId; // (required) <-> target_id
-  String type; // (required) <-> type
+  int type; // (required) <-> type
 
   int? lastMessageAt; // <-> last_message_at
   Map<String, dynamic>? lastMessageOptions; // <-> last_message_options
@@ -37,7 +37,7 @@ class SessionSchema {
     return type == SessionType.TOPIC;
   }
 
-  static String getTypeByMessage(MessageSchema? msg) {
+  static int getTypeByMessage(MessageSchema? msg) {
     if (msg?.isTopic == true) {
       return SessionType.TOPIC;
     } else {
@@ -62,7 +62,7 @@ class SessionSchema {
     var schema = SessionSchema(
       id: e['id'],
       targetId: e['target_id'] ?? "",
-      type: e['type'] ?? "",
+      type: e['type'] ?? 0,
       lastMessageAt: e['last_message_at'],
       lastMessageOptions: e['last_message_options'] != null ? jsonFormat(e['last_message_options']) : null,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,

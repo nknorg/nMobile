@@ -26,30 +26,31 @@ class MessageStorage with Tag {
   static create(Database db, int version) async {
     // create table
     await db.execute('''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        pid TEXT,
-        msg_id TEXT,
-        sender TEXT,
-        receiver TEXT,
-        topic TEXT,
-        target_id TEXT,
-        status INTEGER,
-        is_outbound BOOLEAN DEFAULT 0,
-        is_delete BOOLEAN DEFAULT 0,
-        send_at INTEGER,
-        receive_at INTEGER,
-        delete_at INTEGER,
-        type TEXT,
-        content TEXT,
-        options TEXT
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `pid` VARCHAR(300),
+        `msg_id` VARCHAR(300),
+        `sender` VARCHAR(200),
+        `receiver` VARCHAR(200),
+        `topic` VARCHAR(200),
+        `target_id` VARCHAR(200),
+        `status` INT,
+        `is_outbound` BOOLEAN DEFAULT 0,
+        `is_delete` BOOLEAN DEFAULT 0,
+        `send_at` BIGINT,
+        `receive_at` BIGINT,
+        `delete_at` BIGINT,
+        `type` VARCHAR(30),
+        `content` TEXT,
+        `options` TEXT
       )''');
+
     // index
-    await db.execute('CREATE INDEX index_messages_pid ON $tableName (pid)');
-    await db.execute('CREATE INDEX index_messages_msg_id_type ON $tableName (msg_id, type)');
-    await db.execute('CREATE INDEX index_messages_status_target_id ON $tableName (status, target_id)');
-    await db.execute('CREATE INDEX index_messages_status_is_delete_target_id ON $tableName (status, is_delete, target_id)');
-    await db.execute('CREATE INDEX index_messages_target_id_is_delete_type_send_at ON $tableName (target_id, is_delete, type, send_at)');
+    await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
+    await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
+    await db.execute('CREATE INDEX `index_messages_status_target_id` ON `$tableName` (`status`, `target_id`)');
+    await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id` ON `$tableName` (`status`, `is_delete`, `target_id`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_is_delete_type_send_at` ON `$tableName` (`target_id`, `is_delete`, `type`, `send_at`)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {

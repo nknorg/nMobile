@@ -20,8 +20,8 @@ import 'package:nmobile/utils/format.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class FileType {
-  static const int cache = 0;
-  static const int db = 1;
+  static const cache = 0;
+  static const db = 1;
 }
 
 class SettingsCacheScreen extends BaseStateFulWidget {
