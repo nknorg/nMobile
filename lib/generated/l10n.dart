@@ -3489,6 +3489,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Have not been granted permission to join the group, please try again later.`
+  String get no_permission_join_group {
+    return Intl.message(
+      'Have not been granted permission to join the group, please try again later.',
+      name: 'no_permission_join_group',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -353,6 +353,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "nkn": MessageLookupByLibrary.simpleMessage("NKN"),
         "nkn_mainnet": MessageLookupByLibrary.simpleMessage("NKN Mainnet"),
         "no": MessageLookupByLibrary.simpleMessage("No"),
+        "no_permission_join_group": MessageLookupByLibrary.simpleMessage(
+            "Have not been granted permission to join the group, please try again later."),
         "no_wallet_create":
             MessageLookupByLibrary.simpleMessage("Create New Account"),
         "no_wallet_desc": MessageLookupByLibrary.simpleMessage(

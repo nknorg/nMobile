@@ -129,14 +129,14 @@ class TopicCommon with Tag {
       if ((acceptAll != true)) {
         if (isReject == true) {
           if (justNow) {
-            Toast.show("暂时获查询不到您的入群权限，请稍后再试"); // TODO:GG locale wait
+            Toast.show(S.of(Global.appContext).no_permission_join_group);
           } else {
             Toast.show(S.of(Global.appContext).removed_group_tip);
           }
           return null;
         } else if (isAccept != true) {
           if (justNow) {
-            Toast.show("暂时获查询不到您的入群权限，请稍后再试"); // TODO:GG locale wait
+            Toast.show(S.of(Global.appContext).no_permission_join_group);
           } else {
             Toast.show(S.of(Global.appContext).contact_invite_group_tip);
           }
