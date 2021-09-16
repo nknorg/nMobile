@@ -77,7 +77,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (states.length > 0) {
-        if (states[states.length - 1] == AppLifecycleState.resumed) {
+        if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
           if (!firstConnected) {
             int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
             if (between >= Global.clientReAuthGapMs) {
