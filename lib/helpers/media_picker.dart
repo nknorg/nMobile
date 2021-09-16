@@ -17,10 +17,10 @@ import 'package:permission_handler/permission_handler.dart';
 // import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaType {
-  static const int image = 0;
-  static const int audio = 1;
-  static const int video = 2;
-  static const int common = 3;
+  static const image = 0;
+  static const audio = 1;
+  static const video = 2;
+  static const common = 3;
 }
 
 class MediaPicker {

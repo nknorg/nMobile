@@ -12,23 +12,21 @@ class DeviceInfoStorage with Tag {
   Database? get db => dbCommon.database;
 
   static create(Database db, int version) async {
-    final createSql = '''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        contact_address TEXT,
-        create_at INTEGER,
-        update_at INTEGER,
-        device_id TEXT,
-        data TEXT
-      )''';
     // create table
-    db.execute(createSql);
+    await db.execute('''
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `contact_address` VARCHAR(200),
+        `create_at` BIGINT,
+        `update_at` BIGINT,
+        `device_id` TEXT,
+        `data` TEXT
+      )''');
 
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_device_info_contact_address_device_id ON $tableName (contact_address, device_id)');
-    await db.execute('CREATE INDEX index_device_info_device_id ON $tableName (device_id)');
-    await db.execute('CREATE INDEX index_device_info_contact_address_update_at ON $tableName (contact_address, update_at)');
-    await db.execute('CREATE INDEX index_device_info_contact_address_device_id_update_at ON $tableName (contact_address, device_id, update_at)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id_update_at` ON `$tableName` (`contact_address`, `device_id`, `update_at`)');
+    await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
+    await db.execute('CREATE INDEX `index_device_info_contact_address_update_at` ON `$tableName` (`contact_address`, `update_at`)');
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {

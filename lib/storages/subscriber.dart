@@ -21,25 +21,24 @@ class SubscriberStorage with Tag {
   static create(Database db, int version) async {
     // create table
     await db.execute('''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        topic TEXT,
-        chat_id TEXT,
-        create_at INTEGER,
-        update_at INTEGER,
-        status INTEGER,
-        perm_page INTEGER,
-        data TEXT
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `topic` VARCHAR(200),
+        `chat_id` VARCHAR(200),
+        `create_at` BIGINT,
+        `update_at` BIGINT,
+        `status` INT,
+        `perm_page` INT,
+        `data` TEXT
       )''');
+
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_subscriber_topic_chat_id ON $tableName (topic, chat_id)');
-    await db.execute('CREATE INDEX index_subscriber_create_at ON $tableName (create_at)');
-    await db.execute('CREATE INDEX index_subscriber_update_at ON $tableName (update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_create_at ON $tableName (topic, create_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_update_at ON $tableName (topic, update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_status_create_at ON $tableName (topic, status, create_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_status_update_at ON $tableName (topic, status, update_at)');
-    await db.execute('CREATE INDEX index_subscriber_topic_perm_status ON $tableName (topic, perm_page, status)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_chat_id` ON `$tableName` (`topic`, `chat_id`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_create_at` ON `$tableName` (`topic`, `create_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_update_at` ON `$tableName` (`topic`, `update_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_status_create_at` ON `$tableName` (`topic`, `status`, `create_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_status_update_at` ON `$tableName` (`topic`, `status`, `update_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_perm_status` ON `$tableName` (`topic`, `perm_page`, `status`)');
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool checkDuplicated = true}) async {

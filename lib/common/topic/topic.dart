@@ -864,11 +864,11 @@ class TopicCommon with Tag {
     return await _topicStorage.queryByTopic(topicName);
   }
 
-  Future<List<TopicSchema>> queryList({String? topicType, String? orderBy, int? offset, int? limit}) {
+  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? offset, int? limit}) {
     return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<List<TopicSchema>> queryListJoined({String? topicType, String? orderBy, int? offset, int? limit}) {
+  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int? offset, int? limit}) {
     return _topicStorage.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 

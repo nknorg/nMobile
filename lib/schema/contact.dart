@@ -8,20 +8,20 @@ import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactType {
-  static const String stranger = 'stranger';
-  static const String friend = 'friend';
-  static const String me = 'me';
+  static const me = -1;
+  static const stranger = 0;
+  static const friend = 1;
 }
 
 class RequestType {
-  static const String header = 'header';
-  static const String full = 'full';
+  static const header = 'header';
+  static const full = 'full';
 }
 
 class ContactSchema {
   int? id; // <- id
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
-  String? type; // (required) <-> type
+  int? type; // (required) <-> type
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
@@ -63,7 +63,7 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema?> createByType(String? clientAddress, {String? type}) async {
+  static Future<ContactSchema?> createByType(String? clientAddress, {int? type}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
     return ContactSchema(

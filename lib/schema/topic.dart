@@ -9,8 +9,8 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class TopicType {
-  static int publicTopic = 1;
-  static int privateTopic = 2;
+  static const publicTopic = 1;
+  static const privateTopic = 2;
 }
 
 class TopicSchema {

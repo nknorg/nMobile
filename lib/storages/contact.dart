@@ -17,34 +17,33 @@ class ContactStorage with Tag {
   // created_time INTEGER, // TODO:GG rename
   // updated_time INTEGER, // TODO:GG rename
   static create(Database db, int version) async {
-    final createSql = '''
-      CREATE TABLE $tableName (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        address TEXT,
-        type TEXT,
-        create_at INTEGER,
-        update_at INTEGER,
-        avatar TEXT,
-        first_name TEXT,
-        last_name TEXT,
-        profile_version TEXT,
-        profile_expires_at INTEGER,
-        is_top BOOLEAN DEFAULT 0,
-        device_token TEXT,
-        options TEXT,
-        data TEXT
-      )''';
     // create table
-    db.execute(createSql);
+    await db.execute('''
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `address` VARCHAR(200),
+        `type` INT,
+        `create_at` BIGINT,
+        `update_at` BIGINT,
+        `avatar` TEXT,
+        `first_name` VARCHAR(50),
+        `last_name` VARCHAR(50),
+        `profile_version` VARCHAR(300),
+        `profile_expires_at` BIGINT,
+        `is_top` BOOLEAN DEFAULT 0,
+        `device_token` TEXT,
+        `options` TEXT,
+        `data` TEXT
+      )''');
 
     // index
-    await db.execute('CREATE UNIQUE INDEX unique_index_contact_address ON $tableName (address)');
-    await db.execute('CREATE INDEX index_contact_create_at ON $tableName (create_at)');
-    await db.execute('CREATE INDEX index_contact_update_at ON $tableName (update_at)');
-    await db.execute('CREATE INDEX index_contact_first_name ON $tableName (first_name)');
-    await db.execute('CREATE INDEX index_contact_last_name ON $tableName (last_name)');
-    await db.execute('CREATE INDEX index_contact_type_create_at ON $tableName (type, create_at)');
-    await db.execute('CREATE INDEX index_contact_type_update_at ON $tableName (type, update_at)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
+    await db.execute('CREATE INDEX `index_contact_first_name` ON `$tableName` (`first_name`)');
+    await db.execute('CREATE INDEX `index_contact_last_name` ON `$tableName` (`last_name`)');
+    await db.execute('CREATE INDEX `index_contact_create_at` ON `$tableName` (`create_at`)');
+    await db.execute('CREATE INDEX `index_contact_update_at` ON `$tableName` (`update_at`)');
+    await db.execute('CREATE INDEX `index_contact_type_create_at` ON `$tableName` (`type`, `create_at`)');
+    await db.execute('CREATE INDEX `index_contact_type_update_at` ON `$tableName` (`type`, `update_at`)');
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
@@ -149,14 +148,14 @@ class ContactStorage with Tag {
     return null;
   }
 
-  Future<List<ContactSchema>> queryList({String? contactType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int? limit, int? offset}) async {
     orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
         columns: ['*'],
-        where: (contactType?.isNotEmpty == true) ? 'type = ?' : null,
-        whereArgs: (contactType?.isNotEmpty == true) ? [contactType] : null,
+        where: (contactType != null) ? 'type = ?' : null,
+        whereArgs: (contactType != null) ? [contactType] : null,
         offset: offset ?? null,
         limit: limit ?? null,
         orderBy: orderBy,
@@ -198,7 +197,7 @@ class ContactStorage with Tag {
     return 0;
   }
 
-  Future<bool> setType(int? contactId, String? contactType) async {
+  Future<bool> setType(int? contactId, int? contactType) async {
     if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
     try {
       int? count = await db?.update(
