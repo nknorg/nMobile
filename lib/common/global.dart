@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -96,7 +97,11 @@ class Global {
   static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
     // walletAddress
     if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
-      walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+      try {
+        walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+      } catch (e) {
+        handleError(e);
+      }
     }
 
     int? nonce;
@@ -129,7 +134,11 @@ class Global {
     // walletAddress
     if (walletAddress == null || walletAddress.isEmpty) {
       if (clientCommon.client?.publicKey.isNotEmpty == true) {
-        walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+        try {
+          walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+        } catch (e) {
+          handleError(e);
+        }
       } else {
         return null;
       }

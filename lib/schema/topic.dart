@@ -89,7 +89,11 @@ class TopicSchema {
     String topicName;
     if (isPrivate) {
       int index = topic.lastIndexOf('.');
-      topicName = topic.substring(0, index);
+      if (index > 0) {
+        topicName = topic.substring(0, index);
+      } else {
+        topicName = topic;
+      }
     } else {
       topicName = topic;
     }
@@ -100,15 +104,19 @@ class TopicSchema {
     String topicNameShort;
     if (isPrivate) {
       int index = topic.lastIndexOf('.');
-      String topicName = topic.substring(0, index);
-      if (ownerPubKey?.isNotEmpty == true) {
-        if ((ownerPubKey?.length ?? 0) > 8) {
-          topicNameShort = topicName + '.' + (ownerPubKey?.substring(0, 8) ?? "");
+      if (index > 0) {
+        String topicName = topic.substring(0, index);
+        if (ownerPubKey?.isNotEmpty == true) {
+          if ((ownerPubKey?.length ?? 0) > 8) {
+            topicNameShort = topicName + '.' + (ownerPubKey?.substring(0, 8) ?? "");
+          } else {
+            topicNameShort = topicName + '.' + (ownerPubKey ?? "");
+          }
         } else {
-          topicNameShort = topicName + '.' + (ownerPubKey ?? "");
+          topicNameShort = topicName;
         }
       } else {
-        topicNameShort = topicName;
+        topicNameShort = topic;
       }
     } else {
       topicNameShort = topic;

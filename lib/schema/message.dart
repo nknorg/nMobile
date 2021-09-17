@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:equatable/equatable.dart';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -53,7 +52,7 @@ class MessageContentType {
   static const String topicKickOut = 'event:channelKickOut'; // .
 }
 
-class MessageSchema extends Equatable {
+class MessageSchema {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
   String from; // (required) <-> sender / -> target_id(session_id)
@@ -427,9 +426,6 @@ class MessageSchema extends Equatable {
     }
     return schema;
   }
-
-  @override
-  List<Object?> get props => [pid];
 
   @override
   String toString() {
