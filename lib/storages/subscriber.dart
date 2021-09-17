@@ -5,6 +5,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class SubscriberStorage with Tag {
+  // static String get tableName => 'Subscribers';
   static String get tableName => 'subscriber';
 
   Database? get db => dbCommon.database;

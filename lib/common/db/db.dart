@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/db/upgrade1to2.dart';
+import 'package:nmobile/common/db/upgrade2to3.dart';
+import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
@@ -17,7 +21,7 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 4;
+  static int currentDatabaseVersion = 5;
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -50,25 +54,27 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
-        // Loading.show(); // TODO:GG loading(tip)
-        // TODO:GG index sync
-        // TODO:GG deviceInfo create
-        // TODO:GG session data move
-        // TODO:GG topic fields change
+        Loading.show(text: "数据库升级中,请勿离开此页面!"); // TODO:GG locale dbUpgrade
         // TODO:GG delete message(receipt) + read message(piece + contactOptions)
         // TODO:GG take care old version any upgrade
-        // if (newVersion >= dataBaseVersionV2) {
-        //   await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
-        //   await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
-        // }
-        // if (newVersion >= dataBaseVersionV3 && oldVersion == 2){
-        //   await TopicRepo.updateTopicTableToV3(db);
-        //   await SubscriberRepo.updateTopicTableToV3(db);
-        // }
-        if (oldVersion < 4 && newVersion >= 4) {
-          await SessionStorage.create(db, newVersion);
+        if (oldVersion <= 1 && newVersion >= 2) {
+          await Upgrade1to2.upgradeTopicTable2V3(db);
+          await Upgrade1to2.upgradeContactSchema2V3(db);
         }
-        // Loading.dismiss(); // TODO:GG loading(tip)
+        if (oldVersion == 2 && newVersion >= 3) {
+          await Upgrade2to3.updateTopicTableToV3ByTopic(db);
+          await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
+        }
+        if (oldVersion == 3 && newVersion >= 4) {
+          await Upgrade3to4.updateSubscriberV3ToV4(db);
+        }
+        if (oldVersion == 4 && newVersion >= 5) {
+          // TODO:GG deviceInfo create
+          // TODO:GG session data move
+          await SessionStorage.create(db, newVersion);
+          await DeviceInfoStorage.create(db, newVersion);
+        }
+        Loading.dismiss();
       },
       onOpen: (Database db) async {
         logger.i("DB - opened");
@@ -80,6 +86,7 @@ class DB {
         // );
       },
     );
+    // TODO:GG 这里要加吗
     // await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
     // await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
     // await NKNDataManager.updateSubscriberV3ToV4(db);
