@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -65,7 +66,12 @@ class ContactSchema {
 
   static Future<ContactSchema?> createByType(String? clientAddress, {int? type}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    String? walletAddress;
+    try {
+      walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    } catch (e) {
+      handleError(e);
+    }
     return ContactSchema(
       clientAddress: clientAddress,
       type: type,
@@ -180,7 +186,11 @@ class ContactSchema {
     if (nknWalletAddress?.isNotEmpty == true) {
       data?['nknWalletAddress'] = nknWalletAddress;
     } else {
-      data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      try {
+        data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      } catch (e) {
+        handleError(e);
+      }
     }
     if (notes?.isNotEmpty == true) {
       data?['notes'] = notes;
@@ -246,7 +256,11 @@ class ContactSchema {
       }
       contact.nknWalletAddress = data?['nknWalletAddress'];
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+        try {
+          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+        } catch (e) {
+          handleError(e);
+        }
       }
     }
     return contact;
