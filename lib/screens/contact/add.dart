@@ -15,6 +15,7 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -82,8 +83,12 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
 
     String nickName = ContactSchema.getDefaultName(clientAddress);
-    String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-
+    String? walletAddress;
+    try {
+      walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+    } catch (e) {
+      handleError(e);
+    }
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !verifyNknAddress(walletAddress)) {
       ModalDialog.of(this.context).show(
@@ -96,7 +101,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     setState(() {
       _nameController.text = nickName;
       _clientAddressController.text = clientAddress;
-      _walletAddressController.text = walletAddress;
+      _walletAddressController.text = walletAddress ?? "";
     });
   }
 
@@ -106,7 +111,12 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       Loading.show();
 
       String clientAddress = _clientAddressController.text;
-      String? walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      String? walletAddress;
+      try {
+        walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      } catch (e) {
+        handleError(e);
+      }
       String note = _notesController.text;
 
       String defaultName = ContactSchema.getDefaultName(clientAddress);

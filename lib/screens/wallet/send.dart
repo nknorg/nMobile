@@ -533,7 +533,11 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               if (clientCommon.status == ClientConnectStatus.connected) {
                                                 var contact = await ContactHomeScreen.go(context, isSelect: true);
                                                 if (contact != null && (contact is ContactSchema)) {
-                                                  _sendToController.text = contact.nknWalletAddress ?? (await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress))) ?? "";
+                                                  try {
+                                                    _sendToController.text = contact.nknWalletAddress ?? (await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress))) ?? "";
+                                                  } catch (e) {
+                                                    handleError(e);
+                                                  }
                                                 }
                                               } else {
                                                 Toast.show(_localizations.d_chat_not_login);

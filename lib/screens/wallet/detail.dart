@@ -200,7 +200,12 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               try {
                 String? clientAddress = clientCommon.address;
                 if (clientAddress == null || clientAddress.isEmpty) return;
-                String? connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+                String? connectAddress;
+                try {
+                  connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+                } catch (e) {
+                  handleError(e);
+                }
                 String? defaultAddress = await walletCommon.getDefaultAddress();
                 if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
                   await clientCommon.signOut(closeDB: true);
