@@ -8,7 +8,7 @@ import 'package:nmobile/common/chat/session.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/contact/device_info.dart';
-import 'package:nmobile/common/db.dart';
+import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
 import 'package:nmobile/common/topic/topic.dart';
