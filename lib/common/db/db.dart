@@ -4,6 +4,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
+import 'package:nmobile/common/db/upgrade4to5.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -45,39 +46,49 @@ class DB {
       singleInstance: true,
       onCreate: (Database db, int version) async {
         logger.i("DB - create - version:$version - path:${db.path}");
-        await ContactStorage.create(db, version);
-        await DeviceInfoStorage.create(db, version);
-        await TopicStorage.create(db, version);
-        await SubscriberStorage.create(db, version);
-        await MessageStorage.create(db, version);
-        await SessionStorage.create(db, version);
+        await ContactStorage.create(db);
+        await DeviceInfoStorage.create(db);
+        await TopicStorage.create(db);
+        await SubscriberStorage.create(db);
+        await MessageStorage.create(db);
+        await SessionStorage.create(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
-        Loading.show(text: "数据库升级中,请勿离开此页面!"); // TODO:GG locale dbUpgrade
-        // TODO:GG delete message(receipt) + read message(piece + contactOptions)
-        // TODO:GG take care old version any upgrade
+        Loading.show(text: "数据库升级中,请勿退出app和离开此页面!"); // TODO:GG locale dbUpgrade
+
+        // 1 -> 2
         if (oldVersion <= 1 && newVersion >= 2) {
           await Upgrade1to2.upgradeTopicTable2V3(db);
           await Upgrade1to2.upgradeContactSchema2V3(db);
         }
+
+        // 2 -> 3
         if (oldVersion == 2 && newVersion >= 3) {
           await Upgrade2to3.updateTopicTableToV3ByTopic(db);
           await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
         }
+
+        // 3 -> 4
         if (oldVersion == 3 && newVersion >= 4) {
           await Upgrade3to4.updateSubscriberV3ToV4(db);
         }
+
+        // 4-> 5
         if (oldVersion == 4 && newVersion >= 5) {
-          // TODO:GG deviceInfo create
-          // TODO:GG session data move
-          await SessionStorage.create(db, newVersion);
-          await DeviceInfoStorage.create(db, newVersion);
+          await Upgrade4to5.upgradeContact(db);
+          await Upgrade4to5.createDeviceInfo(db);
+          await Upgrade4to5.upgradeTopic(db);
+          await Upgrade4to5.upgradeSubscriber(db);
+          await Upgrade4to5.upgradeMessages(db);
+          await Upgrade4to5.createSession(db);
         }
+
         Loading.dismiss();
       },
       onOpen: (Database db) async {
         logger.i("DB - opened");
+
         // await addTestData(
         //   db,
         //   selfAddress: clientCommon.address,
@@ -86,10 +97,6 @@ class DB {
         // );
       },
     );
-    // TODO:GG 这里要加吗
-    // await NKNDataManager.upgradeTopicTable2V3(db, dataBaseVersionV3);
-    // await NKNDataManager.upgradeContactSchema2V3(db, dataBaseVersionV3);
-    // await NKNDataManager.updateSubscriberV3ToV4(db);
     return db;
   }
 
