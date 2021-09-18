@@ -46,9 +46,9 @@ dependencies:
   uuid: ^3.0.4
   crypto: ^3.0.1
   mime_type: ^1.0.0
-  permission_handler: ^8.1.4+2
+  permission_handler: ^8.1.6
   vibration: ^1.7.3
-  flutter_local_notifications: ^8.1.1+2
+  flutter_local_notifications: ^8.2.0
   background_fetch: ^1.0.1
   #  get: ^4.3.8
   #  provider: ^6.0.0
@@ -65,6 +65,7 @@ dependencies:
 
   # storage
   flutter_secure_storage: ^4.2.1
+  sqflite: ^2.0.0+4
   sqflite_sqlcipher: ^2.0.0
   #  hive: ^2.0.4
 
@@ -97,7 +98,7 @@ dependencies:
 
   # file
   path: ^1.8.0
-  file_picker: ^4.0.0
+  file_picker: ^4.0.3
 
   # image
   photo_view: ^0.12.0
@@ -119,7 +120,7 @@ dependencies:
   qr_flutter: ^4.0.0
 
   # eth
-  web3dart: ^2.3.0
+  web3dart: ^2.3.1
 
   # plugins
   nkn_sdk_flutter:
