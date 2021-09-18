@@ -11,9 +11,7 @@ class DeviceInfoStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  static create(Database db) async {
-    // create table
-    await db.execute('''
+  static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `contact_address` VARCHAR(200),
@@ -21,7 +19,11 @@ class DeviceInfoStorage with Tag {
         `update_at` BIGINT,
         `device_id` TEXT,
         `data` TEXT
-      )''');
+      )''';
+
+  static create(Database db) async {
+    // create table
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id_update_at` ON `$tableName` (`contact_address`, `device_id`, `update_at`)');
