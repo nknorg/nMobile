@@ -571,10 +571,18 @@ class ChatOutCommon with Tag {
       notification = notification ?? (between > (60 * 60 * 1000)); // 1h
       if (message.isTopic) {
         final topic = await chatCommon.topicHandle(message);
-        pid = await _sendWithTopic(topic, message, msgData, notification: notification);
+        try {
+          pid = await _sendWithTopic(topic, message, msgData, notification: notification);
+        } catch (e) {
+          if (await _handleSendError(e, 3, () => resendMute(message, notification: notification))) return null;
+        }
       } else if (message.to?.isNotEmpty == true) {
         final contact = await chatCommon.contactHandle(message);
-        pid = await _sendWithContact(contact, message, msgData, notification: notification);
+        try {
+          pid = await _sendWithContact(contact, message, msgData, notification: notification);
+        } catch (e) {
+          if (await _handleSendError(e, 3, () => resendMute(message, notification: notification))) return null;
+        }
       }
     }
     // result
@@ -898,7 +906,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<bool> _handleSendError(dynamic e, int tryCount, Function? callback) async {
-    if (e.toString().contains("write: broken pipe")) {
+    if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
       await Future.delayed(Duration(milliseconds: 100));
       final client = (await clientCommon.reSignIn(false))[0];
       if (client != null && (client.address.isNotEmpty == true)) {
