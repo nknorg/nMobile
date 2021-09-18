@@ -19,7 +19,7 @@ class SubscriberStorage with Tag {
   // uploaded BOOLEAN, // TODO:GG delete
   // upload_done BOOLEAN, // TODO:GG delete
   // expire_at INTEGER // TODO:GG delete
-  static create(Database db, int version) async {
+  static create(Database db) async {
     // create table
     await db.execute('''
       CREATE TABLE `$tableName` (

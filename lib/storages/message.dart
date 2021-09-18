@@ -23,7 +23,7 @@ class MessageStorage with Tag {
   // delete_at // TODO:GG rename field
   // status // TODO:GG new field
   // is_delete // TODO:GG new field
-  static create(Database db, int version) async {
+  static create(Database db) async {
     // create table
     await db.execute('''
       CREATE TABLE `$tableName` (

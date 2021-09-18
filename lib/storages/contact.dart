@@ -16,7 +16,7 @@ class ContactStorage with Tag {
   // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
   // created_time INTEGER, // TODO:GG rename
   // updated_time INTEGER, // TODO:GG rename
-  static create(Database db, int version) async {
+  static create(Database db) async {
     // create table
     await db.execute('''
       CREATE TABLE `$tableName` (
