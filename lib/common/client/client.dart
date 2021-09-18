@@ -183,7 +183,14 @@ class ClientCommon with Tag {
     await _onErrorStreamSubscription?.cancel();
     await _onConnectStreamSubscription?.cancel();
     await _onMessageStreamSubscription?.cancel();
-    await client?.close();
+    // close
+    try {
+      await client?.close();
+    } catch (e) {
+      handleError(e);
+      await Future.delayed(Duration(milliseconds: 200));
+      return signOut(closeDB: closeDB);
+    }
     client = null;
     // close DB
     if (closeDB) {
