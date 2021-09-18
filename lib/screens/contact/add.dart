@@ -111,12 +111,6 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       Loading.show();
 
       String clientAddress = _clientAddressController.text;
-      String? walletAddress;
-      try {
-        walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
-      } catch (e) {
-        handleError(e);
-      }
       String note = _notesController.text;
 
       String defaultName = ContactSchema.getDefaultName(clientAddress);
@@ -124,21 +118,17 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.getLocalFile(_headImage?.path) : null;
 
-      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n walletAddress:$walletAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
+      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
-      ContactSchema schema = ContactSchema(
-        clientAddress: clientAddress,
-        type: ContactType.friend,
-        // avatar: defaultAvatar,
-        firstName: defaultName,
-        data: {
-          'firstName': remarkName,
-          'lastName': "",
-          'avatar': remarkAvatar,
-          "notes": note,
-        },
-        nknWalletAddress: walletAddress,
-      );
+      ContactSchema? schema = await ContactSchema.createByType(clientAddress, type: ContactType.friend);
+      if (schema == null) return;
+      schema.firstName = defaultName;
+      schema.data = {
+        'firstName': remarkName,
+        'lastName': "",
+        'avatar': remarkAvatar,
+        "notes": note,
+      };
 
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
       if (exist != null) {

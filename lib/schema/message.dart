@@ -133,7 +133,7 @@ class MessageSchema {
     if (contact != null) return contact;
     contact = await contactCommon.queryByClientAddress(from);
     if (contact != null || !emptyAdd) return contact;
-    contact = await contactCommon.addByType(from, ContactType.stranger, notify: true, checkDuplicated: false);
+    contact = await contactCommon.addByType(from, ContactType.none, notify: true, checkDuplicated: false);
     return contact;
   }
 
