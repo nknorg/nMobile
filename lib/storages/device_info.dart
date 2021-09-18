@@ -11,7 +11,7 @@ class DeviceInfoStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  static create(Database db, int version) async {
+  static create(Database db) async {
     // create table
     await db.execute('''
       CREATE TABLE `$tableName` (

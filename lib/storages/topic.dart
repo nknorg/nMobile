@@ -21,7 +21,7 @@ class TopicStorage with Tag {
   // create_at // TODO:GG new field
   // update_at // TODO:GG new field
   // data // TODO:GG new field
-  static create(Database db, int version) async {
+  static create(Database db) async {
     // create table
     await db.execute('''
       CREATE TABLE `$tableName` (
