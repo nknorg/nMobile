@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/locator.dart';
 
 class Header extends StatelessWidget implements PreferredSizeWidget {
   static double height = 68;
@@ -26,7 +27,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   }) {
     _header = AppBar(
       brightness: this.brightness,
-      backgroundColor: backgroundColor,
+      backgroundColor: backgroundColor ?? application.theme.primaryColor,
       centerTitle: false,
       titleSpacing: 0,
       leading: leading,

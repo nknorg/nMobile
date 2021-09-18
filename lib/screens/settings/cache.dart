@@ -6,6 +6,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -13,6 +14,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/cache.dart';
@@ -61,7 +63,14 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
   _clearCache(int type) async {
     // auth
     String? address = await walletCommon.getDefaultAddress();
-    if (address == null || address.isEmpty) return;
+    if (address == null || address.isEmpty) {
+      WalletSchema? select = await BottomDialog.of(this.context).showWalletSelect(
+        title: S.of(context).select_another_wallet,
+        onlyNKN: true,
+      );
+      address = select?.address;
+      if (address == null || address.isEmpty) return;
+    }
     String? input = await authorization.getWalletPassword(address);
     if (input == null || input.isEmpty) {
       Toast.show(S.of(context).input_password);
