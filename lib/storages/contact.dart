@@ -13,12 +13,7 @@ class ContactStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  // notification_open BOOLEAN DEFAULT 0 // TODO:GG delete move to options
-  // created_time INTEGER, // TODO:GG rename
-  // updated_time INTEGER, // TODO:GG rename
-  static create(Database db) async {
-    // create table
-    await db.execute('''
+  static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `address` VARCHAR(200),
@@ -34,7 +29,11 @@ class ContactStorage with Tag {
         `device_token` TEXT,
         `options` TEXT,
         `data` TEXT
-      )''');
+      )''';
+
+  static create(Database db) async {
+    // create table
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
