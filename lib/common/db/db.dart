@@ -18,6 +18,7 @@ import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/utils/utils.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DB {
@@ -150,6 +151,11 @@ class DB {
   //     logger.e('DB - Close db error', e);
   //   }
   // }
+
+  static Future<bool> checkTableExists(Database db, String table) async {
+    var count = firstIntValue(await db.query('sqlite_master', columns: ['COUNT(*)'], where: 'type = ? AND name = ?', whereArgs: ['table', table]));
+    return (count ?? 0) > 0;
+  }
 
   static Future<bool> checkColumnExists(Database db, String tableName, String columnName) async {
     bool result = false;
