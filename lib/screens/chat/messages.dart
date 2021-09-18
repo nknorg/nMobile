@@ -117,7 +117,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      if (states.length > 0) {
+      if (states.length >= 2) {
         if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
           _readMessages(true, true); // await
         }
