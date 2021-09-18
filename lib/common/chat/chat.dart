@@ -61,8 +61,13 @@ class ChatCommon with Tag {
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
-      exist = await contactCommon.addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
+      int type = message.isTopic ? ContactType.none : ContactType.stranger;
+      exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
     } else {
+      if ((exist.type == ContactType.none) && !message.isTopic) {
+        exist.type = ContactType.stranger;
+        await contactCommon.setType(exist.id, exist.type, notify: true);
+      }
       // profile
       if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs)) {
         logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");

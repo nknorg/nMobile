@@ -802,7 +802,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           // SizedBox(height: 28),
 
           /// AddContact
-          _contactSchema?.type == ContactType.stranger
+          _contactSchema?.type != ContactType.friend
               ? Column(
                   children: [
                     SizedBox(height: 10),
@@ -829,7 +829,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               : SizedBox.shrink(),
 
           /// delete
-          _contactSchema?.type == ContactType.friend
+          (_contactSchema?.type == ContactType.friend) || (_contactSchema?.type == ContactType.stranger)
               ? Column(
                   children: [
                     SizedBox(height: 28),

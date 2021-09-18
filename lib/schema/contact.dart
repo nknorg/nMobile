@@ -10,8 +10,9 @@ import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const me = -1;
-  static const stranger = 0;
-  static const friend = 1;
+  static const none = 0;
+  static const stranger = 1;
+  static const friend = 2;
 }
 
 class RequestType {

@@ -198,7 +198,7 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setType(int? contactId, int? contactType) async {
-    if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
+    if (contactId == null || contactId == 0 || contactType == null) return false;
     try {
       int? count = await db?.update(
         tableName,

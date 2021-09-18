@@ -88,7 +88,7 @@ class ContactCommon with Tag {
     // bool success = await _contactStorage.delete(contactId);
     // if (success) _deleteSink.add(contactId);
     // return success;
-    bool success = await _contactStorage.setType(contactId, ContactType.stranger);
+    bool success = await _contactStorage.setType(contactId, ContactType.none);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
