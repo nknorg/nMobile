@@ -13,19 +13,7 @@ class MessageStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  MessageStorage();
-
-  // is_read BOOLEAN // TODO:GG delete
-  // is_success BOOLEAN // TODO:GG delete
-  // is_send_error BOOLEAN // TODO:GG delete
-  // send_at // TODO:GG rename field
-  // receive_at // TODO:GG rename field
-  // delete_at // TODO:GG rename field
-  // status // TODO:GG new field
-  // is_delete // TODO:GG new field
-  static create(Database db) async {
-    // create table
-    await db.execute('''
+  static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `pid` VARCHAR(300),
@@ -43,7 +31,21 @@ class MessageStorage with Tag {
         `type` VARCHAR(30),
         `content` TEXT,
         `options` TEXT
-      )''');
+      )''';
+
+  MessageStorage();
+
+  // is_read BOOLEAN // TODO:GG delete
+  // is_success BOOLEAN // TODO:GG delete
+  // is_send_error BOOLEAN // TODO:GG delete
+  // send_at // TODO:GG rename field
+  // receive_at // TODO:GG rename field
+  // delete_at // TODO:GG rename field
+  // status // TODO:GG new field
+  // is_delete // TODO:GG new field
+  static create(Database db) async {
+    // create table
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
