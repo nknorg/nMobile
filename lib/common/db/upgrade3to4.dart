@@ -1,6 +1,6 @@
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/storages/subscriber.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:sqflite/sqflite.dart';
 
 class Upgrade3to4 {
   static final createSqlV5 = '''

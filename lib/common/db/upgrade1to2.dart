@@ -1,5 +1,5 @@
 import 'package:nmobile/storages/contact.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:sqflite/sqflite.dart';
 
 import 'db.dart';
 

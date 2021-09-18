@@ -19,7 +19,7 @@ import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:sqflite/sqflite.dart';
 
 class FileType {
   static const cache = 0;
