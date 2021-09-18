@@ -55,27 +55,33 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
-        Loading.show(text: "数据库升级中,请勿退出app和离开此页面!"); // TODO:GG locale dbUpgrade
+        Loading.show(text: "数据库升级中,请勿退出app或离开此页面!"); // TODO:GG locale dbUpgrade
 
         // 1 -> 2
+        bool v1to2 = false;
         if (oldVersion <= 1 && newVersion >= 2) {
+          v1to2 = true;
           await Upgrade1to2.upgradeTopicTable2V3(db);
           await Upgrade1to2.upgradeContactSchema2V3(db);
         }
 
         // 2 -> 3
-        if (oldVersion == 2 && newVersion >= 3) {
+        bool v2to3 = false;
+        if ((v1to2 || oldVersion == 2) && newVersion >= 3) {
+          v2to3 = true;
           await Upgrade2to3.updateTopicTableToV3ByTopic(db);
           await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
         }
 
         // 3 -> 4
-        if (oldVersion == 3 && newVersion >= 4) {
+        bool v3to4 = false;
+        if ((v2to3 || oldVersion == 3) && newVersion >= 4) {
+          v3to4 = true;
           await Upgrade3to4.updateSubscriberV3ToV4(db);
         }
 
         // 4-> 5
-        if (oldVersion == 4 && newVersion >= 5) {
+        if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
           await Upgrade4to5.upgradeContact(db);
           await Upgrade4to5.createDeviceInfo(db);
           await Upgrade4to5.upgradeTopic(db);
