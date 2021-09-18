@@ -11,11 +11,7 @@ class SessionStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  SessionStorage();
-
-  static create(Database db) async {
-    // create table
-    await db.execute('''
+  static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `target_id` VARCHAR(200),
@@ -24,7 +20,13 @@ class SessionStorage with Tag {
         `last_message_options` TEXT,
         `un_read_count` INT,
         `is_top` BOOLEAN DEFAULT 0
-      )''');
+      )''';
+
+  SessionStorage();
+
+  static create(Database db) async {
+    // create table
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_session_target_id` ON `$tableName` (`target_id`)');

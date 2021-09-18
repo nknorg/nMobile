@@ -10,6 +10,18 @@ class SubscriberStorage with Tag {
 
   Database? get db => dbCommon.database;
 
+  static String createSQL = '''
+      CREATE TABLE `$tableName` (
+        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        `topic` VARCHAR(200),
+        `chat_id` VARCHAR(200),
+        `create_at` BIGINT,
+        `update_at` BIGINT,
+        `status` INT,
+        `perm_page` INT,
+        `data` TEXT
+      )''';
+
   // create_at // TODO:GG rename field
   // update_at // TODO:GG new field
   // status // TODO:GG rename(member_status) + retype field
@@ -21,17 +33,7 @@ class SubscriberStorage with Tag {
   // expire_at INTEGER // TODO:GG delete
   static create(Database db) async {
     // create table
-    await db.execute('''
-      CREATE TABLE `$tableName` (
-        `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `topic` VARCHAR(200),
-        `chat_id` VARCHAR(200),
-        `create_at` BIGINT,
-        `update_at` BIGINT,
-        `status` INT,
-        `perm_page` INT,
-        `data` TEXT
-      )''');
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_chat_id` ON `$tableName` (`topic`, `chat_id`)');

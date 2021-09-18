@@ -12,18 +12,7 @@ class TopicStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  // theme_id INTEGER, // TODO:GG replace by options
-  // accept_all BOOLEAN // TODO:GG delete
-  // type // TODO:GG add later (no product)
-  // joined // TODO:GG add later (no product)
-  // subscribe_at // TODO:GG rename field
-  // expire_height // TODO:GG rename field
-  // create_at // TODO:GG new field
-  // update_at // TODO:GG new field
-  // data // TODO:GG new field
-  static create(Database db) async {
-    // create table
-    await db.execute('''
+  static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `topic` VARCHAR(200),
@@ -38,7 +27,20 @@ class TopicStorage with Tag {
         `is_top` BOOLEAN DEFAULT 0,
         `options` TEXT,
         `data` TEXT
-      )''');
+      )''';
+
+  // theme_id INTEGER, // TODO:GG replace by options
+  // accept_all BOOLEAN // TODO:GG delete
+  // type // TODO:GG add later (no product)
+  // joined // TODO:GG add later (no product)
+  // subscribe_at // TODO:GG rename field
+  // expire_height // TODO:GG rename field
+  // create_at // TODO:GG new field
+  // update_at // TODO:GG new field
+  // data // TODO:GG new field
+  static create(Database db) async {
+    // create table
+    await db.execute(createSQL);
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic` ON `$tableName` (`topic`)');
