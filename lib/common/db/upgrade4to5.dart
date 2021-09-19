@@ -15,20 +15,20 @@ import 'package:uuid/uuid.dart';
 class Upgrade4to5 {
   static Future upgradeContact(Database db) async {
     // id (NULL) -> id (NOT NULL)
-    // TODO:GG address (TEXT) -> address (VARCHAR(200))
-    // TODO:GG type (TEXT) -> type (INT)
-    // TODO:GG created_time (INTEGER) -> create_at (BIGINT)
-    // TODO:GG updated_time (INTEGER) -> update_at (BIGINT)
+    // address (TEXT) -> address (VARCHAR(200))
+    // type (TEXT) -> type (INT)
+    // created_time (INTEGER) -> create_at (BIGINT)
+    // updated_time (INTEGER) -> update_at (BIGINT)
     // avatar (TEXT) -> avatar (TEXT)
-    // TODO:GG first_name (TEXT) -> first_name (VARCHAR(50))
-    // TODO:GG last_name (TEXT) -> last_name (VARCHAR(50))
-    // TODO:GG profile_version (TEXT) -> profile_version (VARCHAR(300))
-    // TODO:GG profile_expires_at (INTEGER) -> profile_expires_at (BIGINT)
+    // first_name (TEXT) -> first_name (VARCHAR(50))
+    // last_name (TEXT) -> last_name (VARCHAR(50))
+    // profile_version (TEXT) -> profile_version (VARCHAR(300))
+    // profile_expires_at (INTEGER) -> profile_expires_at (BIGINT)
     // is_top (BOOLEAN) -> is_top (BOOLEAN)
     // device_token (TEXT) -> device_token (TEXT)
     // options (TEXT) -> options (TEXT)
     // data (TEXT) -> data( TEXT)
-    // TODO:GG notification_open (BOOLEAN) -> options.notificationOpen
+    // notification_open (BOOLEAN) -> options.notificationOpen
 
     // v5 table
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
@@ -81,32 +81,32 @@ class Upgrade4to5 {
           int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
           // profile
           String? newAvatar = result["avatar"];
-          String? newFirstName = result["first_name"];
-          String? newLastName = result["last_name"];
+          String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
+          String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
           // profileExtra
-          String? newProfileVersion = result["profile_version"] ?? Uuid().v4();
+          String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
           String? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
           // top + token
           int newIsTop = result["is_top"] ?? 0;
           String? newDeviceToken = result["device_token"];
           // options
-          OptionsSchema oldOptionsSchema = OptionsSchema();
+          OptionsSchema newOptionsSchema = OptionsSchema();
           try {
             Map<String, dynamic>? oldOptionsMap = (result["options"]?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : null;
             if (oldOptionsMap != null && oldOptionsMap.isNotEmpty) {
-              oldOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
-              oldOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
-              oldOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'];
-              oldOptionsSchema.avatarNameColor = oldOptionsMap['color'];
+              newOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
+              newOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
+              newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'];
+              newOptionsSchema.avatarNameColor = oldOptionsMap['color'];
             }
           } catch (e) {
             handleError(e);
             logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
           }
-          oldOptionsSchema.notificationOpen = result["notification_open"] ?? false;
+          newOptionsSchema.notificationOpen = result["notification_open"] ?? false;
           String? newOptions;
           try {
-            newOptions = jsonEncode(oldOptionsSchema.toMap());
+            newOptions = jsonEncode(newOptionsSchema.toMap());
           } catch (e) {
             handleError(e);
             logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
@@ -125,6 +125,13 @@ class Upgrade4to5 {
           newDataMap['notes'] = oldDataMap['notes'];
           newDataMap['avatar'] = oldDataMap['remark_avatar'];
           newDataMap['firstName'] = oldDataMap['firstName'] ?? oldDataMap['remark_name'] ?? oldDataMap['notes'];
+          String? newData;
+          try {
+            newData = jsonEncode(newDataMap);
+          } catch (e) {
+            handleError(e);
+            logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
+          }
 
           // insert v5 table
           Map<String, dynamic> entity = {
@@ -140,7 +147,7 @@ class Upgrade4to5 {
             "is_top": newIsTop,
             "device_token": newDeviceToken,
             "options": newOptions,
-            "data": "",
+            "data": newData,
           };
           int count = await db.insert(ContactStorage.tableName, entity);
           if (count > 0) {
