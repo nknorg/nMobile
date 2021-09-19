@@ -37,130 +37,129 @@ class Upgrade4to5 {
 
     // v1 table
     String oldTableName = "Contact";
+    List<Map<String, dynamic>>? results;
     if ((await DB.checkTableExists(db, oldTableName))) {
-      List<Map<String, dynamic>>? results = await db.query(
-        oldTableName,
-        columns: ['*'],
-      );
-      // convert all v1Data to v5Data
-      if (results != null && results.length > 0) {
-        int total = 0;
-        for (var i = 0; i < results.length; i++) {
-          Map<String, dynamic> result = results[i];
+      results = await db.query(oldTableName, columns: ['*']);
+    }
 
-          // address
-          String? oldAddress = result["address"];
-          if (oldAddress == null || oldAddress.isEmpty) {
-            logger.w("Upgrade4to5 - $oldTableName query - address is null - data:$result");
-          }
-          String? newAddress = ((oldAddress?.isNotEmpty == true) && (oldAddress!.length <= 200)) ? oldAddress : null;
-          if (newAddress == null || newAddress.isEmpty) {
-            logger.w("Upgrade4to5 - $oldTableName convert - address error - data:$result");
-            continue;
-          }
-          // type
-          String? oldType = result["type"];
-          if (oldType == null || oldType.isEmpty) {
-            logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
-          }
-          int newType = ContactType.none;
-          if (oldType == 'me') {
-            newType = ContactType.me;
-          } else if (oldType == 'stranger') {
-            newType = ContactType.stranger;
-          } else if (oldType == 'friend') {
-            newType = ContactType.friend;
-          }
-          // at
-          int? oldCreateAt = result["created_time"];
-          int? oldUpdateAt = result["updated_time"];
-          if (oldCreateAt == null || oldCreateAt == 0 || oldUpdateAt == null || oldUpdateAt == 0) {
-            logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
-          }
-          int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
-          int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
-          // profile
-          String? newAvatar = result["avatar"];
-          String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
-          String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
-          // profileExtra
-          String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
-          String? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
-          // top + token
-          int newIsTop = result["is_top"] ?? 0;
-          String? newDeviceToken = result["device_token"];
-          // options
-          OptionsSchema newOptionsSchema = OptionsSchema();
-          try {
-            Map<String, dynamic>? oldOptionsMap = (result["options"]?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : null;
-            if (oldOptionsMap != null && oldOptionsMap.isNotEmpty) {
-              newOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
-              newOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
-              newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'];
-              newOptionsSchema.avatarNameColor = oldOptionsMap['color'];
-            }
-          } catch (e) {
-            handleError(e);
-            logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
-          }
-          newOptionsSchema.notificationOpen = result["notification_open"] ?? false;
-          String? newOptions;
-          try {
-            newOptions = jsonEncode(newOptionsSchema.toMap());
-          } catch (e) {
-            handleError(e);
-            logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
-          }
-          // data
-          Map<String, dynamic> oldDataMap;
-          try {
-            oldDataMap = (result['data']?.toString().isNotEmpty == true) ? jsonDecode(result['data']) : Map();
-          } catch (e) {
-            handleError(e);
-            logger.w("Upgrade4to5 - $oldTableName query - data(old) error - data:$result");
-            oldDataMap = Map();
-          }
-          Map<String, dynamic> newDataMap = Map();
-          newDataMap['nknWalletAddress'] = oldDataMap['nknWalletAddress']; // too loong to check
-          newDataMap['notes'] = oldDataMap['notes'];
-          newDataMap['avatar'] = oldDataMap['remark_avatar'];
-          newDataMap['firstName'] = oldDataMap['firstName'] ?? oldDataMap['remark_name'] ?? oldDataMap['notes'];
-          String? newData;
-          try {
-            newData = jsonEncode(newDataMap);
-          } catch (e) {
-            handleError(e);
-            logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
-          }
+    // convert all v1Data to v5Data
+    if (results != null && results.length > 0) {
+      int total = 0;
+      for (var i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
 
-          // insert v5 table
-          Map<String, dynamic> entity = {
-            "address": newAddress,
-            "type": newType,
-            "create_at": newCreateAt,
-            "update_at": newUpdateAt,
-            "avatar": newAvatar,
-            "first_name": newFirstName,
-            "last_name": newLastName,
-            "profile_version": newProfileVersion,
-            "profile_expires_at": newProfileExpireAt,
-            "is_top": newIsTop,
-            "device_token": newDeviceToken,
-            "options": newOptions,
-            "data": newData,
-          };
-          int count = await db.insert(ContactStorage.tableName, entity);
-          if (count > 0) {
-            logger.d("Upgrade4to5 - ${ContactStorage.tableName} added success - data:$entity");
-          } else {
-            logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
-          }
-          total += count;
+        // address
+        String? oldAddress = result["address"];
+        if (oldAddress == null || oldAddress.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - address is null - data:$result");
         }
-        logger.i("Upgrade4to5 - ${ContactStorage.tableName} added - total:$total");
-      } else {
-        logger.i("Upgrade4to5 - $oldTableName query - empty");
+        String? newAddress = ((oldAddress?.isNotEmpty == true) && (oldAddress!.length <= 200)) ? oldAddress : null;
+        if (newAddress == null || newAddress.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - address error - data:$result");
+          continue;
+        }
+        // type
+        String? oldType = result["type"];
+        if (oldType == null || oldType.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
+        }
+        int newType = ContactType.none;
+        if (oldType == 'me') {
+          newType = ContactType.me;
+        } else if (oldType == 'stranger') {
+          newType = ContactType.stranger;
+        } else if (oldType == 'friend') {
+          newType = ContactType.friend;
+        }
+        // at
+        int? oldCreateAt = result["created_time"];
+        int? oldUpdateAt = result["updated_time"];
+        if (oldCreateAt == null || oldCreateAt == 0 || oldUpdateAt == null || oldUpdateAt == 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
+        }
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
+        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
+        // profile
+        String? newAvatar = result["avatar"];
+        String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
+        String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
+        // profileExtra
+        String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
+        String? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
+        // top + token
+        int newIsTop = result["is_top"] ?? 0;
+        String? newDeviceToken = result["device_token"];
+        // options
+        OptionsSchema newOptionsSchema = OptionsSchema();
+        try {
+          Map<String, dynamic>? oldOptionsMap = (result["options"]?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : null;
+          if (oldOptionsMap != null && oldOptionsMap.isNotEmpty) {
+            newOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
+            newOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
+            newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'];
+            newOptionsSchema.avatarNameColor = oldOptionsMap['color'];
+          }
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
+        }
+        newOptionsSchema.notificationOpen = result["notification_open"] ?? false;
+        String? newOptions;
+        try {
+          newOptions = jsonEncode(newOptionsSchema.toMap());
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
+        }
+        // data
+        Map<String, dynamic> oldDataMap;
+        try {
+          oldDataMap = (result['data']?.toString().isNotEmpty == true) ? jsonDecode(result['data']) : Map();
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - data(old) error - data:$result");
+          oldDataMap = Map();
+        }
+        Map<String, dynamic> newDataMap = Map();
+        newDataMap['nknWalletAddress'] = oldDataMap['nknWalletAddress']; // too loong to check
+        newDataMap['notes'] = oldDataMap['notes'];
+        newDataMap['avatar'] = oldDataMap['remark_avatar'];
+        newDataMap['firstName'] = oldDataMap['firstName'] ?? oldDataMap['remark_name'] ?? oldDataMap['notes'];
+        String? newData;
+        try {
+          newData = jsonEncode(newDataMap);
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
+        }
+
+        // insert v5 table
+        Map<String, dynamic> entity = {
+          "address": newAddress,
+          "type": newType,
+          "create_at": newCreateAt,
+          "update_at": newUpdateAt,
+          "avatar": newAvatar,
+          "first_name": newFirstName,
+          "last_name": newLastName,
+          "profile_version": newProfileVersion,
+          "profile_expires_at": newProfileExpireAt,
+          "is_top": newIsTop,
+          "device_token": newDeviceToken,
+          "options": newOptions,
+          "data": newData,
+        };
+        int count = await db.insert(ContactStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${ContactStorage.tableName} added success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
+        }
+        total += count;
       }
+      logger.i("Upgrade4to5 - ${ContactStorage.tableName} added - total:$total");
+    } else {
+      logger.i("Upgrade4to5 - $oldTableName query - empty");
     }
   }
 
