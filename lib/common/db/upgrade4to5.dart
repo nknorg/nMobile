@@ -1,14 +1,19 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -35,14 +40,14 @@ class Upgrade4to5 {
       await db.execute(ContactStorage.createSQL);
     }
 
-    // v1 table
+    // v2 table
     String oldTableName = "Contact";
     List<Map<String, dynamic>>? results;
     if ((await DB.checkTableExists(db, oldTableName))) {
       results = await db.query(oldTableName, columns: ['*']);
     }
 
-    // convert all v1Data to v5Data
+    // convert all v2Data to v5Data
     if (results != null && results.length > 0) {
       int total = 0;
       for (var i = 0; i < results.length; i++) {
@@ -80,7 +85,7 @@ class Upgrade4to5 {
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
         // profile
-        String? newAvatar = result["avatar"];
+        String? newAvatar = Path.getLocalFile(result["avatar"]);
         String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
         String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
         // profileExtra
@@ -96,8 +101,8 @@ class Upgrade4to5 {
           if (oldOptionsMap != null && oldOptionsMap.isNotEmpty) {
             newOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
             newOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
-            newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'];
-            newOptionsSchema.avatarNameColor = oldOptionsMap['color'];
+            newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'] != null ? Color(oldOptionsMap['backgroundColor']) : null;
+            newOptionsSchema.avatarNameColor = oldOptionsMap['color'] != null ? Color(oldOptionsMap['color']) : null;
           }
         } catch (e) {
           handleError(e);
@@ -133,7 +138,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
 
-        // insert v5 table
+        // insert v5Data
         Map<String, dynamic> entity = {
           "address": newAddress,
           "type": newType,
@@ -161,6 +166,9 @@ class Upgrade4to5 {
     } else {
       logger.i("Upgrade4to5 - $oldTableName query - empty");
     }
+
+    // drop
+    await db.execute('DROP TABLE IF EXISTS $oldTableName;');
   }
 
   static Future createDeviceInfo(Database db) async {
@@ -168,8 +176,131 @@ class Upgrade4to5 {
   }
 
   static Future upgradeTopic(Database db) async {
-    // TODO:GG db topic
-    // await db.execute('ALTER TABLE $subsriberTable ADD COLUMN member_status BOOLEAN DEFAULT 0');
+    // id (NULL) -> id (NOT NULL)
+    // topic (TEXT) -> topic (VARCHAR(200))
+    // ??/type (INTEGER) -> type (INT)
+    // ?? -> create_at (BIGINT)
+    // ?? -> update_at (BIGINT)
+    // ??/joined (BOOLEAN) -> joined (BOOLEAN)
+    // ??/time_update (INTEGER) -> subscribe_at (BIGINT)
+    // expire_at (INTEGER) -> expire_height (BIGINT)
+    // avatar (TEXT) -> avatar (TEXT)
+    // count (INTEGER) -> count (INT)
+    // is_top (BOOLEAN) -> is_top (BOOLEAN)
+    // options (TEXT) -> options (TEXT)
+    // ?? -> data (TEXT)
+    // accept_all (BOOLEAN) -> ??
+    // theme_id (INTEGER) -> ??
+
+    // v5 table
+    if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
+      await db.execute(TopicStorage.createSQL);
+    }
+
+    // v2 table
+    String oldTableName = 'topic';
+    List<Map<String, dynamic>>? results;
+    if ((await DB.checkTableExists(db, oldTableName))) {
+      results = await db.query(oldTableName, columns: ['*']);
+    }
+
+    // convert all v2Data to v5Data
+    if (results != null && results.length > 0) {
+      int total = 0;
+      for (var i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+
+        // address
+        String? oldTopic = result["topic"];
+        if (oldTopic == null || oldTopic.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - topic is null - data:$result");
+        }
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        if (newTopic == null || newTopic.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
+          continue;
+        }
+        // type
+        int? oldType = result["type"];
+        if (oldType == null) {
+          logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
+        }
+        int newType;
+        if (oldType != null && (oldType == TopicType.privateTopic || oldType == TopicType.privateTopic)) {
+          newType = oldType;
+        } else {
+          newType = isPrivateTopicReg(newTopic) ? TopicType.privateTopic : TopicType.publicTopic;
+        }
+        // at
+        int? oldCreateAt = result["time_update"];
+        int? oldUpdateAt = result["time_update"];
+        if (oldCreateAt == null || oldCreateAt == 0 || oldUpdateAt == null || oldUpdateAt == 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
+        }
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
+        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
+        // joined
+        int newJoined = result["joined"] ?? 1;
+        // subscribe_at + expire_height
+        int? newSubscribeAt = result["time_update"];
+        int? newExpireHeight = result["expire_at"];
+        // profile
+        String? newAvatar = Path.getLocalFile(result["avatar"]);
+        // count + top
+        int? newCount = result["count"];
+        int newIsTop = result["is_top"] ?? 0;
+        // options
+        OptionsSchema newOptionsSchema = OptionsSchema();
+        try {
+          Map<String, dynamic>? oldOptionsMap = (result["options"]?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : null;
+          if (oldOptionsMap != null && oldOptionsMap.isNotEmpty) {
+            newOptionsSchema.deleteAfterSeconds = oldOptionsMap['deleteAfterSeconds'];
+            newOptionsSchema.updateBurnAfterAt = oldOptionsMap['updateTime'];
+            newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'] != null ? Color(oldOptionsMap['backgroundColor']) : null;
+            newOptionsSchema.avatarNameColor = oldOptionsMap['color'] != null ? Color(oldOptionsMap['color']) : null;
+          }
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
+        }
+        String? newOptions;
+        try {
+          newOptions = jsonEncode(newOptionsSchema.toMap());
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
+        }
+
+        // insert v5Data
+        Map<String, dynamic> entity = {
+          'topic': newTopic,
+          'type': newType,
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'joined': newJoined,
+          'subscribe_at': newSubscribeAt,
+          'expire_height': newExpireHeight,
+          'avatar': newAvatar,
+          'count': newCount,
+          'is_top': newIsTop,
+          'options': newOptions,
+          'data': null,
+        };
+        int count = await db.insert(TopicStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${TopicStorage.tableName} added success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${TopicStorage.tableName} added fail - data:$entity");
+        }
+        total += count;
+      }
+      logger.i("Upgrade4to5 - ${TopicStorage.tableName} added - total:$total");
+    } else {
+      logger.i("Upgrade4to5 - $oldTableName query - empty");
+    }
+
+    // drop
+    await db.execute('DROP TABLE IF EXISTS $oldTableName;');
   }
 
   static Future upgradeSubscriber(Database db) async {
@@ -184,5 +315,6 @@ class Upgrade4to5 {
   static Future createSession(Database db) async {
     await SessionStorage.create(db);
     // TODO:GG 取消息的最后一条，聚合成session，还有未读数等其他字段
+    // await db.execute('ALTER TABLE $subsriberTable ADD COLUMN member_status BOOLEAN DEFAULT 0');
   }
 }
