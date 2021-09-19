@@ -29,7 +29,7 @@ class TopicSchema {
   bool isTop = false; // <-> is_top
 
   OptionsSchema? options; // <-> options
-  Map<String, dynamic>? data; // <-> data[permissions, ...]
+  Map<String, dynamic>? data; // <-> data[...]
 
   TopicSchema({
     this.id,

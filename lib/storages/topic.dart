@@ -7,8 +7,9 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
 
 class TopicStorage with Tag {
-  // static String get tableName => 'Topic';
-  static String get tableName => 'topic';
+  // static String get tableName => 'Topic'; // v1
+  // static String get tableName => 'topic'; // v2
+  static String get tableName => 'Topic_3'; // v5
 
   Database? get db => dbCommon.database;
 
@@ -29,15 +30,6 @@ class TopicStorage with Tag {
         `data` TEXT
       )''';
 
-  // theme_id INTEGER, // TODO:GG replace by options
-  // accept_all BOOLEAN // TODO:GG delete
-  // type // TODO:GG add later (no product)
-  // joined // TODO:GG add later (no product)
-  // subscribe_at // TODO:GG rename field
-  // expire_height // TODO:GG rename field
-  // create_at // TODO:GG new field
-  // update_at // TODO:GG new field
-  // data // TODO:GG new field
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
