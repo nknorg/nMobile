@@ -13,6 +13,9 @@ class ContactType {
   static const none = 0;
   static const stranger = 1;
   static const friend = 2;
+  // static const String stranger = 'stranger';
+  // static const String friend = 'friend';
+  // static const String me = 'me';
 }
 
 class RequestType {
