@@ -10,6 +10,12 @@ class SubscriberStatus {
   static const int InvitedReceipt = 2;
   static const int Subscribed = 3;
   static const int Unsubscribed = 4;
+  // static const int DefaultNotMember = 0;
+  // static const int MemberInvited = 1;
+  // static const int MemberPublished = 2;
+  // static const int MemberSubscribed = 3;
+  // static const int MemberPublishRejected = 4;
+  // static const int MemberJoinedButNotInvited = 5;
 }
 
 class SubscriberSchema {
