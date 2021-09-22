@@ -6,10 +6,12 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -334,35 +336,121 @@ class Upgrade4to5 {
   }
 
   static Future upgradeSubscriber(Database db) async {
-    // create_at // TODO:GG rename field
-    // update_at // TODO:GG new field
-    // status // TODO:GG rename(member_status) + retype field
-    // perm_page // TODO:GG rename field + 需要放进data里吗
-    // data // TODO:GG new field
-    // subscribed BOOLEAN, // TODO:GG delete
-    // uploaded BOOLEAN, // TODO:GG delete
-    // upload_done BOOLEAN, // TODO:GG delete
-    // expire_at INTEGER // TODO:GG delete
+    // id (NULL) -> id (NOT NULL)
+    // topic (TEXT) -> topic (VARCHAR(200))
+    // chat_id (TEXT) -> chat_id (VARCHAR(200))
+    // time_create (INTEGER) -> create_at (BIGINT)
+    // ??? -> update_at (BIGINT)
+    // member_status (BOOLEAN) -> status (INT)
+    // prm_p_i (INTEGER) -> perm_page (INT)
+    // ??? -> data (TEXT)
+    // uploaded (BOOLEAN) -> ???
+    // subscribed (BOOLEAN) -> ???
+    // upload_done (BOOLEAN) -> ???
+    // expire_at (INTEGER) -> ???
 
-    // $id INTEGER PRIMARY KEY AUTOINCREMENT,
-    // $topic TEXT,
-    // $chat_id TEXT,
-    // $prm_p_i INTEGER,
-    // $time_create INTEGER,
-    // $expire_at INTEGER,
-    // $uploaded BOOLEAN,
-    // $subscribed BOOLEAN,
-    // $upload_done BOOLEAN,
-    // $member_status BOOLEAN
+    // v5 table
+    if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
+      await db.execute(SubscriberStorage.createSQL);
+    }
 
-    // `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    // `topic` VARCHAR(200),
-    // `chat_id` VARCHAR(200),
-    // `create_at` BIGINT,
-    // `update_at` BIGINT,
-    // `status` INT,
-    // `perm_page` INT,
-    // `data` TEXT
+    // v4 table
+    String oldTableName = "subscriber";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.i("Upgrade4to5 - $oldTableName no exist");
+      return;
+    }
+
+    // convert all v4Data to v5Data
+    int total = 0;
+    int offset = 0;
+    int limit = 50;
+    bool loop = true;
+    while (loop) {
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      if (results == null || results.isEmpty) {
+        loop = false;
+        // delete old table
+        int count = await db.delete(oldTableName);
+        if (count <= 0) {
+          logger.w("Upgrade4to5 - $oldTableName delete - fail");
+        } else {
+          logger.i("Upgrade4to5 - $oldTableName delete - success");
+        }
+        break;
+      } else {
+        offset += limit;
+        logger.i("Upgrade4to5 - $oldTableName offset++ - offset:$offset");
+      }
+
+      // loop offset:limit
+      for (var i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+
+        // topic
+        String? oldTopic = result["topic"];
+        if (oldTopic == null || oldTopic.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - topic is null - data:$result");
+        }
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        if (newTopic == null || newTopic.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - chat_id error - data:$result");
+          continue;
+        }
+        // chatId
+        String? oldChatId = result["chat_id"];
+        if (oldChatId == null || oldChatId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - chat_id is null - data:$result");
+        }
+        String? newChatId = ((oldChatId?.isNotEmpty == true) && (oldChatId!.length <= 200)) ? oldChatId : null;
+        if (newChatId == null || newChatId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - chat_id error - data:$result");
+          continue;
+        }
+        // at
+        int? oldCreateAt = result["time_create"];
+        if (oldCreateAt == null || oldCreateAt == 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
+        }
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Global.txPoolDelayMs) : oldCreateAt;
+        int newUpdateAt = newCreateAt;
+        // type
+        int? oldStatus = result["type"];
+        if (oldStatus == null) {
+          logger.w("Upgrade4to5 - $oldTableName query - status is null - data:$result");
+        }
+        int newStatus = SubscriberStatus.None;
+        if (oldStatus == 0 || oldStatus == 1 || oldStatus == 2 || oldStatus == 3) {
+          newStatus = oldStatus!;
+        } else if (oldStatus == 4 || oldStatus == 5) {
+          newStatus = SubscriberStatus.Unsubscribed;
+        }
+        // permPage
+        int? newPermPage = result["prm_p_i"];
+        if (newPermPage == null || newPermPage < 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - permPage is null - data:$result");
+        }
+
+        // insert v5Data
+        Map<String, dynamic> entity = {
+          'topic': newTopic,
+          'chat_id': newChatId,
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'status': newStatus,
+          'perm_page': newPermPage,
+          'data': null,
+        };
+        int count = await db.insert(SubscriberStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${SubscriberStorage.tableName} added success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} added fail - data:$entity");
+        }
+        total += count;
+      }
+    }
+    logger.i("Upgrade4to5 - ${SubscriberStorage.tableName} add end - total:$total");
   }
 
   static Future upgradeMessages(Database db) async {

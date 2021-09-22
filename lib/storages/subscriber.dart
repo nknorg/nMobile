@@ -6,7 +6,8 @@ import 'package:sqflite/sqflite.dart';
 
 class SubscriberStorage with Tag {
   // static String get tableName => 'Subscribers';
-  static String get tableName => 'subscriber';
+  // static String get tableName => 'subscriber';
+  static String get tableName => 'Subscriber_3'; // v5
 
   Database? get db => dbCommon.database;
 
@@ -22,15 +23,6 @@ class SubscriberStorage with Tag {
         `data` TEXT
       )''';
 
-  // create_at // TODO:GG rename field
-  // update_at // TODO:GG new field
-  // status // TODO:GG rename(member_status) + retype field
-  // perm_page // TODO:GG rename field + 需要放进data里吗
-  // data // TODO:GG new field
-  // subscribed BOOLEAN, // TODO:GG delete
-  // uploaded BOOLEAN, // TODO:GG delete
-  // upload_done BOOLEAN, // TODO:GG delete
-  // expire_at INTEGER // TODO:GG delete
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
