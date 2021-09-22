@@ -211,7 +211,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: resp)
 
             self.onConnect(client: client)
-            self.onMessage(client: client)
+            self.addMessageReceiveQueue(client: client)
         }
         clientQueue.async(execute: clientWorkItem!)
 
