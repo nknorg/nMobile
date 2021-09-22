@@ -7,6 +7,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
@@ -162,6 +163,13 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
 
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(ContactStorage.tableName, columns: ['*'], where: 'address = ?', whereArgs: [newAddress], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${ContactStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+          continue;
+        }
+
         // insert v5Data
         Map<String, dynamic> entity = {
           "address": newAddress,
@@ -187,10 +195,11 @@ class Upgrade4to5 {
         total += count;
       }
     }
-    logger.i("Upgrade4to5 - ${ContactStorage.tableName} add end - total:$total");
+    logger.i("Upgrade4to5 - ${ContactStorage.tableName} added end - total:$total");
   }
 
   static Future createDeviceInfo(Database db) async {
+    // just create table
     await DeviceInfoStorage.create(db);
   }
 
@@ -310,6 +319,13 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
         }
 
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(TopicStorage.tableName, columns: ['*'], where: 'topic = ?', whereArgs: [newTopic], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${TopicStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+          continue;
+        }
+
         // insert v5Data
         Map<String, dynamic> entity = {
           'topic': newTopic,
@@ -334,7 +350,7 @@ class Upgrade4to5 {
         total += count;
       }
     }
-    logger.i("Upgrade4to5 - ${TopicStorage.tableName} add end - total:$total");
+    logger.i("Upgrade4to5 - ${TopicStorage.tableName} added end - total:$total");
   }
 
   static Future upgradeSubscriber(Database db) async {
@@ -433,6 +449,13 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - permPage is null - data:$result");
         }
 
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(SubscriberStorage.tableName, columns: ['*'], where: 'topic = ? AND chat_id = ?', whereArgs: [newTopic, newChatId], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+          continue;
+        }
+
         // insert v5Data
         Map<String, dynamic> entity = {
           'topic': newTopic,
@@ -452,7 +475,7 @@ class Upgrade4to5 {
         total += count;
       }
     }
-    logger.i("Upgrade4to5 - ${SubscriberStorage.tableName} add end - total:$total");
+    logger.i("Upgrade4to5 - ${SubscriberStorage.tableName} added end - total:$total");
   }
 
   static Future upgradeMessages(Database db) async {
@@ -642,7 +665,7 @@ class Upgrade4to5 {
             continue;
           }
         }
-        // data
+        // options
         Map<String, dynamic> oldOptionsMap;
         try {
           oldOptionsMap = (result['options']?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : Map();
@@ -671,6 +694,13 @@ class Upgrade4to5 {
         } catch (e) {
           handleError(e);
           logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
+        }
+
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(MessageStorage.tableName, columns: ['*'], where: 'msg_id = ?', whereArgs: [newMsgId], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${MessageStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+          continue;
         }
 
         // insert v5Data
@@ -703,12 +733,133 @@ class Upgrade4to5 {
         total += count;
       }
     }
-    logger.i("Upgrade4to5 - ${MessageStorage.tableName} add end - total:$total");
+    logger.i("Upgrade4to5 - ${MessageStorage.tableName} added end - total:$total");
   }
 
   static Future createSession(Database db) async {
+    // create table
     await SessionStorage.create(db);
-    // TODO:GG 取消息的最后一条，聚合成session，还有未读数等其他字段
-    // await db.execute('ALTER TABLE $subsriberTable ADD COLUMN member_status BOOLEAN DEFAULT 0');
+
+    // contact
+    int contactTotal = 0;
+    int contactOffset = 0;
+    int contactLimit = 30;
+    bool contactLoop = true;
+    while (contactLoop) {
+      List<Map<String, dynamic>>? contacts = await db.query(ContactStorage.tableName, columns: ['*'], offset: contactOffset, limit: contactLimit);
+      if (contacts == null || contacts.isEmpty) {
+        contactLoop = false;
+        break;
+      } else {
+        contactOffset += contactLimit;
+        logger.i("Upgrade4to5 - ${SessionStorage.tableName} next page by contact - offset:$contactOffset");
+      }
+
+      // loop offset:limit
+      for (var i = 0; i < contacts.length; i++) {
+        Map<String, dynamic> contact = contacts[i];
+
+        // targetId
+        String? targetId = contact["address"];
+        if ((targetId == null) || targetId.isEmpty) {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} added error with contact address - contact:$contact");
+          continue;
+        }
+
+        // lastMsg
+        List<Map<String, dynamic>>? msgList = await db.query(MessageStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], orderBy: "send_at DESC", offset: 0, limit: 1);
+        if (msgList == null || msgList.isEmpty) {
+          logger.i("Upgrade4to5 - ${SessionStorage.tableName} added reject with no contact message - contact:$contact");
+          continue;
+        }
+        Map<String, dynamic> lastMsgMap = msgList[0];
+
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
+          continue;
+        }
+
+        // insert
+        Map<String, dynamic> entity = {
+          'target_id': targetId,
+          'type': SessionType.CONTACT,
+          'last_message_at': lastMsgMap['send_at'] ?? 0,
+          'last_message_options': lastMsgMap,
+          'is_top': contact['is_top'] ?? 0,
+          'un_read_count': 0,
+        };
+        int count = await db.insert(SessionStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${SessionStorage.tableName} added by contact success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by contact fail - data:$entity");
+        }
+        contactTotal += count;
+      }
+    }
+    logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by contact - total:$contactTotal");
+
+    // topic
+    int topicTotal = 0;
+    int topicOffset = 0;
+    int topicLimit = 30;
+    bool topicLoop = true;
+    while (topicLoop) {
+      List<Map<String, dynamic>>? topics = await db.query(TopicStorage.tableName, columns: ['*'], offset: topicOffset, limit: topicLimit);
+      if (topics == null || topics.isEmpty) {
+        topicLoop = false;
+        break;
+      } else {
+        topicOffset += topicLimit;
+        logger.i("Upgrade4to5 - ${SessionStorage.tableName} next page by topic - offset:$topicOffset");
+      }
+
+      // loop offset:limit
+      for (var i = 0; i < topics.length; i++) {
+        Map<String, dynamic> topic = topics[i];
+
+        // targetId
+        String? targetId = topic["topic"];
+        if ((targetId == null) || targetId.isEmpty) {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} added error with topic address - topic:$topic");
+          continue;
+        }
+
+        // lastMsg
+        List<Map<String, dynamic>>? msgList = await db.query(MessageStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], orderBy: "send_at DESC", offset: 0, limit: 1);
+        if (msgList == null || msgList.isEmpty) {
+          logger.i("Upgrade4to5 - ${SessionStorage.tableName} added reject with no topic message - topic:$topic");
+          continue;
+        }
+        Map<String, dynamic> lastMsgMap = msgList[0];
+
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], offset: 0, limit: 1);
+        if (duplicated != null && duplicated.length > 0) {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
+          continue;
+        }
+
+        // insert
+        Map<String, dynamic> entity = {
+          'target_id': targetId,
+          'type': SessionType.TOPIC,
+          'last_message_at': lastMsgMap['send_at'] ?? 0,
+          'last_message_options': lastMsgMap,
+          'is_top': topic['is_top'] ?? 0,
+          'un_read_count': 0,
+        };
+        int count = await db.insert(SessionStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${SessionStorage.tableName} added by topic success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by topic fail - data:$entity");
+        }
+        topicTotal += count;
+      }
+    }
+    logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by topic - total:$topicTotal");
   }
 }
