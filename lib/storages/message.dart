@@ -9,7 +9,8 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
 
 class MessageStorage with Tag {
-  static String get tableName => 'Messages';
+  // static String get tableName => 'Messages';
+  static String get tableName => 'Messages_2';
 
   Database? get db => dbCommon.database;
 
@@ -35,14 +36,6 @@ class MessageStorage with Tag {
 
   MessageStorage();
 
-  // is_read BOOLEAN // TODO:GG delete
-  // is_success BOOLEAN // TODO:GG delete
-  // is_send_error BOOLEAN // TODO:GG delete
-  // send_at // TODO:GG rename field
-  // receive_at // TODO:GG rename field
-  // delete_at // TODO:GG rename field
-  // status // TODO:GG new field
-  // is_delete // TODO:GG new field
   static create(Database db) async {
     // create table
     await db.execute(createSQL);

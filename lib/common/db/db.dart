@@ -56,7 +56,10 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
-        Loading.show(text: "数据库升级中,请勿退出app或离开此页面!"); // TODO:GG locale dbUpgrade ???进度条?
+        Loading.show(text: "数据库升级中,请勿退出app或离开此页面!"); // TODO:GG locale dbUpgrade
+        // TODO:GG ???进度条?
+        // TODO:GG 中途退出咋整???
+        // TODO:GG 打断点看看await是否有序??
 
         // 1 -> 2
         bool v1to2 = false;
