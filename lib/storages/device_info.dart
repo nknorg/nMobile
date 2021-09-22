@@ -7,7 +7,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DeviceInfoStorage with Tag {
-  static String get tableName => 'DeviceInfo';
+  static String get tableName => 'DeviceInfo'; // v5
 
   Database? get db => dbCommon.database;
 
