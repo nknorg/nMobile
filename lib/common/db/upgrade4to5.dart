@@ -5,11 +5,13 @@ import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
+import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
@@ -52,7 +54,7 @@ class Upgrade4to5 {
     // convert all v2Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 50;
+    int limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
@@ -105,7 +107,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
-        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
+        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // profile
         String? newAvatar = Path.getLocalFile(result["avatar"]);
         String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
@@ -224,7 +226,7 @@ class Upgrade4to5 {
     // convert all v2Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 50;
+    int limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
@@ -275,7 +277,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
-        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldUpdateAt;
+        int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // joined
         int newJoined = result["joined"] ?? 1;
         // subscribe_at + expire_height
@@ -364,7 +366,7 @@ class Upgrade4to5 {
     // convert all v4Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 50;
+    int limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
@@ -454,8 +456,254 @@ class Upgrade4to5 {
   }
 
   static Future upgradeMessages(Database db) async {
-    // TODO:GG db messages
-    // TODO:GG delete message(receipt) + read message(piece + contactOptions)
+    // id (NULL) -> id (NOT NULL)
+    // pid (TEXT) -> pid (VARCHAR(300))
+    // msg_id (TEXT) -> msg_id (VARCHAR(300))
+    // sender (TEXT) -> sender (VARCHAR(200))
+    // receiver (TEXT) -> receiver (VARCHAR(200))
+    // topic (TEXT) -> topic (VARCHAR(200))
+    // target_id (TEXT) -> target_id (VARCHAR(200))
+    // is_send_error/is_success/is_read (BOOLEAN) -> status (INT)
+    // is_outbound (BOOLEAN) -> is_outbound (BOOLEAN)
+    // content (TEXT) -> is_delete (BOOLEAN)
+    // send_time (INTEGER) -> send_at (BIGINT)
+    // receive_time (INTEGER) -> receive_at (BIGINT)
+    // delete_time (INTEGER) -> delete_at (BIGINT)
+    // type (TEXT) -> type (VARCHAR(30))
+    // content (TEXT) -> content (TEXT)
+    // options (TEXT) -> options (TEXT)
+
+    // v5 table
+    if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
+      await db.execute(MessageStorage.createSQL);
+    }
+
+    // v2 table
+    String oldTableName = "Messages";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.i("Upgrade4to5 - $oldTableName no exist");
+      return;
+    }
+
+    // convert all v2Data to v5Data
+    int total = 0;
+    int offset = 0;
+    int limit = 30;
+    bool loop = true;
+    while (loop) {
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      if (results == null || results.isEmpty) {
+        loop = false;
+        // delete old table
+        int count = await db.delete(oldTableName);
+        if (count <= 0) {
+          logger.w("Upgrade4to5 - $oldTableName delete - fail");
+        } else {
+          logger.i("Upgrade4to5 - $oldTableName delete - success");
+        }
+        break;
+      } else {
+        offset += limit;
+        logger.i("Upgrade4to5 - $oldTableName offset++ - offset:$offset");
+      }
+
+      // loop offset:limit
+      for (var i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+
+        // pid
+        String? oldPid = result["pid"];
+        if (oldPid == null || oldPid.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - pid is null - data:$result");
+        }
+        String? newPid = ((oldPid?.isNotEmpty == true) && (oldPid!.length <= 300)) ? oldPid : null;
+        if (newPid == null || newPid.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
+          continue;
+        }
+        // msgId
+        String? oldMsgId = result["msg_id"];
+        if (oldMsgId == null || oldMsgId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - msgId is null - data:$result");
+        }
+        String? newMsgId = ((oldMsgId?.isNotEmpty == true) && (oldMsgId!.length <= 300)) ? oldMsgId : null;
+        if (newMsgId == null || newMsgId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - msgId error - data:$result");
+          continue;
+        }
+        // sender
+        String? oldSender = result["sender"];
+        if (oldSender == null || oldSender.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - sender is null - data:$result");
+        }
+        String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
+        if (newSender == null || newSender.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
+          continue;
+        }
+        // receiver
+        String? oldReceiver = result["receiver"];
+        if (oldReceiver == null || oldReceiver.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
+        }
+        String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
+        if (newReceiver == null || newReceiver.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - receiver error - data:$result");
+          continue;
+        }
+        // topic
+        String? oldTopic = result["topic"];
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
+          logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
+        }
+        // isOutBound
+        int? newIsOutbound = result["is_outbound"];
+        if (newIsOutbound == null) {
+          logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
+          continue;
+        }
+        // targetId
+        String? oldTargetId = result["target_id"];
+        if (oldTargetId == null || oldTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - targetId is null - data:$result");
+        }
+        String? newTargetId = ((oldTargetId?.isNotEmpty == true) && (oldTargetId!.length <= 200)) ? oldTargetId : null;
+        if (newTargetId == null || newTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
+          if (newTopic?.isNotEmpty == true) {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is topic - data:$result");
+            newTargetId = newTopic;
+          } else if (newIsOutbound == 1) {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is receiver - data:$result");
+            newTargetId = newReceiver;
+          } else {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is sender - data:$result");
+            newTargetId = newSender;
+          }
+        }
+        // status
+        // int? oldIsSendError = result["is_send_error"];
+        // int? oldIsSuccess = result["is_success"];
+        // int? oldIsRead = result["is_read"];
+        int newStatus = MessageStatus.Read;
+        // delete
+        int newIsDelete = 0;
+        // at
+        int? oldSendAt = result["send_time"];
+        int? oldReceiveAt = result["receive_time"];
+        int? oldDeleteAt = result["delete_time"];
+        if (oldSendAt == null || oldSendAt == 0 || oldReceiveAt == null || oldReceiveAt == 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
+        }
+        int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
+        int newReceiveAt = (oldDeleteAt == null || oldDeleteAt == 0) ? newCreateAt : oldDeleteAt;
+        int? newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
+
+        // type
+        String? oldType = result["type"];
+        if (oldType == null || oldType.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
+          continue;
+        }
+        String newType;
+        if (oldType == MessageContentType.receipt) {
+          logger.w("Upgrade4to5 - $oldTableName convert - type is receipt, need skip - data:$result");
+          continue;
+        } else if (oldType == MessageContentType.contact) {
+          logger.w("Upgrade4to5 - $oldTableName convert - type is contact, need skip - data:$result");
+          continue;
+        } else if (oldType == MessageContentType.contactOptions) {
+          newType = oldType;
+        } else if (oldType == MessageContentType.text || oldType == MessageContentType.textExtension) {
+          newType = oldType;
+        } else if (oldType == MessageContentType.media || oldType == MessageContentType.image || oldType == MessageContentType.audio) {
+          newType = oldType;
+        } else if (oldType == MessageContentType.piece) {
+          logger.w("Upgrade4to5 - $oldTableName convert - type is piece, need skip - data:$result");
+          continue;
+        } else if (oldType == MessageContentType.topicInvitation || oldType == MessageContentType.topicSubscribe) {
+          newType = oldType;
+        } else if (oldType == MessageContentType.topicUnsubscribe) {
+          logger.w("Upgrade4to5 - $oldTableName convert - type is unsubscribe, need skip - data:$result");
+          continue;
+        } else if (oldType == MessageContentType.ping || oldType == MessageContentType.read || oldType == MessageContentType.msgStatus || oldType == MessageContentType.deviceInfo || oldType == MessageContentType.deviceRequest || oldType == MessageContentType.topicKickOut) {
+          logger.w("Upgrade4to5 - $oldTableName convert - type is new ??? - data:$result");
+          continue;
+        } else {
+          logger.w("Upgrade4to5 - $oldTableName convert - type error - data:$result");
+          continue;
+        }
+        // content
+        String? newContent = result['content'];
+        if (newContent == null || newContent.isEmpty) {
+          if (newType != MessageContentType.text && newType != MessageContentType.textExtension && newType != MessageContentType.media && newType != MessageContentType.image && newType != MessageContentType.audio) {
+            logger.w("Upgrade4to5 - $oldTableName convert - content is null - data:$result");
+            continue;
+          }
+        }
+        // data
+        Map<String, dynamic> oldOptionsMap;
+        try {
+          oldOptionsMap = (result['options']?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : Map();
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
+          oldOptionsMap = Map();
+        }
+        Map<String, dynamic> newOptionsMap = Map();
+        newOptionsMap['nknWalletAddress'] = oldOptionsMap['audioDuration'];
+        newOptionsMap['deleteAfterSeconds'] = oldOptionsMap['deleteAfterSeconds'];
+        newOptionsMap['updateBurnAfterAt'] = oldOptionsMap['updateTime'] ?? oldOptionsMap['updateBurnAfterTime'] ?? oldOptionsMap['updateBurnAfterAt'];
+        // newOptionsMap['deviceToken'] = ???;
+        // newOptionsMap['send_at'] = ???;
+        // newOptionsMap['from_piece'] = ???;
+        // newOptionsMap['piece'] = oldOptionsMap['piece'];
+        // newOptionsMap['parentType'] = oldOptionsMap['parentType'];
+        // newOptionsMap['bytesLength'] = oldOptionsMap['bytesLength'];
+        // newOptionsMap['parity'] = oldOptionsMap['parity'];
+        // newOptionsMap['total'] = oldOptionsMap['total'];
+        // newOptionsMap['index'] = oldOptionsMap['index'];
+
+        String? newOptions;
+        try {
+          newOptions = jsonEncode(newOptionsMap);
+        } catch (e) {
+          handleError(e);
+          logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
+        }
+
+        // insert v5Data
+        Map<String, dynamic> entity = {
+          'pid': newPid,
+          'msg_id': newMsgId,
+          'sender': newSender,
+          'receiver': newReceiver,
+          'topic': newTopic,
+          'target_id': newTargetId,
+          // status
+          'status': newStatus,
+          'is_outbound': newIsOutbound,
+          'is_delete': newIsDelete,
+          // at
+          'send_at': newCreateAt,
+          'receive_at': newReceiveAt,
+          'delete_at': newDeleteAt,
+          // data
+          'type': newType,
+          'content': newContent,
+          'options': newOptions,
+        };
+        int count = await db.insert(MessageStorage.tableName, entity);
+        if (count > 0) {
+          logger.d("Upgrade4to5 - ${MessageStorage.tableName} added success - data:$entity");
+        } else {
+          logger.w("Upgrade4to5 - ${MessageStorage.tableName} added fail - data:$entity");
+        }
+        total += count;
+      }
+    }
+    logger.i("Upgrade4to5 - ${MessageStorage.tableName} add end - total:$total");
   }
 
   static Future createSession(Database db) async {
