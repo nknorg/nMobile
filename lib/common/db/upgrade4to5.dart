@@ -42,14 +42,34 @@ class Upgrade4to5 {
 
     // v2 table
     String oldTableName = "Contact";
-    List<Map<String, dynamic>>? results;
-    if ((await DB.checkTableExists(db, oldTableName))) {
-      results = await db.query(oldTableName, columns: ['*']);
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.i("Upgrade4to5 - $oldTableName no exist");
+      return;
     }
 
     // convert all v2Data to v5Data
-    if (results != null && results.length > 0) {
-      int total = 0;
+    int total = 0;
+    int offset = 0;
+    int limit = 50;
+    bool loop = true;
+    while (loop) {
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      if (results == null || results.isEmpty) {
+        loop = false;
+        // delete old table
+        int count = await db.delete(oldTableName);
+        if (count <= 0) {
+          logger.w("Upgrade4to5 - $oldTableName delete - fail");
+        } else {
+          logger.i("Upgrade4to5 - $oldTableName delete - success");
+        }
+        break;
+      } else {
+        offset += limit;
+        logger.i("Upgrade4to5 - $oldTableName offset++ - offset:$offset");
+      }
+
+      // loop offset:limit
       for (var i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
 
@@ -162,13 +182,8 @@ class Upgrade4to5 {
         }
         total += count;
       }
-      logger.i("Upgrade4to5 - ${ContactStorage.tableName} added - total:$total");
-    } else {
-      logger.i("Upgrade4to5 - $oldTableName query - empty");
     }
-
-    // drop
-    await db.execute('DROP TABLE IF EXISTS $oldTableName;');
+    logger.i("Upgrade4to5 - ${ContactStorage.tableName} add end - total:$total");
   }
 
   static Future createDeviceInfo(Database db) async {
@@ -199,14 +214,34 @@ class Upgrade4to5 {
 
     // v2 table
     String oldTableName = 'topic';
-    List<Map<String, dynamic>>? results;
-    if ((await DB.checkTableExists(db, oldTableName))) {
-      results = await db.query(oldTableName, columns: ['*']);
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.i("Upgrade4to5 - $oldTableName no exist");
+      return;
     }
 
     // convert all v2Data to v5Data
-    if (results != null && results.length > 0) {
-      int total = 0;
+    int total = 0;
+    int offset = 0;
+    int limit = 50;
+    bool loop = true;
+    while (loop) {
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      if (results == null || results.isEmpty) {
+        loop = false;
+        // delete old table
+        int count = await db.delete(oldTableName);
+        if (count <= 0) {
+          logger.w("Upgrade4to5 - $oldTableName delete - fail");
+        } else {
+          logger.i("Upgrade4to5 - $oldTableName delete - success");
+        }
+        break;
+      } else {
+        offset += limit;
+        logger.i("Upgrade4to5 - $oldTableName offset++ - offset:$offset");
+      }
+
+      // loop offset:limit
       for (var i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
 
@@ -294,17 +329,40 @@ class Upgrade4to5 {
         }
         total += count;
       }
-      logger.i("Upgrade4to5 - ${TopicStorage.tableName} added - total:$total");
-    } else {
-      logger.i("Upgrade4to5 - $oldTableName query - empty");
     }
-
-    // drop
-    await db.execute('DROP TABLE IF EXISTS $oldTableName;');
+    logger.i("Upgrade4to5 - ${TopicStorage.tableName} add end - total:$total");
   }
 
   static Future upgradeSubscriber(Database db) async {
-    // TODO:GG db subscriber
+    // create_at // TODO:GG rename field
+    // update_at // TODO:GG new field
+    // status // TODO:GG rename(member_status) + retype field
+    // perm_page // TODO:GG rename field + 需要放进data里吗
+    // data // TODO:GG new field
+    // subscribed BOOLEAN, // TODO:GG delete
+    // uploaded BOOLEAN, // TODO:GG delete
+    // upload_done BOOLEAN, // TODO:GG delete
+    // expire_at INTEGER // TODO:GG delete
+
+    // $id INTEGER PRIMARY KEY AUTOINCREMENT,
+    // $topic TEXT,
+    // $chat_id TEXT,
+    // $prm_p_i INTEGER,
+    // $time_create INTEGER,
+    // $expire_at INTEGER,
+    // $uploaded BOOLEAN,
+    // $subscribed BOOLEAN,
+    // $upload_done BOOLEAN,
+    // $member_status BOOLEAN
+
+    // `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    // `topic` VARCHAR(200),
+    // `chat_id` VARCHAR(200),
+    // `create_at` BIGINT,
+    // `update_at` BIGINT,
+    // `status` INT,
+    // `perm_page` INT,
+    // `data` TEXT
   }
 
   static Future upgradeMessages(Database db) async {

@@ -152,6 +152,10 @@ class DB {
   //   }
   // }
 
+  // static Future<void> checkTable(Database db, String table) async {
+  //   await db.execute('DROP TABLE IF EXISTS $table;');
+  // }
+
   static Future<bool> checkTableExists(Database db, String table) async {
     var count = firstIntValue(await db.query('sqlite_master', columns: ['COUNT(*)'], where: 'type = ? AND name = ?', whereArgs: ['table', table]));
     return (count ?? 0) > 0;

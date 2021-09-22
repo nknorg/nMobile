@@ -7,8 +7,8 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
 
 class TopicStorage with Tag {
-  // static String get tableName => 'Topic'; // v1
-  // static String get tableName => 'topic'; // v2
+  // static String get tableName => 'Topic';
+  // static String get tableName => 'topic';
   static String get tableName => 'Topic_3'; // v5
 
   Database? get db => dbCommon.database;
