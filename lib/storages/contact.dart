@@ -9,7 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactStorage with Tag {
-  // static String get tableName => 'Contact'; // v2
+  // static String get tableName => 'Contact';
   static String get tableName => 'Contact_2'; // v5
 
   Database? get db => dbCommon.database;
