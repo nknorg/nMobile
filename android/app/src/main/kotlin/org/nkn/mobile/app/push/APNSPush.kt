@@ -72,11 +72,11 @@ class APNSPush {
                 val n: Notification = builder.build()
                 apnsClient?.push(n, object : NotificationResponseListener {
                     override fun onSuccess(notification: Notification?) {
-                        Log.d("SendPush", "push - success")
+                        Log.d("SendPush", "push - success - deviceToken:$deviceToken")
                     }
 
                     override fun onFailure(notification: Notification?, nr: NotificationResponse) {
-                        Log.e("SendPush", "push - fail - response:$nr")
+                        Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
                     }
                 })
             } catch (e: ExecutionException) {
