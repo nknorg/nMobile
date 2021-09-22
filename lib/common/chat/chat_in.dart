@@ -223,13 +223,6 @@ class ChatInCommon with Tag {
       chatOutCommon.sendReceipt(received); // await
     }
 
-    // status (not handle in messages screen)
-    if (received.isTopic || (!received.canReceipt && received.canDisplay)) {
-      if (received.status != MessageStatus.Read) {
-        chatCommon.updateMessageStatus(received, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false); // await
-      }
-    }
-
     // badge
     if (received.canNotification) {
       bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
@@ -519,6 +512,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
+    received.status = MessageStatus.Read;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -570,6 +564,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
+    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -592,6 +587,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
+    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -614,6 +610,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
+    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -734,6 +731,7 @@ class ChatInCommon with Tag {
     topicCommon.onSubscribe(received.topic, received.from).then((value) async {
       if (!historySubscribed && value != null) {
         // DB
+        received.status = MessageStatus.Read;
         MessageSchema? inserted = await _messageStorage.insert(received);
         if (inserted == null) return false;
         // display
@@ -759,6 +757,7 @@ class ChatInCommon with Tag {
     }
     // permission checked in message click
     // DB
+    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
