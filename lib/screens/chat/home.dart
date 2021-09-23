@@ -169,6 +169,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future _tryLogin() async {
+    if (await dbCommon.needUpgrade()) return;
+
     if (clientCommon.client != null) {
       clientCommon.connectCheck();
       return;

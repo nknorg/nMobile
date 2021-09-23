@@ -13,6 +13,7 @@ import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
@@ -31,9 +32,9 @@ class DB {
   Stream<bool> get openedStream => _openedController.stream;
 
   // ignore: close_sinks
-  StreamController<String> _upgradeTextController = StreamController<String>.broadcast();
-  StreamSink<String> get _upgradeTextSink => _upgradeTextController.sink;
-  Stream<String> get upgradeTextStream => _upgradeTextController.stream;
+  StreamController<String?> _upgradeTipController = StreamController<String?>.broadcast();
+  StreamSink<String?> get _upgradeTipSink => _upgradeTipController.sink;
+  Stream<String?> get upgradeTipStream => _upgradeTipController.stream;
 
   Database? database;
 
@@ -89,24 +90,29 @@ class DB {
 
         // 4-> 5
         if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
-          await Upgrade4to5.upgradeContact(db, upgradeTextStream: _upgradeTextSink);
-          await Upgrade4to5.createDeviceInfo(db, upgradeTextStream: _upgradeTextSink);
-          await Upgrade4to5.upgradeTopic(db, upgradeTextStream: _upgradeTextSink);
-          await Upgrade4to5.upgradeSubscriber(db, upgradeTextStream: _upgradeTextSink);
-          await Upgrade4to5.upgradeMessages(db, upgradeTextStream: _upgradeTextSink);
-          await Upgrade4to5.createSession(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.upgradeContact(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
+          _upgradeTipSink.add(null);
         }
 
         Loading.dismiss();
       },
       onOpen: (Database db) async {
-        logger.i("DB - opened");
+        int version = await db.getVersion();
+        logger.i("DB - opened - version:$version - path:${db.path}");
+        SettingsStorage.setSettings(SettingsStorage.DATABASE_VERSION, version);
       },
     );
     return db;
   }
 
   Future<bool> openByDefault() async {
+    if (await needUpgrade()) return false;
+    // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
       logger.i("DB - openByDefault - wallet default is empty");
@@ -139,6 +145,11 @@ class DB {
 
   bool isOpen() {
     return database != null && database!.isOpen;
+  }
+
+  Future<bool> needUpgrade() async {
+    int? savedVersion = await SettingsStorage.getSettings(SettingsStorage.DATABASE_VERSION);
+    return savedVersion != currentDatabaseVersion;
   }
 
   // delete() async {

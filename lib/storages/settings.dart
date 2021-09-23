@@ -12,6 +12,8 @@ class SettingsStorage {
   static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
   static const String CHAT_TIP_NOTIFICATION = 'chat_tip_notification'; // not support 'NKN_MESSAGE_NOTIFICATION_ALERT'
 
+  static const String DATABASE_VERSION = "database_version";
+
   static final LocalStorage _localStorage = LocalStorage();
 
   static Future getSettings(String key) async {
