@@ -20,6 +20,7 @@ import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
@@ -130,7 +131,13 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _refreshJoined() async {
+    if (_topicSchema == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
     bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
+    if (joined && (_topicSchema?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
+      logger.i("TopicProfileScreen - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
+      joined = _me?.status == SubscriberStatus.Subscribed;
+    }
     // do not topic.setJoined because filed is_joined is action not a tag
     if (_isJoined != joined) {
       setState(() {
