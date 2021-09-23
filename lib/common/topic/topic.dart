@@ -156,7 +156,7 @@ class TopicCommon with Tag {
       Toast.show(S.of(Global.appContext).failure);
       return null;
     }
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 500));
 
     // status + permission
     if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
@@ -178,7 +178,7 @@ class TopicCommon with Tag {
       // public / private + normal
       _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
     }
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 500));
 
     // send messages
     await chatOutCommon.sendTopicSubscribe(topicName);
@@ -345,7 +345,7 @@ class TopicCommon with Tag {
     // client unsubscribe
     bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, toast: true);
     if (!exitSuccess) return null;
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 500));
 
     // topic update
     TopicSchema? exists = await queryByTopic(topicName);
@@ -365,7 +365,7 @@ class TopicCommon with Tag {
 
     // send message
     await chatOutCommon.sendTopicUnSubscribe(topicName);
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 500));
     return exists;
   }
 
