@@ -125,7 +125,7 @@ class Upgrade4to5 {
         String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
         // profileExtra
         String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
-        String? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
+        int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
         // top + token
         int newIsTop = result["is_top"] ?? 0;
         String? newDeviceToken = result["device_token"];
@@ -143,7 +143,7 @@ class Upgrade4to5 {
           handleError(e);
           logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
         }
-        newOptionsSchema.notificationOpen = result["notification_open"] ?? false;
+        newOptionsSchema.notificationOpen = (result["notification_open"]?.toString() == '1') ? true : false;
         String? newOptions;
         try {
           newOptions = jsonEncode(newOptionsSchema.toMap());
@@ -196,13 +196,13 @@ class Upgrade4to5 {
           "options": newOptions,
           "data": newData,
         };
-        int count = await db.insert(ContactStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(ContactStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${ContactStorage.tableName} added success - data:$entity");
+          total += 1;
         } else {
           logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
         }
-        total += count;
         upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/6)");
       }
     }
@@ -366,13 +366,13 @@ class Upgrade4to5 {
           'options': newOptions,
           'data': null,
         };
-        int count = await db.insert(TopicStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(TopicStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${TopicStorage.tableName} added success - data:$entity");
+          total += 1;
         } else {
           logger.w("Upgrade4to5 - ${TopicStorage.tableName} added fail - data:$entity");
         }
-        total += count;
         upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/6)");
       }
     }
@@ -505,13 +505,13 @@ class Upgrade4to5 {
           'perm_page': newPermPage,
           'data': null,
         };
-        int count = await db.insert(SubscriberStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(SubscriberStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${SubscriberStorage.tableName} added success - data:$entity");
+          total += 1;
         } else {
           logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} added fail - data:$entity");
         }
-        total += count;
         upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/6)");
       }
     }
@@ -777,13 +777,13 @@ class Upgrade4to5 {
           'content': newContent,
           'options': newOptions,
         };
-        int count = await db.insert(MessageStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(MessageStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${MessageStorage.tableName} added success - data:$entity");
+          total += 1;
         } else {
           logger.w("Upgrade4to5 - ${MessageStorage.tableName} added fail - data:$entity");
         }
-        total += count;
         upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/6)");
       }
     }
@@ -858,13 +858,13 @@ class Upgrade4to5 {
           'is_top': contact['is_top'] ?? 0,
           'un_read_count': 0,
         };
-        int count = await db.insert(SessionStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(SessionStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${SessionStorage.tableName} added by contact success - data:$entity");
+          contactTotal += 1;
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by contact fail - data:$entity");
         }
-        contactTotal += count;
         upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/6)");
       }
     }
@@ -920,13 +920,13 @@ class Upgrade4to5 {
           'is_top': topic['is_top'] ?? 0,
           'un_read_count': 0,
         };
-        int count = await db.insert(SessionStorage.tableName, entity);
-        if (count > 0) {
+        int id = await db.insert(SessionStorage.tableName, entity);
+        if (id > 0) {
           logger.d("Upgrade4to5 - ${SessionStorage.tableName} added by topic success - data:$entity");
+          topicTotal += 1;
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by topic fail - data:$entity");
         }
-        topicTotal += count;
         upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/6)");
       }
     }

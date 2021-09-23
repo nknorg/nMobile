@@ -39,8 +39,14 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
   @override
   void initState() {
     super.initState();
-    // db
+    // db signIn dialogCallback
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
+      // sync with
+      if ((dbUpdateTip == null || dbUpdateTip!.isEmpty) && (tip?.isNotEmpty == true)) {
+        Loading.dismiss();
+      } else if ((dbUpdateTip?.isNotEmpty == true) && (tip == null || tip.isEmpty)) {
+        Loading.show();
+      }
       setState(() {
         dbUpdateTip = tip;
       });
