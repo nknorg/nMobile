@@ -24,7 +24,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 class Upgrade4to5 {
-  static Future upgradeContact(Database db, {StreamSink<String>? upgradeTextStream}) async {
+  static Future upgradeContact(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // address (TEXT) -> address (VARCHAR(200))
     // type (TEXT) -> type (INT)
@@ -41,14 +41,14 @@ class Upgrade4to5 {
     // data (TEXT) -> data( TEXT)
     // notification_open (BOOLEAN) -> options.notificationOpen
 
-    upgradeTextStream?.add("... (1/6)");
+    upgradeTipStream?.add("... (1/6)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
-      upgradeTextStream?.add(".... (1/6)");
+      upgradeTipStream?.add(".... (1/6)");
       await db.execute(ContactStorage.createSQL);
     }
-    upgradeTextStream?.add("..... (1/6)");
+    upgradeTipStream?.add("..... (1/6)");
 
     // v2 table
     String oldTableName = "Contact";
@@ -56,7 +56,7 @@ class Upgrade4to5 {
       logger.i("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTextStream?.add("...... (1/6)");
+    upgradeTipStream?.add("...... (1/6)");
 
     // total
     List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -203,7 +203,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
         }
         total += count;
-        upgradeTextStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/6)");
       }
     }
     if (total != rawCount) {
@@ -213,13 +213,13 @@ class Upgrade4to5 {
     }
   }
 
-  static Future createDeviceInfo(Database db, {StreamSink<String>? upgradeTextStream}) async {
-    upgradeTextStream?.add("... (2/6)");
+  static Future createDeviceInfo(Database db, {StreamSink<String?>? upgradeTipStream}) async {
+    upgradeTipStream?.add("... (2/6)");
     // just create table
     await DeviceInfoStorage.create(db);
   }
 
-  static Future upgradeTopic(Database db, {StreamSink<String>? upgradeTextStream}) async {
+  static Future upgradeTopic(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // topic (TEXT) -> topic (VARCHAR(200))
     // ??/type (INTEGER) -> type (INT)
@@ -236,14 +236,14 @@ class Upgrade4to5 {
     // accept_all (BOOLEAN) -> ??
     // theme_id (INTEGER) -> ??
 
-    upgradeTextStream?.add("... (3/6)");
+    upgradeTipStream?.add("... (3/6)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
-      upgradeTextStream?.add(".... (3/6)");
+      upgradeTipStream?.add(".... (3/6)");
       await db.execute(TopicStorage.createSQL);
     }
-    upgradeTextStream?.add("..... (3/6)");
+    upgradeTipStream?.add("..... (3/6)");
 
     // v2 table
     String oldTableName = 'topic';
@@ -251,7 +251,7 @@ class Upgrade4to5 {
       logger.i("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTextStream?.add("...... (3/6)");
+    upgradeTipStream?.add("...... (3/6)");
 
     // total
     List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -373,7 +373,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${TopicStorage.tableName} added fail - data:$entity");
         }
         total += count;
-        upgradeTextStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/6)");
       }
     }
     if (total != rawCount) {
@@ -383,7 +383,7 @@ class Upgrade4to5 {
     }
   }
 
-  static Future upgradeSubscriber(Database db, {StreamSink<String>? upgradeTextStream}) async {
+  static Future upgradeSubscriber(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // topic (TEXT) -> topic (VARCHAR(200))
     // chat_id (TEXT) -> chat_id (VARCHAR(200))
@@ -397,14 +397,14 @@ class Upgrade4to5 {
     // upload_done (BOOLEAN) -> ???
     // expire_at (INTEGER) -> ???
 
-    upgradeTextStream?.add("... (4/6)");
+    upgradeTipStream?.add("... (4/6)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
-      upgradeTextStream?.add(".... (4/6)");
+      upgradeTipStream?.add(".... (4/6)");
       await db.execute(SubscriberStorage.createSQL);
     }
-    upgradeTextStream?.add("..... (4/6)");
+    upgradeTipStream?.add("..... (4/6)");
 
     // v4 table
     String oldTableName = "subscriber";
@@ -412,7 +412,7 @@ class Upgrade4to5 {
       logger.i("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTextStream?.add("...... (4/6)");
+    upgradeTipStream?.add("...... (4/6)");
 
     // total
     List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -512,7 +512,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} added fail - data:$entity");
         }
         total += count;
-        upgradeTextStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/6)");
       }
     }
     if (total != rawCount) {
@@ -522,7 +522,7 @@ class Upgrade4to5 {
     }
   }
 
-  static Future upgradeMessages(Database db, {StreamSink<String>? upgradeTextStream}) async {
+  static Future upgradeMessages(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // pid (TEXT) -> pid (VARCHAR(300))
     // msg_id (TEXT) -> msg_id (VARCHAR(300))
@@ -540,14 +540,14 @@ class Upgrade4to5 {
     // content (TEXT) -> content (TEXT)
     // options (TEXT) -> options (TEXT)
 
-    upgradeTextStream?.add("... (5/6)");
+    upgradeTipStream?.add("... (5/6)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
-      upgradeTextStream?.add(".... (5/6)");
+      upgradeTipStream?.add(".... (5/6)");
       await db.execute(MessageStorage.createSQL);
     }
-    upgradeTextStream?.add("..... (5/6)");
+    upgradeTipStream?.add("..... (5/6)");
 
     // v2 table
     String oldTableName = "Messages";
@@ -555,7 +555,7 @@ class Upgrade4to5 {
       logger.i("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTextStream?.add("...... (5/6)");
+    upgradeTipStream?.add("...... (5/6)");
 
     // total
     List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -784,7 +784,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${MessageStorage.tableName} added fail - data:$entity");
         }
         total += count;
-        upgradeTextStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/6)");
       }
     }
     if (total != rawCount) {
@@ -794,12 +794,12 @@ class Upgrade4to5 {
     }
   }
 
-  static Future createSession(Database db, {StreamSink<String>? upgradeTextStream}) async {
-    upgradeTextStream?.add("... (6/6)");
+  static Future createSession(Database db, {StreamSink<String?>? upgradeTipStream}) async {
+    upgradeTipStream?.add("... (6/6)");
 
     // create table
     await SessionStorage.create(db);
-    upgradeTextStream?.add(".... (6/6)");
+    upgradeTipStream?.add(".... (6/6)");
 
     // total
     List<Map<String, dynamic>>? rawCountMap1 = await db.query(ContactStorage.tableName, columns: ['COUNT(id)']);
@@ -865,7 +865,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by contact fail - data:$entity");
         }
         contactTotal += count;
-        upgradeTextStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/6)");
+        upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/6)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by contact - rawCount:$rawCount1 - total:$contactTotal");
@@ -927,7 +927,7 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by topic fail - data:$entity");
         }
         topicTotal += count;
-        upgradeTextStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/6)");
+        upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/6)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by topic - rawCount:$rawCount2 - total:$topicTotal");
