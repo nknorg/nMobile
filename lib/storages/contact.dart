@@ -179,23 +179,23 @@ class ContactStorage with Tag {
     return [];
   }
 
-  Future<int> queryCountByClientAddress(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return 0;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: 'address = ?',
-        whereArgs: [clientAddress],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
-  }
+  // Future<int> queryCountByClientAddress(String? clientAddress) async {
+  //   if (clientAddress == null || clientAddress.isEmpty) return 0;
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['COUNT(id)'],
+  //       where: 'address = ?',
+  //       whereArgs: [clientAddress],
+  //     );
+  //     int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+  //     logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
+  //     return count ?? 0;
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return 0;
+  // }
 
   Future<bool> setType(int? contactId, int? contactType) async {
     if (contactId == null || contactId == 0 || contactType == null) return false;
