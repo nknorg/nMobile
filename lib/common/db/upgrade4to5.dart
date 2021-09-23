@@ -46,7 +46,7 @@ class Upgrade4to5 {
     // v5 table
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
       upgradeTipStream?.add(".... (1/6)");
-      await db.execute(ContactStorage.createSQL);
+      await ContactStorage.create(db);
     }
     upgradeTipStream?.add("..... (1/6)");
 
@@ -92,6 +92,9 @@ class Upgrade4to5 {
         String? oldAddress = result["address"];
         if (oldAddress == null || oldAddress.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - address is null - data:$result");
+        } else if (oldAddress.contains(".__permission__.")) {
+          final splits = oldAddress.split(".__permission__.");
+          oldAddress = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         String? newAddress = ((oldAddress?.isNotEmpty == true) && (oldAddress!.length <= 200)) ? oldAddress : null;
         if (newAddress == null || newAddress.isEmpty) {
@@ -216,7 +219,9 @@ class Upgrade4to5 {
   static Future createDeviceInfo(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     upgradeTipStream?.add("... (2/6)");
     // just create table
-    await DeviceInfoStorage.create(db);
+    if (!(await DB.checkTableExists(db, DeviceInfoStorage.tableName))) {
+      await DeviceInfoStorage.create(db);
+    }
   }
 
   static Future upgradeTopic(Database db, {StreamSink<String?>? upgradeTipStream}) async {
@@ -241,7 +246,7 @@ class Upgrade4to5 {
     // v5 table
     if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
       upgradeTipStream?.add(".... (3/6)");
-      await db.execute(TopicStorage.createSQL);
+      await TopicStorage.create(db);
     }
     upgradeTipStream?.add("..... (3/6)");
 
@@ -312,11 +317,11 @@ class Upgrade4to5 {
         }
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
-        // joined
-        int newJoined = result["joined"] ?? 1;
         // subscribe_at + expire_height
         int? newSubscribeAt = result["time_update"];
         int? newExpireHeight = result["expire_at"];
+        // joined
+        int newJoined = (newExpireHeight ?? 0) > 0 ? 1 : 0; // result["joined"] ?? 1; // result["joined"] always is 0
         // profile
         String? newAvatar = Path.getLocalFile(result["avatar"]);
         // count + top
@@ -402,7 +407,7 @@ class Upgrade4to5 {
     // v5 table
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
       upgradeTipStream?.add(".... (4/6)");
-      await db.execute(SubscriberStorage.createSQL);
+      await SubscriberStorage.create(db);
     }
     upgradeTipStream?.add("..... (4/6)");
 
@@ -458,6 +463,9 @@ class Upgrade4to5 {
         String? oldChatId = result["chat_id"];
         if (oldChatId == null || oldChatId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - chat_id is null - data:$result");
+        } else if (oldChatId.contains(".__permission__.")) {
+          final splits = oldChatId.split(".__permission__.");
+          oldChatId = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         String? newChatId = ((oldChatId?.isNotEmpty == true) && (oldChatId!.length <= 200)) ? oldChatId : null;
         if (newChatId == null || newChatId.isEmpty) {
@@ -472,7 +480,7 @@ class Upgrade4to5 {
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Global.txPoolDelayMs) : oldCreateAt;
         int newUpdateAt = newCreateAt;
         // type
-        int? oldStatus = result["type"];
+        int? oldStatus = result["member_status"];
         if (oldStatus == null) {
           logger.w("Upgrade4to5 - $oldTableName query - status is null - data:$result");
         }
@@ -545,7 +553,7 @@ class Upgrade4to5 {
     // v5 table
     if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
       upgradeTipStream?.add(".... (5/6)");
-      await db.execute(MessageStorage.createSQL);
+      await MessageStorage.create(db);
     }
     upgradeTipStream?.add("..... (5/6)");
 
@@ -611,6 +619,9 @@ class Upgrade4to5 {
         String? oldSender = result["sender"];
         if (oldSender == null || oldSender.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - sender is null - data:$result");
+        } else if (oldSender.contains(".__permission__.")) {
+          final splits = oldSender.split(".__permission__.");
+          oldSender = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
         if (newSender == null || newSender.isEmpty) {
@@ -626,6 +637,9 @@ class Upgrade4to5 {
         if (newReceiver == null || newReceiver.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - receiver error - data:$result");
           continue;
+        } else if (newReceiver.contains(".__permission__.")) {
+          final splits = newReceiver.split(".__permission__.");
+          newReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         // topic
         String? oldTopic = result["topic"];
@@ -798,7 +812,9 @@ class Upgrade4to5 {
     upgradeTipStream?.add("... (6/6)");
 
     // create table
-    await SessionStorage.create(db);
+    if (!(await DB.checkTableExists(db, SessionStorage.tableName))) {
+      await SessionStorage.create(db);
+    }
     upgradeTipStream?.add(".... (6/6)");
 
     // total
