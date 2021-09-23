@@ -30,6 +30,11 @@ class DB {
   StreamSink<bool> get _openedSink => _openedController.sink;
   Stream<bool> get openedStream => _openedController.stream;
 
+  // ignore: close_sinks
+  StreamController<String> _upgradeTextController = StreamController<String>.broadcast();
+  StreamSink<String> get _upgradeTextSink => _upgradeTextController.sink;
+  Stream<String> get upgradeTextStream => _upgradeTextController.stream;
+
   Database? database;
 
   DB();
@@ -57,8 +62,6 @@ class DB {
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
         Loading.show(text: "数据库升级中,请勿退出app或离开此页面!"); // TODO:GG locale dbUpgrade
-        // TODO:GG ???进度条?
-        // TODO:GG 中途退出咋整???
         // TODO:GG 打断点看看await是否有序??
 
         // 1 -> 2
@@ -86,25 +89,18 @@ class DB {
 
         // 4-> 5
         if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
-          await Upgrade4to5.upgradeContact(db);
-          await Upgrade4to5.createDeviceInfo(db);
-          await Upgrade4to5.upgradeTopic(db);
-          await Upgrade4to5.upgradeSubscriber(db);
-          await Upgrade4to5.upgradeMessages(db);
-          await Upgrade4to5.createSession(db);
+          await Upgrade4to5.upgradeContact(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.createDeviceInfo(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.upgradeTopic(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.upgradeSubscriber(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.upgradeMessages(db, upgradeTextStream: _upgradeTextSink);
+          await Upgrade4to5.createSession(db, upgradeTextStream: _upgradeTextSink);
         }
 
         Loading.dismiss();
       },
       onOpen: (Database db) async {
         logger.i("DB - opened");
-
-        // await addTestData(
-        //   db,
-        //   selfAddress: clientCommon.address,
-        //   sideAddress: "98796e46eef1dbdb72678433cdb78c989d12cde487f15f854b4d870a7045b525",
-        //   topicName: "98.0916.001",
-        // );
       },
     );
     return db;
