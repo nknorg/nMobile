@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
@@ -169,7 +170,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future _tryLogin() async {
-    if (await dbCommon.needUpgrade()) return;
+    if (await dbCommon.needUpgrade()) {
+      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null)); // should first
+      return;
+    }
 
     if (clientCommon.client != null) {
       clientCommon.connectCheck();
