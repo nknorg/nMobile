@@ -122,10 +122,6 @@ class Upgrade4to5 {
         }
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
-        // profile
-        String? newAvatar = Path.getLocalFile(result["avatar"]);
-        String? newFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
-        String? newLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
         // profileExtra
         String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
         int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
@@ -175,6 +171,13 @@ class Upgrade4to5 {
           handleError(e);
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
+        // profile
+        String? oldAvatar = Path.getLocalFile(oldDataMap['avatar']);
+        String? newAvatar = (oldAvatar?.isNotEmpty == true) ? oldAvatar : Path.getLocalFile(result["avatar"]);
+        String? oldFirstName = ((oldDataMap["first_name"]?.toString().length ?? 0) > 50) ? oldDataMap["first_name"]?.toString().substring(0, 50) : oldDataMap["first_name"];
+        String? newFirstName = (oldFirstName?.isNotEmpty == true) ? oldFirstName : (((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"]);
+        String? oldLastName = ((oldDataMap["last_name"]?.toString().length ?? 0) > 50) ? oldDataMap["last_name"]?.toString().substring(0, 50) : oldDataMap["last_name"];
+        String? newLastName = (oldLastName?.isNotEmpty == true) ? oldLastName : (((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"]);
 
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(ContactStorage.tableName, columns: ['*'], where: 'address = ?', whereArgs: [newAddress], offset: 0, limit: 1);
@@ -414,7 +417,7 @@ class Upgrade4to5 {
     // v4 table
     String oldTableName = "subscriber";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.i("Upgrade4to5 - $oldTableName no exist");
+      logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
     upgradeTipStream?.add("...... (4/6)");
@@ -491,9 +494,9 @@ class Upgrade4to5 {
           newStatus = SubscriberStatus.Unsubscribed;
         }
         // permPage
-        int? newPermPage = result["prm_p_i"];
+        int? newPermPage = result["prm_p_i"]; // maybe null
         if (newPermPage == null || newPermPage < 0) {
-          logger.w("Upgrade4to5 - $oldTableName query - permPage is null - data:$result");
+          logger.i("Upgrade4to5 - $oldTableName query - permPage is null - data:$result");
         }
 
         // duplicated
@@ -560,7 +563,7 @@ class Upgrade4to5 {
     // v2 table
     String oldTableName = "Messages";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.i("Upgrade4to5 - $oldTableName no exist");
+      logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
     upgradeTipStream?.add("...... (5/6)");
@@ -631,7 +634,7 @@ class Upgrade4to5 {
         // receiver
         String? oldReceiver = result["receiver"];
         if (oldReceiver == null || oldReceiver.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
+          logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
         }
         String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
         if (newReceiver?.contains(".__permission__.") == true) {
@@ -871,7 +874,7 @@ class Upgrade4to5 {
           'target_id': targetId,
           'type': SessionType.CONTACT,
           'last_message_at': lastMsgMap['send_at'] ?? 0,
-          'last_message_options': lastMsgMap,
+          'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (contact["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
         };
@@ -933,7 +936,7 @@ class Upgrade4to5 {
           'target_id': targetId,
           'type': SessionType.TOPIC,
           'last_message_at': lastMsgMap['send_at'] ?? 0,
-          'last_message_options': lastMsgMap,
+          'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (topic["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
         };
