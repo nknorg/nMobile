@@ -219,7 +219,7 @@ class SubscriberStorage with Tag {
   Future<int> queryCountByTopic(String? topic, {int? status}) async {
     if (topic == null || topic.isEmpty) return 0;
     try {
-      List<Map<String, dynamic>>? res = await db?.query(
+      final res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
@@ -237,7 +237,7 @@ class SubscriberStorage with Tag {
   Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
     if (topic == null || topic.isEmpty) return 0;
     try {
-      List<Map<String, dynamic>>? res = await db?.query(
+      final res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: status != null ? 'topic = ? AND perm_page = ? AND status = ?' : 'topic = ? AND perm_page = ?',

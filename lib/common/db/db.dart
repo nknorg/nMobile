@@ -6,7 +6,6 @@ import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
@@ -62,8 +61,6 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
-        Loading.show(text: "数据库升级中,请勿退出app或离开此页面!"); // TODO:GG locale dbUpgrade
-        // TODO:GG 打断点看看await是否有序??
 
         // 1 -> 2
         bool v1to2 = false;
@@ -98,8 +95,6 @@ class DB {
           await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
           _upgradeTipSink.add(null);
         }
-
-        Loading.dismiss();
       },
       onOpen: (Database db) async {
         int version = await db.getVersion();
