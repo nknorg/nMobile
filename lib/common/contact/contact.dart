@@ -107,11 +107,6 @@ class ContactCommon with Tag {
     return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<int> queryCountByClientAddress(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return Future.value(0);
-    return _contactStorage.queryCountByClientAddress(clientAddress);
-  }
-
   Future<bool> setType(int? contactId, int? contactType, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
     bool success = await _contactStorage.setType(contactId, contactType);

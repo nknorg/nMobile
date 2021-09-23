@@ -24,6 +24,13 @@ import 'package:nmobile/utils/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
+// await addTestData(
+//   db,
+//   selfAddress: clientCommon.address,
+//   sideAddress: "98796e46eef1dbdb72678433cdb78c989d12cde487f15f854b4d870a7045b525",
+//   topicName: "98.0916.001",
+// );
+
 Future addTestData(
   Database db, {
   String? selfAddress,
