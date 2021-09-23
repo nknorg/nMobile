@@ -280,7 +280,7 @@ class MessageStorage with Tag {
   Future<int> queryCountByContentType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     try {
-      List<Map<String, dynamic>>? res = await db?.query(
+      final res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: 'msg_id = ? AND type = ?',
@@ -324,7 +324,7 @@ class MessageStorage with Tag {
 
   Future<int> unReadCount() async {
     try {
-      var res = await db?.query(
+      final res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: 'status = ? AND is_delete = ?',
@@ -370,7 +370,7 @@ class MessageStorage with Tag {
   Future<int> unReadCountByTargetId(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return 0;
     try {
-      var res = await db?.query(
+      final res = await db?.query(
         tableName,
         columns: ['COUNT(id)'],
         where: 'status = ? AND is_delete = ? AND target_id = ?',

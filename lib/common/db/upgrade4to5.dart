@@ -59,8 +59,8 @@ class Upgrade4to5 {
     upgradeTipStream?.add("...... (1/6)");
 
     // total
-    List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
-    int rawCount = Sqflite.firstIntValue(rawCountMap ?? <Map<String, dynamic>>[]) ?? 0;
+    final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
+    int rawCount = Sqflite.firstIntValue(rawCountMap) ?? 0;
 
     // convert all v2Data to v5Data
     int total = 0;
@@ -254,8 +254,8 @@ class Upgrade4to5 {
     upgradeTipStream?.add("...... (3/6)");
 
     // total
-    List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
-    int rawCount = Sqflite.firstIntValue(rawCountMap ?? <Map<String, dynamic>>[]) ?? 0;
+    final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
+    int rawCount = Sqflite.firstIntValue(rawCountMap) ?? 0;
 
     // convert all v2Data to v5Data
     int total = 0;
@@ -415,8 +415,8 @@ class Upgrade4to5 {
     upgradeTipStream?.add("...... (4/6)");
 
     // total
-    List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
-    int rawCount = Sqflite.firstIntValue(rawCountMap ?? <Map<String, dynamic>>[]) ?? 0;
+    final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
+    int rawCount = Sqflite.firstIntValue(rawCountMap) ?? 0;
 
     // convert all v4Data to v5Data
     int total = 0;
@@ -558,8 +558,8 @@ class Upgrade4to5 {
     upgradeTipStream?.add("...... (5/6)");
 
     // total
-    List<Map<String, dynamic>>? rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
-    int rawCount = Sqflite.firstIntValue(rawCountMap ?? <Map<String, dynamic>>[]) ?? 0;
+    final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
+    int rawCount = Sqflite.firstIntValue(rawCountMap) ?? 0;
 
     // convert all v2Data to v5Data
     int total = 0;
@@ -802,10 +802,10 @@ class Upgrade4to5 {
     upgradeTipStream?.add(".... (6/6)");
 
     // total
-    List<Map<String, dynamic>>? rawCountMap1 = await db.query(ContactStorage.tableName, columns: ['COUNT(id)']);
-    int rawCount1 = Sqflite.firstIntValue(rawCountMap1 ?? <Map<String, dynamic>>[]) ?? 0;
-    List<Map<String, dynamic>>? rawCountMap2 = await db.query(TopicStorage.tableName, columns: ['COUNT(id)']);
-    int rawCount2 = Sqflite.firstIntValue(rawCountMap2 ?? <Map<String, dynamic>>[]) ?? 0;
+    final rawCountMap1 = await db.query(ContactStorage.tableName, columns: ['COUNT(id)']);
+    int rawCount1 = Sqflite.firstIntValue(rawCountMap1) ?? 0;
+    final rawCountMap2 = await db.query(TopicStorage.tableName, columns: ['COUNT(id)']);
+    int rawCount2 = Sqflite.firstIntValue(rawCountMap2) ?? 0;
     int rawCount = rawCount1 + rawCount2;
 
     // contact
