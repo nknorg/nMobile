@@ -130,7 +130,7 @@ class Upgrade4to5 {
         String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
         int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
         // top + token
-        int newIsTop = result["is_top"] ?? 0;
+        int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
         String? newDeviceToken = result["device_token"];
         // options
         OptionsSchema newOptionsSchema = OptionsSchema();
@@ -326,7 +326,7 @@ class Upgrade4to5 {
         String? newAvatar = Path.getLocalFile(result["avatar"]);
         // count + top
         int? newCount = result["count"];
-        int newIsTop = result["is_top"] ?? 0;
+        int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
         // options
         OptionsSchema newOptionsSchema = OptionsSchema();
         try {
@@ -634,11 +634,8 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
         }
         String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
-        if (newReceiver == null || newReceiver.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - receiver error - data:$result");
-          continue;
-        } else if (newReceiver.contains(".__permission__.")) {
-          final splits = newReceiver.split(".__permission__.");
+        if (newReceiver?.contains(".__permission__.") == true) {
+          final splits = newReceiver!.split(".__permission__.");
           newReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         // topic
@@ -646,6 +643,10 @@ class Upgrade4to5 {
         String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
         if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
           logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
+        }
+        if ((newReceiver == null || newReceiver.isEmpty) && (newTopic == null || newTopic.isEmpty)) {
+          logger.w("Upgrade4to5 - $oldTableName convert - receiver and topic error - data:$result");
+          continue;
         }
         // isOutBound
         int? newIsOutbound = result["is_outbound"];
@@ -742,7 +743,7 @@ class Upgrade4to5 {
           oldOptionsMap = Map();
         }
         Map<String, dynamic> newOptionsMap = Map();
-        newOptionsMap['nknWalletAddress'] = oldOptionsMap['audioDuration'];
+        newOptionsMap['audioDuration'] = oldOptionsMap['audioDuration'];
         newOptionsMap['deleteAfterSeconds'] = oldOptionsMap['deleteAfterSeconds'];
         newOptionsMap['updateBurnAfterAt'] = oldOptionsMap['updateTime'] ?? oldOptionsMap['updateBurnAfterTime'] ?? oldOptionsMap['updateBurnAfterAt'];
         // newOptionsMap['deviceToken'] = ???;
@@ -871,7 +872,7 @@ class Upgrade4to5 {
           'type': SessionType.CONTACT,
           'last_message_at': lastMsgMap['send_at'] ?? 0,
           'last_message_options': lastMsgMap,
-          'is_top': contact['is_top'] ?? 0,
+          'is_top': (contact["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
         };
         int id = await db.insert(SessionStorage.tableName, entity);
@@ -933,7 +934,7 @@ class Upgrade4to5 {
           'type': SessionType.TOPIC,
           'last_message_at': lastMsgMap['send_at'] ?? 0,
           'last_message_options': lastMsgMap,
-          'is_top': topic['is_top'] ?? 0,
+          'is_top': (topic["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
         };
         int id = await db.insert(SessionStorage.tableName, entity);
