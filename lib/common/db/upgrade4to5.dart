@@ -47,13 +47,15 @@ class Upgrade4to5 {
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
       upgradeTipStream?.add(".... (1/6)");
       await ContactStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${ContactStorage.tableName} exist");
     }
     upgradeTipStream?.add("..... (1/6)");
 
     // v2 table
     String oldTableName = "Contact";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.i("Upgrade4to5 - $oldTableName no exist");
+      logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
     upgradeTipStream?.add("...... (1/6)");
@@ -224,6 +226,8 @@ class Upgrade4to5 {
     // just create table
     if (!(await DB.checkTableExists(db, DeviceInfoStorage.tableName))) {
       await DeviceInfoStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${DeviceInfoStorage.tableName} exist");
     }
   }
 
@@ -250,6 +254,8 @@ class Upgrade4to5 {
     if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
       upgradeTipStream?.add(".... (3/6)");
       await TopicStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${TopicStorage.tableName} exist");
     }
     upgradeTipStream?.add("..... (3/6)");
 
@@ -411,6 +417,8 @@ class Upgrade4to5 {
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
       upgradeTipStream?.add(".... (4/6)");
       await SubscriberStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} exist");
     }
     upgradeTipStream?.add("..... (4/6)");
 
@@ -557,6 +565,8 @@ class Upgrade4to5 {
     if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
       upgradeTipStream?.add(".... (5/6)");
       await MessageStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${MessageStorage.tableName} exist");
     }
     upgradeTipStream?.add("..... (5/6)");
 
@@ -818,6 +828,8 @@ class Upgrade4to5 {
     // create table
     if (!(await DB.checkTableExists(db, SessionStorage.tableName))) {
       await SessionStorage.create(db);
+    } else {
+      logger.w("Upgrade4to5 - ${SessionStorage.tableName} exist");
     }
     upgradeTipStream?.add(".... (6/6)");
 
