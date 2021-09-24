@@ -22,6 +22,7 @@ class Badge {
   }
 
   static Future onCountUp(int count) async {
+    if (count == 0) return;
     if (!(await checkEnable())) return;
     _currentCount += count;
     logger.d("Badge - onCountUp - up:$count - currentCount:$_currentCount");
@@ -29,6 +30,7 @@ class Badge {
   }
 
   static Future onCountDown(int count) async {
+    if (count == 0) return;
     if (!(await checkEnable())) return;
     _currentCount -= count;
     logger.d("Badge - onCountDown - down:$count currentCount:$_currentCount");
