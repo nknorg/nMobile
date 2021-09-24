@@ -32,20 +32,51 @@ class ChatCommon with Tag {
 
   ChatCommon();
 
-  Future<OnMessage?> clientSendData(String? dest, String data) async {
+  Future<OnMessage?> clientSendData(String? dest, String data, {int tryCount = 0, int maxTryCount = 5}) async {
     if (dest == null || dest.isEmpty) return null;
+    if (tryCount >= maxTryCount) {
+      logger.w("$TAG - clientSendData - try over - dest:$dest - data:$data");
+      return null;
+    }
     try {
-      return await clientCommon.client?.sendText([dest], data);
+      OnMessage? onMessage = await clientCommon.client?.sendText([dest], data);
+      if (onMessage?.messageId.isNotEmpty == true) {
+        logger.d("$TAG - clientSendData - send success - dest:$dest - data:$data");
+        return onMessage;
+      } else {
+        await Future.delayed(Duration(seconds: 2));
+        logger.w("$TAG - clientSendData - result is empty - dest:$dest - data:$data");
+        return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      }
     } catch (e) {
       handleError(e);
-      return null;
+      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+        await Future.delayed(Duration(milliseconds: 100));
+        final client = (await clientCommon.reSignIn(false))[0];
+        if (client != null && (client.address.isNotEmpty == true)) {
+          logger.i("$TAG - clientSendData - reSignIn success - dest:$dest data:$data");
+          return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        } else {
+          final wallet = await walletCommon.getDefault();
+          logger.w("$TAG - clientSendData - reSignIn fail - wallet:$wallet");
+          return null;
+        }
+      } else {
+        await Future.delayed(Duration(seconds: 2));
+        logger.w("$TAG - clientSendData - try be error - dest:$dest - data:$data");
+        return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      }
     }
   }
 
-  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total}) async {
+  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 5}) async {
     if (topic == null || topic.isEmpty || clientCommon.client == null) return [];
-    // once
+    if (tryCount >= maxTryCount) {
+      logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
+      return [];
+    }
     try {
+      // once
       if (total == null || total <= 1000) {
         OnMessage result = await clientCommon.client!.publishText(topic, data, txPool: txPool, offset: 0, limit: 1000);
         return [result];
@@ -60,7 +91,22 @@ class ChatCommon with Tag {
       return onMessageList;
     } catch (e) {
       handleError(e);
-      return [];
+      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+        await Future.delayed(Duration(milliseconds: 100));
+        final client = (await clientCommon.reSignIn(false))[0];
+        if (client != null && (client.address.isNotEmpty == true)) {
+          logger.i("$TAG - clientPublishData - reSignIn success - topic:$topic data:$data");
+          return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+        } else {
+          final wallet = await walletCommon.getDefault();
+          logger.w("$TAG - clientPublishData - reSignIn fail - wallet:$wallet");
+          return [];
+        }
+      } else {
+        await Future.delayed(Duration(seconds: 2));
+        logger.w("$TAG - clientPublishData - try be error - topic:$topic - data:$data");
+        return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+      }
     }
   }
 
