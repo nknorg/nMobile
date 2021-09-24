@@ -266,11 +266,11 @@ class TopicCommon with Tag {
       // client subscribe
       bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee);
       if (!subscribeSuccess) {
-        if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
+        if (tryCount >= 5) {
           logger.e("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
           return null;
         }
-        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists - tryCount:$tryCount");
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - tryCount:$tryCount - topic:$exists");
         await Future.delayed(Duration(seconds: 5));
         return checkExpireAndSubscribe(topicName, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount);
       }
