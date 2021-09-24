@@ -247,7 +247,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         builder: (context, state) {
           if (state is WalletLoaded) {
             return ListView.builder(
-              padding: EdgeInsets.only(top: 22, bottom: 86),
+              padding: EdgeInsets.only(top: 22, bottom: 80 + Global.screenHeight() * 0.05),
               itemCount: state.wallets.length,
               itemBuilder: (context, index) {
                 WalletSchema wallet = state.wallets[index];
