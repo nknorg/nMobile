@@ -168,13 +168,13 @@ class ChatInCommon with Tag {
         _receivePing(received); // await
         break;
       case MessageContentType.receipt:
-        await _receiveReceipt(received); // await
+        _receiveReceipt(received); // await
         break;
       case MessageContentType.read:
-        await _receiveRead(received); // await
+        _receiveRead(received); // await
         break;
       case MessageContentType.msgStatus:
-        await _receiveMsgStatus(received); // await
+        _receiveMsgStatus(received); // await
         break;
       case MessageContentType.contact:
         _receiveContact(received, contact: contact); // await
