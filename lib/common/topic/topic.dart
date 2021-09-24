@@ -255,7 +255,12 @@ class TopicCommon with Tag {
     }
 
     // subscribe
-    int? globalHeight = await clientCommon.client?.getHeight();
+    int? globalHeight;
+    try {
+      globalHeight = await clientCommon.client?.getHeight();
+    } catch (e) {
+      handleError(e);
+    }
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // client subscribe
@@ -426,7 +431,11 @@ class TopicCommon with Tag {
       logger.i("$TAG - isJoined - expireHeight <= 0 - topicName:$topicName - clientAddress:$clientAddress");
       return false;
     }
-    globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
+    try {
+      globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
+    } catch (e) {
+      handleError(e);
+    }
     if (globalHeight == null || globalHeight <= 0) {
       logger.w("$TAG - isJoined - globalHeight <= 0 - topicName:$topicName");
       return false;
@@ -458,16 +467,21 @@ class TopicCommon with Tag {
 
   Future<Map<String, dynamic>> _clientGetSubscription(String? topicName, String? subscriber) async {
     if (topicName == null || topicName.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
-    Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
-      topic: genTopicHash(topicName),
-      subscriber: subscriber,
-    );
-    if (result?.isNotEmpty == true) {
-      logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - subscriber:$subscriber - result:$result");
-    } else {
-      logger.w("$TAG - _clientGetSubscription - fail - topicName:$topicName - subscriber:$subscriber");
+    try {
+      Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
+        topic: genTopicHash(topicName),
+        subscriber: subscriber,
+      );
+      if (result?.isNotEmpty == true) {
+        logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - subscriber:$subscriber - result:$result");
+      } else {
+        logger.w("$TAG - _clientGetSubscription - fail - topicName:$topicName - subscriber:$subscriber");
+      }
+      return result ?? Map();
+    } catch (e) {
+      handleError(e);
+      return Map();
     }
-    return result ?? Map();
   }
 
   /// ***********************************************************************************************************
