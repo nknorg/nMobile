@@ -64,10 +64,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      if (states.length >= 2) {
-        if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
-          _refreshBadge();
-        }
+      if (application.isFromBackground(states)) {
+        _refreshBadge();
       }
     });
 
@@ -397,8 +395,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
           children: [
             ChatSessionItem(
               session: session,
-              onTap: (who) async {
-                await ChatMessagesScreen.go(context, who);
+              onTap: (who) {
+                ChatMessagesScreen.go(context, who).then((value) {
+                  _refreshBadge();
+                });
               },
               onLongPress: (who) {
                 _popItemMenu(session, index);
