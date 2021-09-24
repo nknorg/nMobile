@@ -388,7 +388,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   Widget _sessionListView() {
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 60),
+      padding: EdgeInsets.only(bottom: 80 + Global.screenHeight() * 0.05),
       controller: _scrollController,
       itemCount: _sessionList.length,
       itemBuilder: (BuildContext context, int index) {
