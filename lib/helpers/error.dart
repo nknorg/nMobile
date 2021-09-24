@@ -64,7 +64,7 @@ String? getErrorShow(dynamic error) {
   if (error?.toString().contains(rpcError) == true) {
     return rpcError;
   }
-  String txError = 'INTERNAL ERROR, can not append tx to txpool: not sufficient funds';
+  String txError = 'can not append tx to txpool: not sufficient funds';
   if (error?.toString().contains(txError) == true) {
     return txError;
   }
@@ -76,5 +76,5 @@ String? getErrorShow(dynamic error) {
   if (error?.toString().contains(ksError) == true) {
     return ksError;
   }
-  return Settings.debug ? error.toString() : _localizations.something_went_wrong;
+  return Settings.debug ? error.toString() : ""; // _localizations.something_went_wrong
 }
