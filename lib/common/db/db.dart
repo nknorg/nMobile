@@ -93,8 +93,10 @@ class DB {
           await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
           await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
           await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
-          _upgradeTipSink.add(null);
         }
+
+        // dismiss tip dialog
+        _upgradeTipSink.add(null);
       },
       onOpen: (Database db) async {
         int version = await db.getVersion();

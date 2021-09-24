@@ -303,7 +303,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             ),
             Expanded(
               child: ListView.builder(
-                padding: EdgeInsets.only(bottom: 60),
+                padding: EdgeInsets.only(bottom: 72),
                 itemCount: listItemViewCount,
                 itemBuilder: (context, index) {
                   int friendItemIndex = index - 1;
