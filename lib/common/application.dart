@@ -50,6 +50,7 @@ class Application {
       if (Platform.isIOS) {
         return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.resumed);
       } else {
+        // android same with inactive
         return (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed);
       }
     }
@@ -61,7 +62,7 @@ class Application {
       if (Platform.isIOS) {
         return (states[0] == AppLifecycleState.resumed) && (states[1] == AppLifecycleState.inactive);
       } else {
-        return (states[0] == AppLifecycleState.resumed) && (states[1] == AppLifecycleState.inactive);
+        return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       }
     }
     return false;
