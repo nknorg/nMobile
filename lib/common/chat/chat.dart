@@ -276,15 +276,15 @@ class ChatCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
     if (status <= message.status && !force) return message;
     // pieces will set sendReceipt fast, set sendSuccess lowly
-    if (message.content is File?) {
-      if (message.status == MessageStatus.Sending && status != MessageStatus.SendSuccess) {
+    if (message.status == MessageStatus.Sending && status != MessageStatus.SendSuccess) {
+      if (!force && (message.content is File) && (tryCount <= 5)) {
         logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
         await Future.delayed(Duration(seconds: 1));
         MessageSchema? _message = await _messageStorage.query(message.msgId);
-        if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify);
+        if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
       }
     }
     // update
@@ -303,8 +303,7 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future readMessagesBySelf(String? clientAddress, String? targetId, {bool badgeDown = false}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
+  Future readMessagesBySelf(String? targetId, String? clientAddress) async {
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
@@ -316,7 +315,9 @@ class ChatCommon with Tag {
     });
     await Future.wait(futures);
     // send messages
-    await chatOutCommon.sendRead(clientAddress, msgIds);
+    if ((clientAddress?.isNotEmpty == true) && msgIds.isNotEmpty) {
+      await chatOutCommon.sendRead(clientAddress, msgIds);
+    }
   }
 
   Future<int> readMessageBySide(String? targetId, int? sendAt, {int offset = 0, int limit = 20}) async {
@@ -337,8 +338,10 @@ class ChatCommon with Tag {
     return offset + noReads.length;
   }
 
-  Future<int> checkSending() async {
+  Future<int> checkSending({int? delayMs}) async {
     if (!dbCommon.isOpen()) return 0;
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+
     List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
     List<Future> futures = [];
     sendingList.forEach((message) {
