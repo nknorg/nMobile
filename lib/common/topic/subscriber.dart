@@ -295,17 +295,17 @@ class SubscriberCommon with Tag {
     Map<String, dynamic>? prefixResult,
   }) async {
     if (topicName == null || topicName.isEmpty) return prefixResult ?? Map();
-    Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
-      topic: genTopicHash(topicName),
-      offset: offset,
-      limit: limit,
-      meta: meta,
-      txPool: txPool,
-      subscriberHashPrefix: subscriberHashPrefix,
-    );
-    if (results?.isNotEmpty == true) {
-      results?.addAll(prefixResult ?? Map());
-      try {
+    try {
+      Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
+        topic: genTopicHash(topicName),
+        offset: offset,
+        limit: limit,
+        meta: meta,
+        txPool: txPool,
+        subscriberHashPrefix: subscriberHashPrefix,
+      );
+      if (results?.isNotEmpty == true) {
+        results?.addAll(prefixResult ?? Map());
         return _clientGetSubscribers(
           topicName,
           offset: offset + limit,
@@ -315,12 +315,12 @@ class SubscriberCommon with Tag {
           subscriberHashPrefix: subscriberHashPrefix,
           prefixResult: results,
         );
-      } catch (e) {
-        handleError(e);
-        return prefixResult ?? Map();
       }
+      logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
+    } catch (e) {
+      handleError(e);
+      return prefixResult ?? Map();
     }
-    logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
     return prefixResult ?? Map();
   }
 
