@@ -648,7 +648,7 @@ class ChatOutCommon with Tag {
     } else {
       message.pid = pid;
       _messageStorage.updatePid(message.msgId, message.pid); // await
-      // noBurning no need receipt/read
+      // no received receipt/read
       if (!message.canReceipt) {
         int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
         chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await

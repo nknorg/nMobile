@@ -77,19 +77,17 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      if (states.length >= 2) {
-        if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
-          if (!firstConnected) {
-            int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
-            if (between >= Global.clientReAuthGapMs) {
-              _tryAuth(); // await
-            } else {
-              clientCommon.connectCheck(); // await
-            }
+      if (application.isFromBackground(states)) {
+        if (!firstConnected) {
+          int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
+          if (between >= Global.clientReAuthGapMs) {
+            _tryAuth(); // await
+          } else {
+            clientCommon.connectCheck(); // await
           }
-        } else if (states[states.length - 1] == AppLifecycleState.paused) {
-          appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
         }
+      } else if (application.isGoBackground(states)) {
+        appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
 

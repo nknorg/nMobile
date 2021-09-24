@@ -29,12 +29,10 @@ class TaskService with Tag {
     // listen
     if (isFirst) {
       application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-        if (states.length >= 2) {
-          if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
-            init(isFirst: false);
-          } else if (states[1] == AppLifecycleState.paused) {
-            uninstall();
-          }
+        if (application.isFromBackground(states)) {
+          init(isFirst: false);
+        } else if (application.isGoBackground(states)) {
+          uninstall();
         }
       });
     }
@@ -68,12 +66,12 @@ class TaskService with Tag {
 
     // immediate
     addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
-    addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1500), callNow: true);
-    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 2500), callNow: true);
+    addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1000), callNow: true);
+    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 1000), callNow: true);
 
     // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
-    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(), callNow: false);
+    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(delayMs: 2000), callNow: true);
     addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false), callNow: false);
   }
 

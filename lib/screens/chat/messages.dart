@@ -117,10 +117,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      if (states.length >= 2) {
-        if ((states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed)) {
-          _readMessages(true, true); // await
-        }
+      if (application.isFromBackground(states)) {
+        _readMessages(true, true); // await
       }
     });
 
@@ -295,19 +293,22 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _readMessages(bool sessionUnreadClear, bool badgeDown) async {
+  _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
     if (sessionUnreadClear) {
       // count not up in chatting
       await sessionCommon.setUnReadCount(this.targetId, 0, notify: true);
     }
-    if (badgeDown) {
+    if (badgeRefresh) {
       // count not up in chatting
       chatCommon.unReadCountByTargetId(targetId).then((value) {
         Badge.onCountDown(value); // await
+      }).then((value) {
+        // set read
+        chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress);
       });
-    }
-    if (this._contact != null && this._topic == null) {
-      await chatCommon.readMessagesBySelf(this._contact?.clientAddress, this.targetId, badgeDown: badgeDown);
+    } else {
+      // set read
+      chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress);
     }
   }
 

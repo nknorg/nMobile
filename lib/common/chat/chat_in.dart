@@ -158,8 +158,11 @@ class ChatInCommon with Tag {
       }
     }
 
+    // status
+    received.status = received.canNotification ? received.status : MessageStatus.Read;
+
     // message
-    bool receiveOk = false;
+    bool insertOk = false;
     switch (received.contentType) {
       case MessageContentType.ping:
         _receivePing(received); // await
@@ -177,7 +180,7 @@ class ChatInCommon with Tag {
         _receiveContact(received, contact: contact); // await
         break;
       case MessageContentType.contactOptions:
-        receiveOk = await _receiveContactOptions(received, contact: contact);
+        insertOk = await _receiveContactOptions(received, contact: contact);
         break;
       case MessageContentType.deviceRequest:
         _receiveDeviceRequest(received, contact: contact); // await
@@ -187,48 +190,50 @@ class ChatInCommon with Tag {
         break;
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        receiveOk = await _receiveText(received);
+        insertOk = await _receiveText(received);
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-        receiveOk = await _receiveImage(received);
+        insertOk = await _receiveImage(received);
         break;
       case MessageContentType.audio:
-        receiveOk = await _receiveAudio(received);
+        insertOk = await _receiveAudio(received);
         break;
       case MessageContentType.piece:
-        receiveOk = await _receivePiece(received);
+        insertOk = await _receivePiece(received);
         break;
       case MessageContentType.topicSubscribe:
-        receiveOk = await _receiveTopicSubscribe(received);
+        insertOk = await _receiveTopicSubscribe(received);
         break;
       case MessageContentType.topicUnsubscribe:
-        receiveOk = await _receiveTopicUnsubscribe(received);
+        await _receiveTopicUnsubscribe(received);
         break;
       case MessageContentType.topicInvitation:
-        receiveOk = await _receiveTopicInvitation(received);
+        insertOk = await _receiveTopicInvitation(received);
         break;
       case MessageContentType.topicKickOut:
-        receiveOk = await _receiveTopicKickOut(received);
+        await _receiveTopicKickOut(received);
         break;
     }
 
     // session
-    if (receiveOk) {
+    if (insertOk) {
       await chatCommon.sessionHandle(received); // must await
     }
 
-    // receipt
-    if (!received.isTopic && received.canReceipt) {
-      chatOutCommon.sendReceipt(received); // await
+    // receipt (no judge insertOk, maybe just want reply receipt)
+    if (received.canReceipt) {
+      if (received.isTopic) {
+        // handle in receive message send by self
+      } else {
+        chatOutCommon.sendReceipt(received); // await
+      }
     }
 
     // badge
-    if (received.canNotification) {
-      bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
-      if (receiveOk && !skipBadgeUp) {
-        Badge.onCountUp(1); // await
-      }
+    bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
+    if (insertOk && received.canNotification && !skipBadgeUp) {
+      Badge.onCountUp(1); // await
     }
   }
 
@@ -266,7 +271,9 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
     } else if (exists.status == MessageStatus.SendReceipt || exists.status == MessageStatus.Read) {
-      if (exists.contentType != MessageContentType.topicInvitation) {
+      if (exists.isTopic && (exists.status != MessageStatus.Read)) {
+        logger.w("$TAG - receiveReceipt - topic is receipt - exists:$exists");
+      } else {
         logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
         return false;
       }
@@ -316,9 +323,9 @@ class ChatInCommon with Tag {
         if (value == null) {
           logger.w("$TAG - _receiveRead - message is empty - msgId:$element");
         } else if (value.status == MessageStatus.Read) {
-          logger.i("$TAG - _receiveRead - message already read - message:$value");
+          logger.d("$TAG - _receiveRead - message already read - message:$value");
         } else {
-          logger.d("$TAG - _receiveRead - message none read - message:$value");
+          logger.i("$TAG - _receiveRead - message none read - message:$value");
           msgList.add(value);
         }
         return;
@@ -512,7 +519,6 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    received.status = MessageStatus.Read;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -564,7 +570,6 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -587,7 +592,6 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -610,7 +614,6 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
@@ -635,7 +638,7 @@ class ChatInCommon with Tag {
     // piece
     MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
     if (piece == null) {
-      received.status = MessageStatus.Read;
+      // received.status = MessageStatus.Read;
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
     } else {
@@ -731,11 +734,11 @@ class ChatInCommon with Tag {
     topicCommon.onSubscribe(received.topic, received.from).then((value) async {
       if (!historySubscribed && value != null) {
         // DB
-        received.status = MessageStatus.Read;
         MessageSchema? inserted = await _messageStorage.insert(received);
-        if (inserted == null) return false;
-        // display
-        _onSavedSink.add(inserted);
+        if (inserted != null) {
+          // display
+          _onSavedSink.add(inserted);
+        }
       }
     });
     return true;
@@ -757,7 +760,6 @@ class ChatInCommon with Tag {
     }
     // permission checked in message click
     // DB
-    received.status = received.isTopic ? MessageStatus.Read : received.status;
     MessageSchema? inserted = await _messageStorage.insert(received);
     if (inserted == null) return false;
     // display
