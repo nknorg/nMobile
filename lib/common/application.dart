@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/theme/light.dart';
@@ -42,5 +43,27 @@ class Application {
       futures.add(func());
     });
     await Future.wait(futures);
+  }
+
+  bool isFromBackground(List<AppLifecycleState> states) {
+    if (states.length >= 2) {
+      if (Platform.isIOS) {
+        return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.resumed);
+      } else {
+        return (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed);
+      }
+    }
+    return false;
+  }
+
+  bool isGoBackground(List<AppLifecycleState> states) {
+    if (states.length >= 2) {
+      if (Platform.isIOS) {
+        return (states[0] == AppLifecycleState.resumed) && (states[1] == AppLifecycleState.inactive);
+      } else {
+        return (states[0] == AppLifecycleState.resumed) && (states[1] == AppLifecycleState.inactive);
+      }
+    }
+    return false;
   }
 }
