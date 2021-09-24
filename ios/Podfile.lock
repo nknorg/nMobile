@@ -49,10 +49,10 @@ PODS:
     - Flutter
   - flutter_secure_storage (3.3.1):
     - Flutter
-  - flutter_sound (8.3.10):
+  - flutter_sound (8.3.12):
     - Flutter
     - mobile-ffmpeg-audio (= 4.4.LTS)
-    - tau_core (= 8.3.10)
+    - tau_core (= 8.3.12)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/SQLCipher (2.7.5):
@@ -120,7 +120,7 @@ PODS:
   - SQLCipher/standard (4.4.2):
     - SQLCipher/common
   - SwiftyGif (5.4.0)
-  - tau_core (8.3.10)
+  - tau_core (8.3.12)
   - TOCropViewController (2.6.0)
   - url_launcher (0.0.1):
     - Flutter
@@ -239,7 +239,7 @@ SPEC CHECKSUMS:
   flutter_image_compress: fd2b476345226e1a10ea352fa306af95704642c1
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
-  flutter_sound: 8583f7b1bf74c95c2df16cf28d188171f072eaf0
+  flutter_sound: 49d06bd22a3eddb54af3cf22db63fcbf1c641d52
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
   image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
@@ -263,7 +263,7 @@ SPEC CHECKSUMS:
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
   SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
-  tau_core: e831da9d9a92b76a2b385f5cc091b96488ba48b1
+  tau_core: 4b7be325f37983d3c74e1692d70e41e12b24d9be
   TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc
