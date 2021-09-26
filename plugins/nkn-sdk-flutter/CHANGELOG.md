@@ -1,3 +1,7 @@
+## 0.1.14
+
+* Fix iOS client onMessage
+
 ## 0.1.13
 
 * Fix ios measureSeedRPCServer and ios client onConnect
