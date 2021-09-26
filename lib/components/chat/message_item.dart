@@ -34,40 +34,97 @@ class ChatMessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (message.contentType == MessageContentType.topicUnsubscribe) {
-      return SizedBox.shrink();
-    }
+    // if (message.contentType == MessageContentType.topicUnsubscribe) {
+    //   return SizedBox.shrink();
+    // }
 
-    List<Widget> contentsWidget = <Widget>[];
+    // user
+    bool isOneUserWithPrev = message.from == prevMessage?.from;
+    bool isOneUserWithNext = message.from == nextMessage?.from;
 
-    bool showTime = false;
+    // status
+    bool isSameStatusWithPrev = message.status == prevMessage?.status;
+    bool isSameStatusWithNext = message.status == nextMessage?.status;
+
+    // type
+    bool canShowProfileByPrevType = prevMessage?.canBurning == true;
+    bool canShowProfileByCurrType = message.canBurning == true;
+    bool canShowProfileByNextType = nextMessage?.canBurning == true;
+
+    // group
+    int oneGroupSeconds = 60 * 2;
+
+    bool isGroupHead = false;
     if (nextMessage == null) {
-      showTime = true;
+      isGroupHead = true;
+    } else if (message.sendAt == null || message.sendAt == 0) {
+      isGroupHead = true;
+    } else if (nextMessage?.sendAt == null || nextMessage?.sendAt == 0) {
+      isGroupHead = true;
+    } else if (!isOneUserWithNext) {
+      isGroupHead = true;
+    } else if (!isSameStatusWithNext) {
+      isGroupHead = true;
+    } else if (!canShowProfileByNextType) {
+      isGroupHead = true;
     } else {
-      if (message.sendAt != null && nextMessage?.sendAt != null) {
-        int curSec = message.sendAt! ~/ 1000;
-        int nextSec = nextMessage!.sendAt! ~/ 1000;
-        if (curSec - nextSec > 60 * 2) {
-          showTime = true;
-        }
+      int curSec = message.sendAt! ~/ 1000;
+      int nextSec = nextMessage!.sendAt! ~/ 1000;
+      if ((nextSec - curSec) >= oneGroupSeconds) {
+        isGroupHead = true;
       }
     }
 
-    bool showProfile = !message.isOutbound && message.isTopic;
-    bool hideProfile = !showTime && showProfile && (message.from == nextMessage?.from && (nextMessage?.canBurning == true));
-
-    if (showTime) {
-      contentsWidget.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 6),
-          child: Label(
-            formatChatTime(DateTime.fromMillisecondsSinceEpoch(this.message.sendAt ?? DateTime.now().millisecondsSinceEpoch)),
-            type: LabelType.bodySmall,
-            fontSize: application.theme.bodyText2.fontSize ?? 14,
-          ),
-        ),
-      );
+    bool isGroupTail = false;
+    if (prevMessage == null) {
+      isGroupTail = true;
+    } else if (message.sendAt == null || message.sendAt == 0) {
+      isGroupTail = true;
+    } else if (prevMessage?.sendAt == null || prevMessage?.sendAt == 0) {
+      isGroupTail = true;
+    } else if (!isOneUserWithPrev) {
+      isGroupTail = true;
+    } else if (!isSameStatusWithPrev) {
+      isGroupTail = true;
+    } else if (!canShowProfileByPrevType) {
+      isGroupTail = true;
+    } else {
+      int prevSec = prevMessage!.sendAt! ~/ 1000;
+      int curSec = message.sendAt! ~/ 1000;
+      if ((curSec - prevSec) >= oneGroupSeconds) {
+        isGroupTail = true;
+      }
     }
+
+    bool isGroupBody = true;
+    if (isGroupHead || isGroupTail) {
+      isGroupBody = false;
+    } else if (!isOneUserWithPrev || !isOneUserWithNext) {
+      isGroupBody = false;
+    } else if (!isSameStatusWithPrev || !isSameStatusWithNext) {
+      isGroupBody = false;
+    } else if (!canShowProfileByPrevType || !canShowProfileByNextType) {
+      isGroupBody = false;
+    }
+
+    // profile
+    bool showProfile = canShowProfileByCurrType && !message.isOutbound && message.isTopic;
+    bool hideProfile = showProfile && !isGroupHead;
+
+    List<Widget> contentsWidget = <Widget>[];
+
+    // if (isGroupHead) {
+    //   contentsWidget.add(
+    //     Padding(
+    //       padding: const EdgeInsets.only(top: 12, bottom: 6),
+    //       child: Label(
+    //         formatChatTime(DateTime.fromMillisecondsSinceEpoch(this.message.sendAt ?? DateTime.now().millisecondsSinceEpoch)),
+    //         type: LabelType.bodySmall,
+    //         fontSize: application.theme.bodyText2.fontSize ?? 14,
+    //       ),
+    //     ),
+    //   );
+    // }
 
     switch (this.message.contentType) {
       // case MessageContentType.ping:
@@ -91,6 +148,10 @@ class ChatMessageItem extends StatelessWidget {
             contact: this.contact,
             showProfile: showProfile,
             hideProfile: hideProfile,
+            showTimeAndStatus: isGroupTail,
+            timeFormatBetween: false,
+            hideTopMargin: isGroupBody || (isGroupTail && !isGroupHead),
+            hideBotMargin: isGroupBody || (isGroupHead && !isGroupTail),
             onAvatarLonePress: this.onAvatarLonePress,
             onResend: this.onResend,
           ),
