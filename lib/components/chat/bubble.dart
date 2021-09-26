@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/services/task.dart';
-import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -32,6 +32,7 @@ class ChatBubble extends BaseStateFulWidget {
   final ContactSchema? contact;
   final bool showProfile;
   final bool hideProfile;
+  final bool showTimeAndStatus;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
@@ -40,6 +41,7 @@ class ChatBubble extends BaseStateFulWidget {
     required this.contact,
     this.showProfile = false,
     this.hideProfile = false,
+    this.showTimeAndStatus = true,
     this.onAvatarLonePress,
     this.onResend,
   });
@@ -55,10 +57,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onPlayPositionChangedSubscription;
 
   late MessageSchema _message;
-
-  late bool _showProfile;
-  late bool _hideProfile;
   ContactSchema? _contact;
+
+  bool _showProfile = false;
+  bool _hideProfile = false;
+  bool _showTimeAndStatus = true;
 
   double _uploadProgress = 1;
 
@@ -130,9 +133,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void onRefreshArguments() {
     _message = widget.message;
-    // contact
+    // visible
     _showProfile = widget.showProfile;
     _hideProfile = widget.hideProfile;
+    _showTimeAndStatus = widget.showTimeAndStatus;
+    // contact
     if (_showProfile) {
       if (widget.contact != null) {
         _contact = widget.contact;
@@ -304,38 +309,39 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _getStatusTip(bool self) {
     S _localizations = S.of(context);
 
-    bool isSending = _message.status == MessageStatus.Sending;
+    // bool isSending = _message.status == MessageStatus.Sending;
     bool isSendFail = _message.status == MessageStatus.SendFail;
-    bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
-    bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
+    // bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
+    // bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
 
-    bool canProgress = (_message.content is File) && !_message.isTopic;
+    // bool canProgress = (_message.content is File) && !_message.isTopic;
 
-    bool showSending = isSending && !canProgress;
-    bool showProgress = isSending && canProgress && _uploadProgress < 1;
+    // bool showSending = isSending && !canProgress;
+    // bool showProgress = isSending && canProgress && _uploadProgress < 1;
 
-    if (showSending) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        child: SpinKitRing(
-          color: application.theme.fontColor4,
-          lineWidth: 1,
-          size: 15,
-        ),
-      );
-    } else if (showProgress) {
-      return Container(
-        width: 40,
-        height: 40,
-        padding: EdgeInsets.all(10),
-        child: CircularProgressIndicator(
-          backgroundColor: application.theme.fontColor4.withAlpha(80),
-          color: application.theme.primaryColor.withAlpha(200),
-          strokeWidth: 2,
-          value: _uploadProgress,
-        ),
-      );
-    } else if (isSendFail) {
+    // if (showSending) {
+    //   return Padding(
+    //     padding: const EdgeInsets.symmetric(horizontal: 10),
+    //     child: SpinKitRing(
+    //       color: application.theme.fontColor4,
+    //       lineWidth: 1,
+    //       size: 15,
+    //     ),
+    //   );
+    // } else if (showProgress) {
+    //   return Container(
+    //     width: 40,
+    //     height: 40,
+    //     padding: EdgeInsets.all(10),
+    //     child: CircularProgressIndicator(
+    //       backgroundColor: application.theme.fontColor4.withAlpha(80),
+    //       color: application.theme.primaryColor.withAlpha(200),
+    //       strokeWidth: 2,
+    //       value: _uploadProgress,
+    //     ),
+    //   );
+    // } else
+    if (isSendFail) {
       return ButtonIcon(
         icon: Icon(
           FontAwesomeIcons.exclamationCircle,
@@ -361,27 +367,28 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           );
         },
       );
-    } else if (isSendSuccess) {
-      return Container(
-        width: 5,
-        height: 5,
-        margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          color: application.theme.strongColor.withAlpha(127),
-        ),
-      );
-    } else if (isSendReceipt) {
-      return Container(
-        width: 5,
-        height: 5,
-        margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          color: application.theme.successColor.withAlpha(127),
-        ),
-      );
     }
+    // else if (isSendSuccess) {
+    //   return Container(
+    //     width: 5,
+    //     height: 5,
+    //     margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
+    //     decoration: BoxDecoration(
+    //       borderRadius: BorderRadius.circular(5),
+    //       color: application.theme.strongColor.withAlpha(127),
+    //     ),
+    //   );
+    // } else if (isSendReceipt) {
+    //   return Container(
+    //     width: 5,
+    //     height: 5,
+    //     margin: EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
+    //     decoration: BoxDecoration(
+    //       borderRadius: BorderRadius.circular(5),
+    //       color: application.theme.successColor.withAlpha(127),
+    //     ),
+    //   );
+    // }
     return SizedBox.shrink();
   }
 
@@ -394,11 +401,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.text:
       case MessageContentType.textExtension:
         _bodyList = _getContentBodyText(dark);
+        _bodyList.add(SizedBox(height: 1));
         onTap = () => _onContentTextTap();
         break;
       case MessageContentType.media:
       case MessageContentType.image:
         _bodyList = _getContentBodyImage(dark);
+        _bodyList.add(SizedBox(height: 4));
         if (_message.content is File) {
           File file = _message.content as File;
           onTap = () => PhotoScreen.go(context, filePath: file.path);
@@ -420,40 +429,184 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       onTap: onTap,
       child: Container(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 5),
         decoration: decoration,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             ..._bodyList,
-            _burnWidget(),
+            _bottomRightWidget(),
           ],
         ),
       ),
     );
   }
 
-  Widget _burnWidget() {
-    if (_message.deleteAt == null) return SizedBox.shrink();
-    DateTime deleteTime = DateTime.fromMillisecondsSinceEpoch(_message.deleteAt ?? DateTime.now().millisecondsSinceEpoch);
-    Color clockColor = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
-    return Column(
-      children: [
-        SizedBox(height: 3),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Icon(FontAwesomeIcons.clock, size: 12, color: clockColor),
-            SizedBox(width: 4),
-            Label(
-              timeFromNowFormat(deleteTime),
-              type: LabelType.bodySmall,
-              fontSize: application.theme.iconTextFontSize,
-              color: clockColor,
+  Widget _bottomRightWidget() {
+    Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
+
+    int? sendAt = _message.isOutbound ? _message.sendAt : (MessageOptions.getSendAt(_message) ?? _message.sendAt);
+    String sendTime = ((sendAt != null) && (sendAt != 0)) ? formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
+
+    bool showTime = _showTimeAndStatus;
+    bool showBurn = _message.deleteAt != null && _message.deleteAt != 0;
+    bool showStatus = _showTimeAndStatus && _message.isOutbound;
+
+    return (showTime || showBurn || showStatus)
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              showTime
+                  ? Label(
+                      sendTime,
+                      type: LabelType.bodySmall,
+                      height: 1,
+                      fontSize: application.theme.iconTextFontSize,
+                      color: color,
+                    )
+                  : SizedBox.shrink(),
+              (showTime && showBurn) ? SizedBox(width: 4) : SizedBox.shrink(),
+              showBurn ? _burnWidget() : SizedBox.shrink(),
+              ((showTime || showBurn) && showStatus) ? SizedBox(width: 4) : SizedBox.shrink(),
+              showStatus ? _bottomRightStatusWidget() : SizedBox.shrink(),
+            ],
+          )
+        : SizedBox(height: 5);
+  }
+
+  Widget _bottomRightStatusWidget() {
+    double iconSize = 10;
+    double borderSize = iconSize / 10;
+    Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
+
+    bool isSending = _message.status == MessageStatus.Sending;
+    bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
+    bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
+    bool isSendRead = _message.status == MessageStatus.Read;
+
+    bool canProgress = (_message.content is File) && !_message.isTopic;
+
+    bool showSending = isSending && !canProgress;
+    bool showProgress = isSending && canProgress && _uploadProgress < 1;
+
+    if (showSending) {
+      return SpinKitRing(
+        color: color,
+        lineWidth: 1.5,
+        size: iconSize,
+      );
+    } else if (showProgress) {
+      return Container(
+        width: iconSize,
+        height: iconSize,
+        child: CircularProgressIndicator(
+          backgroundColor: application.theme.fontColor4.withAlpha(80),
+          color: color,
+          strokeWidth: 2,
+          value: _uploadProgress,
+        ),
+      );
+    } else if (isSendSuccess) {
+      return Icon(FontAwesomeIcons.checkCircle, size: iconSize, color: color);
+    } else if (isSendReceipt || isSendRead) {
+      return Container(
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: iconSize / 2 + borderSize,
+              top: borderSize,
+              child: Icon(
+                isSendReceipt ? FontAwesomeIcons.checkCircle : FontAwesomeIcons.solidCheckCircle,
+                size: iconSize,
+                color: color,
+              ),
+            ),
+            Row(
+              children: [
+                SizedBox(width: iconSize / 2),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _getBgColor(),
+                    border: Border.all(color: _getBgColor(), width: borderSize),
+                    borderRadius: BorderRadius.all(Radius.circular(iconSize)),
+                  ),
+                  child: Icon(
+                    isSendReceipt ? FontAwesomeIcons.checkCircle : FontAwesomeIcons.solidCheckCircle,
+                    size: iconSize,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
           ],
-        )
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _burnWidget() {
+    double iconSize = 10;
+    double borderSize = iconSize / 10;
+    Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
+
+    int deleteAfterMs = (MessageOptions.getContactBurning(_message)[0] ?? 1) * 1000;
+    int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+
+    double percent = (deleteAfterMs - (deleteAt - nowAt)) / deleteAfterMs;
+    percent = percent >= 0 ? (percent <= 1 ? percent : 1) : 0;
+
+    // spinner
+    return Stack(
+      children: [
+        Container(
+          width: iconSize,
+          height: iconSize,
+          decoration: BoxDecoration(
+            border: Border.all(color: color, width: borderSize),
+            borderRadius: BorderRadius.all(Radius.circular(iconSize)),
+          ),
+          child: UnconstrainedBox(
+            child: Transform.rotate(
+              angle: pi * percent * 2,
+              child: Column(
+                children: [
+                  Container(
+                    width: borderSize,
+                    height: iconSize / 3,
+                    decoration: BoxDecoration(color: color),
+                  ),
+                  Container(
+                    width: borderSize,
+                    height: iconSize / 3,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Container(
+          width: iconSize,
+          height: iconSize,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.transparent, width: borderSize),
+            borderRadius: BorderRadius.all(Radius.circular(iconSize)),
+          ),
+          child: CircularProgressIndicator(
+            backgroundColor: Colors.transparent,
+            color: _getBgColor(),
+            strokeWidth: borderSize * 2,
+            value: percent,
+          ),
+        ),
       ],
     );
   }
@@ -556,12 +709,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<dynamic> _getStyles() {
-    SkinTheme _theme = application.theme;
     BoxDecoration decoration;
-    bool dark = false;
+    bool dark;
     if (_message.isOutbound) {
       decoration = BoxDecoration(
-        color: _theme.primaryColor,
+        color: _getBgColor(),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
@@ -572,7 +724,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       dark = true;
     } else {
       decoration = BoxDecoration(
-        color: _theme.backgroundColor2,
+        color: _getBgColor(),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(2),
           topRight: const Radius.circular(12),
@@ -580,7 +732,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           bottomRight: const Radius.circular(12),
         ),
       );
+      dark = false;
     }
     return [decoration, dark];
+  }
+
+  Color _getBgColor() {
+    return _message.isOutbound ? application.theme.primaryColor : application.theme.backgroundColor2;
   }
 }
