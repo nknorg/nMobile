@@ -33,6 +33,9 @@ class ChatBubble extends BaseStateFulWidget {
   final bool showProfile;
   final bool hideProfile;
   final bool showTimeAndStatus;
+  final bool timeFormatBetween;
+  final bool hideTopMargin;
+  final bool hideBotMargin;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
@@ -42,6 +45,9 @@ class ChatBubble extends BaseStateFulWidget {
     this.showProfile = false,
     this.hideProfile = false,
     this.showTimeAndStatus = true,
+    this.timeFormatBetween = false,
+    this.hideTopMargin = false,
+    this.hideBotMargin = false,
     this.onAvatarLonePress,
     this.onResend,
   });
@@ -62,6 +68,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   bool _showProfile = false;
   bool _hideProfile = false;
   bool _showTimeAndStatus = true;
+  bool _timeFormatBetween = false;
+  bool _hideTopMargin = false;
+  bool _hideBotMargin = false;
 
   double _uploadProgress = 1;
 
@@ -137,6 +146,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _showProfile = widget.showProfile;
     _hideProfile = widget.hideProfile;
     _showTimeAndStatus = widget.showTimeAndStatus;
+    _timeFormatBetween = widget.timeFormatBetween;
+    _hideTopMargin = widget.hideTopMargin;
+    _hideBotMargin = widget.hideBotMargin;
     // contact
     if (_showProfile) {
       if (widget.contact != null) {
@@ -230,7 +242,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     }
 
     bool isSendOut = _message.isOutbound;
-
     bool isTipBottom = _message.status == MessageStatus.SendSuccess || _message.status == MessageStatus.SendReceipt;
 
     List styles = _getStyles();
@@ -238,7 +249,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool dark = styles[1];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : (_hideProfile ? 0 : 8)),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : ((_hideTopMargin || _hideBotMargin) ? 0 : 8)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,9 +262,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 4),
+                SizedBox(height: _hideTopMargin ? 1 : 4),
                 _getName(),
-                SizedBox(height: 4),
+                SizedBox(height: _hideTopMargin ? 1 : 4),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -287,9 +298,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               child: _contact != null
                   ? ContactAvatar(
                       contact: _contact!,
-                      radius: 24,
+                      radius: 20,
                     )
-                  : SizedBox(width: 24 * 2, height: 24 * 2),
+                  : SizedBox(width: 20 * 2, height: 20 * 2),
             ),
           )
         : SizedBox.shrink();
@@ -393,7 +404,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getContent(BoxDecoration decoration, bool dark) {
-    double maxWidth = Global.screenWidth() - (12 + 24 * 2 + 8) * 2;
+    double maxWidth = Global.screenWidth() - (12 + 20 * 2 + 8) * 2;
 
     List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
@@ -473,7 +484,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               showStatus ? _bottomRightStatusWidget() : SizedBox.shrink(),
             ],
           )
-        : SizedBox(height: 5);
+        : SizedBox(height: 3);
   }
 
   Widget _bottomRightStatusWidget() {
