@@ -43,3 +43,4 @@ app.*.map.json
 
 /ios/Classes/Push/Resource/
 /android/app/src/main/assets/push/
+/android/app/release/
