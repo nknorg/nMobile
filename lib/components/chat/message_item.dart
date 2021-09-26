@@ -51,15 +51,20 @@ class ChatMessageItem extends StatelessWidget {
     bool canShowProfileByCurrType = message.canBurning == true;
     bool canShowProfileByNextType = nextMessage?.canBurning == true;
 
+    // sendAt
+    int? prevSendAt = (prevMessage?.isOutbound == true) ? prevMessage?.sendAt : (MessageOptions.getSendAt(prevMessage) ?? prevMessage?.sendAt);
+    int? currSendAt = (message.isOutbound == true) ? message.sendAt : (MessageOptions.getSendAt(message) ?? message.sendAt);
+    int? nextSendAt = (nextMessage?.isOutbound == true) ? nextMessage?.sendAt : (MessageOptions.getSendAt(nextMessage) ?? nextMessage?.sendAt);
+
     // group
     int oneGroupSeconds = 60 * 2;
 
     bool isGroupHead = false;
     if (nextMessage == null) {
       isGroupHead = true;
-    } else if (message.sendAt == null || message.sendAt == 0) {
+    } else if (currSendAt == null || currSendAt == 0) {
       isGroupHead = true;
-    } else if (nextMessage?.sendAt == null || nextMessage?.sendAt == 0) {
+    } else if (nextSendAt == null || nextSendAt == 0) {
       isGroupHead = true;
     } else if (!isOneUserWithNext) {
       isGroupHead = true;
@@ -68,8 +73,8 @@ class ChatMessageItem extends StatelessWidget {
     } else if (!canShowProfileByNextType) {
       isGroupHead = true;
     } else {
-      int curSec = message.sendAt! ~/ 1000;
-      int nextSec = nextMessage!.sendAt! ~/ 1000;
+      int curSec = currSendAt ~/ 1000;
+      int nextSec = nextSendAt ~/ 1000;
       if ((curSec - nextSec) >= oneGroupSeconds) {
         isGroupHead = true;
       }
@@ -78,9 +83,9 @@ class ChatMessageItem extends StatelessWidget {
     bool isGroupTail = false;
     if (prevMessage == null) {
       isGroupTail = true;
-    } else if (message.sendAt == null || message.sendAt == 0) {
+    } else if (currSendAt == null || currSendAt == 0) {
       isGroupTail = true;
-    } else if (prevMessage?.sendAt == null || prevMessage?.sendAt == 0) {
+    } else if (prevSendAt == null || prevSendAt == 0) {
       isGroupTail = true;
     } else if (!isOneUserWithPrev) {
       isGroupTail = true;
@@ -89,8 +94,8 @@ class ChatMessageItem extends StatelessWidget {
     } else if (!canShowProfileByPrevType) {
       isGroupTail = true;
     } else {
-      int prevSec = prevMessage!.sendAt! ~/ 1000;
-      int curSec = message.sendAt! ~/ 1000;
+      int prevSec = prevSendAt ~/ 1000;
+      int curSec = currSendAt ~/ 1000;
       if ((prevSec - curSec) >= oneGroupSeconds) {
         isGroupTail = true;
       }
