@@ -60,6 +60,9 @@ class ChatCommon with Tag {
           logger.w("$TAG - clientSendData - reSignIn fail - wallet:$wallet");
           return null;
         }
+      } else if (e.toString().contains("invalid destination")) {
+        logger.w("$TAG - clientSendData - wrong clientAddress - dest:$dest");
+        return null;
       } else {
         handleError(e);
         await Future.delayed(Duration(seconds: 2));
