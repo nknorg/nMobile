@@ -616,7 +616,7 @@ class Upgrade4to5 {
         String? newPid = ((oldPid?.isNotEmpty == true) && (oldPid!.length <= 300)) ? oldPid : null;
         if (newPid == null || newPid.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
-          continue;
+          // continue; // old burning delete
         }
         // msgId
         String? oldMsgId = result["msg_id"];
@@ -639,7 +639,7 @@ class Upgrade4to5 {
         String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
         if (newSender == null || newSender.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
-          continue;
+          // continue; // old burning delete
         }
         // receiver
         String? oldReceiver = result["receiver"];
@@ -657,15 +657,19 @@ class Upgrade4to5 {
         if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
           logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
         }
-        if ((newReceiver == null || newReceiver.isEmpty) && (newTopic == null || newTopic.isEmpty)) {
-          logger.w("Upgrade4to5 - $oldTableName convert - receiver and topic error - data:$result");
-          continue;
-        }
+        // status
+        // int? oldIsSendError = result["is_send_error"];
+        // int? oldIsSuccess = result["is_success"];
+        // int? oldIsRead = result["is_read"];
+        int newStatus = MessageStatus.Read;
+        // delete
+        int newIsDelete = 0;
         // isOutBound
         int? newIsOutbound = result["is_outbound"];
         if (newIsOutbound == null) {
           logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
-          continue;
+          // continue; // old burning delete
+          newIsDelete = 1;
         }
         // targetId
         String? oldTargetId = result["target_id"];
@@ -686,13 +690,11 @@ class Upgrade4to5 {
             newTargetId = newSender;
           }
         }
-        // status
-        // int? oldIsSendError = result["is_send_error"];
-        // int? oldIsSuccess = result["is_success"];
-        // int? oldIsRead = result["is_read"];
-        int newStatus = MessageStatus.Read;
-        // delete
-        int newIsDelete = 0;
+        if (newTargetId == null || newTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
+          // continue; // old burning delete
+          newIsDelete = 1;
+        }
         // at
         int? oldSendAt = result["send_time"];
         int? oldReceiveAt = result["receive_time"];
@@ -703,15 +705,18 @@ class Upgrade4to5 {
         int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
         int newReceiveAt = (oldDeleteAt == null || oldDeleteAt == 0) ? newCreateAt : oldDeleteAt;
         int? newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
-
+        if (newDeleteAt != null && newDeleteAt < DateTime.now().millisecondsSinceEpoch) {
+          logger.i("Upgrade4to5 - $oldTableName query - delete time over - data:$result");
+          newIsDelete = 1;
+        }
         // type
         String? oldType = result["type"];
+        String? newType;
         if (oldType == null || oldType.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
-          continue;
-        }
-        String newType;
-        if (oldType == MessageContentType.receipt) {
+          // continue; // old burning delete
+          newIsDelete = 1;
+        } else if (oldType == MessageContentType.receipt) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is receipt, need skip - data:$result");
           continue;
         } else if (oldType == MessageContentType.contact) {
@@ -736,14 +741,15 @@ class Upgrade4to5 {
           continue;
         } else {
           logger.w("Upgrade4to5 - $oldTableName convert - type error - data:$result");
-          continue;
+          // continue; // old burning delete
+          newIsDelete = 1;
         }
         // content
         String? newContent = result['content'];
         if (newContent == null || newContent.isEmpty) {
-          if (newType != MessageContentType.text && newType != MessageContentType.textExtension && newType != MessageContentType.media && newType != MessageContentType.image && newType != MessageContentType.audio) {
-            logger.w("Upgrade4to5 - $oldTableName convert - content is null - data:$result");
-            continue;
+          if (newType == MessageContentType.text || newType == MessageContentType.textExtension || newType == MessageContentType.media || newType == MessageContentType.image || newType == MessageContentType.audio) {
+            logger.i("Upgrade4to5 - $oldTableName convert - content be delete - data:$result");
+            newIsDelete = 1;
           }
         }
         // options

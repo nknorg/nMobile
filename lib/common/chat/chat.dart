@@ -49,7 +49,6 @@ class ChatCommon with Tag {
         return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     } catch (e) {
-      handleError(e);
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         await Future.delayed(Duration(milliseconds: 100));
         final client = (await clientCommon.reSignIn(false))[0];
@@ -62,6 +61,7 @@ class ChatCommon with Tag {
           return null;
         }
       } else {
+        handleError(e);
         await Future.delayed(Duration(seconds: 2));
         logger.w("$TAG - clientSendData - try be error - dest:$dest - data:$data");
         return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
@@ -90,7 +90,6 @@ class ChatCommon with Tag {
       logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
       return onMessageList;
     } catch (e) {
-      handleError(e);
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         await Future.delayed(Duration(milliseconds: 100));
         final client = (await clientCommon.reSignIn(false))[0];
@@ -103,6 +102,7 @@ class ChatCommon with Tag {
           return [];
         }
       } else {
+        handleError(e);
         await Future.delayed(Duration(seconds: 2));
         logger.w("$TAG - clientPublishData - try be error - topic:$topic - data:$data");
         return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
