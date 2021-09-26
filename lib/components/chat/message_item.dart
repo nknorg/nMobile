@@ -70,7 +70,7 @@ class ChatMessageItem extends StatelessWidget {
     } else {
       int curSec = message.sendAt! ~/ 1000;
       int nextSec = nextMessage!.sendAt! ~/ 1000;
-      if ((nextSec - curSec) >= oneGroupSeconds) {
+      if ((curSec - nextSec) >= oneGroupSeconds) {
         isGroupHead = true;
       }
     }
@@ -91,7 +91,7 @@ class ChatMessageItem extends StatelessWidget {
     } else {
       int prevSec = prevMessage!.sendAt! ~/ 1000;
       int curSec = message.sendAt! ~/ 1000;
-      if ((curSec - prevSec) >= oneGroupSeconds) {
+      if ((prevSec - curSec) >= oneGroupSeconds) {
         isGroupTail = true;
       }
     }
