@@ -249,7 +249,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool dark = styles[1];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isSendOut ? 0 : ((_hideTopMargin || _hideBotMargin) ? 0 : 8)),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: (_hideTopMargin || _hideBotMargin) ? 0 : (isSendOut ? 4 : 8)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +262,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                SizedBox(height: _hideTopMargin ? 1 : 4),
+                SizedBox(height: _hideTopMargin ? 0.5 : 6),
                 _getName(),
                 SizedBox(height: _hideTopMargin ? 1 : 4),
                 Row(
@@ -275,6 +275,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     isSendOut ? SizedBox.shrink() : _getStatusTip(isSendOut),
                   ],
                 ),
+                SizedBox(height: _hideBotMargin ? 0.5 : 6),
               ],
             ),
           ),
