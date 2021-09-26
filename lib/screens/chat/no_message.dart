@@ -12,6 +12,7 @@ import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/utils.dart';
 
 class ChatNoMessageLayout extends BaseStateFulWidget {
   @override
@@ -32,7 +33,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address?.isNotEmpty == true) {
+    if ((address?.isNotEmpty == true) && isDChatByClientAddress(address ?? "")) {
       var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
       await contactCommon.add(contact, notify: true);
       await ChatMessagesScreen.go(context, contact);
