@@ -171,14 +171,14 @@ class WalletStorage with Tag {
 
   Future<String?> getDefaultAddress() async {
     String? address = await _localStorage.get('$KEY_DEFAULT_ADDRESS');
-    // if (address == null || !verifyNknAddress(address)) {
+    // if (address == null || !Validate.isNknAddressOk(address)) {
     //   List<WalletSchema> wallets = await getAll();
     //   if (wallets.isEmpty) {
     //     logger.w("$TAG - getDefaultAddress - wallets.isEmpty");
     //     return null;
     //   }
     //   String firstAddress = wallets[0].address;
-    //   if (firstAddress.isNotEmpty && !verifyNknAddress(firstAddress)) {
+    //   if (firstAddress.isNotEmpty && !Validate.isNknAddressOk(firstAddress)) {
     //     logger.w("$TAG - getDefaultAddress - address error");
     //     return null;
     //   }

@@ -18,7 +18,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -587,7 +586,7 @@ class ChatOutCommon with Tag {
     if (_subscribers.isEmpty || (_subscribers.length == 1 && _subscribers.first.clientAddress == clientCommon.address && privateNormal)) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       int total = await subscriberCommon.getSubscribersCount(message.topic!, false);
-      List<OnMessage> onMessageList = await chatCommon.clientPublishData(genTopicHash(message.topic!), msgData, total: total); // permission checked in received
+      List<OnMessage> onMessageList = await chatCommon.clientPublishData(message.topic, msgData, total: total); // permission checked in received
       if (onMessageList.isNotEmpty && onMessageList[0].messageId.isNotEmpty == true) {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
         return onMessageList[0].messageId;

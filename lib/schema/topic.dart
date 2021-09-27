@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -47,7 +48,7 @@ class TopicSchema {
     this.options,
     this.data,
   }) {
-    this.type = this.type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    this.type = this.type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
 
     if (options == null) {
       options = OptionsSchema();
@@ -58,7 +59,7 @@ class TopicSchema {
     if (topic?.isNotEmpty == true) {
       return TopicSchema(
         topic: topic!,
-        type: type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic),
+        type: type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic),
         createAt: DateTime.now().millisecondsSinceEpoch,
         updateAt: DateTime.now().millisecondsSinceEpoch,
         joined: expireHeight > 0 ? true : false,
@@ -70,7 +71,7 @@ class TopicSchema {
   }
 
   bool get isPrivate {
-    int type = this.type ?? (isPrivateTopicReg(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    int type = this.type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
     return type == TopicType.privateTopic;
   }
 

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/generated/l10n.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/helpers/validate.dart';
 
 class Validator {
   final BuildContext context;
@@ -60,7 +60,7 @@ class Validator {
 
   identifierNKN() {
     return (value) {
-      return value.trim().length == 0 ? _localizations?.error_required : (!RegExp(r'^[^.]*.?[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_client_address_format : null);
+      return value.trim().length == 0 ? _localizations?.error_required : (!Validate.isNknChatIdentifierOk(value) ? _localizations?.error_client_address_format : null);
     };
   }
 
@@ -94,13 +94,13 @@ class Validator {
 
   seedNKN() {
     return (value) {
-      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length != 64 || !RegExp(r'^[0-9a-f]{64}$').hasMatch(value) ? _localizations?.error_seed_format : null);
+      return value.trim().length == 0 ? _localizations?.error_required : (!Validate.isNknSeedOk(value) ? _localizations?.error_seed_format : null);
     };
   }
 
   seedETH() {
     return (value) {
-      return value.trim().length == 0 ? _localizations?.error_required : (value.trim().length < 50 ? _localizations?.error_seed_format : null);
+      return value.trim().length == 0 ? _localizations?.error_required : (!Validate.isEthSeedOk(value) ? _localizations?.error_seed_format : null);
     };
   }
 
@@ -109,7 +109,7 @@ class Validator {
       bool addressFormat = false;
       if (value.trim().length != 0) {
         try {
-          addressFormat = verifyNknAddress(value.trim());
+          addressFormat = Validate.isNknAddressOk(value.trim());
         } catch (e) {
           debugPrintStack(label: e.toString());
         }
@@ -122,7 +122,7 @@ class Validator {
     return (value) {
       bool addressFormat = false;
       try {
-        addressFormat = verifyNknAddress(value.trim());
+        addressFormat = Validate.isNknAddressOk(value.trim());
       } catch (e) {
         debugPrintStack(label: e.toString());
       }
@@ -135,7 +135,7 @@ class Validator {
       bool addressFormat = false;
       if (value.trim().length != 0) {
         try {
-          addressFormat = verifyEthAddress(value);
+          addressFormat = Validate.isEthAddressOk(value);
         } catch (e) {
           debugPrintStack(label: e.toString());
         }
