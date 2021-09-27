@@ -46,7 +46,7 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false}) {
+  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, bool forceSync = false}) {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
     if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
@@ -67,13 +67,13 @@ class ChatOutCommon with Tag {
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 5), () async {
       logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic); // await
+      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic, forceSync: forceSync); // await
       if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
       checkNoAckTimers[targetId]?["timer"]?.cancel();
     });
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, bool forceSync = false}) async {
     if (!clientCommon.isClientCreated) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
 
@@ -97,15 +97,17 @@ class ChatOutCommon with Tag {
     }
 
     // filter
-    checkList = checkList.where((element) {
-      int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      if (between < (60 * 1000)) {
-        logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
-        return false;
-      }
-      return true;
-    }).toList();
+    if (!forceSync) {
+      checkList = checkList.where((element) {
+        int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+        int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+        if (between < (60 * 1000)) {
+          logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
+          return false;
+        }
+        return true;
+      }).toList();
+    }
 
     if (checkList.isEmpty) {
       logger.d("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
