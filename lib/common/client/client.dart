@@ -160,7 +160,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
         chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
         if (status != ClientConnectStatus.connected) {
-          _statusSink.add(ClientConnectStatus.connected);
+          pingSelfSuccess(force: true); // await
         }
       });
 
@@ -238,9 +238,9 @@ class ClientCommon with Tag {
     });
   }
 
-  Future pingSelfSuccess() async {
+  Future pingSelfSuccess({bool force = false}) async {
     if (client == null) return;
-    if (status != ClientConnectStatus.connecting) return;
+    if (!force && (status != ClientConnectStatus.connecting)) return;
     _statusSink.add(ClientConnectStatus.connected);
     // visible
     Future.delayed(Duration(milliseconds: 500), () {
