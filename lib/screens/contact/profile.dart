@@ -218,7 +218,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Loading.dismiss();
 
       // client signIn
-      var client = (await clientCommon.signIn(selected, fetchRemote: true, dialogVisible: (show, tryCount) {
+      var client = (await clientCommon.signIn(selected, create: true, fetchRemote: true, dialogVisible: (show, tryCount) {
         if (tryCount > 1) return;
         show ? Loading.show() : Loading.dismiss();
       }))[0];
