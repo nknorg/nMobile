@@ -131,12 +131,10 @@ class ClientCommon with Tag {
         contactCommon.meUpdateSink.add(me);
       }
 
-      // client status
-      _statusSink.add(ClientConnectStatus.connecting);
-
       // client create
       seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
       if (create || client == null) {
+        _statusSink.add(ClientConnectStatus.connecting);
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
       }
 
@@ -161,6 +159,9 @@ class ClientCommon with Tag {
       _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
         logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
         chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
+        if (status != ClientConnectStatus.connected) {
+          _statusSink.add(ClientConnectStatus.connected);
+        }
       });
 
       // await completer.future;
