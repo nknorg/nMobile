@@ -128,6 +128,12 @@ class MessageSchema {
     return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
   }
 
+  bool get isContentMedia {
+    bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
+    bool isAudio = contentType == MessageContentType.audio;
+    return isImage || isAudio;
+  }
+
   ContactSchema? contact;
   Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
     if (contact != null) return contact;
