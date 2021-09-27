@@ -7,9 +7,9 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:web3dart/credentials.dart';
 
 const ADDRESS_GEN_PREFIX = '02b825';
 const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
@@ -18,7 +18,7 @@ const CHECKSUM_LEN = 4;
 const SEED_LENGTH = 32;
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
-copyText(String? content, {BuildContext? context}) {
+void copyText(String? content, {BuildContext? context}) {
   Clipboard.setData(ClipboardData(text: content));
   if (context != null) {
     S _localizations = S.of(context);
@@ -26,7 +26,7 @@ copyText(String? content, {BuildContext? context}) {
   }
 }
 
-launchUrl(String? url) async {
+void launchUrl(String? url) async {
   if (url == null || url.isEmpty) return;
   try {
     await launch(url, forceSafariVC: false);
@@ -59,65 +59,6 @@ String getPublicKeyByClientAddr(String addr) {
   }
 }
 
-String addressStringToProgramHash(String address) {
-  var addressBytes = base58.decode(address);
-  var programHashBytes = addressBytes.sublist(ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
-  return hexEncode(programHashBytes);
-}
-
-String getAddressStringVerifyCode(String address) {
-  var addressBytes = base58.decode(address);
-  var verifyBytes = addressBytes.sublist(addressBytes.length - CHECKSUM_LEN);
-  return hexEncode(verifyBytes);
-}
-
-List<int> genAddressVerifyBytesFromProgramHash(String programHash) {
-  programHash = ADDRESS_GEN_PREFIX + programHash;
-  var verifyBytes = doubleSha256Hex(programHash);
-  return verifyBytes.sublist(0, CHECKSUM_LEN);
-}
-
-String genAddressVerifyCodeFromProgramHash(String programHash) {
-  var verifyBytes = genAddressVerifyBytesFromProgramHash(programHash);
-  return hexEncode(Uint8List.fromList(verifyBytes));
-}
-
-bool verifyNknAddress(String address) {
-  try {
-    Uint8List addressBytes = base58.decode(address);
-    if (addressBytes.length != ADDRESS_LEN) {
-      return false;
-    }
-    var addressPrefixBytes = addressBytes.sublist(0, ADDRESS_GEN_PREFIX_LEN);
-    var addressPrefix = hexEncode(Uint8List.fromList(addressPrefixBytes));
-    if (addressPrefix != ADDRESS_GEN_PREFIX) {
-      return false;
-    }
-    var programHash = addressStringToProgramHash(address);
-    var addressVerifyCode = getAddressStringVerifyCode(address);
-    var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
-    return addressVerifyCode == programHashVerifyCode;
-  } catch (e) {
-    return false;
-  }
-}
-
-bool verifyEthAddress(String address) {
-  try {
-    EthereumAddress.fromHex(address.trim());
-    return true;
-  } catch (e) {
-    debugPrintStack(label: e.toString());
-    return false;
-  }
-}
-
-final privateTopicRegExp = RegExp(r'\.[0-9a-f]{64}$');
-
-bool isPrivateTopicReg(String topic) {
-  return privateTopicRegExp.hasMatch(topic);
-}
-
 String genTopicHash(String topic) {
   var t = topic.replaceFirst(RegExp(r'^#*'), '');
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
@@ -126,7 +67,7 @@ String genTopicHash(String topic) {
 String? getPubKeyFromTopicOrChatId(String s) {
   final i = s.lastIndexOf('.');
   final pubKey = i > 0 ? s.substring(i + 1) : s;
-  return RegExp("[0-9A-Fa-f]{64}").hasMatch(pubKey) ? pubKey : null;
+  return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
 num? getNumByValueDouble(double? value, int fractionDigits) {

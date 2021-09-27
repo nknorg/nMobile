@@ -11,13 +11,13 @@ import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/utils.dart';
 
 class ChatTopicSearchLayout extends BaseStateFulWidget {
   @override
@@ -54,7 +54,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
     if (_privateSelected) {
       if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
-      if (isPrivateTopicReg(topicName)) {
+      if (Validate.isPrivateTopicOk(topicName)) {
         int index = topicName.lastIndexOf('.');
         String owner = topicName.substring(index + 1);
         if (owner != hexEncode(clientCommon.publicKey!)) return false;
@@ -194,7 +194,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                             padding: const EdgeInsets.only(bottom: 0),
                             keyboardType: TextInputType.numberWithOptions(decimal: true),
                             textInputAction: TextInputAction.done,
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                            inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                             onSaved: (v) => _fee = double.tryParse(v ?? '0') ?? 0,
                             onChanged: (v) {
                               setState(() {

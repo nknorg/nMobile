@@ -17,6 +17,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/scanner.dart';
@@ -90,7 +91,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       handleError(e);
     }
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
-    if (walletAddress == null || !verifyNknAddress(walletAddress)) {
+    if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
       ModalDialog.of(this.context).show(
         content: S.of(this.context).error_unknown_nkn_qrcode,
         hasCloseButton: true,
