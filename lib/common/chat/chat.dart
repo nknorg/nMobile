@@ -333,6 +333,17 @@ class ChatCommon with Tag {
     bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) : true;
     bool success = await _messageStorage.updateIsDelete(message.msgId, true, clearContent: clearContent);
     if (success && notify) _onDeleteSink.add(message.msgId);
+    // delete file
+    if (clearContent && (message.content is File)) {
+      (message.content as File).exists().then((value) {
+        if (value) {
+          (message.content as File).delete(); // await
+          logger.v("$TAG - receivePiece - content file delete success - path:${(message.content as File).path}");
+        } else {
+          logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
+        }
+      });
+    }
     return success;
   }
 
@@ -354,8 +365,7 @@ class ChatCommon with Tag {
     // delete later
     if (message.isDelete && message.content != null) {
       if (status == MessageStatus.SendReceipt || status == MessageStatus.Read) {
-        logger.i("$TAG - updateMessageStatus - delete later yes - message:$message");
-        _messageStorage.updateIsDelete(message.msgId, true, clearContent: true); // await
+        messageDelete(message, notify: false); // await
       } else {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
       }
