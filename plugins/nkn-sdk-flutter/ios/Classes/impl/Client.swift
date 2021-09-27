@@ -26,7 +26,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let numSubClients = 3
     var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
 
-    let onMessageInterval = 100
+    let onMessageInterval = 10
     var currentOnMessageCount = 0
 
     func install(binaryMessenger: FlutterBinaryMessenger) {
