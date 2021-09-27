@@ -14,6 +14,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 
 class ChatCommon with Tag {
   String? currentChatTargetId;
@@ -81,13 +82,13 @@ class ChatCommon with Tag {
     try {
       // once
       if (total == null || total <= 1000) {
-        OnMessage result = await clientCommon.client!.publishText(topic, data, txPool: txPool, offset: 0, limit: 1000);
+        OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
         return [result];
       }
       // split
       List<Future<OnMessage>> futures = [];
       for (int i = 0; i < total; i += 1000) {
-        futures.add(clientCommon.client!.publishText(topic, data, txPool: txPool, offset: i, limit: i + 1000));
+        futures.add(clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: i, limit: i + 1000));
       }
       List<OnMessage> onMessageList = await Future.wait(futures);
       logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");

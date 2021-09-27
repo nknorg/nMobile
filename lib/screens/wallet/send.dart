@@ -22,6 +22,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -349,10 +350,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 logger.i("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'] ?? "";
                 _amountController.text = jsonData['amount']?.toString() ?? "";
-              } else if (_wallet.type == WalletType.nkn && verifyNknAddress(qrData.toString())) {
+              } else if (_wallet.type == WalletType.nkn && Validate.isNknAddressOk(qrData.toString())) {
                 logger.i("$TAG - wallet send scan NKN - address:$qrData");
                 _sendToController.text = qrData.toString();
-              } else if (_wallet.type == WalletType.eth && verifyEthAddress(qrData.toString())) {
+              } else if (_wallet.type == WalletType.eth && Validate.isEthAddressOk(qrData.toString())) {
                 logger.i("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
@@ -454,7 +455,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_sendToFocusNode),
                                     onSaved: (String? v) => _amount = num.tryParse(v ?? "0") ?? 0,
-                                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                    inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                                     showErrorMessage: false,
                                     suffixIcon: GestureDetector(
                                       child: Container(
@@ -591,7 +592,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                             _checkFeeForm(_wallet.type == WalletType.eth, v);
                                           },
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^[0-9]+\.?[0-9]{0,8}'))],
+                                          inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                                           suffixIcon: GestureDetector(
                                             child: Container(
                                               width: 20,

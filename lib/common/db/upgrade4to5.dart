@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
@@ -19,7 +20,6 @@ import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -316,7 +316,7 @@ class Upgrade4to5 {
         if (oldType != null && (oldType == TopicType.privateTopic || oldType == TopicType.privateTopic)) {
           newType = oldType;
         } else {
-          newType = isPrivateTopicReg(newTopic) ? TopicType.privateTopic : TopicType.publicTopic;
+          newType = Validate.isPrivateTopicOk(newTopic) ? TopicType.privateTopic : TopicType.publicTopic;
         }
         // at
         int? oldCreateAt = result["time_update"];
