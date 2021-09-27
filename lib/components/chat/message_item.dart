@@ -154,7 +154,7 @@ class ChatMessageItem extends StatelessWidget {
             showProfile: showProfile,
             hideProfile: hideProfile,
             showTimeAndStatus: isGroupTail,
-            timeFormatBetween: false,
+            // timeFormatBetween: false,
             hideTopMargin: isGroupBody || (isGroupTail && !isGroupHead),
             hideBotMargin: isGroupBody || (isGroupHead && !isGroupTail),
             onAvatarLonePress: this.onAvatarLonePress,
