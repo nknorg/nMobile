@@ -255,7 +255,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true); // await
+      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, forceSync: true); // await
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -300,7 +300,7 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, forceSync: true); // await
 
     return true;
   }
@@ -348,7 +348,7 @@ class ChatInCommon with Tag {
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, forceSync: true); // await
 
     return true;
   }
