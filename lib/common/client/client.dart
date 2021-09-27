@@ -132,9 +132,9 @@ class ClientCommon with Tag {
       }
 
       // client create
-      seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
       if (create || client == null) {
         _statusSink.add(ClientConnectStatus.connecting);
+        seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
       }
 
@@ -151,7 +151,7 @@ class ClientCommon with Tag {
       _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
         logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
         SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
-        _statusSink.add(ClientConnectStatus.connected);
+        pingSelfSuccess(force: true); // await
         if (!completer.isCompleted) completer.complete();
       });
 
@@ -217,8 +217,12 @@ class ClientCommon with Tag {
       await signOut(closeDB: true);
       return [null, false];
     }
+
     await signOut(closeDB: false);
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 200));
+    if (status != ClientConnectStatus.connecting) {
+      _statusSink.add(ClientConnectStatus.connecting);
+    }
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
@@ -230,7 +234,7 @@ class ClientCommon with Tag {
     _statusSink.add(ClientConnectStatus.connecting);
     await chatOutCommon.sendPing(address, true);
     // loop
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(Duration(milliseconds: 800), () {
       if (status == ClientConnectStatus.connecting) {
         _connectingVisibleSink.add(true);
         connectCheck();
@@ -243,7 +247,7 @@ class ClientCommon with Tag {
     if (!force && (status != ClientConnectStatus.connecting)) return;
     _statusSink.add(ClientConnectStatus.connected);
     // visible
-    Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(Duration(milliseconds: 1000), () {
       _connectingVisibleSink.add(false);
     });
   }
