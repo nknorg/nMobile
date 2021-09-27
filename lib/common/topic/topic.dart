@@ -6,6 +6,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -847,7 +848,7 @@ class TopicCommon with Tag {
 
   Future<TopicSchema?> add(TopicSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.topic.isEmpty) return null;
-    schema.type = schema.type ?? (isPrivateTopicReg(schema.topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    schema.type = schema.type ?? (Validate.isPrivateTopicOk(schema.topic) ? TopicType.privateTopic : TopicType.publicTopic);
     if (checkDuplicated) {
       TopicSchema? exist = await queryByTopic(schema.topic);
       if (exist != null) {

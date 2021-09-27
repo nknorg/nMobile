@@ -7,6 +7,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -20,7 +21,6 @@ import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
@@ -165,7 +165,7 @@ Future addTestData(
   // final batch3 = db.batch();
   for (var i = 0; i < topicCount; i++) {
     entity3['topic'] = topicNameList[i];
-    entity3['type'] = isPrivateTopicReg(entity3['topic']) ? TopicType.privateTopic : TopicType.publicTopic;
+    entity3['type'] = Validate.isPrivateTopicOk(entity3['topic']) ? TopicType.privateTopic : TopicType.publicTopic;
     entity3['create_at'] = entity3['create_at'] + 1;
     entity3['update_at'] = entity3['update_at'] + 1;
     entity3['joined'] = (i % 2 == 0) ? 0 : 1;
