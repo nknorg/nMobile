@@ -63,18 +63,17 @@ class DeviceToken {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_APNS)) {
       return token.replaceAll(PREFIX_APNS, "");
-    }
-    // SUPPORT:START
-    if (token.startsWith(PREFIX_FCM) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
+    } else if (token.startsWith(PREFIX_FCM) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
       return "";
     }
-    if (token.length == 64) {
-      return token; // apns
-    } else if (token.length > 163) {
+    // SUPPORT:START
+    if (token.contains('__FCMToken__:')) {
       List<String> sList = token.split('__FCMToken__:');
       if (sList.length >= 2) {
         return sList[0].toString();
       }
+    } else if (token.length == 64) {
+      return token; // apns
     }
     // SUPPORT:END
     return "";
@@ -84,12 +83,16 @@ class DeviceToken {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_FCM)) {
       return token.replaceAll(PREFIX_FCM, "");
-    }
-    // SUPPORT:START
-    if (token.startsWith(PREFIX_APNS) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
+    } else if (token.startsWith(PREFIX_APNS) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
       return "";
     }
-    if (token.length == 163) {
+    // SUPPORT:START
+    if (token.contains('__FCMToken__:')) {
+      List<String> sList = token.split('__FCMToken__:');
+      if (sList.length >= 2) {
+        return sList[1].toString();
+      }
+    } else if (token.length == 163) {
       return token; // fcm
     }
     // SUPPORT:END
