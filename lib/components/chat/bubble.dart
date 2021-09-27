@@ -249,7 +249,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool dark = styles[1];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: (_hideTopMargin || _hideBotMargin) ? 0 : (isSendOut ? 4 : 8)),
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        top: _hideTopMargin ? 0.5 : (isSendOut ? 4 : 8),
+        bottom: _hideBotMargin ? 0.5 : (isSendOut ? 4 : 8),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,9 +267,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                SizedBox(height: _hideTopMargin ? 0.5 : 6),
+                SizedBox(height: _hideTopMargin ? 0 : 4),
                 _getName(),
-                SizedBox(height: _hideTopMargin ? 1 : 4),
+                SizedBox(height: (_showProfile && !_hideProfile) ? 4 : 0),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -275,7 +280,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     isSendOut ? SizedBox.shrink() : _getStatusTip(isSendOut),
                   ],
                 ),
-                SizedBox(height: _hideBotMargin ? 0.5 : 6),
+                SizedBox(height: _hideBotMargin ? 0 : 4),
               ],
             ),
           ),
@@ -728,9 +733,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         color: _getBgColor(),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
-          topRight: const Radius.circular(12),
           bottomLeft: const Radius.circular(12),
-          bottomRight: const Radius.circular(2),
+          topRight: Radius.circular(_hideTopMargin ? 1 : 12),
+          bottomRight: Radius.circular(_hideBotMargin ? 1 : (_hideTopMargin ? 12 : 2)),
         ),
       );
       dark = true;
@@ -738,9 +743,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       decoration = BoxDecoration(
         color: _getBgColor(),
         borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(2),
+          topLeft: Radius.circular(_hideTopMargin ? 1 : (_hideBotMargin ? 12 : 2)),
+          bottomLeft: Radius.circular(_hideBotMargin ? 1 : 12),
           topRight: const Radius.circular(12),
-          bottomLeft: const Radius.circular(12),
           bottomRight: const Radius.circular(12),
         ),
       );
