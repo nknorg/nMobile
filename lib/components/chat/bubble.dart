@@ -669,7 +669,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           minWidth: maxWidth / 5,
           minHeight: maxWidth / 5,
         ),
-        child: Image.file(file),
+        child: Image.file(file, cacheWidth: maxWidth.toInt()),
       )
     ];
   }
