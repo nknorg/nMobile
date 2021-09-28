@@ -10,19 +10,19 @@ class OptionsSchema {
   bool notificationOpen; // FUTURE: topic
 
   int? deleteAfterSeconds; // FUTURE: topic
-  int? updateBurnAfterAt;
+  int? updateBurnAfterAt; // FUTURE: topic
 
-  String? soundResource;
-  int? muteExpireAt;
+  String? soundResource; // FUTURE: chat
+  int? muteExpireAt; // FUTURE: chat
 
   Color? avatarBgColor;
   Color? avatarNameColor;
 
-  File? chatBgFile;
-  Color? chatBgColor;
+  File? chatBgFile; // FUTURE: ui
+  Color? chatBgColor; // FUTURE: ui
 
-  Color? chatBubbleBgColor;
-  Color? chatBubbleTextColor;
+  Color? chatBubbleBgColor; // FUTURE: ui
+  Color? chatBubbleTextColor; // FUTURE: ui
 
   OptionsSchema({
     this.receiveOpen = false,
