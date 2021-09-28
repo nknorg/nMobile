@@ -674,7 +674,7 @@ class ChatInCommon with Tag {
       }
       Uint8List itemBytes = file.readAsBytesSync();
       int? pieceIndex = item.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
-      if (pieceIndex != null && pieceIndex >= 0 && pieceIndex < recoverList.length) {
+      if (itemBytes.isNotEmpty && (pieceIndex != null) && (pieceIndex >= 0) && (pieceIndex < recoverList.length)) {
         recoverList[pieceIndex] = itemBytes;
         recoverCount++;
       }
@@ -684,7 +684,13 @@ class ChatInCommon with Tag {
       return false;
     }
     // combine
-    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+    String? base64String;
+    try {
+      base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+    } catch (e) {
+      handleError(e);
+      return false;
+    }
     if (base64String == null || base64String.isEmpty) {
       logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
       return false;
