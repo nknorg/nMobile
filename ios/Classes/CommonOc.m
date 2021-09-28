@@ -68,17 +68,14 @@
 }
 
 - (NSString *)combinePieces:(NSArray *)dataPieces dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece bytesLength:(NSInteger)tBytesLength{
-    NSError *error = nil;
-    ReedsolomonEncoder * encoder = [[ReedsolomonEncoder alloc] init];
-    encoder = (ReedsolomonEncoder *)ReedsolomonNewDefault(dataPiece, parityPiece, &error);
 
-    NSInteger byteLength = 0;
-    for (int i = 0; i < dataPieces.count; i++){
-        NSData * pData = [dataPieces objectAtIndex:i];
-        if (pData.length > 0){
-            byteLength = pData.length;
-        }
-    }
+//    NSInteger byteLength = 0;
+//    for (int i = 0; i < dataPieces.count; i++){
+//        NSData * pData = [dataPieces objectAtIndex:i];
+//        if (pData.length > 0){
+//            byteLength = pData.length;
+//        }
+//    }
 
     NSInteger combineLength = dataPiece+parityPiece;
     ReedsolomonBytesArray * encodeBytes = [[ReedsolomonBytesArray alloc] init:combineLength];
@@ -86,7 +83,7 @@
     for (int i = 0; i < dataPieces.count; i++){
         NSData * pData = [dataPieces objectAtIndex:i];
         if (pData.length > 0){
-            NSMutableData * nData = [[NSMutableData alloc] initWithBytes:pData.bytes length:byteLength];
+            NSMutableData * nData = [[NSMutableData alloc] initWithBytes:pData.bytes length:pData.length];
             [encodeBytes set:i b:nData];
 //            NSLog(@"byteLength______%lu",byteLength);
         }
@@ -94,7 +91,12 @@
             [encodeBytes set:i b:nil];
         }
     }
+
+    NSError *error = nil;
+    ReedsolomonEncoder * encoder = [[ReedsolomonEncoder alloc] init];
+    encoder = (ReedsolomonEncoder *)ReedsolomonNewDefault(dataPiece, parityPiece, &error);
     BOOL result = [encoder reconstructBytesArray:encodeBytes error:&error];
+
     if (result == true){
 //        NSLog(@"reconstructBytesArray success");
         NSMutableData * joinedData = [[NSMutableData alloc] init];
