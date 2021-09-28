@@ -54,7 +54,7 @@ class ChatOutCommon with Tag {
     // delay
     int? delay = checkNoAckTimers[targetId]?["delay"];
     if (refresh || delay == null || delay == 0 || timer == null) {
-      checkNoAckTimers[targetId]?["delay"] = 5;
+      checkNoAckTimers[targetId]?["delay"] = 2;
       logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else if (timer.isActive != true) {
       checkNoAckTimers[targetId]?["delay"] = ((delay * 2) > (10 * 60)) ? (10 * 60) : (delay * 2);
