@@ -2,15 +2,23 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:logger/logger.dart';
+import 'package:nmobile/common/settings.dart';
 
 Logger logger = Platform.isAndroid
     ? Logger(
-        filter: null,
+        filter: CustomFilter(),
         printer: ColorPrinter(),
         output: null,
         level: Level.verbose,
       )
-    : Logger(printer: PrettyPrinter());
+    : Logger(printer: PrettyPrinter(), filter: CustomFilter());
+
+class CustomFilter extends LogFilter {
+  @override
+  bool shouldLog(LogEvent event) {
+    return Settings.debug;
+  }
+}
 
 mixin Tag {
   String get TAG => _tagInner(32, 5);
