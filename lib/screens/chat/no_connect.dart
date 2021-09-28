@@ -234,7 +234,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                       ),
                       SizedBox(height: 15),
                       Label(
-                        "数据库升级中,请勿退出app或离开此页面!", // TODO:GG locale dbUpgrade
+                        _localizations.upgrade_db_tips,
                         type: LabelType.display,
                         softWrap: true,
                       ),

@@ -157,6 +157,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("您确定要删除该好友吗？"),
         "delete_message_confirm_title":
             MessageLookupByLibrary.simpleMessage("您确定要删除此消息吗?"),
+        "delete_session_confirm_title":
+            MessageLookupByLibrary.simpleMessage("你确定要删除此会话吗？"),
         "delete_wallet": MessageLookupByLibrary.simpleMessage("删除账户"),
         "delete_wallet_confirm_text": MessageLookupByLibrary.simpleMessage(
             "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。"),
@@ -214,7 +216,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "group_member_already":
             MessageLookupByLibrary.simpleMessage("该成员已经加入本群"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
-        "has_left_the_group": MessageLookupByLibrary.simpleMessage("已退出群组"),
+        "has_left_the_group": MessageLookupByLibrary.simpleMessage("已退群"),
         "help": MessageLookupByLibrary.simpleMessage("帮助"),
         "hint_enter_wallet_name": MessageLookupByLibrary.simpleMessage("账户名称"),
         "hours": MessageLookupByLibrary.simpleMessage("小时"),
@@ -428,6 +430,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "update_burn_after_reading":
             MessageLookupByLibrary.simpleMessage("设置了阅后即焚时间"),
         "updated_at": MessageLookupByLibrary.simpleMessage("更新"),
+        "upgrade_db_tips":
+            MessageLookupByLibrary.simpleMessage("数据库升级中,请勿退出app或离开此页面。"),
         "verify_wallet_password":
             MessageLookupByLibrary.simpleMessage("验证账户密码"),
         "version": MessageLookupByLibrary.simpleMessage("版本"),
@@ -437,6 +441,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_profile": MessageLookupByLibrary.simpleMessage("查看资料"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("查看二维码"),
         "wallet_address": MessageLookupByLibrary.simpleMessage("账户地址"),
+        "wallet_missing":
+            MessageLookupByLibrary.simpleMessage("钱包信息丢失，退出并重新导入。"),
         "wallet_name": MessageLookupByLibrary.simpleMessage("账户名称"),
         "wallet_password": MessageLookupByLibrary.simpleMessage("密码"),
         "wallet_password_error": MessageLookupByLibrary.simpleMessage(
