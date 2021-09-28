@@ -192,19 +192,28 @@ class EthErc20Client with Tag {
   late Web3Client _web3client;
 
   EthErc20Client() {
-    var httpClient = Client();
-    _web3client = Web3Client(RPC_SERVER_URL, httpClient);
+    create();
   }
 
   Web3Client get client => _web3client;
 
   Future<EtherAmount> get getGasPrice => _web3client.getGasPrice();
 
+  void create() {
+    var httpClient = Client();
+    _web3client = Web3Client(RPC_SERVER_URL, httpClient);
+  }
+
   Future<EtherAmount?> getBalanceEth({required String address}) async {
     // var credentials = _web3client.credentialsFromPrivateKey("0x...");
     try {
       return await _web3client.getBalance(EthereumAddress.fromHex(address));
     } catch (e) {
+      if (e.toString().contains("Connection terminated")) {
+        create();
+        await Future.delayed(Duration(seconds: 1));
+        return getBalanceEth(address: address);
+      }
       handleError(e);
       return null;
     }
@@ -219,6 +228,11 @@ class EthErc20Client with Tag {
       );
       return EtherAmount.inWei(balance.first);
     } catch (e) {
+      if (e.toString().contains("Connection terminated")) {
+        create();
+        await Future.delayed(Duration(seconds: 1));
+        return getBalanceNkn(address: address);
+      }
       handleError(e);
       return null;
     }
@@ -232,7 +246,7 @@ class EthErc20Client with Tag {
     required num amountEth,
     required int gasLimit,
     int? gasPriceInGwei,
-  }) {
+  }) async {
     try {
       return _web3client.sendTransaction(
         credt,
@@ -246,6 +260,11 @@ class EthErc20Client with Tag {
         fetchChainIdFromNetworkId: true,
       );
     } catch (e) {
+      if (e.toString().contains("Connection terminated")) {
+        create();
+        await Future.delayed(Duration(seconds: 1));
+        return sendEthereum(credt, address: address, amountEth: amountEth, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
+      }
       handleError(e);
       rethrow;
     }
@@ -276,6 +295,11 @@ class EthErc20Client with Tag {
         fetchChainIdFromNetworkId: true,
       );
     } catch (e) {
+      if (e.toString().contains("Connection terminated")) {
+        create();
+        await Future.delayed(Duration(seconds: 1));
+        return sendNknToken(credt, address: address, amountNkn: amountNkn, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
+      }
       handleError(e);
       rethrow;
     }
