@@ -980,6 +980,16 @@ class S {
     );
   }
 
+  /// `Wallet Info missing, Quit and ReImport.`
+  String get wallet_missing {
+    return Intl.message(
+      'Wallet Info missing, Quit and ReImport.',
+      name: 'wallet_missing',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `My Accounts`
   String get my_wallets {
     return Intl.message(
@@ -1705,6 +1715,16 @@ class S {
     return Intl.message(
       'Are you sure you want to delete this device?',
       name: 'delete_device_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete this conversation?`
+  String get delete_session_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this conversation?',
+      name: 'delete_session_confirm_title',
       desc: '',
       args: [],
     );
@@ -3430,10 +3450,10 @@ class S {
     );
   }
 
-  /// `Has left the group`
+  /// `Left group`
   String get has_left_the_group {
     return Intl.message(
-      'Has left the group',
+      'Left group',
       name: 'has_left_the_group',
       desc: '',
       args: [],
@@ -3495,6 +3515,16 @@ class S {
     return Intl.message(
       'Have not been granted permission to join the group, please try again later.',
       name: 'no_permission_join_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `During the database upgrade, please do not exit the app or leave this page.`
+  String get upgrade_db_tips {
+    return Intl.message(
+      'During the database upgrade, please do not exit the app or leave this page.',
+      name: 'upgrade_db_tips',
       desc: '',
       args: [],
     );
