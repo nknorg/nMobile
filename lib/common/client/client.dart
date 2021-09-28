@@ -78,7 +78,6 @@ class ClientCommon with Tag {
   // return [client, pwdError]
   Future<List> signIn(
     WalletSchema? wallet, {
-    bool create = false,
     bool fetchRemote = true,
     Function(bool, int)? dialogVisible,
     String? password,
@@ -114,7 +113,7 @@ class ClientCommon with Tag {
         dialogVisible?.call(false, tryCount);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return signIn(wallet, create: create, fetchRemote: true, dialogVisible: dialogVisible, password: password);
+          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
         } else {
           logger.e("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           return [null, false];
@@ -132,7 +131,7 @@ class ClientCommon with Tag {
       }
 
       // client create
-      if (create || client == null) {
+      if (client == null) {
         _statusSink.add(ClientConnectStatus.connecting);
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
@@ -174,7 +173,7 @@ class ClientCommon with Tag {
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return signIn(wallet, create: create, fetchRemote: true, dialogVisible: dialogVisible, password: password);
+          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
         }
         handleError(e);
         return [null, true];
@@ -184,7 +183,7 @@ class ClientCommon with Tag {
       // loop login
       await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return signIn(wallet, create: create, fetchRemote: fetchRemote, dialogVisible: dialogVisible, password: password, tryCount: ++tryCount);
+      return signIn(wallet, fetchRemote: fetchRemote, dialogVisible: dialogVisible, password: password, tryCount: ++tryCount);
     }
   }
 
@@ -228,7 +227,7 @@ class ClientCommon with Tag {
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    return await signIn(wallet, create: false, fetchRemote: false, password: walletPwd);
+    return await signIn(wallet, fetchRemote: false, password: walletPwd);
   }
 
   Future connectCheck() async {

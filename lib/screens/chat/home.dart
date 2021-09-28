@@ -190,7 +190,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client
     if (isLoginProgress) return;
     isLoginProgress = true;
-    List result = await clientCommon.signIn(wallet,create: true, fetchRemote: false);
+    List result = await clientCommon.signIn(wallet, fetchRemote: false);
     final client = result[0];
     final isPwdError = result[1];
     if (client == null) {
