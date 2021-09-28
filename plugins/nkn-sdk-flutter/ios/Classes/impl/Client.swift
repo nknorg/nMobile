@@ -26,9 +26,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let numSubClients = 3
     var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
 
-    let onMessageInterval = 50
-    var currentOnMessageCount = 0
-
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.methodChannel?.setMethodCallHandler(handle)
@@ -123,7 +120,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         resp["rpcServers"] = rpcServers
         NSLog("%@", resp)
-        eventSink?(resp)
+        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
     }
 
     private func addMessageReceiveQueue(client: NknMultiClient) {
@@ -149,17 +146,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
         ]
         NSLog("%@", resp)
-        eventSink?(resp)
-
-        // todo, queue
-        currentOnMessageCount += 1
-        if (currentOnMessageCount >= onMessageInterval) {
-            usleep(useconds_t(100 * 1000))
-            currentOnMessageCount = 0
-        }
+        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
 
         // loop
-        onMessage(client: client)
+        self.addMessageReceiveQueue(client: client)
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -206,6 +196,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
+        // config.rpcConcurrency = 4
 
         var error: NSError?
         let account = NknNewAccount(seed?.data, &error)!
@@ -213,6 +204,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, error: error)
             return
         }
+
+        // var client :NknMultiClient?;
 
         clientWorkItem = DispatchWorkItem {
             guard let client = self.createClient(account: account, identifier: identifier, config: config) else {
@@ -230,6 +223,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.onMessage(client: client)
         }
         clientQueue.async(execute: clientWorkItem!)
+
+        // self.addClientConnectQueue(client: client!)
+        // self.addMessageReceiveQueue(client: client!)
     }
 
     private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
