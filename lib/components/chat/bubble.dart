@@ -475,7 +475,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              showTime
+              (showTime || showBurn)
                   ? Label(
                       sendTime,
                       type: LabelType.bodySmall,
@@ -484,7 +484,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                       color: color,
                     )
                   : SizedBox.shrink(),
-              (showTime && showBurn) ? SizedBox(width: 4) : SizedBox.shrink(),
+              ((showTime || showBurn) && showBurn) ? SizedBox(width: 4) : SizedBox.shrink(),
               showBurn ? _burnWidget() : SizedBox.shrink(),
               ((showTime || showBurn) && showStatus) ? SizedBox(width: 4) : SizedBox.shrink(),
               showStatus ? _bottomRightStatusWidget() : SizedBox.shrink(),
