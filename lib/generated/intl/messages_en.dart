@@ -183,6 +183,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to delete this friend?"),
         "delete_message_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this message?"),
+        "delete_session_confirm_title": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to delete this conversation?"),
         "delete_wallet": MessageLookupByLibrary.simpleMessage("Delete Account"),
         "delete_wallet_confirm_text": MessageLookupByLibrary.simpleMessage(
             "This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds."),
@@ -247,7 +249,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "The member is in group already"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
         "has_left_the_group":
-            MessageLookupByLibrary.simpleMessage("Has left the group"),
+            MessageLookupByLibrary.simpleMessage("Left group"),
         "help": MessageLookupByLibrary.simpleMessage("Help"),
         "hint_enter_wallet_name":
             MessageLookupByLibrary.simpleMessage("Enter wallet name"),
@@ -497,6 +499,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "update_burn_after_reading": MessageLookupByLibrary.simpleMessage(
             "set the disappearing message timer"),
         "updated_at": MessageLookupByLibrary.simpleMessage("Updated at"),
+        "upgrade_db_tips": MessageLookupByLibrary.simpleMessage(
+            "During the database upgrade, please do not exit the app or leave this page."),
         "verify_wallet_password":
             MessageLookupByLibrary.simpleMessage("Verify Account Password"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
@@ -507,6 +511,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_qrcode": MessageLookupByLibrary.simpleMessage("View QR Code"),
         "wallet_address":
             MessageLookupByLibrary.simpleMessage("Account Address"),
+        "wallet_missing": MessageLookupByLibrary.simpleMessage(
+            "Wallet Info missing, Quit and ReImport."),
         "wallet_name": MessageLookupByLibrary.simpleMessage("Account Name"),
         "wallet_password": MessageLookupByLibrary.simpleMessage("Password"),
         "wallet_password_error": MessageLookupByLibrary.simpleMessage(
