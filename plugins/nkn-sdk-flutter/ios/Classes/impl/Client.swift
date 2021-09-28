@@ -26,7 +26,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let numSubClients = 3
     var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
 
-    let onMessageInterval = 10
+    let onMessageInterval = 50
     var currentOnMessageCount = 0
 
     func install(binaryMessenger: FlutterBinaryMessenger) {
@@ -71,6 +71,13 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientMap[client!.address()] = client
         return client!
+    }
+
+    private func reconnectClient(id: String) {
+        if (!clientMap.keys.contains(id)) {
+            return
+        }
+        clientMap[id]?.reconnect()
     }
 
     private func closeClient(id: String) {
@@ -159,6 +166,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         switch call.method{
         case "create":
             create(call, result: result)
+        case "reconnect":
+            reconnect(call, result: result)
         case "close":
             close(call, result: result)
         case "sendText":
@@ -219,6 +228,18 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
             self.onConnect(client: client)
             self.onMessage(client: client)
+        }
+        clientQueue.async(execute: clientWorkItem!)
+    }
+
+    private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as! String
+
+        clientWorkItem = DispatchWorkItem {
+            self.reconnectClient(id: _id)
+
+            self.resultSuccess(result: result, resp: nil)
         }
         clientQueue.async(execute: clientWorkItem!)
     }
