@@ -189,7 +189,6 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                                   onPressed: () async {
                                     await clientCommon.signIn(
                                       this._selectWallet,
-                                      create: true,
                                       fetchRemote: true,
                                       dialogVisible: (show, tryCount) {
                                         if (tryCount > 1) return;
