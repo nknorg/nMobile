@@ -266,7 +266,7 @@ class ChatInCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
-    MessageSchema? exists = await _messageStorage.query(received.content);
+    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.content, MessageContentType.piece);
     if (exists == null) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
@@ -319,7 +319,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> msgList = [];
     List<Future> futures = [];
     readIds.forEach((element) {
-      futures.add(_messageStorage.query(element).then((value) {
+      futures.add(_messageStorage.queryByNoContentType(element, MessageContentType.piece).then((value) {
         if (value == null) {
           logger.w("$TAG - _receiveRead - message is empty - msgId:$element");
         } else if (value.status == MessageStatus.Read) {
@@ -371,7 +371,7 @@ class ChatInCommon with Tag {
       List<Future> futures = [];
       messageIds.forEach((msgId) {
         if (msgId.isNotEmpty) {
-          futures.add(_messageStorage.query(msgId).then((message) {
+          futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
             if (message != null) {
               msgStatusList.add("$msgId:${message.status}");
             } else {
@@ -395,12 +395,12 @@ class ChatInCommon with Tag {
           int? status = int.tryParse(splits[1]);
           if (status == null || status == 0) {
             // resend msg
-            futures.add(_messageStorage.query(msgId).then((message) {
+            futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
               return chatOutCommon.resendMute(message);
             }));
           } else {
             // update status
-            futures.add(_messageStorage.query(msgId).then((message) {
+            futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
               if (message != null) {
                 int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
                 int? receiveAt = ((reallyStatus == MessageStatus.Read) || (message.receiveAt == null)) ? DateTime.now().millisecondsSinceEpoch : null;
@@ -631,33 +631,42 @@ class ChatInCommon with Tag {
     // combined duplicated
     List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
-      logger.d("$TAG - receivePiece - duplicated - index:$index - message:$existsCombine");
+      logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
       if (index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
     // piece
-    MessageSchema? piece = await _messageStorage.queryByPid(received.pid);
-    if (piece == null) {
-      // received.status = MessageStatus.Read;
-      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
-      piece = await _messageStorage.insert(received);
-    } else {
-      int existIndex = piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
-      if (existIndex == index) {
-        logger.d("$TAG - receivePiece - duplicated - receive:$received - exist:$piece");
-        return false;
+    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(received.msgId, MessageContentType.piece);
+    MessageSchema? piece;
+    for (var i = 0; i < pieces.length; i++) {
+      int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
+      if (insertIndex == index) {
+        piece = pieces[i];
+        break;
       }
     }
-    if (piece == null) {
+    if (piece != null) {
+      logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
+      return false;
+    } else {
+      // received.status = MessageStatus.Read; // modify in before
+      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
+      piece = await _messageStorage.insert(received);
+    }
+
+    // add piece
+    if (piece != null) {
+      pieces.add(piece);
+    } else {
       logger.w("$TAG - receivePiece - piece is null - message:$received");
       return false;
     }
+
     // pieces
     int piecesCount = await _messageStorage.queryCountByContentType(piece.msgId, piece.contentType);
     logger.v("$TAG - receivePiece - progress:$total/$piecesCount/${total + parity}");
     if (piecesCount < total || bytesLength <= 0) return false;
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(piece.msgId, piece.contentType);
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];
