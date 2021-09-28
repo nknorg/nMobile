@@ -57,6 +57,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         client
     }
 
+    private suspend fun reconnectClient(id: String) = withContext(Dispatchers.IO) {
+        if (!clientMap.containsKey(id)) {
+            return@withContext
+        }
+        try {
+            clientMap[id]?.reconnect()
+        } catch (e: Throwable) {
+            eventSink?.error(id, e.localizedMessage, "")
+            return@withContext
+        }
+    }
+
     private suspend fun closeClient(id: String) = withContext(Dispatchers.IO) {
         if (!clientMap.containsKey(id)) {
             return@withContext
@@ -131,6 +143,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "create" -> {
                 create(call, result)
             }
+            "reconnect" -> {
+                reconnect(call, result)
+            }
             "close" -> {
                 close(call, result)
             }
@@ -199,6 +214,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             } catch (e: Throwable) {
                 resultError(result, "", e.localizedMessage)
             }
+        }
+    }
+
+    private fun reconnect(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            reconnectClient(_id)
+            resultSuccess(result, null)
         }
     }
 

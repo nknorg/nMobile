@@ -172,6 +172,14 @@ class Client {
     }
   }
 
+  /// [reconnect] reconnect the multiclient
+  Future<void> reconnect() async {
+    if (!(this.address.isNotEmpty == true)) {
+      return;
+    }
+    await _methodChannel.invokeMethod('reconnect', {'_id': this.address});
+  }
+
   /// [close] closes the multiclient, including all clients it created and all
   /// sessions dialed and accepted. Calling close multiple times is allowed and
   /// will not have any effect.
