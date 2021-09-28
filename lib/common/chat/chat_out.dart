@@ -97,6 +97,7 @@ class ChatOutCommon with Tag {
     }
 
     // filter
+    checkList = checkList = checkList.where((element) => element.canReceipt).toList();
     if (!forceSync) {
       checkList = checkList.where((element) {
         int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
@@ -147,7 +148,7 @@ class ChatOutCommon with Tag {
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     if (!clientCommon.isClientCreated) return;
-    received = (await _messageStorage.query(received.msgId)) ?? received; // get receiveAt
+    received = (await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await chatCommon.clientSendData(received.from, data);
   }

@@ -355,13 +355,13 @@ class ChatCommon with Tag {
       if (!force && (message.content is File) && (tryCount <= 5)) {
         logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
         await Future.delayed(Duration(seconds: 1));
-        MessageSchema? _message = await _messageStorage.query(message.msgId);
+        MessageSchema? _message = await _messageStorage.queryByNoContentType(message.msgId, MessageContentType.piece);
         if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
       }
     }
     // update
     message.status = status;
-    bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt);
+    bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (success && notify) _onUpdateSink.add(message);
     // delete later
     if (message.isDelete && message.content != null) {

@@ -158,26 +158,26 @@ class MessageStorage with Tag {
     return null;
   }
 
-  Future<MessageSchema?> queryByPid(Uint8List? pid) async {
-    if (pid == null || pid.isEmpty) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'pid = ?',
-        whereArgs: [pid],
-      );
-      if (res != null && res.length > 0) {
-        MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - queryByPid - success - pid:$pid - schema:$schema");
-        return schema;
-      }
-      logger.v("$TAG - queryByPid - empty - pid:$pid");
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
-  }
+  // Future<MessageSchema?> queryByPid(Uint8List? pid) async {
+  //   if (pid == null || pid.isEmpty) return null;
+  //   try {
+  //     List<Map<String, dynamic>>? res = await db?.query(
+  //       tableName,
+  //       columns: ['*'],
+  //       where: 'pid = ?',
+  //       whereArgs: [pid],
+  //     );
+  //     if (res != null && res.length > 0) {
+  //       MessageSchema schema = MessageSchema.fromMap(res.first);
+  //       logger.v("$TAG - queryByPid - success - pid:$pid - schema:$schema");
+  //       return schema;
+  //     }
+  //     logger.v("$TAG - queryByPid - empty - pid:$pid");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return null;
+  // }
 
   Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
@@ -465,7 +465,7 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<bool> updateStatus(String? msgId, int status, {int? receiveAt}) async {
+  Future<bool> updateStatus(String? msgId, int status, {int? receiveAt, String? noType}) async {
     if (msgId == null || msgId.isEmpty) return false;
     try {
       int? count = await db?.update(
@@ -478,8 +478,8 @@ class MessageStorage with Tag {
                 'status': status,
                 'receive_at': receiveAt,
               },
-        where: 'msg_id = ?',
-        whereArgs: [msgId],
+        where: (noType?.isNotEmpty == true) ? 'msg_id = ? AND NOT type = ?' : 'msg_id = ?',
+        whereArgs: (noType?.isNotEmpty == true) ? [msgId, noType] : [msgId],
       );
       logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
       return (count ?? 0) > 0;
