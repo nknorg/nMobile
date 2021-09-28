@@ -415,7 +415,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            _localizations.click_to_settings, // TODO:GG locale or topic
+                            "${_topic?.count ?? "--"} ${_localizations.channel_members}",
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
