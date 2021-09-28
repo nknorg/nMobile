@@ -136,6 +136,8 @@ class ClientCommon with Tag {
         _statusSink.add(ClientConnectStatus.connecting);
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
+      } else {
+        client?.reconnect(); // await no onConnect callback
       }
 
       dialogVisible?.call(false, tryCount);
@@ -218,7 +220,7 @@ class ClientCommon with Tag {
       return [null, false];
     }
 
-    await signOut(closeDB: false);
+    // await signOut(closeDB: false);
     await Future.delayed(Duration(milliseconds: 200));
     if (status != ClientConnectStatus.connecting) {
       _statusSink.add(ClientConnectStatus.connecting);
@@ -226,7 +228,7 @@ class ClientCommon with Tag {
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    return await signIn(wallet, fetchRemote: false, password: walletPwd);
+    return await signIn(wallet, create: false, fetchRemote: false, password: walletPwd);
   }
 
   Future connectCheck() async {
@@ -234,7 +236,7 @@ class ClientCommon with Tag {
     _statusSink.add(ClientConnectStatus.connecting);
     await chatOutCommon.sendPing(address, true);
     // loop
-    Future.delayed(Duration(milliseconds: 800), () {
+    Future.delayed(Duration(milliseconds: 1000), () {
       if (status == ClientConnectStatus.connecting) {
         _connectingVisibleSink.add(true);
         connectCheck();
