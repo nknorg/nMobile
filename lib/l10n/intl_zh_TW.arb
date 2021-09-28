@@ -98,6 +98,7 @@
   "input_password_again": "再次輸入密碼",
   "create_wallet": "創建賬戶",
   "create_nkn_wallet": "創建主網帳戶",
+  "wallet_missing": "钱包信息丢失，退出并重新导入。",
 
   "my_wallets": "我的賬戶",
   "import_wallet": "導入賬戶",
@@ -179,6 +180,7 @@
   "delete_cache_confirm_title": "您確定要刪除緩存嗎?",
   "delete_db_confirm_title": "您確定要清空資料庫嗎？",
   "delete_device_confirm_title": "您確定要刪除該設備嗎？",
+  "delete_session_confirm_title": "你確定要刪除此會話嗎？",
 
   "select_asset_to_send": "選擇要發送資金的賬戶",
   "select_asset_to_receive": "選擇要接收資金的賬戶",
@@ -356,11 +358,12 @@
   "blocked_user_disallow_invite": "改用戶已經被拉黑，不允許普通成員邀請",
   "confirm_resend": "確認重新發送？",
   "release_to_cancel": "鬆開取消",
-  "has_left_the_group": "已退出群組",
+  "has_left_the_group": "已退群",
   "reject_user_tip": "確定要移除該用戶嗎？",
   "picture_too_big": "圖片尺寸過大",
   "add_user_duplicated": "已添加該用戶",
   "confirm_unsubscribe_group": "確定要退出群聊嗎？",
   "balance_not_enough": "餘額不足",
-  "no_permission_join_group": "還未獲得入群權限，請稍後再試。"
+  "no_permission_join_group": "還未獲得入群權限，請稍後再試。",
+  "upgrade_db_tips": "數據庫升級中,請勿退出app或離開此頁面。"
 }
