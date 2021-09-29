@@ -84,6 +84,25 @@ class MessageStorage with Tag {
   //   return false;
   // }
 
+  // Future<bool> deleteByPid(String? pid) async {
+  //   if (pid == null || pid.isEmpty) return false;
+  //   try {
+  //     int? result = await db?.delete(
+  //       tableName,
+  //       where: 'pid = ?',
+  //       whereArgs: [pid],
+  //     );
+  //     if (result != null && result > 0) {
+  //       logger.v("$TAG - deleteByPid - success - pid:$pid");
+  //       return true;
+  //     }
+  //     logger.w("$TAG - deleteByPid - empty - pid:$pid");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return false;
+  // }
+
   Future<bool> deleteByContentType(String? msgId, String? contentType) async {
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return false;
     try {
