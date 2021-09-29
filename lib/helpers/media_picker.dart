@@ -328,10 +328,15 @@ class MediaPicker {
     size = await compressFile?.length() ?? ChatOutCommon.maxBodySize;
     overMaxSize = size >= ChatOutCommon.maxBodySize;
     if (overMaxSize) {
-      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       return _compressFile(compressFile, mediaType, 50);
     }
-    logger.i('MediaPicker - _compressFile - compress:END - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    bool overShouldSize = size >= ChatOutCommon.shouldBodySize;
+    if (overShouldSize) {
+      logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      return _compressFile(compressFile, mediaType, 50);
+    }
+    logger.i('MediaPicker - _compressFile - compress:END - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     return compressFile;
   }

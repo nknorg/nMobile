@@ -29,6 +29,7 @@ class ChatOutCommon with Tag {
   static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 192
 
   static const int maxBodySize = piecesMaxTotal * piecesPreLength * 2; // 1,572,864 less then 4,000,000(nkn-go-sdk)
+  static const int shouldBodySize = maxBodySize ~/ 5; // 300k
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -54,7 +55,7 @@ class ChatOutCommon with Tag {
     // delay
     int? delay = checkNoAckTimers[targetId]?["delay"];
     if (refresh || delay == null || delay == 0 || timer == null) {
-      checkNoAckTimers[targetId]?["delay"] = 3;
+      checkNoAckTimers[targetId]?["delay"] = 5;
       logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else if (timer.isActive != true) {
       checkNoAckTimers[targetId]?["delay"] = ((delay * 2) > (10 * 60)) ? (10 * 60) : (delay * 2);
