@@ -210,7 +210,7 @@ class ClientCommon with Tag {
     }
   }
 
-  Future<List> reSignIn(bool needPwd) async {
+  Future<List> reSignIn(bool needPwd, {int delayMs = 200}) async {
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
@@ -220,7 +220,7 @@ class ClientCommon with Tag {
     }
 
     // await signOut(closeDB: false);
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(Duration(milliseconds: delayMs));
     if (status != ClientConnectStatus.connecting) {
       _statusSink.add(ClientConnectStatus.connecting);
     }
@@ -233,7 +233,9 @@ class ClientCommon with Tag {
   Future connectCheck() async {
     if (client == null) return;
     _statusSink.add(ClientConnectStatus.connecting);
-    await chatOutCommon.sendPing(address, true);
+    reSignIn(false, delayMs: 0).then((value) {
+      chatOutCommon.sendPing(address, true);
+    });
     // loop
     Future.delayed(Duration(milliseconds: 1000), () {
       if (status == ClientConnectStatus.connecting) {

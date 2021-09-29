@@ -24,7 +24,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # version: 1.2.0+225
 # 21/09/XX nMobileTest
 # version: 1.2.0+226
-# 21/XX/XX XXX
+# 21/09/29
 version: 1.2.0+227
 
 environment:
