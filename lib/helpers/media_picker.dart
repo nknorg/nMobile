@@ -329,12 +329,20 @@ class MediaPicker {
     overMaxSize = size >= ChatOutCommon.maxBodySize;
     if (overMaxSize) {
       logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-      return _compressFile(compressFile, mediaType, 50);
+      if (compressQuality <= 5) {
+        Toast.show(S.of(Global.appContext).picture_too_big);
+        return null;
+      }
+      return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
     }
     bool overShouldSize = size >= ChatOutCommon.shouldBodySize;
     if (overShouldSize) {
-      logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-      return _compressFile(compressFile, mediaType, 50);
+      if (compressQuality > 5) {
+        logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
+      } else {
+        logger.w('MediaPicker - _compressFile - compress:END - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      }
     }
     logger.i('MediaPicker - _compressFile - compress:END - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
