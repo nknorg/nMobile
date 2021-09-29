@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -36,7 +37,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     if ((address?.isNotEmpty == true) && isDChatByClientAddress(address ?? "")) {
       var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
       await contactCommon.add(contact, notify: true);
-      await ChatMessagesScreen.go(context, contact);
+      await ChatMessagesScreen.go(Global.appContext, contact);
     }
   }
 
@@ -45,7 +46,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName);
     Loading.dismiss();
-    if (_topic != null) ChatMessagesScreen.go(context, _topic);
+    if (_topic != null) ChatMessagesScreen.go(Global.appContext, _topic);
   }
 
   @override
