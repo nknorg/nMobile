@@ -95,14 +95,14 @@ class Global {
   }
 
   static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
-    // walletAddress
-    if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
-      try {
-        walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
-      } catch (e) {
-        handleError(e);
-      }
-    }
+    // // walletAddress
+    // if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
+    //   try {
+    //     walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+    //   } catch (e) {
+    //     handleError(e);
+    //   }
+    // }
 
     int? nonce;
 
@@ -131,18 +131,18 @@ class Global {
   static Future<int?> refreshNonce({String? walletAddress, bool useNow = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
-    // walletAddress
-    if (walletAddress == null || walletAddress.isEmpty) {
-      if (clientCommon.client?.publicKey.isNotEmpty == true) {
-        try {
-          walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
-        } catch (e) {
-          handleError(e);
-        }
-      } else {
-        return null;
-      }
-    }
+    // // walletAddress
+    // if (walletAddress == null || walletAddress.isEmpty) {
+    //   if (clientCommon.client?.publicKey.isNotEmpty == true) {
+    //     try {
+    //       walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
+    //     } catch (e) {
+    //       handleError(e);
+    //     }
+    //   } else {
+    //     return null;
+    //   }
+    // }
 
     int? nonce;
 
