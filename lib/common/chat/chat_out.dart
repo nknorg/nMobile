@@ -22,14 +22,14 @@ import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   // piece
-  static const int piecesPreLength = 4 * 1024; // 4 ~ 8k
+  static const int piecesPreLength = 4 * 1024; // 4 ~ 40k
   static const int piecesMinParity = 2; // parity >= 2
-  static const int piecesMaxParity = (255 ~/ 4); // parity <= 63
+  static const int piecesMaxParity = (40 ~/ 4); // parity <= 10
   static const int piecesMinTotal = 5; // total >= 5
-  static const int piecesMaxTotal = 255 - piecesMaxParity; // total <= 192
+  static const int piecesMaxTotal = 40 - piecesMaxParity; // total <= 30
 
-  static const int maxBodySize = piecesMaxTotal * piecesPreLength * 2; // 1,572,864 less then 4,000,000(nkn-go-sdk)
-  static const int shouldBodySize = maxBodySize ~/ 5; // 300k
+  static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,228,800 less then 4,000,000(nkn-go-sdk)
+  static const int shouldBodySize = maxBodySize ~/ 4; // 300k
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
