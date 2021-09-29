@@ -74,7 +74,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
     WalletSchema? _defaultSelect = await walletCommon.getDefault();
     if (_defaultSelect == null) {
       List<WalletSchema> wallets = await walletCommon.getWallets();
-      if (wallets.isNotEmpty) {
+      if (wallets.isNotEmpty && (wallets[0].type != WalletType.eth)) {
         _defaultSelect = wallets[0];
       }
     }

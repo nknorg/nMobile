@@ -243,7 +243,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         if (state is WalletLoaded) {
-          if (state.isWalletsEmpty()) {
+          if (state.isWalletsEmpty() || (state.defaultWallet()?.type == WalletType.eth)) {
             return ChatNoWalletLayout();
           } else if (state.defaultWallet() == null) {
             return ChatNoConnectLayout();
