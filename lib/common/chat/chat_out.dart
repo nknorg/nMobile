@@ -46,7 +46,7 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, bool forceSync = false}) {
+  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
     if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
@@ -54,7 +54,7 @@ class ChatOutCommon with Tag {
     // delay
     int? delay = checkNoAckTimers[targetId]?["delay"];
     if (refresh || delay == null || delay == 0 || timer == null) {
-      checkNoAckTimers[targetId]?["delay"] = 2;
+      checkNoAckTimers[targetId]?["delay"] = 3;
       logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
     } else if (timer.isActive != true) {
       checkNoAckTimers[targetId]?["delay"] = ((delay * 2) > (10 * 60)) ? (10 * 60) : (delay * 2);
@@ -67,13 +67,13 @@ class ChatOutCommon with Tag {
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? 5), () async {
       logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic, forceSync: forceSync); // await
+      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic, filterSec: filterSec); // await
       if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
       checkNoAckTimers[targetId]?["timer"]?.cancel();
     });
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, bool forceSync = false}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 60}) async {
     if (!clientCommon.isClientCreated) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
 
@@ -98,17 +98,15 @@ class ChatOutCommon with Tag {
 
     // filter
     checkList = checkList = checkList.where((element) => element.canReceipt).toList();
-    if (!forceSync) {
-      checkList = checkList.where((element) {
-        int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-        int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-        if (between < (60 * 1000)) {
-          logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
-          return false;
-        }
-        return true;
-      }).toList();
-    }
+    checkList = checkList.where((element) {
+      int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+      if (between < (filterSec * 1000)) {
+        logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
+        return false;
+      }
+      return true;
+    }).toList();
 
     if (checkList.isEmpty) {
       logger.d("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
