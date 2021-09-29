@@ -74,7 +74,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
     WalletSchema? _defaultSelect = await walletCommon.getDefault();
     if (_defaultSelect == null) {
       List<WalletSchema> wallets = await walletCommon.getWallets();
-      if (wallets.isNotEmpty && (wallets[0].type != WalletType.eth)) {
+      if (wallets.isNotEmpty) {
         _defaultSelect = wallets[0];
       }
     }
@@ -187,6 +187,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                                   width: double.infinity,
                                   text: _localizations.connect,
                                   onPressed: () async {
+                                    if (this._selectWallet?.type != WalletType.nkn) return;
                                     await clientCommon.signIn(
                                       this._selectWallet,
                                       fetchRemote: true,
