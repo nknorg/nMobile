@@ -135,36 +135,34 @@ class ClientCommon with Tag {
         _statusSink.add(ClientConnectStatus.connecting);
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
+
+        // client error
+        _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
+          logger.e("$TAG - signIn - onError -> event:${event.toString()}");
+          _onErrorSink.add(event);
+        });
+
+        // client connect (just listen once)
+        Completer completer = Completer();
+        _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
+          logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
+          SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
+          pingSelfSuccess(force: true); // await
+          if (!completer.isCompleted) completer.complete();
+        });
+
+        // client receive (looper)
+        _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
+          logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
+          chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
+          if (status != ClientConnectStatus.connected) {
+            pingSelfSuccess(force: true); // await
+          }
+        });
       } else {
+        dialogVisible?.call(false, tryCount);
         client?.reconnect(); // await no onConnect callback
       }
-
-      dialogVisible?.call(false, tryCount);
-
-      // client error
-      _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
-        logger.e("$TAG - signIn - onError -> event:${event.toString()}");
-        _onErrorSink.add(event);
-      });
-
-      // client connect (just listen once)
-      Completer completer = Completer();
-      _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
-        logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-        SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
-        pingSelfSuccess(force: true); // await
-        if (!completer.isCompleted) completer.complete();
-      });
-
-      // client receive (looper)
-      _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-        logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-        chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
-        if (status != ClientConnectStatus.connected) {
-          pingSelfSuccess(force: true); // await
-        }
-      });
-
       // await completer.future;
       return [client, false];
     } catch (e) {
