@@ -136,6 +136,8 @@ class ClientCommon with Tag {
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
+        dialogVisible?.call(false, tryCount);
+
         // client error
         _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
           logger.e("$TAG - signIn - onError -> event:${event.toString()}");
