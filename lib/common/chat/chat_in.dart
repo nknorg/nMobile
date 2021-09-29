@@ -348,7 +348,7 @@ class ChatInCommon with Tag {
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
+    // chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
 
     return true;
   }
@@ -653,7 +653,6 @@ class ChatInCommon with Tag {
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
     }
-
     // add piece
     if (piece != null) {
       pieces.add(piece);
@@ -661,11 +660,8 @@ class ChatInCommon with Tag {
       logger.w("$TAG - receivePiece - piece is null - message:$received");
       return false;
     }
-
-    // pieces
-    int piecesCount = await _messageStorage.queryCountByContentType(piece.msgId, piece.contentType);
-    logger.v("$TAG - receivePiece - progress:$total/$piecesCount/${total + parity}");
-    if (piecesCount < total || bytesLength <= 0) return false;
+    logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
+    if (pieces.length < total || bytesLength <= 0) return false;
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
