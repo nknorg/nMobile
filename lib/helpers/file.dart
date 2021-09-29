@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -48,8 +47,9 @@ class FileHelper {
       handleError(e);
       return null;
     }
-    String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
-    String localPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), dirType, '$name.$extension', chatTarget: chatTarget);
+    // String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
+    // String localPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), dirType, '$name.$extension', chatTarget: chatTarget);
+    String localPath = await Path.getCacheFile(hexEncode(clientCommon.publicKey!), fileExt: '$extension');
     File? file = Path.getCompleteFile(localPath) != null ? File(Path.getCompleteFile(localPath)!) : null;
     logger.d('MessageSchema - loadMediaFile - path:${file?.absolute}');
     if (file == null) return null;
