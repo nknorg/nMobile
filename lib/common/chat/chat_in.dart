@@ -31,12 +31,13 @@ class ChatInCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
+  Uint8List? receivePid;
   Map<String, bool> receiveLoops = Map();
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
   ChatInCommon();
 
-  Future onClientMessage(MessageSchema? message, {bool needWait = false}) async {
+  Future onClientMessage(MessageSchema? message, {bool needFast = false}) async {
     if (message == null) return;
 
     // topic msg published callback can be used receipt
@@ -47,17 +48,13 @@ class ChatInCommon with Tag {
 
     // message
     try {
-      if (needWait) {
-        await _messageHandle(message);
-      } else {
-        onMessageReceive(message.targetId, message);
-      }
+      onMessageReceive(message.targetId, message, needFast: needFast);
     } catch (e) {
       handleError(e);
     }
   }
 
-  void onMessageReceive(String? targetId, MessageSchema? received) {
+  void onMessageReceive(String? targetId, MessageSchema? received, {bool needFast = false}) {
     if (targetId == null || targetId.isEmpty) {
       logger.w("$TAG - onMessageReceive - targetId is empty - received:$received");
       return;
@@ -75,7 +72,15 @@ class ChatInCommon with Tag {
     }
 
     // handle
-    receiveMessages[targetId]?.add(received);
+    if (needFast) {
+      if ((receiveMessages[targetId]?.length ?? 0) > 0) {
+        receiveMessages[targetId]?.insert(1, received);
+      } else {
+        receiveMessages[targetId]?.insert(0, received);
+      }
+    } else {
+      receiveMessages[targetId]?.add(received);
+    }
     _loopReceiveMessage(targetId); // await
   }
 
@@ -98,7 +103,10 @@ class ChatInCommon with Tag {
 
     // handle
     MessageSchema? received = receiveMessages[targetId]?[0];
-    if (received != null) {
+    if (received?.pid == receivePid) {
+      logger.i("$TAG - loopReceiveMessage - message is duplicated - targetId:$targetId");
+    } else if (received != null) {
+      receivePid = received.pid;
       try {
         await _messageHandle(received);
       } catch (e) {
@@ -255,7 +263,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
+      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -300,7 +308,7 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 60); // await
 
     return true;
   }
@@ -593,6 +601,7 @@ class ChatInCommon with Tag {
     }
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
+    if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
@@ -615,6 +624,7 @@ class ChatInCommon with Tag {
     }
     // DB
     MessageSchema? inserted = await _messageStorage.insert(received);
+    if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
@@ -707,27 +717,7 @@ class ChatInCommon with Tag {
     }
     // combine.content - handle later
     logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
-    await onClientMessage(combine, needWait: true);
-    // delete
-    logger.i("$TAG - receivePiece - DELETE:START - pieces_count:${pieces.length}");
-    bool deleted = await _messageStorage.deleteByContentType(piece.msgId, piece.contentType);
-    if (deleted) {
-      pieces.forEach((MessageSchema element) {
-        if (element.content is File) {
-          if ((element.content as File).existsSync()) {
-            (element.content as File).delete(); // await
-            // logger.v("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
-          } else {
-            logger.e("$TAG - receivePiece - DELETE:ERROR - NoExists - path:${(element.content as File).path}");
-          }
-        } else {
-          logger.e("$TAG - receivePiece - DELETE:ERROR - empty:${element.content?.toString()}");
-        }
-      });
-      logger.i("$TAG - receivePiece - DELETE:SUCCESS - count:${pieces.length}");
-    } else {
-      logger.w("$TAG - receivePiece - DELETE:FAIL - empty - pieces:$pieces");
-    }
+    onClientMessage(combine, needFast: true); // await
     return true;
   }
 
@@ -782,5 +772,32 @@ class ChatInCommon with Tag {
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
     topicCommon.onKickOut(received.topic, received.from, received.content); // await
     return true;
+  }
+
+  Future<int> _deletePieces(String msgId) async {
+    int count = 0;
+    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(msgId, MessageContentType.piece);
+    logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
+    bool deleted = await _messageStorage.deleteByContentType(msgId, MessageContentType.piece);
+    if (deleted) {
+      for (var i = 0; i < pieces.length; i++) {
+        MessageSchema piece = pieces[i];
+        if (piece.content is File) {
+          if ((piece.content as File).existsSync()) {
+            (piece.content as File).delete(); // await
+            // logger.v("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+            count++;
+          } else {
+            logger.e("$TAG - _deletePieces - DELETE:ERROR - NoExists - path:${(piece.content as File).path}");
+          }
+        } else {
+          logger.e("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
+        }
+      }
+      logger.i("$TAG - _deletePieces - DELETE:SUCCESS - count:${pieces.length}");
+    } else {
+      logger.w("$TAG - _deletePieces - DELETE:FAIL - empty - pieces:$pieces");
+    }
+    return count;
   }
 }
