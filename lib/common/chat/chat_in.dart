@@ -263,7 +263,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing(received.from, false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
+      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -278,13 +278,9 @@ class ChatInCommon with Tag {
     if (exists == null) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
-    } else if (exists.status == MessageStatus.SendReceipt || exists.status == MessageStatus.Read) {
-      if (exists.isTopic && (exists.status != MessageStatus.Read)) {
-        logger.w("$TAG - receiveReceipt - topic is receipt - exists:$exists");
-      } else {
-        logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
-        return false;
-      }
+    } else if (exists.status == MessageStatus.Read) {
+      logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
+      return false;
     }
 
     // deviceInfo
@@ -292,7 +288,7 @@ class ChatInCommon with Tag {
     bool readEnable = deviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
 
     // status
-    if (exists.isTopic || received.receiveAt != null || !readEnable) {
+    if (exists.isTopic || (received.receiveAt != null) || !readEnable) {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
       if (!exists.isTopic) {
         int reallySendAt = received.sendAt ?? 0;
@@ -308,7 +304,7 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 60); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10); // await
 
     return true;
   }
@@ -355,8 +351,8 @@ class ChatInCommon with Tag {
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
-    // check msgStatus
-    // chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
+    // check msgStatus (duplicated with entry messages screen)
+    // chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
 
     return true;
   }
@@ -655,20 +651,18 @@ class ChatInCommon with Tag {
         break;
       }
     }
+    // add
     if (piece != null) {
       logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
-      return false;
     } else {
       // received.status = MessageStatus.Read; // modify in before
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
       piece = await _messageStorage.insert(received);
-    }
-    // add piece
-    if (piece != null) {
-      pieces.add(piece);
-    } else {
-      logger.w("$TAG - receivePiece - piece is null - message:$received");
-      return false;
+      if (piece != null) {
+        pieces.add(piece);
+      } else {
+        logger.w("$TAG - receivePiece - piece added null - message:$received");
+      }
     }
     logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
