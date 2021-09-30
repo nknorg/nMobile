@@ -440,7 +440,11 @@ class ChatCommon with Tag {
     for (int offset = 0; true; offset += limit) {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       result.forEach((element) {
-        if (element.isContact) sessions.add(element);
+        int between = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
+        // 10 days filter
+        if (element.isContact && (between < 10 * 24 * 60 * 60 * 1000)) {
+          sessions.add(element);
+        }
       });
       logger.d("$TAG - sendPang2SessionsContact - offset:$offset - current_len:${result.length} - total_len:${sessions.length}");
       if ((result.length < limit) || (sessions.length >= max)) break;
