@@ -268,9 +268,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       return;
     }
     topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
-    await Future.delayed(Duration(milliseconds: 300));
+    await Future.delayed(Duration(milliseconds: 500));
     logger.i("$TAG - _refreshTopicSubscribers - start");
     await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
+    // refresh count
+    int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
+    if (_topic?.count != count) {
+      await topicCommon.setCount(_topic?.id, count, notify: true);
+    }
   }
 
   _refreshTopicJoined() async {
