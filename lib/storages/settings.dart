@@ -7,7 +7,7 @@ class SettingsStorage {
   static const String LOCALE_KEY = 'locale';
   static const String SEED_RPC_SERVERS_KEY = 'seed_rpc_servers'; // not support 'NKN_RPC_NODE_LIST'
   static const String NOTIFICATION_TYPE_KEY = 'notification_type'; // not support 'local_notification_type'
-  static const String BIOMETRICS_AUTHENTICATION = 'biometrics_authentication'; // not support 'auth'
+  static const String BIOMETRICS_AUTHENTICATION = 'auth';
 
   static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
   static const String CHAT_TIP_NOTIFICATION = 'chat_tip_notification'; // not support 'NKN_MESSAGE_NOTIFICATION_ALERT'
