@@ -12,6 +12,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/components/topic/subscriber_item.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -204,14 +205,16 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    Loading.show();
-    await topicCommon.invitee(
-      _topicSchema?.topic,
-      _topicSchema?.isPrivate == true,
-      _topicSchema?.isOwner(clientCommon.address) == true,
-      address,
-    );
-    Loading.dismiss();
+    if ((address?.isNotEmpty == true) && Validate.isNknChatIdentifierOk(address)) {
+      Loading.show();
+      await topicCommon.invitee(
+        _topicSchema?.topic,
+        _topicSchema?.isPrivate == true,
+        _topicSchema?.isOwner(clientCommon.address) == true,
+        address,
+      );
+      Loading.dismiss();
+    }
   }
 
   @override
