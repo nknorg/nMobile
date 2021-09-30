@@ -20,6 +20,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -32,7 +33,6 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
@@ -462,7 +462,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );
-                            if ((address?.isNotEmpty == true) && isDChatByClientAddress(address ?? "")) {
+                            if ((address?.isNotEmpty == true) && Validate.isNknChatIdentifierOk(address)) {
                               var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
                               await contactCommon.add(contact, notify: true);
                               await ChatMessagesScreen.go(context, contact);

@@ -46,10 +46,6 @@ Map<String, dynamic>? jsonFormat(raw) {
   return null;
 }
 
-bool isDChatByClientAddress(String clientAddress) {
-  return clientAddress.length > 64;
-}
-
 String getPublicKeyByClientAddr(String addr) {
   int n = addr.lastIndexOf('.');
   if (n < 0) {

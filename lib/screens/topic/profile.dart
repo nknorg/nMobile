@@ -19,6 +19,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -182,14 +183,16 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    Loading.show();
-    await topicCommon.invitee(
-      _topicSchema?.topic,
-      _topicSchema?.isPrivate == true,
-      _topicSchema?.isOwner(clientCommon.address) == true,
-      address,
-    );
-    Loading.dismiss();
+    if ((address?.isNotEmpty == true) && Validate.isNknChatIdentifierOk(address)) {
+      Loading.show();
+      await topicCommon.invitee(
+        _topicSchema?.topic,
+        _topicSchema?.isPrivate == true,
+        _topicSchema?.isOwner(clientCommon.address) == true,
+        address,
+      );
+      Loading.dismiss();
+    }
   }
 
   _statusAction(bool nextSubscribe) async {

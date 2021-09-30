@@ -7,13 +7,13 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/utils.dart';
 
 class ChatNoMessageLayout extends BaseStateFulWidget {
   @override
@@ -34,7 +34,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if ((address?.isNotEmpty == true) && isDChatByClientAddress(address ?? "")) {
+    if ((address?.isNotEmpty == true) && Validate.isNknChatIdentifierOk(address)) {
       var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
       await contactCommon.add(contact, notify: true);
       await ChatMessagesScreen.go(Global.appContext, contact);
