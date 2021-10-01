@@ -68,7 +68,7 @@ class Validate {
 
   static final regPubKey = RegExp("[0-9A-Fa-f]{64}");
   static isNknPublicKey(String? publicKey) {
-    if (publicKey == null || publicKey.isEmpty) return false;
+    if (publicKey == null || publicKey.isEmpty || (publicKey.length != 64)) return false;
     return regPubKey.hasMatch(publicKey);
   }
 
@@ -79,7 +79,7 @@ class Validate {
 
   static final regSeed = RegExp(r'^[0-9A-Fa-f]{64}$');
   static bool isNknSeedOk(String? seed) {
-    if (seed == null || seed.isEmpty) return false;
+    if (seed == null || seed.isEmpty || (seed.length != 64)) return false;
     return regSeed.hasMatch(seed);
   }
 
@@ -97,6 +97,10 @@ class Validate {
   static final regChatIdentifier = RegExp(r'^[^.]*.?[0-9A-Fa-f]{64}$');
   static isNknChatIdentifierOk(String? identifier) {
     if (identifier == null || identifier.isEmpty) return false;
+    List<String> splits = identifier.split(".");
+    if (splits.length > 0) {
+      if (splits[splits.length - 1].length != 64) return false;
+    }
     return regChatIdentifier.hasMatch(identifier);
   }
 
