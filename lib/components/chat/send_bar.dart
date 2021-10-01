@@ -6,6 +6,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
@@ -364,7 +365,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: <Widget>[
                               Expanded(
-                                child: TextField(
+                                child: FixedTextField(
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
                                     hintText: S.of(context).type_a_message,
