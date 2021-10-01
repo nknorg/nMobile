@@ -21,6 +21,7 @@ import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
+import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/format.dart';
@@ -297,10 +298,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             opacity: _hideProfile ? 0 : 1,
             child: GestureDetector(
               onTap: () async {
-                File? file = await _contact?.displayAvatarFile;
-                PhotoScreen.go(context, filePath: file?.path);
+                if (_hideProfile || (_contact == null)) return;
+                ContactProfileScreen.go(context, schema: _contact);
               },
-              onLongPress: () => widget.onAvatarLonePress?.call(_contact!, _message),
+              onLongPress: () {
+                if (_hideProfile || (_contact == null)) return;
+                widget.onAvatarLonePress?.call(_contact!, _message);
+              },
               child: _contact != null
                   ? ContactAvatar(
                       contact: _contact!,
