@@ -329,6 +329,10 @@ class ChatCommon with Tag {
     return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
   }
 
+  Future<int> deleteByTargetId(String? targetId) {
+    return _messageStorage.deleteByTargetId(targetId);
+  }
+
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) : true;
