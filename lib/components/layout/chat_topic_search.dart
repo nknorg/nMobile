@@ -78,7 +78,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
     return Form(
       key: _formKey,
-      autovalidateMode: AutovalidateMode.always,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: () {
         _formValid = (_formKey.currentState as FormState).validate();
       },
