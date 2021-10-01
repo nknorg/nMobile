@@ -329,8 +329,8 @@ class ChatCommon with Tag {
     return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
   }
 
-  Future<int> deleteByTargetId(String? targetId) {
-    return _messageStorage.deleteByTargetId(targetId);
+  Future<bool> deleteByTargetId(String? targetId) {
+    return _messageStorage.updateIsDeleteByTargetId(targetId, true, clearContent: true);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
