@@ -12,6 +12,7 @@ import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/item.dart';
@@ -282,7 +283,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       ),
                     ),
                     Expanded(
-                      child: TextField(
+                      child: FixedTextField(
                         controller: _searchController,
                         onChanged: (val) {
                           _searchAction(val);
