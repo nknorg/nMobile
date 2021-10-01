@@ -113,7 +113,7 @@ class FixedTextFormField extends FormField<String> {
           enabled: enabled ?? decoration?.enabled ?? true,
           autovalidateMode: autovalidate ? AutovalidateMode.always : (autovalidateMode ?? AutovalidateMode.disabled),
           builder: (FormFieldState<String> field) {
-            final _TextFormFieldState state = field as _TextFormFieldState;
+            final _FixedTextFormFieldState state = field as _FixedTextFormFieldState;
             final InputDecoration effectiveDecoration = (decoration ?? const InputDecoration()).applyDefaults(Theme.of(field.context).inputDecorationTheme);
             void onChangedHandler(String value) {
               field.didChange(value);
@@ -179,16 +179,16 @@ class FixedTextFormField extends FormField<String> {
   final TextEditingController? controller;
 
   @override
-  _TextFormFieldState createState() => _TextFormFieldState();
+  _FixedTextFormFieldState createState() => _FixedTextFormFieldState();
 }
 
-class _TextFormFieldState extends FormFieldState<String> {
+class _FixedTextFormFieldState extends FormFieldState<String> {
   TextEditingController? _controller;
 
   TextEditingController? get _effectiveController => widget.controller ?? _controller;
 
   @override
-  TextFormField get widget => super.widget as TextFormField;
+  FixedTextFormField get widget => super.widget as FixedTextFormField;
 
   @override
   void initState() {
@@ -201,7 +201,7 @@ class _TextFormFieldState extends FormFieldState<String> {
   }
 
   @override
-  void didUpdateWidget(TextFormField oldWidget) {
+  void didUpdateWidget(FixedTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       oldWidget.controller?.removeListener(_handleControllerChanged);
