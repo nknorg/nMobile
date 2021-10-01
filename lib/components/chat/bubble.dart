@@ -59,6 +59,7 @@ class ChatBubble extends BaseStateFulWidget {
 
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
+  StreamSubscription? _contactUpdateStreamSubscription;
   StreamSubscription? _onPieceOutStreamSubscription;
   StreamSubscription? _onPlayStateChangedSubscription;
   StreamSubscription? _onPlayPositionChangedSubscription;
@@ -81,6 +82,14 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void initState() {
     super.initState();
+    // contact
+    _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
+      if (_contact?.id == event.id) {
+        setState(() {
+          _contact = event;
+        });
+      }
+    });
     // pieces
     _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
@@ -205,6 +214,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   @override
   void dispose() {
     // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
+    _contactUpdateStreamSubscription?.cancel();
     _onPlayStateChangedSubscription?.cancel();
     _onPlayPositionChangedSubscription?.cancel();
     _onPieceOutStreamSubscription?.cancel();
