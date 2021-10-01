@@ -122,24 +122,24 @@ class MessageStorage with Tag {
     return false;
   }
 
-  Future<int> deleteByTargetId(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return 0;
-    try {
-      int? count = await db?.delete(
-        tableName,
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      if (count != null && count > 0) {
-        logger.v("$TAG - deleteByTargetId - success - targetId:$targetId");
-        return count;
-      }
-      logger.w("$TAG - deleteByTargetId - fail - targetId:$targetId");
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
-  }
+  // Future<int> deleteByTargetId(String? targetId) async {
+  //   if (targetId == null || targetId.isEmpty) return 0;
+  //   try {
+  //     int? count = await db?.delete(
+  //       tableName,
+  //       where: 'target_id = ?',
+  //       whereArgs: [targetId],
+  //     );
+  //     if (count != null && count > 0) {
+  //       logger.v("$TAG - deleteByTargetId - success - targetId:$targetId");
+  //       return count;
+  //     }
+  //     logger.w("$TAG - deleteByTargetId - fail - targetId:$targetId");
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return 0;
+  // }
 
   // Future<int> deleteList(List<MessageSchema>? list) async {
   //   if (list == null || list.isEmpty) return 0;
@@ -532,18 +532,28 @@ class MessageStorage with Tag {
     try {
       int? count = await db?.update(
         tableName,
-        clearContent
-            ? {
-                'is_delete': isDelete ? 1 : 0,
-                'content': null,
-              }
-            : {
-                'is_delete': isDelete ? 1 : 0,
-              },
+        clearContent ? {'is_delete': isDelete ? 1 : 0, 'content': null} : {'is_delete': isDelete ? 1 : 0},
         where: 'msg_id = ?',
         whereArgs: [msgId],
       );
       logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
+      return (count ?? 0) > 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
+  Future<bool> updateIsDeleteByTargetId(String? targetId, bool isDelete, {bool clearContent = false}) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        clearContent ? {'is_delete': isDelete ? 1 : 0, 'content': null} : {'is_delete': isDelete ? 1 : 0},
+        where: 'target_id = ?',
+        whereArgs: [targetId],
+      );
+      logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");
       return (count ?? 0) > 0;
     } catch (e) {
       handleError(e);
