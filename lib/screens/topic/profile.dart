@@ -183,7 +183,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if ((address?.isNotEmpty == true) && Validate.isNknChatIdentifierOk(address)) {
+    if (address?.isNotEmpty == true) {
       Loading.show();
       await topicCommon.invitee(
         _topicSchema?.topic,
