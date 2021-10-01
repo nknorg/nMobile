@@ -122,6 +122,25 @@ class MessageStorage with Tag {
     return false;
   }
 
+  Future<int> deleteByTargetId(String? targetId) async {
+    if (targetId == null || targetId.isEmpty) return 0;
+    try {
+      int? count = await db?.delete(
+        tableName,
+        where: 'target_id = ?',
+        whereArgs: [targetId],
+      );
+      if (count != null && count > 0) {
+        logger.v("$TAG - deleteByTargetId - success - targetId:$targetId");
+        return count;
+      }
+      logger.w("$TAG - deleteByTargetId - fail - targetId:$targetId");
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
+
   // Future<int> deleteList(List<MessageSchema>? list) async {
   //   if (list == null || list.isEmpty) return 0;
   //   try {

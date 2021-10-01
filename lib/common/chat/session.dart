@@ -66,6 +66,7 @@ class SessionCommon with Tag {
     if (targetId == null || targetId.isEmpty) return false;
     bool success = await _sessionStorage.delete(targetId);
     if (success && notify) _deleteSink.add(targetId);
+    chatCommon.deleteByTargetId(targetId); // await
     return success;
   }
 
