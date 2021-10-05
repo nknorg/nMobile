@@ -201,8 +201,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // ping
     if (this._contact != null && this._topic == null) {
-      chatOutCommon.sendPing(this.targetId, true); // await
-      chatOutCommon.sendPing(this.targetId, false); // await
+      chatOutCommon.sendPing([this.targetId ?? ""], true); // await
+      chatOutCommon.sendPing([this.targetId ?? ""], false); // await
     } else if (this._topic != null && this._contact == null) {
       chatOutCommon.setMsgStatusCheckTimer(this.targetId, true, refresh: true); // await
     }
@@ -309,23 +309,23 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         Badge.onCountDown(value); // await
       }).then((value) {
         // set read
-        chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress);
+        chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress); // await
       });
     } else {
       // set read
-      chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress);
+      chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress); // await
     }
   }
 
   _toggleBottomMenu() async {
-    FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = !_showBottomMenu;
     });
   }
 
   _hideAll() {
-    FocusScope.of(context).requestFocus(FocusNode());
+    if (mounted) FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = false;
     });
@@ -628,7 +628,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   ? ChatBottomMenu(
                       show: _showBottomMenu,
                       onPickedImage: (File picked) async {
-                        FocusScope.of(context).requestFocus(FocusNode());
+                        if (mounted) FocusScope.of(context).requestFocus(FocusNode());
                         // save
                         if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
                         String? imagePath = Path.getCompleteFile(Path.createLocalFile(

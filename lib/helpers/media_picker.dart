@@ -263,7 +263,7 @@ class MediaPicker {
 
     int size = await original.length();
     bool overMaxSize = size >= ChatOutCommon.maxBodySize;
-    logger.i('MediaPicker - _compressFile - compress:START - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    logger.i('MediaPicker - _compressFile - compress:START - compressQuality:$compressQuality - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     bool isImage = ((mime(original.path)?.indexOf('image') ?? -1) >= 0) || (mediaType == MediaType.image);
@@ -328,7 +328,7 @@ class MediaPicker {
     size = await compressFile?.length() ?? ChatOutCommon.maxBodySize;
     overMaxSize = size >= ChatOutCommon.maxBodySize;
     if (overMaxSize) {
-      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       if (compressQuality <= 5) {
         Toast.show(S.of(Global.appContext).picture_too_big);
         return null;
@@ -337,8 +337,8 @@ class MediaPicker {
     }
     bool overShouldSize = size >= ChatOutCommon.shouldBodySize;
     if (overShouldSize) {
-      if (compressQuality > 5) {
-        logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      if (compressQuality > 10) {
+        logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
       } else {
         logger.w('MediaPicker - _compressFile - compress:END - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');

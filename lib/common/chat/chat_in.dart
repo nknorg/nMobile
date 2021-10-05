@@ -37,51 +37,46 @@ class ChatInCommon with Tag {
 
   ChatInCommon();
 
-  Future onClientMessage(MessageSchema? message, {bool needFast = false}) async {
-    if (message == null) return;
+  Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
+    if (message == null) {
+      logger.w("$TAG - onMessageReceive - message is null - received:$message");
+      return;
+    } else if ((message.targetId == null) || message.targetId!.isEmpty) {
+      logger.w("$TAG - onMessageReceive - targetId is empty - received:$message");
+      return;
+    }
 
     // topic msg published callback can be used receipt
-    if (message.isTopic && !message.isOutbound && (message.from == message.to || message.from == clientCommon.address)) {
+    if (message.isTopic && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
       message.contentType = MessageContentType.receipt;
       message.content = message.msgId;
     }
 
-    // message
-    try {
-      onMessageReceive(message.targetId, message, needFast: needFast);
-    } catch (e) {
-      handleError(e);
-    }
-  }
-
-  void onMessageReceive(String? targetId, MessageSchema? received, {bool needFast = false}) {
-    if (targetId == null || targetId.isEmpty) {
-      logger.w("$TAG - onMessageReceive - targetId is empty - received:$received");
-      return;
-    } else if (received == null) {
-      logger.w("$TAG - onMessageReceive - received is empty - targetId:$targetId");
-      return;
-    }
-
     // init
-    if (receiveMessages[targetId] == null) {
-      receiveMessages[targetId] = [];
-      receiveLoops[targetId] = false;
-    } else if (receiveMessages[targetId]!.isEmpty || receiveLoops[targetId] == null) {
-      receiveLoops[targetId] = false;
+    if (receiveMessages[message.targetId] == null) {
+      receiveMessages[message.targetId!] = [];
+      receiveLoops[message.targetId!] = false;
+    } else if (receiveMessages[message.targetId]!.isEmpty || (receiveLoops[message.targetId] == null)) {
+      receiveLoops[message.targetId!] = false;
+    }
+
+    // queue
+    if (needFast) {
+      if ((receiveMessages[message.targetId]?.length ?? 0) > 0) {
+        receiveMessages[message.targetId]?.insert(1, message);
+      } else {
+        receiveMessages[message.targetId]?.insert(0, message);
+      }
+    } else {
+      receiveMessages[message.targetId]?.add(message);
     }
 
     // handle
-    if (needFast) {
-      if ((receiveMessages[targetId]?.length ?? 0) > 0) {
-        receiveMessages[targetId]?.insert(1, received);
-      } else {
-        receiveMessages[targetId]?.insert(0, received);
-      }
-    } else {
-      receiveMessages[targetId]?.add(received);
+    try {
+      _loopReceiveMessage(message.targetId); // await
+    } catch (e) {
+      handleError(e);
     }
-    _loopReceiveMessage(targetId); // await
   }
 
   Future _loopReceiveMessage(String? targetId) async {
@@ -95,7 +90,7 @@ class ChatInCommon with Tag {
     receiveLoops[targetId] = true;
 
     // empty
-    if (receiveMessages[targetId] == null || receiveMessages[targetId]!.isEmpty) {
+    if ((receiveMessages[targetId] == null) || receiveMessages[targetId]!.isEmpty) {
       logger.i("$TAG - loopReceiveMessage - receives is empty - targetId:$targetId");
       receiveLoops[targetId] = false;
       return;
@@ -138,7 +133,7 @@ class ChatInCommon with Tag {
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
     SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
-    if (topic != null && subscriber != null) {
+    if (topic != null) {
       if (topic.joined != true) {
         logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
         return;
@@ -146,6 +141,9 @@ class ChatInCommon with Tag {
         logger.v("$TAG - _messageHandle - accept message - public topic - subscriber:$subscriber - topic:$topic");
       } else if (received.isTopicAction) {
         logger.i("$TAG - _messageHandle - accept message - just action - subscriber:$subscriber - topic:$topic");
+      } else if (subscriber == null) {
+        logger.w("$TAG - _messageHandle - deny message - subscriber is null - subscriber:$subscriber - topic:$topic");
+        return;
       } else if (subscriber.status == SubscriberStatus.Subscribed) {
         logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
@@ -176,10 +174,10 @@ class ChatInCommon with Tag {
         _receivePing(received); // await
         break;
       case MessageContentType.receipt:
-        _receiveReceipt(received); // await
+        await _receiveReceipt(received);
         break;
       case MessageContentType.read:
-        _receiveRead(received); // await
+        await _receiveRead(received);
         break;
       case MessageContentType.msgStatus:
         _receiveMsgStatus(received); // await
@@ -225,14 +223,14 @@ class ChatInCommon with Tag {
     }
 
     // session
-    if (insertOk) {
+    if (insertOk && received.canDisplay) {
       await chatCommon.sessionHandle(received); // must await
     }
 
     // receipt (no judge insertOk, maybe just want reply receipt)
     if (received.canReceipt) {
       if (received.isTopic) {
-        // handle in receive message send by self
+        // handle in receive message which send by self
       } else {
         chatOutCommon.sendReceipt(received); // await
       }
@@ -260,7 +258,7 @@ class ChatInCommon with Tag {
     String content = received.content as String;
     if (content == "ping") {
       logger.i("$TAG - _receivePing - receive pang - received:$received");
-      await chatOutCommon.sendPing(received.from, false);
+      await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
@@ -285,10 +283,10 @@ class ChatInCommon with Tag {
 
     // deviceInfo
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(received.from);
-    bool readEnable = deviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
+    bool readSupport = deviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
 
     // status
-    if (exists.isTopic || (received.receiveAt != null) || !readEnable) {
+    if (exists.isTopic || (received.receiveAt != null) || !readSupport) {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
       if (!exists.isTopic) {
         int reallySendAt = received.sendAt ?? 0;
@@ -321,38 +319,34 @@ class ChatInCommon with Tag {
 
     // messages
     List<MessageSchema> msgList = [];
-    List<Future> futures = [];
-    readIds.forEach((element) {
-      futures.add(_messageStorage.queryByNoContentType(element, MessageContentType.piece).then((value) {
-        if (value == null) {
-          logger.w("$TAG - _receiveRead - message is empty - msgId:$element");
-        } else if (value.status == MessageStatus.Read) {
-          logger.d("$TAG - _receiveRead - message already read - message:$value");
-        } else {
-          logger.i("$TAG - _receiveRead - message none read - message:$value");
-          msgList.add(value);
-        }
-        return;
-      }));
-    });
-    await Future.wait(futures);
+    for (var i = 0; i < readIds.length; i++) {
+      final msgId = readIds[i];
+      MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+      if (message == null) {
+        logger.w("$TAG - _receiveRead - message is empty - msgId:$msgId");
+      } else if (message.status == MessageStatus.Read) {
+        logger.d("$TAG - _receiveRead - message already read - message:$message");
+      } else {
+        logger.i("$TAG - _receiveRead - message none read - message:$message");
+        msgList.add(message);
+      }
+    }
     if (msgList.isEmpty) return true;
 
-    // status
-    futures.clear();
-    msgList.forEach((element) {
-      int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
-      futures.add(chatCommon.updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true));
-    });
-    await Future.wait(futures);
+    // update
+    for (var i = 0; i < msgList.length; i++) {
+      MessageSchema message = msgList[i];
+      int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+      await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt, notify: true);
+    }
 
     // read history
     msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
     chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
 
-    // check msgStatus (duplicated with entry messages screen)
-    // chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
+    // check msgStatus
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
 
     return true;
   }
@@ -372,53 +366,50 @@ class ChatInCommon with Tag {
     if (requestType == "ask") {
       // receive ask
       List<String> msgStatusList = [];
-      List<Future> futures = [];
-      messageIds.forEach((msgId) {
-        if (msgId.isNotEmpty) {
-          futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
-            if (message != null) {
-              msgStatusList.add("$msgId:${message.status}");
-            } else {
-              msgStatusList.add("$msgId:${null}");
-            }
-            return;
-          }));
+      for (var i = 0; i < messageIds.length; i++) {
+        String msgId = messageIds[i];
+        if (msgId.isEmpty) continue;
+        MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+        if (message != null) {
+          msgStatusList.add("$msgId:${message.status}");
+        } else {
+          msgStatusList.add("$msgId:${null}");
         }
-      });
-      await Future.wait(futures);
+      }
       // send reply
-      String? clientAddress = received.isTopic ? received.topic : received.from;
-      await chatOutCommon.sendMsgStatus(clientAddress, false, msgStatusList);
+      await chatOutCommon.sendMsgStatus(received.from, false, msgStatusList);
     } else if (requestType == "reply") {
       // receive reply
-      List<Future> futures = [];
-      messageIds.forEach((value) {
-        if (value.isNotEmpty) {
-          List<String> splits = value.split(":");
-          String msgId = splits[0];
-          int? status = int.tryParse(splits[1]);
-          if (status == null || status == 0) {
-            // resend msg
-            futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
-              return chatOutCommon.resendMute(message);
-            }));
-          } else {
-            // update status
-            futures.add(_messageStorage.queryByNoContentType(msgId, MessageContentType.piece).then((message) {
-              if (message != null) {
-                int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
-                int? receiveAt = ((reallyStatus == MessageStatus.Read) || (message.receiveAt == null)) ? DateTime.now().millisecondsSinceEpoch : null;
-                logger.i("$TAG - _receiveMsgStatus - msg update status - status:$reallyStatus - receiveAt:$receiveAt - received:$received");
-                return chatCommon.updateMessageStatus(message, reallyStatus, receiveAt: receiveAt, notify: true);
-              } else {
-                logger.w("$TAG - _receiveMsgStatus - msg no exists when update status - msgId:$msgId");
-                return null;
-              }
-            }));
-          }
+      for (var i = 0; i < messageIds.length; i++) {
+        String combineId = messageIds[i];
+        if (combineId.isEmpty) {
+          logger.w("$TAG - _receiveMsgStatus - combineId is empty - received:$received");
+          continue;
         }
-      });
-      await Future.wait(futures);
+        List<String> splits = combineId.split(":");
+        String msgId = splits[0];
+        if (msgId.isEmpty) {
+          logger.w("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
+          continue;
+        }
+        MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+        if (message == null) {
+          logger.w("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
+          continue;
+        }
+        int? status = int.tryParse(splits[1]);
+        if ((status == null) || (status == 0)) {
+          // resend msg
+          logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - received:$received");
+          await chatOutCommon.resendMute(message);
+        } else {
+          // update status
+          int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
+          int? receiveAt = ((reallyStatus == MessageStatus.Read) && (message.receiveAt == null)) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+          logger.i("$TAG - _receiveMsgStatus - msg update status - status:$reallyStatus - receiveAt:$receiveAt - received:$received");
+          await chatCommon.updateMessageStatus(message, reallyStatus, receiveAt: receiveAt, notify: true);
+        }
+      }
     } else {
       logger.w("$TAG - _receiveMsgStatus - requestType error - requestType:$requestType - messageIds:$messageIds - received:$received");
       return false;
@@ -698,10 +689,14 @@ class ChatInCommon with Tag {
       base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
     } catch (e) {
       handleError(e);
-      return false;
     }
-    if (base64String == null || base64String.isEmpty) {
-      logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+    if ((base64String == null) || base64String.isEmpty) {
+      if (pieces.length >= (total + parity)) {
+        logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");
+        await _deletePieces(received.msgId); // delete wrong pieces
+      } else {
+        logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+      }
       return false;
     }
     MessageSchema? combine = MessageSchema.fromPiecesReceive(pieces, base64String);
@@ -711,7 +706,7 @@ class ChatInCommon with Tag {
     }
     // combine.content - handle later
     logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
-    onClientMessage(combine, needFast: true); // await
+    onMessageReceive(combine, needFast: true); // await
     return true;
   }
 
@@ -772,8 +767,8 @@ class ChatInCommon with Tag {
     int count = 0;
     List<MessageSchema> pieces = await _messageStorage.queryListByContentType(msgId, MessageContentType.piece);
     logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
-    bool deleted = await _messageStorage.deleteByContentType(msgId, MessageContentType.piece);
-    if (deleted) {
+    int result = await _messageStorage.deleteByContentType(msgId, MessageContentType.piece);
+    if (result > 0) {
       for (var i = 0; i < pieces.length; i++) {
         MessageSchema piece = pieces[i];
         if (piece.content is File) {
