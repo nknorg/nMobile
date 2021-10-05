@@ -35,7 +35,7 @@ class ClientCommon with Tag {
 
   late int status;
 
-  bool get isClientCreated => (client != null) && (client!.address.isNotEmpty == true);
+  bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
 
   int connectedAt = 0;
 
@@ -156,7 +156,7 @@ class ClientCommon with Tag {
         // client receive (looper)
         _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
           logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
-          chatInCommon.onClientMessage(MessageSchema.fromReceive(event));
+          chatInCommon.onMessageReceive(MessageSchema.fromReceive(event));
           if (status != ClientConnectStatus.connected) {
             pingSelfSuccess(force: true); // await
           }
@@ -234,7 +234,7 @@ class ClientCommon with Tag {
     if (client == null) return;
     _statusSink.add(ClientConnectStatus.connecting);
     reSignIn(false, delayMs: 0).then((value) {
-      chatOutCommon.sendPing(address, true);
+      chatOutCommon.sendPing([address ?? ""], true);
     });
     // loop
     Future.delayed(Duration(milliseconds: 1000), () {
