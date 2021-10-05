@@ -26,58 +26,67 @@ class ChatCommon with Tag {
 
   // ignore: close_sinks
   StreamController<String> _onDeleteController = StreamController<String>.broadcast();
-  StreamSink<String> get _onDeleteSink => _onDeleteController.sink;
+  StreamSink<String> get onDeleteSink => _onDeleteController.sink;
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
   MessageStorage _messageStorage = MessageStorage();
 
   ChatCommon();
 
-  Future<OnMessage?> clientSendData(String? dest, String data, {int tryCount = 0, int maxTryCount = 5}) async {
-    if (dest == null || dest.isEmpty) return null;
+  Future<OnMessage?> clientSendData(List<String> destList, String data, {int tryCount = 0, int maxTryCount = 5}) async {
+    destList = destList.where((element) => element.isNotEmpty).toList();
+    if (destList.isEmpty) {
+      logger.w("$TAG - clientSendData - destList is empty - destList:$destList - data:$data");
+      return null;
+    }
     if (tryCount >= maxTryCount) {
-      logger.w("$TAG - clientSendData - try over - dest:$dest - data:$data");
+      logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
     try {
-      OnMessage? onMessage = await clientCommon.client?.sendText([dest], data);
+      OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
-        logger.d("$TAG - clientSendData - send success - dest:$dest - data:$data");
+        logger.d("$TAG - clientSendData - send success - destList:$destList - data:$data");
         return onMessage;
       } else {
+        logger.w("$TAG - clientSendData - onMessage msgId is empty - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        logger.w("$TAG - clientSendData - result is empty - dest:$dest - data:$data");
-        return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-        await Future.delayed(Duration(milliseconds: 100));
-        final client = (await clientCommon.reSignIn(false))[0];
-        if (client != null && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - clientSendData - reSignIn success - dest:$dest data:$data");
-          return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
+        if ((client != null) && (client.address.isNotEmpty == true)) {
+          logger.i("$TAG - clientSendData - reSignIn success - destList:$destList data:$data");
+          await Future.delayed(Duration(seconds: 1));
+          return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
-          final wallet = await walletCommon.getDefault();
-          logger.w("$TAG - clientSendData - reSignIn fail - wallet:$wallet");
+          // maybe always no here
+          logger.w("$TAG - clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
           return null;
         }
       } else if (e.toString().contains("invalid destination")) {
-        logger.w("$TAG - clientSendData - wrong clientAddress - dest:$dest");
+        logger.w("$TAG - clientSendData - wrong clientAddress - destList:$destList");
         return null;
       } else {
         handleError(e);
+        logger.w("$TAG - clientSendData - try by error - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        logger.w("$TAG - clientSendData - try be error - dest:$dest - data:$data");
-        return clientSendData(dest, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     }
   }
 
   Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 5}) async {
-    if (topic == null || topic.isEmpty || clientCommon.client == null) return [];
+    if (topic == null || topic.isEmpty) return [];
     if (tryCount >= maxTryCount) {
       logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
       return [];
+    }
+    if (!clientCommon.isClientCreated) {
+      logger.i("$TAG - clientPublishData - client is null - dest:$topic - data:$data");
+      await Future.delayed(Duration(seconds: 2));
+      return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     try {
       // once
@@ -95,21 +104,21 @@ class ChatCommon with Tag {
       return onMessageList;
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-        await Future.delayed(Duration(milliseconds: 100));
-        final client = (await clientCommon.reSignIn(false))[0];
-        if (client != null && (client.address.isNotEmpty == true)) {
+        final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
+        if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - clientPublishData - reSignIn success - topic:$topic data:$data");
-          return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+          await Future.delayed(Duration(seconds: 1));
+          return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
-          final wallet = await walletCommon.getDefault();
-          logger.w("$TAG - clientPublishData - reSignIn fail - wallet:$wallet");
+          // maybe always no here
+          logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
           return [];
         }
       } else {
         handleError(e);
+        logger.w("$TAG - clientPublishData - try by error - topic:$topic - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        logger.w("$TAG - clientPublishData - try be error - topic:$topic - data:$data");
-        return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+        return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     }
   }
@@ -126,11 +135,11 @@ class ChatCommon with Tag {
       exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
     } else {
       if ((exist.type == ContactType.none) && !message.isTopic) {
-        exist.type = ContactType.stranger;
-        await contactCommon.setType(exist.id, exist.type, notify: true);
+        bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
+        if (success) exist.type = ContactType.stranger;
       }
       // profile
-      if (exist.profileUpdateAt == null || DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs)) {
+      if ((exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
         logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
       } else {
@@ -139,17 +148,17 @@ class ChatCommon with Tag {
       }
     }
     // burning
-    if (exist != null && message.canBurning && message.contentType != MessageContentType.contactOptions) {
+    if ((exist != null) && message.canBurning) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
-      if (burnAfterSeconds != null && burnAfterSeconds > 0 && exist.options?.deleteAfterSeconds != burnAfterSeconds) {
-        if (exist.options?.updateBurnAfterAt == null || (updateBurnAfterAt ?? 0) > exist.options!.updateBurnAfterAt!) {
+      if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (exist.options?.deleteAfterSeconds != burnAfterSeconds)) {
+        if ((exist.options?.updateBurnAfterAt == null) || ((updateBurnAfterAt ?? 0) >= exist.options!.updateBurnAfterAt!)) {
           // side update latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
           exist.options?.updateBurnAfterAt = updateBurnAfterAt;
           contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
-        } else if ((updateBurnAfterAt ?? 0) <= exist.options!.updateBurnAfterAt!) {
+        } else {
           // mine update latest
           deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
             if (deviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
@@ -176,7 +185,7 @@ class ChatCommon with Tag {
       logger.i("$TAG - deviceInfoHandle - new - request - contact:$contact");
       chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     } else {
-      if (latest.updateAt == null || DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs)) {
+      if ((latest.updateAt == null) || (DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs))) {
         logger.i("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
       } else {
@@ -305,8 +314,8 @@ class ChatCommon with Tag {
   MessageSchema burningHandle(MessageSchema message) {
     if (!message.canBurning) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    if (burnAfterSeconds != null && burnAfterSeconds > 0) {
+    int? burnAfterSeconds = (burningOptions.length >= 1) ? burningOptions[0] : null;
+    if ((burnAfterSeconds != null) && (burnAfterSeconds > 0)) {
       // set delete time
       logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
       message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
@@ -329,15 +338,16 @@ class ChatCommon with Tag {
     return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
   }
 
-  Future<bool> deleteByTargetId(String? targetId) {
+  Future<bool> deleteByTargetId(String? targetId) async {
+    await _messageStorage.deleteByTargetIdContentType(targetId, MessageContentType.piece);
     return _messageStorage.updateIsDeleteByTargetId(targetId, true, clearContent: true);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    bool clearContent = message.isOutbound ? (message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) : true;
+    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Received) || (message.status == MessageStatus.Read)) : true;
     bool success = await _messageStorage.updateIsDelete(message.msgId, true, clearContent: clearContent);
-    if (success && notify) _onDeleteSink.add(message.msgId);
+    if (success && notify) onDeleteSink.add(message.msgId);
     // delete file
     if (clearContent && (message.content is File)) {
       (message.content as File).exists().then((value) {
@@ -355,7 +365,7 @@ class ChatCommon with Tag {
   Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
     if (status <= message.status && !force) return message;
     // pieces will set sendReceipt fast, set sendSuccess lowly
-    if (message.status == MessageStatus.Sending && status != MessageStatus.SendSuccess) {
+    if ((message.status == MessageStatus.Sending) && (status != MessageStatus.SendSuccess)) {
       if (!force && (message.content is File) && (tryCount <= 5)) {
         logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
         await Future.delayed(Duration(seconds: 1));
@@ -368,8 +378,8 @@ class ChatCommon with Tag {
     bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (success && notify) _onUpdateSink.add(message);
     // delete later
-    if (message.isDelete && message.content != null) {
-      if (status == MessageStatus.SendReceipt || status == MessageStatus.Read) {
+    if (message.isDelete && (message.content != null)) {
+      if ((status == MessageStatus.SendReceipt) || (status == MessageStatus.Received) || (status == MessageStatus.Read)) {
         messageDelete(message, notify: false); // await
       } else {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
@@ -382,13 +392,12 @@ class ChatCommon with Tag {
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
-    List<Future> futures = [];
     List<MessageSchema> unreadList = await _messageStorage.queryListByTargetIdWithUnRead(targetId);
-    unreadList.forEach((element) {
+    for (var i = 0; i < unreadList.length; i++) {
+      MessageSchema element = unreadList[i];
       msgIds.add(element.msgId);
-      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false));
-    });
-    await Future.wait(futures);
+      await updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false);
+    }
     // send messages
     if ((clientAddress?.isNotEmpty == true) && msgIds.isNotEmpty) {
       await chatOutCommon.sendRead(clientAddress, msgIds);
@@ -401,12 +410,11 @@ class ChatCommon with Tag {
     List<MessageSchema> noReads = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
     List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
     // read
-    List<Future> futures = [];
-    shouldReads.forEach((element) {
-      int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : null;
-      futures.add(updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true));
-    });
-    await Future.wait(futures);
+    for (var i = 0; i < shouldReads.length; i++) {
+      MessageSchema element = shouldReads[i];
+      int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
+      await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
+    }
     // loop
     if (noReads.length >= limit) return readMessageBySide(targetId, sendAt, offset: offset + limit, limit: limit);
     logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${timeFormat(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
@@ -414,21 +422,27 @@ class ChatCommon with Tag {
   }
 
   Future<int> checkSending({int? delayMs}) async {
-    if (!dbCommon.isOpen()) return 0;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
+    int waitSec = 60; // 1m
     List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
-    List<Future> futures = [];
-    sendingList.forEach((message) {
-      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-      if (DateTime.now().millisecondsSinceEpoch - msgSendAt < (60 * 1000)) {
+
+    for (var i = 0; i < sendingList.length; i++) {
+      MessageSchema message = sendingList[i];
+      int msgSendAt = message.sendAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (waitSec * 1000)) {
         logger.d("$TAG - checkSending - sendAt justNow - targetId:${message.targetId} - message:$message");
       } else {
         logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
-        futures.add(chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true));
+        if (message.canResend) {
+          await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true);
+        } else {
+          int count = await _messageStorage.deleteByContentType(message.msgId, message.contentType);
+          if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
+        }
       }
-    });
-    await Future.wait(futures);
+    }
+
     logger.i("$TAG - checkSending - checkCount:${sendingList.length}");
     return sendingList.length;
   }
@@ -438,27 +452,23 @@ class ChatCommon with Tag {
 
     int max = 100;
     int limit = 20;
-    List<SessionSchema> sessions = [];
+    List<String> targetIds = [];
 
     // sessions
+    int filterDay = 10; // 10 days filter
     for (int offset = 0; true; offset += limit) {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       result.forEach((element) {
         int between = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
-        // 10 days filter
-        if (element.isContact && (between < 10 * 24 * 60 * 60 * 1000)) {
-          sessions.add(element);
+        if (element.isContact && (between < (filterDay * 24 * 60 * 60 * 1000))) {
+          targetIds.add(element.targetId);
         }
       });
-      logger.d("$TAG - sendPang2SessionsContact - offset:$offset - current_len:${result.length} - total_len:${sessions.length}");
-      if ((result.length < limit) || (sessions.length >= max)) break;
+      logger.d("$TAG - sendPang2SessionsContact - offset:$offset - current_len:${result.length} - total_len:${targetIds.length}");
+      if ((result.length < limit) || (targetIds.length >= max)) break;
     }
 
-    List<Future> futures = [];
-    sessions.forEach((session) {
-      logger.d("$TAG - sendPang2SessionsContact - send pang - session:$session");
-      futures.add(chatOutCommon.sendPing(session.targetId, false));
-    });
-    await Future.wait(futures);
+    // send
+    await chatOutCommon.sendPing(targetIds, false);
   }
 }

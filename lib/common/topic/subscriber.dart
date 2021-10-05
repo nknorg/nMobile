@@ -47,8 +47,8 @@ class SubscriberCommon with Tag {
     List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
 
     // delete/update DB data
-    List<Future> futures = [];
-    for (SubscriberSchema dbItem in dbSubscribers) {
+    for (var i = 0; i < dbSubscribers.length; i++) {
+      SubscriberSchema dbItem = dbSubscribers[i];
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((dbItem.status != SubscriberStatus.None) && ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs)) {
@@ -68,12 +68,12 @@ class SubscriberCommon with Tag {
       // different with node in DB
       if (findNode == null) {
         logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
-        futures.add(delete(dbItem.id, notify: true));
+        await delete(dbItem.id, notify: true);
       } else {
         if (findNode.status == SubscriberStatus.Unsubscribed) {
           logger.i("$TAG - refreshSubscribers - DB has,but node is unsubscribe - DB:$dbItem - node:$findNode");
           if (dbItem.status != findNode.status) {
-            futures.add(setStatus(dbItem.id, findNode.status, notify: true));
+            await setStatus(dbItem.id, findNode.status, notify: true);
           }
         } else {
           // status
@@ -82,7 +82,7 @@ class SubscriberCommon with Tag {
               logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
             } else {
               logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findNode");
-              futures.add(setStatus(dbItem.id, findNode.status, notify: true));
+              await setStatus(dbItem.id, findNode.status, notify: true);
             }
           } else {
             logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findNode");
@@ -90,16 +90,15 @@ class SubscriberCommon with Tag {
           // prmPage
           if (dbItem.permPage != findNode.permPage && findNode.permPage != null) {
             logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
-            futures.add(setPermPage(dbItem.id, findNode.permPage, notify: true));
+            await setPermPage(dbItem.id, findNode.permPage, notify: true);
           }
         }
       }
     }
-    await Future.wait(futures);
 
     // insert node data
-    futures.clear();
-    for (SubscriberSchema nodeItem in nodeSubscribers) {
+    for (var i = 0; i < nodeSubscribers.length; i++) {
+      SubscriberSchema nodeItem = nodeSubscribers[i];
       bool findDB = false;
       for (SubscriberSchema dbItem in dbSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
@@ -110,10 +109,9 @@ class SubscriberCommon with Tag {
       // different with DB in node
       if (!findDB) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
-        futures.add(add(nodeItem, notify: true));
+        await add(nodeItem, notify: true);
       }
     }
-    await Future.wait(futures);
   }
 
   // caller = everyone, meta = isPrivate

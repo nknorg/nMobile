@@ -57,7 +57,7 @@ class ChatMessageItem extends StatelessWidget {
     int? nextSendAt = (nextMessage?.isOutbound == true) ? nextMessage?.sendAt : (MessageOptions.getSendAt(nextMessage) ?? nextMessage?.sendAt);
 
     // group
-    int oneGroupSeconds = 60;
+    int oneGroupSeconds = 2 * 60; // 2m
 
     bool isGroupHead = false;
     if (nextMessage == null) {
