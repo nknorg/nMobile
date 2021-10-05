@@ -94,7 +94,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
-      if (msgId == null || percent == null || _message.status != MessageStatus.Sending || !(_message.content is File)) {
+      if (msgId == null || (percent == null) || (_message.status != MessageStatus.Sending) || !(_message.content is File)) {
         // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
         if (_uploadProgress != 1) {
           setState(() {
@@ -179,34 +179,36 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _uploadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
     // burn
-    List<int?> burningOptions = MessageOptions.getContactBurning(_message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    if (_message.deleteAt == null && burnAfterSeconds != null && burnAfterSeconds > 0 && (_message.status != MessageStatus.Sending && _message.status != MessageStatus.SendFail)) {
-      _message = chatCommon.burningHandle(_message);
-    }
-    if (_message.deleteAt != null) {
-      String? senderKey = _message.isOutbound ? _message.from : (_message.to ?? _message.topic);
-      if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (senderKey?.isNotEmpty == true)) {
-        String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${_message.msgId}";
-        taskService.addTask1(taskKey, (String key) {
-          if (senderKey?.isNotEmpty == true && !key.contains(senderKey!)) {
-            // remove others client burning
-            taskService.removeTask1(key);
-            // onRefreshArguments(); // refresh task (will dead loop)
-            return;
-          }
-          if (_message.deleteAt == null || _message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
-            // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
-          } else {
-            logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
-            chatCommon.messageDelete(_message, notify: true); // await
-            taskService.removeTask1(key);
-          }
-          setState(() {}); // async need
-        });
-      } else {
-        logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
-        chatCommon.messageDelete(_message, notify: true); // await
+    if (_message.canBurning) {
+      List<int?> burningOptions = MessageOptions.getContactBurning(_message);
+      int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+      if ((_message.deleteAt == null) && (burnAfterSeconds != null) && (burnAfterSeconds > 0) && (_message.status != MessageStatus.Sending && _message.status != MessageStatus.SendFail)) {
+        _message = chatCommon.burningHandle(_message);
+      }
+      if (_message.deleteAt != null) {
+        String? senderKey = _message.isOutbound ? _message.from : (_message.to ?? _message.topic);
+        if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (senderKey?.isNotEmpty == true)) {
+          String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${_message.msgId}";
+          taskService.addTask1(taskKey, (String key) {
+            if (senderKey?.isNotEmpty == true && !key.contains(senderKey!)) {
+              // remove others client burning
+              taskService.removeTask1(key);
+              // onRefreshArguments(); // refresh task (will dead loop)
+              return;
+            }
+            if (_message.deleteAt == null || _message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
+              // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+            } else {
+              logger.i("$TAG - delete(tick) - key:$key - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
+              chatCommon.messageDelete(_message, notify: true); // await
+              taskService.removeTask1(key);
+            }
+            setState(() {}); // async need
+          });
+        } else {
+          logger.i("$TAG - delete(now) - msgId:${_message.msgId} - deleteAt:${_message.deleteAt} - now:${DateTime.now()}");
+          chatCommon.messageDelete(_message, notify: true); // await
+        }
       }
     }
   }
@@ -480,7 +482,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
 
     bool showTime = _showTimeAndStatus;
-    bool showBurn = _message.deleteAt != null && _message.deleteAt != 0;
+    bool showBurn = _message.canBurning && (_message.deleteAt != null) && (_message.deleteAt != 0);
     bool showStatus = _showTimeAndStatus && _message.isOutbound;
 
     return (showTime || showBurn || showStatus)
@@ -517,10 +519,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
     bool isSendRead = _message.status == MessageStatus.Read;
 
-    bool canProgress = (_message.content is File) && !_message.isTopic;
-
-    bool showSending = isSending && !canProgress;
-    bool showProgress = isSending && canProgress && _uploadProgress < 1;
+    bool showProgress = isSending && (_message.content is File) && (_uploadProgress < 1) && (_uploadProgress > 0);
+    bool showSending = isSending && !showProgress;
 
     if (showSending) {
       return SpinKitRing(
@@ -585,7 +585,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double borderSize = iconSize / 10;
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int deleteAfterMs = (MessageOptions.getContactBurning(_message)[0] ?? 1) * 1000;
+    final burningOptions = MessageOptions.getContactBurning(_message);
+    int deleteAfterMs = (burningOptions.length >= 1 ? (burningOptions[0] ?? 1) : 1) * 1000;
+
     int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
 

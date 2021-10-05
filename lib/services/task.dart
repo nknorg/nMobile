@@ -12,7 +12,7 @@ class TaskService with Tag {
   static const KEY_RPC_REFRESH = "rpc_refresh";
   static const KEY_NONCE_REFRESH = "nonce_refresh";
   static const KEY_TOPIC_CHECK = "topic_check";
-  static const KEY_MSG_BURNING = "message_burning";
+  static const KEY_MSG_BURNING = "message_burning"; // FUTURE:burning
 
   Timer? _timer1;
   Map<String, Function(String)> tasks1 = Map<String, Function(String)>();
@@ -71,7 +71,7 @@ class TaskService with Tag {
 
     // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
-    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(delayMs: 2000), callNow: true);
+    addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSending(), callNow: false);
     addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false), callNow: false);
   }
 

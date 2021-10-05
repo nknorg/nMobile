@@ -94,6 +94,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
+        // check sending
+        chatCommon.checkSending(delayMs: 2000); // await
         // send pangs (3h)
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
           chatCommon.sendPang2SessionsContact(delayMs: 1000); // await

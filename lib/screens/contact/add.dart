@@ -246,9 +246,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                           hintText: _localizations.input_name,
                           validator: Validator.of(context).contactName(),
                           textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_clientAddressFocusNode);
-                          },
+                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_clientAddressFocusNode),
                         ),
                         SizedBox(height: 14),
                         Label(
@@ -262,9 +260,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                           hintText: _localizations.input_d_chat_address,
                           validator: Validator.of(context).pubKeyNKN(),
                           textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_walletAddressFocusNode);
-                          },
+                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_walletAddressFocusNode),
                           // multi: true,
                           maxLines: 10,
                         ),
@@ -288,9 +284,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                           hintText: _localizations.input_wallet_address,
                           validator: Validator.of(context).addressNKNOrEmpty(),
                           textInputAction: TextInputAction.next,
-                          onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_notesFocusNode);
-                          },
+                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_notesFocusNode),
                         ),
                         Row(
                           children: <Widget>[
@@ -311,9 +305,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                           focusNode: _notesFocusNode,
                           hintText: _localizations.input_notes,
                           textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(null);
-                          },
+                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                         ),
                       ],
                     ),

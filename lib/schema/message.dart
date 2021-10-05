@@ -99,7 +99,7 @@ class MessageSchema {
     return topic?.isNotEmpty == true;
   }
 
-  // Burning
+  // burning
   bool get canBurning {
     bool isText = contentType == MessageContentType.text || contentType == MessageContentType.textExtension;
     bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
@@ -107,18 +107,23 @@ class MessageSchema {
     return isText || isImage || isAudio;
   }
 
-  // == Burning
-  bool get canReceipt {
-    bool isEvent = contentType == MessageContentType.topicInvitation;
-    return canBurning || isEvent;
+  // ++ resend
+  bool get canResend {
+    return canBurning;
   }
 
-  // ++ UnReadCount / Notification
+  // ++ receipt
+  bool get canReceipt {
+    bool isEvent = contentType == MessageContentType.topicInvitation;
+    return canResend || isEvent;
+  }
+
+  // ++ unReadCount / notification
   bool get canNotification {
     return canReceipt;
   }
 
-  // ++ Session
+  // ++ session
   bool get canDisplay {
     bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
     return canNotification || isEvent;

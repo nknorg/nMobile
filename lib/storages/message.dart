@@ -43,6 +43,7 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
     await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_type` ON `$tableName` (`target_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_status_target_id` ON `$tableName` (`status`, `target_id`)');
     await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id` ON `$tableName` (`status`, `is_delete`, `target_id`)');
     await db.execute('CREATE INDEX `index_messages_target_id_is_delete_type_send_at` ON `$tableName` (`target_id`, `is_delete`, `type`, `send_at`)');
@@ -103,43 +104,43 @@ class MessageStorage with Tag {
   //   return false;
   // }
 
-  Future<bool> deleteByContentType(String? msgId, String? contentType) async {
-    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return false;
+  Future<int> deleteByContentType(String? msgId, String? contentType) async {
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     try {
-      int? result = await db?.delete(
+      int? count = await db?.delete(
         tableName,
         where: 'msg_id = ? AND type = ?',
         whereArgs: [msgId, contentType],
       );
-      if (result != null && result > 0) {
+      if (count != null && count > 0) {
         logger.v("$TAG - deleteByContentType - success - msgId:$msgId - contentType:$contentType");
-        return true;
+        return count;
       }
       logger.w("$TAG - deleteByContentType - empty - msgId:$msgId - contentType:$contentType");
     } catch (e) {
       handleError(e);
     }
-    return false;
+    return 0;
   }
 
-  // Future<int> deleteByTargetId(String? targetId) async {
-  //   if (targetId == null || targetId.isEmpty) return 0;
-  //   try {
-  //     int? count = await db?.delete(
-  //       tableName,
-  //       where: 'target_id = ?',
-  //       whereArgs: [targetId],
-  //     );
-  //     if (count != null && count > 0) {
-  //       logger.v("$TAG - deleteByTargetId - success - targetId:$targetId");
-  //       return count;
-  //     }
-  //     logger.w("$TAG - deleteByTargetId - fail - targetId:$targetId");
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return 0;
-  // }
+  Future<int> deleteByTargetIdContentType(String? targetId, String? contentType) async {
+    if (targetId == null || targetId.isEmpty || contentType == null || contentType.isEmpty) return 0;
+    try {
+      int? count = await db?.delete(
+        tableName,
+        where: 'target_id = ? AND type = ?',
+        whereArgs: [targetId, contentType],
+      );
+      if (count != null && count > 0) {
+        logger.v("$TAG - deleteByTargetIdContentType - success - targetId:$targetId - contentType:$contentType");
+        return count;
+      }
+      logger.w("$TAG - deleteByTargetIdContentType - empty - targetId:$targetId - contentType:$contentType");
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+  }
 
   // Future<int> deleteList(List<MessageSchema>? list) async {
   //   if (list == null || list.isEmpty) return 0;
