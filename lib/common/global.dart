@@ -110,18 +110,24 @@ class Global {
     if (walletAddress?.isNotEmpty == true) {
       if (nonceMap[walletAddress] != null && nonceMap[walletAddress] != 0) {
         nonce = nonceMap[walletAddress]! + 1;
-        logger.d("Global - getNonce - cached - nonce:$nonce");
+        logger.d("Global - getNonce - cached by walletAddress - nonce:$nonce");
+      }
+    } else if (clientCommon.address?.isNotEmpty == true) {
+      if (nonceMap[clientCommon.address] != null && nonceMap[clientCommon.address] != 0) {
+        nonce = nonceMap[clientCommon.address]! + 1;
+        logger.d("Global - getNonce - cached by clientAddress - nonce:$nonce");
       }
     }
 
-    // rpc
+    // get / set
     if (forceFetch || nonce == null || nonce <= 0) {
       nonce = await refreshNonce(walletAddress: walletAddress, useNow: true);
-    }
-
-    // set
-    if ((walletAddress?.isNotEmpty == true) && (nonce != null && nonce != 0)) {
-      nonceMap[walletAddress!] = nonce;
+    } else {
+      if (walletAddress?.isNotEmpty == true) {
+        nonceMap[walletAddress!] = nonce;
+      } else if (clientCommon.address?.isNotEmpty == true) {
+        nonceMap[clientCommon.address!] = nonce;
+      }
     }
 
     logger.d("Global - getNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
@@ -147,22 +153,26 @@ class Global {
     int? nonce;
 
     // rpc
-    if (walletAddress?.isNotEmpty == true) {
-      List<String> seedRpcList = await Global.getSeedRpcList(null);
-      nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
-    } else {
-      try {
+    try {
+      if (walletAddress?.isNotEmpty == true) {
+        List<String> seedRpcList = await Global.getSeedRpcList(null);
+        nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
+      } else {
         nonce = await clientCommon.client?.getNonce(txPool: true);
-      } catch (e) {
-        handleError(e);
       }
+    } catch (e) {
+      handleError(e);
     }
 
     if (!useNow && nonce != null) --nonce;
 
     // set
-    if ((walletAddress?.isNotEmpty == true) && (nonce != null && nonce != 0)) {
-      nonceMap[walletAddress!] = nonce;
+    if (nonce != null && nonce != 0) {
+      if (walletAddress?.isNotEmpty == true) {
+        nonceMap[walletAddress!] = nonce;
+      } else if (clientCommon.address?.isNotEmpty == true) {
+        nonceMap[clientCommon.address!] = nonce;
+      }
     }
 
     logger.d("Global - refreshNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
