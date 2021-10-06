@@ -24,7 +24,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     private var clientEventWorkItem: DispatchWorkItem?
 
     let numSubClients = 3
-    var clientMap: [String:NknMultiClient] = [String:NknMultiClient]()
+    var client: NknMultiClient?
 
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
@@ -53,103 +53,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     private func resultError(_ error: Error?, code: String? = "") -> FlutterError {
         return FlutterError(code: code ?? "", message: error?.localizedDescription, details: "")
-    }
-
-    private func createClient(account: NknAccount, identifier: String = "", config: NknClientConfig) -> NknMultiClient? {
-        let pubKey: String = account.pubKey()!.hexEncode
-        let id = identifier.isEmpty ? pubKey : "\(identifier).\(pubKey)"
-
-        if (clientMap.keys.contains(id)) {
-            closeClient(id: id)
-        }
-        let client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config)
-        if (client == nil) {
-            return nil
-        }
-        clientMap[client!.address()] = client
-        return client!
-    }
-
-    private func reconnectClient(id: String) {
-        if (!clientMap.keys.contains(id)) {
-            return
-        }
-        clientMap[id]?.reconnect()
-    }
-
-    private func closeClient(id: String) {
-        if (!clientMap.keys.contains(id)) {
-            return
-        }
-        do {
-            try clientMap[id]?.close()
-        } catch let error {
-            self.eventSinkError(eventSink: eventSink!, error: error, code: id)
-        }
-        clientMap.removeValue(forKey: id)
-    }
-
-    private func addClientConnectQueue(client: NknMultiClient) {
-        clientConnectWorkItem = DispatchWorkItem {
-            self.onConnect(client: client)
-        }
-        clientConnectQueue.async(execute: clientConnectWorkItem!)
-    }
-
-    private func onConnect(client: NknMultiClient) {
-        guard let node = client.onConnect?.next() else {
-            return
-        }
-
-        var resp: [String: Any] = [String: Any]()
-        resp["_id"] = client.address()
-        resp["event"] = "onConnect"
-        resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
-        resp["client"] = ["address": client.address()]
-        var rpcServers = [String]()
-        for i in 0...numSubClients {
-            let c = client.getClient(i)
-            let rpcNode = c?.getNode()
-            var rpcAddr = rpcNode?.rpcAddr ?? ""
-            if (rpcAddr.count > 0) {
-                rpcAddr = "http://" + rpcAddr
-                if(!rpcServers.contains(rpcAddr)) {
-                    rpcServers.append(rpcAddr)
-                }
-            }
-        }
-        resp["rpcServers"] = rpcServers
-        NSLog("%@", resp)
-        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
-    }
-
-    private func addMessageReceiveQueue(client: NknMultiClient) {
-        clientReceiveWorkItem = DispatchWorkItem {
-            self.onMessage(client: client)
-        }
-        clientReceiveQueue.async(execute: clientReceiveWorkItem!)
-    }
-
-    private func onMessage(client: NknMultiClient) {
-        guard let msg = client.onMessage?.next() else {
-            return
-        }
-
-        var resp: [String: Any] = [String: Any]()
-        resp["_id"] = client.address()
-        resp["event"] = "onMessage"
-        resp["data"] = [
-            "src": msg.src,
-            "data": String(data: msg.data!, encoding: String.Encoding.utf8)!,
-            "type": msg.type,
-            "encrypted": msg.encrypted,
-            "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
-        ]
-        NSLog("%@", resp)
-        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
-
-        // loop
-        self.addMessageReceiveQueue(client: client)
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -205,22 +108,21 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
 
-        // var client :NknMultiClient?;
-
         clientWorkItem = DispatchWorkItem {
-            guard let client = self.createClient(account: account, identifier: identifier, config: config) else {
+            self.client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: self.numSubClients, originalClient: true, config: config)
+            if (self.client == nil) {
                 self.resultError(result: result, code: "", message: "connect fail")
                 return
             }
 
             var resp:[String:Any] = [String:Any]()
-            resp["address"] = client.address()
-            resp["publicKey"] = client.pubKey()
-            resp["seed"] = client.seed()
+            resp["address"] = self.client?.address()
+            resp["publicKey"] = self.client?.pubKey()
+            resp["seed"] = self.client?.seed()
             self.resultSuccess(result: result, resp: resp)
 
-            self.onConnect(client: client)
-            self.onMessage(client: client)
+            self.onConnect(client: self.client)
+            self.onMessage(client: self.client)
         }
         clientQueue.async(execute: clientWorkItem!)
 
@@ -229,12 +131,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
 
     private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let _id = args["_id"] as! String
-
         clientWorkItem = DispatchWorkItem {
-            self.reconnectClient(id: _id)
-
+            self.client?.reconnect()
             self.resultSuccess(result: result, resp: nil)
         }
         clientQueue.async(execute: clientWorkItem!)
@@ -245,11 +143,78 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let _id = args["_id"] as! String
 
         clientWorkItem = DispatchWorkItem {
-            self.closeClient(id: _id)
-
-            self.resultSuccess(result: result, resp: nil)
+            do {
+                try self.client?.close()
+                self.client = nil
+                self.resultSuccess(result: result, resp: nil)
+            } catch let error {
+                self.eventSinkError(eventSink: self.eventSink!, error: error, code: _id)
+            }
         }
         clientQueue.async(execute: clientWorkItem!)
+    }
+
+    private func addClientConnectQueue(client: NknMultiClient?) {
+        clientConnectWorkItem = DispatchWorkItem {
+            self.onConnect(client: client)
+        }
+        clientConnectQueue.async(execute: clientConnectWorkItem!)
+    }
+
+    private func onConnect(client: NknMultiClient?) {
+        guard let node = client?.onConnect?.next() else {
+            return
+        }
+
+        var resp: [String: Any] = [String: Any]()
+        resp["_id"] = client?.address()
+        resp["event"] = "onConnect"
+        resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
+        resp["client"] = ["address": client?.address()]
+        var rpcServers = [String]()
+        for i in 0...numSubClients {
+            let c = client?.getClient(i)
+            let rpcNode = c?.getNode()
+            var rpcAddr = rpcNode?.rpcAddr ?? ""
+            if (rpcAddr.count > 0) {
+                rpcAddr = "http://" + rpcAddr
+                if(!rpcServers.contains(rpcAddr)) {
+                    rpcServers.append(rpcAddr)
+                }
+            }
+        }
+        resp["rpcServers"] = rpcServers
+        NSLog("%@", resp)
+        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
+    }
+
+    private func addMessageReceiveQueue(client: NknMultiClient?) {
+        clientReceiveWorkItem = DispatchWorkItem {
+            self.onMessage(client: client)
+        }
+        clientReceiveQueue.async(execute: clientReceiveWorkItem!)
+    }
+
+    private func onMessage(client: NknMultiClient?) {
+        guard let msg = client?.onMessage?.next() else {
+            return
+        }
+
+        var resp: [String: Any] = [String: Any]()
+        resp["_id"] = client?.address()
+        resp["event"] = "onMessage"
+        resp["data"] = [
+            "src": msg.src,
+            "data": String(data: msg.data!, encoding: String.Encoding.utf8)!,
+            "type": msg.type,
+            "encrypted": msg.encrypted,
+            "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
+        ]
+        NSLog("%@", resp)
+        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
+
+        // loop
+        self.addMessageReceiveQueue(client: client)
     }
 
     private func sendText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -261,11 +226,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let noReply = args["noReply"] as? Bool ?? true
         let timeout = args["timeout"] as? Int32 ?? 10000
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
         let nknDests = NknStringArray(from: nil)!
@@ -283,8 +245,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.noReply = noReply
 
                 if (!noReply) {
-                    let onMessage: NknOnMessage = try client.sendText(nknDests, data: data, config: config)
-                    guard let msg = onMessage.next(withTimeout: timeout) else {
+                    let onMessage: NknOnMessage? = try self.client?.sendText(nknDests, data: data, config: config)
+                    guard let msg = onMessage?.next(withTimeout: timeout) else {
                         self.resultSuccess(result: result, resp: nil)
                         return
                     }
@@ -298,7 +260,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     self.resultSuccess(result: result, resp: resp)
                     return
                 } else {
-                    try client.sendText(nknDests, data: data, config: config)
+                    try self.client?.sendText(nknDests, data: data, config: config)
 
                     var resp: [String: Any] = [String: Any]()
                     resp["messageId"] = config.messageID
@@ -322,11 +284,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let offset = args["offset"] as? Int32 ?? 0
         let limit = args["limit"] as? Int32 ?? 1000
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
@@ -339,7 +298,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.offset = offset
                 config.limit = limit
 
-                try client.publishText(topic, data: data, config: config)
+                try self.client?.publishText(topic, data: data, config: config)
 
                 var resp: [String: Any] = [String: Any]()
                 resp["messageId"] = config.messageID
@@ -362,11 +321,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let fee = args["fee"] as? String ?? "0"
         let nonce = args["nonce"] as? Int
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
@@ -378,12 +334,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.nonce = Int64(nonce!)
             }
 
-            let hash = client.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: config, error: &error)
+            let hash = self.client?.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: config, error: &error)
             if(error != nil) {
                 self.resultError(result: result, error: error, code: _id)
                 return
             }
-
             self.resultSuccess(result: result, resp: hash)
             return
         }
@@ -398,11 +353,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let fee = args["fee"] as? String ?? "0"
         let nonce = args["nonce"] as? Int
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
@@ -414,12 +366,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.nonce = Int64(nonce!)
             }
 
-            let hash = client.unsubscribe(identifier, topic: topic, config: config, error: &error)
+            let hash = self.client?.unsubscribe(identifier, topic: topic, config: config, error: &error)
             if(error != nil) {
                 self.resultError(result: result, error: error, code: _id)
                 return
             }
-
             self.resultSuccess(result: result, resp: hash)
             return
         }
@@ -436,20 +387,16 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let txPool = args["txPool"] as? Bool ?? true
         let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
         clientEventWorkItem = DispatchWorkItem {
             do {
-                let res: NknSubscribers? = try client.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
+                let res: NknSubscribers? = try self.client?.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
                 let mapPro = MapProtocol()
                 res?.subscribers?.range(mapPro)
-
                 self.resultSuccess(result: result, resp: mapPro.result)
                 return
             } catch let error {
@@ -466,19 +413,15 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let topic = args["topic"] as! String
         let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var count: Int = 0
-                try client.getSubscribersCount(topic, subscriberHashPrefix: subscriberHashPrefix?.data, ret0_: &count)
-
+                try self.client?.getSubscribersCount(topic, subscriberHashPrefix: subscriberHashPrefix?.data, ret0_: &count)
                 self.resultSuccess(result: result, resp: count)
                 return
             } catch let error {
@@ -495,21 +438,18 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let topic = args["topic"] as! String
         let subscriber = args["subscriber"] as! String
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
         clientEventWorkItem = DispatchWorkItem {
             do {
-                let res: NknSubscription = try client.getSubscription(topic, subscriber: subscriber)
+                let res: NknSubscription? = try self.client?.getSubscription(topic, subscriber: subscriber)
 
                 var resp: [String: Any] = [String: Any]()
-                resp["meta"] = res.meta
-                resp["expiresAt"] = res.expiresAt
+                resp["meta"] = res?.meta
+                resp["expiresAt"] = res?.expiresAt
                 self.resultSuccess(result: result, resp: resp)
                 return
             } catch let error {
@@ -524,19 +464,15 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let _id = args["_id"] as! String
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var height: Int32 = 0
-                try client.getHeight(&height)
-
+                try self.client?.getHeight(&height)
                 self.resultSuccess(result: result, resp: height)
                 return
             } catch let error {
@@ -553,19 +489,15 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let address = args["address"] as! String
         let txPool = args["txPool"] as? Bool ?? true
 
-        guard (clientMap.keys.contains(_id)) else {
+        if (self.client == nil) {
             result(FlutterError(code: "", message: "client is null", details: ""))
-            return
-        }
-        guard let client = clientMap[_id] else{
             return
         }
 
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var nonce: Int64 = 0
-                try client.getNonceByAddress(address, txPool: txPool, ret0_: &nonce)
-
+                try self.client?.getNonceByAddress(address, txPool: txPool, ret0_: &nonce)
                 self.resultSuccess(result: result, resp: nonce)
                 return
             } catch let error {
