@@ -613,7 +613,7 @@ class ChatOutCommon with Tag {
       targetIds.addAll(targetIdsByPiece);
       targetIdsByPiece.clear();
     }
-    OnMessage? onMessage = await chatCommon.clientSendData(targetIds, msgData);
+    OnMessage? onMessage = await chatCommon.clientSendData(targetIds, msgData); // long time to wait when targetIds too much
     // result
     Uint8List? pid;
     if (targetIds.contains(clientCommon.address)) {
@@ -660,7 +660,7 @@ class ChatOutCommon with Tag {
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty) return null;
 
-    logger.i("$TAG - _sendByPiecesIfNeed:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _sendByPieces:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
 
     List<MessageSchema> resultList = [];
     for (var index = 0; index < dataList.length; index++) {
@@ -684,19 +684,19 @@ class ChatOutCommon with Tag {
       );
       MessageSchema? result = await sendPiece(clientAddressList, piece);
       if ((result == null) || (result.pid == null)) {
-        logger.w("$TAG - _sendByPiecesIfNeed:ERROR - piece:$piece");
+        logger.w("$TAG - _sendByPieces:ERROR - piece:$piece");
       } else {
         resultList.add(result);
       }
       await Future.delayed(Duration(milliseconds: 25));
     }
-    resultList.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
-    List<MessageSchema?> finds = resultList.where((element) => element.pid != null).toList();
+    List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
+    finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     if (finds.length >= total) {
-      logger.i("$TAG - _sendByPiecesIfNeed:SUCCESS - count:${resultList.length} - total:$total - message:$message");
-      if (finds.isNotEmpty) return finds[0]?.pid;
+      logger.i("$TAG - _sendByPieces:SUCCESS - count:${resultList.length} - total:$total - message:$message");
+      if (finds.isNotEmpty) return finds[0].pid;
     } else {
-      logger.w("$TAG - _sendByPiecesIfNeed:FAIL - count:${resultList.length} - total:$total - message:$message");
+      logger.w("$TAG - _sendByPieces:FAIL - count:${resultList.length} - total:$total - message:$message");
     }
     return null;
   }
