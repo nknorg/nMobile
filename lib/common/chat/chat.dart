@@ -424,7 +424,7 @@ class ChatCommon with Tag {
   Future<int> checkSending({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
-    int waitSec = 60; // 1m
+    int waitSec = 3 * 60; // 1m
     List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
 
     for (var i = 0; i < sendingList.length; i++) {
