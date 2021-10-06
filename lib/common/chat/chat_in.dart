@@ -525,7 +525,7 @@ class ChatInCommon with Tag {
   Future<bool> _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
-      logger.w("$TAG - _receiveDeviceRequest - contact - empty - data:${received.content}");
+      logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
       return false;
     }
     chatOutCommon.sendDeviceInfo(exist.clientAddress); // await
