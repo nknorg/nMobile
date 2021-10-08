@@ -131,9 +131,16 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
 
     private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as! String
+
         clientWorkItem = DispatchWorkItem {
-            self.client?.reconnect()
-            self.resultSuccess(result: result, resp: nil)
+            if (self.client != nil) {
+                self.client?.reconnect()
+                self.resultSuccess(result: result, resp: nil)
+            } else {
+                self.resultError(result: result, code: _id, message: "reconnect fail")
+            }
         }
         clientQueue.async(execute: clientWorkItem!)
     }
@@ -148,7 +155,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.client = nil
                 self.resultSuccess(result: result, resp: nil)
             } catch let error {
-                self.eventSinkError(eventSink: self.eventSink!, error: error, code: _id)
+                self.resultError(result: result, error: error, code: _id)
             }
         }
         clientQueue.async(execute: clientWorkItem!)

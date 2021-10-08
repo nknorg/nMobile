@@ -193,6 +193,9 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
+        // else {
+        //     config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+        // }
         // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
@@ -234,6 +237,9 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
+        // else {
+        //     config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
+        // }
         // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
