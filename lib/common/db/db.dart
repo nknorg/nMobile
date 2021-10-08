@@ -5,9 +5,6 @@ import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
-import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -107,26 +104,26 @@ class DB {
     return db;
   }
 
-  Future<bool> openByDefault() async {
-    if (await needUpgrade()) return false;
-    // wallet
-    WalletSchema? wallet = await walletCommon.getDefault();
-    if (wallet == null || wallet.address.isEmpty) {
-      logger.i("DB - openByDefault - wallet default is empty");
-      return false;
-    }
-    String publicKey = wallet.publicKey;
-    String? seed = await walletCommon.getSeed(wallet.address);
-    if (publicKey.isEmpty || seed == null || seed.isEmpty) {
-      logger.w("DB - openByDefault - publicKey/seed error");
-      return false;
-    }
-    await open(publicKey, seed);
-
-    ContactSchema? me = await contactCommon.getMe(clientAddress: publicKey, canAdd: true);
-    contactCommon.meUpdateSink.add(me);
-    return true;
-  }
+  // Future<bool> openByDefault() async {
+  //   if (await needUpgrade()) return false;
+  //   // wallet
+  //   WalletSchema? wallet = await walletCommon.getDefault();
+  //   if (wallet == null || wallet.address.isEmpty) {
+  //     logger.i("DB - openByDefault - wallet default is empty");
+  //     return false;
+  //   }
+  //   String publicKey = wallet.publicKey;
+  //   String? seed = await walletCommon.getSeed(wallet.address);
+  //   if (publicKey.isEmpty || seed == null || seed.isEmpty) {
+  //     logger.w("DB - openByDefault - publicKey/seed error");
+  //     return false;
+  //   }
+  //   await open(publicKey, seed);
+  //
+  //   ContactSchema? me = await contactCommon.getMe(clientAddress: publicKey, canAdd: true);
+  //   contactCommon.meUpdateSink.add(me);
+  //   return true;
+  // }
 
   Future open(String publicKey, String seed) async {
     //if (database != null) return; // bug!
