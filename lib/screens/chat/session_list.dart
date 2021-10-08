@@ -87,7 +87,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       if (finds.isEmpty) {
         _sessionList.insert(0, event);
       } else {
-        _sessionList = _sessionList.map((SessionSchema e) => e.targetId != event.targetId ? e : event).toList();
+        _sessionList = _sessionList.map((SessionSchema e) => (e.targetId != event.targetId) ? e : event).toList();
       }
       _sortMessages();
     });
@@ -168,10 +168,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
       // update
       if (newLastMsg == null) {
-        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, null, session.unReadCount, sendAt: oldLastMsg.sendAt, notify: true);
+        final sendAt = MessageOptions.getSendAt(oldLastMsg) ?? oldLastMsg.sendAt;
+        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, null, session.unReadCount, sendAt: sendAt, notify: true);
       } else {
         newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
-        session.lastMessageAt = newLastMsg.sendAt;
+        session.lastMessageAt = MessageOptions.getSendAt(newLastMsg) ?? newLastMsg.sendAt;
         session.lastMessageOptions = newLastMsg.toMap();
         int unreadCount = oldLastMsg.canNotification ? (session.unReadCount - 1) : session.unReadCount;
         session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
