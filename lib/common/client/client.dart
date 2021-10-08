@@ -38,6 +38,7 @@ class ClientCommon with Tag {
   bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
 
   int connectedAt = 0;
+  bool connectChecking = false;
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -68,7 +69,7 @@ class ClientCommon with Tag {
     });
     onErrorStream.listen((dynamic event) {
       handleError(event);
-      connectCheck();
+      connectCheck(reconnect: true);
     });
   }
 
@@ -79,64 +80,87 @@ class ClientCommon with Tag {
   Future<List> signIn(
     WalletSchema? wallet, {
     bool fetchRemote = true,
-    Function(bool, int)? dialogVisible,
+    Function(bool, int)? loadingVisible,
     String? password,
     int tryCount = 1,
   }) async {
-    if (wallet == null || wallet.address.isEmpty) return [null, false];
     // if (client != null) await close(); // async boom!!!
-    try {
-      // password
-      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
-      if (password == null || password.isEmpty) return [null, true];
-      dialogVisible?.call(true, tryCount);
+    if (wallet == null || wallet.address.isEmpty) return [null, false];
 
-      // pubKey/seed
+    // pubKey/seed
+    String? pubKey = wallet.publicKey;
+    String? seed = await walletCommon.getSeed(wallet.address);
+
+    try {
+      // password get
+      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
+      if (password == null || password.isEmpty) {
+        return [null, true];
+      }
+
+      // ui + status
+      loadingVisible?.call(true, tryCount);
+      _statusSink.add(ClientConnectStatus.connecting);
+
+      // password check
+      if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
+        logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+        throw Exception("wrong password");
+      }
+
+      // database by cache
+      if ((pubKey.isNotEmpty == true) && (seed?.isNotEmpty == true)) {
+        if (!(dbCommon.isOpen() == true)) {
+          try {
+            await dbCommon.open(pubKey, seed!);
+          } catch (e) {
+            handleError(e);
+          }
+          // wallet + contact
+          BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
+          ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
+          contactCommon.meUpdateSink.add(me);
+        }
+      }
+
+      // rpc wallet
       List<String>? seedRpcList;
-      String? pubKey;
-      String? seed;
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
         seedRpcList = await Global.getSeedRpcList(wallet.address, measure: true);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
-      } else {
-        if (!(await walletCommon.isPasswordRight(wallet.address, password, seedRpcList: seedRpcList))) {
-          logger.w("$TAG - signIn - password error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          throw Exception("wrong password");
-        }
-        pubKey = wallet.publicKey;
-        seed = await walletCommon.getSeed(wallet.address);
       }
+
+      // check pubKey/seed
       if (pubKey == null || pubKey.isEmpty || seed == null || seed.isEmpty) {
-        dialogVisible?.call(false, tryCount);
+        loadingVisible?.call(false, tryCount);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
+          return signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
         } else {
           logger.e("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+          _statusSink.add(ClientConnectStatus.disconnected);
           return [null, false];
         }
       }
 
-      // database
+      // database by remote
       if (!(dbCommon.isOpen() == true)) {
         await dbCommon.open(pubKey, seed);
-        // wallet
+        // wallet + contact
         BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
-        // contact
         ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
         contactCommon.meUpdateSink.add(me);
       }
 
       // client create
       if (client == null) {
-        _statusSink.add(ClientConnectStatus.connecting);
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
-        dialogVisible?.call(false, tryCount);
+        loadingVisible?.call(false, tryCount);
 
         // client error
         _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
@@ -148,8 +172,8 @@ class ClientCommon with Tag {
         Completer completer = Completer();
         _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
           logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-          SettingsStorage.addSeedRpcServers(event.rpcServers!, prefix: wallet.address);
-          pingSelfSuccess(force: true); // await
+          SettingsStorage.addSeedRpcServers(event.rpcServers ?? [], prefix: wallet.address);
+          connectSuccess(force: true); // await
           if (!completer.isCompleted) completer.complete();
         });
 
@@ -158,24 +182,26 @@ class ClientCommon with Tag {
           logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
           chatInCommon.onMessageReceive(MessageSchema.fromReceive(event));
           if (status != ClientConnectStatus.connected) {
-            pingSelfSuccess(force: true); // await
+            connectSuccess(force: true); // await
           }
         });
       } else {
-        dialogVisible?.call(false, tryCount);
-        client?.reconnect(); // await no onConnect callback
+        loadingVisible?.call(false, tryCount);
+        client?.reconnect(); // await // no onConnect callback
+        // no status update (updated by ping/pang)
       }
       // await completer.future;
       return [client, false];
     } catch (e) {
-      dialogVisible?.call(false, tryCount);
+      loadingVisible?.call(false, tryCount);
       // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return signIn(wallet, fetchRemote: true, dialogVisible: dialogVisible, password: password);
+          return signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
         }
         handleError(e);
+        _statusSink.add(ClientConnectStatus.disconnected);
         return [null, true];
       }
       // toast
@@ -183,11 +209,11 @@ class ClientCommon with Tag {
       // loop login
       await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return signIn(wallet, fetchRemote: fetchRemote, dialogVisible: dialogVisible, password: password, tryCount: ++tryCount);
+      return signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
     }
   }
 
-  Future signOut({bool closeDB = true}) async {
+  Future signOut({bool clearWallet = true, bool closeDB = true}) async {
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
     // client
@@ -200,14 +226,11 @@ class ClientCommon with Tag {
     } catch (e) {
       handleError(e);
       await Future.delayed(Duration(milliseconds: 200));
-      return signOut(closeDB: closeDB);
+      return signOut(closeDB: closeDB, clearWallet: clearWallet);
     }
     client = null;
-    // close DB
-    if (closeDB) {
-      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null)); // should first
-      await dbCommon.close();
-    }
+    if (clearWallet) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
+    if (closeDB) await dbCommon.close();
   }
 
   Future<List> reSignIn(bool needPwd, {int delayMs = 200}) async {
@@ -215,7 +238,7 @@ class ClientCommon with Tag {
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
       AppScreen.go(Global.appContext);
-      await signOut(closeDB: true);
+      await signOut(closeDB: true, clearWallet: true);
       return [null, false];
     }
 
@@ -230,28 +253,45 @@ class ClientCommon with Tag {
     return await signIn(wallet, fetchRemote: false, password: walletPwd);
   }
 
-  Future connectCheck() async {
+  Future connectCheck({bool reconnect = false}) async {
     if (client == null) return;
+    if (connectChecking) return;
+    connectChecking = true;
     _statusSink.add(ClientConnectStatus.connecting);
-    reSignIn(false, delayMs: 0).then((value) {
+
+    // reconnect
+    if (reconnect) {
+      reSignIn(false, delayMs: 0).then((value) {
+        chatOutCommon.sendPing([address ?? ""], true);
+      });
+    } else {
       chatOutCommon.sendPing([address ?? ""], true);
-    });
+    }
+
     // loop
     Future.delayed(Duration(milliseconds: 1000), () {
+      connectChecking = false;
       if (status == ClientConnectStatus.connecting) {
         _connectingVisibleSink.add(true);
-        connectCheck();
+        connectCheck(reconnect: reconnect);
       }
     });
   }
 
-  Future pingSelfSuccess({bool force = false}) async {
+  Future connectSuccess({bool force = false}) async {
     if (client == null) return;
-    if (!force && (status != ClientConnectStatus.connecting)) return;
+    if (!force && (status != ClientConnectStatus.connecting)) {
+      connectChecking = false;
+      _connectingVisibleSink.add(false);
+      return;
+    }
     _statusSink.add(ClientConnectStatus.connected);
     // visible
-    Future.delayed(Duration(milliseconds: 1000), () {
-      _connectingVisibleSink.add(false);
+    Future.delayed(Duration(milliseconds: 500), () {
+      connectChecking = false;
+      if (status == ClientConnectStatus.connected) {
+        _connectingVisibleSink.add(false);
+      }
     });
   }
 }

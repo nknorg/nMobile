@@ -248,7 +248,7 @@ class ChatInCommon with Tag {
     // if (received.isTopic) return; (limit in out)
     if (received.from == received.to || received.from == clientCommon.address) {
       logger.i("$TAG - _receivePing - ping self receive - received:$received");
-      await clientCommon.pingSelfSuccess();
+      await clientCommon.connectSuccess();
       return true;
     }
     if (!(received.content! is String)) {
