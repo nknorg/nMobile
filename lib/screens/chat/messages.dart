@@ -142,6 +142,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       setState(() {
         _topic = event;
       });
+      _refreshTopicSubscribers(fetch: false);
       _refreshTopicJoined();
     });
     // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
@@ -149,8 +150,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // });
 
     // subscriber
-    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (event.topic == _topic?.topic) && (event.clientAddress == clientCommon.address)).listen((event) {
-      _refreshTopicJoined();
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
+      if (event.clientAddress == clientCommon.address) {
+        _refreshTopicJoined();
+      } else {
+        _refreshTopicSubscribers(fetch: false);
+      }
     });
 
     // contact
@@ -259,18 +264,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
   }
 
-  _refreshTopicSubscribers() async {
+  _refreshTopicSubscribers({bool fetch = true}) async {
     if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
-    int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
-    // less 1h
-    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
-      logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
-      return;
+    if (fetch) {
+      int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
+      // less 1h
+      if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
+        logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
+        return;
+      }
+      topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
+      await Future.delayed(Duration(milliseconds: 500));
+      logger.i("$TAG - _refreshTopicSubscribers - start");
+      await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
     }
-    topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
-    await Future.delayed(Duration(milliseconds: 500));
-    logger.i("$TAG - _refreshTopicSubscribers - start");
-    await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
     // refresh count
     int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {
