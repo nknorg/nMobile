@@ -334,7 +334,8 @@ class SubscriberCommon with Tag {
       // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
       count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     } else {
-      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+      // count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+      count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     }
     logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:$isPrivate - count:$count");
     return count;

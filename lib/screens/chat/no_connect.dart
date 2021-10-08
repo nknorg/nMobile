@@ -19,6 +19,10 @@ import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ChatNoConnectLayout extends BaseStateFulWidget {
+  final Function(WalletSchema? wallet)? goConnect;
+
+  ChatNoConnectLayout(this.goConnect);
+
   @override
   _ChatNoConnectLayoutState createState() => _ChatNoConnectLayoutState();
 }
@@ -186,16 +190,9 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                                 child: Button(
                                   width: double.infinity,
                                   text: _localizations.connect,
-                                  onPressed: () async {
+                                  onPressed: () {
                                     if (this._selectWallet?.type != WalletType.nkn) return;
-                                    await clientCommon.signIn(
-                                      this._selectWallet,
-                                      fetchRemote: true,
-                                      dialogVisible: (show, tryCount) {
-                                        if (tryCount > 1) return;
-                                        show ? Loading.show() : Loading.dismiss();
-                                      },
-                                    );
+                                    this.widget.goConnect?.call(this._selectWallet);
                                   },
                                 ),
                               )

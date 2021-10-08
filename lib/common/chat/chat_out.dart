@@ -608,12 +608,18 @@ class ChatOutCommon with Tag {
       }
     }
     // send
-    Uint8List? piecePid = await _sendByPieces(targetIdsByPiece, message);
-    if ((piecePid == null) || piecePid.isEmpty) {
-      targetIds.addAll(targetIdsByPiece);
-      targetIdsByPiece.clear();
+    Uint8List? piecePid;
+    if (targetIdsByPiece.isNotEmpty) {
+      piecePid = await _sendByPieces(targetIdsByPiece, message);
+      if ((piecePid == null) || piecePid.isEmpty) {
+        targetIds.addAll(targetIdsByPiece);
+        targetIdsByPiece.clear();
+      }
     }
-    OnMessage? onMessage = await chatCommon.clientSendData(targetIds, msgData); // long time to wait when targetIds too much
+    OnMessage? onMessage;
+    if (targetIds.isNotEmpty) {
+      onMessage = await chatCommon.clientSendData(targetIds, msgData); // long time to wait when targetIds too much
+    }
     // result
     Uint8List? pid;
     if (targetIds.contains(clientCommon.address)) {

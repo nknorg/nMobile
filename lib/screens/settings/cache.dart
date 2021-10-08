@@ -82,7 +82,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     }
     // clear
     Loading.show();
-    await clientCommon.signOut(closeDB: true);
+    await clientCommon.signOut(closeDB: true, clearWallet: true);
     await Future.delayed(Duration(seconds: 1));
     if (type == FileType.cache) {
       await clearCacheFile(Global.applicationRootDirectory);

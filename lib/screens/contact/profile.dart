@@ -213,12 +213,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     Loading.show();
     try {
       // client signOut
-      await clientCommon.signOut(closeDB: true);
+      await clientCommon.signOut(closeDB: true, clearWallet: true);
       await Future.delayed(Duration(milliseconds: 500)); // wait client close
       Loading.dismiss();
 
       // client signIn
-      var client = (await clientCommon.signIn(selected, fetchRemote: true, dialogVisible: (show, tryCount) {
+      var client = (await clientCommon.signIn(selected, fetchRemote: true, loadingVisible: (show, tryCount) {
         if (tryCount > 1) return;
         show ? Loading.show() : Loading.dismiss();
       }))[0];

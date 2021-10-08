@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
@@ -50,6 +49,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _contactMeUpdateSubscription;
 
   bool isLoginProgress = false;
+  bool showSessionList = false;
 
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
@@ -71,7 +71,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       setState(() {
         dbOpen = event;
         _refreshContactMe();
-        _tryLogin();
+        // _tryLogin();
       });
     });
 
@@ -169,64 +169,74 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
-  Future _tryLogin() async {
-    if (await dbCommon.needUpgrade()) {
-      BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null)); // should first
-      return;
-    }
-
-    if (clientCommon.client != null) {
-      clientCommon.connectCheck();
-      return;
-    }
-
+  Future _tryLogin({WalletSchema? wallet}) async {
     // wallet
-    WalletSchema? wallet = await walletCommon.getDefault();
+    wallet = wallet ?? await walletCommon.getDefault();
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryLogin - wallet default is empty");
       return;
     }
-
-    // client
     if (isLoginProgress) return;
     isLoginProgress = true;
-    List result = await clientCommon.signIn(wallet, fetchRemote: true);
+
+    // client
+    List result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryCount) {
+      if (tryCount > 1) return;
+      _toggleSessionListShow(true);
+    });
     final client = result[0];
     final isPwdError = result[1];
     if (client == null) {
       if (isPwdError) {
         logger.i("$TAG - _tryLogin - signIn - password error, close all");
-        await clientCommon.signOut(closeDB: true);
+        _toggleSessionListShow(false);
+        await clientCommon.signOut(closeDB: true, clearWallet: false);
       } else {
         logger.w("$TAG - _tryLogin - signIn - other error, should be not go here");
-        await clientCommon.signOut(closeDB: false);
+        await clientCommon.signOut(closeDB: false, clearWallet: false);
       }
+    } else {
+      _toggleSessionListShow(true);
     }
+
     isLoginProgress = false;
   }
 
   Future _tryAuth() async {
     if (!clientCommon.isClientCreated) return;
+    _toggleSessionListShow(false);
+    AppScreen.go(this.context);
 
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _authAgain - wallet default is empty");
+      await clientCommon.signOut(closeDB: true, clearWallet: true);
       return;
     }
+
     // password
     String? password = await authorization.getWalletPassword(wallet.address);
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
       Toast.show(S.of(this.context).tip_password_error);
-      await clientCommon.signOut(closeDB: true);
-      AppScreen.go(this.context);
+      await clientCommon.signOut(closeDB: true, clearWallet: false);
       return;
     }
+    _toggleSessionListShow(true);
+
     // connect
-    await clientCommon.connectCheck();
+    await clientCommon.connectCheck(reconnect: true);
+  }
+
+  _toggleSessionListShow(bool show) {
+    if (showSessionList != show) {
+      setState(() {
+        showSessionList = show;
+      });
+    }
   }
 
   _refreshContactMe() async {
@@ -243,12 +253,20 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
-        if (state is WalletLoaded) {
-          if (state.isWalletsEmpty()) {
-            return ChatNoWalletLayout();
-          } else if (state.defaultWallet() == null) {
-            return ChatNoConnectLayout();
-          }
+        // wallet no loaded
+        if (!(state is WalletLoaded)) {
+          return Container(
+            child: SpinKitThreeBounce(
+              color: application.theme.primaryColor,
+              size: Global.screenWidth() / 15,
+            ),
+          );
+        }
+
+        if (state.isWalletsEmpty()) {
+          return ChatNoWalletLayout();
+        } else if (!showSessionList) {
+          return ChatNoConnectLayout((wallet) => _tryLogin(wallet: wallet));
         }
 
         return Layout(
