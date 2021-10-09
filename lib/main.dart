@@ -49,6 +49,7 @@ void main() async {
   // mounted
   application.registerMounted(() async {
     // await dbCommon.openByDefault();
+    chatCommon.init();
     await taskService.init();
     await localNotification.init();
     // await backgroundFetchService.install();

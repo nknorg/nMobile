@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 @deprecated
@@ -23,7 +21,7 @@ class BackgroundFetchService with Tag {
         stopOnTerminate: false,
 
         /// Android only When set true, ensure that this job will not run if the device is in active use.
-        requiresDeviceIdle: true,
+        requiresDeviceIdle: false,
 
         /// Android only: Set true to enable the Headless mechanism,
         /// for handling fetch events after app termination.
@@ -34,7 +32,7 @@ class BackgroundFetchService with Tag {
         forceAlarmManager: true,
 
         /// Android only Set detailed description of the kind of network your job requires.
-        requiredNetworkType: NetworkType.ANY,
+        requiredNetworkType: NetworkType.NONE,
 
         /// Android only Specify that to run this job, the device's battery level must not be low.
         requiresBatteryNotLow: false,
@@ -47,15 +45,14 @@ class BackgroundFetchService with Tag {
         requiresStorageNotLow: false,
       ),
       _onBackgroundFetch,
-      (String taskId) async {
-        logger.w("$TAG - init - timeout - taskId:$taskId");
-        BackgroundFetch.finish(taskId);
-      },
+      _onBackgroundTimeout,
     );
-    logger.i("$TAG - init - enable:${status != BackgroundFetch.STATUS_DENIED} - status:$status");
-    if (Platform.isAndroid) {
-      await BackgroundFetch.registerHeadlessTask(_backgroundFetchHeadlessTask);
+    if (status == BackgroundFetch.STATUS_DENIED) {
+      logger.w("$TAG - init - enable:false - status:$status");
+    } else {
+      logger.i("$TAG - init - enable:true - status:$status");
     }
+    await BackgroundFetch.registerHeadlessTask(_backgroundFetchHeadlessTask);
   }
 
   void _backgroundFetchHeadlessTask(HeadlessTask task) async {
@@ -66,25 +63,36 @@ class BackgroundFetchService with Tag {
       BackgroundFetch.finish(taskId);
       return;
     }
-    logger.d('$TAG - _backgroundFetchHeadlessTask - todo - taskId:$taskId');
+    logger.i('$TAG - _backgroundFetchHeadlessTask - run - taskId:$taskId');
     _onBackgroundFetch(taskId);
   }
 
   void _onBackgroundFetch(String taskId) async {
-    if (clientCommon.status == ClientConnectStatus.connected) {
-      logger.d("$TAG - _onBackgroundFetch - finish - connected - taskId:$taskId");
-      BackgroundFetch.finish(taskId);
-      return;
-    }
     if (application.appLifecycleState == AppLifecycleState.resumed) {
-      logger.d("$TAG - _onBackgroundFetch - finish - resumed - taskId:$taskId");
+      logger.i("$TAG - _onBackgroundFetch - finish - on resumed - taskId:$taskId");
       BackgroundFetch.finish(taskId);
       return;
     }
-    logger.i("$TAG - _onBackgroundFetch - todo - taskId:$taskId");
+    if (!clientCommon.isClientCreated) {
+      logger.i("$TAG - _onBackgroundFetch - finish - client closed - taskId:$taskId");
+      BackgroundFetch.finish(taskId);
+      return;
+    }
     // signOut
-    await clientCommon.reSignIn(false);
+    logger.i("$TAG - _onBackgroundFetch - run start - taskId:$taskId");
+    try {
+      await clientCommon.signOut(clearWallet: false, closeDB: true);
+      logger.i("$TAG - _onBackgroundFetch - run success - taskId:$taskId");
+    } catch (e) {
+      logger.w("$TAG - _onBackgroundFetch - run fail - taskId:$taskId");
+      handleError(e);
+    }
     // finish
+    BackgroundFetch.finish(taskId);
+  }
+
+  void _onBackgroundTimeout(String taskId) async {
+    logger.w("$TAG - init - timeout - taskId:$taskId");
     BackgroundFetch.finish(taskId);
   }
 }
