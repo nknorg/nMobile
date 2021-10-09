@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -17,8 +18,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class ChatCommon with Tag {
-  String? currentChatTargetId;
-
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get _onUpdateSink => _onUpdateController.sink;
@@ -29,9 +28,24 @@ class ChatCommon with Tag {
   StreamSink<String> get onDeleteSink => _onDeleteController.sink;
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
+  String? currentChatTargetId;
+  bool inBackGround = false;
+
   MessageStorage _messageStorage = MessageStorage();
 
   ChatCommon();
+
+  void init() {
+    application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      if (application.isFromBackground(states)) {
+        Future.delayed(Duration(seconds: 1), () {
+          if (inBackGround) inBackGround = false;
+        });
+      } else if (application.isGoBackground(states)) {
+        inBackGround = true;
+      }
+    });
+  }
 
   Future<OnMessage?> clientSendData(List<String> destList, String data, {int tryCount = 0, int maxTryCount = 5}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
@@ -43,13 +57,23 @@ class ChatCommon with Tag {
       logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
+    if (!clientCommon.isClientCreated) {
+      logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(seconds: 2));
+      return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+    }
+    if (inBackGround && Platform.isIOS) {
+      logger.i("$TAG - clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(milliseconds: 750));
+      return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+    }
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
         logger.d("$TAG - clientSendData - send success - destList:$destList - data:$data");
         return onMessage;
       } else {
-        logger.w("$TAG - clientSendData - onMessage msgId is empty - destList:$destList - data:$data");
+        logger.w("$TAG - clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
         return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
@@ -57,7 +81,7 @@ class ChatCommon with Tag {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - clientSendData - reSignIn success - destList:$destList data:$data");
+          logger.i("$TAG - clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
           await Future.delayed(Duration(seconds: 1));
           return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
@@ -70,7 +94,7 @@ class ChatCommon with Tag {
         return null;
       } else {
         handleError(e);
-        logger.w("$TAG - clientSendData - try by error - destList:$destList - data:$data");
+        logger.w("$TAG - clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
         return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
@@ -84,8 +108,13 @@ class ChatCommon with Tag {
       return [];
     }
     if (!clientCommon.isClientCreated) {
-      logger.i("$TAG - clientPublishData - client is null - dest:$topic - data:$data");
+      logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 2));
+      return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+    }
+    if (inBackGround && Platform.isIOS) {
+      logger.i("$TAG - clientPublishData - in background - tryCount:$tryCount - dest:$topic - data:$data");
+      await Future.delayed(Duration(milliseconds: 750));
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     try {
@@ -106,7 +135,7 @@ class ChatCommon with Tag {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - clientPublishData - reSignIn success - topic:$topic data:$data");
+          logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
           await Future.delayed(Duration(seconds: 1));
           return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
@@ -116,7 +145,7 @@ class ChatCommon with Tag {
         }
       } else {
         handleError(e);
-        logger.w("$TAG - clientPublishData - try by error - topic:$topic - data:$data");
+        logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
         await Future.delayed(Duration(seconds: 2));
         return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
