@@ -242,7 +242,11 @@ class ClientCommon with Tag {
       return [null, false];
     }
 
-    // await signOut(closeDB: false);
+    if (!isClientCreated) {
+      logger.i("$TAG - reSignIn - sign out when client no created - wallet:$wallet");
+      await signOut(clearWallet: false, closeDB: false);
+    }
+
     await Future.delayed(Duration(milliseconds: delayMs));
     if (status != ClientConnectStatus.connecting) {
       _statusSink.add(ClientConnectStatus.connecting);
