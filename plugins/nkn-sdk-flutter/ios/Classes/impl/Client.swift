@@ -217,7 +217,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             "encrypted": msg.encrypted,
             "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
         ]
-        NSLog("%@", resp)
+        NSLog("onMessage - %@", String(data: msg.data!, encoding: String.Encoding.utf8)!)
         self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
 
         // loop
