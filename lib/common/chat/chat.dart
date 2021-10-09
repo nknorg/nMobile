@@ -47,7 +47,7 @@ class ChatCommon with Tag {
     });
   }
 
-  Future<OnMessage?> clientSendData(List<String> destList, String data, {int tryCount = 0, int maxTryCount = 5}) async {
+  Future<OnMessage?> clientSendData(List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - clientSendData - destList is empty - destList:$destList - data:$data");
@@ -63,7 +63,7 @@ class ChatCommon with Tag {
       return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (inBackGround && Platform.isIOS) {
-      logger.i("$TAG - clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
+      logger.i("$TAG - clientSendData - ios in background - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(milliseconds: 750));
       return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
@@ -101,7 +101,7 @@ class ChatCommon with Tag {
     }
   }
 
-  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 5}) async {
+  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
     if (topic == null || topic.isEmpty) return [];
     if (tryCount >= maxTryCount) {
       logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
@@ -113,7 +113,7 @@ class ChatCommon with Tag {
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (inBackGround && Platform.isIOS) {
-      logger.i("$TAG - clientPublishData - in background - tryCount:$tryCount - dest:$topic - data:$data");
+      logger.i("$TAG - clientPublishData - ios in background - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(milliseconds: 750));
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
