@@ -65,9 +65,9 @@ void main() async {
         options.environment = Global.isRelease ? 'production' : 'debug';
         options.release = Global.versionFormat;
       },
-      // return
-      appRunner: () => runApp(Main()),
+      //appRunner: () => runApp(Main()),
     );
+    runApp(Main());
   }, onZoneError: (Object error, StackTrace stack) async {
     if (Settings.debug) logger.e(error, stack);
     await Sentry.captureException(error, stackTrace: stack);
