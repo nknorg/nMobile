@@ -665,13 +665,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     );
   }
 
-  // _debugSendText({int count = 0, int maxTimes = 10000}) async {
-  //   String text = "$count _ ${Uuid().v4()}";
-  //   chatOutCommon.sendText(text, topic: _topic, contact: _contact);
-  //   if (count < maxTimes) {
-  //     await Future.delayed(Duration(milliseconds: 10), () {
-  //       _debugSendText(count: ++count, maxTimes: maxTimes);
-  //     });
+  // _debugSendText({bool enableTopic = false, int maxTimes = 10000}) async {
+  //   if (!enableTopic && (_topic != null)) return;
+  //   for (var i = 0; i < maxTimes; i++) {
+  //     String text = "$i _ ${Uuid().v4()}";
+  //     chatOutCommon.sendText(text, topic: _topic, contact: _contact);
+  //   }
+  // }
+
+  // _debugSendPing({int maxTimes = 10000}) async {
+  //   if (_topic != null) return;
+  //   for (var i = 0; i < maxTimes; i++) {
+  //     if (clientCommon.address != null) {
+  //       chatOutCommon.sendPing([clientCommon.address!], true);
+  //     }
   //   }
   // }
 }
