@@ -173,7 +173,7 @@ class ClientCommon with Tag {
         _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
           logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
           SettingsStorage.addSeedRpcServers(event.rpcServers ?? [], prefix: wallet.address);
-          connectSuccess(force: true); // await
+          connectSuccess(force: true);
           if (!completer.isCompleted) completer.complete();
         });
 
@@ -182,7 +182,7 @@ class ClientCommon with Tag {
           logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
           chatInCommon.onMessageReceive(MessageSchema.fromReceive(event));
           if (status != ClientConnectStatus.connected) {
-            connectSuccess(force: true); // await
+            connectSuccess(force: true);
           }
         });
       } else {
@@ -257,7 +257,7 @@ class ClientCommon with Tag {
     return await signIn(wallet, fetchRemote: false, password: walletPwd);
   }
 
-  Future connectCheck({bool reconnect = false}) async {
+  void connectCheck({bool reconnect = false}) {
     if (client == null) return;
     if (connectChecking) return;
     connectChecking = true;
@@ -282,7 +282,7 @@ class ClientCommon with Tag {
     });
   }
 
-  Future connectSuccess({bool force = false}) async {
+  void connectSuccess({bool force = false}) {
     if (client == null) return;
     if (!force && (status != ClientConnectStatus.connecting)) {
       connectChecking = false;

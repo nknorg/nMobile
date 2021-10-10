@@ -664,4 +664,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       ),
     );
   }
+
+  // _debugSendText({int count = 0, int maxTimes = 10000}) async {
+  //   String text = "$count _ ${Uuid().v4()}";
+  //   chatOutCommon.sendText(text, topic: _topic, contact: _contact);
+  //   if (count < maxTimes) {
+  //     await Future.delayed(Duration(milliseconds: 10), () {
+  //       _debugSendText(count: ++count, maxTimes: maxTimes);
+  //     });
+  //   }
+  // }
 }
