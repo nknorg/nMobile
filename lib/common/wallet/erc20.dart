@@ -200,8 +200,7 @@ class EthErc20Client with Tag {
   Future<EtherAmount> get getGasPrice => _web3client.getGasPrice();
 
   void create() {
-    var httpClient = Client();
-    _web3client = Web3Client(RPC_SERVER_URL, httpClient);
+    _web3client = Web3Client(RPC_SERVER_URL, Client());
   }
 
   Future<EtherAmount?> getBalanceEth({required String address}) async {
@@ -210,6 +209,7 @@ class EthErc20Client with Tag {
       return await _web3client.getBalance(EthereumAddress.fromHex(address));
     } catch (e) {
       if (e.toString().contains("Connection terminated")) {
+        await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return getBalanceEth(address: address);
@@ -229,6 +229,7 @@ class EthErc20Client with Tag {
       return EtherAmount.inWei(balance.first);
     } catch (e) {
       if (e.toString().contains("Connection terminated")) {
+        await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return getBalanceNkn(address: address);
@@ -261,6 +262,7 @@ class EthErc20Client with Tag {
       );
     } catch (e) {
       if (e.toString().contains("Connection terminated")) {
+        await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return sendEthereum(credt, address: address, amountEth: amountEth, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
@@ -296,6 +298,7 @@ class EthErc20Client with Tag {
       );
     } catch (e) {
       if (e.toString().contains("Connection terminated")) {
+        await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return sendNknToken(credt, address: address, amountNkn: amountNkn, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
