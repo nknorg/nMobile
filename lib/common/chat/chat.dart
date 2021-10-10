@@ -28,9 +28,9 @@ class ChatCommon with Tag {
   StreamSink<String> get onDeleteSink => _onDeleteController.sink;
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
-  // concurrent
-  int nowConcurrent = 0;
-  int maxConcurrent = 10;
+  // send interval
+  int minSendIntervalMs = 20;
+  int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   bool inBackGround = false;
   String? currentChatTargetId;
@@ -76,21 +76,20 @@ class ChatCommon with Tag {
       await Future.delayed(Duration(seconds: 1));
       return clientSendData(destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
     }
-    if (nowConcurrent >= maxConcurrent) {
-      logger.i("$TAG - clientSendData - concurrent max - tryCount:$tryCount - destList:$destList - data:$data");
-      await Future.delayed(Duration(seconds: 1));
+    if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
+      int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
+      logger.i("$TAG - clientSendData - interval small - interval:$interval - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
       return clientSendData(destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
     }
-    nowConcurrent++;
+    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
         logger.d("$TAG - clientSendData - send success - destList:$destList - data:$data");
-        nowConcurrent--;
         return onMessage;
       } else {
         logger.w("$TAG - clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
-        nowConcurrent--;
         await Future.delayed(Duration(seconds: 2));
         return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
@@ -99,23 +98,19 @@ class ChatCommon with Tag {
         final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
-          nowConcurrent--;
           await Future.delayed(Duration(seconds: 1));
           return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
           // maybe always no here
           logger.w("$TAG - clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-          nowConcurrent--;
           return null;
         }
       } else if (e.toString().contains("invalid destination")) {
         logger.w("$TAG - clientSendData - wrong clientAddress - destList:$destList");
-        nowConcurrent--;
         return null;
       } else {
         handleError(e);
         logger.w("$TAG - clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
-        nowConcurrent--;
         await Future.delayed(Duration(seconds: 2));
         return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
@@ -138,17 +133,17 @@ class ChatCommon with Tag {
       await Future.delayed(Duration(seconds: 1));
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
     }
-    if (nowConcurrent >= maxConcurrent) {
-      logger.i("$TAG - clientPublishData - concurrent max - tryCount:$tryCount - dest:$topic - data:$data");
-      await Future.delayed(Duration(seconds: 1));
+    if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
+      int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
+      logger.i("$TAG - clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
+      await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
     }
-    nowConcurrent++;
+    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
     try {
       // once
       if (total == null || total <= 1000) {
         OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
-        nowConcurrent--;
         return [result];
       }
       // split
@@ -158,26 +153,22 @@ class ChatCommon with Tag {
       }
       List<OnMessage> onMessageList = await Future.wait(futures);
       logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
-      nowConcurrent--;
       return onMessageList;
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
-          nowConcurrent--;
           await Future.delayed(Duration(seconds: 1));
           return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
           // maybe always no here
           logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-          nowConcurrent--;
           return [];
         }
       } else {
         handleError(e);
         logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
-        nowConcurrent--;
         await Future.delayed(Duration(seconds: 2));
         return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }

@@ -153,7 +153,7 @@ class TopicCommon with Tag {
       Toast.show(S.of(Global.appContext).failure);
       return null;
     }
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 250));
 
     // status + permission
     if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
@@ -175,7 +175,7 @@ class TopicCommon with Tag {
       // public / private + normal
       _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
     }
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 250));
 
     // send messages
     await chatOutCommon.sendTopicSubscribe(topicName);
@@ -269,7 +269,7 @@ class TopicCommon with Tag {
           return null;
         }
         logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - tryCount:$tryCount - topic:$exists");
-        await Future.delayed(Duration(seconds: 5));
+        await Future.delayed(Duration(seconds: 2));
         return checkExpireAndSubscribe(topicName, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount, toast: toast);
       }
 
@@ -353,7 +353,7 @@ class TopicCommon with Tag {
     // client unsubscribe
     bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, toast: true);
     if (!exitSuccess) return null;
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 250));
 
     // topic update
     TopicSchema? exists = await queryByTopic(topicName);
@@ -373,7 +373,7 @@ class TopicCommon with Tag {
 
     // send message
     await chatOutCommon.sendTopicUnSubscribe(topicName);
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 250));
     return exists;
   }
 
@@ -548,7 +548,10 @@ class TopicCommon with Tag {
 
     // send message
     MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topicName);
-    if (_msg == null) return null;
+    if (_msg == null) {
+      Toast.show(S.of(Global.appContext).failure);
+      return null;
+    }
     Toast.show(S.of(Global.appContext).invitation_sent);
     return _subscriber;
   }
