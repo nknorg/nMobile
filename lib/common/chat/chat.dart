@@ -418,6 +418,7 @@ class ChatCommon with Tag {
   }
 
   Future readMessagesBySelf(String? targetId, String? clientAddress) async {
+    if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
@@ -477,6 +478,7 @@ class ChatCommon with Tag {
   }
 
   Future sendPang2SessionsContact({int? delayMs}) async {
+    if (!clientCommon.isClientCreated) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     int max = 100;
