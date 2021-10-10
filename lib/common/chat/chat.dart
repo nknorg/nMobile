@@ -16,6 +16,7 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatCommon with Tag {
   // ignore: close_sinks
@@ -195,6 +196,9 @@ class ChatCommon with Tag {
         logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
         // skip all messages need send contact request
+        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
+        exist.profileVersion = exist.profileVersion ?? Uuid().v4();
+        exist.profileUpdateAt = DateTime.now().millisecondsSinceEpoch;
         await contactCommon.setProfileOnly(exist, exist.profileVersion, notify: true);
       } else {
         double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
