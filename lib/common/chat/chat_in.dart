@@ -35,6 +35,10 @@ class ChatInCommon with Tag {
   Map<String, bool> receiveLoops = Map();
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
+  // receive interval
+  int minReceiveIntervalMs = 20;
+  int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
+
   ChatInCommon();
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
@@ -95,6 +99,14 @@ class ChatInCommon with Tag {
       receiveLoops[targetId] = false;
       return;
     }
+
+    // interval
+    int interval = DateTime.now().millisecondsSinceEpoch - lastReceiveTimeStamp;
+    if (interval < minReceiveIntervalMs) {
+      logger.i("$TAG - loopReceiveMessage - interval small - interval:$interval - targetId:$targetId");
+      await Future.delayed(Duration(milliseconds: interval + 1));
+    }
+    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
     // handle
     MessageSchema? received = receiveMessages[targetId]?[0];
@@ -171,7 +183,7 @@ class ChatInCommon with Tag {
     bool insertOk = false;
     switch (received.contentType) {
       case MessageContentType.ping:
-        _receivePing(received); // await
+        await _receivePing(received); // need interval
         break;
       case MessageContentType.receipt:
         await _receiveReceipt(received);
@@ -180,19 +192,19 @@ class ChatInCommon with Tag {
         await _receiveRead(received);
         break;
       case MessageContentType.msgStatus:
-        _receiveMsgStatus(received); // await
+        await _receiveMsgStatus(received); // need interval
         break;
       case MessageContentType.contact:
-        _receiveContact(received, contact: contact); // await
+        await _receiveContact(received, contact: contact);
         break;
       case MessageContentType.contactOptions:
         insertOk = await _receiveContactOptions(received, contact: contact);
         break;
       case MessageContentType.deviceRequest:
-        _receiveDeviceRequest(received, contact: contact); // await
+        await _receiveDeviceRequest(received, contact: contact); // need interval
         break;
       case MessageContentType.deviceInfo:
-        _receiveDeviceInfo(received, contact: contact); // await
+        await _receiveDeviceInfo(received, contact: contact);
         break;
       case MessageContentType.text:
       case MessageContentType.textExtension:
@@ -248,7 +260,7 @@ class ChatInCommon with Tag {
     // if (received.isTopic) return; (limit in out)
     if (received.from == received.to || received.from == clientCommon.address) {
       logger.i("$TAG - _receivePing - ping self receive - received:$received");
-      await clientCommon.connectSuccess();
+      clientCommon.connectSuccess();
       return true;
     }
     if (!(received.content! is String)) {
@@ -261,7 +273,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10); // await
+      chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -290,7 +302,7 @@ class ChatInCommon with Tag {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
       if (!exists.isTopic) {
         int reallySendAt = received.sendAt ?? 0;
-        chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
+        await chatCommon.readMessageBySide(received.targetId, reallySendAt);
       }
     } else {
       await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
@@ -298,11 +310,11 @@ class ChatInCommon with Tag {
 
     // topicInvitation
     if (exists.contentType == MessageContentType.topicInvitation) {
-      subscriberCommon.onInvitedReceipt(exists.content, received.from); // await
+      await subscriberCommon.onInvitedReceipt(exists.content, received.from);
     }
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10);
 
     return true;
   }
@@ -343,10 +355,10 @@ class ChatInCommon with Tag {
     // read history
     msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    chatCommon.readMessageBySide(received.targetId, reallySendAt); // await
+    await chatCommon.readMessageBySide(received.targetId, reallySendAt);
 
     // check msgStatus
-    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60); // await
+    chatOutCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60);
 
     return true;
   }
@@ -401,7 +413,8 @@ class ChatInCommon with Tag {
         if ((status == null) || (status == 0)) {
           // resend msg
           logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - received:$received");
-          await chatOutCommon.resendMute(message);
+          chatOutCommon.resendMute(message); // await
+          await Future.delayed(Duration(milliseconds: 100));
         } else {
           // update status
           int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;
@@ -470,7 +483,7 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          contactCommon.setOtherProfile(exist, firstName, lastName, Path.getLocalFile(avatar?.path), version, notify: true); // await
+          await contactCommon.setOtherProfile(exist, firstName, lastName, Path.getLocalFile(avatar?.path), version, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
@@ -504,11 +517,11 @@ class ChatInCommon with Tag {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateAt = ((content['updateBurnAfterAt'] ?? content['updateBurnAfterTime']) as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
-      contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true); // await
+      await contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true);
     } else if (optionsType == '1') {
       String deviceToken = (content['deviceToken']?.toString()) ?? "";
       logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true); // await
+      await contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
     } else {
       logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
       return false;
@@ -553,7 +566,7 @@ class ChatInCommon with Tag {
       },
     );
     logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - message:$message - data:$data");
-    deviceInfoCommon.set(message); // await
+    await deviceInfoCommon.set(message);
     return true;
   }
 
