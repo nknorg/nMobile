@@ -38,6 +38,7 @@ class ChatInCommon with Tag {
   // receive interval
   int minReceiveIntervalMs = 20;
   int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
+  MessageSchema? lastReceiveMsg;
 
   ChatInCommon();
 
@@ -55,6 +56,37 @@ class ChatInCommon with Tag {
       message.contentType = MessageContentType.receipt;
       message.content = message.msgId;
     }
+
+    // last (no session filter)
+    if (lastReceiveMsg?.contentType == message.contentType) {
+      bool from = lastReceiveMsg?.from == message.from;
+      bool to = lastReceiveMsg?.to == message.to;
+      bool topic = lastReceiveMsg?.topic == message.topic;
+      bool targetId = lastReceiveMsg?.targetId == message.targetId;
+      bool contact = lastReceiveMsg?.contact == message.contact;
+      if (from && to && topic && targetId && contact) {
+        bool typePing = message.contentType == MessageContentType.ping;
+        bool typeReceipt = message.contentType == MessageContentType.receipt;
+        bool typeRead = message.contentType == MessageContentType.read;
+        bool typeMsgStatus = message.contentType == MessageContentType.msgStatus;
+        bool typeContact = message.contentType == MessageContentType.contact;
+        // bool typeContactOptions = message.contentType == MessageContentType.contactOptions;
+        bool typeDeviceRequest = message.contentType == MessageContentType.deviceRequest;
+        bool typeDeviceInfo = message.contentType == MessageContentType.deviceInfo;
+        if (typePing || typeReceipt || typeRead || typeMsgStatus || typeContact || typeDeviceRequest || typeDeviceInfo) {
+          int interval = DateTime.now().millisecondsSinceEpoch - lastReceiveTimeStamp;
+          if (interval < 1000) {
+            logger.i("$TAG - onMessageReceive - skip - current == last - interval:$interval - last:$lastReceiveMsg - received:$message");
+            return;
+          } else {
+            logger.i("$TAG - onMessageReceive - continue by interval large - current == last - last:$lastReceiveMsg - received:$message");
+          }
+        } else {
+          logger.i("$TAG - onMessageReceive - continue by type - current == last - last:$lastReceiveMsg - received:$message");
+        }
+      }
+    }
+    lastReceiveMsg = message;
 
     // init
     if (receiveMessages[message.targetId] == null) {
@@ -414,7 +446,7 @@ class ChatInCommon with Tag {
           // resend msg
           logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - received:$received");
           chatOutCommon.resendMute(message); // await
-          await Future.delayed(Duration(milliseconds: 100));
+          await Future.delayed(Duration(milliseconds: 200));
         } else {
           // update status
           int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;

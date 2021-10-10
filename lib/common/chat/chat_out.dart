@@ -69,6 +69,7 @@ class ChatOutCommon with Tag {
     if (timer?.isActive == true) {
       logger.i("$TAG - setMsgStatusCheckTimer - cancel old - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
       timer?.cancel();
+      timer = null;
     }
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? initDelay), () async {
@@ -123,7 +124,8 @@ class ChatOutCommon with Tag {
     if (isTopic || forceResend) {
       for (var i = 0; i < checkList.length; i++) {
         MessageSchema element = checkList[i];
-        await resendMute(element);
+        resendMute(element);
+        await Future.delayed(Duration(milliseconds: forceResend ? 200 : 500));
       }
     } else {
       List<String> msgIds = [];
@@ -132,7 +134,7 @@ class ChatOutCommon with Tag {
           msgIds.add(element.msgId);
         }
       });
-      await sendMsgStatus(targetId, true, msgIds);
+      sendMsgStatus(targetId, true, msgIds); // await
     }
 
     logger.i("$TAG - _checkMsgStatus - checkCount:${checkList.length} - targetId:$targetId - isTopic:$isTopic");
@@ -694,7 +696,7 @@ class ChatOutCommon with Tag {
       } else {
         resultList.add(result);
       }
-      await Future.delayed(Duration(milliseconds: 25));
+      await Future.delayed(Duration(milliseconds: chatCommon.minSendIntervalMs + 5));
     }
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
     finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
