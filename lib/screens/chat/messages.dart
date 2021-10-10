@@ -673,7 +673,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   //   }
   // }
 
-  // _debugSendPing({int maxTimes = 10000}) async {
+  // _debugSendPing({int maxTimes = 1000}) async {
   //   if (_topic != null) return;
   //   for (var i = 0; i < maxTimes; i++) {
   //     if (clientCommon.address != null) {
