@@ -83,7 +83,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           if (between >= Global.clientReAuthGapMs) {
             _tryAuth(); // await
           } else {
-            clientCommon.connectCheck(); // await
+            clientCommon.connectCheck();
           }
         }
       } else if (application.isGoBackground(states)) {
@@ -228,7 +228,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _toggleSessionListShow(true);
 
     // connect
-    await clientCommon.connectCheck(reconnect: true);
+    clientCommon.connectCheck(reconnect: true);
   }
 
   _toggleSessionListShow(bool show) {
@@ -242,6 +242,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   _refreshContactMe() async {
     if (!dbOpen) return;
     ContactSchema? contact = await contactCommon.getMe();
+    if (contact == null) {
+      return await Future.delayed(Duration(seconds: 1), () => _refreshContactMe());
+    }
     setState(() {
       _contactMe = contact;
     });
