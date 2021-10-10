@@ -162,6 +162,17 @@ class ContactCommon with Tag {
     return success;
   }
 
+  Future<bool> setProfileOnly(ContactSchema? old, String? profileVersion, {bool notify = false}) async {
+    if (old == null || old.id == 0) return false;
+    bool success = await _contactStorage.setProfileOnly(
+      old.id,
+      profileVersion ?? Uuid().v4(),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    if (success && notify) queryAndNotify(old.id);
+    return success;
+  }
+
   Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     bool success = await _contactStorage.setTop(clientAddress, top);
