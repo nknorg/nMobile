@@ -247,6 +247,30 @@ class ContactStorage with Tag {
     return false;
   }
 
+  Future<bool> setProfileOnly(int? contactId, String? profileVersion, int? profileExpiresAt) async {
+    if (contactId == null || contactId == 0) return false;
+    try {
+      int? count = await db?.update(
+        tableName,
+        {
+          'profile_version': profileVersion ?? Uuid().v4(),
+          'profile_expires_at': profileExpiresAt ?? DateTime.now().millisecondsSinceEpoch,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [contactId],
+      );
+      if (count != null && count > 0) {
+        logger.v("$TAG - setProfileOnly - success - contactId:$contactId - profileVersion:$profileVersion - profileExpiresAt:$profileExpiresAt");
+        return true;
+      }
+      logger.w("$TAG - setProfileOnly - fail - contactId:$contactId - profileVersion:$profileVersion - profileExpiresAt:$profileExpiresAt");
+    } catch (e) {
+      handleError(e);
+    }
+    return false;
+  }
+
   Future<bool> setTop(String? clientAddress, bool top) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     try {

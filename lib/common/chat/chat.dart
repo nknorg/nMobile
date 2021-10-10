@@ -203,6 +203,8 @@ class ChatCommon with Tag {
       if ((exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
         logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
         chatOutCommon.sendContactRequest(exist, RequestType.header); // await
+        // skip all messages need send contact request
+        await contactCommon.setProfileOnly(exist, exist.profileVersion, notify: true);
       } else {
         double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG contactHandle - expiresAt - between:${between}s");
@@ -245,10 +247,15 @@ class ChatCommon with Tag {
     if (latest == null) {
       logger.i("$TAG - deviceInfoHandle - new - request - contact:$contact");
       chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
+      // skip all messages need send contact request
+      await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: contact.clientAddress));
     } else {
       if ((latest.updateAt == null) || (DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs))) {
         logger.i("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
         chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
+        // skip all messages need send contact request
+        latest.updateAt = DateTime.now().millisecondsSinceEpoch;
+        await deviceInfoCommon.set(latest);
       } else {
         double between = ((latest.updateAt! + Global.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
         logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
