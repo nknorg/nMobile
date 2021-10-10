@@ -71,7 +71,7 @@ dependencies:
 
   # log
   logger: ^1.1.0
-  sentry_flutter: ^5.1.0
+  sentry_flutter: ^6.0.1
 
   # locale
   intl: ^0.17.0
