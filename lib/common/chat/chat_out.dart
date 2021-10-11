@@ -145,7 +145,7 @@ class ChatOutCommon with Tag {
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getPing(isPing);
-    await chatCommon.clientSendData(clientAddressList, data);
+    await chatCommon.clientSendData(clientCommon.address, clientAddressList, data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -154,7 +154,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     received = (await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
-    await chatCommon.clientSendData([received.from], data);
+    await chatCommon.clientSendData(clientCommon.address, [received.from], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -162,7 +162,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getRead(msgIds);
-    await chatCommon.clientSendData([clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -170,7 +170,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getMsgStatus(ask, msgIds);
-    await chatCommon.clientSendData([clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -179,7 +179,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-    await chatCommon.clientSendData([target.clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [target.clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -194,7 +194,7 @@ class ChatOutCommon with Tag {
     } else {
       data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
     }
-    await chatCommon.clientSendData([target.clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [target.clientAddress], data);
   }
 
   // NO topic (1 to 1)
@@ -233,7 +233,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getDeviceRequest();
-    await chatCommon.clientSendData([clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -241,7 +241,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getDeviceInfo();
-    await chatCommon.clientSendData([clientAddress], data);
+    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -308,7 +308,7 @@ class ChatOutCommon with Tag {
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await chatCommon.clientSendData(clientAddressList, data);
+    OnMessage? onResult = await chatCommon.clientSendData(clientCommon.address, clientAddressList, data);
     if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
@@ -541,7 +541,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
       logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
-      pid = (await chatCommon.clientSendData([message.to ?? ""], msgData))?.messageId;
+      pid = (await chatCommon.clientSendData(clientCommon.address, [message.to ?? ""], msgData))?.messageId;
     }
     // result
     if (pid?.isNotEmpty == true) {
@@ -590,7 +590,8 @@ class ChatOutCommon with Tag {
     if (_subscribers.isEmpty || (_subscribers.length == 1 && (_subscribers.first.clientAddress == clientCommon.address) && privateNormal)) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       int total = await subscriberCommon.getSubscribersCount(message.topic!, false);
-      List<OnMessage> onMessageList = await chatCommon.clientPublishData(message.topic, msgData, total: total); // permission checked in received
+      // permission checked in received
+      List<OnMessage> onMessageList = await chatCommon.clientPublishData(clientCommon.address, message.topic, msgData, total: total);
       if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
         return onMessageList[0].messageId;
@@ -620,7 +621,7 @@ class ChatOutCommon with Tag {
     }
     OnMessage? onMessage;
     if (targetIds.isNotEmpty) {
-      onMessage = await chatCommon.clientSendData(targetIds, msgData); // long time to wait when targetIds too much
+      onMessage = await chatCommon.clientSendData(clientCommon.address, targetIds, msgData); // long time to wait when targetIds too much
     }
     // result
     Uint8List? pid;
