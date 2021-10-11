@@ -485,8 +485,16 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               contactSelect: true,
                             );
                             if (address?.isNotEmpty == true) {
-                              var contact = await ContactSchema.createByType(address, type: ContactType.stranger);
-                              await contactCommon.add(contact, notify: true);
+                              ContactSchema? contact = await contactCommon.queryByClientAddress(address);
+                              if (contact != null) {
+                                if (contact.type == ContactType.none) {
+                                  bool success = await contactCommon.setType(contact.id, ContactType.stranger,notify: true);
+                                  if (success) contact.type = ContactType.stranger;
+                                }
+                              } else {
+                                contact = await ContactSchema.createByType(address, type: ContactType.stranger);
+                                await contactCommon.add(contact, notify: true);
+                              }
                               await ChatMessagesScreen.go(context, contact);
                             }
                             Navigator.pop(this.context); // floatActionBtn
