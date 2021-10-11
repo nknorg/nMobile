@@ -36,189 +36,222 @@ class SessionStorage with Tag {
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null) return null;
-    try {
-      Map<String, dynamic> entity = await schema.toMap();
-      int? id;
-      if (!checkDuplicated) {
-        id = await db?.insert(tableName, entity);
-      } else {
-        await db?.transaction((txn) async {
-          List<Map<String, dynamic>>? res = await txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'target_id = ?',
-            whereArgs: [schema.targetId],
-          );
-          if (res != null && res.length > 0) {
-            logger.w("$TAG - insert - duplicated - schema:$schema");
-          } else {
-            id = await txn.insert(tableName, entity);
-          }
-        });
-      }
-      if (id != null && id != 0) {
-        SessionSchema schema = SessionSchema.fromMap(entity);
-        schema.id = id;
-        logger.v("$TAG - insert - success - schema:$schema");
-        return schema;
-      } else {
-        SessionSchema? exists = await query(schema.targetId);
-        if (exists != null) {
-          logger.i("$TAG - insert - exists - schema:$exists");
+    Map<String, dynamic> entity = await schema.toMap();
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? id;
+        if (!checkDuplicated) {
+          id = await db?.transaction((txn) {
+            return txn.insert(tableName, entity);
+          });
         } else {
-          logger.w("$TAG - insert - fail - schema:$schema");
+          id = await db?.transaction((txn) async {
+            List<Map<String, dynamic>>? res = await txn.query(
+              tableName,
+              columns: ['*'],
+              where: 'target_id = ?',
+              whereArgs: [schema.targetId],
+            );
+            if (res != null && res.length > 0) {
+              logger.w("$TAG - insert - duplicated - schema:$schema");
+              return null;
+            } else {
+              return await txn.insert(tableName, entity);
+            }
+          });
         }
+        if (id != null) {
+          SessionSchema schema = SessionSchema.fromMap(entity);
+          schema.id = id;
+          logger.v("$TAG - insert - success - schema:$schema");
+          return schema;
+        } else {
+          SessionSchema? exists = await query(schema.targetId);
+          if (exists != null) {
+            logger.i("$TAG - insert - exists - schema:$exists");
+          } else {
+            logger.w("$TAG - insert - fail - schema:$schema");
+          }
+        }
+      } catch (e) {
+        handleError(e);
       }
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+      return null;
+    });
   }
 
   Future<bool> delete(String targetId) async {
     if (targetId.isEmpty) return false;
-    try {
-      int? result = await db?.delete(
-        tableName,
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      if (result != null && result > 0) {
-        logger.v("$TAG - delete - success - targetId:$targetId");
-        return true;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? result = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'target_id = ?',
+            whereArgs: [targetId],
+          );
+        });
+        if (result != null && result > 0) {
+          logger.v("$TAG - delete - success - targetId:$targetId");
+          return true;
+        }
+        logger.w("$TAG - delete - empty - targetId:$targetId");
+      } catch (e) {
+        handleError(e);
       }
-      logger.w("$TAG - delete - empty - targetId:$targetId");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+      return false;
+    });
   }
 
   Future<SessionSchema?> query(String? targetId) async {
     if (targetId == null || targetId.isEmpty) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      if (res != null && res.length > 0) {
-        SessionSchema schema = SessionSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - targetId:$targetId - schema:$schema");
-        return schema;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'target_id = ?',
+            whereArgs: [targetId],
+          );
+        });
+        if (res != null && res.length > 0) {
+          SessionSchema schema = SessionSchema.fromMap(res.first);
+          logger.v("$TAG - query - success - targetId:$targetId - schema:$schema");
+          return schema;
+        }
+        logger.v("$TAG - query - empty - targetId:$targetId ");
+      } catch (e) {
+        handleError(e);
       }
-      logger.v("$TAG - query - empty - targetId:$targetId ");
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+      return null;
+    });
   }
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) async {
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        offset: offset ?? null,
-        limit: limit ?? null,
-        orderBy: 'is_top desc, last_message_at DESC',
-      );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListRecent - empty");
-        return [];
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            offset: offset ?? null,
+            limit: limit ?? null,
+            orderBy: 'is_top desc, last_message_at DESC',
+          );
+        });
+        if (res == null || res.isEmpty) {
+          logger.v("$TAG - queryListRecent - empty");
+          return [];
+        }
+        List<SessionSchema> result = <SessionSchema>[];
+        String logText = '';
+        res.forEach((map) {
+          SessionSchema item = SessionSchema.fromMap(map);
+          logText += "\n      $item";
+          result.add(item);
+        });
+        logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
+        return result;
+      } catch (e) {
+        handleError(e);
       }
-      List<SessionSchema> result = <SessionSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        SessionSchema item = SessionSchema.fromMap(map);
-        logText += "\n      $item";
-        result.add(item);
-      });
-      logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
+      return [];
+    });
   }
 
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
     if (schema == null || schema.targetId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
-          'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-          'un_read_count': schema.unReadCount,
-        },
-        where: 'target_id = ?',
-        whereArgs: [schema.targetId],
-      );
-      logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+              'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+              'un_read_count': schema.unReadCount,
+            },
+            where: 'target_id = ?',
+            whereArgs: [schema.targetId],
+          );
+        });
+        logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
+        return (count ?? 0) > 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
   }
 
   // Future<bool> updateLastMessage(SessionSchema? schema) async {
   //   if (schema == null || schema.targetId.isEmpty) return false;
-  //   try {
-  //     int? count = await db?.update(
-  //       tableName,
-  //       {
-  //         'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
-  //         'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-  //       },
-  //       where: 'target_id = ?',
-  //       whereArgs: [schema.targetId],
-  //     );
-  //     logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
-  //     return (count ?? 0) > 0;
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return false;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       int? count = await db?.transaction((txn) {
+  //         return txn.update(
+  //           tableName,
+  //           {
+  //             'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+  //             'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+  //           },
+  //           where: 'target_id = ?',
+  //           whereArgs: [schema.targetId],
+  //         );
+  //       });
+  //       logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
+  //       return (count ?? 0) > 0;
+  //     } catch (e) {
+  //       handleError(e);
+  //     }
+  //     return false;
+  //   });
   // }
 
   Future<bool> updateIsTop(String? targetId, bool isTop) async {
     if (targetId == null || targetId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'is_top': isTop ? 1 : 0,
-        },
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      logger.v("$TAG - updateIsTop - targetId:$targetId - isTop:$isTop");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'is_top': isTop ? 1 : 0,
+            },
+            where: 'target_id = ?',
+            whereArgs: [targetId],
+          );
+        });
+        logger.v("$TAG - updateIsTop - targetId:$targetId - isTop:$isTop");
+        return (count ?? 0) > 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
   }
 
   Future<bool> updateUnReadCount(String? targetId, int unread) async {
     if (targetId == null || targetId.isEmpty) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'un_read_count': unread,
-        },
-        where: 'target_id = ?',
-        whereArgs: [targetId],
-      );
-      logger.v("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
-      return (count ?? 0) > 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'un_read_count': unread,
+            },
+            where: 'target_id = ?',
+            whereArgs: [targetId],
+          );
+        });
+        logger.v("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
+        return (count ?? 0) > 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
   }
 }
