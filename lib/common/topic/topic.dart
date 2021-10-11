@@ -42,10 +42,19 @@ class TopicCommon with Tag {
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     List<TopicSchema> topics = await queryList();
-    for (var i = 0; i < topics.length; i++) {
-      TopicSchema topic = topics[i];
-      bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
-      if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined);
+    if (refreshSubscribers) {
+      for (var i = 0; i < topics.length; i++) {
+        TopicSchema topic = topics[i];
+        bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+        if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined);
+      }
+    } else {
+      List<Future> futures = [];
+      topics.forEach((TopicSchema topic) {
+        bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+        if (check) futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
+      });
+      await Future.wait(futures);
     }
   }
 
