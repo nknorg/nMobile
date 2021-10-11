@@ -67,7 +67,7 @@ class ChatCommon with Tag {
       logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
-    if (!clientCommon.isClientCreated) {
+    if (!clientCommon.isClientCreated || clientCommon.isClosing) {
       logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 2));
       return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
@@ -124,7 +124,7 @@ class ChatCommon with Tag {
       logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
       return [];
     }
-    if (!clientCommon.isClientCreated) {
+    if (!clientCommon.isClientCreated || clientCommon.isClosing) {
       logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 2));
       return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);

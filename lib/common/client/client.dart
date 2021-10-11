@@ -33,13 +33,6 @@ class ClientCommon with Tag {
 
   Uint8List? get publicKey => client?.publicKey;
 
-  late int status;
-
-  bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
-
-  int connectedAt = 0;
-  bool connectChecking = false;
-
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
   StreamSink<int> get _statusSink => _statusController.sink;
@@ -59,7 +52,14 @@ class ClientCommon with Tag {
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
 
+  bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
+  late int status;
+  bool isClosing = false;
+  int connectedAt = 0;
+  bool connectChecking = false;
+
   ClientCommon() {
+    isClosing = false;
     status = ClientConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
@@ -156,6 +156,7 @@ class ClientCommon with Tag {
       }
 
       // client create
+      isClosing = false;
       if (client == null) {
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
@@ -214,6 +215,7 @@ class ClientCommon with Tag {
   }
 
   Future signOut({bool clearWallet = true, bool closeDB = true}) async {
+    isClosing = true;
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
     // client
@@ -229,6 +231,7 @@ class ClientCommon with Tag {
       return signOut(closeDB: closeDB, clearWallet: clearWallet);
     }
     client = null;
+    isClosing = false;
     if (clearWallet) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
     if (closeDB) await dbCommon.close();
   }
@@ -260,6 +263,7 @@ class ClientCommon with Tag {
   void connectCheck({bool reconnect = false}) {
     if (client == null) return;
     if (connectChecking) return;
+    isClosing = false;
     connectChecking = true;
     _statusSink.add(ClientConnectStatus.connecting);
 
