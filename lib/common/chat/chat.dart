@@ -69,6 +69,7 @@ class ChatCommon with Tag {
     if (targetId == null || targetId.isEmpty) return 0;
 
     int limit = 20;
+    int maxCount = 100;
     List<MessageSchema> checkList = [];
 
     // noAck
@@ -77,6 +78,7 @@ class ChatCommon with Tag {
       checkList.addAll(result);
       logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
+      if ((offset + limit) >= maxCount) break;
     }
 
     // noRead
@@ -85,6 +87,7 @@ class ChatCommon with Tag {
       checkList.addAll(result);
       logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
+      if ((offset + limit) >= maxCount) break;
     }
 
     // filter
