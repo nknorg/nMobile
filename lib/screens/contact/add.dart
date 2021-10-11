@@ -138,7 +138,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
           Loading.dismiss();
           return;
         } else {
-          contactCommon.setType(exist.id, ContactType.friend, notify: true);
+          await contactCommon.setType(exist.id, ContactType.friend, notify: true);
         }
       } else {
         ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);

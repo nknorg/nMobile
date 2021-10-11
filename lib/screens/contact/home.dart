@@ -122,11 +122,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         _searchAction(_searchController.text);
       }
       // type
-      if (strangerIndex >= 0 && event.type == ContactType.friend) {
+      if ((friendIndex < 0) && (event.type == ContactType.friend)) {
         _allFriends.insert(0, event);
-      }
-      if (friendIndex >= 0 && event.type == ContactType.stranger) {
+        _searchAction(_searchController.text);
+      } else if ((strangerIndex < 0) && (event.type == ContactType.stranger)) {
         _allStrangers.insert(0, event);
+        _searchAction(_searchController.text);
       }
     });
 
