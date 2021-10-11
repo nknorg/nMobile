@@ -440,14 +440,20 @@ class ChatCommon with Tag {
   Future<int> checkSending({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
-    int waitSec = 3 * 60; // 1m
+    int singleWaitSec = 3 * 60; // 3m
+    int topicWaitSec = singleWaitSec * 2; // 6m
+    int topicMediaWaitSec = topicWaitSec * 2; // 12m
     List<MessageSchema> sendingList = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending);
 
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
       int msgSendAt = message.sendAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (waitSec * 1000)) {
-        logger.d("$TAG - checkSending - sendAt justNow - targetId:${message.targetId} - message:$message");
+      if (!message.isTopic && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (singleWaitSec * 1000))) {
+        logger.d("$TAG - checkSending - sendAt justNow by single - targetId:${message.targetId} - message:$message");
+      } else if (message.isTopic && !(message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicWaitSec * 1000))) {
+        logger.d("$TAG - checkSending - sendAt justNow by topic - targetId:${message.targetId} - message:$message");
+      } else if (message.isTopic && (message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicMediaWaitSec * 1000))) {
+        logger.d("$TAG - checkSending - sendAt justNow by topic media - targetId:${message.targetId} - message:$message");
       } else {
         logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
         if (message.canResend) {
