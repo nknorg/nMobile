@@ -57,7 +57,7 @@ class ChatCommon with Tag {
     });
   }
 
-  Future<OnMessage?> clientSendData(List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
+  Future<OnMessage?> clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - clientSendData - destList is empty - destList:$destList - data:$data");
@@ -67,21 +67,21 @@ class ChatCommon with Tag {
       logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
-    if (!clientCommon.isClientCreated || clientCommon.isClosing) {
-      logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - destList:$destList - data:$data");
+    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 2));
-      return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (inBackGround && Platform.isIOS) {
       logger.i("$TAG - clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 1));
-      return clientSendData(destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
+      return clientSendData(selfAddress, destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
     }
     if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
       int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
       logger.i("$TAG - clientSendData - interval small - interval:$interval - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
-      return clientSendData(destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
+      return clientSendData(selfAddress, destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
     }
     lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
     try {
@@ -92,7 +92,7 @@ class ChatCommon with Tag {
       } else {
         logger.w("$TAG - clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
@@ -100,7 +100,7 @@ class ChatCommon with Tag {
         if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
           await Future.delayed(Duration(seconds: 1));
-          return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+          return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
           // maybe always no here
           logger.w("$TAG - clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
@@ -113,32 +113,32 @@ class ChatCommon with Tag {
         handleError(e);
         logger.w("$TAG - clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        return clientSendData(destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     }
   }
 
-  Future<List<OnMessage>> clientPublishData(String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
+  Future<List<OnMessage>> clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
     if (topic == null || topic.isEmpty) return [];
     if (tryCount >= maxTryCount) {
       logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
       return [];
     }
-    if (!clientCommon.isClientCreated || clientCommon.isClosing) {
-      logger.i("$TAG - clientPublishData - client is null - tryCount:$tryCount - dest:$topic - data:$data");
+    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 2));
-      return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (inBackGround && Platform.isIOS) {
       logger.i("$TAG - clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 1));
-      return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
     }
     if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
       int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
       logger.i("$TAG - clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
-      return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
     }
     lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
     try {
@@ -161,7 +161,7 @@ class ChatCommon with Tag {
         if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
           await Future.delayed(Duration(seconds: 1));
-          return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+          return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
         } else {
           // maybe always no here
           logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
@@ -171,7 +171,7 @@ class ChatCommon with Tag {
         handleError(e);
         logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
         await Future.delayed(Duration(seconds: 2));
-        return clientPublishData(topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     }
   }
