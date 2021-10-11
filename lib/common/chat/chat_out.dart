@@ -645,12 +645,15 @@ class ChatOutCommon with Tag {
       return null;
     }
     // targets
+    bool selfReceive = false;
     List<String> targetIds = [];
     List<String> targetIdsByPiece = [];
     for (var i = 0; i < _subscribers.length; i++) {
       SubscriberSchema subscriber = _subscribers[i];
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(subscriber.clientAddress);
-      if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+      if (subscriber.clientAddress == clientCommon.address) {
+        selfReceive = true;
+      } else if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
         targetIds.add(subscriber.clientAddress);
       } else {
         targetIdsByPiece.add(subscriber.clientAddress);
@@ -671,10 +674,23 @@ class ChatOutCommon with Tag {
     }
     // result
     Uint8List? pid;
-    if (targetIds.contains(clientCommon.address)) {
-      pid = onMessage?.messageId;
-    } else {
-      pid = piecePid;
+    if (selfReceive) {
+      Uint8List? _piecePid;
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(clientCommon.address);
+      if (deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+        _piecePid = await _sendByPieces([clientCommon.address ?? ""], message);
+      }
+      if (_piecePid?.isNotEmpty == true) {
+        pid = _piecePid;
+      } else {
+        OnMessage? _onMessage = await clientSendData(clientCommon.address, [clientCommon.address ?? ""], msgData);
+        if (_onMessage?.messageId.isNotEmpty == true) {
+          pid = _onMessage?.messageId;
+        }
+      }
+    }
+    if (pid == null || pid.isEmpty) {
+      pid = onMessage?.messageId ?? piecePid;
     }
     if (pid?.isNotEmpty == true) {
       chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
