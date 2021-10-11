@@ -29,8 +29,6 @@ class ChatInCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
-  MessageStorage _messageStorage = MessageStorage();
-
   MessageSchema? lastReceiveMsg;
 
   Uint8List? receivePid;
@@ -317,7 +315,7 @@ class ChatInCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
-    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.content, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.content, MessageContentType.piece);
     if (exists == null) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
@@ -366,7 +364,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> msgList = [];
     for (var i = 0; i < readIds.length; i++) {
       final msgId = readIds[i];
-      MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+      MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
       if (message == null) {
         logger.w("$TAG - _receiveRead - message is empty - msgId:$msgId");
       } else if (message.status == MessageStatus.Read) {
@@ -414,7 +412,7 @@ class ChatInCommon with Tag {
       for (var i = 0; i < messageIds.length; i++) {
         String msgId = messageIds[i];
         if (msgId.isEmpty) continue;
-        MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+        MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
         if (message != null) {
           msgStatusList.add("$msgId:${message.status}");
         } else {
@@ -437,7 +435,7 @@ class ChatInCommon with Tag {
           logger.w("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
           continue;
         }
-        MessageSchema? message = await _messageStorage.queryByNoContentType(msgId, MessageContentType.piece);
+        MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
         if (message == null) {
           logger.w("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
           continue;
@@ -537,7 +535,7 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return false;
     }
-    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receiveContactOptions - duplicated - message:$exists");
       return false;
@@ -560,7 +558,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
@@ -605,13 +603,13 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveText(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - receiveText - duplicated - message:$exists");
       return false;
     }
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
@@ -620,7 +618,7 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveImage(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
       logger.d("$TAG - receiveImage - duplicated - message:$exists");
       return false;
@@ -633,7 +631,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -643,7 +641,7 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveAudio(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
       logger.d("$TAG - receiveAudio - duplicated - message:$exists");
       return false;
@@ -656,7 +654,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -672,14 +670,14 @@ class ChatInCommon with Tag {
     int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
     int index = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
-    List<MessageSchema> existsCombine = await _messageStorage.queryListByContentType(received.msgId, parentType);
+    List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
       if (index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
     // piece
-    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(received.msgId, MessageContentType.piece);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(received.msgId, MessageContentType.piece);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
       int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
@@ -694,7 +692,7 @@ class ChatInCommon with Tag {
     } else {
       // received.status = MessageStatus.Read; // modify in before
       received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
-      piece = await _messageStorage.insert(received);
+      piece = await MessageStorage.instance.insert(received);
       if (piece != null) {
         pieces.add(piece);
       } else {
@@ -759,7 +757,7 @@ class ChatInCommon with Tag {
   // NO single
   Future<bool> _receiveTopicSubscribe(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receiveTopicSubscribe - duplicated - message:$exists");
       return false;
@@ -770,7 +768,7 @@ class ChatInCommon with Tag {
     topicCommon.onSubscribe(received.topic, received.from).then((value) async {
       if (!historySubscribed && value != null) {
         // DB
-        MessageSchema? inserted = await _messageStorage.insert(received);
+        MessageSchema? inserted = await MessageStorage.instance.insert(received);
         if (inserted != null) {
           // display
           _onSavedSink.add(inserted);
@@ -789,14 +787,14 @@ class ChatInCommon with Tag {
   // NO topic (1 to 1)
   Future<bool> _receiveTopicInvitation(MessageSchema received) async {
     // duplicated
-    MessageSchema? exists = await _messageStorage.query(received.msgId);
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receiveTopicInvitation - duplicated - message:$exists");
       return false;
     }
     // permission checked in message click
     // DB
-    MessageSchema? inserted = await _messageStorage.insert(received);
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
@@ -811,9 +809,9 @@ class ChatInCommon with Tag {
 
   Future<int> _deletePieces(String msgId) async {
     int count = 0;
-    List<MessageSchema> pieces = await _messageStorage.queryListByContentType(msgId, MessageContentType.piece);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece);
     logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
-    int result = await _messageStorage.deleteByContentType(msgId, MessageContentType.piece);
+    int result = await MessageStorage.instance.deleteByContentType(msgId, MessageContentType.piece);
     if (result > 0) {
       for (var i = 0; i < pieces.length; i++) {
         MessageSchema piece = pieces[i];

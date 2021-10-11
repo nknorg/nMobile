@@ -43,8 +43,6 @@ class ChatOutCommon with Tag {
   StreamSink<Map<String, dynamic>> get _onPieceOutSink => _onPieceOutController.sink;
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
 
-  MessageStorage _messageStorage = MessageStorage();
-
   bool inBackGround = false;
 
   // send interval
@@ -200,7 +198,7 @@ class ChatOutCommon with Tag {
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     if (!clientCommon.isClientCreated) return;
-    received = (await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
+    received = (await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await clientSendData(clientCommon.address, [received.from], data);
   }
@@ -308,7 +306,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String data = MessageData.getText(message);
-    return _sendAndDB(message, data);
+    return _sendAndDB(message, data, contact: contact, topic: topic);
   }
 
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -328,7 +326,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String? data = await MessageData.getImage(message);
-    return _sendAndDB(message, data);
+    return _sendAndDB(message, data, contact: contact, topic: topic);
   }
 
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -347,7 +345,7 @@ class ChatOutCommon with Tag {
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
     );
     String? data = await MessageData.getAudio(message);
-    return _sendAndDB(message, data);
+    return _sendAndDB(message, data, contact: contact, topic: topic);
   }
 
   // NO DB NO display
@@ -493,7 +491,7 @@ class ChatOutCommon with Tag {
     if (pid?.isNotEmpty == true) {
       logger.i("$TAG - resendMute - resend result - pid:$pid - message:$message");
       message.pid = pid;
-      _messageStorage.updatePid(message.msgId, message.pid); // await
+      MessageStorage.instance.updatePid(message.msgId, message.pid); // await
     } else {
       logger.w("$TAG - resendMute - resend fail - message:$message");
     }
@@ -511,10 +509,10 @@ class ChatOutCommon with Tag {
     if (message == null || msgData == null) return null;
     // DB
     if (!resend) {
-      message = await _messageStorage.insert(message);
+      message = await MessageStorage.instance.insert(message);
     } else if (resend) {
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
-      _messageStorage.updateSendAt(message.msgId, message.sendAt); // await
+      MessageStorage.instance.updateSendAt(message.msgId, message.sendAt); // await
     }
     if (message == null) return null;
     // display
@@ -537,7 +535,7 @@ class ChatOutCommon with Tag {
     // pid
     if (pid?.isNotEmpty == true) {
       message.pid = pid;
-      _messageStorage.updatePid(message.msgId, message.pid); // await
+      MessageStorage.instance.updatePid(message.msgId, message.pid); // await
       // no received receipt/read
       if (!message.canReceipt) {
         int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
@@ -549,7 +547,7 @@ class ChatOutCommon with Tag {
         message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
       } else {
         // noResend just delete
-        int count = await _messageStorage.deleteByContentType(message.msgId, message.contentType);
+        int count = await MessageStorage.instance.deleteByContentType(message.msgId, message.contentType);
         if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
         return null;
       }
