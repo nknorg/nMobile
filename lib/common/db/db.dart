@@ -17,6 +17,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/utils/utils.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
@@ -31,6 +32,8 @@ class DB {
   StreamController<String?> _upgradeTipController = StreamController<String?>.broadcast();
   StreamSink<String?> get _upgradeTipSink => _upgradeTipController.sink;
   Stream<String?> get upgradeTipStream => _upgradeTipController.stream;
+
+  Lock lock = new Lock();
 
   Database? database;
 
