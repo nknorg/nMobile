@@ -31,14 +31,15 @@ class ChatInCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
+  MessageSchema? lastReceiveMsg;
+
   Uint8List? receivePid;
   Map<String, bool> receiveLoops = Map();
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
   // receive interval
-  int minReceiveIntervalMs = 20;
+  int minReceiveIntervalMs = 30;
   int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
-  MessageSchema? lastReceiveMsg;
 
   ChatInCommon();
 
