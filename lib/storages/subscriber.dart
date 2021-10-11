@@ -38,309 +38,362 @@ class SubscriberStorage with Tag {
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.topic.isEmpty || schema.clientAddress.isEmpty) return null;
-    try {
-      Map<String, dynamic> entity = schema.toMap();
-      int? id;
-      if (!checkDuplicated) {
-        id = await db?.insert(tableName, entity);
-      } else {
-        await db?.transaction((txn) async {
-          List<Map<String, dynamic>> res = await txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'topic = ? AND chat_id = ?',
-            whereArgs: [schema.topic, schema.clientAddress],
-          );
-          if (res != null && res.length > 0) {
-            logger.w("$TAG - insert - duplicated - schema:$schema");
-          } else {
-            id = await txn.insert(tableName, entity);
-          }
-        });
-      }
-      if (id != null && id != 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(entity);
-        schema?.id = id;
-        logger.v("$TAG - insert - success - schema:$schema");
-        return schema;
-      } else {
-        SubscriberSchema? exists = await queryByTopicChatId(schema.topic, schema.clientAddress);
-        if (exists != null) {
-          logger.i("$TAG - insert - exists - schema:$exists");
+    Map<String, dynamic> entity = schema.toMap();
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? id;
+        if (!checkDuplicated) {
+          id = await db?.transaction((txn) {
+            return txn.insert(tableName, entity);
+          });
         } else {
-          logger.w("$TAG - insert - fail - schema:$schema");
+          id = await db?.transaction((txn) async {
+            List<Map<String, dynamic>> res = await txn.query(
+              tableName,
+              columns: ['*'],
+              where: 'topic = ? AND chat_id = ?',
+              whereArgs: [schema.topic, schema.clientAddress],
+            );
+            if (res != null && res.length > 0) {
+              logger.w("$TAG - insert - duplicated - schema:$schema");
+              return null;
+            } else {
+              return await txn.insert(tableName, entity);
+            }
+          });
         }
+        if (id != null) {
+          SubscriberSchema? schema = SubscriberSchema.fromMap(entity);
+          schema?.id = id;
+          logger.v("$TAG - insert - success - schema:$schema");
+          return schema;
+        } else {
+          SubscriberSchema? exists = await queryByTopicChatId(schema.topic, schema.clientAddress);
+          if (exists != null) {
+            logger.i("$TAG - insert - exists - schema:$exists");
+          } else {
+            logger.w("$TAG - insert - fail - schema:$schema");
+          }
+        }
+      } catch (e) {
+        handleError(e);
       }
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+      return null;
+    });
   }
 
   Future<bool> delete(int? subscriberId) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    try {
-      int? count = await db?.delete(
-        tableName,
-        where: 'id = ?',
-        whereArgs: [subscriberId],
-      );
-      if (count != null && count > 0) {
-        logger.v("$TAG - delete - success - subscriberId:$subscriberId");
-        return true;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - delete - success - subscriberId:$subscriberId");
+          return true;
+        }
+        logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
+      } catch (e) {
+        handleError(e);
       }
-      logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+      return false;
+    });
   }
 
   // Future<int> deleteByTopic(String? topic) async {
   //   if (topic == null || topic.isEmpty) return 0;
-  //   try {
-  //     int? count = await db?.delete(
-  //       tableName,
-  //       where: 'topic = ?',
-  //       whereArgs: [topic],
-  //     );
-  //     if (count != null && count > 0) {
-  //       logger.v("$TAG - deleteByTopic - success - topic:$topic");
-  //       return count;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       int? count = await db?.transaction((txn) {
+  //         return txn.delete(
+  //           tableName,
+  //           where: 'topic = ?',
+  //           whereArgs: [topic],
+  //         );
+  //       });
+  //       if (count != null && count > 0) {
+  //         logger.v("$TAG - deleteByTopic - success - topic:$topic");
+  //         return count;
+  //       }
+  //       logger.w("$TAG - deleteByTopic - fail - topic:$topic");
+  //     } catch (e) {
+  //       handleError(e);
   //     }
-  //     logger.w("$TAG - deleteByTopic - fail - topic:$topic");
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return 0;
+  //     return 0;
+  //   });
   // }
 
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (subscriberId == null || subscriberId == 0) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'id = ?',
-        whereArgs: [subscriberId],
-      );
-      if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
-        return schema;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (res != null && res.length > 0) {
+          SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+          logger.v("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
+          return schema;
+        }
+        logger.v("$TAG - query - empty - subscriberId:$subscriberId");
+      } catch (e) {
+        handleError(e);
       }
-      logger.v("$TAG - query - empty - subscriberId:$subscriberId");
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+      return null;
+    });
   }
 
   Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
     if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'topic = ? AND chat_id = ?',
-        whereArgs: [topic, chatId],
-      );
-      if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.v("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
-        return schema;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'topic = ? AND chat_id = ?',
+            whereArgs: [topic, chatId],
+          );
+        });
+        if (res != null && res.length > 0) {
+          SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+          logger.v("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
+          return schema;
+        }
+        logger.v("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
+      } catch (e) {
+        handleError(e);
       }
-      logger.v("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+      return null;
+    });
   }
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? limit, int? offset}) async {
     if (topic == null || topic.isEmpty) return [];
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
-        whereArgs: status != null ? [topic, status] : [topic],
-        offset: offset ?? null,
-        limit: limit ?? null,
-        orderBy: orderBy ?? 'create_at ASC',
-      );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
-        return [];
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
+            whereArgs: status != null ? [topic, status] : [topic],
+            offset: offset ?? null,
+            limit: limit ?? null,
+            orderBy: orderBy ?? 'create_at ASC',
+          );
+        });
+        if (res == null || res.isEmpty) {
+          logger.v("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
+          return [];
+        }
+        List<SubscriberSchema> results = <SubscriberSchema>[];
+        String logText = '';
+        res.forEach((map) {
+          logText += "\n      $map";
+          SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
+          if (subscriber != null) results.add(subscriber);
+        });
+        logger.v("$TAG - queryListByTopic - items:$logText");
+        return results;
+      } catch (e) {
+        handleError(e);
       }
-      List<SubscriberSchema> results = <SubscriberSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        logText += "\n      $map";
-        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
-        if (subscriber != null) results.add(subscriber);
-      });
-      logger.v("$TAG - queryListByTopic - items:$logText");
-      return results;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
+      return [];
+    });
   }
 
   Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage) async {
     if (topic == null || topic.isEmpty || permPage == null) return [];
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'topic = ? AND perm_page = ?',
-        whereArgs: [topic, permPage],
-      );
-      if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
-        return [];
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'topic = ? AND perm_page = ?',
+            whereArgs: [topic, permPage],
+          );
+        });
+        if (res == null || res.isEmpty) {
+          logger.v("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
+          return [];
+        }
+        List<SubscriberSchema> results = <SubscriberSchema>[];
+        String logText = '';
+        res.forEach((map) {
+          logText += "\n      $map";
+          SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
+          if (subscriber != null) results.add(subscriber);
+        });
+        logger.v("$TAG - queryListByTopicPerm - items:$logText");
+        return results;
+      } catch (e) {
+        handleError(e);
       }
-      List<SubscriberSchema> results = <SubscriberSchema>[];
-      String logText = '';
-      res.forEach((map) {
-        logText += "\n      $map";
-        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
-        if (subscriber != null) results.add(subscriber);
-      });
-      logger.v("$TAG - queryListByTopicPerm - items:$logText");
-      return results;
-    } catch (e) {
-      handleError(e);
-    }
-    return [];
+      return [];
+    });
   }
 
   Future<int> queryCountByTopic(String? topic, {int? status}) async {
     if (topic == null || topic.isEmpty) return 0;
-    try {
-      final res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
-        whereArgs: status != null ? [topic, status] : [topic],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - queryCountByTopic - topic:$topic - count:$status");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        final res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['COUNT(id)'],
+            where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
+            whereArgs: status != null ? [topic, status] : [topic],
+          );
+        });
+        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+        logger.v("$TAG - queryCountByTopic - topic:$topic - count:$status");
+        return count ?? 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
   }
 
   Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
     if (topic == null || topic.isEmpty) return 0;
-    try {
-      final res = await db?.query(
-        tableName,
-        columns: ['COUNT(id)'],
-        where: status != null ? 'topic = ? AND perm_page = ? AND status = ?' : 'topic = ? AND perm_page = ?',
-        whereArgs: status != null ? [topic, permPage, status] : [topic, permPage],
-      );
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
-      return count ?? 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        final res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['COUNT(id)'],
+            where: status != null ? 'topic = ? AND perm_page = ? AND status = ?' : 'topic = ? AND perm_page = ?',
+            whereArgs: status != null ? [topic, permPage, status] : [topic, permPage],
+          );
+        });
+        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+        logger.v("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
+        return count ?? 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
   }
 
   Future<int> queryMaxPermPageByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return 0;
-    try {
-      List<Map<String, dynamic>>? res = await db?.query(
-        tableName,
-        columns: ['*'],
-        where: 'topic = ?',
-        whereArgs: [topic],
-        orderBy: 'perm_page DESC',
-      );
-      if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
-        logger.v("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
-        return schema?.permPage ?? 0;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'topic = ?',
+            whereArgs: [topic],
+            orderBy: 'perm_page DESC',
+          );
+        });
+        if (res != null && res.length > 0) {
+          SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+          logger.v("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
+          return schema?.permPage ?? 0;
+        }
+        logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
+        return 0;
+      } catch (e) {
+        handleError(e);
       }
-      logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
       return 0;
-    } catch (e) {
-      handleError(e);
-    }
-    return 0;
+    });
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {
     if (subscriberId == null || subscriberId == 0 || status == null) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'status': status,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [subscriberId],
-      );
-      if (count != null && count > 0) {
-        logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
-        return true;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'status': status,
+              'update_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
+          return true;
+        }
+        logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
+      } catch (e) {
+        handleError(e);
       }
-      logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+      return false;
+    });
   }
 
   Future<bool> setPermPage(int? subscriberId, int? permPage) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    try {
-      int? count = await db?.update(
-        tableName,
-        {
-          'perm_page': permPage,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'id = ?',
-        whereArgs: [subscriberId],
-      );
-      if (count != null && count > 0) {
-        logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
-        return true;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'perm_page': permPage,
+              'update_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
+          return true;
+        }
+        logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
+      } catch (e) {
+        handleError(e);
       }
-      logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+      return false;
+    });
   }
 
   // Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
   //   if (subscriberId == null || subscriberId == 0) return false;
-  //   try {
-  //     int? count = await db?.update(
-  //       tableName,
-  //       {
-  //         'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-  //         'update_at': DateTime.now().millisecondsSinceEpoch,
-  //       },
-  //       where: 'id = ?',
-  //       whereArgs: [subscriberId],
-  //     );
-  //     if (count != null && count > 0) {
-  //       logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
-  //       return true;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       int? count = await db?.transaction((txn) {
+  //         return txn.update(
+  //           tableName,
+  //           {
+  //             'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+  //             'update_at': DateTime.now().millisecondsSinceEpoch,
+  //           },
+  //           where: 'id = ?',
+  //           whereArgs: [subscriberId],
+  //         );
+  //       });
+  //       if (count != null && count > 0) {
+  //         logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
+  //         return true;
+  //       }
+  //       logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
+  //     } catch (e) {
+  //       handleError(e);
   //     }
-  //     logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return false;
+  //     return false;
+  //   });
   // }
 }
