@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/widgets.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -18,6 +19,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -43,109 +45,155 @@ class ChatOutCommon with Tag {
 
   MessageStorage _messageStorage = MessageStorage();
 
-  Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
+  bool inBackGround = false;
+
+  // send interval
+  int minSendIntervalMs = 20;
+  int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   ChatOutCommon();
 
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
-    if (!clientCommon.isClientCreated) return;
-    if (targetId == null || targetId.isEmpty) return;
-    if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
-    Timer? timer = checkNoAckTimers[targetId]?["timer"];
-    // delay
-    int initDelay = 3; // 3s
-    int maxDelay = 5 * 60; // 5m
-    int? delay = checkNoAckTimers[targetId]?["delay"];
-    if (refresh || (timer == null) || (delay == null) || (delay == 0)) {
-      checkNoAckTimers[targetId]?["delay"] = initDelay;
-      logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-    } else if (timer.isActive != true) {
-      checkNoAckTimers[targetId]?["delay"] = ((delay * 2) >= maxDelay) ? maxDelay : (delay * 2);
-      logger.i("$TAG - setMsgStatusCheckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-    } else {
-      logger.i("$TAG - setMsgStatusCheckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-    }
-    // timer
-    if (timer?.isActive == true) {
-      logger.i("$TAG - setMsgStatusCheckTimer - cancel old - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      timer?.cancel();
-      timer = null;
-    }
-    // start
-    checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? initDelay), () async {
-      logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await chatOutCommon._checkMsgStatus(targetId, isTopic, filterSec: filterSec); // await
-      if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
-      checkNoAckTimers[targetId]?["timer"]?.cancel();
+  void init() {
+    application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      Timer? timer;
+      if (application.isFromBackground(states)) {
+        timer?.cancel();
+        timer = null;
+        timer = Timer(Duration(seconds: 1), () {
+          inBackGround = false;
+        });
+      } else if (application.isGoBackground(states)) {
+        inBackGround = true;
+        timer?.cancel();
+        timer = null;
+      }
     });
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 60}) async {
-    if (!clientCommon.isClientCreated) return 0;
-    if (targetId == null || targetId.isEmpty) return 0;
-
-    int limit = 20;
-    List<MessageSchema> checkList = [];
-
-    // noAck
-    for (int offset = 0; true; offset += limit) {
-      final result = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
-      checkList.addAll(result);
-      logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
-      if (result.length < limit) break;
+  Future<OnMessage?> clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
+    destList = destList.where((element) => element.isNotEmpty).toList();
+    if (destList.isEmpty) {
+      logger.w("$TAG - clientSendData - destList is empty - destList:$destList - data:$data");
+      return null;
     }
-
-    // noRead
-    for (int offset = 0; true; offset += limit) {
-      final result = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
-      checkList.addAll(result);
-      logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
-      if (result.length < limit) break;
+    if (tryCount >= maxTryCount) {
+      logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
+      return null;
     }
-
-    // filter
-    checkList = checkList = checkList.where((element) => element.canReceipt).toList();
-    checkList = checkList.where((element) {
-      int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      if (between < (filterSec * 1000)) {
-        logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
-        return false;
+    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(seconds: 2));
+      return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+    }
+    if (inBackGround && Platform.isIOS) {
+      logger.i("$TAG - clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(seconds: 1));
+      return clientSendData(selfAddress, destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
+    }
+    if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
+      int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
+      logger.i("$TAG - clientSendData - interval small - interval:$interval - tryCount:$tryCount - destList:$destList - data:$data");
+      await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
+      return clientSendData(selfAddress, destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
+    }
+    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    try {
+      OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
+      if (onMessage?.messageId.isNotEmpty == true) {
+        logger.d("$TAG - clientSendData - send success - destList:$destList - data:$data");
+        return onMessage;
+      } else {
+        logger.w("$TAG - clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
+        await Future.delayed(Duration(seconds: 2));
+        return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
-      return true;
-    }).toList();
-
-    if (checkList.isEmpty) {
-      logger.d("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic");
-      return 0;
-    }
-
-    // resend
-    if (isTopic || forceResend) {
-      for (var i = 0; i < checkList.length; i++) {
-        MessageSchema element = checkList[i];
-        resendMute(element);
-        await Future.delayed(Duration(milliseconds: forceResend ? 200 : 500));
-      }
-    } else {
-      List<String> msgIds = [];
-      checkList.forEach((element) {
-        if (element.msgId.isNotEmpty) {
-          msgIds.add(element.msgId);
+    } catch (e) {
+      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+        final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
+        if ((client != null) && (client.address.isNotEmpty == true)) {
+          logger.i("$TAG - clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
+          await Future.delayed(Duration(seconds: 1));
+          return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        } else {
+          // maybe always no here
+          logger.w("$TAG - clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
+          return null;
         }
-      });
-      sendMsgStatus(targetId, true, msgIds); // await
+      } else if (e.toString().contains("invalid destination")) {
+        logger.w("$TAG - clientSendData - wrong clientAddress - destList:$destList");
+        return null;
+      } else {
+        handleError(e);
+        logger.w("$TAG - clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
+        await Future.delayed(Duration(seconds: 2));
+        return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      }
     }
+  }
 
-    logger.i("$TAG - _checkMsgStatus - checkCount:${checkList.length} - targetId:$targetId - isTopic:$isTopic");
-    return checkList.length;
+  Future<List<OnMessage>> clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
+    if (topic == null || topic.isEmpty) return [];
+    if (tryCount >= maxTryCount) {
+      logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
+      return [];
+    }
+    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - dest:$topic - data:$data");
+      await Future.delayed(Duration(seconds: 2));
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+    }
+    if (inBackGround && Platform.isIOS) {
+      logger.i("$TAG - clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
+      await Future.delayed(Duration(seconds: 1));
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+    }
+    if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
+      int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
+      logger.i("$TAG - clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
+      await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
+      return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+    }
+    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    try {
+      // once
+      if (total == null || total <= 1000) {
+        OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
+        return [result];
+      }
+      // split
+      List<Future<OnMessage>> futures = [];
+      for (int i = 0; i < total; i += 1000) {
+        futures.add(clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: i, limit: i + 1000));
+      }
+      List<OnMessage> onMessageList = await Future.wait(futures);
+      logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
+      return onMessageList;
+    } catch (e) {
+      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+        final client = (await clientCommon.reSignIn(false, delayMs: 100))[0];
+        if ((client != null) && (client.address.isNotEmpty == true)) {
+          logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
+          await Future.delayed(Duration(seconds: 1));
+          return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        } else {
+          // maybe always no here
+          logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
+          return [];
+        }
+      } else {
+        handleError(e);
+        logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
+        await Future.delayed(Duration(seconds: 2));
+        return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      }
+    }
   }
 
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getPing(isPing);
-    await chatCommon.clientSendData(clientCommon.address, clientAddressList, data);
+    await clientSendData(clientCommon.address, clientAddressList, data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -154,7 +202,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     received = (await _messageStorage.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
-    await chatCommon.clientSendData(clientCommon.address, [received.from], data);
+    await clientSendData(clientCommon.address, [received.from], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -162,7 +210,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getRead(msgIds);
-    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
+    await clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -170,7 +218,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getMsgStatus(ask, msgIds);
-    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
+    await clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -179,7 +227,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-    await chatCommon.clientSendData(clientCommon.address, [target.clientAddress], data);
+    await clientSendData(clientCommon.address, [target.clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -194,7 +242,7 @@ class ChatOutCommon with Tag {
     } else {
       data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
     }
-    await chatCommon.clientSendData(clientCommon.address, [target.clientAddress], data);
+    await clientSendData(clientCommon.address, [target.clientAddress], data);
   }
 
   // NO topic (1 to 1)
@@ -233,7 +281,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getDeviceRequest();
-    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
+    await clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -241,7 +289,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getDeviceInfo();
-    await chatCommon.clientSendData(clientCommon.address, [clientAddress], data);
+    await clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
@@ -308,7 +356,7 @@ class ChatOutCommon with Tag {
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await chatCommon.clientSendData(clientCommon.address, clientAddressList, data);
+    OnMessage? onResult = await clientSendData(clientCommon.address, clientAddressList, data);
     if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
@@ -541,7 +589,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
       logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
-      pid = (await chatCommon.clientSendData(clientCommon.address, [message.to ?? ""], msgData))?.messageId;
+      pid = (await clientSendData(clientCommon.address, [message.to ?? ""], msgData))?.messageId;
     }
     // result
     if (pid?.isNotEmpty == true) {
@@ -591,7 +639,7 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       int total = await subscriberCommon.getSubscribersCount(message.topic!, false);
       // permission checked in received
-      List<OnMessage> onMessageList = await chatCommon.clientPublishData(clientCommon.address, message.topic, msgData, total: total);
+      List<OnMessage> onMessageList = await clientPublishData(clientCommon.address, message.topic, msgData, total: total);
       if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
         return onMessageList[0].messageId;
@@ -621,7 +669,7 @@ class ChatOutCommon with Tag {
     }
     OnMessage? onMessage;
     if (targetIds.isNotEmpty) {
-      onMessage = await chatCommon.clientSendData(clientCommon.address, targetIds, msgData); // long time to wait when targetIds too much
+      onMessage = await clientSendData(clientCommon.address, targetIds, msgData); // long time to wait when targetIds too much
     }
     // result
     Uint8List? pid;
@@ -697,7 +745,7 @@ class ChatOutCommon with Tag {
       } else {
         resultList.add(result);
       }
-      await Future.delayed(Duration(milliseconds: chatCommon.minSendIntervalMs + 5));
+      await Future.delayed(Duration(milliseconds: minSendIntervalMs));
     }
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
     finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
