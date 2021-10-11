@@ -29,8 +29,6 @@ class ChatCommon with Tag {
 
   Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
 
-  MessageStorage _messageStorage = MessageStorage();
-
   ChatCommon();
 
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
@@ -75,7 +73,7 @@ class ChatCommon with Tag {
 
     // noAck
     for (int offset = 0; true; offset += limit) {
-      final result = await _messageStorage.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
+      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
       checkList.addAll(result);
       logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
@@ -83,7 +81,7 @@ class ChatCommon with Tag {
 
     // noRead
     for (int offset = 0; true; offset += limit) {
-      final result = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
       checkList.addAll(result);
       logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
@@ -333,7 +331,7 @@ class ChatCommon with Tag {
       // set delete time
       logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
       message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-      _messageStorage.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
+      MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
         if (success) _onUpdateSink.add(message);
       });
     }
@@ -341,26 +339,26 @@ class ChatCommon with Tag {
   }
 
   Future<int> unreadCount() {
-    return _messageStorage.unReadCount();
+    return MessageStorage.instance.unReadCount();
   }
 
   Future<int> unReadCountByTargetId(String? targetId) {
-    return _messageStorage.unReadCountByTargetId(targetId);
+    return MessageStorage.instance.unReadCountByTargetId(targetId);
   }
 
   Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
-    return _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
+    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
   }
 
   Future<bool> deleteByTargetId(String? targetId) async {
-    await _messageStorage.deleteByTargetIdContentType(targetId, MessageContentType.piece);
-    return _messageStorage.updateIsDeleteByTargetId(targetId, true, clearContent: true);
+    await MessageStorage.instance.deleteByTargetIdContentType(targetId, MessageContentType.piece);
+    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, true, clearContent: true);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Received) || (message.status == MessageStatus.Read)) : true;
-    bool success = await _messageStorage.updateIsDelete(message.msgId, true, clearContent: clearContent);
+    bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
     if (success && notify) onDeleteSink.add(message.msgId);
     // delete file
     if (clearContent && (message.content is File)) {
@@ -383,13 +381,13 @@ class ChatCommon with Tag {
       if (!force && (message.content is File) && (tryCount <= 5)) {
         logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
         await Future.delayed(Duration(seconds: 1));
-        MessageSchema? _message = await _messageStorage.queryByNoContentType(message.msgId, MessageContentType.piece);
+        MessageSchema? _message = await MessageStorage.instance.queryByNoContentType(message.msgId, MessageContentType.piece);
         if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
       }
     }
     // update
     message.status = status;
-    bool success = await _messageStorage.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
+    bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (success && notify) _onUpdateSink.add(message);
     // delete later
     if (message.isDelete && (message.content != null)) {
@@ -407,7 +405,7 @@ class ChatCommon with Tag {
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
-    List<MessageSchema> unreadList = await _messageStorage.queryListByTargetIdWithUnRead(targetId);
+    List<MessageSchema> unreadList = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId);
     for (var i = 0; i < unreadList.length; i++) {
       MessageSchema element = unreadList[i];
       msgIds.add(element.msgId);
@@ -422,7 +420,7 @@ class ChatCommon with Tag {
   Future<int> readMessageBySide(String? targetId, int? sendAt, {int offset = 0, int limit = 20}) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
     // noReads
-    List<MessageSchema> noReads = await _messageStorage.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
     List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
     // read
     for (var i = 0; i < shouldReads.length; i++) {
@@ -440,7 +438,7 @@ class ChatCommon with Tag {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     int waitSec = 3 * 60; // 1m
-    List<MessageSchema> sendingList = await _messageStorage.queryListByStatus(MessageStatus.Sending);
+    List<MessageSchema> sendingList = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending);
 
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
@@ -452,7 +450,7 @@ class ChatCommon with Tag {
         if (message.canResend) {
           await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, notify: true);
         } else {
-          int count = await _messageStorage.deleteByContentType(message.msgId, message.contentType);
+          int count = await MessageStorage.instance.deleteByContentType(message.msgId, message.contentType);
           if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
         }
       }
