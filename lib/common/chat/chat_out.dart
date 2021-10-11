@@ -48,7 +48,7 @@ class ChatOutCommon with Tag {
   bool inBackGround = false;
 
   // send interval
-  int minSendIntervalMs = 20;
+  int minSendIntervalMs = 30;
   int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   ChatOutCommon();
