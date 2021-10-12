@@ -52,8 +52,18 @@ class SubscriberCommon with Tag {
       // filter in txPool
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((dbItem.status != SubscriberStatus.None) && ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs)) {
-        logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
-        continue;
+        if ((dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.InvitedSend)) {
+          int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
+          if ((DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
+            logger.i("$TAG - refreshSubscribers - DB update just now, status cant next - dbSub:$dbItem");
+          } else {
+            logger.i("$TAG - refreshSubscribers - DB update just now, and create to long - dbSub:$dbItem");
+            continue;
+          }
+        } else {
+          logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
+          continue;
+        }
       } else {
         var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
         logger.d("$TAG - refreshSubscribers - DB update to long - between:${betweenS}s");
@@ -150,8 +160,7 @@ class SubscriberCommon with Tag {
     // merge
     List<SubscriberSchema> results = [];
     if (!meta || _acceptAll == true) {
-      results = subscribers;
-      results = results.map((e) {
+      results = subscribers.map((e) {
         e.status = SubscriberStatus.Subscribed;
         return e;
       }).toList();
