@@ -29,9 +29,13 @@ class ClientCommon with Tag {
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
 
+  // == chat_id
   String? get address => client?.address;
 
+  // == wallet publicKey
   Uint8List? get publicKey => client?.publicKey;
+
+  bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
 
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
@@ -52,30 +56,25 @@ class ClientCommon with Tag {
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
 
-  bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
   late int status;
-  bool isClosing = false;
-  int connectedAt = 0;
+  bool clientClosing = false;
   bool connectChecking = false;
 
   ClientCommon() {
-    isClosing = false;
     status = ClientConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
-      if (client != null && event == ClientConnectStatus.connected) {
-        connectedAt = DateTime.now().millisecondsSinceEpoch;
-      }
     });
     onErrorStream.listen((dynamic event) {
       handleError(event);
       connectCheck(reconnect: true);
     });
+    clientClosing = false;
+    connectChecking = false;
   }
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  // need signOut
   // return [client, pwdError]
   Future<List> signIn(
     WalletSchema? wallet, {
@@ -156,7 +155,6 @@ class ClientCommon with Tag {
       }
 
       // client create
-      isClosing = false;
       if (client == null) {
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
@@ -215,7 +213,8 @@ class ClientCommon with Tag {
   }
 
   Future signOut({bool clearWallet = true, bool closeDB = true}) async {
-    isClosing = true;
+    if (clientClosing) return;
+    clientClosing = true;
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
     // client
@@ -227,11 +226,12 @@ class ClientCommon with Tag {
       await client?.close();
     } catch (e) {
       handleError(e);
+      clientClosing = false;
       await Future.delayed(Duration(milliseconds: 200));
       return signOut(closeDB: closeDB, clearWallet: clearWallet);
     }
     client = null;
-    isClosing = false;
+    clientClosing = false;
     if (clearWallet) BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(null));
     if (closeDB) await dbCommon.close();
   }
@@ -251,9 +251,7 @@ class ClientCommon with Tag {
     }
 
     await Future.delayed(Duration(milliseconds: delayMs));
-    if (status != ClientConnectStatus.connecting) {
-      _statusSink.add(ClientConnectStatus.connecting);
-    }
+    _statusSink.add(ClientConnectStatus.connecting);
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
@@ -263,7 +261,6 @@ class ClientCommon with Tag {
   void connectCheck({bool reconnect = false}) {
     if (client == null) return;
     if (connectChecking) return;
-    isClosing = false;
     connectChecking = true;
     _statusSink.add(ClientConnectStatus.connecting);
 
