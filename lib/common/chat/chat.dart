@@ -144,22 +144,23 @@ class ChatCommon with Tag {
         bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
         if (success) exist.type = ContactType.stranger;
       }
-      // profile
-      if ((exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
-        logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
-        chatOutCommon.sendContactRequest(exist, RequestType.header); // await
-        // skip all messages need send contact request
-        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
-        exist.profileVersion = exist.profileVersion ?? Uuid().v4();
-        exist.profileUpdateAt = DateTime.now().millisecondsSinceEpoch;
-        await contactCommon.setProfileOnly(exist, exist.profileVersion, notify: true);
-      } else {
-        double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
-        logger.d("$TAG contactHandle - expiresAt - between:${between}s");
-      }
+    }
+    if (exist == null) return null;
+    // profile
+    if ((exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
+      logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
+      chatOutCommon.sendContactRequest(exist, RequestType.header); // await
+      // skip all messages need send contact request
+      exist.updateAt = DateTime.now().millisecondsSinceEpoch;
+      exist.profileVersion = exist.profileVersion ?? Uuid().v4();
+      exist.profileUpdateAt = DateTime.now().millisecondsSinceEpoch;
+      await contactCommon.setProfileOnly(exist, exist.profileVersion, notify: true);
+    } else {
+      double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
+      logger.d("$TAG contactHandle - expiresAt - between:${between}s");
     }
     // burning
-    if ((exist != null) && message.canBurning) {
+    if (message.canBurning) {
       List<int?> burningOptions = MessageOptions.getContactBurning(message);
       int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
       int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
@@ -319,7 +320,7 @@ class ChatCommon with Tag {
       return added;
     }
     // update
-    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? exist.unReadCount + 1 : exist.unReadCount);
+    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
     exist.lastMessageAt = MessageOptions.getSendAt(message) ?? message.sendAt;
     exist.lastMessageOptions = message.toMap();
@@ -476,10 +477,10 @@ class ChatCommon with Tag {
 
     int max = 100;
     int limit = 20;
+    int filterDay = 10; // 10 days filter
     List<String> targetIds = [];
 
     // sessions
-    int filterDay = 10; // 10 days filter
     for (int offset = 0; true; offset += limit) {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       result.forEach((element) {
