@@ -297,6 +297,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _refreshTopicSubscribers({bool fetch = true}) async {
     if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
     bool topicCountEmpty = (_topic?.count ?? 0) <= 1;
+    // refresh count
+    int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
+    if (_topic?.count != count) {
+      await topicCommon.setCount(_topic?.id, count, notify: true);
+    }
+    // fetch
     if (fetch || topicCountEmpty) {
       int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
       if (topicCountEmpty) {
@@ -309,11 +315,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       await Future.delayed(Duration(milliseconds: 500));
       logger.i("$TAG - _refreshTopicSubscribers - start");
       await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
-    }
-    // refresh count
-    int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
-    if (_topic?.count != count) {
-      await topicCommon.setCount(_topic?.id, count, notify: true);
+      // refresh again
+      int count2 = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
+      if (count != count2) {
+        await topicCommon.setCount(_topic?.id, count2, notify: true);
+      }
     }
   }
 
