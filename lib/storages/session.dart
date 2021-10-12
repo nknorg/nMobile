@@ -66,12 +66,7 @@ class SessionStorage with Tag {
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
-          SessionSchema? exists = await query(schema.targetId);
-          if (exists != null) {
-            logger.i("$TAG - insert - exists - schema:$exists");
-          } else {
-            logger.w("$TAG - insert - fail - schema:$schema");
-          }
+          logger.i("$TAG - insert - exists - schema:$schema");
         }
       } catch (e) {
         handleError(e);

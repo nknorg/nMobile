@@ -68,12 +68,7 @@ class SubscriberStorage with Tag {
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
-          SubscriberSchema? exists = await queryByTopicChatId(schema.topic, schema.clientAddress);
-          if (exists != null) {
-            logger.i("$TAG - insert - exists - schema:$exists");
-          } else {
-            logger.w("$TAG - insert - fail - schema:$schema");
-          }
+          logger.i("$TAG - insert - exists - schema:$schema");
         }
       } catch (e) {
         handleError(e);
