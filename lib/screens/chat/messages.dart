@@ -73,10 +73,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusSubscription;
 
+  StreamSubscription? _onContactUpdateStreamSubscription;
   StreamSubscription? _onTopicUpdateStreamSubscription;
   // StreamSubscription? _onTopicDeleteStreamSubscription;
+  StreamSubscription? _onSubscriberAddStreamSubscription;
   StreamSubscription? _onSubscriberUpdateStreamSubscription;
-  StreamSubscription? _onContactUpdateStreamSubscription;
 
   StreamSubscription? _onMessageReceiveStreamSubscription;
   StreamSubscription? _onMessageSendStreamSubscription;
@@ -131,6 +132,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       });
     });
 
+    // contact
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((ContactSchema event) {
+      setState(() {
+        _contact = event;
+      });
+    });
+
     // topic
     // isPopIng = false;
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
@@ -142,27 +150,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       setState(() {
         _topic = event;
       });
-      _refreshTopicSubscribers(fetch: false);
       _refreshTopicJoined();
+      _refreshTopicSubscribers(fetch: false);
     });
     // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
     //   Navigator.pop(this.context);
     // });
 
     // subscriber
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.listen((SubscriberSchema schema) {
+      if (schema.topic == _topic?.topic) {
+        _refreshTopicSubscribers(fetch: false);
+      }
+    });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       } else {
         _refreshTopicSubscribers(fetch: false);
       }
-    });
-
-    // contact
-    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((ContactSchema event) {
-      setState(() {
-        _contact = event;
-      });
     });
 
     // messages
@@ -198,8 +204,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _getDataMessages(true);
 
     // topic
-    _refreshTopicSubscribers(); // await
     _refreshTopicJoined(); // await
+    _refreshTopicSubscribers(); // await
 
     // read
     _readMessages(true, true); // await
@@ -226,10 +232,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _appLifeChangeSubscription?.cancel();
     _clientStatusSubscription?.cancel();
 
+    _onContactUpdateStreamSubscription?.cancel();
     _onTopicUpdateStreamSubscription?.cancel();
     // _onTopicDeleteStreamSubscription?.cancel();
+    _onSubscriberAddStreamSubscription?.cancel();
     _onSubscriberUpdateStreamSubscription?.cancel();
-    _onContactUpdateStreamSubscription?.cancel();
 
     _onInputChangeController.close();
     _onMessageReceiveStreamSubscription?.cancel();
@@ -267,12 +274,34 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
   }
 
+  _refreshTopicJoined() async {
+    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
+    if (joined && (_topic?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+      logger.i("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
+      joined = _me?.status == SubscriberStatus.Subscribed;
+    }
+    if (!joined && mounted) {
+      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: false).then((value) {
+        Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
+      });
+    }
+    if (_isJoined != joined) {
+      setState(() {
+        _isJoined = joined;
+      });
+    }
+  }
+
   _refreshTopicSubscribers({bool fetch = true}) async {
     if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
-    if (fetch) {
+    bool topicCountEmpty = (_topic?.count ?? 0) <= 1;
+    if (fetch || topicCountEmpty) {
       int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
-      // less 1h
-      if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
+      if (topicCountEmpty) {
+        logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountError");
+      } else if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
         logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
         return;
       }
@@ -285,26 +314,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {
       await topicCommon.setCount(_topic?.id, count, notify: true);
-    }
-  }
-
-  _refreshTopicJoined() async {
-    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
-    bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
-    if (joined && (_topic?.isPrivate == true)) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
-      logger.i("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
-      joined = _me?.status == SubscriberStatus.Subscribed;
-    }
-    if (!joined && mounted) {
-      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: false).then((value) async {
-        await Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
-      });
-    }
-    if (_isJoined != joined) {
-      setState(() {
-        _isJoined = joined;
-      });
     }
   }
 
