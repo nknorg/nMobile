@@ -63,7 +63,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> subscribe(String? topicName, {bool justNow = false, double fee = 0}) async {
+  Future<TopicSchema?> subscribe(String? topicName, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
     if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
@@ -122,7 +122,7 @@ class TopicCommon with Tag {
 
     // check expire + pull subscribers
     bool historyJoined = exists.joined;
-    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: true, fee: fee, toast: true);
+    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: fetchSubscribers, fee: fee, toast: true);
     if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 

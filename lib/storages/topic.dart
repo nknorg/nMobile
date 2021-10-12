@@ -76,12 +76,7 @@ class TopicStorage with Tag {
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
-          TopicSchema? exists = await queryByTopic(schema.topic);
-          if (exists != null) {
-            logger.i("$TAG - insert - exists - schema:$exists");
-          } else {
-            logger.w("$TAG - insert - fail - schema:$schema");
-          }
+          logger.i("$TAG - insert - exists - schema:$schema");
         }
       } catch (e) {
         handleError(e);
