@@ -372,7 +372,7 @@ class ChatMessageItem extends StatelessWidget {
                       Loading.show();
                       int sendAt = MessageOptions.getSendAt(message) ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
-                      TopicSchema? result = await topicCommon.subscribe(topic, justNow: isJustNow);
+                      TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow);
                       Loading.dismiss();
                       if (result != null) Toast.show(_localizations.subscribed);
                     }
