@@ -75,8 +75,9 @@ class ChatCommon with Tag {
     // noAck
     for (int offset = 0; true; offset += limit) {
       final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
-      checkList.addAll(result);
-      logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      final canReceipts = result.where((element) => element.canReceipt).toList();
+      checkList.addAll(canReceipts);
+      logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
       if ((offset + limit) >= maxCount) break;
     }
@@ -84,14 +85,14 @@ class ChatCommon with Tag {
     // noRead
     for (int offset = 0; true; offset += limit) {
       final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
-      checkList.addAll(result);
-      logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${result.length} - total_len:${checkList.length}");
+      final canReceipts = result.where((element) => element.canReceipt).toList();
+      checkList.addAll(canReceipts);
+      logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
       if (result.length < limit) break;
       if ((offset + limit) >= maxCount) break;
     }
 
     // filter
-    checkList = checkList = checkList.where((element) => element.canReceipt).toList();
     checkList = checkList.where((element) {
       int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;

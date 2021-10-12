@@ -467,8 +467,12 @@ class ChatOutCommon with Tag {
         msgData = await MessageData.getAudio(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
+      case MessageContentType.topicInvitation:
+        msgData = MessageData.getTopicInvitee(message);
+        logger.i("$TAG - resendMute - resend invitee - targetId:${message.targetId} - msgData:$msgData");
+        break;
       default:
-        logger.w("$TAG - resendMute - noBurning no receipt/read - targetId:${message.targetId} - message:$message");
+        logger.w("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
         int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
         message = await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         return message;
