@@ -209,8 +209,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       chatOutCommon.sendPing([this.targetId ?? ""], true); // await
       chatOutCommon.sendPing([this.targetId ?? ""], false); // await
     } else if (this._topic != null && this._contact == null) {
-      chatOutCommon.setMsgStatusCheckTimer(this.targetId, true, refresh: true); // await
+      chatCommon.setMsgStatusCheckTimer(this.targetId, true, refresh: true); // await
     }
+
+    // test
+    // Future.delayed(Duration(seconds: 1), () => _debugSendText());
   }
 
   @override
@@ -665,20 +668,38 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     );
   }
 
-  // _debugSendText({bool enableTopic = false, int maxTimes = 10000}) async {
-  //   if (!enableTopic && (_topic != null)) return;
+  // _debugSendText({int maxTimes = 100}) async {
   //   for (var i = 0; i < maxTimes; i++) {
-  //     String text = "$i _ ${Uuid().v4()}";
+  //     String text = "${i + 1} _ ${Uuid().v4()}";
   //     chatOutCommon.sendText(text, topic: _topic, contact: _contact);
   //   }
   // }
 
-  // _debugSendPing({int maxTimes = 1000}) async {
+  // _debugSendPing({int maxTimes = 100}) async {
   //   if (_topic != null) return;
   //   for (var i = 0; i < maxTimes; i++) {
   //     if (clientCommon.address != null) {
   //       chatOutCommon.sendPing([clientCommon.address!], true);
   //     }
+  //   }
+  // }
+
+  // _debugSubscribersAdd({int maxCount = 2000}) async {
+  //   if (_topic == null) return;
+  //   for (var i = 0; i < maxCount; i++) {
+  //     Wallet nkn = await Wallet.create(null, config: WalletConfig(password: "12345"));
+  //     if (nkn.address.isEmpty || nkn.keystore.isEmpty || nkn.seed.isEmpty) {
+  //       logger.w("$TAG - _debugSubscribersAdd - wallet create fail - nkn:${nkn.toString()}");
+  //       continue;
+  //     }
+  //     logger.i("$TAG - _debugSubscribersAdd - wallet create success - nkn:${nkn.toString()}");
+  //     Client client = await Client.create(nkn.seed);
+  //     String topicHash = await client.subscribe(
+  //       topic: genTopicHash(_topic!.topic),
+  //       duration: Global.topicDefaultSubscribeHeight,
+  //     );
+  //     logger.i("$TAG - _debugSubscribersAdd - subscribe success - topicName:${_topic!.topic} - topicHash:$topicHash");
+  //     await subscriberCommon.onSubscribe(_topic!.topic, client.address, 0);
   //   }
   // }
 }
