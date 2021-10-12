@@ -78,8 +78,8 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
-    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - destList:$destList - data:$data");
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 2));
       return clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
@@ -135,8 +135,8 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - clientPublishData - try over - dest:$topic - data:$data");
       return [];
     }
-    if (!clientCommon.isClientCreated || clientCommon.isClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.isClosing} - tryCount:$tryCount - dest:$topic - data:$data");
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - clientPublishData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 2));
       return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
