@@ -123,10 +123,7 @@ class TopicCommon with Tag {
     // check expire + pull subscribers
     bool historyJoined = exists.joined;
     exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: true, fee: fee, toast: true);
-    if (exists == null) {
-      Toast.show(S.of(Global.appContext).failure);
-      return null;
-    }
+    if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
     // status + permission
