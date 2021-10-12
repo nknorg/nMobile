@@ -19,7 +19,6 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
-import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -124,7 +123,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         this._topicSchema = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(topicName, refreshSubscribers: true); // await
+      topicCommon.checkExpireAndSubscribe(topicName); // await
     });
 
     _refreshJoined(); // await
