@@ -50,7 +50,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
   Future<bool> createOrJoinTopic(String? topicName, double fee) async {
     if (topicName == null || topicName.isEmpty) return false;
-    Loading.show();
 
     if (_privateSelected) {
       if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
@@ -63,8 +62,10 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
+    Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fee: fee);
     Loading.dismiss();
+
     if (_topic == null) return false;
     Navigator.pop(this.context);
     ChatMessagesScreen.go(Global.appContext, _topic);
