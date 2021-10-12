@@ -242,7 +242,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   _refreshContactMe() async {
     if (!dbOpen) return;
     ContactSchema? contact = await contactCommon.getMe();
-    if (contact == null) {
+    if ((contact == null) && mounted) {
       return await Future.delayed(Duration(seconds: 1), () => _refreshContactMe());
     }
     setState(() {
@@ -488,7 +488,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               ContactSchema? contact = await contactCommon.queryByClientAddress(address);
                               if (contact != null) {
                                 if (contact.type == ContactType.none) {
-                                  bool success = await contactCommon.setType(contact.id, ContactType.stranger,notify: true);
+                                  bool success = await contactCommon.setType(contact.id, ContactType.stranger, notify: true);
                                   if (success) contact.type = ContactType.stranger;
                                 }
                               } else {
