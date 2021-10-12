@@ -345,7 +345,9 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    chatCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10);
+    if ((received.from != received.to) && (received.from != clientCommon.address)) {
+      chatCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10);
+    }
 
     return true;
   }
@@ -389,7 +391,9 @@ class ChatInCommon with Tag {
     await chatCommon.readMessageBySide(received.targetId, reallySendAt);
 
     // check msgStatus
-    chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 60);
+    if ((received.from != received.to) && (received.from != clientCommon.address)) {
+      chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
+    }
 
     return true;
   }
