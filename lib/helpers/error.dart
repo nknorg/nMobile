@@ -34,20 +34,16 @@ catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? 
   };
 }
 
-String? handleError(
-  dynamic error, {
-  StackTrace? stackTrace,
-  String? toast,
-}) {
+String? handleError(dynamic error, {StackTrace? stackTrace, String? toast}) {
   if (!Global.isRelease) {
     logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
   String? show = getErrorShow(error);
-  if (show != null && show.isNotEmpty) {
-    Toast.show(show);
-  } else if (toast?.isNotEmpty == true) {
+  if (toast?.isNotEmpty == true) {
     Toast.show(toast);
+  } else if (show != null && show.isNotEmpty) {
+    Toast.show(show);
   }
   return show;
 }
