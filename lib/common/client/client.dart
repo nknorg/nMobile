@@ -226,8 +226,8 @@ class ClientCommon with Tag {
       await client?.close();
     } catch (e) {
       handleError(e);
-      clientClosing = false;
       await Future.delayed(Duration(milliseconds: 200));
+      clientClosing = false;
       return signOut(closeDB: closeDB, clearWallet: clearWallet);
     }
     client = null;
