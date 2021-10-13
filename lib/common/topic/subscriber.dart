@@ -50,14 +50,16 @@ class SubscriberCommon with Tag {
     for (var i = 0; i < dbSubscribers.length; i++) {
       SubscriberSchema dbItem = dbSubscribers[i];
       // filter in txPool
+      int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((dbItem.status != SubscriberStatus.None) && ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs)) {
-        if ((dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.InvitedSend)) {
-          int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
+      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
+        if (dbItem.status == SubscriberStatus.None) {
+          logger.d("$TAG - refreshSubscribers - DB update just now, next by no status - dbSub:$dbItem");
+        } else if (!meta && ((dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.InvitedSend))) {
           if ((DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
-            logger.i("$TAG - refreshSubscribers - DB update just now, status cant next - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB update just now, next by just created - dbSub:$dbItem");
           } else {
-            logger.i("$TAG - refreshSubscribers - DB update just now, and create to long - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB update just now, and created to long - dbSub:$dbItem");
             continue;
           }
         } else {
