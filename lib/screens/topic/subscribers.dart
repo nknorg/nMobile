@@ -89,7 +89,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     // });
 
     // subscriber listen
-    _addSubscriberSubscription = subscriberCommon.addStream.listen((SubscriberSchema schema) {
+    _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
       setState(() {
         _subscriberList.add(schema);
       });
@@ -99,7 +99,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         _subscriberList = _subscriberList.where((element) => element.id != subscriberId).toList();
       });
     });
-    _updateSubscriberSubscription = subscriberCommon.updateStream.listen((SubscriberSchema event) {
+    _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema event) {
       setState(() {
         _subscriberList = _subscriberList.map((e) => e.id == event.id ? event : e).toList();
       });

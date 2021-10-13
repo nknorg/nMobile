@@ -158,10 +158,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // });
 
     // subscriber
-    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.listen((SubscriberSchema schema) {
-      if (schema.topic == _topic?.topic) {
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
         _refreshTopicSubscribers(fetch: false);
-      }
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
