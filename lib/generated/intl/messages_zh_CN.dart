@@ -204,6 +204,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "fast": MessageLookupByLibrary.simpleMessage("快"),
         "featured": MessageLookupByLibrary.simpleMessage("精选"),
         "fee": MessageLookupByLibrary.simpleMessage("矿工费"),
+        "file_too_big": MessageLookupByLibrary.simpleMessage("文件尺寸过大"),
         "files": MessageLookupByLibrary.simpleMessage("文件"),
         "first_name": MessageLookupByLibrary.simpleMessage("名"),
         "friends": MessageLookupByLibrary.simpleMessage("好友"),
@@ -328,7 +329,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "password_wrong":
             MessageLookupByLibrary.simpleMessage("账户密码或keystore错误"),
         "pending": MessageLookupByLibrary.simpleMessage("待定"),
-        "picture_too_big": MessageLookupByLibrary.simpleMessage("图片尺寸过大"),
         "pictures": MessageLookupByLibrary.simpleMessage("图片"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[草稿]"),
         "popular_channels": MessageLookupByLibrary.simpleMessage("推荐群组"),
