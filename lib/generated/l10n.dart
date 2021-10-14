@@ -3470,11 +3470,11 @@ class S {
     );
   }
 
-  /// `The picture is too big`
-  String get picture_too_big {
+  /// `The file is too big`
+  String get file_too_big {
     return Intl.message(
-      'The picture is too big',
-      name: 'picture_too_big',
+      'The file is too big',
+      name: 'file_too_big',
       desc: '',
       args: [],
     );
