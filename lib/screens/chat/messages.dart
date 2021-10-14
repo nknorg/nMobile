@@ -371,7 +371,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if (sendCount >= 3 && receiveCount >= 3) break;
     }
     logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
-    if (sendCount < 3 || receiveCount < 3) return;
+    if ((sendCount < 3) || (receiveCount < 3) || !mounted) return;
     // tip dialog
     ModalDialog.of(this.context).confirm(
       title: S.of(context).tip_open_send_device_token,
