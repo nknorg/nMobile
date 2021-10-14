@@ -233,7 +233,7 @@ class MediaPicker {
     }
     // crop
     File? cropFile = await ImageCropper.cropImage(
-      sourcePath: original.path,
+      sourcePath: original.absolute.path,
       cropStyle: cropStyle,
       aspectRatio: cropRatio,
       compressQuality: 100, // later handle
@@ -314,7 +314,7 @@ class MediaPicker {
     }
     // compress
     File? compressFile = await FlutterImageCompress.compressAndGetFile(
-      original.path,
+      original.absolute.path,
       compressPath,
       quality: compressQuality,
       autoCorrectionAngle: true,

@@ -66,74 +66,77 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
 
     RepaintBoundary repaintBoundary = RepaintBoundary(
       key: globalKey,
-      child: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
-            child: Material(
-              color: application.theme.backgroundColor2,
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-              elevation: 0,
-              child: InkWell(
+      child: Container(
+        color: application.theme.backgroundColor,
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+              child: Material(
+                color: application.theme.backgroundColor2,
                 borderRadius: BorderRadius.all(Radius.circular(8)),
-                onTap: () {
-                  copyText(_wallet.address, context: context);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                  // decoration: BoxDecoration(
-                  //   borderRadius: BorderRadius.all(Radius.circular(8)),
-                  //   color: application.theme.backgroundColor2,
-                  // ),
-                  child: Column(
-                    children: <Widget>[
-                      Label(
-                        _localizations.wallet_address,
-                        type: LabelType.h4,
-                        textAlign: TextAlign.start,
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Label(
-                          _wallet.address,
-                          type: LabelType.bodyRegular,
+                elevation: 0,
+                child: InkWell(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  onTap: () {
+                    copyText(_wallet.address, context: context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    // decoration: BoxDecoration(
+                    //   borderRadius: BorderRadius.all(Radius.circular(8)),
+                    //   color: application.theme.backgroundColor2,
+                    // ),
+                    child: Column(
+                      children: <Widget>[
+                        Label(
+                          _localizations.wallet_address,
+                          type: LabelType.h4,
                           textAlign: TextAlign.start,
-                          maxLines: 10,
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Asset.iconSvg(
-                              'copy',
-                              width: 24,
-                              color: application.theme.primaryColor,
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Label(
+                            _wallet.address,
+                            type: LabelType.bodyRegular,
+                            textAlign: TextAlign.start,
+                            maxLines: 10,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Asset.iconSvg(
+                                'copy',
+                                width: 24,
+                                color: application.theme.primaryColor,
+                              ),
                             ),
-                          ),
-                          Label(
-                            _localizations.copy_to_clipboard,
-                            color: application.theme.primaryColor,
-                            type: LabelType.h4,
-                          ),
-                        ],
-                      ),
-                    ],
+                            Label(
+                              _localizations.copy_to_clipboard,
+                              color: application.theme.primaryColor,
+                              type: LabelType.h4,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(top: 24),
-            child: QrImage(
-              data: _wallet.address,
-              version: QrVersions.auto,
-              size: Global.screenWidth() * 0.57,
+            Container(
+              padding: const EdgeInsets.only(top: 24),
+              child: QrImage(
+                data: _wallet.address,
+                version: QrVersions.auto,
+                size: Global.screenWidth() * 0.57,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
 
