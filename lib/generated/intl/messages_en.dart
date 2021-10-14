@@ -236,6 +236,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "fast": MessageLookupByLibrary.simpleMessage("Fast"),
         "featured": MessageLookupByLibrary.simpleMessage("Featured"),
         "fee": MessageLookupByLibrary.simpleMessage("Fee"),
+        "file_too_big":
+            MessageLookupByLibrary.simpleMessage("The file is too big"),
         "files": MessageLookupByLibrary.simpleMessage("Files"),
         "first_name": MessageLookupByLibrary.simpleMessage("First Name"),
         "friends": MessageLookupByLibrary.simpleMessage("Friend"),
@@ -383,8 +385,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
         "pending": MessageLookupByLibrary.simpleMessage("pending"),
-        "picture_too_big":
-            MessageLookupByLibrary.simpleMessage("The picture is too big"),
         "pictures": MessageLookupByLibrary.simpleMessage("Pictures"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[Draft]"),
         "popular_channels":

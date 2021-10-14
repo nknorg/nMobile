@@ -270,7 +270,7 @@ class MediaPicker {
 
     if (isGif || !isImage) {
       if (overMaxSize) {
-        Toast.show(S.of(Global.appContext).picture_too_big);
+        Toast.show(S.of(Global.appContext).file_too_big);
         return null;
       }
       return original;
@@ -330,7 +330,7 @@ class MediaPicker {
     if (overMaxSize) {
       logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       if (compressQuality <= 5) {
-        Toast.show(S.of(Global.appContext).picture_too_big);
+        Toast.show(S.of(Global.appContext).file_too_big);
         return null;
       }
       return _compressFile(compressFile, mediaType, compressQuality ~/ 2);

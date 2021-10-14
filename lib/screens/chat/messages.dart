@@ -159,7 +159,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // subscriber
     _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
-        _refreshTopicSubscribers(fetch: false);
+      _refreshTopicSubscribers(fetch: false);
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
@@ -626,7 +626,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     int size = await content.length();
                     logger.w("$TAG - onRecordTap - saveFileSize:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
                     if (size >= ChatOutCommon.maxBodySize) {
-                      Toast.show("音频文件太大了");
+                      Toast.show(S.of(context).file_too_big);
                       if (await content.exists()) {
                         await content.delete();
                       }
