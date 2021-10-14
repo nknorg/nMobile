@@ -179,14 +179,14 @@ class MediaPicker {
     // crop
     File? croppedFile = await _cropFile(pickedFile, mediaType, cropStyle, cropRatio);
     if (croppedFile == null) {
-      logger.w('MediaPicker - pickImageAndVideoBySystem - croppedFile = null}');
+      logger.w('MediaPicker - pickImageAndVideoBySystem - croppedFile = null');
       return null;
     }
 
     // compress
     File? compressFile = await _compressFile(croppedFile, mediaType, compressQuality);
     if (compressFile == null) {
-      logger.w('MediaPicker - pickImageAndVideoBySystem - compress = null}');
+      logger.w('MediaPicker - pickImageAndVideoBySystem - compress = null');
       return null;
     }
 
