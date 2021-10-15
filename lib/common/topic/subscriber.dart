@@ -338,14 +338,15 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<int> getSubscribersCount(String? topicName, bool isPrivate, {Uint8List? subscriberHashPrefix}) async {
+  Future<int> getSubscribersCount(String? topicName, bool isPrivate, {bool fetch = false, Uint8List? subscriberHashPrefix}) async {
     if (topicName == null || topicName.isEmpty) return 0;
     int count = 0;
-    if (isPrivate) {
+    if (fetch) {
+      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+    } else if (isPrivate) {
       // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
       count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     } else {
-      // count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
       count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     }
     logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:$isPrivate - count:$count");

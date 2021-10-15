@@ -29,14 +29,16 @@ class ChatInCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
+  // check duplicated
   MessageSchema? lastReceiveMsg;
 
+  // receive queue
   Uint8List? receivePid;
   Map<String, bool> receiveLoops = Map();
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
   // receive interval
-  int minReceiveIntervalMs = 30;
+  final int minReceiveIntervalMs = 30;
   int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   ChatInCommon();
@@ -140,13 +142,12 @@ class ChatInCommon with Tag {
     lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
     // handle
-    MessageSchema? received = receiveMessages[targetId]?[0];
-    if (received?.pid == receivePid) {
+    if (receiveMessages[targetId]?[0].pid == receivePid) {
       logger.i("$TAG - loopReceiveMessage - message is duplicated - targetId:$targetId");
-    } else if (received != null) {
-      receivePid = received.pid;
+    } else if (receiveMessages[targetId]?[0] != null) {
+      receivePid = receiveMessages[targetId]?[0].pid;
       try {
-        await _messageHandle(received);
+        await _messageHandle(receiveMessages[targetId]![0]);
       } catch (e) {
         handleError(e);
       }
