@@ -25,8 +25,10 @@ class ChatCommon with Tag {
   StreamSink<String> get onDeleteSink => _onDeleteController.sink;
   Stream<String> get onDeleteStream => _onDeleteController.stream; // .distinct((prev, next) => prev.msgId == next.msgId)
 
+  // current page
   String? currentChatTargetId;
 
+  // check timers
   Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
 
   ChatCommon();
