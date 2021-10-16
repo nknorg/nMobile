@@ -64,26 +64,18 @@ class ChatInCommon with Tag {
       bool to = lastReceiveMsg?.to == message.to;
       bool topic = lastReceiveMsg?.topic == message.topic;
       bool targetId = lastReceiveMsg?.targetId == message.targetId;
-      bool contact = lastReceiveMsg?.contact == message.contact;
-      if (from && to && topic && targetId && contact) {
-        bool typePing = message.contentType == MessageContentType.ping;
-        bool typeReceipt = message.contentType == MessageContentType.receipt;
-        bool typeRead = message.contentType == MessageContentType.read;
-        bool typeMsgStatus = message.contentType == MessageContentType.msgStatus;
-        bool typeContact = message.contentType == MessageContentType.contact;
-        // bool typeContactOptions = message.contentType == MessageContentType.contactOptions;
-        bool typeDeviceRequest = message.contentType == MessageContentType.deviceRequest;
-        bool typeDeviceInfo = message.contentType == MessageContentType.deviceInfo;
-        if (typePing || typeReceipt || typeRead || typeMsgStatus || typeContact || typeDeviceRequest || typeDeviceInfo) {
+      bool content = lastReceiveMsg?.content == message.content;
+      if (from && to && topic && targetId && content) {
+        if (!message.canDisplay) {
           int interval = DateTime.now().millisecondsSinceEpoch - lastReceiveTimeStamp;
           if (interval < 1000) {
-            logger.i("$TAG - onMessageReceive - skip - current == last - interval:$interval - last:$lastReceiveMsg - received:$message");
+            logger.i("$TAG - onMessageReceive - check duplicated - skip by just receive - interval:$interval - last:$lastReceiveMsg - received:$message");
             return;
           } else {
-            logger.i("$TAG - onMessageReceive - continue by interval large - current == last - last:$lastReceiveMsg - received:$message");
+            logger.i("$TAG - onMessageReceive - check duplicated - continue by interval large - last:$lastReceiveMsg - received:$message");
           }
         } else {
-          logger.i("$TAG - onMessageReceive - continue by type - current == last - last:$lastReceiveMsg - received:$message");
+          logger.i("$TAG - onMessageReceive - check duplicated - continue by type display - last:$lastReceiveMsg - received:$message");
         }
       }
     }
