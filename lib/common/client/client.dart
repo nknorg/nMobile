@@ -156,7 +156,9 @@ class ClientCommon with Tag {
 
       // client create
       if (client == null) {
-        chatCommon.checkSendingWithFail(force: true);
+        chatCommon.clear();
+        chatInCommon.clear();
+        chatOutCommon.clear();
 
         seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
