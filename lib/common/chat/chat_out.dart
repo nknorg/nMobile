@@ -58,14 +58,21 @@ class ChatOutCommon with Tag {
         timer?.cancel();
         timer = null;
         timer = Timer(Duration(seconds: 1), () {
+          logger.i("$TAG - init - in background");
           inBackGround = false;
         });
       } else if (application.isGoBackground(states)) {
+        logger.i("$TAG - init - in foreground");
         inBackGround = true;
         timer?.cancel();
         timer = null;
       }
     });
+  }
+
+  void clear() {
+    // inBackGround = false;
+    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
   }
 
   Future<OnMessage?> clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
