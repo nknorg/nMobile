@@ -29,19 +29,25 @@ class ChatInCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
-  // check duplicated
-  MessageSchema? lastReceiveMsg;
-
   // receive queue
   Uint8List? receivePid;
   Map<String, bool> receiveLoops = Map();
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
-  // receive interval
+  // check duplicated
   final int minReceiveIntervalMs = 30;
+  MessageSchema? lastReceiveMsg;
   int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   ChatInCommon();
+
+  void clear() {
+    // receivePid == null;
+    receiveLoops.clear();
+    receiveMessages.clear();
+    lastReceiveMsg = null;
+    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
+  }
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
     if (message == null) {
