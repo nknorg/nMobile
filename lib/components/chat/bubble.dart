@@ -480,10 +480,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
     int? sendAt = _message.isOutbound ? _message.sendAt : (MessageOptions.getSendAt(_message) ?? _message.sendAt);
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
+    bool isSending = _message.status == MessageStatus.Sending;
 
-    bool showTime = _showTimeAndStatus;
+    bool showTime = isSending || _showTimeAndStatus;
     bool showBurn = _message.canBurning && (_message.deleteAt != null) && (_message.deleteAt != 0);
-    bool showStatus = _showTimeAndStatus && _message.isOutbound;
+    bool showStatus = (isSending || _showTimeAndStatus) && _message.isOutbound;
 
     return (showTime || showBurn || showStatus)
         ? Row(
