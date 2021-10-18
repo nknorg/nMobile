@@ -292,6 +292,7 @@ class TopicCommon with Tag {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
           logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topicName:$topicName - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+          if (toast) Toast.show(S.of(Global.appContext).something_went_wrong);
           success = false;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
@@ -372,6 +373,7 @@ class TopicCommon with Tag {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
           logger.w("$TAG - _clientUnsubscribe - try over by nonce is not continuous - topicName:$topicName - nonce:$nonce");
+          if (toast) Toast.show(S.of(Global.appContext).something_went_wrong);
           success = false;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
