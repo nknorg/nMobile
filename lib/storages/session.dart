@@ -35,6 +35,7 @@ class SessionStorage with Tag {
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
+    if (db?.isOpen != true) return null;
     if (schema == null) return null;
     Map<String, dynamic> entity = await schema.toMap();
     return await dbCommon.lock.synchronized(() async {
@@ -76,6 +77,7 @@ class SessionStorage with Tag {
   }
 
   Future<bool> delete(String targetId) async {
+    if (db?.isOpen != true) return false;
     if (targetId.isEmpty) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -99,6 +101,7 @@ class SessionStorage with Tag {
   }
 
   Future<SessionSchema?> query(String? targetId) async {
+    if (db?.isOpen != true) return null;
     if (targetId == null || targetId.isEmpty) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -124,6 +127,7 @@ class SessionStorage with Tag {
   }
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) async {
+    if (db?.isOpen != true) return [];
     return await dbCommon.lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -156,6 +160,7 @@ class SessionStorage with Tag {
   }
 
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
+    if (db?.isOpen != true) return false;
     if (schema == null || schema.targetId.isEmpty) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -181,6 +186,7 @@ class SessionStorage with Tag {
   }
 
   // Future<bool> updateLastMessage(SessionSchema? schema) async {
+  // if (db?.isOpen != true) return false;
   //   if (schema == null || schema.targetId.isEmpty) return false;
   //   return await dbCommon.lock.synchronized(() async {
   //     try {
@@ -205,6 +211,7 @@ class SessionStorage with Tag {
   // }
 
   Future<bool> updateIsTop(String? targetId, bool isTop) async {
+    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -228,6 +235,7 @@ class SessionStorage with Tag {
   }
 
   Future<bool> updateUnReadCount(String? targetId, int unread) async {
+    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
