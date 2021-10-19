@@ -68,8 +68,11 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   _refreshContact() async {
-    if (contact?.clientAddress == null || contact?.clientAddress.isEmpty == true || contact?.clientAddress != widget.subscriber.clientAddress) {
-      ContactSchema? _contact = await widget.subscriber.getContact(emptyAdd: true);
+    if ((contact?.clientAddress == null) || (contact?.clientAddress.isEmpty == true) || (contact?.clientAddress != widget.subscriber.clientAddress)) {
+      ContactSchema? _contact = await contactCommon.queryByClientAddress(widget.subscriber.clientAddress);
+      if (_contact == null) {
+        _contact = await contactCommon.addByType(widget.subscriber.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+      }
       setState(() {
         contact = _contact;
       });
