@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class SubscriberStatus {
@@ -45,12 +43,6 @@ class SubscriberSchema {
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
-  }
-
-  Future<ContactSchema?> getContact({bool emptyAdd = false}) async {
-    ContactSchema? _contact = await contactCommon.queryByClientAddress(clientAddress);
-    if (_contact != null || !emptyAdd) return _contact;
-    return await contactCommon.addByType(clientAddress, ContactType.none, notify: true, checkDuplicated: false);
   }
 
   static SubscriberSchema? create(String? topic, String? clientAddress, int? status, int? permPage) {
