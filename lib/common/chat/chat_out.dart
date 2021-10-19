@@ -119,36 +119,6 @@ class ChatOutCommon with Tag {
     });
   }
 
-  // Future<List<OnMessage>> clientPublishDataWithFile(String? selfAddress, String? topic, String data, {int fileSize = 0, bool txPool = true, int? total}) async {
-  //   // bool canAddTopicFileConcurrent = isFile && ((total ?? 1) > topicFileMinSubscribers) && (fileSize > topicFileMinSize);
-  //   // if (canAddTopicFileConcurrent) {
-  //   //   if (topicFileCurConcurrent >= topicFileMaxConcurrent) {
-  //   //     int wait = (total ?? 1) * (fileSize ~/ topicFileMinSize); // count * (2/100k)
-  //   //     logger.i("$TAG - clientPublishData - topic file concurrent over - wait:$wait - concurrent:$topicFileCurConcurrent - subscribers:$topicFileMinSubscribers - tryCount:$tryCount - dest:$topic - data:$data");
-  //   //     await Future.delayed(Duration(milliseconds: wait));
-  //   //     return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, isFile: isFile, fileSize: fileSize, tryCount: tryCount, maxTryCount: maxTryCount);
-  //   //   }
-  //   //   topicFileCurConcurrent++;
-  //   //   logger.i("$TAG - clientPublishData - topic file sending - concurrent:$topicFileCurConcurrent - fileSize:${formatFlowSize(fileSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - subscribers:$topicFileMinSubscribers - tryCount:$tryCount - dest:$topic - data:$data");
-  //   // }
-  //   // if (canAddTopicFileConcurrent) topicFileCurConcurrent--;
-  //   if (((total ?? 1) > topicFileMinSubscribers) && (fileSize > topicFileMinSize)) {
-  //     Lock? lock = _topicFileLocks[selfAddress ?? ""];
-  //     if (lock == null) {
-  //       logger.i("$TAG - clientPublishDataWithFile - topic file lock new - selfAddress:$selfAddress - dest:$topic - data:$data");
-  //       lock = new Lock();
-  //       _topicFileLocks[selfAddress ?? ""] = lock;
-  //     }
-  //     return lock.synchronized(() async {
-  //       logger.i("$TAG - clientPublishDataWithFile - topic file send start - dest:$topic - data:$data");
-  //       List<OnMessage> result = await clientPublishData(selfAddress, topic, data, txPool: txPool, total: total);
-  //       logger.i("$TAG - clientPublishDataWithFile - topic file send end - result:${result.length} dest:$topic - data:$data");
-  //       return result;
-  //     });
-  //   }
-  //   return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total);
-  // }
-
   Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
     if (tryCount >= maxTryCount) {
       logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
@@ -727,7 +697,7 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       // permission checked in received
       int total = await subscriberCommon.getSubscribersCount(message.topic!, false, fetch: _subscribers.isEmpty);
-      List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total); // TODO:GG
+      List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total);
       if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
         return onMessageList[0].messageId;
