@@ -81,6 +81,44 @@ class DeviceInfoStorage with Tag {
     });
   }
 
+  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+    if (contactAddressList == null || contactAddressList.isEmpty) return [];
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List? res = await db?.transaction((txn) {
+          Batch batch = txn.batch();
+          contactAddressList.forEach((contactAddress) {
+            batch.query(
+              tableName,
+              columns: ['*'],
+              where: 'contact_address = ?',
+              whereArgs: [contactAddress],
+              offset: 0,
+              limit: 1,
+              orderBy: 'update_at DESC',
+            );
+          });
+          return batch.commit();
+        });
+        if (res != null && res.length > 0) {
+          List<DeviceInfoSchema> schemaList = [];
+          for (var i = 0; i < res.length; i++) {
+            if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
+            Map<String, dynamic> map = res[i][0];
+            DeviceInfoSchema schema = DeviceInfoSchema.fromMap(map);
+            schemaList.add(schema);
+          }
+          logger.v("$TAG - queryListLatest - success - contactAddressList:$contactAddressList - schemaList:$schemaList");
+          return schemaList;
+        }
+        logger.v("$TAG - queryListLatest - empty - contactAddressList:$contactAddressList");
+      } catch (e) {
+        handleError(e);
+      }
+      return [];
+    });
+  }
+
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
     return await dbCommon.lock.synchronized(() async {
