@@ -20,6 +20,7 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -51,6 +52,10 @@ class ChatOutCommon with Tag {
   final int minSendIntervalMs = 30;
   int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
+  // large sending
+  final int largeBodyMaxPieceSize = 30 * 1024 * 1024; // 3M < 4,000,000(nkn-go-sdk)
+  Lock largeBodyLock = Lock();
+
   ChatOutCommon();
 
   void init() {
@@ -75,7 +80,74 @@ class ChatOutCommon with Tag {
   void clear() {
     // inBackGround = false;
     lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    largeBodyLock = Lock();
   }
+
+  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1}) async {
+    destList = destList.where((element) => element.isNotEmpty).toList();
+    if (destList.isEmpty) return null;
+    int totalSize = destList.length * data.length;
+    if ((destList.length <= 1) || (totalSize <= largeBodyMaxPieceSize)) {
+      logger.d("$TAG - sendData - small message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+      return _clientSendData(selfAddress, destList, data);
+    }
+    logger.i("$TAG - sendData - large message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+
+    return await largeBodyLock.synchronized(() async {
+      int piecesCount = (totalSize ~/ largeBodyMaxPieceSize);
+      int destCountPerPiece = ((destList.length ~/ piecesCount) <= 1) ? 1 : (destList.length ~/ piecesCount);
+      logger.i("$TAG - sendData - LOCK:START - piecesCount:$piecesCount - destCountPerPiece:$destCountPerPiece - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+
+      OnMessage? onMessage;
+      for (var i = 0; i < destList.length; i = i + destCountPerPiece) {
+        int endIndex = i + destCountPerPiece;
+        while (endIndex >= destList.length) endIndex--;
+        if (endIndex < i) break;
+        List<String> subDestList = destList.sublist(i, endIndex);
+        int subSize = subDestList.length * data.length;
+        logger.i("$TAG - sendData - LOCK:PROGRESS - ($i-$endIndex)/${destList.length} - totalSizeM:${totalSize / 1024 / 1024} - subSizeM:${subSize / 1024 / 1024} - subList:$subDestList - destList:$destList - data:$data");
+        OnMessage? _onMessage = await _clientSendData(selfAddress, subDestList, data);
+        if (onMessage?.messageId == null || onMessage!.messageId.isEmpty) onMessage = _onMessage;
+        if ((msgId?.isNotEmpty == true) && (totalPercent > 0) && (totalPercent <= 1)) {
+          double percent = (endIndex + 1) / destList.length;
+          _onPieceOutSink.add({"msg_id": msgId, "percent": percent});
+        }
+        await Future.delayed(Duration(milliseconds: minSendIntervalMs));
+      }
+      logger.i("$TAG - sendData - LOCK:END - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+      return onMessage;
+    });
+  }
+
+  // Future<List<OnMessage>> clientPublishDataWithFile(String? selfAddress, String? topic, String data, {int fileSize = 0, bool txPool = true, int? total}) async {
+  //   // bool canAddTopicFileConcurrent = isFile && ((total ?? 1) > topicFileMinSubscribers) && (fileSize > topicFileMinSize);
+  //   // if (canAddTopicFileConcurrent) {
+  //   //   if (topicFileCurConcurrent >= topicFileMaxConcurrent) {
+  //   //     int wait = (total ?? 1) * (fileSize ~/ topicFileMinSize); // count * (2/100k)
+  //   //     logger.i("$TAG - clientPublishData - topic file concurrent over - wait:$wait - concurrent:$topicFileCurConcurrent - subscribers:$topicFileMinSubscribers - tryCount:$tryCount - dest:$topic - data:$data");
+  //   //     await Future.delayed(Duration(milliseconds: wait));
+  //   //     return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, isFile: isFile, fileSize: fileSize, tryCount: tryCount, maxTryCount: maxTryCount);
+  //   //   }
+  //   //   topicFileCurConcurrent++;
+  //   //   logger.i("$TAG - clientPublishData - topic file sending - concurrent:$topicFileCurConcurrent - fileSize:${formatFlowSize(fileSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - subscribers:$topicFileMinSubscribers - tryCount:$tryCount - dest:$topic - data:$data");
+  //   // }
+  //   // if (canAddTopicFileConcurrent) topicFileCurConcurrent--;
+  //   if (((total ?? 1) > topicFileMinSubscribers) && (fileSize > topicFileMinSize)) {
+  //     Lock? lock = _topicFileLocks[selfAddress ?? ""];
+  //     if (lock == null) {
+  //       logger.i("$TAG - clientPublishDataWithFile - topic file lock new - selfAddress:$selfAddress - dest:$topic - data:$data");
+  //       lock = new Lock();
+  //       _topicFileLocks[selfAddress ?? ""] = lock;
+  //     }
+  //     return lock.synchronized(() async {
+  //       logger.i("$TAG - clientPublishDataWithFile - topic file send start - dest:$topic - data:$data");
+  //       List<OnMessage> result = await clientPublishData(selfAddress, topic, data, txPool: txPool, total: total);
+  //       logger.i("$TAG - clientPublishDataWithFile - topic file send end - result:${result.length} dest:$topic - data:$data");
+  //       return result;
+  //     });
+  //   }
+  //   return clientPublishData(selfAddress, topic, data, txPool: txPool, total: total);
+  // }
 
   Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
     if (tryCount >= maxTryCount) {
@@ -90,7 +162,7 @@ class ChatOutCommon with Tag {
     if (inBackGround && Platform.isIOS) {
       logger.i("$TAG - _clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 1));
-      return _clientSendData(selfAddress, destList, data, tryCount: tryCount, maxTryCount: maxTryCount);
+      return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
       int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
@@ -150,7 +222,7 @@ class ChatOutCommon with Tag {
     if (inBackGround && Platform.isIOS) {
       logger.i("$TAG - _clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 1));
-      return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+      return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
     if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
       int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
@@ -356,7 +428,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display
-  Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {int tryCount = 1}) async {
+  Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
     if (!clientCommon.isClientCreated) return null;
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
@@ -365,7 +437,12 @@ class ChatOutCommon with Tag {
     if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
-    if (!message.isTopic) {
+    if (percent > 0 && percent <= 1) {
+      if (percent <= 1.05) {
+        // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+        _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+      }
+    } else if (!message.isTopic) {
       int? total = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL];
       int? index = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
       double percent = (index ?? 0) / (total ?? 1);
@@ -662,32 +739,34 @@ class ChatOutCommon with Tag {
     List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(contactAddressList);
     // targets
     bool selfReceive = false;
-    List<String> targetIds = [];
     List<String> targetIdsByPiece = [];
+    List<String> targetIdsByFull = [];
     for (var i = 0; i < _subscribers.length; i++) {
       SubscriberSchema subscriber = _subscribers[i];
       int findIndex = deviceInfoList.indexWhere((element) => element.contactAddress == subscriber.clientAddress);
       DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
       if (subscriber.clientAddress == clientCommon.address) {
         selfReceive = true;
-      } else if (!deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-        targetIds.add(subscriber.clientAddress);
-      } else {
+      } else if (deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
         targetIdsByPiece.add(subscriber.clientAddress);
+      } else {
+        targetIdsByFull.add(subscriber.clientAddress);
       }
     }
     // send
-    Uint8List? piecePid;
+    Uint8List? piecesPid;
+    double piecesTotalPercent = targetIdsByPiece.length / _subscribers.length;
     if (targetIdsByPiece.isNotEmpty) {
-      piecePid = await _sendByPieces(targetIdsByPiece, message);
-      if ((piecePid == null) || piecePid.isEmpty) {
-        targetIds.addAll(targetIdsByPiece);
+      piecesPid = await _sendByPieces(targetIdsByPiece, message, totalPercent: piecesTotalPercent);
+      if ((piecesPid == null) || piecesPid.isEmpty) {
+        targetIdsByFull.addAll(targetIdsByPiece);
         targetIdsByPiece.clear();
       }
     }
-    OnMessage? onMessage;
-    if (targetIds.isNotEmpty) {
-      onMessage = await sendData(clientCommon.address, targetIds, msgData); // long time to wait when targetIds too much
+    OnMessage? fullOnMessage;
+    double fullTotalPercent = targetIdsByFull.length / _subscribers.length;
+    if (targetIdsByFull.isNotEmpty) {
+      fullOnMessage = await sendData(clientCommon.address, targetIdsByFull, msgData, msgId: message.msgId, totalPercent: fullTotalPercent);
     }
     // result
     Uint8List? pid;
@@ -707,7 +786,7 @@ class ChatOutCommon with Tag {
       }
     }
     if (pid == null || pid.isEmpty) {
-      pid = onMessage?.messageId ?? piecePid;
+      pid = fullOnMessage?.messageId ?? piecesPid;
     }
     if (pid?.isNotEmpty == true) {
       chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
@@ -715,18 +794,16 @@ class ChatOutCommon with Tag {
     // push
     contactCommon.queryListByClientAddress(contactAddressList).then((List<ContactSchema> contactList) async {
       if (notification && message.canNotification) {
-        if (piecePid?.isNotEmpty == true) {
+        if (piecesPid?.isNotEmpty == true) {
           for (var i = 0; i < targetIdsByPiece.length; i++) {
-            String targetId = targetIdsByPiece[i];
-            int findIndex = contactList.indexWhere((element) => element.clientAddress == targetId);
+            int findIndex = contactList.indexWhere((element) => element.clientAddress == targetIdsByPiece[i]);
             ContactSchema? _contact = findIndex >= 0 ? contactList[findIndex] : null;
             _sendPush(message, _contact?.deviceToken); // await
           }
         }
-        if (onMessage?.messageId.isNotEmpty == true) {
-          for (var i = 0; i < targetIds.length; i++) {
-            String targetId = targetIds[i];
-            int findIndex = contactList.indexWhere((element) => element.clientAddress == targetId);
+        if (fullOnMessage?.messageId.isNotEmpty == true) {
+          for (var i = 0; i < targetIdsByFull.length; i++) {
+            int findIndex = contactList.indexWhere((element) => element.clientAddress == targetIdsByFull[i]);
             ContactSchema? _contact = findIndex >= 0 ? contactList[findIndex] : null;
             _sendPush(message, _contact?.deviceToken); // await
           }
@@ -740,7 +817,7 @@ class ChatOutCommon with Tag {
     return pid;
   }
 
-  Future<Uint8List?> _sendByPieces(List<String> clientAddressList, MessageSchema message) async {
+  Future<Uint8List?> _sendByPieces(List<String> clientAddressList, MessageSchema message, {double totalPercent = -1}) async {
     List results = await _convert2Pieces(message);
     if (results.isEmpty) return null;
     String dataBytesString = results[0];
@@ -774,7 +851,8 @@ class ChatOutCommon with Tag {
         parity: parity,
         index: index,
       );
-      MessageSchema? result = await sendPiece(clientAddressList, piece);
+      double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
+      MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
       if ((result == null) || (result.pid == null)) {
         logger.w("$TAG - _sendByPieces:ERROR - piece:$piece");
       } else {
