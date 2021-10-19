@@ -634,6 +634,39 @@ class MessageStorage with Tag {
     });
   }
 
+  // Future<bool> updateListStatus(List<String>? msgIdList, int status, {int? receiveAt, String? noType}) async {
+  //   if (db?.isOpen != true) return false;
+  //   if (msgIdList == null || msgIdList.isEmpty) return false;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       await db?.transaction((txn) {
+  //         Batch batch = txn.batch();
+  //         msgIdList.forEach((msgId) {
+  //           batch.update(
+  //             tableName,
+  //             receiveAt == null
+  //                 ? {
+  //                     'status': status,
+  //                   }
+  //                 : {
+  //                     'status': status,
+  //                     'receive_at': receiveAt,
+  //                   },
+  //             where: (noType?.isNotEmpty == true) ? 'msg_id = ? AND NOT type = ?' : 'msg_id = ?',
+  //             whereArgs: (noType?.isNotEmpty == true) ? [msgId, noType] : [msgId],
+  //           );
+  //         });
+  //         return batch.commit();
+  //       });
+  //       logger.v("$TAG - updateListStatus - status:$status - msgIdList:$msgIdList");
+  //       return true;
+  //     } catch (e) {
+  //       handleError(e);
+  //     }
+  //     return false;
+  //   });
+  // }
+
   Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
