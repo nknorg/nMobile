@@ -32,6 +32,7 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
+    if (db?.isOpen != true) return null;
     if (schema == null || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await dbCommon.lock.synchronized(() async {
@@ -54,6 +55,7 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
+    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -82,6 +84,7 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+    if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -120,6 +123,7 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
+    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -148,6 +152,7 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<bool> update(int? deviceInfoId, Map<String, dynamic>? newData) async {
+    if (db?.isOpen != true) return false;
     if (deviceInfoId == null || deviceInfoId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
