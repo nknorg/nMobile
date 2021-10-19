@@ -160,6 +160,41 @@ class ContactStorage with Tag {
     });
   }
 
+  Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
+    if (clientAddressList == null || clientAddressList.isEmpty) return [];
+    return dbCommon.lock.synchronized(() async {
+      try {
+        List? res = await db?.transaction((txn) {
+          Batch batch = txn.batch();
+          clientAddressList.forEach((clientAddress) {
+            batch.query(
+              tableName,
+              columns: ['*'],
+              where: 'address = ?',
+              whereArgs: [clientAddress],
+            );
+          });
+          return batch.commit();
+        });
+        if (res != null && res.length > 0) {
+          List<ContactSchema> schemaList = [];
+          for (var i = 0; i < res.length; i++) {
+            if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
+            Map<String, dynamic> map = res[i][0];
+            ContactSchema schema = await ContactSchema.fromMap(map);
+            schemaList.add(schema);
+          }
+          logger.v("$TAG - queryByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
+          return schemaList;
+        }
+        logger.v("$TAG - queryByClientAddress - empty - clientAddressList:$clientAddressList");
+      } catch (e) {
+        handleError(e);
+      }
+      return [];
+    });
+  }
+
   Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int? limit, int? offset}) async {
     orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
     return await dbCommon.lock.synchronized(() async {

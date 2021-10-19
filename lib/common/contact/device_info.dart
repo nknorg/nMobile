@@ -32,6 +32,11 @@ class DeviceInfoCommon with Tag {
     return await _deviceInfoStorage.queryLatest(contactAddress);
   }
 
+  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+    if (contactAddressList == null || contactAddressList.isEmpty) return [];
+    return await _deviceInfoStorage.queryListLatest(contactAddressList);
+  }
+
   // DeviceInfoSchema createMe() {
   //   return DeviceInfoSchema(
   //     contactId: 1,

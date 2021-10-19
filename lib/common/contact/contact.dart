@@ -103,6 +103,11 @@ class ContactCommon with Tag {
     return await _contactStorage.queryByClientAddress(clientAddress);
   }
 
+  Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
+    if (clientAddressList == null || clientAddressList.isEmpty) return [];
+    return await _contactStorage.queryListByClientAddress(clientAddressList);
+  }
+
   Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int? offset, int? limit}) {
     return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }

@@ -121,7 +121,7 @@ class SubscriberCommon with Tag {
       // different with DB in node
       if (!findDB) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
-        await add(nodeItem, notify: true);
+        await add(nodeItem, notify: true); // no need batch
       }
     }
   }
@@ -486,7 +486,7 @@ class SubscriberCommon with Tag {
   /// ************************************************* common **************************************************
   /// ***********************************************************************************************************
 
-  Future<SubscriberSchema?> add(SubscriberSchema? schema, {bool topicCountCheck = true, bool notify = false, bool checkDuplicated = true}) async {
+  Future<SubscriberSchema?> add(SubscriberSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.topic.isEmpty) return null;
     if (checkDuplicated) {
       SubscriberSchema? exist = await queryByTopicChatId(schema.topic, schema.clientAddress);
