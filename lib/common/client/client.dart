@@ -16,6 +16,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:synchronized/synchronized.dart';
 
 class ClientConnectStatus {
   static const int disconnected = 0;
@@ -56,6 +57,8 @@ class ClientCommon with Tag {
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
 
+  Lock _lock = Lock();
+
   late int status;
   bool clientClosing = false;
   bool connectChecking = false;
@@ -75,14 +78,14 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
+  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) {
+    return _lock.synchronized(() {
+      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: tryCount);
+    });
+  }
+
   // return [client, pwdError]
-  Future<List> signIn(
-    WalletSchema? wallet, {
-    bool fetchRemote = true,
-    Function(bool, int)? loadingVisible,
-    String? password,
-    int tryCount = 1,
-  }) async {
+  Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) async {
     // if (client != null) await close(); // async boom!!!
     if (wallet == null || wallet.address.isEmpty) return [null, false];
 
@@ -137,7 +140,7 @@ class ClientCommon with Tag {
         loadingVisible?.call(false, tryCount);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-          return signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
+          return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
         } else {
           logger.e("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           _statusSink.add(ClientConnectStatus.disconnected);
@@ -201,7 +204,7 @@ class ClientCommon with Tag {
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
+          return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
         }
         handleError(e);
         _statusSink.add(ClientConnectStatus.disconnected);
@@ -212,12 +215,17 @@ class ClientCommon with Tag {
       // loop login
       await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
+      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
     }
   }
 
-  Future signOut({bool clearWallet = true, bool closeDB = true}) async {
-    if (clientClosing) return;
+  Future signOut({bool clearWallet = true, bool closeDB = true}) {
+    return _lock.synchronized(() {
+      return _signOut(clearWallet: clearWallet, closeDB: closeDB);
+    });
+  }
+
+  Future _signOut({bool clearWallet = true, bool closeDB = true}) async {
     clientClosing = true;
     // status
     _statusSink.add(ClientConnectStatus.disconnected);
@@ -232,7 +240,7 @@ class ClientCommon with Tag {
       handleError(e);
       await Future.delayed(Duration(milliseconds: 200));
       clientClosing = false;
-      return signOut(closeDB: closeDB, clearWallet: clearWallet);
+      return _signOut(closeDB: closeDB, clearWallet: clearWallet);
     }
     client = null;
     clientClosing = false;
@@ -250,7 +258,7 @@ class ClientCommon with Tag {
     }
 
     if (!isClientCreated) {
-      logger.i("$TAG - reSignIn - sign out when client no created - wallet:$wallet");
+      logger.i("$TAG - reSignIn - unsubscribe stream when client no created - wallet:$wallet");
       await signOut(clearWallet: false, closeDB: false);
     }
 
