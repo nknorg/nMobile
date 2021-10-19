@@ -45,6 +45,7 @@ class TopicStorage with Tag {
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
+    if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await dbCommon.lock.synchronized(() async {
@@ -86,6 +87,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> delete(int? topicId) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -109,6 +111,7 @@ class TopicStorage with Tag {
   }
 
   Future<TopicSchema?> query(int? topicId) async {
+    if (db?.isOpen != true) return null;
     if (topicId == null || topicId == 0) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -134,6 +137,7 @@ class TopicStorage with Tag {
   }
 
   Future<TopicSchema?> queryByTopic(String? topic) async {
+    if (db?.isOpen != true) return null;
     if (topic == null || topic.isEmpty) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -159,6 +163,7 @@ class TopicStorage with Tag {
   }
 
   Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? limit, int? offset}) async {
+    if (db?.isOpen != true) return [];
     return await dbCommon.lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -193,6 +198,7 @@ class TopicStorage with Tag {
   }
 
   Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int? limit, int? offset}) async {
+    if (db?.isOpen != true) return [];
     return await dbCommon.lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -227,6 +233,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     var values = {
       'joined': joined ? 1 : 0,
@@ -262,6 +269,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -289,6 +297,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setCount(int? topicId, int userCount) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -316,6 +325,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setTop(int? topicId, bool top) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
@@ -343,6 +353,7 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setData(int? topicId, Map<String, dynamic>? newData) async {
+    if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
