@@ -41,17 +41,17 @@ class SubscriberCommon with Tag {
 
   // caller = everyone, meta = isPrivate
   Future refreshSubscribers(
-    String? topicName, {
+    String? topic, {
     String? ownerPubKey,
     bool meta = false,
     bool txPool = true,
     Uint8List? subscriberHashPrefix,
   }) async {
-    if (topicName == null || topicName.isEmpty) return [];
+    if (topic == null || topic.isEmpty) return [];
 
-    List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
+    List<SubscriberSchema> dbSubscribers = await queryListByTopic(topic);
     List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(
-      topicName,
+      topic,
       ownerPubKey: ownerPubKey,
       meta: meta,
       txPool: txPool,
@@ -140,16 +140,16 @@ class SubscriberCommon with Tag {
 
   // caller = everyone, meta = isPrivate
   Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(
-    String? topicName, {
+    String? topic, {
     String? ownerPubKey,
     bool meta = false,
     bool txPool = true,
     Uint8List? subscriberHashPrefix,
   }) async {
-    if (topicName == null || topicName.isEmpty) return [];
+    if (topic == null || topic.isEmpty) return [];
     // subscribers(permission)
     Map<String, dynamic> noMergeResults = await _clientGetSubscribers(
-      topicName,
+      topic,
       meta: meta,
       txPool: txPool,
       subscriberHashPrefix: subscriberHashPrefix,
@@ -159,7 +159,7 @@ class SubscriberCommon with Tag {
     List<SubscriberSchema> subscribers = [];
     noMergeResults.forEach((key, value) {
       if (key.isNotEmpty && !key.contains('.__permission__.')) {
-        SubscriberSchema? item = SubscriberSchema.create(topicName, key, SubscriberStatus.None, null);
+        SubscriberSchema? item = SubscriberSchema.create(topic, key, SubscriberStatus.None, null);
         if (item != null) subscribers.add(item);
       }
     });
@@ -168,7 +168,7 @@ class SubscriberCommon with Tag {
     List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
     if (meta) {
       permissionsResult = await _getPermissionsFromNode(
-        topicName,
+        topic,
         clientGetSubscribers: noMergeResults,
         txPool: txPool,
         subscriberHashPrefix: subscriberHashPrefix,
@@ -233,8 +233,8 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<List<dynamic>> findPermissionFromNode(String? topicName, bool isPrivate, String? clientAddress, {bool txPool = true}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) {
+  Future<List<dynamic>> findPermissionFromNode(String? topic, bool isPrivate, String? clientAddress, {bool txPool = true}) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) {
       return [null, null, null, null];
     }
     if (!isPrivate) {
@@ -242,7 +242,7 @@ class SubscriberCommon with Tag {
       return [null, true, true, false];
     }
     // permissions
-    List<dynamic> result = await _getPermissionsFromNode(topicName, txPool: txPool);
+    List<dynamic> result = await _getPermissionsFromNode(topic, txPool: txPool);
     List<SubscriberSchema> subscribers = result[0];
     bool? _acceptAll = result[1];
     if (_acceptAll == true) {
@@ -262,12 +262,12 @@ class SubscriberCommon with Tag {
     return [null, _acceptAll, null, null];
   }
 
-  Future<List<dynamic>> _getPermissionsFromNode(String? topicName, {bool txPool = true, Uint8List? subscriberHashPrefix, Map<String, dynamic>? clientGetSubscribers}) async {
-    if (topicName == null || topicName.isEmpty) return [[], null];
+  Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Uint8List? subscriberHashPrefix, Map<String, dynamic>? clientGetSubscribers}) async {
+    if (topic == null || topic.isEmpty) return [[], null];
     // permissions + subscribers
     Map<String, dynamic> noMergeResults = clientGetSubscribers ??
         await _clientGetSubscribers(
-          topicName,
+          topic,
           meta: true,
           txPool: txPool,
           subscriberHashPrefix: subscriberHashPrefix,
@@ -289,7 +289,7 @@ class SubscriberCommon with Tag {
         for (int i = 0; i < acceptList.length; i++) {
           var element = acceptList[i];
           if (element is Map) {
-            SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], InitialAcceptStatus, permPage);
+            SubscriberSchema? item = SubscriberSchema.create(topic, element["addr"], InitialAcceptStatus, permPage);
             if (item != null) permissions.add(item);
           } else if (element is String) {
             if (element.trim() == "*") {
@@ -308,7 +308,7 @@ class SubscriberCommon with Tag {
         if (!_acceptAll) {
           rejectList.forEach((element) {
             if (element is Map) {
-              SubscriberSchema? item = SubscriberSchema.create(topicName, element["addr"], InitialRejectStatus, permPage);
+              SubscriberSchema? item = SubscriberSchema.create(topic, element["addr"], InitialRejectStatus, permPage);
               if (item != null) permissions.add(item);
             } else {
               logger.w("$TAG - _getPermissionsFromNode - reject type error - accept:$element");
@@ -322,7 +322,7 @@ class SubscriberCommon with Tag {
   }
 
   Future<Map<String, dynamic>> _clientGetSubscribers(
-    String? topicName, {
+    String? topic, {
     int offset = 0,
     int limit = 10000,
     bool meta = false,
@@ -330,10 +330,10 @@ class SubscriberCommon with Tag {
     Uint8List? subscriberHashPrefix,
     Map<String, dynamic>? prefixResult,
   }) async {
-    if (topicName == null || topicName.isEmpty) return prefixResult ?? Map();
+    if (topic == null || topic.isEmpty) return prefixResult ?? Map();
     try {
       Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
-        topic: genTopicHash(topicName),
+        topic: genTopicHash(topic),
         offset: offset,
         limit: limit,
         meta: meta,
@@ -343,7 +343,7 @@ class SubscriberCommon with Tag {
       if (results?.isNotEmpty == true) {
         results?.addAll(prefixResult ?? Map());
         return _clientGetSubscribers(
-          topicName,
+          topic,
           offset: offset + limit,
           limit: limit,
           meta: meta,
@@ -365,27 +365,27 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<int> getSubscribersCount(String? topicName, bool isPrivate, {bool fetch = false, Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
+  Future<int> getSubscribersCount(String? topic, bool isPrivate, {bool fetch = false, Uint8List? subscriberHashPrefix}) async {
+    if (topic == null || topic.isEmpty) return 0;
     int count = 0;
     if (fetch) {
-      count = await this._clientGetSubscribersCount(topicName, subscriberHashPrefix: subscriberHashPrefix);
+      count = await this._clientGetSubscribersCount(topic, subscriberHashPrefix: subscriberHashPrefix);
     } else if (isPrivate) {
-      // count = (await _mergePermissionsAndSubscribers(topicName, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
-      count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+      // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true, subscriberHashPrefix: subscriberHashPrefix)).length;
+      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     } else {
-      count = await queryCountByTopic(topicName, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     }
-    logger.d("$TAG - getSubscribersCount - topicName:$topicName - isPrivate:$isPrivate - count:$count");
+    logger.d("$TAG - getSubscribersCount - topic:$topic - isPrivate:$isPrivate - count:$count");
     return count;
   }
 
-  Future<int> _clientGetSubscribersCount(String? topicName, {Uint8List? subscriberHashPrefix}) async {
-    if (topicName == null || topicName.isEmpty) return 0;
+  Future<int> _clientGetSubscribersCount(String? topic, {Uint8List? subscriberHashPrefix}) async {
+    if (topic == null || topic.isEmpty) return 0;
     int? count;
     try {
       count = await clientCommon.client?.getSubscribersCount(
-        topic: genTopicHash(topicName),
+        topic: genTopicHash(topic),
         subscriberHashPrefix: subscriberHashPrefix,
       );
     } catch (e) {
@@ -399,12 +399,12 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // status: InvitedSend (caller = owner)
-  Future<SubscriberSchema?> onInvitedSend(String? topicName, String? clientAddress, int? permPage) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onInvitedSend(String? topic, String? clientAddress, int? permPage) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedSend, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.InvitedSend, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -421,12 +421,12 @@ class SubscriberCommon with Tag {
   }
 
   // status: InvitedReceipt (caller = owner)
-  Future<SubscriberSchema?> onInvitedReceipt(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onInvitedReceipt(String? topic, String? clientAddress) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.InvitedReceipt, null), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.InvitedReceipt, null), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -438,12 +438,12 @@ class SubscriberCommon with Tag {
   }
 
   // status: Subscribed (caller = self + other)
-  Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress, int? permPage) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, int? permPage) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Subscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Subscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -460,12 +460,12 @@ class SubscriberCommon with Tag {
   }
 
   // status: Unsubscribed (caller = self + other)
-  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int? permPage}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress, {int? permPage}) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
@@ -485,12 +485,12 @@ class SubscriberCommon with Tag {
   }
 
   // status: Kick (caller = owner)
-  Future<SubscriberSchema?> onKickOut(String? topicName, String? clientAddress, {int? permPage}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onKickOut(String? topic, String? clientAddress, {int? permPage}) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topicName, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
