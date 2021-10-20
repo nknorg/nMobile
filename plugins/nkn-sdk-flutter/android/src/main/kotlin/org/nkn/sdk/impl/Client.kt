@@ -101,7 +101,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 config.seedRPCServerAddr.append(addr)
             }
         }
-        // config.rpcConcurrency = 4
+        config.rpcConcurrency = 1
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
