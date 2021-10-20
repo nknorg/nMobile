@@ -63,24 +63,24 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> subscribe(String? topicName, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
-    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+  Future<TopicSchema?> subscribe(String? topic, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
+    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
-    TopicSchema? exists = await queryByTopic(topicName);
+    TopicSchema? exists = await queryByTopic(topic);
     if (exists == null) {
-      int expireHeight = await getExpireAtByNode(topicName, clientCommon.address);
-      exists = await add(TopicSchema.create(topicName, expireHeight: expireHeight), notify: true, checkDuplicated: false);
+      int expireHeight = await getExpireAtByNode(topic, clientCommon.address);
+      exists = await add(TopicSchema.create(topic, expireHeight: expireHeight), notify: true, checkDuplicated: false);
       logger.d("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
       // refreshSubscribers later
     }
     if (exists == null) {
-      logger.w("$TAG - subscribe - null - topicName:$topicName");
+      logger.w("$TAG - subscribe - null - topic:$topic");
       return null;
     }
 
     // subscriber me
-    // SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+    // SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topic, clientCommon.address);
     // if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
     //   int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
     //   if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
@@ -92,7 +92,7 @@ class TopicCommon with Tag {
     // permission(private + normal)
     int? permPage;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, exists.isPrivate, clientCommon.address);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, exists.isPrivate, clientCommon.address);
       permPage = permission[0];
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
@@ -122,17 +122,17 @@ class TopicCommon with Tag {
 
     // check expire + pull subscribers
     // bool historyJoined = exists.joined;
-    exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: fetchSubscribers, fee: fee, toast: true);
+    exists = await checkExpireAndSubscribe(topic, enableFirst: true, forceSubscribe: true, refreshSubscribers: fetchSubscribers, fee: fee, toast: true);
     if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
     // status + permission
     // if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
     //   // private + owner
-    //   _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
-    //   Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
-    //   meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
-    //   bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta, toast: true);
+    //   _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, 0);
+    //   Map<String, dynamic> meta = await _getMetaByNodePage(topic, 0);
+    //   meta = await _buildMetaByAppend(topic, meta, _subscriberMe);
+    //   bool permissionSuccess = await _clientSubscribe(topic, fee: fee, permissionPage: 0, meta: meta, toast: true);
     //   if (!permissionSuccess) {
     //     logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
     //     // await subscriberCommon.deleteByTopic(exists.topic);
@@ -144,20 +144,20 @@ class TopicCommon with Tag {
     //   }
     // } else {
     //   // public / private + normal
-    //   _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
+    //   _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
     // }
-    await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
+    await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
     await Future.delayed(Duration(milliseconds: 250));
 
     // send messages
-    await chatOutCommon.sendTopicSubscribe(topicName);
+    await chatOutCommon.sendTopicSubscribe(topic);
     await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
     return exists;
   }
 
   // caller = self(owner/normal)
   Future<TopicSchema?> checkExpireAndSubscribe(
-    String? topicName, {
+    String? topic, {
     bool refreshSubscribers = false,
     bool forceSubscribe = false,
     bool enableFirst = false,
@@ -165,12 +165,12 @@ class TopicCommon with Tag {
     int tryCount = 1,
     bool toast = false,
   }) async {
-    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
 
     // topic exist
-    TopicSchema? exists = await queryByTopic(topicName);
+    TopicSchema? exists = await queryByTopic(topic);
     if (exists == null) {
-      logger.w("$TAG - checkExpireAndSubscribe - null - topicName:$topicName");
+      logger.w("$TAG - checkExpireAndSubscribe - null - topic:$topic");
       return null;
     }
 
@@ -234,7 +234,7 @@ class TopicCommon with Tag {
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // client subscribe
-      bool subscribeSuccess = await _clientSubscribe(topicName, fee: fee, toast: toast);
+      bool subscribeSuccess = await _clientSubscribe(topic, fee: fee, toast: toast);
       if (!subscribeSuccess) {
         if ((tryCount >= 5) || toast) {
           logger.e("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
@@ -242,7 +242,7 @@ class TopicCommon with Tag {
         }
         logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - tryCount:$tryCount - topic:$exists");
         await Future.delayed(Duration(seconds: 2));
-        return checkExpireAndSubscribe(topicName, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount, toast: toast);
+        return checkExpireAndSubscribe(topic, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount, toast: toast);
       }
 
       // db update
@@ -260,14 +260,14 @@ class TopicCommon with Tag {
     }
     // subscribers
     if (refreshSubscribers) {
-      await subscriberCommon.refreshSubscribers(topicName, ownerPubKey: exists.ownerPubKey, meta: exists.isPrivate);
+      await subscriberCommon.refreshSubscribers(topic, ownerPubKey: exists.ownerPubKey, meta: exists.isPrivate);
     }
     return exists;
   }
 
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
-  Future<bool> _clientSubscribe(String? topicName, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta, int? nonce, int tryCount = 1, bool toast = false}) async {
-    if (topicName == null || topicName.isEmpty) return false;
+  Future<bool> _clientSubscribe(String? topic, {double fee = 0, int? permissionPage, Map<String, dynamic>? meta, int? nonce, int tryCount = 1, bool toast = false}) async {
+    if (topic == null || topic.isEmpty) return false;
     String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
     nonce = nonce ?? await Global.getNonce();
@@ -275,7 +275,7 @@ class TopicCommon with Tag {
     bool success;
     try {
       String? topicHash = await clientCommon.client?.subscribe(
-        topic: genTopicHash(topicName),
+        topic: genTopicHash(topic),
         duration: Global.topicDefaultSubscribeHeight,
         fee: fee.toString(),
         identifier: identifier,
@@ -283,27 +283,27 @@ class TopicCommon with Tag {
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientSubscribe - success - topicName:$topicName - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
+        logger.d("$TAG - _clientSubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
       } else {
-        logger.e("$TAG - _clientSubscribe - fail - topicName:$topicName - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        logger.e("$TAG - _clientSubscribe - fail - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
-          logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topicName:$topicName - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+          logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
           if (toast) Toast.show(S.of(Global.appContext).something_went_wrong);
           success = false;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
-          return _clientSubscribe(topicName, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, tryCount: ++tryCount, toast: toast);
+          return _clientSubscribe(topic, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, tryCount: ++tryCount, toast: toast);
         }
       } else {
         await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
-          logger.w("$TAG - _clientSubscribe - duplicated - topicName:$topicName - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+          logger.w("$TAG - _clientSubscribe - duplicated - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
           if (toast) Toast.show(S.of(Global.appContext).request_processed);
         } else {
           handleError(e);
@@ -319,17 +319,17 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self
-  Future<TopicSchema?> unsubscribe(String? topicName, {double fee = 0}) async {
-    if (topicName == null || topicName.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+  Future<TopicSchema?> unsubscribe(String? topic, {double fee = 0}) async {
+    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     // permission modify in owners message received by owner
 
     // client unsubscribe
-    bool exitSuccess = await _clientUnsubscribe(topicName, fee: fee, toast: true);
+    bool exitSuccess = await _clientUnsubscribe(topic, fee: fee, toast: true);
     if (!exitSuccess) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
     // topic update
-    TopicSchema? exists = await queryByTopic(topicName);
+    TopicSchema? exists = await queryByTopic(topic);
     bool setSuccess = await setJoined(exists?.id, false, notify: true);
     if (setSuccess) {
       exists?.joined = false;
@@ -340,51 +340,51 @@ class TopicCommon with Tag {
     // if (setSuccess) exists?.count = (exists.count ?? 1) - 1;
 
     // DB(topic+subscriber) delete
-    await subscriberCommon.onUnsubscribe(topicName, clientCommon.address);
-    // await subscriberCommon.deleteByTopic(topicName); // stay is useful
+    await subscriberCommon.onUnsubscribe(topic, clientCommon.address);
+    // await subscriberCommon.deleteByTopic(topic); // stay is useful
     // await delete(exists?.id, notify: true); // replace by setJoined
 
     // send message
-    await chatOutCommon.sendTopicUnSubscribe(topicName);
+    await chatOutCommon.sendTopicUnSubscribe(topic);
     await Future.delayed(Duration(milliseconds: 250));
     return exists;
   }
 
-  Future<bool> _clientUnsubscribe(String? topicName, {double fee = 0, int? nonce, int tryCount = 1, bool toast = false}) async {
-    if (topicName == null || topicName.isEmpty) return false;
+  Future<bool> _clientUnsubscribe(String? topic, {double fee = 0, int? nonce, int tryCount = 1, bool toast = false}) async {
+    if (topic == null || topic.isEmpty) return false;
     // String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
     nonce = nonce ?? await Global.getNonce();
 
     bool success;
     try {
       String? topicHash = await clientCommon.client?.unsubscribe(
-        topic: genTopicHash(topicName),
+        topic: genTopicHash(topic),
         identifier: "", // no used (maybe will be used by owner later)
         fee: fee.toString(),
         nonce: nonce,
       );
       if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientUnsubscribe - success - topicName:$topicName - nonce:$nonce - topicHash:$topicHash");
+        logger.d("$TAG - _clientUnsubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash");
       } else {
-        logger.e("$TAG - _clientUnsubscribe - fail - topicName:$topicName - nonce:$nonce - topicHash:$topicHash");
+        logger.e("$TAG - _clientUnsubscribe - fail - topic:$topic - nonce:$nonce - topicHash:$topicHash");
       }
       success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
-          logger.w("$TAG - _clientUnsubscribe - try over by nonce is not continuous - topicName:$topicName - nonce:$nonce");
+          logger.w("$TAG - _clientUnsubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce");
           if (toast) Toast.show(S.of(Global.appContext).something_went_wrong);
           success = false;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
-          return _clientUnsubscribe(topicName, fee: fee, nonce: nonce, tryCount: ++tryCount, toast: toast);
+          return _clientUnsubscribe(topic, fee: fee, nonce: nonce, tryCount: ++tryCount, toast: toast);
         }
       } else {
         await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
-          logger.w("$TAG - _clientUnsubscribe - duplicated - topicName:$topicName - nonce:$nonce");
+          logger.w("$TAG - _clientUnsubscribe - duplicated - topic:$topic - nonce:$nonce");
           if (toast) Toast.show(S.of(Global.appContext).request_processed);
         } else {
           handleError(e);
@@ -400,17 +400,17 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<bool> isJoined(String? topicName, String? clientAddress, {int? globalHeight}) async {
-    if (topicName == null || topicName.isEmpty) return false;
-    TopicSchema? exists = await queryByTopic(topicName);
+  Future<bool> isJoined(String? topic, String? clientAddress, {int? globalHeight}) async {
+    if (topic == null || topic.isEmpty) return false;
+    TopicSchema? exists = await queryByTopic(topic);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
     if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
-      logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topicName:$topicName - clientAddress:$clientAddress");
+      logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
     int expireHeight = await getExpireAtByNode(exists?.topic, clientAddress);
     if (expireHeight <= 0) {
-      logger.i("$TAG - isJoined - expireHeight <= 0 - topicName:$topicName - clientAddress:$clientAddress");
+      logger.i("$TAG - isJoined - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
       return false;
     }
     try {
@@ -419,25 +419,25 @@ class TopicCommon with Tag {
       handleError(e);
     }
     if (globalHeight == null || globalHeight <= 0) {
-      logger.w("$TAG - isJoined - globalHeight <= 0 - topicName:$topicName");
+      logger.w("$TAG - isJoined - globalHeight <= 0 - topic:$topic");
       return false;
     }
     return expireHeight >= globalHeight;
   }
 
-  Future<int> getExpireAtByNode(String? topicName, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
+  Future<int> getExpireAtByNode(String? topic, String? clientAddress) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    Map<String, dynamic> result = await _clientGetSubscription(topicName, pubKey);
+    Map<String, dynamic> result = await _clientGetSubscription(topic, pubKey);
     String? expiresAt = result['expiresAt']?.toString() ?? "0";
     return int.tryParse(expiresAt) ?? 0;
   }
 
-  Future<Map<String, dynamic>> _getMetaByNodePage(String? topicName, int permPage) async {
-    if (topicName == null || topicName.isEmpty) return Map();
-    String? ownerPubKey = getPubKeyFromTopicOrChatId(topicName);
+  Future<Map<String, dynamic>> _getMetaByNodePage(String? topic, int permPage) async {
+    if (topic == null || topic.isEmpty) return Map();
+    String? ownerPubKey = getPubKeyFromTopicOrChatId(topic);
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
-    Map<String, dynamic> result = await _clientGetSubscription(topicName, indexWithPubKey);
+    Map<String, dynamic> result = await _clientGetSubscription(topic, indexWithPubKey);
     if (result['meta']?.toString().isNotEmpty == true) {
       Map<String, dynamic> meta = jsonFormat(result['meta']) ?? Map();
       logger.d("$TAG - _getMetaByNodePage - meta:$meta");
@@ -447,17 +447,17 @@ class TopicCommon with Tag {
     return Map();
   }
 
-  Future<Map<String, dynamic>> _clientGetSubscription(String? topicName, String? subscriber) async {
-    if (topicName == null || topicName.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
+  Future<Map<String, dynamic>> _clientGetSubscription(String? topic, String? subscriber) async {
+    if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     try {
       Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
-        topic: genTopicHash(topicName),
+        topic: genTopicHash(topic),
         subscriber: subscriber,
       );
       if (result?.isNotEmpty == true) {
-        logger.d("$TAG - _clientGetSubscription - success - topicName:$topicName - subscriber:$subscriber - result:$result");
+        logger.d("$TAG - _clientGetSubscription - success - topic:$topic - subscriber:$subscriber - result:$result");
       } else {
-        logger.w("$TAG - _clientGetSubscription - fail - topicName:$topicName - subscriber:$subscriber");
+        logger.w("$TAG - _clientGetSubscription - fail - topic:$topic - subscriber:$subscriber");
       }
       return result ?? Map();
     } catch (e) {
@@ -471,8 +471,8 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> invitee(String? topicName, bool isPrivate, bool isOwner, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+  Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     if (clientAddress == clientCommon.address) {
       Toast.show(S.of(Global.appContext).invite_yourself_error);
       return null;
@@ -483,7 +483,7 @@ class TopicCommon with Tag {
     }
 
     // check status
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if (_subscriber != null && _subscriber.status == SubscriberStatus.Subscribed) {
       Toast.show(S.of(Global.appContext).group_member_already);
       return null;
@@ -493,8 +493,8 @@ class TopicCommon with Tag {
     int? appendPermPage;
     bool? acceptAll = false;
     if (isPrivate) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, isPrivate, clientAddress);
-      appendPermPage = permission[0] ?? (await subscriberCommon.queryMaxPermPageByTopic(topicName));
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, isPrivate, clientAddress);
+      appendPermPage = permission[0] ?? (await subscriberCommon.queryMaxPermPageByTopic(topic));
       acceptAll = permission[1];
       bool? isReject = permission[3];
       if ((acceptAll != true) && !isOwner && (isReject == true)) {
@@ -505,14 +505,14 @@ class TopicCommon with Tag {
     }
 
     // update DB
-    _subscriber = await subscriberCommon.onInvitedSend(topicName, clientAddress, appendPermPage);
+    _subscriber = await subscriberCommon.onInvitedSend(topic, clientAddress, appendPermPage);
     if (_subscriber == null) return null;
 
     // update meta (private + owner + no_accept_all)
     if (isPrivate && isOwner && (acceptAll != true) && (appendPermPage != null)) {
-      Map<String, dynamic> meta = await _getMetaByNodePage(topicName, appendPermPage);
-      meta = await _buildMetaByAppend(topicName, meta, _subscriber);
-      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: appendPermPage, meta: meta, toast: true);
+      Map<String, dynamic> meta = await _getMetaByNodePage(topic, appendPermPage);
+      meta = await _buildMetaByAppend(topic, meta, _subscriber);
+      bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: appendPermPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - invitee - clientSubscribe error - permPage:$appendPermPage - meta:$meta");
         await subscriberCommon.delete(_subscriber.id, notify: true);
@@ -521,7 +521,7 @@ class TopicCommon with Tag {
     }
 
     // send message
-    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topicName);
+    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
     if (_msg == null) {
       Toast.show(S.of(Global.appContext).failure);
       return null;
@@ -531,19 +531,19 @@ class TopicCommon with Tag {
   }
 
   // caller = private + owner
-  Future<SubscriberSchema?> kick(String? topicName, bool isPrivate, bool isOwner, String? clientAddress) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+  Future<SubscriberSchema?> kick(String? topic, bool isPrivate, bool isOwner, String? clientAddress) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
     if (clientAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
 
     // check status
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topicName, clientAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     int? oldStatus = _subscriber?.status;
     if (_subscriber == null) return null;
     if (_subscriber.canBeKick == false) return null; // checked in UI
 
     // check permission
-    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, isPrivate, clientAddress);
+    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, isPrivate, clientAddress);
     int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
     if (permPage == null) {
@@ -552,14 +552,14 @@ class TopicCommon with Tag {
     }
 
     // update DB
-    _subscriber = await subscriberCommon.onKickOut(topicName, clientAddress, permPage: permPage);
+    _subscriber = await subscriberCommon.onKickOut(topic, clientAddress, permPage: permPage);
     if (_subscriber == null) return null;
 
     // update meta (private + owner + no_accept_all)
     if (acceptAll != true) {
-      Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
-      meta = await _buildMetaByAppend(topicName, meta, _subscriber);
-      bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta, toast: true);
+      Map<String, dynamic> meta = await _getMetaByNodePage(topic, permPage);
+      meta = await _buildMetaByAppend(topic, meta, _subscriber);
+      bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: permPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
         _subscriber.status = oldStatus;
@@ -569,16 +569,16 @@ class TopicCommon with Tag {
     }
 
     // send message
-    await chatOutCommon.sendTopicKickOut(topicName, clientAddress);
+    await chatOutCommon.sendTopicKickOut(topic, clientAddress);
     Toast.show(S.of(Global.appContext).rejected);
     return _subscriber;
   }
 
-  Future<Map<String, dynamic>> _buildMetaByAppend(String? topicName, Map<String, dynamic> meta, SubscriberSchema? append) async {
-    if (topicName == null || topicName.isEmpty || append == null) return Map();
+  Future<Map<String, dynamic>> _buildMetaByAppend(String? topic, Map<String, dynamic> meta, SubscriberSchema? append) async {
+    if (topic == null || topic.isEmpty || append == null) return Map();
     // permPage
     if ((append.permPage ?? -1) <= 0) {
-      append.permPage = (await subscriberCommon.findPermissionFromNode(topicName, true, append.clientAddress))[0] ?? 0;
+      append.permPage = (await subscriberCommon.findPermissionFromNode(topic, true, append.clientAddress))[0] ?? 0;
     }
 
     // node meta
@@ -603,7 +603,7 @@ class TopicCommon with Tag {
     }
 
     // DB meta (maybe in txPool)
-    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topicName, append.permPage);
+    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage);
     subscribers.forEach((SubscriberSchema element) {
       if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -645,18 +645,18 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> onSubscribe(String? topicName, String? clientAddress, {int tryCount = 1}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, {int tryCount = 1}) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // topic exist
-    TopicSchema? _topic = await queryByTopic(topicName);
+    TopicSchema? _topic = await queryByTopic(topic);
     if (_topic == null) {
-      logger.w("$TAG - onSubscribe - null - topicName:$topicName");
+      logger.w("$TAG - onSubscribe - null - topic:$topic");
       return null;
     }
 
     // permission check
     if (_topic.isPrivate && !_topic.isOwner(clientAddress)) {
-      List permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
+      List permission = await subscriberCommon.findPermissionFromNode(topic, _topic.isPrivate, clientAddress);
       // int? permPage = permission[0];
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
@@ -669,7 +669,7 @@ class TopicCommon with Tag {
           }
           logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryCount:$tryCount - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
           await Future.delayed(Duration(seconds: 5));
-          return onSubscribe(topicName, clientAddress, tryCount: ++tryCount);
+          return onSubscribe(topic, clientAddress, tryCount: ++tryCount);
         } else {
           logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
         }
@@ -681,38 +681,38 @@ class TopicCommon with Tag {
     // permission modify in invitee action by owner
 
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onSubscribe(topicName, clientAddress, null);
+    SubscriberSchema? _subscriber = await subscriberCommon.onSubscribe(topic, clientAddress, null);
     if (_subscriber == null) return null;
 
     // subscribers sync
     // if (_topic.isPrivate) {
     //   Future.delayed(Duration(seconds: 1), () {
-    //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    //     subscriberCommon.refreshSubscribers(topic, meta: _topic.isPrivate);
     //   });
     // }
     return _subscriber;
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onUnsubscribe(String? topicName, String? clientAddress, {int tryCount = 1}) async {
-    if (topicName == null || topicName.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress, {int tryCount = 1}) async {
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
-    TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
+    TopicSchema? _topic = await topicCommon.queryByTopic(topic);
     if (_topic == null) {
-      logger.w("$TAG - onUnsubscribe - null - topicName:$topicName");
+      logger.w("$TAG - onUnsubscribe - null - topic:$topic");
       return null;
     }
 
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onUnsubscribe(topicName, clientAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.onUnsubscribe(topic, clientAddress);
     if (_subscriber == null) {
-      logger.w("$TAG - onUnsubscribe - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      logger.w("$TAG - onUnsubscribe - subscriber is null - topic:$topic - clientAddress:$clientAddress");
       return null;
     }
 
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address != clientAddress) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, _topic.isPrivate, clientAddress);
       int? permPage = permission[0] ?? _subscriber.permPage;
       bool? acceptAll = permission[1];
       if (acceptAll == true) {
@@ -728,11 +728,11 @@ class TopicCommon with Tag {
           }
         }
         // meta update
-        Map<String, dynamic> meta = await _getMetaByNodePage(topicName, permPage);
+        Map<String, dynamic> meta = await _getMetaByNodePage(topic, permPage);
         _subscriber.status = SubscriberStatus.None;
-        meta = await _buildMetaByAppend(topicName, meta, _subscriber);
+        meta = await _buildMetaByAppend(topic, meta, _subscriber);
         _subscriber.status = SubscriberStatus.Unsubscribed;
-        bool subscribeSuccess = await _clientSubscribe(topicName, fee: 0, permissionPage: permPage, meta: meta);
+        bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: permPage, meta: meta);
         if (!subscribeSuccess) {
           if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
             logger.e("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
@@ -740,7 +740,7 @@ class TopicCommon with Tag {
           }
           logger.w("$TAG - onUnsubscribe - clientSubscribe error - tryCount:$tryCount - permPage:$permPage - meta:$meta");
           await Future.delayed(Duration(seconds: 5));
-          return onUnsubscribe(topicName, clientAddress, tryCount: ++tryCount);
+          return onUnsubscribe(topic, clientAddress, tryCount: ++tryCount);
         }
       }
     }
@@ -758,29 +758,29 @@ class TopicCommon with Tag {
     // subscribers sync
     // if (_topic.isPrivate) {
     //   Future.delayed(Duration(seconds: 1), () {
-    //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+    //     subscriberCommon.refreshSubscribers(topic, meta: _topic.isPrivate);
     //   });
     // }
     return _subscriber;
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onKickOut(String? topicName, String? senderAddress, String? clientAddress, {int tryCount = 1}) async {
-    if (topicName == null || topicName.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+  Future<SubscriberSchema?> onKickOut(String? topic, String? senderAddress, String? clientAddress, {int tryCount = 1}) async {
+    if (topic == null || topic.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
-    TopicSchema? _topic = await topicCommon.queryByTopic(topicName);
-    if (_topic == null) {
-      logger.w("$TAG - onKickOut - null - topicName:$topicName");
+    TopicSchema? _exist = await topicCommon.queryByTopic(topic);
+    if (_exist == null) {
+      logger.w("$TAG - onKickOut - null - topic:$topic");
       return null;
-    } else if (!_topic.isOwner(senderAddress)) {
-      logger.w("$TAG - onKickOut - sender error - topicName:$topicName - senderAddress:$senderAddress");
+    } else if (!_exist.isOwner(senderAddress)) {
+      logger.w("$TAG - onKickOut - sender error - topic:$topic - senderAddress:$senderAddress");
       return null;
     }
 
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onKickOut(topicName, clientAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.onKickOut(topic, clientAddress);
     if (_subscriber == null) {
-      logger.w("$TAG - onKickOut - subscriber is null - topicName:$topicName - clientAddress:$clientAddress");
+      logger.w("$TAG - onKickOut - subscriber is null - topic:$topic - clientAddress:$clientAddress");
       return null;
     }
 
@@ -788,34 +788,34 @@ class TopicCommon with Tag {
 
     // self unsubscribe
     if (clientAddress == clientCommon.address) {
-      bool exitSuccess = await _clientUnsubscribe(topicName, fee: 0);
+      bool exitSuccess = await _clientUnsubscribe(topic, fee: 0);
       if (!exitSuccess) {
         if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
-          logger.e("$TAG - onKickOut - clientUnsubscribe error - topicName:$topicName - subscriber:$_subscriber");
+          logger.e("$TAG - onKickOut - clientUnsubscribe error - topic:$topic - subscriber:$_subscriber");
           return null;
         }
-        logger.w("$TAG - onKickOut - clientUnsubscribe error - tryCount:$tryCount - topicName:$topicName - subscriber:$_subscriber");
+        logger.w("$TAG - onKickOut - clientUnsubscribe error - tryCount:$tryCount - topic:$topic - subscriber:$_subscriber");
         await Future.delayed(Duration(seconds: 5));
-        return onKickOut(topicName, senderAddress, clientAddress, tryCount: ++tryCount);
+        return onKickOut(topic, senderAddress, clientAddress, tryCount: ++tryCount);
       }
-      bool setSuccess = await setJoined(_topic.id, false, notify: true);
+      bool setSuccess = await setJoined(_exist.id, false, notify: true);
       if (setSuccess) {
-        _topic.joined = false;
-        _topic.subscribeAt = 0;
-        _topic.expireBlockHeight = 0;
+        _exist.joined = false;
+        _exist.subscribeAt = 0;
+        _exist.expireBlockHeight = 0;
       }
       // DB update (just node sync can delete)
-      // await subscriberCommon.deleteByTopic(topicName); // stay is useful
+      // await subscriberCommon.deleteByTopic(topic); // stay is useful
       // await delete(_topic.id, notify: true); // replace by setJoined
     } else {
-      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
-      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+      bool setSuccess = await setCount(_exist.id, (_exist.count ?? 1) - 1, notify: true);
+      if (setSuccess) _exist.count = (_exist.count ?? 1) - 1;
       // await subscriberCommon.delete(_subscriber.id, notify: true);
 
       // subscribers sync
       // if (_topic.isPrivate) {
       //   Future.delayed(Duration(seconds: 1), () {
-      //     subscriberCommon.refreshSubscribers(topicName, meta: _topic.isPrivate);
+      //     subscriberCommon.refreshSubscribers(topic, meta: _topic.isPrivate);
       //   });
       // }
     }
@@ -854,9 +854,9 @@ class TopicCommon with Tag {
     return _topicStorage.query(topicId);
   }
 
-  Future<TopicSchema?> queryByTopic(String? topicName) async {
-    if (topicName == null || topicName.isEmpty) return null;
-    return await _topicStorage.queryByTopic(topicName);
+  Future<TopicSchema?> queryByTopic(String? topic) async {
+    if (topic == null || topic.isEmpty) return null;
+    return await _topicStorage.queryByTopic(topic);
   }
 
   Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? offset, int? limit}) {

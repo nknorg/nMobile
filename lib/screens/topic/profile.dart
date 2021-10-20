@@ -101,15 +101,15 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   _refreshTopicSchema({TopicSchema? schema}) async {
     TopicSchema? topicSchema = widget.arguments![TopicProfileScreen.argTopicSchema];
     int? topicId = widget.arguments![TopicProfileScreen.argTopicId];
-    String? topicName = widget.arguments![TopicProfileScreen.argTopicTopic];
+    String? topic = widget.arguments![TopicProfileScreen.argTopicTopic];
     if (schema != null) {
       this._topicSchema = schema;
     } else if (topicSchema != null && topicSchema.id != 0) {
       this._topicSchema = topicSchema;
     } else if (topicId != null && topicId != 0) {
       this._topicSchema = await topicCommon.query(topicId);
-    } else if (topicName?.isNotEmpty == true) {
-      this._topicSchema = await topicCommon.queryByTopic(topicName);
+    } else if (topic?.isNotEmpty == true) {
+      this._topicSchema = await topicCommon.queryByTopic(topic);
     }
     if (this._topicSchema == null) return;
     setState(() {});
@@ -123,7 +123,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         this._topicSchema = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(topicName); // await
+      topicCommon.checkExpireAndSubscribe(this._topicSchema?.topic); // await
     });
 
     _refreshJoined(); // await
