@@ -269,7 +269,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _messages.insert(0, added);
     });
     // tip
-    Future.delayed(Duration(seconds: 1), () => _tipNotificationOpen()); // await
+    Future.delayed(Duration(milliseconds: 500), () => _tipNotificationOpen()); // await
   }
 
   _refreshTopicJoined() async {
