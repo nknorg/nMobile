@@ -86,7 +86,10 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     String nickName = ContactSchema.getDefaultName(clientAddress);
     String? walletAddress;
     try {
-      walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
+      if (pubKey?.isNotEmpty == true) {
+        walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+      }
     } catch (e) {
       handleError(e);
     }

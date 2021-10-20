@@ -202,7 +202,10 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 if (clientAddress == null || clientAddress.isEmpty) return;
                 String? connectAddress;
                 try {
-                  connectAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+                  String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
+                  if (pubKey?.isNotEmpty == true) {
+                    connectAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+                  }
                 } catch (e) {
                   handleError(e);
                 }
