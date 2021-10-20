@@ -47,7 +47,10 @@ class ContactCommon with Tag {
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
         try {
-          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+          String? pubKey = getPubKeyFromTopicOrChatId(contact.clientAddress);
+          if (pubKey?.isNotEmpty == true) {
+            contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+          }
         } catch (e) {
           handleError(e);
         }
@@ -66,7 +69,10 @@ class ContactCommon with Tag {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
       try {
-        schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(schema.clientAddress));
+        String? pubKey = getPubKeyFromTopicOrChatId(schema.clientAddress);
+        if (pubKey?.isNotEmpty == true) {
+          schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+        }
       } catch (e) {
         handleError(e);
       }
