@@ -40,11 +40,23 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
-  Future refreshSubscribers(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
+  Future refreshSubscribers(
+    String? topicName, {
+    String? ownerPubKey,
+    bool meta = false,
+    bool txPool = true,
+    Uint8List? subscriberHashPrefix,
+  }) async {
     if (topicName == null || topicName.isEmpty) return [];
 
     List<SubscriberSchema> dbSubscribers = await queryListByTopic(topicName);
-    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topicName, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix);
+    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(
+      topicName,
+      ownerPubKey: ownerPubKey,
+      meta: meta,
+      txPool: txPool,
+      subscriberHashPrefix: subscriberHashPrefix,
+    );
 
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
@@ -127,9 +139,15 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topicName, {bool meta = false, bool txPool = true, Uint8List? subscriberHashPrefix}) async {
+  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(
+    String? topicName, {
+    String? ownerPubKey,
+    bool meta = false,
+    bool txPool = true,
+    Uint8List? subscriberHashPrefix,
+  }) async {
     if (topicName == null || topicName.isEmpty) return [];
-    // permissions + subscribers
+    // subscribers(permission)
     Map<String, dynamic> noMergeResults = await _clientGetSubscribers(
       topicName,
       meta: meta,
@@ -137,7 +155,7 @@ class SubscriberCommon with Tag {
       subscriberHashPrefix: subscriberHashPrefix,
     );
 
-    // subscribers
+    // subscribers(subscribe)
     List<SubscriberSchema> subscribers = [];
     noMergeResults.forEach((key, value) {
       if (key.isNotEmpty && !key.contains('.__permission__.')) {
@@ -169,6 +187,11 @@ class SubscriberCommon with Tag {
     } else {
       for (int i = 0; i < subscribers.length; i++) {
         var subscriber = subscribers[i];
+        if (ownerPubKey == getPubKeyFromTopicOrChatId(subscriber.clientAddress)) {
+          subscriber.status = SubscriberStatus.Subscribed;
+          results.add(subscriber);
+          continue;
+        }
         bool find = false;
         for (int j = 0; j < permissions.length; j++) {
           SubscriberSchema permission = permissions[j];
@@ -192,8 +215,12 @@ class SubscriberCommon with Tag {
       for (int i = 0; i < permissions.length; i++) {
         SubscriberSchema permission = permissions[i];
         if (subscribers.where((element) => element.clientAddress.isNotEmpty && element.clientAddress == permission.clientAddress).toList().isEmpty) {
-          logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - permission:$permission");
-          results.add(permission);
+          if (ownerPubKey != getPubKeyFromTopicOrChatId(permission.clientAddress)) {
+            logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - permission:$permission");
+            results.add(permission);
+          } else {
+            logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission (owner) - permission:$permission");
+          }
         }
       }
     }

@@ -80,7 +80,7 @@ class TopicCommon with Tag {
     }
 
     // subscriber me
-    SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
+    // SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topicName, clientCommon.address);
     // if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
     //   int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
     //   if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
@@ -121,31 +121,32 @@ class TopicCommon with Tag {
     }
 
     // check expire + pull subscribers
-    bool historyJoined = exists.joined;
+    // bool historyJoined = exists.joined;
     exists = await checkExpireAndSubscribe(topicName, enableFirst: true, forceSubscribe: true, refreshSubscribers: fetchSubscribers, fee: fee, toast: true);
     if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
     // status + permission
-    if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
-      // private + owner
-      _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
-      Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
-      meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
-      bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta, toast: true);
-      if (!permissionSuccess) {
-        logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
-        // await subscriberCommon.deleteByTopic(exists.topic);
-        if (!historyJoined) {
-          // need delete by subscribed first when permission push
-          await delete(exists.id, notify: true);
-        }
-        return null;
-      }
-    } else {
-      // public / private + normal
-      _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
-    }
+    // if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
+    //   // private + owner
+    //   _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, 0);
+    //   Map<String, dynamic> meta = await _getMetaByNodePage(topicName, 0);
+    //   meta = await _buildMetaByAppend(topicName, meta, _subscriberMe);
+    //   bool permissionSuccess = await _clientSubscribe(topicName, fee: fee, permissionPage: 0, meta: meta, toast: true);
+    //   if (!permissionSuccess) {
+    //     logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
+    //     // await subscriberCommon.deleteByTopic(exists.topic);
+    //     if (!historyJoined) {
+    //       // need delete by subscribed first when permission push
+    //       await delete(exists.id, notify: true);
+    //     }
+    //     return null;
+    //   }
+    // } else {
+    //   // public / private + normal
+    //   _subscriberMe = await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
+    // }
+    await subscriberCommon.onSubscribe(topicName, clientCommon.address, permPage);
     await Future.delayed(Duration(milliseconds: 250));
 
     // send messages
@@ -259,7 +260,7 @@ class TopicCommon with Tag {
     }
     // subscribers
     if (refreshSubscribers) {
-      await subscriberCommon.refreshSubscribers(topicName, meta: exists.isPrivate);
+      await subscriberCommon.refreshSubscribers(topicName, ownerPubKey: exists.ownerPubKey, meta: exists.isPrivate);
     }
     return exists;
   }
@@ -654,30 +655,26 @@ class TopicCommon with Tag {
     }
 
     // permission check
-    if (_topic.isPrivate) {
+    if (_topic.isPrivate && !_topic.isOwner(clientAddress)) {
       List permission = await subscriberCommon.findPermissionFromNode(topicName, _topic.isPrivate, clientAddress);
       // int? permPage = permission[0];
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
       bool? isReject = permission[3];
-      if (!_topic.isOwner(clientAddress)) {
-        if (acceptAll == null || acceptAll != true) {
-          if (isReject == true || isAccept != true) {
-            if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
-              logger.e("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
-              return null;
-            }
-            logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryCount:$tryCount - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
-            await Future.delayed(Duration(seconds: 5));
-            return onSubscribe(topicName, clientAddress, tryCount: ++tryCount);
-          } else {
-            logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+      if (acceptAll == null || acceptAll != true) {
+        if (isReject == true || isAccept != true) {
+          if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
+            logger.e("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+            return null;
           }
+          logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryCount:$tryCount - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+          await Future.delayed(Duration(seconds: 5));
+          return onSubscribe(topicName, clientAddress, tryCount: ++tryCount);
         } else {
-          logger.i("$TAG - onSubscribe - topic is accept all - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+          logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
         }
       } else {
-        logger.i("$TAG - onSubscribe - subscribe is owner - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+        logger.i("$TAG - onSubscribe - topic is accept all - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
       }
     }
 
@@ -749,7 +746,7 @@ class TopicCommon with Tag {
     }
 
     // owner unsubscribe
-    if (_topic.isPrivate && _topic.isOwner(clientAddress)) {
+    if (_topic.isPrivate && _topic.isOwner(clientAddress) && clientCommon.address == clientAddress) {
       // do nothing now
     }
 

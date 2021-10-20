@@ -162,7 +162,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _refreshMembersCount(); // await
 
     // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, meta: this._topicSchema?.isPrivate == true).then((value) {
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, ownerPubKey: _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) {
       _getDataSubscribers(true);
     });
     _getDataSubscribers(true);

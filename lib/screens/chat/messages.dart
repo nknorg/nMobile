@@ -302,17 +302,17 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     // fetch
     if (fetch || topicCountEmpty) {
-      int lastRefreshAt = topicsCheck[_topic!.topicName] ?? 0;
+      int lastRefreshAt = topicsCheck[_topic!.topic] ?? 0;
       if (topicCountEmpty) {
         logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountError");
       } else if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
         logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
         return;
       }
-      topicsCheck[_topic!.topicName] = DateTime.now().millisecondsSinceEpoch;
+      topicsCheck[_topic!.topic] = DateTime.now().millisecondsSinceEpoch;
       await Future.delayed(Duration(milliseconds: 500));
       logger.i("$TAG - _refreshTopicSubscribers - start");
-      await subscriberCommon.refreshSubscribers(_topic?.topicName, meta: _topic?.isPrivate == true);
+      await subscriberCommon.refreshSubscribers(_topic?.topic, ownerPubKey: _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
       // refresh again
       int count2 = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
       if (count != count2) {
