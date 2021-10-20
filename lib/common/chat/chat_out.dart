@@ -53,7 +53,7 @@ class ChatOutCommon with Tag {
   int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
   // large sending
-  final int largeBodyMaxPieceSize = 30 * 1024 * 1024; // 3M < 4,000,000(nkn-go-sdk)
+  final int largeBodyMaxPieceSize = 3 * 1024 * 1024; // 3M < 4,000,000(nkn-go-sdk)
   Lock largeBodyLock = Lock();
 
   ChatOutCommon();
