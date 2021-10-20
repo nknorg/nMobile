@@ -46,24 +46,15 @@ Map<String, dynamic>? jsonFormat(raw) {
   return null;
 }
 
-String getPublicKeyByClientAddr(String addr) {
-  int n = addr.lastIndexOf('.');
-  if (n < 0) {
-    return addr;
-  } else {
-    return addr.substring(n + 1);
-  }
+String? getPubKeyFromTopicOrChatId(String s) {
+  final i = s.lastIndexOf('.');
+  final pubKey = i >= 0 ? s.substring(i + 1) : s;
+  return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
 String genTopicHash(String topic) {
   var t = topic.replaceFirst(RegExp(r'^#*'), '');
   return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
-}
-
-String? getPubKeyFromTopicOrChatId(String s) {
-  final i = s.lastIndexOf('.');
-  final pubKey = i > 0 ? s.substring(i + 1) : s;
-  return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
 num? getNumByValueDouble(double? value, int fractionDigits) {
