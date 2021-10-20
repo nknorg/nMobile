@@ -72,7 +72,10 @@ class ContactSchema {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress;
     try {
-      walletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+      String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
+      if (pubKey?.isNotEmpty == true) {
+        walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+      }
     } catch (e) {
       handleError(e);
     }
@@ -191,7 +194,10 @@ class ContactSchema {
       data?['nknWalletAddress'] = nknWalletAddress;
     } else {
       try {
-        data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(clientAddress));
+        String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
+        if (pubKey?.isNotEmpty == true) {
+          data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(pubKey!);
+        }
       } catch (e) {
         handleError(e);
       }
@@ -261,7 +267,10 @@ class ContactSchema {
       contact.nknWalletAddress = data?['nknWalletAddress'];
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
         try {
-          contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(getPublicKeyByClientAddr(contact.clientAddress));
+          String? pubKey = getPubKeyFromTopicOrChatId(contact.clientAddress);
+          if (pubKey?.isNotEmpty == true) {
+            contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
+          }
         } catch (e) {
           handleError(e);
         }
