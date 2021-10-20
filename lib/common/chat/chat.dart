@@ -252,9 +252,12 @@ class ChatCommon with Tag {
     // duplicated
     SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
     if (exist == null) {
-      if (topic.isPrivate != true) {
+      if (!topic.isPrivate) {
         exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, null));
         logger.i("$TAG - subscriberHandle - public: add Subscribed - subscriber:$exist");
+      } else if (topic.isOwner(message.from)) {
+        exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, null));
+        logger.i("$TAG - subscriberHandle - private: add Owner - subscriber:$exist");
       } else {
         // will go here when duration(TxPoolDelay) gone in new version
         List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
