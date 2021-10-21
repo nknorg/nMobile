@@ -34,8 +34,12 @@ class TopicCommon with Tag {
 
   TopicCommon();
 
+  /// ***********************************************************************************************************
+  /// ************************************************* check ***************************************************
+  /// ***********************************************************************************************************
+
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
-    if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    if (!clientCommon.isClientCreated) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     List<TopicSchema> topics = await queryList();
@@ -55,13 +59,23 @@ class TopicCommon with Tag {
     }
   }
 
+  Future checkAndTryAgainSubscribe(String? topic, {bool txPool = true}) async {
+    if (!clientCommon.isClientCreated) return;
+    //
+    getExpireAtByNode(topic, clientCommon.address);
+  }
+
+  Future checkAndTryAgainPermission(String? topic, String? clientAddress, {bool txPool = true}) async {
+    //
+  }
+
   /// ***********************************************************************************************************
   /// *********************************************** subscribe *************************************************
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
   Future<TopicSchema?> subscribe(String? topic, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
-    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
@@ -162,7 +176,7 @@ class TopicCommon with Tag {
     int tryCount = 1,
     bool toast = false,
   }) async {
-    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
@@ -317,7 +331,7 @@ class TopicCommon with Tag {
 
   // caller = self
   Future<TopicSchema?> unsubscribe(String? topic, {double fee = 0}) async {
-    if (topic == null || topic.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
     // permission modify in owners message received by owner
 
     // client unsubscribe
@@ -469,7 +483,7 @@ class TopicCommon with Tag {
 
   // caller = everyone
   Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated) return null;
     if (clientAddress == clientCommon.address) {
       Toast.show(S.of(Global.appContext).invite_yourself_error);
       return null;
@@ -532,7 +546,7 @@ class TopicCommon with Tag {
 
   // caller = private + owner
   Future<SubscriberSchema?> kick(String? topic, bool isPrivate, bool isOwner, String? clientAddress) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || clientCommon.address == null || clientCommon.address!.isEmpty) return null;
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated) return null;
     if (clientAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
 

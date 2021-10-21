@@ -273,7 +273,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _refreshTopicJoined() async {
-    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    if (_topic == null || !clientCommon.isClientCreated) return;
     bool joined = await topicCommon.isJoined(_topic?.topic, clientCommon.address);
     if (joined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
@@ -293,7 +293,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _refreshTopicSubscribers({bool fetch = true}) async {
-    if (_topic == null || clientCommon.address == null || clientCommon.address!.isEmpty) return;
+    if (_topic == null || !clientCommon.isClientCreated) return;
     bool topicCountEmpty = (_topic?.count ?? 0) <= 1;
     // refresh count
     int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
