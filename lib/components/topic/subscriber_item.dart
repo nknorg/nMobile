@@ -6,7 +6,6 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/item.dart';
-import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -267,14 +266,12 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   Navigator.pop(this.context);
-                  Loading.show();
                   await topicCommon.kick(
                     topic.topic,
                     topic.isPrivate,
                     topic.isOwner(clientCommon.address),
                     subscriber.clientAddress,
                   );
-                  Loading.dismiss();
                 },
               ),
               reject: Button(
@@ -286,14 +283,12 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               ),
             );
           } else {
-            Loading.show();
             await topicCommon.invitee(
               topic.topic,
               topic.isPrivate,
               topic.isOwner(clientCommon.address),
               subscriber.clientAddress,
             );
-            Loading.dismiss();
           }
         },
       ),
