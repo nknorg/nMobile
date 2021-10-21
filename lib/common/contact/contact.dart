@@ -13,30 +13,27 @@ import 'package:uuid/uuid.dart';
 class ContactCommon with Tag {
   ContactStorage _contactStorage = ContactStorage();
 
+  // ignore: close_sinks
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
   StreamSink<ContactSchema> get _addSink => _addController.sink;
   Stream<ContactSchema> get addStream => _addController.stream;
 
+  // ignore: close_sinks
   // StreamController<int> _deleteController = StreamController<int>.broadcast();
   // StreamSink<int> get _deleteSink => _deleteController.sink;
   // Stream<int> get deleteStream => _deleteController.stream;
 
+  // ignore: close_sinks
   StreamController<ContactSchema> _updateController = StreamController<ContactSchema>.broadcast();
   StreamSink<ContactSchema> get _updateSink => _updateController.sink;
   Stream<ContactSchema> get updateStream => _updateController.stream;
 
+  // ignore: close_sinks
   StreamController<ContactSchema?> _meUpdateController = StreamController<ContactSchema?>.broadcast();
   StreamSink<ContactSchema?> get meUpdateSink => _meUpdateController.sink;
   Stream<ContactSchema?> get meUpdateStream => _meUpdateController.stream;
 
   ContactCommon();
-
-  close() {
-    _addController.close();
-    // _deleteController.close();
-    _updateController.close();
-    _meUpdateController.close();
-  }
 
   Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false}) async {
     List<ContactSchema> contacts = await _contactStorage.queryList(contactType: ContactType.me, limit: 1);

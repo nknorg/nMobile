@@ -9,25 +9,22 @@ import 'package:nmobile/utils/logger.dart';
 class SessionCommon with Tag {
   SessionStorage _sessionStorage = SessionStorage();
 
+  // ignore: close_sinks
   StreamController<SessionSchema> _addController = StreamController<SessionSchema>.broadcast();
   StreamSink<SessionSchema> get _addSink => _addController.sink;
   Stream<SessionSchema> get addStream => _addController.stream;
 
+  // ignore: close_sinks
   StreamController<String> _deleteController = StreamController<String>.broadcast();
   StreamSink<String> get _deleteSink => _deleteController.sink;
   Stream<String> get deleteStream => _deleteController.stream;
 
+  // ignore: close_sinks
   StreamController<SessionSchema> _updateController = StreamController<SessionSchema>.broadcast();
   StreamSink<SessionSchema> get _updateSink => _updateController.sink;
   Stream<SessionSchema> get updateStream => _updateController.stream;
 
   SessionCommon();
-
-  close() {
-    _addController.close();
-    _deleteController.close();
-    _updateController.close();
-  }
 
   Future<SessionSchema?> add(SessionSchema? schema, MessageSchema? lastMsg, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.targetId.isEmpty) return null;
