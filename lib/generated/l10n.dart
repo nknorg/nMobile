@@ -3310,6 +3310,16 @@ class S {
     );
   }
 
+  /// `inviting`
+  String get inviting {
+    return Intl.message(
+      'inviting',
+      name: 'inviting',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `You have already invited this member,still invite?`
   String get invited_already {
     return Intl.message(

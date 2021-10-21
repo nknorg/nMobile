@@ -344,6 +344,7 @@
   "slide_to_cancel": "< Slide Cancel <",
   "invite_and_send_success": "invite and send success",
   "join_but_not_invite": "not invited",
+  "inviting": "inviting",
   "invited_already": "You have already invited this member,still invite?",
   "group_member_already": "The member is in group already",
   "invite_yourself_error": "Can not invite yourself!",

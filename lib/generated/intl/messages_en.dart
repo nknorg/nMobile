@@ -302,6 +302,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "You have already invited this member,still invite?"),
         "invites_desc_me": m2,
         "invites_desc_other": m3,
+        "inviting": MessageLookupByLibrary.simpleMessage("inviting"),
         "join_but_not_invite":
             MessageLookupByLibrary.simpleMessage("not invited"),
         "joined_channel": MessageLookupByLibrary.simpleMessage("Joined group"),

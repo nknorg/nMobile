@@ -489,6 +489,8 @@ class TopicCommon with Tag {
       return null;
     }
 
+    if (isPrivate) Toast.show(S.of(Global.appContext).inviting);
+
     // check permission
     int? appendPermPage;
     bool? acceptAll = false;
@@ -504,21 +506,22 @@ class TopicCommon with Tag {
       }
     }
 
-    // update DB
-    _subscriber = await subscriberCommon.onInvitedSend(topic, clientAddress, appendPermPage);
-    if (_subscriber == null) return null;
-
     // update meta (private + owner + no_accept_all)
     if (isPrivate && isOwner && (acceptAll != true) && (appendPermPage != null)) {
+      _subscriber = _subscriber ?? SubscriberSchema.create(topic, clientAddress, SubscriberStatus.InvitedSend, appendPermPage);
+      _subscriber?.status = SubscriberStatus.InvitedSend;
+      _subscriber?.permPage = appendPermPage;
       Map<String, dynamic> meta = await _getMetaByNodePage(topic, appendPermPage);
       meta = await _buildMetaByAppend(topic, meta, _subscriber);
       bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: appendPermPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - invitee - clientSubscribe error - permPage:$appendPermPage - meta:$meta");
-        await subscriberCommon.delete(_subscriber.id, notify: true);
         return null;
       }
     }
+
+    // update DB
+    _subscriber = await subscriberCommon.onInvitedSend(topic, clientAddress, appendPermPage);
 
     // send message
     MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
@@ -538,7 +541,6 @@ class TopicCommon with Tag {
 
     // check status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
-    int? oldStatus = _subscriber?.status;
     if (_subscriber == null) return null;
     if (_subscriber.canBeKick == false) return null; // checked in UI
 
@@ -551,22 +553,21 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // update DB
-    _subscriber = await subscriberCommon.onKickOut(topic, clientAddress, permPage: permPage);
-    if (_subscriber == null) return null;
-
     // update meta (private + owner + no_accept_all)
     if (acceptAll != true) {
+      _subscriber.status = SubscriberStatus.Unsubscribed;
+      _subscriber.permPage = permPage;
       Map<String, dynamic> meta = await _getMetaByNodePage(topic, permPage);
       meta = await _buildMetaByAppend(topic, meta, _subscriber);
       bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: permPage, meta: meta, toast: true);
       if (!subscribeSuccess) {
         logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
-        _subscriber.status = oldStatus;
-        await subscriberCommon.setStatus(_subscriber.id, _subscriber.status, notify: true);
         return null;
       }
     }
+
+    // update DB
+    _subscriber = await subscriberCommon.onKickOut(topic, clientAddress, permPage: permPage);
 
     // send message
     await chatOutCommon.sendTopicKickOut(topic, clientAddress);
