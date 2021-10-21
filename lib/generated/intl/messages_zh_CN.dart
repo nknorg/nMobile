@@ -256,6 +256,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("你已经邀请过该成员，继续邀请?"),
         "invites_desc_me": m2,
         "invites_desc_other": m3,
+        "inviting": MessageLookupByLibrary.simpleMessage("邀请中"),
         "join_but_not_invite": MessageLookupByLibrary.simpleMessage("未邀请"),
         "joined_channel": MessageLookupByLibrary.simpleMessage("加入群聊"),
         "keystore": MessageLookupByLibrary.simpleMessage("Keystore"),

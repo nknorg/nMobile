@@ -183,14 +183,12 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      Loading.show();
       await topicCommon.invitee(
         _topicSchema?.topic,
         _topicSchema?.isPrivate == true,
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
       );
-      Loading.dismiss();
     }
   }
 
