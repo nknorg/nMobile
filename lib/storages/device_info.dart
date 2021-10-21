@@ -91,15 +91,17 @@ class DeviceInfoStorage with Tag {
         List? res = await db?.transaction((txn) {
           Batch batch = txn.batch();
           contactAddressList.forEach((contactAddress) {
-            batch.query(
-              tableName,
-              columns: ['*'],
-              where: 'contact_address = ?',
-              whereArgs: [contactAddress],
-              offset: 0,
-              limit: 1,
-              orderBy: 'update_at DESC',
-            );
+            if (contactAddress.isNotEmpty) {
+              batch.query(
+                tableName,
+                columns: ['*'],
+                where: 'contact_address = ?',
+                whereArgs: [contactAddress],
+                offset: 0,
+                limit: 1,
+                orderBy: 'update_at DESC',
+              );
+            }
           });
           return batch.commit();
         });
