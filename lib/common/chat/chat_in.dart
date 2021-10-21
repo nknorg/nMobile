@@ -361,19 +361,8 @@ class ChatInCommon with Tag {
     }
 
     // messages
-    List<MessageSchema> msgList = [];
-    for (var i = 0; i < readIds.length; i++) {
-      final msgId = readIds[i];
-      MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
-      if (message == null) {
-        logger.w("$TAG - _receiveRead - message is empty - msgId:$msgId");
-      } else if (message.status == MessageStatus.Read) {
-        logger.d("$TAG - _receiveRead - message already read - message:$message");
-      } else {
-        logger.i("$TAG - _receiveRead - message none read - message:$message");
-        msgList.add(message);
-      }
-    }
+    List<String> msgIds = readIds.map((e) => e?.toString() ?? "").toList();
+    List<MessageSchema> msgList = await MessageStorage.instance.queryListByNoContentType(msgIds, MessageContentType.piece);
     if (msgList.isEmpty) return true;
 
     // update
@@ -389,9 +378,9 @@ class ChatInCommon with Tag {
     await chatCommon.readMessageBySide(received.targetId, reallySendAt);
 
     // check msgStatus
-    if ((received.from != received.to) && (received.from != clientCommon.address)) {
-      chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
-    }
+    // if ((received.from != received.to) && (received.from != clientCommon.address)) {
+    //   chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
+    // }
     return true;
   }
 
@@ -409,11 +398,14 @@ class ChatInCommon with Tag {
 
     if (requestType == "ask") {
       // receive ask
+      List<String> msgIds = messageIds.map((e) => e?.toString() ?? "").toList();
+      List<MessageSchema> messageList = await MessageStorage.instance.queryListByNoContentType(msgIds, MessageContentType.piece);
       List<String> msgStatusList = [];
       for (var i = 0; i < messageIds.length; i++) {
         String msgId = messageIds[i];
         if (msgId.isEmpty) continue;
-        MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
+        int findIndex = messageList.indexWhere((element) => element.msgId == msgId);
+        MessageSchema? message = findIndex >= 0 ? messageList[findIndex] : null;
         if (message != null) {
           msgStatusList.add("$msgId:${message.status}");
         } else {

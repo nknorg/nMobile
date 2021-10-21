@@ -172,12 +172,14 @@ class ContactStorage with Tag {
         List? res = await db?.transaction((txn) {
           Batch batch = txn.batch();
           clientAddressList.forEach((clientAddress) {
-            batch.query(
-              tableName,
-              columns: ['*'],
-              where: 'address = ?',
-              whereArgs: [clientAddress],
-            );
+            if (clientAddress.isNotEmpty) {
+              batch.query(
+                tableName,
+                columns: ['*'],
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+              );
+            }
           });
           return batch.commit();
         });
@@ -189,10 +191,10 @@ class ContactStorage with Tag {
             ContactSchema schema = await ContactSchema.fromMap(map);
             schemaList.add(schema);
           }
-          logger.v("$TAG - queryByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
+          logger.v("$TAG - queryListByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
           return schemaList;
         }
-        logger.v("$TAG - queryByClientAddress - empty - clientAddressList:$clientAddressList");
+        logger.v("$TAG - queryListByClientAddress - empty - clientAddressList:$clientAddressList");
       } catch (e) {
         handleError(e);
       }

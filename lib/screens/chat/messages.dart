@@ -213,7 +213,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       chatOutCommon.sendPing([this.targetId ?? ""], true); // await
       chatOutCommon.sendPing([this.targetId ?? ""], false); // await
     } else if (this._topic != null && this._contact == null) {
-      chatCommon.setMsgStatusCheckTimer(this.targetId, true, refresh: true, filterSec: 5 * 60); // await
+      chatCommon.setMsgStatusCheckTimer(this.targetId, true, filterSec: 5 * 60); // await
     }
 
     // test

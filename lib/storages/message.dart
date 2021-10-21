@@ -285,6 +285,44 @@ class MessageStorage with Tag {
     });
   }
 
+  Future<List<MessageSchema>> queryListByNoContentType(List<String>? msgIds, String? contentType) async {
+    if (db?.isOpen != true) return [];
+    if (msgIds == null || msgIds.isEmpty || contentType == null || contentType.isEmpty) return [];
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        List? res = await db?.transaction((txn) {
+          Batch batch = txn.batch();
+          msgIds.forEach((msgId) {
+            if (msgId.isNotEmpty) {
+              batch.query(
+                tableName,
+                columns: ['*'],
+                where: 'msg_id = ? AND NOT type = ?',
+                whereArgs: [msgId, contentType],
+              );
+            }
+          });
+          return batch.commit();
+        });
+        if (res != null && res.length > 0) {
+          List<MessageSchema> schemaList = [];
+          for (var i = 0; i < res.length; i++) {
+            if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
+            Map<String, dynamic> map = res[i][0];
+            MessageSchema schema = MessageSchema.fromMap(map);
+            schemaList.add(schema);
+          }
+          logger.v("$TAG - queryListByNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
+          return schemaList;
+        }
+        logger.v("$TAG - queryListByNoContentType - empty - msgIds:$msgIds");
+      } catch (e) {
+        handleError(e);
+      }
+      return [];
+    });
+  }
+
   // Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
   //   if (db?.isOpen != true) return null;
   //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
