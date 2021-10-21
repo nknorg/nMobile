@@ -5,7 +5,6 @@ import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -90,9 +89,13 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
     // subscriber listen
     _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
-      setState(() {
-        _subscriberList.add(schema);
-      });
+      bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
+      bool isSubscribe = schema.status == SubscriberStatus.Subscribed;
+      if (isOwner || isSubscribe) {
+        setState(() {
+          _subscriberList.add(schema);
+        });
+      }
     });
     _deleteSubscriberSubscription = subscriberCommon.deleteStream.listen((int subscriberId) {
       setState(() {
@@ -205,14 +208,12 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      Loading.show();
       await topicCommon.invitee(
         _topicSchema?.topic,
         _topicSchema?.isPrivate == true,
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
       );
-      Loading.dismiss();
     }
   }
 
