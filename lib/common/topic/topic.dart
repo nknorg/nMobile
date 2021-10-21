@@ -17,25 +17,22 @@ import 'package:nmobile/utils/utils.dart';
 class TopicCommon with Tag {
   TopicStorage _topicStorage = TopicStorage();
 
+  // ignore: close_sinks
   StreamController<TopicSchema> _addController = StreamController<TopicSchema>.broadcast();
   StreamSink<TopicSchema> get _addSink => _addController.sink;
   Stream<TopicSchema> get addStream => _addController.stream;
 
+  // ignore: close_sinks
   // StreamController<String> _deleteController = StreamController<String>.broadcast();
   // StreamSink<String> get _deleteSink => _deleteController.sink;
   // Stream<String> get deleteStream => _deleteController.stream;
 
+  // ignore: close_sinks
   StreamController<TopicSchema> _updateController = StreamController<TopicSchema>.broadcast();
   StreamSink<TopicSchema> get _updateSink => _updateController.sink;
   Stream<TopicSchema> get updateStream => _updateController.stream;
 
   TopicCommon();
-
-  close() {
-    _addController.close();
-    // _deleteController.close();
-    _updateController.close();
-  }
 
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
     if (clientCommon.address == null || clientCommon.address!.isEmpty) return;
