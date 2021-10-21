@@ -12,14 +12,17 @@ import 'package:nmobile/utils/utils.dart';
 class SubscriberCommon with Tag {
   SubscriberStorage _subscriberStorage = SubscriberStorage();
 
+  // ignore: close_sinks
   StreamController<SubscriberSchema> _addController = StreamController<SubscriberSchema>.broadcast();
   StreamSink<SubscriberSchema> get _addSink => _addController.sink;
   Stream<SubscriberSchema> get addStream => _addController.stream;
 
+  // ignore: close_sinks
   StreamController<int> _deleteController = StreamController<int>.broadcast();
   StreamSink<int> get _deleteSink => _deleteController.sink;
   Stream<int> get deleteStream => _deleteController.stream;
 
+  // ignore: close_sinks
   StreamController<SubscriberSchema> _updateController = StreamController<SubscriberSchema>.broadcast();
   StreamSink<SubscriberSchema> get _updateSink => _updateController.sink;
   Stream<SubscriberSchema> get updateStream => _updateController.stream;
@@ -28,12 +31,6 @@ class SubscriberCommon with Tag {
   static const int InitialRejectStatus = SubscriberStatus.Unsubscribed;
 
   SubscriberCommon();
-
-  close() {
-    _addController.close();
-    _deleteController.close();
-    _updateController.close();
-  }
 
   /// ***********************************************************************************************************
   /// ********************************************** subscribers ************************************************
