@@ -164,7 +164,7 @@ class MessageSchema {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: DateTime.now().millisecondsSinceEpoch, // data['timestamp'] != null ? data['timestamp'] : null, (used by receive_at, for sort)
+      sendAt: data['timestamp'] != null ? data['timestamp'] : DateTime.now().millisecondsSinceEpoch,
       receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
@@ -219,10 +219,8 @@ class MessageSchema {
       schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
     }
 
-    // sendAt
-    if (data['timestamp'] != null && data['timestamp'] is int) {
-      schema = MessageOptions.setSendAt(schema, data['timestamp']);
-    }
+    // getAt
+    schema = MessageOptions.setGetAt(schema, DateTime.now().millisecondsSinceEpoch);
 
     return schema;
   }
@@ -243,7 +241,7 @@ class MessageSchema {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: DateTime.now().millisecondsSinceEpoch, // piece.sendAt, (used by receive_at, for sort)
+      sendAt: piece.sendAt,
       receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
@@ -451,7 +449,7 @@ class MessageOptions {
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
-  static const KEY_SEND_AT = "send_at";
+  static const KEY_GET_AT = "get_at";
 
   static const KEY_FROM_PIECE = "from_piece";
 
@@ -502,15 +500,15 @@ class MessageOptions {
     return message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
   }
 
-  static MessageSchema setSendAt(MessageSchema message, int sendAt) {
+  static MessageSchema setGetAt(MessageSchema message, int sendAt) {
     if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_SEND_AT] = sendAt;
+    message.options![MessageOptions.KEY_GET_AT] = sendAt;
     return message;
   }
 
-  static int? getSendAt(MessageSchema? message) {
+  static int? getGetAt(MessageSchema? message) {
     if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_SEND_AT];
+    return message.options![MessageOptions.KEY_GET_AT];
   }
 }
 
