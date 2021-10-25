@@ -345,6 +345,7 @@
   "invite_and_send_success": "邀請發送成功",
   "join_but_not_invite": "未邀請",
   "inviting": "邀請中",
+  "subscribing": "訂閱中",
   "invited_already": "你已經邀請過該成員，繼續邀請?",
   "group_member_already": "該成員已經加入本群",
   "invite_yourself_error": "不能邀請你自己!",

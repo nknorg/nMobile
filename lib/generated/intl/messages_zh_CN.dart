@@ -401,6 +401,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribe_or_waiting":
             MessageLookupByLibrary.simpleMessage("加入或等待片刻..."),
         "subscribed": MessageLookupByLibrary.simpleMessage("已加入"),
+        "subscribing": MessageLookupByLibrary.simpleMessage("订阅中"),
         "success": MessageLookupByLibrary.simpleMessage("成功"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
