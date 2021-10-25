@@ -466,6 +466,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribe_or_waiting":
             MessageLookupByLibrary.simpleMessage("Subscribe or Waiting..."),
         "subscribed": MessageLookupByLibrary.simpleMessage("Subscribed"),
+        "subscribing": MessageLookupByLibrary.simpleMessage("subscribing"),
         "success": MessageLookupByLibrary.simpleMessage("Success"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
