@@ -188,6 +188,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _topicSchema?.isPrivate == true,
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
+        toast: true,
       );
     }
   }
@@ -210,7 +211,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           onPressed: () async {
             Navigator.pop(this.context);
             Loading.show();
-            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic);
+            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, toast: true);
             Loading.dismiss();
             if (deleted != null) {
               Toast.show(_localizations.unsubscribed);
