@@ -350,6 +350,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "my_profile": MessageLookupByLibrary.simpleMessage("My Profile"),
         "my_wallets": MessageLookupByLibrary.simpleMessage("My Accounts"),
         "name": MessageLookupByLibrary.simpleMessage("Name"),
+        "need_re_subscribe":
+            MessageLookupByLibrary.simpleMessage("Need to re-subscribe"),
         "new_group": MessageLookupByLibrary.simpleMessage("New Group"),
         "new_message": MessageLookupByLibrary.simpleMessage("New Message"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("Direct Message"),

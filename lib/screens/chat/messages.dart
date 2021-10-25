@@ -417,7 +417,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     int deleteAfterSeconds = (_topic != null ? _topic?.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds) ?? 0;
     Color notifyBellColor = ((_topic != null ? _topic?.options?.notificationOpen : _contact?.options?.notificationOpen) ?? false) ? application.theme.primaryColor : Colors.white38;
 
-    String? disableTip = (_topic != null && _isJoined == false) ? (_topic!.isSubscribeProgress() ? S.of(this.context).subscribing : S.of(this.context).tip_ask_group_owner_permission) : (!isClientOk ? S.of(this.context).d_chat_not_login : null);
+    String? disableTip = (_topic != null && _isJoined == false) ? (_topic!.isSubscribeProgress() ? S.of(this.context).subscribing : (_topic!.isPrivate ? S.of(this.context).tip_ask_group_owner_permission : S.of(this.context).need_re_subscribe)) : (!isClientOk ? S.of(this.context).d_chat_not_login : null);
 
     return Layout(
       headerColor: _theme.headBarColor2,
