@@ -18,9 +18,9 @@ class SubscriberCommon with Tag {
   Stream<SubscriberSchema> get addStream => _addController.stream;
 
   // ignore: close_sinks
-  StreamController<int> _deleteController = StreamController<int>.broadcast();
-  StreamSink<int> get _deleteSink => _deleteController.sink;
-  Stream<int> get deleteStream => _deleteController.stream;
+  // StreamController<int> _deleteController = StreamController<int>.broadcast();
+  // StreamSink<int> get _deleteSink => _deleteController.sink;
+  // Stream<int> get deleteStream => _deleteController.stream;
 
   // ignore: close_sinks
   StreamController<SubscriberSchema> _updateController = StreamController<SubscriberSchema>.broadcast();
@@ -58,17 +58,19 @@ class SubscriberCommon with Tag {
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
       SubscriberSchema dbItem = dbSubscribers[i];
+      if (dbItem.isPermissionProgress() != null) {
+        logger.i("$TAG - refreshSubscribers - DB need try, skip - dbSub:$dbItem");
+        continue;
+      }
       // filter in txPool
       int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
-        if (dbItem.status == SubscriberStatus.None) {
-          logger.d("$TAG - refreshSubscribers - DB update just now, next by no status - dbSub:$dbItem");
-        } else if (!meta && ((dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.InvitedSend))) {
+        if (!meta && ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt))) {
           if ((DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
-            logger.i("$TAG - refreshSubscribers - DB update just now, next by just created - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB invitee just now, next by just created - dbSub:$dbItem");
           } else {
-            logger.i("$TAG - refreshSubscribers - DB update just now, and created to long - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB invitee just now, maybe in tx pool - dbSub:$dbItem");
             continue;
           }
         } else {
@@ -79,39 +81,41 @@ class SubscriberCommon with Tag {
         var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
         logger.d("$TAG - refreshSubscribers - DB update to long - between:${betweenS}s");
       }
-      SubscriberSchema? findNode;
+      SubscriberSchema? findInNode;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
-          findNode = nodeItem;
+          findInNode = nodeItem;
           break;
         }
       }
       // different with node in DB
-      if (findNode == null) {
-        logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
-        await delete(dbItem.id, notify: true);
+      if (findInNode == null) {
+        if (dbItem.status != SubscriberStatus.None) {
+          logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
+          await setStatus(dbItem.id, SubscriberStatus.None, notify: true);
+        }
       } else {
-        if (findNode.status == SubscriberStatus.Unsubscribed) {
-          logger.i("$TAG - refreshSubscribers - DB has,but node is unsubscribe - DB:$dbItem - node:$findNode");
-          if (dbItem.status != findNode.status) {
-            await setStatus(dbItem.id, findNode.status, notify: true);
+        if (findInNode.status == SubscriberStatus.Unsubscribed) {
+          logger.i("$TAG - refreshSubscribers - DB find, but node is unsubscribe - DB:$dbItem - node:$findInNode");
+          if (dbItem.status != findInNode.status) {
+            await setStatus(dbItem.id, findInNode.status, notify: true);
           }
         } else {
           // status
-          if (dbItem.status != findNode.status) {
-            if (findNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
-              logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findNode");
+          if (dbItem.status != findInNode.status) {
+            if (findInNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
+              logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findInNode");
             } else {
-              logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findNode");
-              await setStatus(dbItem.id, findNode.status, notify: true);
+              logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findInNode");
+              await setStatus(dbItem.id, findInNode.status, notify: true);
             }
           } else {
-            logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findNode");
+            logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
           }
           // prmPage
-          if (dbItem.permPage != findNode.permPage && findNode.permPage != null) {
-            logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findNode");
-            await setPermPage(dbItem.id, findNode.permPage, notify: true);
+          if (dbItem.permPage != findInNode.permPage && findInNode.permPage != null) {
+            logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findInNode");
+            await setPermPage(dbItem.id, findInNode.permPage, notify: true);
           }
         }
       }
@@ -120,15 +124,15 @@ class SubscriberCommon with Tag {
     // insert node data
     for (var i = 0; i < nodeSubscribers.length; i++) {
       SubscriberSchema nodeItem = nodeSubscribers[i];
-      bool findDB = false;
+      bool findInDB = false;
       for (SubscriberSchema dbItem in dbSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
-          findDB = true;
+          findInDB = true;
           break;
         }
       }
       // different with DB in node
-      if (!findDB) {
+      if (!findInDB) {
         logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
         await add(nodeItem, notify: true); // no need batch
       }
@@ -524,12 +528,12 @@ class SubscriberCommon with Tag {
     return added;
   }
 
-  Future<bool> delete(int? subscriberId, {bool notify = false}) async {
-    if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await _subscriberStorage.delete(subscriberId);
-    if (success && notify) _deleteSink.add(subscriberId);
-    return success;
-  }
+  // Future<bool> delete(int? subscriberId, {bool notify = false}) async {
+  //   if (subscriberId == null || subscriberId == 0) return false;
+  //   bool success = await _subscriberStorage.delete(subscriberId);
+  //   if (success && notify) _deleteSink.add(subscriberId);
+  //   return success;
+  // }
 
   // Future<int> deleteByTopic(String? topic) async {
   //   if (topic == null || topic.isEmpty) return 0;
@@ -583,6 +587,13 @@ class SubscriberCommon with Tag {
     if (subscriberId == null || subscriberId == 0) return false;
     if (permPage != null && permPage < 0) return false;
     bool success = await _subscriberStorage.setPermPage(subscriberId, permPage);
+    if (success && notify) queryAndNotify(subscriberId);
+    return success;
+  }
+
+  Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData, {bool notify = false}) async {
+    if (subscriberId == null || subscriberId == 0) return false;
+    bool success = await _subscriberStorage.setData(subscriberId, newData);
     if (success && notify) queryAndNotify(subscriberId);
     return success;
   }

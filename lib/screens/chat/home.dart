@@ -29,6 +29,7 @@ import 'package:nmobile/screens/chat/no_wallet.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -55,6 +56,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _clientStatusChangeSubscription;
 
   bool firstConnected = true;
+  bool inBackground = false;
   int appBackgroundAt = 0;
   int lastSendPangsAt = 0;
   int lastCheckTopicsAt = 0;
@@ -78,6 +80,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
+        inBackground = true;
         if (!firstConnected) {
           int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (between >= Global.clientReAuthGapMs) {
@@ -87,6 +90,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           }
         }
       } else if (application.isGoBackground(states)) {
+        inBackground = false;
         appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
@@ -94,8 +98,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        // check sending
-        // chatCommon.checkSending(delayMs: 2000); // await
+        firstConnected = false;
         // send pangs (3h)
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
           chatCommon.sendPang2SessionsContact(delayMs: 1000); // await
@@ -106,8 +109,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           topicCommon.checkAllTopics(refreshSubscribers: false, delayMs: 2000); // await
           lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
         }
-        // firstConnected
-        firstConnected = false;
+        // check subscribe
+        Future.delayed(Duration(seconds: 3), () {
+          if (!inBackground) taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), callNow: true);
+        });
+        // check permission
+        Future.delayed(Duration(seconds: 5), () {
+          if (!inBackground) taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), callNow: true);
+        });
       }
     });
 
