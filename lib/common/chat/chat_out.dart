@@ -85,7 +85,10 @@ class ChatOutCommon with Tag {
 
   Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
-    if (destList.isEmpty) return null;
+    if (destList.isEmpty) {
+      logger.w("$TAG - _clientSendData - destList is empty - destList:$destList - data:$data");
+      return null;
+    }
     int totalSize = destList.length * data.length;
     if ((destList.length <= 1) || (totalSize <= largeBodyMaxPieceSize)) {
       logger.d("$TAG - sendData - small message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
@@ -120,6 +123,11 @@ class ChatOutCommon with Tag {
   }
 
   Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
+    destList = destList.where((element) => element.isNotEmpty).toList();
+    if (destList.isEmpty) {
+      logger.w("$TAG - _clientSendData - destList is empty - destList:$destList - data:$data");
+      return null;
+    }
     if (tryCount >= maxTryCount) {
       logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
       return null;
@@ -238,6 +246,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
+    if (clientAddressList.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     String data = MessageData.getPing(isPing);
     await _clientSendData(clientCommon.address, clientAddressList, data);
