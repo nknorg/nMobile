@@ -10,6 +10,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -150,21 +151,37 @@ class MediaPicker {
     if (source == ImageSource.camera) {
       permission = Permission.camera;
     } else if (source == ImageSource.gallery) {
-      permission = Permission.mediaLibrary;
+      if (Platform.isIOS) {
+        int osVersion = int.tryParse(Global.deviceVersion) ?? 0;
+        if (osVersion >= 14) {
+          permission = Permission.photos;
+        } else {
+          permission = Permission.mediaLibrary;
+        }
+      } else {
+        permission = Permission.mediaLibrary;
+      }
     } else {
       return null;
     }
     PermissionStatus permissionStatus = await permission.request();
-    if (permissionStatus != PermissionStatus.granted) {
+    if (permissionStatus == PermissionStatus.permanentlyDenied) {
+      openAppSettings();
+      return null;
+    } else if (permissionStatus == PermissionStatus.denied || permissionStatus == PermissionStatus.restricted) {
       return null;
     }
 
     // pick
     XFile? pickedResult;
-    if (mediaType == MediaType.video) {
-      pickedResult = await ImagePicker().pickVideo(source: source, maxDuration: maxDuration);
-    } else {
-      pickedResult = await ImagePicker().pickImage(source: source); // imageQuality: compressQuality  -> ios ino enable
+    try {
+      if (mediaType == MediaType.video) {
+        pickedResult = await ImagePicker().pickVideo(source: source, maxDuration: maxDuration);
+      } else {
+        pickedResult = await ImagePicker().pickImage(source: source); // imageQuality: compressQuality  -> ios no enable
+      }
+    } catch (e) {
+      handleError(e);
     }
     if (pickedResult == null || pickedResult.path.isEmpty) {
       logger.w("MediaPicker - pickImageAndVideoBySystem - pickedResult = null"); // eg:/data/user/0/org.nkn.mobile.app.debug/cache/image_picker3336694179441112013.jpg
