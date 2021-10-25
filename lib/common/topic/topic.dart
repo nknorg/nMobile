@@ -688,10 +688,9 @@ class TopicCommon with Tag {
       if (toast) Toast.show(S.of(Global.appContext).group_member_already);
       return null;
     }
+    bool isOldStatusInvitedReceived = _subscriber?.status == SubscriberStatus.InvitedReceipt;
 
     // if (isPrivate && toast) Toast.show(S.of(Global.appContext).inviting);
-
-    // update DB
 
     // check permission
     int? appendPermPage;
@@ -732,6 +731,8 @@ class TopicCommon with Tag {
         if (toast) Toast.show(S.of(Global.appContext).failure);
         return null;
       }
+    } else if (isOldStatusInvitedReceived) {
+      await subscriberCommon.setStatus(_subscriber?.id, SubscriberStatus.InvitedReceipt, notify: true);
     }
     if (toast) Toast.show(S.of(Global.appContext).invitation_sent);
     return _subscriber;
