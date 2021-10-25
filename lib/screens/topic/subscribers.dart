@@ -47,7 +47,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   StreamSubscription? _updateTopicSubscription;
   // StreamSubscription? _deleteTopicSubscription;
   StreamSubscription? _addSubscriberSubscription;
-  StreamSubscription? _deleteSubscriberSubscription;
+  // StreamSubscription? _deleteSubscriberSubscription;
   StreamSubscription? _updateSubscriberSubscription;
 
   TopicSchema? _topicSchema;
@@ -89,23 +89,22 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
     // subscriber listen
     _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
-      bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
-      bool isSubscribe = schema.status == SubscriberStatus.Subscribed;
-      if (isOwner || isSubscribe) {
-        setState(() {
-          _subscriberList.add(schema);
-        });
-      }
+      _subscriberList.add(schema);
+      _showSubscriberList();
     });
-    _deleteSubscriberSubscription = subscriberCommon.deleteStream.listen((int subscriberId) {
-      setState(() {
-        _subscriberList = _subscriberList.where((element) => element.id != subscriberId).toList();
-      });
-    });
+    // _deleteSubscriberSubscription = subscriberCommon.deleteStream.listen((int subscriberId) {
+    //   setState(() {
+    //     _subscriberList = _subscriberList.where((element) => element.id != subscriberId).toList();
+    //   });
+    // });
     _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema event) {
-      setState(() {
-        _subscriberList = _subscriberList.map((e) => e.id == event.id ? event : e).toList();
-      });
+      int index = _subscriberList.indexWhere((element) => element.id == event.id);
+      if (index >= 0) {
+        _subscriberList[index] = event;
+      } else {
+        _subscriberList.add(event);
+      }
+      _showSubscriberList();
     });
 
     // scroll
@@ -126,7 +125,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _updateTopicSubscription?.cancel();
     // _deleteTopicSubscription?.cancel();
     _addSubscriberSubscription?.cancel();
-    _deleteSubscriberSubscription?.cancel();
+    // _deleteSubscriberSubscription?.cancel();
     _updateSubscriberSubscription?.cancel();
     super.dispose();
   }
@@ -191,10 +190,20 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     }
     bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
     int? status = isOwner ? null : SubscriberStatus.Subscribed;
-    var messages = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, status: status, offset: _offset, limit: 20);
-    messages.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
+    var subscribers = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, status: status, offset: _offset, limit: 20);
+    if (refresh) subscribers.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
+    _subscriberList = refresh ? subscribers : _subscriberList + subscribers; // maybe addStream
+    _showSubscriberList();
+  }
+
+  _showSubscriberList() {
+    bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
     setState(() {
-      _subscriberList = refresh ? messages : _subscriberList + messages; // maybe addStream
+      if (isOwner) {
+        _subscriberList = _subscriberList.where((element) => element.status != SubscriberStatus.None).toList();
+      } else {
+        _subscriberList = _subscriberList.where((element) => element.status == SubscriberStatus.Subscribed).toList();
+      }
     });
   }
 
@@ -213,6 +222,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         _topicSchema?.isPrivate == true,
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
+        toast: true,
       );
     }
   }

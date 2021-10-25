@@ -183,6 +183,38 @@ class TopicSchema {
     }
   }
 
+  Map<String, dynamic> getDataByAppendSubscribe(bool subscribe, bool isProgress) {
+    Map<String, dynamic> newData = data ?? Map();
+    if (subscribe) {
+      if (isProgress) {
+        newData['subscribe_progress'] = true;
+      } else {
+        newData.remove('subscribe_progress');
+      }
+      newData.remove('unsubscribe_progress');
+    } else {
+      if (isProgress) {
+        newData['unsubscribe_progress'] = true;
+      } else {
+        newData.remove('unsubscribe_progress');
+      }
+      newData.remove('subscribe_progress');
+    }
+    return newData;
+  }
+
+  bool isSubscribeProgress() {
+    bool? isProgress = data?['subscribe_progress'];
+    if (isProgress == null) return false;
+    return isProgress;
+  }
+
+  bool isUnSubscribeProgress() {
+    bool? isProgress = data?['unsubscribe_progress'];
+    if (isProgress == null) return false;
+    return isProgress;
+  }
+
   Map<String, dynamic> toMap() {
     if (options == null) {
       options = OptionsSchema();
