@@ -69,21 +69,21 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
-      if (_sessionList.where((element) => element.targetId == event.targetId).toList().isEmpty) {
+      if (_sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList().isEmpty) {
         _sessionList.insert(0, event);
       }
       _sortMessages();
     });
-    _sessionDeleteSubscription = sessionCommon.deleteStream.listen((String event) {
+    _sessionDeleteSubscription = sessionCommon.deleteStream.listen((values) {
       setState(() {
-        _sessionList = _sessionList.where((element) => element.targetId != event).toList();
+        _sessionList = _sessionList.where((element) => !((element.targetId == values[0]) && (element.type == values[1]))).toList();
       });
     });
     _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
       if (chatCommon.currentChatTargetId == event.targetId) {
         event.unReadCount = 0;
       }
-      var finds = _sessionList.where((element) => element.targetId == event.targetId).toList();
+      var finds = _sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList();
       if (finds.isEmpty) {
         _sessionList.insert(0, event);
       } else {
@@ -144,10 +144,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     } else {
       _offset = _sessionList.length;
     }
-    var messages = await sessionCommon.queryListRecent(offset: _offset, limit: 20);
+    var sessions = await sessionCommon.queryListRecent(offset: _offset, limit: 20);
     setState(() {
       _isLoaded = true;
-      _sessionList += messages;
+      _sessionList += sessions;
     });
   }
 
@@ -169,7 +169,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       // update
       if (newLastMsg == null) {
         final sendAt = oldLastMsg.sendAt ?? MessageOptions.getGetAt(oldLastMsg);
-        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, null, session.unReadCount, sendAt: sendAt, notify: true);
+        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, null, session.unReadCount, sendAt: sendAt, notify: true);
       } else {
         newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
         session.lastMessageAt = newLastMsg.sendAt ?? MessageOptions.getGetAt(newLastMsg);
@@ -183,7 +183,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         setState(() {
           _sessionList[findIndex] = session;
         });
-        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, newLastMsg, session.unReadCount, notify: false);
+        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, newLastMsg, session.unReadCount, notify: false);
       }
     }
   }
@@ -218,7 +218,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               onPressed: () async {
                 Navigator.pop(this.context);
                 bool top = !item.isTop;
-                sessionCommon.setTop(item.targetId, top, notify: true);
+                sessionCommon.setTop(item.targetId, item.type, top, notify: true);
               },
             ),
             SimpleDialogOption(
@@ -245,7 +245,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       Navigator.pop(this.context);
-                      await sessionCommon.delete(item.targetId, notify: true);
+                      await sessionCommon.delete(item.targetId, item.type, notify: true);
                     },
                   ),
                 );
