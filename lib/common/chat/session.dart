@@ -15,9 +15,9 @@ class SessionCommon with Tag {
   Stream<SessionSchema> get addStream => _addController.stream;
 
   // ignore: close_sinks
-  StreamController<String> _deleteController = StreamController<String>.broadcast();
-  StreamSink<String> get _deleteSink => _deleteController.sink;
-  Stream<String> get deleteStream => _deleteController.stream;
+  StreamController<List<dynamic>> _deleteController = StreamController<List<dynamic>>.broadcast();
+  StreamSink<List<dynamic>> get _deleteSink => _deleteController.sink;
+  Stream<List<dynamic>> get deleteStream => _deleteController.stream;
 
   // ignore: close_sinks
   StreamController<SessionSchema> _updateController = StreamController<SessionSchema>.broadcast();
@@ -30,7 +30,7 @@ class SessionCommon with Tag {
     if (schema == null || schema.targetId.isEmpty) return null;
     // duplicated
     if (checkDuplicated) {
-      SessionSchema? exist = await query(schema.targetId);
+      SessionSchema? exist = await query(schema.targetId, schema.type);
       if (exist != null) {
         logger.i("$TAG - add - duplicated - schema:$exist");
         return null;
@@ -59,31 +59,31 @@ class SessionCommon with Tag {
     return added;
   }
 
-  Future<bool> delete(String? targetId, {bool notify = false}) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    bool success = await _sessionStorage.delete(targetId);
-    if (success && notify) _deleteSink.add(targetId);
+  Future<bool> delete(String? targetId, int? type, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty || type == null) return false;
+    bool success = await _sessionStorage.delete(targetId, type);
+    if (success && notify) _deleteSink.add([targetId, type]);
     chatCommon.deleteByTargetId(targetId); // await
     return success;
   }
 
-  Future<SessionSchema?> query(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return null;
-    return await _sessionStorage.query(targetId);
+  Future<SessionSchema?> query(String? targetId, int? type) async {
+    if (targetId == null || targetId.isEmpty || type == null) return null;
+    return await _sessionStorage.query(targetId, type);
   }
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) {
     return _sessionStorage.queryListRecent(offset: offset, limit: limit);
   }
 
-  Future<bool> setLastMessageAndUnReadCount(String? targetId, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
+  Future<bool> setLastMessageAndUnReadCount(String? targetId, int? type, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageAt = sendAt ?? lastMessage?.sendAt ?? MessageOptions.getGetAt(lastMessage);
     session.lastMessageOptions = lastMessage?.toMap();
     session.unReadCount = unread ?? await chatCommon.unReadCountByTargetId(targetId);
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
-    if (success && notify) queryAndNotify(session.targetId);
+    if (success && notify) queryAndNotify(session.targetId, type);
     return success;
   }
 
@@ -97,23 +97,23 @@ class SessionCommon with Tag {
   //   return success;
   // }
 
-  Future<bool> setTop(String? targetId, bool top, {bool notify = false}) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    bool success = await _sessionStorage.updateIsTop(targetId, top);
-    if (success && notify) queryAndNotify(targetId);
+  Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty || type == null) return false;
+    bool success = await _sessionStorage.updateIsTop(targetId, type, top);
+    if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
 
-  Future<bool> setUnReadCount(String? targetId, int unread, {bool notify = false}) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    bool success = await _sessionStorage.updateUnReadCount(targetId, unread);
-    if (success && notify) queryAndNotify(targetId);
+  Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty || type == null) return false;
+    bool success = await _sessionStorage.updateUnReadCount(targetId, type, unread);
+    if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
 
-  Future queryAndNotify(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return;
-    SessionSchema? updated = await query(targetId);
+  Future queryAndNotify(String? targetId, int? type) async {
+    if (targetId == null || targetId.isEmpty || type == null) return;
+    SessionSchema? updated = await query(targetId, type);
     if (updated != null) {
       _updateSink.add(updated);
     }

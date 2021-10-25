@@ -29,7 +29,7 @@ class SessionStorage with Tag {
     await db.execute(createSQL);
 
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_session_target_id` ON `$tableName` (`target_id`)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_session_target_id_type` ON `$tableName` (`target_id`, `type`)');
     await db.execute('CREATE INDEX `index_session_is_top_last_message_at` ON `$tableName` (`is_top`, `last_message_at`)');
     await db.execute('CREATE INDEX `index_session_type_is_top_last_message_at` ON `$tableName` (`type`, `is_top`, `last_message_at`)');
   }
@@ -50,8 +50,8 @@ class SessionStorage with Tag {
             List<Map<String, dynamic>>? res = await txn.query(
               tableName,
               columns: ['*'],
-              where: 'target_id = ?',
-              whereArgs: [schema.targetId],
+              where: 'target_id = ? AND type = ?',
+              whereArgs: [schema.targetId, schema.type],
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - schema:$schema");
@@ -76,23 +76,23 @@ class SessionStorage with Tag {
     });
   }
 
-  Future<bool> delete(String targetId) async {
+  Future<bool> delete(String? targetId, int? type) async {
     if (db?.isOpen != true) return false;
-    if (targetId.isEmpty) return false;
+    if (targetId == null || targetId.isEmpty || type == null) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
         int? result = await db?.transaction((txn) {
           return txn.delete(
             tableName,
-            where: 'target_id = ?',
-            whereArgs: [targetId],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [targetId, type],
           );
         });
         if (result != null && result > 0) {
-          logger.v("$TAG - delete - success - targetId:$targetId");
+          logger.v("$TAG - delete - success - targetId:$targetId - type:$type");
           return true;
         }
-        logger.w("$TAG - delete - empty - targetId:$targetId");
+        logger.w("$TAG - delete - empty - targetId:$targetId - type:$type");
       } catch (e) {
         handleError(e);
       }
@@ -100,25 +100,25 @@ class SessionStorage with Tag {
     });
   }
 
-  Future<SessionSchema?> query(String? targetId) async {
+  Future<SessionSchema?> query(String? targetId, int? type) async {
     if (db?.isOpen != true) return null;
-    if (targetId == null || targetId.isEmpty) return null;
+    if (targetId == null || targetId.isEmpty || type == null) return null;
     return await dbCommon.lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
             tableName,
             columns: ['*'],
-            where: 'target_id = ?',
-            whereArgs: [targetId],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [targetId, type],
           );
         });
         if (res != null && res.length > 0) {
           SessionSchema schema = SessionSchema.fromMap(res.first);
-          logger.v("$TAG - query - success - targetId:$targetId - schema:$schema");
+          logger.v("$TAG - query - success - targetId:$targetId - type:$type - schema:$schema");
           return schema;
         }
-        logger.v("$TAG - query - empty - targetId:$targetId ");
+        logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
       } catch (e) {
         handleError(e);
       }
@@ -172,8 +172,8 @@ class SessionStorage with Tag {
               'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
               'un_read_count': schema.unReadCount,
             },
-            where: 'target_id = ?',
-            whereArgs: [schema.targetId],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [schema.targetId, schema.type],
           );
         });
         logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
@@ -210,9 +210,9 @@ class SessionStorage with Tag {
   //   });
   // }
 
-  Future<bool> updateIsTop(String? targetId, bool isTop) async {
+  Future<bool> updateIsTop(String? targetId, int? type, bool isTop) async {
     if (db?.isOpen != true) return false;
-    if (targetId == null || targetId.isEmpty) return false;
+    if (targetId == null || targetId.isEmpty || type == null) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
@@ -221,11 +221,11 @@ class SessionStorage with Tag {
             {
               'is_top': isTop ? 1 : 0,
             },
-            where: 'target_id = ?',
-            whereArgs: [targetId],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [targetId, type],
           );
         });
-        logger.v("$TAG - updateIsTop - targetId:$targetId - isTop:$isTop");
+        logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
         return (count ?? 0) > 0;
       } catch (e) {
         handleError(e);
@@ -234,9 +234,9 @@ class SessionStorage with Tag {
     });
   }
 
-  Future<bool> updateUnReadCount(String? targetId, int unread) async {
+  Future<bool> updateUnReadCount(String? targetId, int? type, int unread) async {
     if (db?.isOpen != true) return false;
-    if (targetId == null || targetId.isEmpty) return false;
+    if (targetId == null || targetId.isEmpty || type == null) return false;
     return await dbCommon.lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
@@ -245,11 +245,11 @@ class SessionStorage with Tag {
             {
               'un_read_count': unread,
             },
-            where: 'target_id = ?',
-            whereArgs: [targetId],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [targetId, type],
           );
         });
-        logger.v("$TAG - updateUnReadCount - targetId:$targetId - unread:$unread");
+        logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
         return (count ?? 0) > 0;
       } catch (e) {
         handleError(e);

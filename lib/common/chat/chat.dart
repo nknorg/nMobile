@@ -328,7 +328,7 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     // duplicated
     if (message.targetId == null || message.targetId!.isEmpty) return null;
-    SessionSchema? exist = await sessionCommon.query(message.targetId);
+    SessionSchema? exist = await sessionCommon.query(message.targetId, message.isTopic ? SessionType.TOPIC : SessionType.CONTACT);
     if (exist == null) {
       SessionSchema? added = SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message));
       added = await sessionCommon.add(added, message, notify: true);
@@ -340,7 +340,7 @@ class ChatCommon with Tag {
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
     exist.lastMessageAt = message.sendAt ?? MessageOptions.getGetAt(message);
     exist.lastMessageOptions = message.toMap();
-    await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, message, exist.unReadCount, notify: true); // must await
+    await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, exist.type, message, exist.unReadCount, notify: true); // must await
     return exist;
   }
 
