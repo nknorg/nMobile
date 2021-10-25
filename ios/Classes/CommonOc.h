@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 {
 }
 
-- (NSString *)saveImageWithImageName:(NSString*) imageName imageData:(FlutterStandardTypedData*) imageData albumName:(NSString *)albumName overwriteFile:(BOOL)overwriteFile;
+- (void)saveImageWithImageName:(NSString*) imageName imageData:(FlutterStandardTypedData*) imageData albumName:(NSString *)albumName overwriteFile:(BOOL)overwriteFile;
 
 - (NSString *)combinePieces:(NSArray *)dataPieces dataShard:(NSInteger)dataPiece parityShards:(NSInteger)parityPiece bytesLength:(NSInteger)bytesLength;
 
