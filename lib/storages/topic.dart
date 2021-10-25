@@ -86,29 +86,29 @@ class TopicStorage with Tag {
     });
   }
 
-  Future<bool> delete(int? topicId) async {
-    if (db?.isOpen != true) return false;
-    if (topicId == null || topicId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - delete - success - topicId:$topicId");
-          return true;
-        }
-        logger.w("$TAG - delete - fail - topicId:$topicId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }
+  // Future<bool> delete(int? topicId) async {
+  //   if (db?.isOpen != true) return false;
+  //   if (topicId == null || topicId == 0) return false;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       int? count = await db?.transaction((txn) {
+  //         return txn.delete(
+  //           tableName,
+  //           where: 'id = ?',
+  //           whereArgs: [topicId],
+  //         );
+  //       });
+  //       if (count != null && count > 0) {
+  //         logger.v("$TAG - delete - success - topicId:$topicId");
+  //         return true;
+  //       }
+  //       logger.w("$TAG - delete - fail - topicId:$topicId");
+  //     } catch (e) {
+  //       handleError(e);
+  //     }
+  //     return false;
+  //   });
+  // }
 
   Future<TopicSchema?> query(int? topicId) async {
     if (db?.isOpen != true) return null;

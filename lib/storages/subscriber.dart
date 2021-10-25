@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -78,29 +80,29 @@ class SubscriberStorage with Tag {
     });
   }
 
-  Future<bool> delete(int? subscriberId) async {
-    if (db?.isOpen != true) return false;
-    if (subscriberId == null || subscriberId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'id = ?',
-            whereArgs: [subscriberId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - delete - success - subscriberId:$subscriberId");
-          return true;
-        }
-        logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }
+  // Future<bool> delete(int? subscriberId) async {
+  //   if (db?.isOpen != true) return false;
+  //   if (subscriberId == null || subscriberId == 0) return false;
+  //   return await dbCommon.lock.synchronized(() async {
+  //     try {
+  //       int? count = await db?.transaction((txn) {
+  //         return txn.delete(
+  //           tableName,
+  //           where: 'id = ?',
+  //           whereArgs: [subscriberId],
+  //         );
+  //       });
+  //       if (count != null && count > 0) {
+  //         logger.v("$TAG - delete - success - subscriberId:$subscriberId");
+  //         return true;
+  //       }
+  //       logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
+  //     } catch (e) {
+  //       handleError(e);
+  //     }
+  //     return false;
+  //   });
+  // }
 
   // Future<int> deleteByTopic(String? topic) async {
   // if (db?.isOpen != true) return 0;
@@ -377,31 +379,31 @@ class SubscriberStorage with Tag {
     });
   }
 
-  // Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
-  // if (db?.isOpen != true) return false;
-  //   if (subscriberId == null || subscriberId == 0) return false;
-  //   return await dbCommon.lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.update(
-  //           tableName,
-  //           {
-  //             'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-  //             'update_at': DateTime.now().millisecondsSinceEpoch,
-  //           },
-  //           where: 'id = ?',
-  //           whereArgs: [subscriberId],
-  //         );
-  //       });
-  //       if (count != null && count > 0) {
-  //         logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
-  //         return true;
-  //       }
-  //       logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
+    if (db?.isOpen != true) return false;
+    if (subscriberId == null || subscriberId == 0) return false;
+    return await dbCommon.lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+              'update_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
+          return true;
+        }
+        logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }
 }

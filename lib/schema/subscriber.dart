@@ -45,6 +45,21 @@ class SubscriberSchema {
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
+  Map<String, dynamic> getDataByAppendStatus(int status, bool isProgress) {
+    Map<String, dynamic> newData = data ?? Map();
+    if (isProgress) {
+      newData['permission_progress'] = status;
+    } else {
+      newData.remove('permission_progress');
+    }
+    return newData;
+  }
+
+  int? isPermissionProgress() {
+    int? status = data?['permission_progress'];
+    return status;
+  }
+
   static SubscriberSchema? create(String? topic, String? clientAddress, int? status, int? permPage) {
     if (topic?.isNotEmpty == true && clientAddress?.isNotEmpty == true) {
       return SubscriberSchema(

@@ -271,6 +271,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     topic.isPrivate,
                     topic.isOwner(clientCommon.address),
                     subscriber.clientAddress,
+                    toast: true,
                   );
                 },
               ),
@@ -288,6 +289,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               topic.isPrivate,
               topic.isOwner(clientCommon.address),
               subscriber.clientAddress,
+              toast: true,
             );
           }
         },
