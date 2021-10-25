@@ -121,7 +121,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   Widget build(BuildContext context) {
     if (_topic == null && _contact == null && loaded) {
-      sessionCommon.delete(widget.session.targetId);
+      sessionCommon.delete(widget.session.targetId, widget.session.type);
       return SizedBox.shrink();
     }
     SessionSchema session = widget.session;

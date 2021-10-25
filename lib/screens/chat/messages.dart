@@ -23,6 +23,7 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
@@ -324,7 +325,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
     if (sessionUnreadClear) {
       // count not up in chatting
-      await sessionCommon.setUnReadCount(this.targetId, 0, notify: true);
+      await sessionCommon.setUnReadCount(this.targetId, _topic != null ? SessionType.TOPIC : SessionType.CONTACT, 0, notify: true);
     }
     if (badgeRefresh) {
       // count not up in chatting
