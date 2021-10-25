@@ -9,10 +9,13 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:synchronized/synchronized.dart';
 
 class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
   EthErc20Client _erc20client = EthErc20Client();
+
+  Lock _lock = Lock();
 
   WalletCommon();
 
@@ -77,6 +80,12 @@ class WalletCommon with Tag {
   }
 
   queryBalance({int? delayMs}) async {
+    await _lock.synchronized(() {
+      return queryBalanceWithNoLock(delayMs: delayMs);
+    });
+  }
+
+  queryBalanceWithNoLock({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;

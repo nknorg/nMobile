@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/global.dart';
@@ -7,17 +8,21 @@ import 'package:nmobile/utils/logger.dart';
 
 class TaskService with Tag {
   static const KEY_WALLET_BALANCE = "wallet_balance";
-  static const KEY_CLIENT_CONNECT = "client_connect";
-  static const KEY_MSG_FAIL_CHECK = "msg_fail_check";
   static const KEY_RPC_REFRESH = "rpc_refresh";
   static const KEY_NONCE_REFRESH = "nonce_refresh";
+  static const KEY_SUBSCRIBE_CHECK = "subscribe_check";
+  static const KEY_PERMISSION_CHECK = "permission_check";
+  static const KEY_CLIENT_CONNECT = "client_connect";
   static const KEY_TOPIC_CHECK = "topic_check";
   static const KEY_MSG_BURNING = "message_burning"; // FUTURE:burning
 
-  bool isBackground = false;
+  bool inBackground = false;
 
   Timer? _timer1;
   Map<String, Function(String)> tasks1 = Map<String, Function(String)>();
+
+  Timer? _timer30;
+  Map<String, Function(String)> tasks30 = Map<String, Function(String)>();
 
   Timer? _timer60;
   Map<String, Function(String)> tasks60 = Map<String, Function(String)>();
@@ -34,9 +39,9 @@ class TaskService with Tag {
         if (application.isFromBackground(states)) {
           uninstall();
           init(isFirst: false);
-          isBackground = false;
+          inBackground = false;
         } else if (application.isGoBackground(states)) {
-          isBackground = true;
+          inBackground = true;
           uninstall();
         }
       });
@@ -46,21 +51,32 @@ class TaskService with Tag {
     // timer 1s
     _timer1 = _timer1 ??
         Timer.periodic(Duration(seconds: 1), (timer) async {
-          if (isBackground) return;
+          if (inBackground && Platform.isIOS) return;
           tasks1.keys.forEach((String key) {
             // logger.d("$Tag - tick_1 - key:$key");
-            if (isBackground) return;
+            if (inBackground && Platform.isIOS) return;
             tasks1[key]?.call(key);
+          });
+        });
+
+    // timer 30s
+    _timer30 = _timer30 ??
+        Timer.periodic(Duration(seconds: 30), (timer) {
+          if (inBackground && Platform.isIOS) return;
+          tasks30.keys.forEach((String key) {
+            // logger.d("$Tag - tick_30 - key:$key");
+            if (inBackground && Platform.isIOS) return;
+            tasks30[key]?.call(key);
           });
         });
 
     // timer 60s
     _timer60 = _timer60 ??
         Timer.periodic(Duration(seconds: 60), (timer) {
-          if (isBackground) return;
+          if (inBackground && Platform.isIOS) return;
           tasks60.keys.forEach((String key) {
             // logger.d("$Tag - tick_60 - key:$key");
-            if (isBackground) return;
+            if (inBackground && Platform.isIOS) return;
             tasks60[key]?.call(key);
           });
         });
@@ -68,10 +84,10 @@ class TaskService with Tag {
     // timer 300s
     _timer300 = _timer300 ??
         Timer.periodic(Duration(seconds: 300), (timer) {
-          if (isBackground) return;
+          if (inBackground && Platform.isIOS) return;
           _tasks300.keys.forEach((String key) {
             // logger.d("$Tag - tick_300 - key:$key");
-            if (isBackground) return;
+            if (inBackground && Platform.isIOS) return;
             _tasks300[key]?.call(key);
           });
         });
@@ -80,6 +96,8 @@ class TaskService with Tag {
     addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
     addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1000), callNow: true);
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 1500), callNow: true);
+    // addTask30(KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(delayMs: 5000), callNow: true);
+    // addTask30(KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(delayMs: 7000), callNow: true);
 
     // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
@@ -90,6 +108,8 @@ class TaskService with Tag {
   uninstall() {
     _timer1?.cancel();
     _timer1 = null;
+    _timer30?.cancel();
+    _timer30 = null;
     _timer60?.cancel();
     _timer60 = null;
     _timer300?.cancel();
@@ -112,6 +132,23 @@ class TaskService with Tag {
       }
     });
     tasks1 = temp;
+  }
+
+  void addTask30(String key, Function(String) func, {bool callNow = true}) {
+    logger.d("$Tag - addTask30 - key:$key - func:${func.toString()}");
+    if (callNow) func.call(key);
+    tasks30[key] = func;
+  }
+
+  void removeTask30(String key) {
+    if (!tasks30.keys.contains(key)) return;
+    Map<String, Function(String)> temp = Map();
+    tasks30.forEach((k, v) {
+      if (k != key) {
+        temp[k] = v;
+      }
+    });
+    tasks30 = temp;
   }
 
   void addTask60(String key, Function(String) func, {bool callNow = true}) {

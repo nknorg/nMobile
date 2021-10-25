@@ -11,6 +11,7 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:synchronized/synchronized.dart';
 
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
@@ -54,6 +55,7 @@ class Global {
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
 
+  static Lock _lock = Lock();
   static Map<String, int> nonceMap = {};
 
   static init() async {
@@ -135,6 +137,12 @@ class Global {
   }
 
   static Future<int?> refreshNonce({String? walletAddress, bool useNow = false, int? delayMs}) async {
+    return await _lock.synchronized(() {
+      return refreshNonceWithNoLock(walletAddress: walletAddress, useNow: useNow, delayMs: delayMs);
+    });
+  }
+
+  static Future<int?> refreshNonceWithNoLock({String? walletAddress, bool useNow = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     // // walletAddress
