@@ -338,7 +338,7 @@ class ChatCommon with Tag {
     // update
     var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
-    exist.lastMessageAt = MessageOptions.getSendAt(message) ?? message.sendAt;
+    exist.lastMessageAt = message.sendAt ?? MessageOptions.getGetAt(message);
     exist.lastMessageOptions = message.toMap();
     await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, message, exist.unReadCount, notify: true); // must await
     return exist;

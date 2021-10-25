@@ -487,6 +487,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> resend(MessageSchema? message, {ContactSchema? contact, DeviceInfoSchema? deviceInfo, TopicSchema? topic}) async {
     if (message == null) return null;
     message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
+    await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
+    message.sendAt = DateTime.now().millisecondsSinceEpoch;
     String? msgData;
     switch (message.contentType) {
       case MessageContentType.text:
@@ -570,9 +572,6 @@ class ChatOutCommon with Tag {
     // DB
     if (!resend) {
       message = await MessageStorage.instance.insert(message);
-    } else if (resend) {
-      message.sendAt = DateTime.now().millisecondsSinceEpoch;
-      MessageStorage.instance.updateSendAt(message.msgId, message.sendAt); // await
     }
     if (message == null) return null;
     // display
