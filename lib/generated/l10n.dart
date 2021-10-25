@@ -3330,6 +3330,16 @@ class S {
     );
   }
 
+  /// `Need to re-subscribe`
+  String get need_re_subscribe {
+    return Intl.message(
+      'Need to re-subscribe',
+      name: 'need_re_subscribe',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `You have already invited this member,still invite?`
   String get invited_already {
     return Intl.message(

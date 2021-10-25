@@ -300,6 +300,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "my_profile": MessageLookupByLibrary.simpleMessage("个人资料"),
         "my_wallets": MessageLookupByLibrary.simpleMessage("我的账户"),
         "name": MessageLookupByLibrary.simpleMessage("名字"),
+        "need_re_subscribe": MessageLookupByLibrary.simpleMessage("需要重新订阅"),
         "new_group": MessageLookupByLibrary.simpleMessage("新建群聊"),
         "new_message": MessageLookupByLibrary.simpleMessage("新消息"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("新建私聊"),
