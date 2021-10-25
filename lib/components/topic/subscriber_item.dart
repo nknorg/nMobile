@@ -290,6 +290,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               topic.isOwner(clientCommon.address),
               subscriber.clientAddress,
               toast: true,
+              sendMsg: true,
             );
           }
         },

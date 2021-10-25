@@ -223,6 +223,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
         toast: true,
+        sendMsg: true,
       );
     }
   }
