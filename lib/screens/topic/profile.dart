@@ -189,6 +189,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _topicSchema?.isOwner(clientCommon.address) == true,
         address,
         toast: true,
+        sendMsg: true,
       );
     }
   }
