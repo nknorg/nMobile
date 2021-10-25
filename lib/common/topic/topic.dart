@@ -465,7 +465,7 @@ class TopicCommon with Tag {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
           logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isNotEmpty) Toast.show(S.of(Global.appContext).something_went_wrong);
+          if (toast && identifier.isEmpty) Toast.show(S.of(Global.appContext).something_went_wrong);
           success = identifier.isNotEmpty;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
@@ -476,7 +476,7 @@ class TopicCommon with Tag {
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientSubscribe - duplicated - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isNotEmpty) Toast.show(S.of(Global.appContext).request_processed);
+          if (toast && identifier.isEmpty) Toast.show(S.of(Global.appContext).request_processed);
         } else {
           handleError(e);
         }
@@ -671,7 +671,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false}) async {
+  Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false, bool sendMsg = false}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated) return null;
     if (clientAddress == clientCommon.address) {
       if (toast) Toast.show(S.of(Global.appContext).invite_yourself_error);
@@ -689,7 +689,7 @@ class TopicCommon with Tag {
       return null;
     }
 
-    if (isPrivate && toast) Toast.show(S.of(Global.appContext).inviting);
+    // if (isPrivate && toast) Toast.show(S.of(Global.appContext).inviting);
 
     // update DB
 
@@ -726,10 +726,12 @@ class TopicCommon with Tag {
     }
 
     // send message
-    MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
-    if (_msg == null) {
-      if (toast) Toast.show(S.of(Global.appContext).failure);
-      return null;
+    if (sendMsg) {
+      MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
+      if (_msg == null) {
+        if (toast) Toast.show(S.of(Global.appContext).failure);
+        return null;
+      }
     }
     if (toast) Toast.show(S.of(Global.appContext).invitation_sent);
     return _subscriber;
