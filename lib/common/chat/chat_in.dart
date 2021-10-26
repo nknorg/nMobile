@@ -332,7 +332,7 @@ class ChatInCommon with Tag {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
       if (!exists.isTopic) {
         int reallySendAt = received.sendAt ?? 0;
-        await chatCommon.readMessageBySide(received.targetId, reallySendAt);
+        await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
       }
     } else {
       await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
@@ -375,7 +375,7 @@ class ChatInCommon with Tag {
     // read history
     msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    await chatCommon.readMessageBySide(received.targetId, reallySendAt);
+    await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
 
     // check msgStatus
     // if ((received.from != received.to) && (received.from != clientCommon.address)) {

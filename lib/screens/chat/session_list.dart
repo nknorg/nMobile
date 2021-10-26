@@ -87,7 +87,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       if (finds.isEmpty) {
         _sessionList.insert(0, event);
       } else {
-        _sessionList = _sessionList.map((SessionSchema e) => (e.targetId != event.targetId) ? e : event).toList();
+        _sessionList = _sessionList.map((SessionSchema e) => ((e.targetId == event.targetId) && (e.type == event.type)) ? event : e).toList();
       }
       _sortMessages();
     });
@@ -164,7 +164,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       // find
       SessionSchema session = _sessionList[findIndex];
       MessageSchema oldLastMsg = MessageSchema.fromMap(session.lastMessageOptions!);
-      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(session.targetId, offset: 0, limit: 1);
+      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(session.targetId, session.type == SessionType.TOPIC ? session.targetId : "", offset: 0, limit: 1);
       MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
       // update
       if (newLastMsg == null) {

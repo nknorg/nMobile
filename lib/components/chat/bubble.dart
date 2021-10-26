@@ -186,11 +186,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         _message = chatCommon.burningHandle(_message);
       }
       if (_message.deleteAt != null) {
-        String? senderKey = _message.isOutbound ? _message.from : (_message.to ?? _message.topic);
-        if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && (senderKey?.isNotEmpty == true)) {
+        String? senderKey = _message.isOutbound ? _message.from : (_message.topic.isNotEmpty ? _message.topic : _message.to);
+        if ((_message.deleteAt! > DateTime.now().millisecondsSinceEpoch) && senderKey.isNotEmpty) {
           String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${_message.msgId}";
           taskService.addTask1(taskKey, (String key) {
-            if (senderKey?.isNotEmpty == true && !key.contains(senderKey!)) {
+            if (senderKey.isNotEmpty && !key.contains(senderKey)) {
               // remove others client burning
               taskService.removeTask1(key);
               // onRefreshArguments(); // refresh task (will dead loop)

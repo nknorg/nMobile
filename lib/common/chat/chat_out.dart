@@ -357,8 +357,8 @@ class ChatOutCommon with Tag {
       msgId: Uuid().v4(),
       from: clientCommon.address!,
       contentType: contentType,
-      to: (topic?.topic.isNotEmpty == true) ? null : contact?.clientAddress,
-      topic: topic?.topic,
+      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
+      topic: topic?.topic ?? "",
       content: content,
       deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
@@ -377,8 +377,8 @@ class ChatOutCommon with Tag {
       msgId: Uuid().v4(),
       from: clientCommon.address!,
       contentType: contentType,
-      to: (topic?.topic.isNotEmpty == true) ? null : contact?.clientAddress,
-      topic: topic?.topic,
+      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
+      topic: topic?.topic ?? "",
       content: content,
       deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
@@ -395,8 +395,8 @@ class ChatOutCommon with Tag {
       msgId: Uuid().v4(),
       from: clientCommon.address!,
       contentType: MessageContentType.audio,
-      to: (topic?.topic.isNotEmpty == true) ? null : contact?.clientAddress,
-      topic: topic?.topic,
+      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
+      topic: topic?.topic ?? "",
       content: content,
       audioDurationS: durationS,
       deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
@@ -553,7 +553,7 @@ class ChatOutCommon with Tag {
       if (message.isTopic) {
         final topic = await chatCommon.topicHandle(message);
         pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification);
-      } else if (message.to?.isNotEmpty == true) {
+      } else if (message.to.isNotEmpty) {
         final contact = await chatCommon.contactHandle(message);
         pid = await _sendWithContactSafe(contact, message, msgData, notification: notification);
       }
@@ -596,7 +596,7 @@ class ChatOutCommon with Tag {
     if (message.isTopic) {
       pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification);
       logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
-    } else if (message.to?.isNotEmpty == true) {
+    } else if (message.to.isNotEmpty == true) {
       pid = await _sendWithContactSafe(contact, message, msgData, notification: notification);
       logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
     }
@@ -649,13 +649,13 @@ class ChatOutCommon with Tag {
     // send
     Uint8List? pid;
     if (deviceInfoCommon.isMsgPieceEnable(_deviceInfo?.platform, _deviceInfo?.appVersion)) {
-      pid = await _sendByPieces([message.to ?? ""], message);
+      pid = await _sendByPieces([message.to], message);
     }
     if (pid?.isNotEmpty == true) {
       logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
       logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
-      pid = (await sendData(clientCommon.address, [message.to ?? ""], msgData))?.messageId;
+      pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
     }
     // result
     if (pid?.isNotEmpty == true) {
@@ -704,7 +704,7 @@ class ChatOutCommon with Tag {
     if (_subscribers.isEmpty || (_subscribers.length == 1 && (_subscribers.first.clientAddress == clientCommon.address) && privateNormal)) {
       logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
       // permission checked in received
-      int total = await subscriberCommon.getSubscribersCount(message.topic!, false, fetch: _subscribers.isEmpty);
+      int total = await subscriberCommon.getSubscribersCount(message.topic, false, fetch: _subscribers.isEmpty);
       List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total);
       if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
         chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await

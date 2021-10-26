@@ -56,8 +56,8 @@ class MessageSchema {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
   String from; // (required) <-> sender / -> target_id(session_id)
-  String? to; // <-> receiver / -> target_id(session_id)
-  String? topic; // <-> topic / -> target_id(session_id)
+  String to; // <-> receiver / -> target_id(session_id)
+  String topic; // <-> topic / -> target_id(session_id)
 
   int status; // <-> status
   bool isOutbound; // <-> is_outbound
@@ -75,8 +75,8 @@ class MessageSchema {
     this.pid,
     required this.msgId,
     required this.from,
-    this.to,
-    this.topic,
+    this.to = "",
+    this.topic = "",
     // status
     required this.status,
     required this.isOutbound,
@@ -96,7 +96,7 @@ class MessageSchema {
   }
 
   bool get isTopic {
-    return topic?.isNotEmpty == true;
+    return topic.isNotEmpty == true;
   }
 
   // burning
@@ -157,8 +157,8 @@ class MessageSchema {
       pid: raw.messageId,
       msgId: data['id'] ?? "",
       from: raw.src ?? "",
-      to: clientCommon.address,
-      topic: data['topic'],
+      to: clientCommon.address ?? "",
+      topic: data['topic'] ?? "",
       // status
       status: MessageStatus.Received,
       isOutbound: false,
@@ -268,8 +268,8 @@ class MessageSchema {
     // this.pid, // SDK create
     required this.msgId,
     required this.from,
-    this.to,
-    this.topic,
+    this.to = "",
+    this.topic = "",
     // status
     this.status = MessageStatus.Sending,
     this.isOutbound = true,
@@ -385,8 +385,8 @@ class MessageSchema {
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       msgId: e['msg_id'] ?? "",
       from: e['sender'] ?? "",
-      to: e['receiver'],
-      topic: e['topic'],
+      to: e['receiver'] ?? "",
+      topic: e['topic'] ?? "",
       // status
       status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
