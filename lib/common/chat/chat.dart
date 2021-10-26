@@ -82,7 +82,7 @@ class ChatCommon with Tag {
 
     // noAck
     for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, offset: offset, limit: limit);
+      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
       final canReceipts = result.where((element) => element.canReceipt).toList();
       checkList.addAll(canReceipts);
       logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
@@ -92,7 +92,7 @@ class ChatCommon with Tag {
 
     // noRead
     for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
       final canReceipts = result.where((element) => element.canReceipt).toList();
       checkList.addAll(canReceipts);
       logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
@@ -363,17 +363,17 @@ class ChatCommon with Tag {
     return MessageStorage.instance.unReadCount();
   }
 
-  Future<int> unReadCountByTargetId(String? targetId) {
-    return MessageStorage.instance.unReadCountByTargetId(targetId);
+  Future<int> unReadCountByTargetId(String? targetId, String? topic) {
+    return MessageStorage.instance.unReadCountByTargetId(targetId, topic);
   }
 
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, topic, offset: offset, limit: limit);
   }
 
-  Future<bool> deleteByTargetId(String? targetId) async {
-    await MessageStorage.instance.deleteByTargetIdContentType(targetId, MessageContentType.piece);
-    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, true, clearContent: true);
+  Future<bool> deleteByTargetId(String? targetId, String? topic) async {
+    await MessageStorage.instance.deleteByTargetIdContentType(targetId, topic, MessageContentType.piece);
+    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, topic, true, clearContent: true);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
@@ -421,12 +421,12 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future readMessagesBySelf(String? targetId, String? clientAddress) async {
+  Future readMessagesBySelf(String? targetId, String? topic, String? clientAddress) async {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
-    List<MessageSchema> unreadList = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId);
+    List<MessageSchema> unreadList = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic);
     for (var i = 0; i < unreadList.length; i++) {
       MessageSchema element = unreadList[i];
       msgIds.add(element.msgId);
@@ -438,10 +438,10 @@ class ChatCommon with Tag {
     }
   }
 
-  Future<int> readMessageBySide(String? targetId, int? sendAt, {int offset = 0, int limit = 20}) async {
+  Future<int> readMessageBySide(String? targetId, String? topic, int? sendAt, {int offset = 0, int limit = 20}) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
     // noReads
-    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, offset: offset, limit: limit);
+    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, offset: offset, limit: limit);
     List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
     // read
     for (var i = 0; i < shouldReads.length; i++) {
@@ -450,7 +450,7 @@ class ChatCommon with Tag {
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     // loop
-    if (noReads.length >= limit) return readMessageBySide(targetId, sendAt, offset: offset + limit, limit: limit);
+    if (noReads.length >= limit) return readMessageBySide(targetId, topic, sendAt, offset: offset + limit, limit: limit);
     logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${timeFormat(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
     return offset + noReads.length;
   }

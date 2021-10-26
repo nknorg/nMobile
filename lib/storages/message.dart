@@ -46,10 +46,10 @@ class MessageStorage with Tag {
     // index
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
     await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
-    await db.execute('CREATE INDEX `index_messages_target_id_type` ON `$tableName` (`target_id`, `type`)');
-    await db.execute('CREATE INDEX `index_messages_status_target_id` ON `$tableName` (`status`, `target_id`)');
-    await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id` ON `$tableName` (`status`, `is_delete`, `target_id`)');
-    await db.execute('CREATE INDEX `index_messages_target_id_is_delete_type_send_at` ON `$tableName` (`target_id`, `is_delete`, `type`, `send_at`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_topic_type` ON `$tableName` (`target_id`, `topic`, `type`)');
+    await db.execute('CREATE INDEX `index_messages_status_target_id_topic` ON `$tableName` (`status`, `target_id`, `topic`)');
+    await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic` ON `$tableName` (`status`, `is_delete`, `target_id`, `topic`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_topic_is_delete_type_send_at` ON `$tableName` (`target_id`, `topic`, `is_delete`, `type`, `send_at`)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -146,7 +146,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<int> deleteByTargetIdContentType(String? targetId, String? contentType) async {
+  Future<int> deleteByTargetIdContentType(String? targetId, String? topic, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     return await dbCommon.lock.synchronized(() async {
@@ -154,8 +154,8 @@ class MessageStorage with Tag {
         int? count = await db?.transaction((txn) {
           return txn.delete(
             tableName,
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [targetId, contentType],
+            where: 'target_id = ? AND topic = ? AND type = ?',
+            whereArgs: [targetId, topic ?? "", contentType],
           );
         });
         if (count != null && count > 0) {
@@ -492,7 +492,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     return await dbCommon.lock.synchronized(() async {
@@ -501,8 +501,8 @@ class MessageStorage with Tag {
           return txn.query(
             tableName,
             columns: ['*'],
-            where: 'status = ? AND is_delete = ? AND target_id = ?',
-            whereArgs: [MessageStatus.Received, 0, targetId],
+            where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
+            whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
           );
         });
         if (res == null || res.isEmpty) {
@@ -525,7 +525,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<int> unReadCountByTargetId(String? targetId) async {
+  Future<int> unReadCountByTargetId(String? targetId, String? topic) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     return await dbCommon.lock.synchronized(() async {
@@ -534,8 +534,8 @@ class MessageStorage with Tag {
           return txn.query(
             tableName,
             columns: ['COUNT(id)'],
-            where: 'status = ? AND is_delete = ? AND target_id = ?',
-            whereArgs: [MessageStatus.Received, 0, targetId],
+            where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
+            whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
           );
         });
         int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
@@ -548,7 +548,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     return await dbCommon.lock.synchronized(() async {
@@ -557,8 +557,8 @@ class MessageStorage with Tag {
           return txn.query(
             tableName,
             columns: ['*'],
-            where: 'target_id = ? AND is_delete = ? AND NOT type = ?',
-            whereArgs: [targetId, 0, MessageContentType.piece],
+            where: 'target_id = ? AND topic = ? AND is_delete = ? AND NOT type = ?',
+            whereArgs: [targetId, topic ?? "", 0, MessageContentType.piece],
             offset: offset,
             limit: limit,
             orderBy: 'send_at DESC',
@@ -584,7 +584,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
     return await dbCommon.lock.synchronized(() async {
@@ -593,8 +593,8 @@ class MessageStorage with Tag {
           return txn.query(
             tableName,
             columns: ['*'],
-            where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ?' : 'status = ?',
-            whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId] : [status],
+            where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ? AND topic = ?' : 'status = ?',
+            whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId, topic ?? ""] : [status],
             offset: offset,
             limit: limit,
           );
@@ -727,7 +727,7 @@ class MessageStorage with Tag {
     });
   }
 
-  Future<bool> updateIsDeleteByTargetId(String? targetId, bool isDelete, {bool clearContent = false}) async {
+  Future<bool> updateIsDeleteByTargetId(String? targetId, String? topic, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty) return false;
     return await dbCommon.lock.synchronized(() async {
@@ -736,8 +736,8 @@ class MessageStorage with Tag {
           return txn.update(
             tableName,
             clearContent ? {'is_delete': isDelete ? 1 : 0, 'content': null} : {'is_delete': isDelete ? 1 : 0},
-            where: 'target_id = ?',
-            whereArgs: [targetId],
+            where: 'target_id = ? AND topic = ?',
+            whereArgs: [targetId, topic ?? ""],
           );
         });
         logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");

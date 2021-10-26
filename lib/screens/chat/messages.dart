@@ -252,7 +252,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else {
       _offset = _messages.length;
     }
-    var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, offset: _offset, limit: 20);
+    var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, _topic?.topic, offset: _offset, limit: 20);
     setState(() {
       _messages = _messages + messages;
     });
@@ -329,15 +329,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     if (badgeRefresh) {
       // count not up in chatting
-      chatCommon.unReadCountByTargetId(targetId).then((value) {
+      chatCommon.unReadCountByTargetId(targetId, this._topic?.topic).then((value) {
         Badge.onCountDown(value); // await
       }).then((value) {
         // set read
-        chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress); // await
+        chatCommon.readMessagesBySelf(this.targetId, this._topic?.topic, this._contact?.clientAddress); // await
       });
     } else {
       // set read
-      chatCommon.readMessagesBySelf(this.targetId, this._contact?.clientAddress); // await
+      chatCommon.readMessagesBySelf(this.targetId, this._topic?.topic, this._contact?.clientAddress); // await
     }
   }
 

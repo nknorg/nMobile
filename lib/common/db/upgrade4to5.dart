@@ -795,8 +795,8 @@ class Upgrade4to5 {
           'pid': newPid,
           'msg_id': newMsgId,
           'sender': newSender,
-          'receiver': newReceiver,
-          'topic': newTopic,
+          'receiver': newReceiver ?? "",
+          'topic': newTopic ?? "",
           'target_id': newTargetId,
           // status
           'status': newStatus,
