@@ -322,7 +322,7 @@ class ChatMessageItem extends StatelessWidget {
   Widget _topicInvitedWidget(BuildContext context) {
     S _localizations = S.of(context);
 
-    String to = (message.to?.length ?? 0) > 6 ? (message.to?.substring(0, 6) ?? " ") : " ";
+    String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
     String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
     String inviteDesc = message.isOutbound ? _localizations.invites_desc_other(to) : _localizations.invites_desc_me(from);
 
