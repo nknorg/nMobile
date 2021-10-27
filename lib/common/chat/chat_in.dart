@@ -287,6 +287,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receivePing(MessageSchema received) async {
+    if (application.inBackGround) return false;
     // if (received.isTopic) return; (limit in out)
     if (received.from == received.to || received.from == clientCommon.address) {
       logger.i("$TAG - _receivePing - ping self receive - received:$received");
@@ -386,6 +387,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveMsgStatus(MessageSchema received) async {
+    if (application.inBackGround) return false;
     // if (received.isTopic) return; (limit in out)
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
