@@ -246,16 +246,6 @@ class TopicCommon with Tag {
       return null;
     }
 
-    // subscriber me
-    // SubscriberSchema? _subscriberMe = await subscriberCommon.queryByTopicChatId(topic, clientCommon.address);
-    // if (_subscriberMe?.status == SubscriberStatus.Unsubscribed) {
-    //   int updateAt = _subscriberMe?.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-    //   if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
-    //     Toast.show(S.of(Global.appContext).left_group_tip);
-    //     return null;
-    //   }
-    // }
-
     // permission(private + normal)
     int? permPage;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
@@ -288,32 +278,24 @@ class TopicCommon with Tag {
     }
 
     // check expire + pull subscribers
-    // bool historyJoined = exists.joined;
     exists = await checkExpireAndSubscribe(topic, enableFirst: true, forceSubscribe: true, refreshSubscribers: fetchSubscribers, fee: fee, toast: true);
     if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
+    // SUPPORT:START
     // status + permission
-    // if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
-    //   // private + owner
-    //   _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, 0);
-    //   Map<String, dynamic> meta = await _getMetaByNodePage(topic, 0);
-    //   meta = await _buildMetaByAppend(topic, meta, _subscriberMe);
-    //   bool permissionSuccess = await _clientSubscribe(topic, fee: fee, permissionPage: 0, meta: meta, toast: true);
-    //   if (!permissionSuccess) {
-    //     logger.w("$TAG - subscribe - owner subscribe permission fail - topic:$exists");
-    //     // await subscriberCommon.deleteByTopic(exists.topic);
-    //     if (!historyJoined) {
-    //       // need delete by subscribed first when permission push
-    //       await delete(exists.id, notify: true);
-    //     }
-    //     return null;
-    //   }
-    // } else {
-    //   // public / private + normal
-    //   _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
-    // }
-    await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
+    if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
+      SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, 0);
+      Map<String, dynamic> meta = await _getMetaByNodePage(topic, 0);
+      meta = await _buildMetaByAppend(topic, meta, _subscriberMe);
+      await _clientSubscribe(topic, fee: fee, permissionPage: 0, meta: meta, clientAddress: clientCommon.address, status: SubscriberStatus.Subscribed);
+    } else {
+      await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
+    }
+    // SUPPORT:END
+    // FUTURE:START
+    // await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
+    // FUTURE:END
     await Future.delayed(Duration(milliseconds: 250));
 
     // send messages
