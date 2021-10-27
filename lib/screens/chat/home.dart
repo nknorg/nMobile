@@ -56,7 +56,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _clientStatusChangeSubscription;
 
   bool firstConnected = true;
-  bool inBackground = false;
   int appBackgroundAt = 0;
   int lastSendPangsAt = 0;
   int lastCheckTopicsAt = 0;
@@ -80,7 +79,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        inBackground = true;
         if (!firstConnected) {
           int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (between >= Global.clientReAuthGapMs) {
@@ -90,7 +88,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           }
         }
       } else if (application.isGoBackground(states)) {
-        inBackground = false;
         appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
@@ -111,11 +108,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         }
         // check subscribe
         Future.delayed(Duration(seconds: 3), () {
-          if (!inBackground) taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), callNow: true);
+          if (!application.inBackGround) taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), callNow: true);
         });
         // check permission
         Future.delayed(Duration(seconds: 5), () {
-          if (!inBackground) taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), callNow: true);
+          if (!application.inBackGround) taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), callNow: true);
         });
       }
     });
