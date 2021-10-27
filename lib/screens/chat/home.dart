@@ -29,7 +29,6 @@ import 'package:nmobile/screens/chat/no_wallet.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
-import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -106,14 +105,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           topicCommon.checkAllTopics(refreshSubscribers: false, delayMs: 2000); // await
           lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
         }
-        // check subscribe
-        Future.delayed(Duration(seconds: 3), () {
-          if (!application.inBackGround) taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), callNow: true);
-        });
-        // check permission
-        Future.delayed(Duration(seconds: 5), () {
-          if (!application.inBackGround) taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), callNow: true);
-        });
       }
     });
 

@@ -272,6 +272,7 @@ class ClientCommon with Tag {
   }
 
   void connectCheck({bool reconnect = false}) {
+    if (application.inBackGround) return;
     if (client == null) return;
     if (connectChecking) return;
     connectChecking = true;
