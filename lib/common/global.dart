@@ -132,7 +132,7 @@ class Global {
       }
     }
 
-    logger.d("Global - getNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
+    logger.d("Global - getNonce - nonce:$nonce - walletAddress:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
     return nonce;
   }
 
@@ -171,6 +171,7 @@ class Global {
     } catch (e) {
       handleError(e);
     }
+    logger.d("Global - refreshNonce - nonce:$nonce - walletAddress:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
 
     if (!useNow && nonce != null) --nonce;
 
@@ -182,8 +183,6 @@ class Global {
         nonceMap[clientCommon.address!] = nonce;
       }
     }
-
-    logger.d("Global - refreshNonce - nonce:$nonce - address:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
     return nonce;
   }
 }
