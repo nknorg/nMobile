@@ -71,7 +71,7 @@ class TopicCommon with Tag {
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
-      int max = 20;
+      int max = 10;
       int limit = 20;
       List<TopicSchema> topicsWithSubscribe = [];
       List<TopicSchema> topicsWithUnSubscribe = [];
@@ -138,7 +138,7 @@ class TopicCommon with Tag {
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
-      int topicMax = 20;
+      int topicMax = 10;
       int subscriberMax = 20;
       int limit = 20;
       List<TopicSchema> topics = [];
