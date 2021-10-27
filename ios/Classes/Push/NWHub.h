@@ -10,7 +10,7 @@
 
 @class NWNotification, NWPusher;
 
-/** Allows callback on errors while pushing to and reading from server. 
+/** Allows callback on errors while pushing to and reading from server.
  
  Check out `NWHub` for more details.
  */
@@ -111,7 +111,7 @@
 
 /** @name Pushing (pros) */
 
-/** Push a notification and reconnect if anything failed. 
+/** Push a notification and reconnect if anything failed.
  
  This will assign the notification a unique (incremental) identifier and feed it to the internal pusher. If this succeeds, the notification is stored for later lookup by `readFailed:autoReconnect:error:`. If it fails, the delegate will be invoked and it will reconnect if set to auto-reconnect.
  
