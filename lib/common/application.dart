@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:nmobile/theme/light.dart';
 import 'package:nmobile/theme/theme.dart';
+import 'package:nmobile/utils/logger.dart';
 
 typedef Func = Future Function();
 
@@ -19,7 +20,32 @@ class Application {
   Stream<List<AppLifecycleState>> get appLifeStream => _appLifeController.stream;
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
+  bool inBackGround = false;
+  bool inBackGroundLater = false;
+
   Application();
+
+  void init() {
+    appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+      Timer? timer;
+      if (isFromBackground(states)) {
+        logger.i("Application - init - in foreground");
+        inBackGround = false;
+        timer?.cancel();
+        timer = null;
+        timer = Timer(Duration(seconds: 1), () {
+          logger.i("Application - init - in foreground later");
+          inBackGroundLater = false;
+        });
+      } else if (isGoBackground(states)) {
+        logger.i("Application - init - in background");
+        inBackGround = true;
+        inBackGroundLater = true;
+        timer?.cancel();
+        timer = null;
+      }
+    });
+  }
 
   registerInitialize(Func fn) {
     _initializeFutures.add(fn);

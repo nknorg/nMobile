@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/widgets.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -45,9 +44,6 @@ class ChatOutCommon with Tag {
   StreamSink<Map<String, dynamic>> get _onPieceOutSink => _onPieceOutController.sink;
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
 
-  // is background
-  bool inBackGround = false;
-
   // send interval
   final int minSendIntervalMs = 30;
   int lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
@@ -58,27 +54,7 @@ class ChatOutCommon with Tag {
 
   ChatOutCommon();
 
-  void init() {
-    application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      Timer? timer;
-      if (application.isFromBackground(states)) {
-        timer?.cancel();
-        timer = null;
-        timer = Timer(Duration(seconds: 1), () {
-          logger.i("$TAG - init - in background");
-          inBackGround = false;
-        });
-      } else if (application.isGoBackground(states)) {
-        logger.i("$TAG - init - in foreground");
-        inBackGround = true;
-        timer?.cancel();
-        timer = null;
-      }
-    });
-  }
-
   void clear() {
-    // inBackGround = false;
     lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
     largeBodyLock = Lock();
   }
@@ -137,7 +113,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(seconds: 2));
       return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
-    if (inBackGround && Platform.isIOS) {
+    if (application.inBackGroundLater && Platform.isIOS) {
       logger.i("$TAG - _clientSendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 1));
       return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
@@ -197,7 +173,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(seconds: 2));
       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
-    if (inBackGround && Platform.isIOS) {
+    if (application.inBackGroundLater && Platform.isIOS) {
       logger.i("$TAG - _clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
       await Future.delayed(Duration(seconds: 1));
       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);

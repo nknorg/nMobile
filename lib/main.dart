@@ -48,8 +48,8 @@ void main() async {
 
   // mounted
   application.registerMounted(() async {
+    application.init();
     // await dbCommon.openByDefault();
-    chatOutCommon.init();
     await taskService.init();
     await localNotification.init();
     // await backgroundFetchService.install();
