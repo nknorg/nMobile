@@ -42,6 +42,8 @@ class ChatCommon with Tag {
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
     if (!clientCommon.isClientCreated) return;
     if (targetId == null || targetId.isEmpty) return;
+    if (application.inBackGroundLater) return;
+
     if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
     Timer? timer = checkNoAckTimers[targetId]?["timer"];
     // delay
@@ -75,9 +77,10 @@ class ChatCommon with Tag {
   Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 60}) async {
     if (!clientCommon.isClientCreated) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
+    if (application.inBackGroundLater) return 0;
 
     int limit = 20;
-    int maxCount = 100;
+    int maxCount = 10;
     List<MessageSchema> checkList = [];
 
     // noAck
@@ -398,14 +401,14 @@ class ChatCommon with Tag {
   Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
     if (status <= message.status && !force) return message;
     // pieces will set sendReceipt fast, set sendSuccess lowly
-    if ((message.status == MessageStatus.Sending) && (status != MessageStatus.SendSuccess)) {
-      if (!force && (message.content is File) && (tryCount <= 5)) {
-        logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
-        await Future.delayed(Duration(seconds: 1));
-        MessageSchema? _message = await MessageStorage.instance.queryByNoContentType(message.msgId, MessageContentType.piece);
-        if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
-      }
-    }
+    // if ((message.status == MessageStatus.Sending) && (status != MessageStatus.SendSuccess)) {
+    //   if (!force && (message.content is File) && (tryCount <= 5)) {
+    //     logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
+    //     await Future.delayed(Duration(seconds: 1));
+    //     MessageSchema? _message = await MessageStorage.instance.queryByNoContentType(message.msgId, MessageContentType.piece);
+    //     if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
+    //   }
+    // }
     // update
     message.status = status;
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
@@ -499,7 +502,7 @@ class ChatCommon with Tag {
     if (!clientCommon.isClientCreated) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
-    int max = 100;
+    int max = 20;
     int limit = 20;
     int filterDay = 10; // 10 days filter
     List<String> targetIds = [];
