@@ -62,7 +62,7 @@ class ChatOutCommon with Tag {
   Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
-      logger.w("$TAG - _clientSendData - destList is empty - destList:$destList - data:$data");
+      logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
       return null;
     }
     int totalSize = destList.length * data.length;
@@ -80,7 +80,7 @@ class ChatOutCommon with Tag {
       OnMessage? onMessage;
       for (var i = 0; i < destList.length; i = i + destCountPerPiece) {
         int endIndex = i + destCountPerPiece;
-        while (endIndex >= destList.length) endIndex--;
+        while (endIndex > destList.length) endIndex--;
         if (endIndex < i) break;
         List<String> subDestList = destList.sublist(i, endIndex);
         int subSize = subDestList.length * data.length;
