@@ -59,7 +59,7 @@ class ChatOutCommon with Tag {
     largeBodyLock = Lock();
   }
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1}) async {
+  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1, double prePercent = 0}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
@@ -87,9 +87,9 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - sendData - LOCK:PROGRESS - ($i-$endIndex)/${destList.length} - totalSizeM:${totalSize / 1024 / 1024} - subSizeM:${subSize / 1024 / 1024} - subList:$subDestList - destList:$destList - data:$data");
         OnMessage? _onMessage = await _clientSendData(selfAddress, subDestList, data);
         if (onMessage?.messageId == null || onMessage!.messageId.isEmpty) onMessage = _onMessage;
-        if ((msgId?.isNotEmpty == true) && (totalPercent > 0) && (totalPercent <= 1)) {
-          double percent = (endIndex + 1) / destList.length;
-          _onPieceOutSink.add({"msg_id": msgId, "percent": percent});
+        if (msgId?.isNotEmpty == true) {
+          double percent = endIndex / destList.length * totalPercent + prePercent;
+          if (percent >= 0 && percent <= 1) _onPieceOutSink.add({"msg_id": msgId, "percent": percent});
         }
         await Future.delayed(Duration(milliseconds: minSendIntervalMs));
       }
@@ -720,23 +720,15 @@ class ChatOutCommon with Tag {
     OnMessage? fullOnMessage;
     double fullTotalPercent = targetIdsByFull.length / _subscribers.length;
     if (targetIdsByFull.isNotEmpty) {
-      fullOnMessage = await sendData(clientCommon.address, targetIdsByFull, msgData, msgId: message.msgId, totalPercent: fullTotalPercent);
+      fullOnMessage = await sendData(clientCommon.address, targetIdsByFull, msgData, msgId: message.msgId, totalPercent: fullTotalPercent, prePercent: piecesTotalPercent);
     }
     // result
     Uint8List? pid;
+    double selfPercent = 1 / _subscribers.length;
     if (selfReceive) {
-      Uint8List? _piecePid;
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(clientCommon.address);
-      if (deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-        _piecePid = await _sendByPieces([clientCommon.address ?? ""], message);
-      }
-      if (_piecePid?.isNotEmpty == true) {
-        pid = _piecePid;
-      } else {
-        OnMessage? _onMessage = await sendData(clientCommon.address, [clientCommon.address ?? ""], msgData);
-        if (_onMessage?.messageId.isNotEmpty == true) {
-          pid = _onMessage?.messageId;
-        }
+      OnMessage? _onMessage = await sendData(clientCommon.address, [clientCommon.address ?? ""], msgData, msgId: message.msgId, totalPercent: selfPercent, prePercent: piecesTotalPercent + fullTotalPercent);
+      if (_onMessage?.messageId.isNotEmpty == true) {
+        pid = _onMessage?.messageId;
       }
     }
     if (pid == null || pid.isEmpty) {

@@ -60,6 +60,8 @@ class ChatInCommon with Tag {
 
     // topic msg published callback can be used receipt
     if (message.isTopic && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
+      if (message.from.isEmpty) message.from = clientCommon.address ?? message.to;
+      if (message.to.isEmpty) message.to = clientCommon.address ?? message.from;
       message.contentType = MessageContentType.receipt;
       message.content = message.msgId;
     }
@@ -321,6 +323,9 @@ class ChatInCommon with Tag {
       return false;
     } else if (exists.status == MessageStatus.Read) {
       logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
+      return false;
+    } else if (exists.isTopic && !(received.from == received.to && received.from == clientCommon.address)) {
+      logger.d("$TAG - receiveReceipt - topic skip - exists:$exists");
       return false;
     }
 
@@ -668,7 +673,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
-      if (index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
+      // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
     // piece
