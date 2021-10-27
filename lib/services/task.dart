@@ -16,8 +16,6 @@ class TaskService with Tag {
   static const KEY_TOPIC_CHECK = "topic_check";
   static const KEY_MSG_BURNING = "message_burning"; // FUTURE:burning
 
-  bool inBackground = false;
-
   Timer? _timer1;
   Map<String, Function(String)> tasks1 = Map<String, Function(String)>();
 
@@ -39,9 +37,7 @@ class TaskService with Tag {
         if (application.isFromBackground(states)) {
           uninstall();
           init(isFirst: false);
-          inBackground = false;
         } else if (application.isGoBackground(states)) {
-          inBackground = true;
           uninstall();
         }
       });
@@ -51,10 +47,10 @@ class TaskService with Tag {
     // timer 1s
     _timer1 = _timer1 ??
         Timer.periodic(Duration(seconds: 1), (timer) async {
-          if (inBackground && Platform.isIOS) return;
+          if (application.inBackGround && Platform.isIOS) return;
           tasks1.keys.forEach((String key) {
             // logger.d("$Tag - tick_1 - key:$key");
-            if (inBackground && Platform.isIOS) return;
+            if (application.inBackGround && Platform.isIOS) return;
             tasks1[key]?.call(key);
           });
         });
@@ -62,10 +58,10 @@ class TaskService with Tag {
     // timer 30s
     _timer30 = _timer30 ??
         Timer.periodic(Duration(seconds: 30), (timer) {
-          if (inBackground && Platform.isIOS) return;
+          if (application.inBackGround && Platform.isIOS) return;
           tasks30.keys.forEach((String key) {
             // logger.d("$Tag - tick_30 - key:$key");
-            if (inBackground && Platform.isIOS) return;
+            if (application.inBackGround && Platform.isIOS) return;
             tasks30[key]?.call(key);
           });
         });
@@ -73,10 +69,10 @@ class TaskService with Tag {
     // timer 60s
     _timer60 = _timer60 ??
         Timer.periodic(Duration(seconds: 60), (timer) {
-          if (inBackground && Platform.isIOS) return;
+          if (application.inBackGround && Platform.isIOS) return;
           tasks60.keys.forEach((String key) {
             // logger.d("$Tag - tick_60 - key:$key");
-            if (inBackground && Platform.isIOS) return;
+            if (application.inBackGround && Platform.isIOS) return;
             tasks60[key]?.call(key);
           });
         });
@@ -84,10 +80,10 @@ class TaskService with Tag {
     // timer 300s
     _timer300 = _timer300 ??
         Timer.periodic(Duration(seconds: 300), (timer) {
-          if (inBackground && Platform.isIOS) return;
+          if (application.inBackGround && Platform.isIOS) return;
           _tasks300.keys.forEach((String key) {
             // logger.d("$Tag - tick_300 - key:$key");
-            if (inBackground && Platform.isIOS) return;
+            if (application.inBackGround && Platform.isIOS) return;
             _tasks300[key]?.call(key);
           });
         });
