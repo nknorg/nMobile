@@ -40,7 +40,7 @@ class Global {
   static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
   static late int profileExpireMs = 6 * 60 * 60 * 1000; // 6h
   static late int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
-  static late int txPoolDelayMs = 3 * 60 * 1000; // 3m
+  static late int txPoolDelayMs = 1 * 60 * 1000; // 1m
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
