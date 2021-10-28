@@ -52,7 +52,7 @@ class DeviceInfoCommon with Tag {
   //   );
   // }
 
-  bool isMsgReadEnable(String? platform, int? appVersion) {
+  static bool isDeviceTokenNoCombineEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
     platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
@@ -60,7 +60,7 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 
-  bool isMsgPieceEnable(String? platform, int? appVersion) {
+  static bool isMsgReadEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
     platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
@@ -68,7 +68,7 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 
-  bool isMsgImageEnable(String? platform, int? appVersion) {
+  static bool isMsgPieceEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
     platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
@@ -76,7 +76,7 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 
-  bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
+  static bool isMsgImageEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
     platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
@@ -84,7 +84,15 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 
-  bool isTopicPermissionEnable(String? platform, int? appVersion) {
+  static bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
+    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
+    bool platformOK = false, versionOk = false;
+    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+    versionOk = appVersion >= 224;
+    return platformOK && versionOk;
+  }
+
+  static bool isTopicPermissionEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
     platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);

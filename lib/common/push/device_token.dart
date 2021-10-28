@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -11,14 +12,14 @@ class DeviceToken {
   static const PREFIX_OPPO = "[OPPO]:";
   static const PREFIX_VIVO = "[VIVO]:";
 
-  static Future<String?> get() async {
+  static Future<String?> get({String? platform, int? appVersion}) async {
     String? token;
     if (Platform.isIOS) {
-      token = await getAPNS();
+      token = await getAPNS(platform: platform, appVersion: appVersion);
     } else if (Platform.isAndroid) {
       if (await Common.isGoogleServiceAvailable()) {
         // chinese mobile phone maybe support google service, but token is null
-        token = await getFCM();
+        token = await getFCM(platform: platform, appVersion: appVersion);
       } else {
         // other
       }
@@ -27,18 +28,22 @@ class DeviceToken {
     return token;
   }
 
-  static Future<String> getAPNS({String appVersionBuild = ""}) async {
+  static Future<String> getAPNS({String? platform, int? appVersion}) async {
     String? token = await Common.getAPNSToken();
-    if (token?.isNotEmpty == true) {
-      token = PREFIX_APNS + token!;
+    if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
+      if (token?.isNotEmpty == true) {
+        token = PREFIX_APNS + token!;
+      }
     }
     return token ?? "";
   }
 
-  static Future<String> getFCM() async {
+  static Future<String> getFCM({String? platform, int? appVersion}) async {
     String? token = await Common.getFCMToken();
-    if (token?.isNotEmpty == true) {
-      token = PREFIX_FCM + token!;
+    if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
+      if (token?.isNotEmpty == true) {
+        token = PREFIX_FCM + token!;
+      }
     }
     return token ?? "";
   }

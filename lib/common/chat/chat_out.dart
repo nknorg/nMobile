@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
@@ -348,7 +349,7 @@ class ChatOutCommon with Tag {
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     if (!clientCommon.isClientCreated) return null;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
-    String contentType = deviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
+    String contentType = DeviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -624,7 +625,7 @@ class ChatOutCommon with Tag {
     logger.d("$TAG - _sendWithContact - info - _deviceInfo:$_deviceInfo - contact:$contact - message:$message - msgData:$msgData");
     // send
     Uint8List? pid;
-    if (deviceInfoCommon.isMsgPieceEnable(_deviceInfo?.platform, _deviceInfo?.appVersion)) {
+    if (DeviceInfoCommon.isMsgPieceEnable(_deviceInfo?.platform, _deviceInfo?.appVersion)) {
       pid = await _sendByPieces([message.to], message);
     }
     if (pid?.isNotEmpty == true) {
@@ -662,7 +663,7 @@ class ChatOutCommon with Tag {
     for (var i = 0; i < _oldSubscribers.length; i++) {
       SubscriberSchema element = _oldSubscribers[i];
       DeviceInfoSchema? value = await deviceInfoCommon.queryLatest(element.clientAddress);
-      if (!deviceInfoCommon.isTopicPermissionEnable(value?.platform, value?.appVersion)) {
+      if (!DeviceInfoCommon.isTopicPermissionEnable(value?.platform, value?.appVersion)) {
         logger.i("$TAG - _sendWithTopic - add receiver to support old version - subscriber:$element");
         _subscribers.add(element);
       } else {
@@ -701,7 +702,7 @@ class ChatOutCommon with Tag {
       DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
       if (subscriber.clientAddress == clientCommon.address) {
         selfReceive = true;
-      } else if (deviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+      } else if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
         targetIdsByPiece.add(subscriber.clientAddress);
       } else {
         targetIdsByFull.add(subscriber.clientAddress);
