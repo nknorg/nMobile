@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -193,7 +194,7 @@ class ChatInCommon with Tag {
       } else {
         // joined + message(content) + noSubscribe
         // SUPPORT:START
-        if (!deviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+        if (!DeviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
           if (subscriber.status == SubscriberStatus.None) {
             logger.i("$TAG - _messageHandle - accept message - subscriber maybe ok permission (old version) - subscriber:$subscriber - topic:$topic");
           } else {
@@ -331,7 +332,7 @@ class ChatInCommon with Tag {
 
     // deviceInfo
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(received.from);
-    bool readSupport = deviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
+    bool readSupport = DeviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
 
     // status
     if (exists.isTopic || (received.receiveAt != null) || !readSupport) {
