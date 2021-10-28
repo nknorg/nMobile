@@ -94,18 +94,18 @@ class ChatCommon with Tag {
     }
 
     // noRead
-    for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
-      final canReceipts = result.where((element) => element.canReceipt).toList();
-      checkList.addAll(canReceipts);
-      logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
-      if (result.length < limit) break;
-      if ((offset + limit) >= maxCount) break;
-    }
+    // for (int offset = 0; true; offset += limit) {
+    //   final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
+    //   final canReceipts = result.where((element) => element.canReceipt).toList();
+    //   checkList.addAll(canReceipts);
+    //   logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
+    //   if (result.length < limit) break;
+    //   if ((offset + limit) >= maxCount) break;
+    // }
 
     // filter
     checkList = checkList.where((element) {
-      int msgSendAt = (element.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      int msgSendAt = (element.sendAt ?? 0);
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       if (between < (filterSec * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
@@ -330,10 +330,10 @@ class ChatCommon with Tag {
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
     // duplicated
-    if (message.targetId == null || message.targetId!.isEmpty) return null;
+    if (message.targetId.isEmpty) return null;
     SessionSchema? exist = await sessionCommon.query(message.targetId, message.isTopic ? SessionType.TOPIC : SessionType.CONTACT);
     if (exist == null) {
-      SessionSchema? added = SessionSchema(targetId: message.targetId!, type: SessionSchema.getTypeByMessage(message));
+      SessionSchema? added = SessionSchema(targetId: message.targetId, type: SessionSchema.getTypeByMessage(message));
       added = await sessionCommon.add(added, message, notify: true);
       logger.i("$TAG - sessionHandle - new - targetId:${message.targetId} - added:$added");
       return added;

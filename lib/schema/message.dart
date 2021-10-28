@@ -91,7 +91,7 @@ class MessageSchema {
     this.options,
   });
 
-  String? get targetId {
+  String get targetId {
     return isTopic ? topic : (isOutbound ? to : from);
   }
 
