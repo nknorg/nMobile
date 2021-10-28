@@ -778,7 +778,7 @@ class ChatInCommon with Tag {
         }
       }
     });
-    return true;
+    return !historySubscribed;
   }
 
   // NO single
