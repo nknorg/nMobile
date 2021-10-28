@@ -8,6 +8,12 @@ import Sentry
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
+        super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        
+        if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+        }
+        
         SentrySDK.start { options in
             options.dsn = "https://0d2217601b1c4eb4bf310ca001fabf39@o466976.ingest.sentry.io/5680254"
             let infoDictionary = Bundle.main.infoDictionary
@@ -18,32 +24,38 @@ import Sentry
             options.releaseName = "nMobile"
         }
         
-        registerNotification();
+        signal(SIGPIPE, SIG_IGN)
         
         GeneratedPluginRegistrant.register(with: self)
         
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
         Common.register(controller: controller)
         
-        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    }
-    
-    func registerNotification() {
-        if #available(iOS 10.0, *) {
-            let center = UNUserNotificationCenter.current()
-            center.delegate = self as UNUserNotificationCenterDelegate
-            center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
-                if isSucceseed == true{
-                    print("Application - registerNotification - success")
-                } else {
-                    print("Application - registerNotification - fail - error = \(String(describing:error))")
-                }
-            }
-            UIApplication.shared.registerForRemoteNotifications()
-        }
+        registerNotification();
         
         NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        
+        //return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        return true;
+    }
+    
+    func registerNotification() {
+        if(!UserDefaults.standard.bool(forKey: "Notification")) {
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            UserDefaults.standard.set(true, forKey: "Notification")
+        }
+        
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
+            if isSucceseed == true{
+                print("Application - registerNotification - success")
+            } else {
+                print("Application - registerNotification - fail - error = \(String(describing:error))")
+            }
+        }
+        UIApplication.shared.registerForRemoteNotifications()
     }
     
     @objc func becomeActive(noti:Notification) {
@@ -60,9 +72,9 @@ import Sentry
         print("Application - GetDeviceToken - token = \(formatDeviceToken)")
         UserDefaults.standard.setValue(formatDeviceToken, forKey: "nkn_device_token")
         
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
-            APNSPushService.shared().connectAPNS();
-        }
+//        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5) {
+//            APNSPushService.shared().connectAPNS();
+//        }
     }
     
 //    override func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
