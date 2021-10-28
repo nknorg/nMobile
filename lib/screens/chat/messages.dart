@@ -210,12 +210,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _readMessages(true, true); // await
 
     // ping
-    if (this._contact != null && this._topic == null) {
-      chatOutCommon.sendPing([this.targetId ?? ""], true); // await
-      chatOutCommon.sendPing([this.targetId ?? ""], false); // await
-    } else if (this._topic != null && this._contact == null) {
-      chatCommon.setMsgStatusCheckTimer(this.targetId, true, filterSec: 5 * 60); // await
-    }
+    // if (this._contact != null && this._topic == null) {
+    //   chatOutCommon.sendPing([this.targetId ?? ""], true); // await
+    //   chatOutCommon.sendPing([this.targetId ?? ""], false); // await
+    // } else if (this._topic != null && this._contact == null) {
+    //   chatCommon.setMsgStatusCheckTimer(this.targetId, true, filterSec: 5 * 60); // await
+    // }
 
     // test
     // Future.delayed(Duration(seconds: 1), () => _debugSendText());
