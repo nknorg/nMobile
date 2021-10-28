@@ -9,6 +9,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -358,6 +359,41 @@ class ChatCommon with Tag {
       MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
         if (success) _onUpdateSink.add(message);
       });
+    }
+    return message;
+  }
+
+  MessageSchema burningStart(MessageSchema message, Function? tick) {
+    if (!message.canBurning) return message;
+    List<int?> burningOptions = MessageOptions.getContactBurning(message);
+    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    if ((message.deleteAt == null) && (burnAfterSeconds != null) && (burnAfterSeconds > 0) && ((message.status != MessageStatus.Sending) && (message.status != MessageStatus.SendFail))) {
+      message = chatCommon.burningHandle(message);
+    }
+    if (message.deleteAt != null) {
+      String? senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : message.to);
+      if (senderKey.isNotEmpty && (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
+        String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
+        taskService.addTask1(taskKey, (String key) {
+          if (senderKey.isNotEmpty && !key.contains(senderKey)) {
+            // remove others client burning
+            taskService.removeTask1(key);
+            // onRefreshArguments(); // refresh task (will dead loop)
+            return;
+          }
+          if (message.deleteAt == null || message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
+            // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+          } else {
+            logger.i("$TAG - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+            chatCommon.messageDelete(message, notify: true); // await
+            taskService.removeTask1(key);
+          }
+          tick?.call();
+        });
+      } else {
+        logger.i("$TAG - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+        chatCommon.messageDelete(message, notify: true); // await
+      }
     }
     return message;
   }
