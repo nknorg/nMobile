@@ -295,7 +295,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _refreshTopicSubscribers({bool fetch = true}) async {
     if (_topic == null || !clientCommon.isClientCreated) return;
-    bool topicCountEmpty = (_topic?.count ?? 0) <= 1;
+    bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
     // refresh count
     int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {

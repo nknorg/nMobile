@@ -62,31 +62,39 @@ class SubscriberCommon with Tag {
         logger.i("$TAG - refreshSubscribers - DB need try, skip - dbSub:$dbItem");
         continue;
       }
-      // filter in txPool
-      int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
-      int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
-        if (!meta && ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt))) {
-          if ((DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
-            logger.i("$TAG - refreshSubscribers - DB invitee just now, next by just created - dbSub:$dbItem");
-          } else {
-            logger.i("$TAG - refreshSubscribers - DB invitee just now, maybe in tx pool - dbSub:$dbItem");
-            continue;
-          }
-        } else {
-          logger.i("$TAG - refreshSubscribers - DB update just now, maybe in tx pool - dbSub:$dbItem");
-          continue;
-        }
-      } else {
-        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
-        logger.d("$TAG - refreshSubscribers - DB update to long - between:${betweenS}s");
-      }
       SubscriberSchema? findInNode;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
           findInNode = nodeItem;
           break;
         }
+      }
+      // filter in txPool
+      int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
+      int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs;
+      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs;
+      if (isCreateJustNow) {
+        if (dbItem.status == SubscriberStatus.None) {
+          logger.i("$TAG - refreshSubscribers - DB created just now, next by status none - dbSub:$dbItem");
+        } else if (dbItem.status == SubscriberStatus.InvitedSend || dbItem.status == SubscriberStatus.InvitedReceipt) {
+          if (findInNode?.status == SubscriberStatus.Subscribed) {
+            logger.i("$TAG - refreshSubscribers - DB created just now, next bu subscribed - dbSub:$dbItem");
+          } else {
+            var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+            logger.d("$TAG - refreshSubscribers - DB created just now, skip by invited - between:${betweenS}s - dbSub:$dbItem");
+            continue;
+          }
+        } else {
+          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - dbSub:$dbItem");
+          continue;
+        }
+      } else if (isUpdateJustNow) {
+        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - dbSub:$dbItem");
+        continue;
+      } else {
+        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+        logger.d("$TAG - refreshSubscribers - DB updated to long, so can next - between:${betweenS}s");
       }
       // different with node in DB
       if (findInNode == null) {
