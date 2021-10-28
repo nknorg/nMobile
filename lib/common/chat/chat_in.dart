@@ -53,7 +53,7 @@ class ChatInCommon with Tag {
     if (message == null) {
       logger.w("$TAG - onMessageReceive - message is null - received:$message");
       return;
-    } else if ((message.targetId == null) || message.targetId!.isEmpty) {
+    } else if (message.targetId.isEmpty) {
       logger.w("$TAG - onMessageReceive - targetId is empty - received:$message");
       return;
     }
@@ -91,10 +91,10 @@ class ChatInCommon with Tag {
 
     // init
     if (receiveMessages[message.targetId] == null) {
-      receiveMessages[message.targetId!] = [];
-      receiveLoops[message.targetId!] = false;
+      receiveMessages[message.targetId] = [];
+      receiveLoops[message.targetId] = false;
     } else if (receiveMessages[message.targetId]!.isEmpty || (receiveLoops[message.targetId] == null)) {
-      receiveLoops[message.targetId!] = false;
+      receiveLoops[message.targetId] = false;
     }
 
     // queue
@@ -306,7 +306,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
+      chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 30);
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -318,14 +318,14 @@ class ChatInCommon with Tag {
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
     MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.content, MessageContentType.piece);
-    if (exists == null) {
+    if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
-    } else if (exists.status == MessageStatus.Read) {
+    } else if ((exists.status == MessageStatus.SendReceipt) || (exists.status == MessageStatus.Read)) {
       logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
     } else if (exists.isTopic && !(received.from == received.to && received.from == clientCommon.address)) {
-      logger.d("$TAG - receiveReceipt - topic skip - exists:$exists");
+      logger.d("$TAG - receiveReceipt - topic skip others - exists:$exists");
       return false;
     }
 
@@ -351,7 +351,7 @@ class ChatInCommon with Tag {
 
     // check msgStatus
     if ((received.from != received.to) && (received.from != clientCommon.address)) {
-      chatCommon.setMsgStatusCheckTimer(received.targetId, exists.isTopic, refresh: true, filterSec: 10);
+      chatCommon.setMsgStatusCheckTimer(exists.targetId, exists.isTopic, refresh: true, filterSec: 30);
     }
     return true;
   }
@@ -430,7 +430,7 @@ class ChatInCommon with Tag {
           continue;
         }
         List<String> splits = combineId.split(":");
-        String msgId = splits[0];
+        String msgId = splits.length > 0 ? splits[0] : "";
         if (msgId.isEmpty) {
           logger.w("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
           continue;
