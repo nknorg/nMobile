@@ -22,6 +22,7 @@ import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -395,8 +396,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._topic != null) {
       // FUTURE: topic notificationOpen
     } else {
+      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
-      String? deviceToken = nextOpen ? await DeviceToken.get() : null;
+      String? deviceToken = nextOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
       if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
         Toast.show(_localizations.unavailable_device);
         return;
