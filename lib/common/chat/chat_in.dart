@@ -336,10 +336,10 @@ class ChatInCommon with Tag {
     // status
     if (exists.isTopic || (received.receiveAt != null) || !readSupport) {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
-      if (!exists.isTopic) {
-        int reallySendAt = received.sendAt ?? 0;
-        await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
-      }
+      // if (!exists.isTopic) {
+      //   int reallySendAt = received.sendAt ?? 0;
+      //   await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
+      // }
     } else {
       await chatCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
     }
@@ -463,6 +463,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> _receiveContact(MessageSchema received, {ContactSchema? contact}) async {
+    if (application.inBackGround) return false;
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
@@ -567,6 +568,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
+    if (application.inBackGround) return false;
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
@@ -578,6 +580,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceInfo(MessageSchema received, {ContactSchema? contact}) async {
+    if (application.inBackGround) return false;
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
