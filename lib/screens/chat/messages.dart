@@ -219,7 +219,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // }
 
     // test
-    // Future.delayed(Duration(seconds: 1), () => _debugSendText());
+    // Future.delayed(Duration(seconds: 1), () => _debugSendText(maxTimes: 1000, delayMS: 100));
   }
 
   @override
@@ -686,10 +686,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     );
   }
 
-  // _debugSendText({int maxTimes = 100}) async {
+  // _debugSendText({int maxTimes = 100, int? delayMS}) async {
   //   for (var i = 0; i < maxTimes; i++) {
   //     String text = "${i + 1} _ ${Uuid().v4()}";
   //     chatOutCommon.sendText(text, topic: _topic, contact: _contact);
+  //     if (delayMS != null) await Future.delayed(Duration(milliseconds: delayMS));
   //   }
   // }
 
