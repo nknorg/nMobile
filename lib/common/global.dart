@@ -165,7 +165,7 @@ class Global {
       if (walletAddress?.isNotEmpty == true) {
         List<String> seedRpcList = await Global.getSeedRpcList(null);
         nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: true, config: RpcConfig(seedRPCServerAddr: seedRpcList));
-      } else {
+      } else if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         nonce = await clientCommon.client?.getNonce(txPool: true);
       }
     } catch (e) {

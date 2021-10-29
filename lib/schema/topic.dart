@@ -172,7 +172,9 @@ class TopicSchema {
   Future<bool> shouldResubscribe({int? globalHeight}) async {
     if ((expireBlockHeight == null) || (expireBlockHeight! <= 0)) return true;
     try {
-      globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
+      }
     } catch (e) {
       handleError(e);
     }
