@@ -42,7 +42,7 @@ class ChatCommon with Tag {
   }
 
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
 
@@ -77,7 +77,7 @@ class ChatCommon with Tag {
   }
 
   Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 60}) async {
-    if (!clientCommon.isClientCreated) return 0;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     if (application.inBackGroundLater && Platform.isIOS) return 0;
 
@@ -462,7 +462,7 @@ class ChatCommon with Tag {
   }
 
   Future readMessagesBySelf(String? targetId, String? topic, String? clientAddress) async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
@@ -536,7 +536,7 @@ class ChatCommon with Tag {
   }
 
   Future sendPang2SessionsContact({int? delayMs}) async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     int max = 20;
