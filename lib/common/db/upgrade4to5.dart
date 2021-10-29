@@ -862,7 +862,7 @@ class Upgrade4to5 {
         Map<String, dynamic> entity = {
           'target_id': targetId,
           'type': SessionType.CONTACT,
-          'last_message_at': lastMsgMap['send_at'] ?? 0,
+          'last_message_at': lastMsgMap['send_at'],
           'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (contact["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
@@ -924,7 +924,7 @@ class Upgrade4to5 {
         Map<String, dynamic> entity = {
           'target_id': targetId,
           'type': SessionType.TOPIC,
-          'last_message_at': lastMsgMap['send_at'] ?? 0,
+          'last_message_at': lastMsgMap['send_at'],
           'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (topic["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': 0,
