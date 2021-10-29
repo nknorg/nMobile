@@ -290,7 +290,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receivePing(MessageSchema received) async {
-    if (application.inBackGround) return false;
+    if (application.inBackGround && Platform.isIOS) return false;
     // if (received.isTopic) return; (limit in out)
     if (received.from == received.to || received.from == clientCommon.address) {
       logger.i("$TAG - _receivePing - ping self receive - received:$received");
@@ -393,7 +393,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveMsgStatus(MessageSchema received) async {
-    if (application.inBackGround) return false;
+    if (application.inBackGround && Platform.isIOS) return false;
     // if (received.isTopic) return; (limit in out)
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
@@ -464,7 +464,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> _receiveContact(MessageSchema received, {ContactSchema? contact}) async {
-    if (application.inBackGround) return false;
+    if (application.inBackGround && Platform.isIOS) return false;
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
@@ -569,7 +569,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
-    if (application.inBackGround) return false;
+    if (application.inBackGround && Platform.isIOS) return false;
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
@@ -581,7 +581,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceInfo(MessageSchema received, {ContactSchema? contact}) async {
-    if (application.inBackGround) return false;
+    if (application.inBackGround && Platform.isIOS) return false;
     if (received.content == null) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
