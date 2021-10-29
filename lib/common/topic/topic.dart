@@ -377,7 +377,9 @@ class TopicCommon with Tag {
     // subscribe
     int? globalHeight;
     try {
-      globalHeight = await clientCommon.client?.getHeight();
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        globalHeight = await clientCommon.client?.getHeight();
+      }
     } catch (e) {
       handleError(e);
     }
@@ -434,20 +436,24 @@ class TopicCommon with Tag {
 
     bool success;
     try {
-      String? topicHash = await clientCommon.client?.subscribe(
-        topic: genTopicHash(topic),
-        duration: Global.topicDefaultSubscribeHeight,
-        fee: fee.toString(),
-        identifier: identifier,
-        meta: metaString,
-        nonce: nonce,
-      );
-      if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientSubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? topicHash = await clientCommon.client?.subscribe(
+          topic: genTopicHash(topic),
+          duration: Global.topicDefaultSubscribeHeight,
+          fee: fee.toString(),
+          identifier: identifier,
+          meta: metaString,
+          nonce: nonce,
+        );
+        if (topicHash != null && topicHash.isNotEmpty) {
+          logger.d("$TAG - _clientSubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
+        } else {
+          logger.e("$TAG - _clientSubscribe - fail - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        }
+        success = (topicHash != null) && (topicHash.isNotEmpty);
       } else {
-        logger.e("$TAG - _clientSubscribe - fail - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        success = false;
       }
-      success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
@@ -537,18 +543,22 @@ class TopicCommon with Tag {
 
     bool success;
     try {
-      String? topicHash = await clientCommon.client?.unsubscribe(
-        topic: genTopicHash(topic),
-        identifier: "", // no used (maybe will be used by owner later)
-        fee: fee.toString(),
-        nonce: nonce,
-      );
-      if (topicHash != null && topicHash.isNotEmpty) {
-        logger.d("$TAG - _clientUnsubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash");
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? topicHash = await clientCommon.client?.unsubscribe(
+          topic: genTopicHash(topic),
+          identifier: "", // no used (maybe will be used by owner later)
+          fee: fee.toString(),
+          nonce: nonce,
+        );
+        if (topicHash != null && topicHash.isNotEmpty) {
+          logger.d("$TAG - _clientUnsubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash");
+        } else {
+          logger.e("$TAG - _clientUnsubscribe - fail - topic:$topic - nonce:$nonce - topicHash:$topicHash");
+        }
+        success = (topicHash != null) && (topicHash.isNotEmpty);
       } else {
-        logger.e("$TAG - _clientUnsubscribe - fail - topic:$topic - nonce:$nonce - topicHash:$topicHash");
+        success = false;
       }
-      success = (topicHash != null) && (topicHash.isNotEmpty);
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
@@ -602,7 +612,9 @@ class TopicCommon with Tag {
       return false;
     }
     try {
-      globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
+      }
     } catch (e) {
       handleError(e);
     }
@@ -635,19 +647,26 @@ class TopicCommon with Tag {
     return Map();
   }
 
-  Future<Map<String, dynamic>> _clientGetSubscription(String? topic, String? subscriber) async {
+  Future<Map<String, dynamic>> _clientGetSubscription(String? topic, String? subscriber, {int tryCount = 0}) async {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     try {
-      Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
-        topic: genTopicHash(topic),
-        subscriber: subscriber,
-      );
-      if (result?.isNotEmpty == true) {
-        logger.d("$TAG - _clientGetSubscription - success - topic:$topic - subscriber:$subscriber - result:$result");
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
+          topic: genTopicHash(topic),
+          subscriber: subscriber,
+        );
+        if (result?.isNotEmpty == true) {
+          logger.d("$TAG - _clientGetSubscription - success - topic:$topic - subscriber:$subscriber - result:$result");
+        } else {
+          logger.w("$TAG - _clientGetSubscription - fail - topic:$topic - subscriber:$subscriber");
+        }
+        return result ?? Map();
       } else {
-        logger.w("$TAG - _clientGetSubscription - fail - topic:$topic - subscriber:$subscriber");
+        logger.w("$TAG - _clientGetSubscription - retry - tryCount:$tryCount - topic:$topic - subscriber:$subscriber");
+        if (tryCount >= 5) Map();
+        await Future.delayed(Duration(seconds: 2));
+        return _clientGetSubscription(topic, subscriber, tryCount: ++tryCount);
       }
-      return result ?? Map();
     } catch (e) {
       handleError(e);
       return Map();

@@ -393,10 +393,12 @@ class SubscriberCommon with Tag {
     if (topic == null || topic.isEmpty) return 0;
     int? count;
     try {
-      count = await clientCommon.client?.getSubscribersCount(
-        topic: genTopicHash(topic),
-        subscriberHashPrefix: subscriberHashPrefix,
-      );
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        count = await clientCommon.client?.getSubscribersCount(
+          topic: genTopicHash(topic),
+          subscriberHashPrefix: subscriberHashPrefix,
+        );
+      }
     } catch (e) {
       handleError(e);
     }
