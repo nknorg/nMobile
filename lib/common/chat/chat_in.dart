@@ -351,9 +351,9 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    if ((received.from != received.to) && (received.from != clientCommon.address)) {
-      chatCommon.setMsgStatusCheckTimer(exists.targetId, exists.isTopic, refresh: true, filterSec: 3 * 60);
-    }
+    // if ((received.from != received.to) && (received.from != clientCommon.address)) {
+    //   chatCommon.setMsgStatusCheckTimer(exists.targetId, exists.isTopic, refresh: true, filterSec: 3 * 60);
+    // }
     return true;
   }
 
@@ -446,7 +446,6 @@ class ChatInCommon with Tag {
           // resend msg
           logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - received:$received");
           chatOutCommon.resendMute(message); // await
-          await Future.delayed(Duration(milliseconds: 200));
         } else {
           // update status
           int reallyStatus = (status == MessageStatus.Read) ? MessageStatus.Read : MessageStatus.SendReceipt;

@@ -126,7 +126,6 @@ class ChatCommon with Tag {
       for (var i = 0; i < checkList.length; i++) {
         MessageSchema element = checkList[i];
         chatOutCommon.resendMute(element);
-        await Future.delayed(Duration(milliseconds: forceResend ? 200 : 500));
       }
     } else {
       List<String> msgIds = [];

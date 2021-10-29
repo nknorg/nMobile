@@ -53,6 +53,8 @@ class ChatOutCommon with Tag {
   final int largeBodyMaxPieceSize = 3 * 1024 * 1024; // 3M < 4,000,000(nkn-go-sdk)
   Lock largeBodyLock = Lock();
 
+  Lock resendLock = Lock();
+
   ChatOutCommon();
 
   void clear() {
@@ -492,7 +494,13 @@ class ChatOutCommon with Tag {
     return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
   }
 
-  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) async {
+  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) {
+    return resendLock.synchronized(() {
+      return resendMuteNoLock(message, notification: notification);
+    });
+  }
+
+  Future<MessageSchema?> resendMuteNoLock(MessageSchema? message, {bool? notification}) async {
     if (message == null) return null;
     // msgData
     String? msgData;
