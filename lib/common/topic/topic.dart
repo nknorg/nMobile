@@ -43,7 +43,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
@@ -67,7 +67,7 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllSubscribe({int? delayMs, bool txPool = true}) async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
@@ -106,7 +106,7 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTrySubscribe(TopicSchema? topic, bool subscribed, {int? delayMs}) async {
-    if (topic == null || !clientCommon.isClientCreated) return;
+    if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
@@ -134,7 +134,7 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllPermission({int? delayMs}) async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
@@ -179,7 +179,7 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryPermission(SubscriberSchema? subscriber, int? status, {int? delayMs, bool txPool = true}) async {
-    if (subscriber == null || status == null || !clientCommon.isClientCreated) return;
+    if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
@@ -232,7 +232,7 @@ class TopicCommon with Tag {
 
   // caller = self(owner/normal)
   Future<TopicSchema?> subscribe(String? topic, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
-    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
