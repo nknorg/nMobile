@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -272,7 +273,7 @@ class ClientCommon with Tag {
   }
 
   void connectCheck({bool reconnect = false}) {
-    if (application.inBackGround) return;
+    if (application.inBackGround && Platform.isIOS) return;
     if (client == null) return;
     if (connectChecking) return;
     connectChecking = true;

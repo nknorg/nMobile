@@ -20,9 +20,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # version: 1.1.2+223
 # 21/07/XX test ios notification
 # version: 1.2.0+224
-# 21/08/XX nMobileTest
+# 21/08/XX
 # version: 1.2.0+225
-# 21/09/XX nMobileTest
+# 21/09/XX
 # version: 1.2.0+226
 # 21/09/29
 # version: 1.2.0+227
@@ -40,7 +40,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # version: 1.2.0+233
 # 21/10/28
 # version: 1.2.0+234
-# 21/11/XX
+# 21/11/29
 version: 1.2.0+235
 
 environment:
