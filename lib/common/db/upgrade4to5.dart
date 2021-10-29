@@ -737,7 +737,7 @@ class Upgrade4to5 {
         newOptionsMap['deleteAfterSeconds'] = oldOptionsMap['deleteAfterSeconds'];
         newOptionsMap['updateBurnAfterAt'] = oldOptionsMap['updateTime'] ?? oldOptionsMap['updateBurnAfterTime'] ?? oldOptionsMap['updateBurnAfterAt'];
         // newOptionsMap['deviceToken'] = ???;
-        // newOptionsMap['send_at'] = ???;
+        // newOptionsMap['get_at'] = ???;
         // newOptionsMap['from_piece'] = ???;
         // newOptionsMap['piece'] = oldOptionsMap['piece'];
         // newOptionsMap['parentType'] = oldOptionsMap['parentType'];
