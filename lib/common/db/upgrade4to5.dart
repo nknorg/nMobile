@@ -41,16 +41,16 @@ class Upgrade4to5 {
     // data (TEXT) -> data( TEXT)
     // notification_open (BOOLEAN) -> options.notificationOpen
 
-    upgradeTipStream?.add("... (1/6)");
+    upgradeTipStream?.add("... (1/7)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
-      upgradeTipStream?.add(".... (1/6)");
+      upgradeTipStream?.add(".... (1/7)");
       await ContactStorage.create(db);
     } else {
       logger.w("Upgrade4to5 - ${ContactStorage.tableName} exist");
     }
-    upgradeTipStream?.add("..... (1/6)");
+    upgradeTipStream?.add("..... (1/7)");
 
     // v2 table
     String oldTableName = "Contact";
@@ -58,7 +58,7 @@ class Upgrade4to5 {
       logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTipStream?.add("...... (1/6)");
+    upgradeTipStream?.add("...... (1/7)");
 
     // total
     final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -73,13 +73,7 @@ class Upgrade4to5 {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
-        // delete old table
-        int count = await db.delete(oldTableName);
-        if (count <= 0) {
-          logger.w("Upgrade4to5 - $oldTableName delete - fail");
-        } else {
-          logger.i("Upgrade4to5 - $oldTableName delete - success");
-        }
+        logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
       } else {
         offset += limit;
@@ -211,7 +205,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/7)");
       }
     }
     if (total != rawCount) {
@@ -222,7 +216,7 @@ class Upgrade4to5 {
   }
 
   static Future createDeviceInfo(Database db, {StreamSink<String?>? upgradeTipStream}) async {
-    upgradeTipStream?.add("... (2/6)");
+    upgradeTipStream?.add("... (2/7)");
     // just create table
     if (!(await DB.checkTableExists(db, DeviceInfoStorage.tableName))) {
       await DeviceInfoStorage.create(db);
@@ -248,16 +242,16 @@ class Upgrade4to5 {
     // accept_all (BOOLEAN) -> ??
     // theme_id (INTEGER) -> ??
 
-    upgradeTipStream?.add("... (3/6)");
+    upgradeTipStream?.add("... (3/7)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
-      upgradeTipStream?.add(".... (3/6)");
+      upgradeTipStream?.add(".... (3/7)");
       await TopicStorage.create(db);
     } else {
       logger.w("Upgrade4to5 - ${TopicStorage.tableName} exist");
     }
-    upgradeTipStream?.add("..... (3/6)");
+    upgradeTipStream?.add("..... (3/7)");
 
     // v2 table
     String oldTableName = 'topic';
@@ -265,7 +259,7 @@ class Upgrade4to5 {
       logger.i("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTipStream?.add("...... (3/6)");
+    upgradeTipStream?.add("...... (3/7)");
 
     // total
     final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -280,13 +274,7 @@ class Upgrade4to5 {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
-        // delete old table
-        int count = await db.delete(oldTableName);
-        if (count <= 0) {
-          logger.w("Upgrade4to5 - $oldTableName delete - fail");
-        } else {
-          logger.i("Upgrade4to5 - $oldTableName delete - success");
-        }
+        logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
       } else {
         offset += limit;
@@ -387,7 +375,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${TopicStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/7)");
       }
     }
     if (total != rawCount) {
@@ -411,16 +399,16 @@ class Upgrade4to5 {
     // upload_done (BOOLEAN) -> ???
     // expire_at (INTEGER) -> ???
 
-    upgradeTipStream?.add("... (4/6)");
+    upgradeTipStream?.add("... (4/7)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
-      upgradeTipStream?.add(".... (4/6)");
+      upgradeTipStream?.add(".... (4/7)");
       await SubscriberStorage.create(db);
     } else {
       logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} exist");
     }
-    upgradeTipStream?.add("..... (4/6)");
+    upgradeTipStream?.add("..... (4/7)");
 
     // v4 table
     String oldTableName = "subscriber";
@@ -428,7 +416,7 @@ class Upgrade4to5 {
       logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTipStream?.add("...... (4/6)");
+    upgradeTipStream?.add("...... (4/7)");
 
     // total
     final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -443,13 +431,7 @@ class Upgrade4to5 {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
-        // delete old table
-        int count = await db.delete(oldTableName);
-        if (count <= 0) {
-          logger.w("Upgrade4to5 - $oldTableName delete - fail");
-        } else {
-          logger.i("Upgrade4to5 - $oldTableName delete - success");
-        }
+        logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
       } else {
         offset += limit;
@@ -531,7 +513,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/7)");
       }
     }
     if (total != rawCount) {
@@ -559,16 +541,16 @@ class Upgrade4to5 {
     // content (TEXT) -> content (TEXT)
     // options (TEXT) -> options (TEXT)
 
-    upgradeTipStream?.add("... (5/6)");
+    upgradeTipStream?.add("... (5/7)");
 
     // v5 table
     if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
-      upgradeTipStream?.add(".... (5/6)");
+      upgradeTipStream?.add(".... (5/7)");
       await MessageStorage.create(db);
     } else {
       logger.w("Upgrade4to5 - ${MessageStorage.tableName} exist");
     }
-    upgradeTipStream?.add("..... (5/6)");
+    upgradeTipStream?.add("..... (5/7)");
 
     // v2 table
     String oldTableName = "Messages";
@@ -576,7 +558,7 @@ class Upgrade4to5 {
       logger.w("Upgrade4to5 - $oldTableName no exist");
       return;
     }
-    upgradeTipStream?.add("...... (5/6)");
+    upgradeTipStream?.add("...... (5/7)");
 
     // total
     final rawCountMap = await db.query(oldTableName, columns: ['COUNT(id)']);
@@ -591,13 +573,7 @@ class Upgrade4to5 {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
-        // delete old table
-        int count = await db.delete(oldTableName);
-        if (count <= 0) {
-          logger.w("Upgrade4to5 - $oldTableName delete - fail");
-        } else {
-          logger.i("Upgrade4to5 - $oldTableName delete - success");
-        }
+        logger.i("Upgrade4to5 - $oldTableName loop over");
         break;
       } else {
         offset += limit;
@@ -818,7 +794,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${MessageStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/6)");
+        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/7)");
       }
     }
     if (total != rawCount) {
@@ -829,7 +805,7 @@ class Upgrade4to5 {
   }
 
   static Future createSession(Database db, {StreamSink<String?>? upgradeTipStream}) async {
-    upgradeTipStream?.add("... (6/6)");
+    upgradeTipStream?.add("... (6/7)");
 
     // create table
     if (!(await DB.checkTableExists(db, SessionStorage.tableName))) {
@@ -837,7 +813,7 @@ class Upgrade4to5 {
     } else {
       logger.w("Upgrade4to5 - ${SessionStorage.tableName} exist");
     }
-    upgradeTipStream?.add(".... (6/6)");
+    upgradeTipStream?.add(".... (6/7)");
 
     // total
     final rawCountMap1 = await db.query(ContactStorage.tableName, columns: ['COUNT(id)']);
@@ -881,7 +857,7 @@ class Upgrade4to5 {
         Map<String, dynamic> lastMsgMap = msgList[0];
 
         // duplicated
-        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], offset: 0, limit: 1);
+        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.CONTACT], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
           continue;
@@ -903,7 +879,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by contact fail - data:$entity");
         }
-        upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/6)");
+        upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/7)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by contact - rawCount:$rawCount1 - total:$contactTotal");
@@ -943,7 +919,7 @@ class Upgrade4to5 {
         Map<String, dynamic> lastMsgMap = msgList[0];
 
         // duplicated
-        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ?', whereArgs: [targetId], offset: 0, limit: 1);
+        List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.TOPIC], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} query - duplicated - lastMsg:$lastMsgMap - duplicated:$duplicated");
           continue;
@@ -965,9 +941,64 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by topic fail - data:$entity");
         }
-        upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/6)");
+        upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/7)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by topic - rawCount:$rawCount2 - total:$topicTotal");
+  }
+
+  static Future deletesOldTables(Database db, {StreamSink<String?>? upgradeTipStream}) async {
+    // contact
+    upgradeTipStream?.add(". (7/7)");
+    String oldContactTableName = "Contact";
+    if (await DB.checkTableExists(db, oldContactTableName)) {
+      int count = await db.delete(oldContactTableName);
+      if (count <= 0) {
+        logger.w("Upgrade4to5 - $oldContactTableName delete - fail");
+      } else {
+        logger.i("Upgrade4to5 - $oldContactTableName delete - success");
+      }
+    } else {
+      logger.w("Upgrade4to5 - delete $oldContactTableName no exist");
+    }
+    // topic
+    upgradeTipStream?.add(".. (7/7)");
+    String oldTopicTableName = 'topic';
+    if (await DB.checkTableExists(db, oldTopicTableName)) {
+      int count = await db.delete(oldTopicTableName);
+      if (count <= 0) {
+        logger.w("Upgrade4to5 - $oldTopicTableName delete - fail");
+      } else {
+        logger.i("Upgrade4to5 - $oldTopicTableName delete - success");
+      }
+    } else {
+      logger.w("Upgrade4to5 - delete $oldTopicTableName no exist");
+    }
+    // subscriber
+    upgradeTipStream?.add("... (7/7)");
+    String oldSubscriberTableName = 'subscriber';
+    if (await DB.checkTableExists(db, oldSubscriberTableName)) {
+      int count = await db.delete(oldSubscriberTableName);
+      if (count <= 0) {
+        logger.w("Upgrade4to5 - $oldSubscriberTableName delete - fail");
+      } else {
+        logger.i("Upgrade4to5 - $oldSubscriberTableName delete - success");
+      }
+    } else {
+      logger.w("Upgrade4to5 - delete $oldSubscriberTableName no exist");
+    }
+    // messages
+    upgradeTipStream?.add(".... (7/7)");
+    String oldMessageTableName = 'Messages';
+    if (await DB.checkTableExists(db, oldMessageTableName)) {
+      int count = await db.delete(oldMessageTableName);
+      if (count <= 0) {
+        logger.w("Upgrade4to5 - $oldMessageTableName delete - fail");
+      } else {
+        logger.i("Upgrade4to5 - $oldMessageTableName delete - success");
+      }
+    } else {
+      logger.w("Upgrade4to5 - delete $oldMessageTableName no exist");
+    }
   }
 }

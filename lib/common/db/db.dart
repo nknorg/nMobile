@@ -93,6 +93,7 @@ class DB {
           await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
           await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
           await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: _upgradeTipSink);
         }
 
         // dismiss tip dialog
