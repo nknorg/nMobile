@@ -584,107 +584,8 @@ class Upgrade4to5 {
       for (var i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
 
-        // pid
-        String? oldPid = result["pid"];
-        if (oldPid == null || oldPid.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName query - pid is null - data:$result");
-        }
-        String? newPid = ((oldPid?.isNotEmpty == true) && (oldPid!.length <= 300)) ? oldPid : null;
-        if (newPid == null || newPid.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
-          // continue; // old burning delete
-        }
-        // msgId
-        String? oldMsgId = result["msg_id"];
-        if (oldMsgId == null || oldMsgId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName query - msgId is null - data:$result");
-        }
-        String? newMsgId = ((oldMsgId?.isNotEmpty == true) && (oldMsgId!.length <= 300)) ? oldMsgId : null;
-        if (newMsgId == null || newMsgId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - msgId error - data:$result");
-          continue;
-        }
-        // sender
-        String? oldSender = result["sender"];
-        if (oldSender == null || oldSender.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName query - sender is null - data:$result");
-        } else if (oldSender.contains(".__permission__.")) {
-          final splits = oldSender.split(".__permission__.");
-          oldSender = splits.length > 0 ? splits[splits.length - 1] : "";
-        }
-        String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
-        if (newSender == null || newSender.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
-          // continue; // old burning delete
-        }
-        // receiver
-        String? oldReceiver = result["receiver"];
-        if (oldReceiver == null || oldReceiver.isEmpty) {
-          logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
-        }
-        String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
-        if (newReceiver?.contains(".__permission__.") == true) {
-          final splits = newReceiver!.split(".__permission__.");
-          newReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
-        }
-        // topic
-        String? oldTopic = result["topic"];
-        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
-        if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
-          logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
-        }
-        // status
-        // int? oldIsSendError = result["is_send_error"];
-        // int? oldIsSuccess = result["is_success"];
-        // int? oldIsRead = result["is_read"];
-        int newStatus = MessageStatus.Read;
         // delete
         int newIsDelete = 0;
-        // isOutBound
-        int? newIsOutbound = result["is_outbound"];
-        if (newIsOutbound == null) {
-          logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
-          // continue; // old burning delete
-          newIsDelete = 1;
-        }
-        // targetId
-        String? oldTargetId = result["target_id"];
-        if (oldTargetId == null || oldTargetId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName query - targetId is null - data:$result");
-        }
-        String? newTargetId = ((oldTargetId?.isNotEmpty == true) && (oldTargetId!.length <= 200)) ? oldTargetId : null;
-        if (newTargetId == null || newTargetId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
-          if (newTopic?.isNotEmpty == true) {
-            logger.i("Upgrade4to5 - $oldTableName convert - targetId is topic - data:$result");
-            newTargetId = newTopic;
-          } else if (newIsOutbound == 1) {
-            logger.i("Upgrade4to5 - $oldTableName convert - targetId is receiver - data:$result");
-            newTargetId = newReceiver;
-          } else {
-            logger.i("Upgrade4to5 - $oldTableName convert - targetId is sender - data:$result");
-            newTargetId = newSender;
-          }
-        }
-        if (newTargetId == null || newTargetId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
-          // continue; // old burning delete
-          newIsDelete = 1;
-        }
-        // at
-        int? oldSendAt = result["send_time"];
-        int? oldReceiveAt = result["receive_time"];
-        int? oldDeleteAt = result["delete_time"];
-        if (oldSendAt == null || oldSendAt == 0 || oldReceiveAt == null || oldReceiveAt == 0) {
-          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
-        }
-        int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
-        int newReceiveAt = (oldDeleteAt == null || oldDeleteAt == 0) ? newCreateAt : oldDeleteAt;
-        int? newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
-        if (newDeleteAt != null && newDeleteAt < DateTime.now().millisecondsSinceEpoch) {
-          logger.i("Upgrade4to5 - $oldTableName query - delete time over - data:$result");
-          newIsDelete = 1;
-        }
         // type
         String? oldType = result["type"];
         String? newType;
@@ -712,22 +613,116 @@ class Upgrade4to5 {
         } else if (oldType == MessageContentType.topicUnsubscribe) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is unsubscribe, need skip - data:$result");
           continue;
-        } else if (oldType == MessageContentType.ping || oldType == MessageContentType.read || oldType == MessageContentType.msgStatus || oldType == MessageContentType.deviceInfo || oldType == MessageContentType.deviceRequest || oldType == MessageContentType.topicKickOut) {
+        } else {
           logger.w("Upgrade4to5 - $oldTableName convert - type is new ??? - data:$result");
           continue;
-        } else {
-          logger.w("Upgrade4to5 - $oldTableName convert - type error - data:$result");
-          // continue; // old burning delete
-          newIsDelete = 1;
         }
         // content
         String? newContent = result['content'];
         if (newContent == null || newContent.isEmpty) {
           if (newType == MessageContentType.text || newType == MessageContentType.textExtension || newType == MessageContentType.media || newType == MessageContentType.image || newType == MessageContentType.audio) {
             logger.i("Upgrade4to5 - $oldTableName convert - content be delete - data:$result");
+            // continue; // old burning delete
             newIsDelete = 1;
           }
         }
+        // pid
+        String? oldPid = result["pid"];
+        if (oldPid == null || oldPid.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - pid is null - data:$result");
+        }
+        String? newPid = ((oldPid?.isNotEmpty == true) && (oldPid!.length <= 300)) ? oldPid : null;
+        if (newPid == null || newPid.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
+        }
+        // msgId
+        String? oldMsgId = result["msg_id"];
+        if (oldMsgId == null || oldMsgId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - msgId is null - data:$result");
+        }
+        String? newMsgId = ((oldMsgId?.isNotEmpty == true) && (oldMsgId!.length <= 300)) ? oldMsgId : null;
+        if (newMsgId == null || newMsgId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - msgId error - data:$result");
+          continue; // old burning no delete
+        }
+        // sender
+        String? oldSender = result["sender"];
+        if (oldSender == null || oldSender.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - sender is null - data:$result");
+        } else if (oldSender.contains(".__permission__.")) {
+          final splits = oldSender.split(".__permission__.");
+          oldSender = splits.length > 0 ? splits[splits.length - 1] : "";
+        }
+        String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
+        if (newSender == null || newSender.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
+          if (newIsDelete != 1) continue;
+        }
+        // receiver
+        String? oldReceiver = result["receiver"];
+        if (oldReceiver == null || oldReceiver.isEmpty) {
+          logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
+        }
+        String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
+        if (newReceiver?.contains(".__permission__.") == true) {
+          final splits = newReceiver!.split(".__permission__.");
+          newReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
+        }
+        // topic
+        String? oldTopic = result["topic"];
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
+          logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
+        }
+        // isOutBound
+        int? newIsOutbound = result["is_outbound"];
+        if (newIsOutbound == null) {
+          logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
+          if (newIsDelete != 1) continue;
+        }
+        // status
+        // int? oldIsSendError = result["is_send_error"];
+        // int? oldIsSuccess = result["is_success"];
+        // int? oldIsRead = result["is_read"];
+        int newStatus = MessageStatus.Read;
+        // targetId
+        String? oldTargetId = result["target_id"];
+        if (oldTargetId == null || oldTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName query - targetId is null - data:$result");
+        }
+        String? newTargetId = ((oldTargetId?.isNotEmpty == true) && (oldTargetId!.length <= 200)) ? oldTargetId : null;
+        if (newTargetId == null || newTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
+          if (newTopic?.isNotEmpty == true) {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is topic - data:$result");
+            newTargetId = newTopic;
+          } else if (newIsOutbound == 1) {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is receiver - data:$result");
+            newTargetId = newReceiver;
+          } else {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId is sender - data:$result");
+            newTargetId = newSender;
+          }
+        }
+        if (newTargetId == null || newTargetId.isEmpty) {
+          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
+          if (newIsDelete != 1) continue;
+        }
+        // at
+        int? oldSendAt = result["send_time"];
+        int? oldReceiveAt = result["receive_time"];
+        int? oldDeleteAt = result["delete_time"];
+        if (oldSendAt == null || oldSendAt == 0 || oldReceiveAt == null || oldReceiveAt == 0) {
+          logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
+        }
+        int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
+        int newReceiveAt = (oldReceiveAt == null || oldReceiveAt == 0) ? newCreateAt : oldReceiveAt;
+        int? newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
+        // if (newDeleteAt != null && newDeleteAt < DateTime.now().millisecondsSinceEpoch) {
+        //   logger.i("Upgrade4to5 - $oldTableName query - delete time over - data:$result");
+        //   newIsDelete = 1;
+        // }
+
         // options
         Map<String, dynamic> oldOptionsMap;
         try {
@@ -770,10 +765,10 @@ class Upgrade4to5 {
         Map<String, dynamic> entity = {
           'pid': newPid,
           'msg_id': newMsgId,
-          'sender': newSender,
+          'sender': newSender ?? "",
           'receiver': newReceiver ?? "",
           'topic': newTopic ?? "",
-          'target_id': newTargetId,
+          'target_id': newTargetId ?? "",
           // status
           'status': newStatus,
           'is_outbound': newIsOutbound,
@@ -783,7 +778,7 @@ class Upgrade4to5 {
           'receive_at': newReceiveAt,
           'delete_at': newDeleteAt,
           // data
-          'type': newType,
+          'type': newType ?? "",
           'content': newContent,
           'options': newOptions,
         };
