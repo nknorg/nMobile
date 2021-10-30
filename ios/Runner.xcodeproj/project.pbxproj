@@ -26,6 +26,7 @@
 		C62BB8262689B1CA00DAAC43 /* nkn_p.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */; };
 		C62BB8272689B1CA00DAAC43 /* NKNPush.cer in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8242689B1CA00DAAC43 /* NKNPush.cer */; };
 		C62BB8282689B1CA00DAAC43 /* nkn.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8252689B1CA00DAAC43 /* nkn.p12 */; };
+		C6824CED272CFB6D00BA7AAF /* nkn_test.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */; };
 		C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F42E03266A28CE007BA337 /* ChannelBase.swift */; };
 		C6FFD764266E09E600410547 /* CommonOc.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FFD763266E09E600410547 /* CommonOc.m */; };
 /* End PBXBuildFile section */
@@ -79,6 +80,7 @@
 		C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_p.p12; sourceTree = "<group>"; };
 		C62BB8242689B1CA00DAAC43 /* NKNPush.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = NKNPush.cer; sourceTree = "<group>"; };
 		C62BB8252689B1CA00DAAC43 /* nkn.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn.p12; sourceTree = "<group>"; };
+		C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_test.p12; sourceTree = "<group>"; };
 		C6CABF45268452450054F007 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		C6F42E03266A28CE007BA337 /* ChannelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBase.swift; sourceTree = "<group>"; };
 		C6FFD762266E09E600410547 /* CommonOc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonOc.h; sourceTree = "<group>"; };
@@ -203,6 +205,7 @@
 		C62BB8222689B19200DAAC43 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
+				C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */,
 				C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */,
 				C62BB8252689B1CA00DAAC43 /* nkn.p12 */,
 				C62BB8242689B1CA00DAAC43 /* NKNPush.cer */,
@@ -276,6 +279,7 @@
 				C62BB8262689B1CA00DAAC43 /* nkn_p.p12 in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
+				C6824CED272CFB6D00BA7AAF /* nkn_test.p12 in Resources */,
 				C62BB8272689B1CA00DAAC43 /* NKNPush.cer in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
