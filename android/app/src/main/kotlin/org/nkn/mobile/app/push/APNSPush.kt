@@ -17,9 +17,9 @@ import java.util.concurrent.ExecutionException
  */
 class APNSPush {
     companion object {
+        private const val ApnsTopic = "org.nkn.nmobile"
         private const val ApnsAssetsPath = "ApnsFilePath"
         private const val ApnsPassword = "ApnsFilePwd"
-        private const val ApnsTopic = "org.nkn.nmobile"
 
         private var apnsClient: ApnsClient? = null
 
