@@ -77,6 +77,42 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:980911608673:android:b2566c0208cfa6be5d6b20",
+        "android_client_info": {
+          "package_name": "org.nkn.mobile.apptest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "980911608673-roe44tqqg0g3qahcaf1clm8i8j5rq3pv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLPB-l2_w7LgeeyaLMQBiX3jVfTHf1ez0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "980911608673-roe44tqqg0g3qahcaf1clm8i8j5rq3pv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "980911608673-jsfne43egn1j5595bh58qqiohqu09hut.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.nkn.nmobile"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
