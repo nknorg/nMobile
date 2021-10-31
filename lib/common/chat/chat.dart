@@ -437,14 +437,12 @@ class ChatCommon with Tag {
   Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
     if (status <= message.status && !force) return message;
     // pieces will set sendReceipt fast, set sendSuccess lowly
-    // if ((message.status == MessageStatus.Sending) && (status != MessageStatus.SendSuccess)) {
-    //   if (!force && (message.content is File) && (tryCount <= 5)) {
-    //     logger.i("$TAG - updateMessageStatus - piece to fast - new:$status - old:${message.status} - msgId:${message.msgId}");
-    //     await Future.delayed(Duration(seconds: 1));
-    //     MessageSchema? _message = await MessageStorage.instance.queryByNoContentType(message.msgId, MessageContentType.piece);
-    //     if (_message != null) return updateMessageStatus(_message, status, receiveAt: receiveAt, force: force, notify: notify, tryCount: ++tryCount);
-    //   }
-    // }
+    if ((message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) && (status == MessageStatus.SendSuccess)) {
+      if (!force) {
+        logger.i("$TAG - updateMessageStatus - status is fast - new:$status - old:${message.status} - msgId:${message.msgId}");
+        return message;
+      }
+    }
     // update
     message.status = status;
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
