@@ -27,6 +27,13 @@
 		C62BB8272689B1CA00DAAC43 /* NKNPush.cer in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8242689B1CA00DAAC43 /* NKNPush.cer */; };
 		C62BB8282689B1CA00DAAC43 /* nkn.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8252689B1CA00DAAC43 /* nkn.p12 */; };
 		C6824CED272CFB6D00BA7AAF /* nkn_test.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */; };
+		C6824D29272E4EA900BA7AAF /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D22272E4EA700BA7AAF /* Connection.swift */; };
+		C6824D2A272E4EA900BA7AAF /* APNsServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D23272E4EA700BA7AAF /* APNsServer.swift */; };
+		C6824D2B272E4EA900BA7AAF /* PKCS12Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D24272E4EA700BA7AAF /* PKCS12Adapter.swift */; };
+		C6824D2C272E4EA900BA7AAF /* APNsPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D25272E4EA700BA7AAF /* APNsPayload.swift */; };
+		C6824D2D272E4EA900BA7AAF /* APNsRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D27272E4EA800BA7AAF /* APNsRequest.swift */; };
+		C6824D2E272E4EA900BA7AAF /* APNsPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6824D28272E4EA900BA7AAF /* APNsPort.swift */; };
+		C683E279272E4FB200102547 /* APNSPusher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C683E278272E4FB200102547 /* APNSPusher.swift */; };
 		C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F42E03266A28CE007BA337 /* ChannelBase.swift */; };
 		C6FFD764266E09E600410547 /* CommonOc.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FFD763266E09E600410547 /* CommonOc.m */; };
 /* End PBXBuildFile section */
@@ -81,6 +88,14 @@
 		C62BB8242689B1CA00DAAC43 /* NKNPush.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = NKNPush.cer; sourceTree = "<group>"; };
 		C62BB8252689B1CA00DAAC43 /* nkn.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn.p12; sourceTree = "<group>"; };
 		C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_test.p12; sourceTree = "<group>"; };
+		C6824D22272E4EA700BA7AAF /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
+		C6824D23272E4EA700BA7AAF /* APNsServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APNsServer.swift; sourceTree = "<group>"; };
+		C6824D24272E4EA700BA7AAF /* PKCS12Adapter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PKCS12Adapter.swift; sourceTree = "<group>"; };
+		C6824D25272E4EA700BA7AAF /* APNsPayload.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APNsPayload.swift; sourceTree = "<group>"; };
+		C6824D26272E4EA800BA7AAF /* APNsKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = APNsKit.h; sourceTree = "<group>"; };
+		C6824D27272E4EA800BA7AAF /* APNsRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APNsRequest.swift; sourceTree = "<group>"; };
+		C6824D28272E4EA900BA7AAF /* APNsPort.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = APNsPort.swift; sourceTree = "<group>"; };
+		C683E278272E4FB200102547 /* APNSPusher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APNSPusher.swift; sourceTree = "<group>"; };
 		C6CABF45268452450054F007 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		C6F42E03266A28CE007BA337 /* ChannelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBase.swift; sourceTree = "<group>"; };
 		C6FFD762266E09E600410547 /* CommonOc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonOc.h; sourceTree = "<group>"; };
@@ -169,6 +184,7 @@
 		C61A6E6D266A19F000A7F1E1 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				C6824D20272E4E8E00BA7AAF /* Push2 */,
 				C61A6E6E266A1A2100A7F1E1 /* Push */,
 				C6F42E03266A28CE007BA337 /* ChannelBase.swift */,
 				C61A6E6F266A1A7C00A7F1E1 /* Common.swift */,
@@ -181,7 +197,6 @@
 		C61A6E6E266A1A2100A7F1E1 /* Push */ = {
 			isa = PBXGroup;
 			children = (
-				C62BB8222689B19200DAAC43 /* Resource */,
 				C62BB8062689AA0D00DAAC43 /* APNSPushService.h */,
 				C62BB80B2689AA0D00DAAC43 /* APNSPushService.m */,
 				C62BB80D2689AA0E00DAAC43 /* NWHub.h */,
@@ -211,6 +226,22 @@
 				C62BB8242689B1CA00DAAC43 /* NKNPush.cer */,
 			);
 			path = Resource;
+			sourceTree = "<group>";
+		};
+		C6824D20272E4E8E00BA7AAF /* Push2 */ = {
+			isa = PBXGroup;
+			children = (
+				C62BB8222689B19200DAAC43 /* Resource */,
+				C683E278272E4FB200102547 /* APNSPusher.swift */,
+				C6824D26272E4EA800BA7AAF /* APNsKit.h */,
+				C6824D25272E4EA700BA7AAF /* APNsPayload.swift */,
+				C6824D28272E4EA900BA7AAF /* APNsPort.swift */,
+				C6824D27272E4EA800BA7AAF /* APNsRequest.swift */,
+				C6824D23272E4EA700BA7AAF /* APNsServer.swift */,
+				C6824D22272E4EA700BA7AAF /* Connection.swift */,
+				C6824D24272E4EA700BA7AAF /* PKCS12Adapter.swift */,
+			);
+			path = Push2;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -364,19 +395,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C683E279272E4FB200102547 /* APNSPusher.swift in Sources */,
 				C6FFD764266E09E600410547 /* CommonOc.m in Sources */,
 				C62BB8192689AA0E00DAAC43 /* NWSSLConnection.m in Sources */,
+				C6824D2E272E4EA900BA7AAF /* APNsPort.swift in Sources */,
 				C62BB8182689AA0E00DAAC43 /* NWType.m in Sources */,
+				C6824D2B272E4EA900BA7AAF /* PKCS12Adapter.swift in Sources */,
 				C62BB8152689AA0E00DAAC43 /* NWNotification.m in Sources */,
 				C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */,
+				C6824D2C272E4EA900BA7AAF /* APNsPayload.swift in Sources */,
 				C62BB8172689AA0E00DAAC43 /* APNSPushService.m in Sources */,
 				C62BB81B2689AA0E00DAAC43 /* NWHub.m in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				C61A6E70266A1A7C00A7F1E1 /* Common.swift in Sources */,
 				C62BB81C2689AA0E00DAAC43 /* NWSecTools.m in Sources */,
+				C6824D2A272E4EA900BA7AAF /* APNsServer.swift in Sources */,
+				C6824D2D272E4EA900BA7AAF /* APNsRequest.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				C62BB8162689AA0E00DAAC43 /* NWPushFeedback.m in Sources */,
 				C62BB81A2689AA0E00DAAC43 /* NWPusher.m in Sources */,
+				C6824D29272E4EA900BA7AAF /* Connection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
