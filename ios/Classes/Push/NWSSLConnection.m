@@ -13,6 +13,7 @@
 OSStatus NWSSLRead(SSLConnectionRef connection, void *data, size_t *length);
 OSStatus NWSSLWrite(SSLConnectionRef connection, const void *data, size_t *length);
 
+
 @implementation NWSSLConnection {
     int _socket;
     SSLContextRef _context;
