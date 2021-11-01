@@ -59,11 +59,11 @@ import Sentry
     }
     
     @objc func becomeActive(noti:Notification) {
-        APNSPushService.shared().connectAPNS()
+        //APNSPushService.shared().connectAPNS()
     }
     
     @objc func becomeDeath(noti:Notification) {
-        APNSPushService.shared().disConnectAPNS()
+        //APNSPushService.shared().disConnectAPNS()
     }
     
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
