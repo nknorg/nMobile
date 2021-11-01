@@ -644,7 +644,7 @@ class ChatOutCommon with Tag {
     }
     // result
     if (pid?.isNotEmpty == true) {
-      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
+      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
     }
     // push
     if (notification && message.canNotification) {
@@ -692,7 +692,7 @@ class ChatOutCommon with Tag {
       int total = await subscriberCommon.getSubscribersCount(message.topic, false, fetch: _subscribers.isEmpty);
       List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total);
       if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
-        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
+        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
         return onMessageList[0].messageId;
       }
       return null;
@@ -744,7 +744,7 @@ class ChatOutCommon with Tag {
       pid = fullOnMessage?.messageId ?? piecesPid;
     }
     if (pid?.isNotEmpty == true) {
-      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, notify: true); // await
+      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
     }
     // push
     contactCommon.queryListByClientAddress(contactAddressList).then((List<ContactSchema> contactList) async {
