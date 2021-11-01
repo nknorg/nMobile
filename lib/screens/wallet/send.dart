@@ -594,10 +594,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                           focusNode: _feeToFocusNode,
                                           onSaved: (v) => _fee = double.tryParse(v ?? "0") ?? 0,
                                           textInputAction: TextInputAction.done,
-                                          onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
-                                          onChanged: (v) {
+                                          onFieldSubmitted: (v) {
                                             _checkFeeForm(_wallet.type == WalletType.eth, v);
                                           },
+                                          // onChanged // error why?
                                           keyboardType: TextInputType.numberWithOptions(decimal: true),
                                           inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                                           suffixIcon: GestureDetector(
