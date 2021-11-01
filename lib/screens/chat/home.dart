@@ -210,6 +210,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // password
     String? password = await authorization.getWalletPassword(wallet.address);
+    if (password == null) return; // android bug return null when fromBackground
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
       Toast.show(S.of(this.context).tip_password_error);
@@ -224,6 +225,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   _toggleSessionListShow(bool show) {
     if (showSessionList != show) {
+      showSessionList = show; // no check mounted
       setState(() {
         showSessionList = show;
       });
@@ -236,6 +238,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return await Future.delayed(Duration(seconds: 1), () => _refreshContactMe());
     }
     setState(() {
+      dbOpen = true;
       _contactMe = contact;
     });
   }
@@ -303,7 +306,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               },
             ),
           ),
-          body: (_contactMe != null) && (dbOpen || showSessionList)
+          body: (_contactMe != null) && dbOpen
               ? ChatSessionListLayout(_contactMe!)
               : Container(
                   child: SpinKitThreeBounce(
