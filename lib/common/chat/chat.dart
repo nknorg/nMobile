@@ -434,14 +434,14 @@ class ChatCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
-    if (status <= message.status && !force) return message;
-    // pieces will set sendReceipt fast, set sendSuccess lowly
-    if ((message.status == MessageStatus.SendReceipt || message.status == MessageStatus.Read) && (status == MessageStatus.SendSuccess)) {
-      if (!force) {
-        logger.i("$TAG - updateMessageStatus - status is fast - new:$status - old:${message.status} - msgId:${message.msgId}");
-        return message;
-      }
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
+    if (reQuery) {
+      MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
+      if (_latest != null) message = _latest;
+    }
+    if ((status <= message.status) && !force) {
+      logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
+      return message;
     }
     // update
     message.status = status;
