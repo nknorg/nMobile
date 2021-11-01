@@ -110,14 +110,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // contactMe
     _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
-      setState(() {
-        _contactMe = event;
-      });
+      _refreshContactMe();
     });
-
-    // init
-    dbOpen = dbCommon.isOpen();
-    _refreshContactMe();
 
     // login
     _tryLogin();
@@ -237,7 +231,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _refreshContactMe() async {
-    if (!dbOpen) return;
     ContactSchema? contact = await contactCommon.getMe();
     if ((contact == null) && mounted) {
       return await Future.delayed(Duration(seconds: 1), () => _refreshContactMe());
@@ -310,7 +303,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               },
             ),
           ),
-          body: (_contactMe != null) && dbOpen
+          body: (_contactMe != null) && (dbOpen || showSessionList)
               ? ChatSessionListLayout(_contactMe!)
               : Container(
                   child: SpinKitThreeBounce(
