@@ -681,10 +681,19 @@ class Upgrade4to5 {
           if (newIsDelete != 1) continue;
         }
         // status
-        // int? oldIsSendError = result["is_send_error"];
+        int? oldIsSendError = result["is_send_error"];
         // int? oldIsSuccess = result["is_success"];
-        // int? oldIsRead = result["is_read"];
+        int? oldIsRead = result["is_read"];
         int newStatus = MessageStatus.Read;
+        if (newIsOutbound == 1) {
+          if (oldIsSendError == 1) {
+            newStatus = MessageStatus.SendFail;
+          }
+        } else if (newIsOutbound == 0) {
+          if (oldIsRead == null || oldIsRead == 0) {
+            newStatus = MessageStatus.Received;
+          }
+        }
         // targetId
         String? oldTargetId = result["target_id"];
         if (oldTargetId == null || oldTargetId.isEmpty) {
