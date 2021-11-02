@@ -270,10 +270,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
         if (state.isWalletsEmpty()) {
           return ChatNoWalletLayout();
-        } else if (!showSessionList || (state.defaultWallet() == null)) {
-          return ChatNoConnectLayout((wallet) => _tryLogin(wallet: wallet));
         } else if ((dbUpdateTip?.isNotEmpty == true) && !dbOpen) {
           return _dbUpgradeTip();
+        } else if (!showSessionList || (state.defaultWallet() == null)) {
+          return ChatNoConnectLayout((wallet) => _tryLogin(wallet: wallet));
         }
 
         return Layout(
