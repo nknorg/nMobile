@@ -42,6 +42,9 @@ class ChatHomeScreen extends BaseStateFulWidget {
 class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
 
+  String? dbUpdateTip;
+  StreamSubscription? _upgradeTipListen;
+
   bool dbOpen = false;
   StreamSubscription? _dbOpenedSubscription;
 
@@ -67,10 +70,15 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     super.initState();
 
     // db
+    _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
+      setState(() {
+        dbUpdateTip = tip;
+      });
+    });
     _dbOpenedSubscription = dbCommon.openedStream.listen((event) {
       setState(() {
         dbOpen = event;
-        _refreshContactMe();
+        if (event) _refreshContactMe();
         // _tryLogin();
       });
     });
@@ -149,6 +157,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   @override
   void dispose() {
+    _upgradeTipListen?.cancel();
     _dbOpenedSubscription?.cancel();
     _contactMeUpdateSubscription?.cancel();
     _appLifeChangeSubscription?.cancel();
@@ -263,6 +272,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           return ChatNoWalletLayout();
         } else if (!showSessionList || (state.defaultWallet() == null)) {
           return ChatNoConnectLayout((wallet) => _tryLogin(wallet: wallet));
+        } else if ((dbUpdateTip?.isNotEmpty == true) && !dbOpen) {
+          return _dbUpgradeTip();
         }
 
         return Layout(
@@ -377,8 +388,52 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     );
   }
 
+  _dbUpgradeTip() {
+    S _localizations = S.of(context);
+
+    return Container(
+      color: Colors.black26,
+      alignment: Alignment.center,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: Global.screenHeight() / 4,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 10),
+            CircularProgressIndicator(
+              backgroundColor: Colors.white,
+            ),
+            SizedBox(height: 25),
+            Label(
+              dbUpdateTip ?? "",
+              type: LabelType.display,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              fontWeight: FontWeight.w500,
+            ),
+            SizedBox(height: 15),
+            Label(
+              _localizations.upgrade_db_tips,
+              type: LabelType.display,
+              softWrap: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   _showFloatActionMenu() {
+    S _localizations = S.of(context);
     double btnSize = 48;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -407,7 +462,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               color: Colors.black26,
                             ),
                             child: Label(
-                              S.of(context).new_group,
+                              _localizations.new_group,
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,
@@ -427,7 +482,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               color: Colors.black26,
                             ),
                             child: Label(
-                              S.of(context).new_whisper,
+                              _localizations.new_whisper,
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,
@@ -457,7 +512,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             Navigator.pop(this.context);
                             BottomDialog.of(context).showWithTitle(
                               height: Global.screenHeight() * 0.8,
-                              title: S.of(context).create_channel,
+                              title: _localizations.create_channel,
                               child: ChatTopicSearchLayout(),
                             );
                           },
@@ -471,9 +526,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           child: Asset.iconSvg('user', width: 24, color: application.theme.fontLightColor),
                           onPressed: () async {
                             String? address = await BottomDialog.of(context).showInput(
-                              title: S.of(context).new_whisper,
-                              inputTip: S.of(context).send_to,
-                              inputHint: S.of(context).enter_or_select_a_user_pubkey,
+                              title: _localizations.new_whisper,
+                              inputTip: _localizations.send_to,
+                              inputHint: _localizations.enter_or_select_a_user_pubkey,
                               validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );
