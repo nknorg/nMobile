@@ -860,6 +860,10 @@ class Upgrade4to5 {
         }
         Map<String, dynamic> lastMsgMap = msgList[0];
 
+        // unreadCount
+        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [MessageStatus.Received, 0, targetId]);
+        int unreadCount = Sqflite.firstIntValue(res) ?? 0;
+
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.CONTACT], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
@@ -874,7 +878,7 @@ class Upgrade4to5 {
           'last_message_at': lastMsgMap['send_at'],
           'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (contact["is_top"]?.toString() == '1') ? 1 : 0,
-          'un_read_count': 0,
+          'un_read_count': (unreadCount < 0) ? 0 : unreadCount,
         };
         int id = await db.insert(SessionStorage.tableName, entity);
         if (id > 0) {
@@ -922,6 +926,10 @@ class Upgrade4to5 {
         }
         Map<String, dynamic> lastMsgMap = msgList[0];
 
+        // unreadCount
+        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [MessageStatus.Received, 0, targetId]);
+        int unreadCount = Sqflite.firstIntValue(res) ?? 0;
+
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(SessionStorage.tableName, columns: ['*'], where: 'target_id = ? AND type = ?', whereArgs: [targetId, SessionType.TOPIC], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
@@ -936,7 +944,7 @@ class Upgrade4to5 {
           'last_message_at': lastMsgMap['send_at'],
           'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (topic["is_top"]?.toString() == '1') ? 1 : 0,
-          'un_read_count': 0,
+          'un_read_count': (unreadCount < 0) ? 0 : unreadCount,
         };
         int id = await db.insert(SessionStorage.tableName, entity);
         if (id > 0) {
