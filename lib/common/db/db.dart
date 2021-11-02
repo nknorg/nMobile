@@ -45,6 +45,8 @@ class DB {
     String password = hexEncode(sha256(seed));
     logger.i("DB - ready - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
 
+    _upgradeTipSink.add(null);
+
     // test
     // int i = 0;
     // while (i < 100) {
@@ -52,7 +54,6 @@ class DB {
     //   await Future.delayed(Duration(milliseconds: 100));
     //   i++;
     // }
-    // _upgradeTipSink.add(null);
 
     var db = await openDatabase(
       path,
@@ -111,6 +112,7 @@ class DB {
       onOpen: (Database db) async {
         int version = await db.getVersion();
         logger.i("DB - opened - version:$version - path:${db.path}");
+        _upgradeTipSink.add(null);
         SettingsStorage.setSettings(SettingsStorage.DATABASE_VERSION, version);
       },
     );
