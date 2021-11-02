@@ -45,6 +45,15 @@ class DB {
     String password = hexEncode(sha256(seed));
     logger.i("DB - ready - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
 
+    // test
+    // int i = 0;
+    // while (i < 100) {
+    //   _upgradeTipSink.add("test_$i");
+    //   await Future.delayed(Duration(milliseconds: 100));
+    //   i++;
+    // }
+    // _upgradeTipSink.add(null);
+
     var db = await openDatabase(
       path,
       password: password,
