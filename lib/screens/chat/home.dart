@@ -412,7 +412,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             ),
             SizedBox(height: 25),
             Label(
-              dbUpdateTip ?? "",
+              dbUpdateTip ?? "...",
               type: LabelType.display,
               textAlign: TextAlign.center,
               softWrap: true,
