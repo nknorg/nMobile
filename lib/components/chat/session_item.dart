@@ -325,9 +325,16 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
+    } else if (_lastMsg?.content is String?) {
+      contentWidget = Label(
+        prefix + ((_lastMsg?.content as String?)?.trim() ?? " "),
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
     } else {
       contentWidget = Label(
-        prefix + (_lastMsg?.content ?? ""),
+        prefix + " ",
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
