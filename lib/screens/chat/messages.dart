@@ -224,8 +224,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void dispose() {
-    chatCommon.currentChatTargetId = null;
-
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
 
@@ -243,6 +241,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onMessageSendStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
     _onMessageUpdateStreamSubscription?.cancel();
+
+    chatCommon.currentChatTargetId = null;
+
     super.dispose();
   }
 
