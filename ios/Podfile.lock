@@ -49,10 +49,11 @@ PODS:
     - Flutter
   - flutter_secure_storage (3.3.1):
     - Flutter
-  - flutter_sound (8.3.12):
+  - flutter_sound (8.4.2):
     - Flutter
+    - flutter_sound_core (= 8.4.2)
     - mobile-ffmpeg-audio (= 4.4.LTS)
-    - tau_core (= 8.3.12)
+  - flutter_sound_core (8.4.2)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/SQLCipher (2.7.5):
@@ -120,7 +121,6 @@ PODS:
   - SQLCipher/standard (4.4.2):
     - SQLCipher/common
   - SwiftyGif (5.4.0)
-  - tau_core (8.3.12)
   - TOCropViewController (2.6.0)
   - url_launcher (0.0.1):
     - Flutter
@@ -158,6 +158,7 @@ SPEC REPOS:
   trunk:
     - DKImagePickerController
     - DKPhotoGallery
+    - flutter_sound_core
     - FMDB
     - libwebp
     - Mantle
@@ -167,7 +168,6 @@ SPEC REPOS:
     - SDWebImageWebPCoder
     - SQLCipher
     - SwiftyGif
-    - tau_core
     - TOCropViewController
 
 EXTERNAL SOURCES:
@@ -239,7 +239,8 @@ SPEC CHECKSUMS:
   flutter_image_compress: fd2b476345226e1a10ea352fa306af95704642c1
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
-  flutter_sound: 49d06bd22a3eddb54af3cf22db63fcbf1c641d52
+  flutter_sound: db1364f901b96c17e00101c831994487186afdf4
+  flutter_sound_core: 55a1665e7ef8cdb95ab9dd06581c746dd9c96e48
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
   image_picker: e06f7a68f000bd36f552c1847e33cda96ed31f1f
@@ -250,7 +251,7 @@ SPEC CHECKSUMS:
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   nkn_sdk_flutter: 474f0ff5cf11795bd592708a1c707cc15e70e49a
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
-  path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  path_provider: d1e9807085df1f9cc9318206cd649dc0b76be3de
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
   SDWebImage: c666b97e1fa9c64b4909816a903322018f0a9c84
@@ -263,7 +264,6 @@ SPEC CHECKSUMS:
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
   SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
-  tau_core: 4b7be325f37983d3c74e1692d70e41e12b24d9be
   TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc

@@ -575,7 +575,7 @@ class ChatOutCommon with Tag {
     // topic
     topic = topic ?? await chatCommon.topicHandle(message);
     // session
-    chatCommon.sessionHandle(message); // await
+    await chatCommon.sessionHandle(message);
     // SDK
     Uint8List? pid;
     if (message.isTopic) {
