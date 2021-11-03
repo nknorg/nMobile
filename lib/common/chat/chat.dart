@@ -342,9 +342,14 @@ class ChatCommon with Tag {
     // update
     var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
-    exist.lastMessageAt = message.sendAt ?? MessageOptions.getGetAt(message);
-    exist.lastMessageOptions = message.toMap();
-    await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, exist.type, message, exist.unReadCount, notify: true); // must await
+    int newLastMessageAt = message.sendAt ?? MessageOptions.getGetAt(message) ?? DateTime.now().millisecondsSinceEpoch;
+    if ((exist.lastMessageAt == null) || (exist.lastMessageAt! <= newLastMessageAt)) {
+      exist.lastMessageAt = newLastMessageAt;
+      exist.lastMessageOptions = message.toMap();
+      await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, exist.type, message, exist.unReadCount, notify: true); // must await
+    } else {
+      await sessionCommon.setUnReadCount(exist.targetId, exist.type, exist.unReadCount, notify: true); // must await
+    }
     return exist;
   }
 
