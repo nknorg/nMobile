@@ -307,7 +307,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      if (!received.isTopic) chatCommon.setMsgStatusCheckTimer(received.targetId, false, refresh: true, filterSec: 3 * 60);
+      if (!received.isTopic) chatCommon.setMsgStatusCheckTimer(received.targetId, false, refresh: true, filterSec: 60);
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
