@@ -307,7 +307,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 3 * 60);
+      if (!received.isTopic) chatCommon.setMsgStatusCheckTimer(received.targetId, false, refresh: true, filterSec: 3 * 60);
     } else {
       logger.w("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -325,7 +325,7 @@ class ChatInCommon with Tag {
     } else if ((exists.status == MessageStatus.SendReceipt) || (exists.status == MessageStatus.Read)) {
       logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
-    } else if (exists.isTopic && !(received.from == received.to && received.from == clientCommon.address)) {
+    } else if (exists.isTopic && !((received.from == received.to) && (received.from == clientCommon.address))) {
       logger.d("$TAG - receiveReceipt - topic skip others - exists:$exists");
       return false;
     }
@@ -351,9 +351,9 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    // if ((received.from != received.to) && (received.from != clientCommon.address)) {
-    //   chatCommon.setMsgStatusCheckTimer(exists.targetId, exists.isTopic, refresh: true, filterSec: 3 * 60);
-    // }
+    if (!exists.isTopic && (received.from != received.to) && (received.from != clientCommon.address)) {
+      chatCommon.setMsgStatusCheckTimer(exists.targetId, false, refresh: true, filterSec: 60); // await
+    }
     return true;
   }
 
@@ -385,8 +385,8 @@ class ChatInCommon with Tag {
     await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
 
     // check msgStatus
-    // if ((received.from != received.to) && (received.from != clientCommon.address)) {
-    //   chatCommon.setMsgStatusCheckTimer(received.targetId, received.isTopic, refresh: true, filterSec: 10);
+    // if (!exists.isTopic && (received.from != received.to) && (received.from != clientCommon.address)) {
+    //   chatCommon.setMsgStatusCheckTimer(received.targetId, false, refresh: true, filterSec: 10); // await
     // }
     return true;
   }
