@@ -38,7 +38,7 @@ class Global {
   static int topicWarnBlockExpireHeight = 100000; // 23day
 
   static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static late int profileExpireMs = 6 * 60 * 60 * 1000; // 6h
+  static late int profileExpireMs = 30 * 60 * 1000; // 30m
   static late int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
   static late int txPoolDelayMs = 1 * 60 * 1000; // 1m
 
