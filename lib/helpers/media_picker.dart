@@ -8,8 +8,6 @@ import 'package:mime_type/mime_type.dart';
 import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -279,24 +277,23 @@ class MediaPicker {
     if (original == null) return null;
 
     int size = await original.length();
-    bool overMaxSize = size >= ChatOutCommon.maxBodySize;
-    logger.i('MediaPicker - _compressFile - compress:START - compressQuality:$compressQuality - overMaxSize:$overMaxSize - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    logger.i('MediaPicker - _compressFile - compress:START - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     bool isImage = ((mime(original.path)?.indexOf('image') ?? -1) >= 0) || (mediaType == MediaType.image);
 
     if (isGif || !isImage) {
-      if (overMaxSize) {
-        Toast.show(S.of(Global.appContext).file_too_big);
-        return null;
-      }
+      // if (size >= ChatOutCommon.maxBodySize) {
+      //   Toast.show(S.of(Global.appContext).file_too_big);
+      //   return null;
+      // }
       return original;
     } else if (compressQuality >= 100) {
-      if (!overMaxSize) {
-        return original;
-      } else {
-        compressQuality = 50;
-      }
+      // if (size < ChatOutCommon.maxBodySize) {
+      return original;
+      // } else {
+      //   compressQuality = 50;
+      // }
     }
 
     // filePath
@@ -342,18 +339,16 @@ class MediaPicker {
     );
     logger.i('MediaPicker - _compressFile - compress - format:$format - path:${compressFile?.path}');
 
-    size = await compressFile?.length() ?? ChatOutCommon.maxBodySize;
-    overMaxSize = size >= ChatOutCommon.maxBodySize;
-    if (overMaxSize) {
-      logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-      if (compressQuality <= 5) {
-        Toast.show(S.of(Global.appContext).file_too_big);
-        return null;
-      }
-      return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
-    }
-    bool overShouldSize = size >= ChatOutCommon.shouldBodySize;
-    if (overShouldSize) {
+    size = await compressFile?.length() ?? 0;
+    // if (size >= ChatOutCommon.maxBodySize) {
+    //   logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    //   if (compressQuality <= 5) {
+    //     Toast.show(S.of(Global.appContext).file_too_big);
+    //     return null;
+    //   }
+    //   return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
+    // }
+    if (size >= ChatOutCommon.shouldBodySize) {
       if (compressQuality > 10) {
         logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
