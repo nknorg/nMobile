@@ -25,16 +25,16 @@ import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   // piece
-  static const int piecesPreLength = 3 * 1024; // 3 ~ 30k (<=30k)
-  static const int piecesMinParity = (8 ~/ 4); // parity >= 2
-  static const int piecesMaxParity = (80 ~/ 4); // parity <= 20
-  static const int piecesMinTotal = 8 - piecesMinParity; // total >= 6 (6*3<=30k)
-  static const int piecesMaxTotal = 80 - piecesMaxParity; // total <= 60
+  static const int piecesPreLength = 5 * 1024; // >= 4k
+  static const int piecesMinParity = (5 ~/ 5); // >= 1
+  static const int piecesMaxParity = (50 ~/ 5); // <= 10
+  static const int piecesMinTotal = 5 - piecesMinParity; // >= 4
+  static const int piecesMaxTotal = 50 - piecesMaxParity; // <= 40
 
   // size
-  static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
-  static const int shouldBodySize = maxBodySize ~/ 9; // 200k
   static const int zipMaxSize = 30 * 1000; // < 32k
+  static const int shouldBodySize = 150 * 1024; // 150k
+  // static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
@@ -52,7 +52,7 @@ class ChatOutCommon with Tag {
 
   // large sending
   final int largeBodyMaxPieceSize = 3 * 1024 * 1024; // 3M < 4,000,000(nkn-go-sdk)
-  Lock largeBodyLock = Lock();
+  Map<String, Lock> largeBodyLockMap = Map();
 
   Lock resendLock = Lock();
 
@@ -60,10 +60,10 @@ class ChatOutCommon with Tag {
 
   void clear() {
     lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
-    largeBodyLock = Lock();
+    largeBodyLockMap.clear();
   }
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int? bodySize, String? msgId, double totalPercent = -1, double prePercent = 0}) async {
+  Future<OnMessage?> sendData(String? selfAddress, String? target, List<String> destList, String data, {int? bodySize, String? msgId, double totalPercent = -1, double prePercent = 0}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
@@ -77,10 +77,17 @@ class ChatOutCommon with Tag {
     }
     logger.i("$TAG - sendData - large message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
 
+    String targetId = target ?? "none";
+    Lock? largeBodyLock = largeBodyLockMap[targetId];
+    if (largeBodyLock == null) {
+      logger.i("$TAG - sendData - LOCK:CREATE - targetId:$targetId");
+      largeBodyLock = Lock();
+      largeBodyLockMap[targetId] = largeBodyLock;
+    }
     return await largeBodyLock.synchronized(() async {
       int piecesCount = (totalSize ~/ largeBodyMaxPieceSize);
       int destCountPerPiece = ((destList.length ~/ piecesCount) <= 1) ? 1 : (destList.length ~/ piecesCount);
-      logger.i("$TAG - sendData - LOCK:START - piecesCount:$piecesCount - destCountPerPiece:$destCountPerPiece - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+      logger.i("$TAG - sendData - LOCK:START - targetId:$targetId - piecesCount:$piecesCount - destCountPerPiece:$destCountPerPiece - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
 
       OnMessage? onMessage;
       for (var i = 0; i < destList.length; i = i + destCountPerPiece) {
@@ -89,7 +96,7 @@ class ChatOutCommon with Tag {
         if (endIndex < i) break;
         List<String> subDestList = destList.sublist(i, endIndex);
         int subSize = subDestList.length * dataSize;
-        logger.i("$TAG - sendData - LOCK:PROGRESS - ($i-$endIndex)/${destList.length} - totalSizeM:${totalSize / 1024 / 1024} - subSizeM:${subSize / 1024 / 1024} - subList:$subDestList - destList:$destList - data:$data");
+        logger.i("$TAG - sendData - LOCK:PROGRESS - targetId:$targetId - ($i-$endIndex)/${destList.length} - totalSizeM:${totalSize / 1024 / 1024} - subSizeM:${subSize / 1024 / 1024} - subList:$subDestList - destList:$destList - data:$data");
         OnMessage? _onMessage = await _clientSendData(selfAddress, subDestList, data);
         if (onMessage?.messageId == null || onMessage!.messageId.isEmpty) onMessage = _onMessage;
         if (msgId?.isNotEmpty == true) {
@@ -98,7 +105,7 @@ class ChatOutCommon with Tag {
         }
         await Future.delayed(Duration(milliseconds: minSendIntervalMs));
       }
-      logger.i("$TAG - sendData - LOCK:END - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
+      logger.i("$TAG - sendData - LOCK:END - targetId:$targetId - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
       return onMessage;
     });
   }
@@ -393,7 +400,7 @@ class ChatOutCommon with Tag {
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await sendData(clientCommon.address, clientAddressList, data, bodySize: bodySize);
+    OnMessage? onResult = await sendData(clientCommon.address, message.targetId, clientAddressList, data, bodySize: bodySize);
     if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
@@ -642,7 +649,7 @@ class ChatOutCommon with Tag {
       logger.d("$TAG - _sendWithContact - to_contact_pieces - to:${message.to} - pid:$pid - deviceInfo:$_deviceInfo");
     } else {
       logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
-      pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
+      pid = (await sendData(clientCommon.address, message.targetId, [message.to], msgData))?.messageId;
     }
     // result
     if (pid?.isNotEmpty == true) {
@@ -731,13 +738,13 @@ class ChatOutCommon with Tag {
     OnMessage? fullOnMessage;
     double fullTotalPercent = targetIdsByFull.length / _subscribers.length;
     if (targetIdsByFull.isNotEmpty) {
-      fullOnMessage = await sendData(clientCommon.address, targetIdsByFull, msgData, msgId: message.msgId, totalPercent: fullTotalPercent, prePercent: piecesTotalPercent);
+      fullOnMessage = await sendData(clientCommon.address, message.targetId, targetIdsByFull, msgData, msgId: message.msgId, totalPercent: fullTotalPercent, prePercent: piecesTotalPercent);
     }
     // result
     Uint8List? pid;
     double selfPercent = 1 / _subscribers.length;
     if (selfReceive) {
-      OnMessage? _onMessage = await sendData(clientCommon.address, [clientCommon.address ?? ""], msgData, msgId: message.msgId, totalPercent: selfPercent, prePercent: piecesTotalPercent + fullTotalPercent);
+      OnMessage? _onMessage = await sendData(clientCommon.address, message.targetId, [clientCommon.address ?? ""], msgData, msgId: message.msgId, totalPercent: selfPercent, prePercent: piecesTotalPercent + fullTotalPercent);
       if (_onMessage?.messageId.isNotEmpty == true) {
         pid = _onMessage?.messageId;
       }
