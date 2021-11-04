@@ -221,7 +221,7 @@ class MessageSchema {
     }
 
     // getAt
-    schema = MessageOptions.setGetAt(schema, DateTime.now().millisecondsSinceEpoch);
+    schema = MessageOptions.setInAt(schema, DateTime.now().millisecondsSinceEpoch);
 
     return schema;
   }
@@ -260,6 +260,9 @@ class MessageSchema {
 
     // diff with no pieces image
     schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
+
+    // getAt
+    schema = MessageOptions.setInAt(schema, DateTime.now().millisecondsSinceEpoch);
 
     return schema;
   }
@@ -450,7 +453,8 @@ class MessageOptions {
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
   static const KEY_DEVICE_TOKEN = "deviceToken";
 
-  static const KEY_GET_AT = "get_at";
+  static const KEY_OUT_AT = "out_at";
+  static const KEY_IN_AT = "in_at";
 
   static const KEY_FROM_PIECE = "from_piece";
 
@@ -501,15 +505,26 @@ class MessageOptions {
     return message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
   }
 
-  static MessageSchema setGetAt(MessageSchema message, int sendAt) {
+  static MessageSchema setOutAt(MessageSchema message, int sendAt) {
     if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_GET_AT] = sendAt;
+    message.options![MessageOptions.KEY_OUT_AT] = sendAt;
     return message;
   }
 
-  static int? getGetAt(MessageSchema? message) {
+  static int? getOutAt(MessageSchema? message) {
     if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_GET_AT];
+    return message.options![MessageOptions.KEY_OUT_AT];
+  }
+
+  static MessageSchema setInAt(MessageSchema message, int sendAt) {
+    if (message.options == null) message.options = Map<String, dynamic>();
+    message.options![MessageOptions.KEY_IN_AT] = sendAt;
+    return message;
+  }
+
+  static int? getInAt(MessageSchema? message) {
+    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
+    return message.options![MessageOptions.KEY_IN_AT];
   }
 }
 

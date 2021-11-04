@@ -168,11 +168,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
       // update
       if (newLastMsg == null) {
-        final sendAt = oldLastMsg.sendAt ?? MessageOptions.getGetAt(oldLastMsg);
+        final sendAt = oldLastMsg.sendAt ?? MessageOptions.getInAt(oldLastMsg);
         await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, null, session.unReadCount, sendAt: sendAt, notify: true);
       } else {
         newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
-        session.lastMessageAt = newLastMsg.sendAt ?? MessageOptions.getGetAt(newLastMsg);
+        session.lastMessageAt = newLastMsg.sendAt ?? MessageOptions.getInAt(newLastMsg);
         session.lastMessageOptions = newLastMsg.toMap();
         int unreadCount = oldLastMsg.canNotification ? (session.unReadCount - 1) : session.unReadCount;
         session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
