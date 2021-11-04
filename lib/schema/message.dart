@@ -153,6 +153,7 @@ class MessageSchema {
     if (raw == null || raw.data == null || raw.src == null) return null;
     Map<String, dynamic>? data = jsonFormat(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
+
     MessageSchema schema = MessageSchema(
       pid: raw.messageId,
       msgId: data['id'] ?? "",
@@ -164,7 +165,7 @@ class MessageSchema {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: data['timestamp'] != null ? data['timestamp'] : DateTime.now().millisecondsSinceEpoch,
+      sendAt: data['send_timestamp'] ?? data['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
@@ -619,6 +620,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contactOptions,
       'optionType': '0',
       'content': {
@@ -637,6 +639,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.contactOptions,
       'optionType': '1',
       'content': {
@@ -673,6 +676,7 @@ class MessageData {
     Map map = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
     };
@@ -692,6 +696,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
     };
@@ -713,6 +718,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': content,
     };
@@ -729,6 +735,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': message.contentType,
       'content': message.content,
       'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
@@ -750,6 +757,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicSubscribe,
     };
@@ -760,6 +768,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicUnsubscribe,
     };
@@ -769,7 +778,8 @@ class MessageData {
   static String getTopicInvitee(MessageSchema message) {
     Map data = {
       'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': MessageContentType.topicInvitation,
       'content': message.content,
     };
@@ -780,6 +790,7 @@ class MessageData {
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
       'topic': message.topic,
       'contentType': MessageContentType.topicKickOut,
       'content': message.content,
