@@ -41,7 +41,7 @@ class ChatCommon with Tag {
     checkSendingWithFail(force: true); // await
   }
 
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 60}) {
+  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
@@ -76,7 +76,7 @@ class ChatCommon with Tag {
     });
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 60}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 10}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     if (application.inBackGroundLater && Platform.isIOS) return 0;
@@ -107,7 +107,7 @@ class ChatCommon with Tag {
 
     // filter
     checkList = checkList.where((element) {
-      int msgSendAt = (element.sendAt ?? 0);
+      int msgSendAt = MessageOptions.getOutAt(element) ?? element.sendAt ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       if (between < (filterSec * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
@@ -342,7 +342,7 @@ class ChatCommon with Tag {
     // update
     var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
-    int newLastMessageAt = message.sendAt ?? MessageOptions.getGetAt(message) ?? DateTime.now().millisecondsSinceEpoch;
+    int newLastMessageAt = message.sendAt ?? MessageOptions.getInAt(message) ?? DateTime.now().millisecondsSinceEpoch;
     if ((exist.lastMessageAt == null) || (exist.lastMessageAt! <= newLastMessageAt)) {
       exist.lastMessageAt = newLastMessageAt;
       exist.lastMessageOptions = message.toMap();
@@ -451,6 +451,10 @@ class ChatCommon with Tag {
     // update
     message.status = status;
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
+    if (status == MessageStatus.SendSuccess) {
+      message = MessageOptions.setOutAt(message, DateTime.now().millisecondsSinceEpoch);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+    }
     if (success && notify) _onUpdateSink.add(message);
     // delete later
     if (message.isDelete && (message.content != null)) {
