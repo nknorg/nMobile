@@ -63,14 +63,15 @@ class ChatOutCommon with Tag {
     largeBodyLock = Lock();
   }
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {String? msgId, double totalPercent = -1, double prePercent = 0}) async {
+  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int? bodySize, String? msgId, double totalPercent = -1, double prePercent = 0}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
       return null;
     }
-    int totalSize = destList.length * data.length;
-    if ((destList.length <= 1) || (totalSize <= largeBodyMaxPieceSize)) {
+    int dataSize = bodySize ?? data.length;
+    int totalSize = destList.length * dataSize;
+    if ((destList.length <= 1) || (dataSize <= zipMaxSize) || (totalSize <= largeBodyMaxPieceSize)) {
       logger.d("$TAG - sendData - small message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
       return _clientSendData(selfAddress, destList, data);
     }
@@ -87,7 +88,7 @@ class ChatOutCommon with Tag {
         while (endIndex > destList.length) endIndex--;
         if (endIndex < i) break;
         List<String> subDestList = destList.sublist(i, endIndex);
-        int subSize = subDestList.length * data.length;
+        int subSize = subDestList.length * dataSize;
         logger.i("$TAG - sendData - LOCK:PROGRESS - ($i-$endIndex)/${destList.length} - totalSizeM:${totalSize / 1024 / 1024} - subSizeM:${subSize / 1024 / 1024} - subList:$subDestList - destList:$destList - data:$data");
         OnMessage? _onMessage = await _clientSendData(selfAddress, subDestList, data);
         if (onMessage?.messageId == null || onMessage!.messageId.isEmpty) onMessage = _onMessage;
@@ -387,12 +388,12 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display
-  Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
+  Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {int? bodySize, double percent = -1}) async {
     if (!clientCommon.isClientCreated) return null;
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await sendData(clientCommon.address, clientAddressList, data);
+    OnMessage? onResult = await sendData(clientCommon.address, clientAddressList, data, bodySize: bodySize);
     if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
@@ -808,7 +809,7 @@ class ChatOutCommon with Tag {
         index: index,
       );
       double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
-      MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
+      MessageSchema? result = await sendPiece(clientAddressList, piece, bodySize: bytesLength ~/ total, percent: percent);
       if ((result == null) || (result.pid == null)) {
         logger.w("$TAG - _sendByPieces:ERROR - piece:$piece");
       } else {
