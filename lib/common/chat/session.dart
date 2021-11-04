@@ -42,7 +42,7 @@ class SessionCommon with Tag {
       lastMsg = history.isNotEmpty ? history[0] : null;
     }
     if (schema.lastMessageAt == null || schema.lastMessageOptions == null) {
-      schema.lastMessageAt = lastMsg?.sendAt ?? MessageOptions.getGetAt(lastMsg);
+      schema.lastMessageAt = lastMsg?.sendAt ?? MessageOptions.getInAt(lastMsg);
       schema.lastMessageOptions = lastMsg?.toMap();
     }
     // unReadCount
@@ -79,7 +79,7 @@ class SessionCommon with Tag {
   Future<bool> setLastMessageAndUnReadCount(String? targetId, int? type, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
-    session.lastMessageAt = sendAt ?? lastMessage?.sendAt ?? MessageOptions.getGetAt(lastMessage);
+    session.lastMessageAt = sendAt ?? lastMessage?.sendAt ?? MessageOptions.getInAt(lastMessage);
     session.lastMessageOptions = lastMessage?.toMap();
     session.unReadCount = unread ?? await chatCommon.unReadCountByTargetId(targetId, type == SessionType.TOPIC ? session.targetId : "");
     bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);

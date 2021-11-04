@@ -52,9 +52,9 @@ class ChatMessageItem extends StatelessWidget {
     bool canShowProfileByNextType = nextMessage?.canBurning == true;
 
     // sendAt
-    int? prevSendAt = (prevMessage?.isOutbound == true) ? prevMessage?.sendAt : (prevMessage?.sendAt ?? MessageOptions.getGetAt(prevMessage));
-    int? currSendAt = (message.isOutbound == true) ? message.sendAt : (message.sendAt ?? MessageOptions.getGetAt(message));
-    int? nextSendAt = (nextMessage?.isOutbound == true) ? nextMessage?.sendAt : (nextMessage?.sendAt ?? MessageOptions.getGetAt(nextMessage));
+    int? prevSendAt = (prevMessage?.isOutbound == true) ? prevMessage?.sendAt : (prevMessage?.sendAt ?? MessageOptions.getInAt(prevMessage));
+    int? currSendAt = (message.isOutbound == true) ? message.sendAt : (message.sendAt ?? MessageOptions.getInAt(message));
+    int? nextSendAt = (nextMessage?.isOutbound == true) ? nextMessage?.sendAt : (nextMessage?.sendAt ?? MessageOptions.getInAt(nextMessage));
 
     // group
     int oneGroupSeconds = 2 * 60; // 2m
@@ -370,7 +370,7 @@ class ChatMessageItem extends StatelessWidget {
                     );
                     if (topic?.isNotEmpty == true) {
                       Loading.show();
-                      int sendAt = message.sendAt ?? MessageOptions.getGetAt(message) ?? 0;
+                      int sendAt = message.sendAt ?? MessageOptions.getInAt(message) ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow);
                       Loading.dismiss();

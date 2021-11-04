@@ -446,7 +446,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _bottomRightWidget() {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getGetAt(_message));
+    int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getInAt(_message));
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
     bool isSending = _message.status == MessageStatus.Sending;
 
