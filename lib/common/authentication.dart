@@ -31,6 +31,7 @@ class Authorization {
         localizedReason: localizedReason,
         useErrorDialogs: true,
         stickyAuth: true,
+        biometricOnly: true,
       );
       return success;
     } catch (e) {
