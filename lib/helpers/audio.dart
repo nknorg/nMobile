@@ -11,7 +11,6 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:uuid/uuid.dart';
 
 class AudioHelper with Tag {
   static const double MessageRecordMaxDurationS = 60;
@@ -198,13 +197,7 @@ class AudioHelper with Tag {
 
   Future<String?> _getRecordPath(String? targetId) async {
     if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-    String? recordPath = Path.getCompleteFile(Path.createLocalFile(
-      hexEncode(clientCommon.publicKey!),
-      SubDirType.chat,
-      "${Uuid().v4()}.aac",
-      chatTarget: targetId,
-    ));
-    if (recordPath == null || recordPath.isEmpty) return null;
+    String recordPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: targetId, fileExt: 'aac');
     var outputFile = File(recordPath);
     if (await outputFile.exists()) {
       await outputFile.delete();
