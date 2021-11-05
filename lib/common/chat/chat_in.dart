@@ -487,15 +487,15 @@ class ChatInCommon with Tag {
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
       if (requestType == RequestType.header) {
-        chatOutCommon.sendContactResponse(exist, RequestType.header); // await
+        chatOutCommon.sendContactResponse(exist.clientAddress, RequestType.header); // await
       } else {
-        chatOutCommon.sendContactResponse(exist, RequestType.full); // await
+        chatOutCommon.sendContactResponse(exist.clientAddress, RequestType.full); // await
       }
     } else {
       // need request/save
       if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
         if (responseType != RequestType.full && content == null) {
-          chatOutCommon.sendContactRequest(exist, RequestType.full); // await
+          chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
         } else {
           if (content == null) {
             logger.w("$TAG - receiveContact - content is empty - data:$data");
