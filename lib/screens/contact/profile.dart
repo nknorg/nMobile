@@ -119,6 +119,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   bool _notificationOpen = false;
 
+  bool _profileFetched = false;
+
   @override
   void onRefreshArguments() {
     _refreshContactSchema();
@@ -192,6 +194,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       }
     }
     setState(() {});
+
+    // fetch
+    if (!_profileFetched && (_contactSchema?.isMe == false)) {
+      _profileFetched = true;
+      chatOutCommon.sendContactRequest(_contactSchema?.clientAddress, RequestType.header, _contactSchema?.profileVersion); // await
+    }
   }
 
   Future<bool> _refreshDefaultWallet({WalletSchema? wallet}) async {

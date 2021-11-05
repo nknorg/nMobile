@@ -266,17 +266,17 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactRequest(ContactSchema? target, String requestType, {int tryCount = 1}) async {
-    if (target == null || target.clientAddress.isEmpty) return;
+  Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion, {int tryCount = 1}) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
-    String data = MessageData.getContactRequest(requestType, target.profileVersion, updateAt);
-    await _clientSendData(clientCommon.address, [target.clientAddress], data);
+    String data = MessageData.getContactRequest(requestType, profileVersion, updateAt);
+    await _clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactResponse(ContactSchema? target, String requestType, {ContactSchema? me, int tryCount = 1}) async {
-    if (target == null || target.clientAddress.isEmpty) return;
+  Future sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me, int tryCount = 1}) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     int updateAt = DateTime.now().millisecondsSinceEpoch;
@@ -286,7 +286,7 @@ class ChatOutCommon with Tag {
     } else {
       data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
     }
-    await _clientSendData(clientCommon.address, [target.clientAddress], data);
+    await _clientSendData(clientCommon.address, [clientAddress], data);
   }
 
   // NO topic (1 to 1)

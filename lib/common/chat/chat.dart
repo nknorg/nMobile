@@ -147,9 +147,11 @@ class ChatCommon with Tag {
     // duplicated
     String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
+    bool addFirst = false;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
+      addFirst = true;
       int type = message.isTopic ? ContactType.none : ContactType.stranger;
       exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
     } else {
@@ -160,10 +162,10 @@ class ChatCommon with Tag {
     }
     if (exist == null) return null;
     // profile
-    if (!message.isTopic) {
-      if ((exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
+    if (addFirst || !message.isTopic) {
+      if (addFirst || (exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
         logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
-        chatOutCommon.sendContactRequest(exist, RequestType.header); // await
+        chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.header, exist.profileVersion); // await
         // skip all messages need send contact request
         exist.updateAt = DateTime.now().millisecondsSinceEpoch;
         exist.profileVersion = exist.profileVersion ?? Uuid().v4();
@@ -210,9 +212,9 @@ class ChatCommon with Tag {
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.clientAddress);
     if (latest == null) {
       logger.i("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
       // skip all messages need send contact request
       latest = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: contact.clientAddress));
+      chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
     }
     if (latest == null) return null;
     // profile
