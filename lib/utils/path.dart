@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 class SubDirType {
   static const cache = "cache";
+  static const download = "nkn";
   static const chat = "chat";
   static const contact = "contact";
   static const topic = "topic";
@@ -49,14 +50,22 @@ class Path {
     }
   }
 
+  /**
+   ******************************************************************************************************************************
+   ******************************************************************************************************************************
+   */
+
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/
-  static Future<String> getDir(String? mPubKey, String? dirType) async {
+  static Future<String> getDir(String? mPubKey, String? dirType, {String? target}) async {
     String dirPath = Global.applicationRootDirectory.path;
     if (mPubKey != null && mPubKey.isNotEmpty) {
       dirPath = join(dirPath, mPubKey);
     }
     if (dirType != null && dirType.isNotEmpty) {
       dirPath = join(dirPath, dirType);
+    }
+    if (target != null && target.isNotEmpty) {
+      dirPath = join(dirPath, target);
     }
     Directory dir = Directory(dirPath);
     if (!await dir.exists()) {
@@ -66,21 +75,26 @@ class Path {
   }
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? fileExt}) async {
-    String dirPath = await getDir(mPubKey, dirType);
+  static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? target, String? fileExt}) async {
+    String dirPath = await getDir(mPubKey, dirType, target: target);
     String path = join(dirPath, joinFileExt(fileName, fileExt));
     return path;
   }
 
-  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> getCacheFile(String? mPubKey, {String? fileExt}) async {
+  /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{random}.{fileExt}
+  static Future<String> getRandomFile(String? mPubKey, String dirType, {String? target, String? fileExt}) async {
     String fileName = new DateTime.now().second.toString() + "_" + Uuid().v4() + '_temp';
     if (fileExt != null && fileExt.isNotEmpty) {
       fileName += ".$fileExt";
     }
-    String path = await _getFile(mPubKey, SubDirType.cache, fileName, fileExt: fileExt);
+    String path = await _getFile(mPubKey, dirType, fileName, target: target, fileExt: fileExt);
     return path;
   }
+
+  /**
+   ******************************************************************************************************************************
+   ******************************************************************************************************************************
+   */
 
   /// eg:{rootPath}/{localPath}
   static String? getCompleteFile(String? localPath) {
@@ -93,14 +107,5 @@ class Path {
     if (completePath == null || completePath.isEmpty) return null;
     String rootDir = Global.applicationRootDirectory.path.endsWith("/") ? Global.applicationRootDirectory.path : (Global.applicationRootDirectory.path + "/");
     return completePath.split(rootDir).last;
-  }
-
-  /// eg:{mPubKey}/{dirType}/{chatTarget}/{fileName}
-  static String createLocalFile(String mPubKey, String dirType, String filePath, {String? chatTarget}) {
-    if (chatTarget?.isNotEmpty == true) {
-      return join(mPubKey, dirType, chatTarget, Path.getFileName(filePath));
-    } else {
-      return join(mPubKey, dirType, Path.getFileName(filePath));
-    }
   }
 }

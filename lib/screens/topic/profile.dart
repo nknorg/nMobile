@@ -28,7 +28,6 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:uuid/uuid.dart';
 
 class TopicProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/profile';
@@ -155,8 +154,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String remarkAvatarLocalPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, "${Uuid().v4()}.jpeg");
-    String? remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
+    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, target: _topicSchema?.topic, fileExt: 'jpeg');
+    String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
+    if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickSingle(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
