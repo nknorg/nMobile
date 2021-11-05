@@ -14,7 +14,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 class AudioHelper with Tag {
-  static const double MessageRecordMaxDurationS = 30;
+  static const double MessageRecordMaxDurationS = 60;
   static const double MessageRecordMinDurationS = 0.5;
 
   // player
