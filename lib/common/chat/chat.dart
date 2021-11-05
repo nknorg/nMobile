@@ -178,27 +178,29 @@ class ChatCommon with Tag {
     }
     // burning
     if (message.canBurning) {
-      List<int?> burningOptions = MessageOptions.getContactBurning(message);
-      int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-      int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
-      if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (exist.options?.deleteAfterSeconds != burnAfterSeconds)) {
-        if ((exist.options?.updateBurnAfterAt == null) || ((updateBurnAfterAt ?? 0) >= exist.options!.updateBurnAfterAt!)) {
-          // side update latest
-          exist.options?.deleteAfterSeconds = burnAfterSeconds;
-          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-          contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
-        } else {
-          // mine update latest
-          deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
-            if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              if (exist == null) return;
-              chatOutCommon.sendContactOptionsBurn(
-                exist.clientAddress,
-                exist.options!.deleteAfterSeconds!,
-                exist.options!.updateBurnAfterAt!,
-              ); // await
-            }
-          });
+      if (!message.isTopic) {
+        List<int?> burningOptions = MessageOptions.getContactBurning(message);
+        int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+        int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
+        if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (exist.options?.deleteAfterSeconds != burnAfterSeconds)) {
+          if ((exist.options?.updateBurnAfterAt == null) || ((updateBurnAfterAt ?? 0) >= exist.options!.updateBurnAfterAt!)) {
+            // side update latest
+            exist.options?.deleteAfterSeconds = burnAfterSeconds;
+            exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+            contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
+          } else {
+            // mine update latest
+            deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
+              if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+                if (exist == null) return;
+                chatOutCommon.sendContactOptionsBurn(
+                  exist.clientAddress,
+                  exist.options!.deleteAfterSeconds!,
+                  exist.options!.updateBurnAfterAt!,
+                ); // await
+              }
+            });
+          }
         }
       }
     }
