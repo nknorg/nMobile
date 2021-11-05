@@ -486,21 +486,25 @@ class ChatOutCommon with Tag {
     message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
     await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
     message.sendAt = DateTime.now().millisecondsSinceEpoch;
-    String? msgData;
-    switch (message.contentType) {
-      case MessageContentType.text:
-      case MessageContentType.textExtension:
-        msgData = MessageData.getText(message);
-        break;
-      case MessageContentType.media:
-      case MessageContentType.image:
-        msgData = await MessageData.getImage(message);
-        break;
-      case MessageContentType.audio:
-        msgData = await MessageData.getAudio(message);
-        break;
-    }
-    return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
+    // send
+    return resendLock.synchronized(() async {
+      if (message == null) return null;
+      String? msgData;
+      switch (message.contentType) {
+        case MessageContentType.text:
+        case MessageContentType.textExtension:
+          msgData = MessageData.getText(message);
+          break;
+        case MessageContentType.media:
+        case MessageContentType.image:
+          msgData = await MessageData.getImage(message);
+          break;
+        case MessageContentType.audio:
+          msgData = await MessageData.getAudio(message);
+          break;
+      }
+      return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
+    });
   }
 
   Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) {
