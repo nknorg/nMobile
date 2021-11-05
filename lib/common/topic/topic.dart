@@ -302,6 +302,8 @@ class TopicCommon with Tag {
     // send messages
     await chatOutCommon.sendTopicSubscribe(topic);
     await setCount(exists.id, (exists.count ?? 0) + 1, notify: true);
+    // subscribersInfo
+    subscriberCommon.fetchSubscribersInfo(topic); // await
     return exists;
   }
 

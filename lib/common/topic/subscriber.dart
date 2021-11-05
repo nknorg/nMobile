@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -31,6 +33,38 @@ class SubscriberCommon with Tag {
   static const int InitialRejectStatus = SubscriberStatus.Unsubscribed;
 
   SubscriberCommon();
+
+  Future fetchSubscribersInfo(String? topic, {bool contact = true, bool deviceInfo = true}) async {
+    if (topic == null || topic.isEmpty) return;
+    int limit = 20;
+    List<SubscriberSchema> subscribers = [];
+    // query
+    for (int offset = 0; true; offset += limit) {
+      List<SubscriberSchema> result = await queryListByTopic(topic, offset: offset, limit: limit);
+      subscribers.addAll(result);
+      if (result.length < limit) break;
+    }
+    if (subscribers.isEmpty) return;
+    // fetch
+    for (var i = 0; i < subscribers.length; i++) {
+      SubscriberSchema sub = subscribers[i];
+      if (sub.clientAddress.isEmpty) continue;
+      // contact
+      ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
+      if (_contact == null) {
+        logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
+        _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+        await chatOutCommon.sendContactRequest(_contact?.clientAddress, RequestType.header, null);
+      }
+      // deviceInfo
+      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
+      if (_deviceInfo == null) {
+        logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
+        _deviceInfo = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: sub.clientAddress));
+        await chatOutCommon.sendDeviceRequest(_deviceInfo?.contactAddress);
+      }
+    }
+  }
 
   /// ***********************************************************************************************************
   /// ********************************************** subscribers ************************************************
