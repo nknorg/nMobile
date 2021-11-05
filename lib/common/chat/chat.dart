@@ -41,7 +41,7 @@ class ChatCommon with Tag {
     checkSendingWithFail(force: true); // await
   }
 
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) {
+  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
@@ -76,7 +76,7 @@ class ChatCommon with Tag {
     });
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 10}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     if (application.inBackGroundLater && Platform.isIOS) return 0;
@@ -107,9 +107,10 @@ class ChatCommon with Tag {
 
     // filter
     checkList = checkList.where((element) {
-      int msgSendAt = MessageOptions.getOutAt(element) ?? element.sendAt ?? 0;
+      int msgSendAt = MessageOptions.getOutAt(element) ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      if (between < (filterSec * 1000)) {
+      int filter = element.isContentMedia ? (filterSec + 5) : filterSec;
+      if (between < (filter * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;
       }
