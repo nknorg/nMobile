@@ -35,7 +35,6 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:uuid/uuid.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -659,13 +658,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
                         // save
                         if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-                        String? imagePath = Path.getCompleteFile(Path.createLocalFile(
-                          hexEncode(clientCommon.publicKey!),
-                          SubDirType.chat,
-                          "${Uuid().v4()}.${Path.getFileExt(picked) ?? "jpg"}",
-                          chatTarget: this.targetId ?? "",
-                        ));
-                        if (imagePath == null || imagePath.isEmpty) return null;
+                        String? imagePath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: this.targetId, fileExt: 'jpg');
                         var outputFile = File(imagePath);
                         if (await outputFile.exists()) {
                           await outputFile.delete();

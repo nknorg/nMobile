@@ -13,6 +13,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+// import 'package:flutter_luban/flutter_luban.dart';
 // import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaType {
@@ -228,7 +229,7 @@ class MediaPicker {
             break;
         }
       }
-      String randomPath = await Path.getCacheFile("cache", fileExt: fileExt);
+      String randomPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
       returnFile = File(randomPath);
       if (!await returnFile.exists()) {
         await returnFile.create(recursive: true);
@@ -296,6 +297,28 @@ class MediaPicker {
       // }
     }
 
+    // File? compressFile;
+    // String compressDirPath = await Path.getDir(null, SubDirType.cache);
+    // CompressObject compressObject = CompressObject(
+    //   imageFile: original,
+    //   path: compressDirPath,
+    //   quality: compressQuality, // first compress quality, default 80
+    //   step: 8, // compress quality step, The bigger the fast, Smaller is more accurate, default 6
+    //   mode: CompressMode.LARGE2SMALL, //default AUTO
+    // );
+    // try {
+    //   String? returnPath = await Luban.compressImage(compressObject);
+    //   compressFile = (returnPath?.isNotEmpty == true) ? File(returnPath!) : null;
+    // } catch (e) {
+    //   handleError(e);
+    // }
+    // if (compressFile == null || !compressFile.existsSync()) {
+    //   logger.i('MediaPicker - _compressFile - compress:FAIL - compressQuality:$compressQuality - path:${compressFile?.path}');
+    //   return original;
+    // }
+    // size = await compressFile.length();
+    // logger.i('MediaPicker - _compressFile - compress:OK - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - path:${compressFile.path}');
+
     // filePath
     String? fileExt = Path.getFileExt(original);
     if (fileExt == null || fileExt.isEmpty) {
@@ -311,7 +334,7 @@ class MediaPicker {
           break;
       }
     }
-    String compressPath = await Path.getCacheFile("cache", fileExt: fileExt);
+    String compressPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
     // format
     CompressFormat? format;
     if (compressPath.toLowerCase().endsWith(".jpg") || compressPath.toLowerCase().endsWith(".jpeg")) {
@@ -337,8 +360,9 @@ class MediaPicker {
       // minWidth: 300,
       // minHeight: 300,
     );
-    logger.i('MediaPicker - _compressFile - compress - format:$format - path:${compressFile?.path}');
+    logger.i('MediaPicker - _compressFile - compress:OK - format:$format - path:${compressFile?.path}');
 
+    // limit
     size = await compressFile?.length() ?? 0;
     // if (size >= ChatOutCommon.maxBodySize) {
     //   logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
@@ -350,14 +374,14 @@ class MediaPicker {
     // }
     if (size >= ChatOutCommon.shouldBodySize) {
       if (compressQuality > 10) {
-        logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-        return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
+        logger.i('MediaPicker - _compressFile - compress:AGAIN - overShouldSize - compressQuality:${compressQuality - 20} - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        return _compressFile(compressFile, mediaType, compressQuality - 20);
       } else {
         logger.w('MediaPicker - _compressFile - compress:END - overShouldSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       }
+    } else {
+      logger.i('MediaPicker - _compressFile - compress:END - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     }
-    logger.i('MediaPicker - _compressFile - compress:END - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-
     return compressFile;
   }
 }

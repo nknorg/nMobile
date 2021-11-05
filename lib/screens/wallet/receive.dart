@@ -159,7 +159,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               var qrImg = await boundary?.toImage();
               ByteData? imgData = await qrImg?.toByteData(format: ImageByteFormat.png);
               Uint8List? imgBytes = imgData?.buffer.asUint8List();
-              String path = await Path.getCacheFile("cache", fileExt: "png");
+              String path = await Path.getRandomFile(null, SubDirType.download, fileExt: "png");
               if (imgBytes == null || imgBytes.isEmpty || path.isEmpty) {
                 Loading.dismiss();
                 return;

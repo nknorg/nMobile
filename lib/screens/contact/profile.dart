@@ -32,7 +32,6 @@ import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:uuid/uuid.dart';
 
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
@@ -251,8 +250,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String remarkAvatarLocalPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg");
-    String? remarkAvatarPath = Path.getCompleteFile(remarkAvatarLocalPath);
+    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: _contactSchema?.clientAddress, fileExt: 'jpeg');
+    String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
+    if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickSingle(
       mediaType: MediaType.image,
       source: ImageSource.gallery,

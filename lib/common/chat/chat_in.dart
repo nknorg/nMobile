@@ -511,7 +511,7 @@ class ChatInCommon with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, extension: "jpg");
+              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, target: received.targetId, extension: "jpg");
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
@@ -630,7 +630,7 @@ class ChatInCommon with Tag {
     }
     // File
     bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "jpg" : null, chatTarget: received.from);
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? "jpg" : null);
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
       return false;
@@ -653,7 +653,7 @@ class ChatInCommon with Tag {
     }
     // File
     bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, extension: isPieceCombine ? "aac" : null, chatTarget: received.from);
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? "aac" : null);
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
       return false;

@@ -25,7 +25,6 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
-import 'package:uuid/uuid.dart';
 
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
@@ -60,7 +59,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String? returnPath = Path.getCompleteFile(Path.createLocalFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, "${Uuid().v4()}.jpeg"));
+    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: null, fileExt: 'jpeg');
     File? picked = await MediaPicker.pickSingle(
       mediaType: MediaType.image,
       source: ImageSource.gallery,
