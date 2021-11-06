@@ -320,6 +320,7 @@ class ChatInCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
+    if (!(received.content is String)) return false;
     MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.content, MessageContentType.piece);
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
@@ -397,7 +398,7 @@ class ChatInCommon with Tag {
   Future<bool> _receiveMsgStatus(MessageSchema received) async {
     if (application.inBackGround && Platform.isIOS) return false;
     // if (received.isTopic) return; (limit in out)
-    if (received.content == null) return false;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     String? requestType = data['requestType']?.toString();
     List messageIds = data['messageIds'] ?? [];
@@ -466,7 +467,7 @@ class ChatInCommon with Tag {
   // NO DB NO display (1 to 1)
   Future<bool> _receiveContact(MessageSchema received, {ContactSchema? contact}) async {
     if (application.inBackGround && Platform.isIOS) return false;
-    if (received.content == null) return false;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
@@ -530,7 +531,8 @@ class ChatInCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
-    if (received.content == null) return false; // received.isTopic (limit in out)
+    // received.isTopic (limit in out)
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
     ContactSchema? existContact = contact ?? await received.getSender(emptyAdd: true);
@@ -583,7 +585,7 @@ class ChatInCommon with Tag {
   // NO DB NO display
   Future<bool> _receiveDeviceInfo(MessageSchema received, {ContactSchema? contact}) async {
     if (application.inBackGround && Platform.isIOS) return false;
-    if (received.content == null) return false;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     // duplicated
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
@@ -808,6 +810,7 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
+    if ((received.content == null) || !(received.content is String)) return false;
     topicCommon.onKickOut(received.topic, received.from, received.content); // await
     return true;
   }

@@ -695,7 +695,7 @@ class ChatOutCommon with Tag {
     // subscribers check
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
-      SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content, SubscriberStatus.None, null);
+      SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content?.toString(), SubscriberStatus.None, null);
       if (kicked != null) _subscribers.add(kicked);
     }
     bool privateNormal = topic.isPrivate && !topic.isOwner(clientCommon.address);

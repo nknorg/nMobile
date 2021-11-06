@@ -364,7 +364,7 @@ class ChatMessageItem extends StatelessWidget {
                     String? topic = await BottomDialog.of(context).showInput(
                       title: _localizations.accept_invitation,
                       desc: inviteDesc,
-                      value: message.content?.toString() ?? "",
+                      value: message.content?.toString() ?? " ",
                       actionText: _localizations.accept_invitation,
                       enable: false,
                     );
