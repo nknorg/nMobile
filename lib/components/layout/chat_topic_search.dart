@@ -67,7 +67,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     Loading.dismiss();
 
     if (_topic == null) return false;
-    Navigator.pop(this.context);
+    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     ChatMessagesScreen.go(Global.appContext, _topic);
     return true;
   }

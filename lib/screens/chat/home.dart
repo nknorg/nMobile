@@ -439,7 +439,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       builder: (context) {
         return GestureDetector(
           onTap: () {
-            Navigator.pop(this.context);
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
           },
           child: Align(
             alignment: Alignment.bottomRight,
@@ -509,7 +509,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
                           child: Asset.iconSvg('group', width: 22, color: application.theme.fontLightColor),
                           onPressed: () async {
-                            Navigator.pop(this.context);
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                             BottomDialog.of(context).showWithTitle(
                               height: Global.screenHeight() * 0.8,
                               title: _localizations.create_channel,
@@ -545,7 +545,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               }
                               await ChatMessagesScreen.go(context, contact);
                             }
-                            Navigator.pop(this.context); // floatActionBtn
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context); // floatActionBtn
                           },
                         ),
                       ],

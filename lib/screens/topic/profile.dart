@@ -76,7 +76,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
       if (!event.joined && !isPopIng) {
         isPopIng = true;
-        Navigator.pop(this.context);
+        if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
         return;
       }
       setState(() {
@@ -86,7 +86,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       _refreshMembersCount(); // await
     });
     // _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
-    //   Navigator.pop(this.context);
+    //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
   }
 
@@ -210,13 +210,13 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           text: _localizations.unsubscribe,
           backgroundColor: application.theme.strongColor,
           onPressed: () async {
-            Navigator.pop(this.context);
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
             Loading.show();
             TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, toast: true);
             Loading.dismiss();
             if (deleted != null) {
               Toast.show(_localizations.unsubscribed);
-              // Navigator.pop(this.context);
+              // if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
             }
           },
         ),
@@ -225,7 +225,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           text: _localizations.cancel,
           fontColor: application.theme.fontColor2,
           backgroundColor: application.theme.backgroundLightColor,
-          onPressed: () => Navigator.pop(this.context),
+          onPressed: () {
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+          },
         ),
       );
     }

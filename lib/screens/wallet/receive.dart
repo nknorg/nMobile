@@ -187,7 +187,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                       _wallet = finds[0];
                     }
                     // else {
-                    //   Navigator.pop(this.context);
+                    //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                     // }
                   }
                   return Column(
@@ -225,7 +225,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                       text: _localizations.done,
                       width: double.infinity,
                       onPressed: () {
-                        Navigator.pop(this.context);
+                        if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                       },
                     ),
                   ),

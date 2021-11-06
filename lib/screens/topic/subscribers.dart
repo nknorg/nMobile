@@ -75,7 +75,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
       // if (!event.joined && !isPopIng) {
       //   isPopIng = true;
-      //   Navigator.pop(this.context);
+      //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       //   return;
       // }
       setState(() {
@@ -84,7 +84,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       _refreshMembersCount(); // await
     });
     // _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
-    //   Navigator.pop(this.context);
+    //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
 
     // subscriber listen

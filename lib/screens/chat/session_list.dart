@@ -216,7 +216,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                 ),
               ),
               onPressed: () async {
-                Navigator.pop(this.context);
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                 bool top = !item.isTop;
                 sessionCommon.setTop(item.targetId, item.type, top, notify: true);
               },
@@ -235,7 +235,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                 ),
               ),
               onPressed: () async {
-                Navigator.pop(this.context);
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                 ModalDialog.of(this.context).confirm(
                   content: S.of(context).delete_session_confirm_title,
                   hasCloseButton: true,
@@ -244,7 +244,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     text: S.of(context).delete_contact,
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
-                      Navigator.pop(this.context);
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                       await sessionCommon.delete(item.targetId, item.type, notify: true);
                     },
                   ),

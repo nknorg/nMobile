@@ -225,7 +225,9 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             text: _localizations.cancel,
             fontColor: application.theme.fontColor2,
             backgroundColor: application.theme.backgroundLightColor,
-            onPressed: () => Navigator.pop(this.context),
+            onPressed: () {
+              if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+            },
           ),
         );
         break;
@@ -287,7 +289,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                     this._wallet = finds[0];
                   }
                   // else {
-                  //   Navigator.pop(this.context);
+                  //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                   // }
                 }
                 return Padding(

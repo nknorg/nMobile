@@ -33,7 +33,7 @@ class BottomDialog extends BaseStateFulWidget {
   Function? updateHeight;
 
   close({result}) {
-    Navigator.of(this.context).pop(result);
+    if (Navigator.of(this.context).canPop()) Navigator.of(this.context).pop(result);
   }
 
   Future<T?> show<T>({
@@ -302,7 +302,7 @@ class BottomDialog extends BaseStateFulWidget {
           text: actionText ?? _localizations.continue_text,
           width: double.infinity,
           onPressed: () {
-            Navigator.pop(this.context, _inputController.text);
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, _inputController.text);
           },
         ),
       ),
