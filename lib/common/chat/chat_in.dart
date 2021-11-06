@@ -297,7 +297,7 @@ class ChatInCommon with Tag {
       clientCommon.connectSuccess();
       return true;
     }
-    if (!(received.content! is String)) {
+    if ((received.content == null) || !(received.content! is String)) {
       logger.w("$TAG - _receivePing - content type error - received:$received");
       return false;
     }
@@ -320,7 +320,7 @@ class ChatInCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
-    if (!(received.content is String)) return false;
+    if ((received.content == null) || !(received.content is String)) return false;
     MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.content, MessageContentType.piece);
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
@@ -609,6 +609,10 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveText(MessageSchema received) async {
+    if (received.content == null) {
+      logger.w("$TAG - receiveText - content null - message:$received");
+      return false;
+    }
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
@@ -624,6 +628,10 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveImage(MessageSchema received) async {
+    if (received.content == null) {
+      logger.w("$TAG - _receiveImage - content null - message:$received");
+      return false;
+    }
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
@@ -647,6 +655,10 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveAudio(MessageSchema received) async {
+    if (received.content == null) {
+      logger.w("$TAG - _receiveAudio - content null - message:$received");
+      return false;
+    }
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
