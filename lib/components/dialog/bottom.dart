@@ -27,7 +27,7 @@ class BottomDialog extends BaseStateFulWidget {
 
   BottomDialog.of(this.context);
 
-  late WidgetBuilder builder;
+  WidgetBuilder? builder;
   Widget? action;
   double? height;
   Function? updateHeight;
@@ -477,7 +477,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
 
     List<Widget> body = <Widget>[
       Expanded(
-        child: widget.builder(widget.context),
+        child: widget.builder?.call(widget.context) ?? SizedBox.shrink(),
       ),
     ];
 
@@ -523,7 +523,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: body,
                 )
-              : widget.builder(widget.context),
+              : widget.builder?.call(widget.context) ?? SizedBox.shrink(),
         ),
       ),
     ];

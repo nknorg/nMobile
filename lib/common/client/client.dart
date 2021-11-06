@@ -60,7 +60,7 @@ class ClientCommon with Tag {
 
   Lock _lock = Lock();
 
-  late int status;
+  int status = ClientConnectStatus.disconnected;
   bool clientClosing = false;
   bool connectChecking = false;
 

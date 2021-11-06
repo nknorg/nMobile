@@ -337,7 +337,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       stream: clientCommon.statusStream,
       initialData: clientCommon.status,
       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-        late Widget statusWidget;
+        Widget statusWidget;
         switch (snapshot.data) {
           case ClientConnectStatus.disconnected:
             statusWidget = Row(

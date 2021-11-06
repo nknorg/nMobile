@@ -36,7 +36,7 @@ class WalletImportByKeystoreLayout extends BaseStateFulWidget {
 class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletImportByKeystoreLayout> with SingleTickerProviderStateMixin, Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  late WalletBloc _walletBloc;
+  WalletBloc? _walletBloc;
 
   bool _formValid = false;
   TextEditingController _keystoreController = TextEditingController();
@@ -80,7 +80,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
           logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
+          _walletBloc?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
         } else {
           final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
           String ethAddress = (await eth.address).hex;
@@ -94,7 +94,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: name);
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
-          _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
+          _walletBloc?.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
         }
         walletCommon.queryBalance(delayMs: 3000); // await
 
