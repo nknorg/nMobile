@@ -74,7 +74,7 @@ class AudioHelper with Tag {
         int d = await player.getDuration();
         if (d > 0) playerDuration = d;
       }
-      if (playerDuration == null) return;
+      if (playerDuration == null || playerDuration == 0) return;
       _onPlayPositionChangedSink.add({
         "id": playerId,
         "duration": playerDuration,
