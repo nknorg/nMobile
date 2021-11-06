@@ -129,10 +129,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       });
     });
     _onPlayPositionChangedSubscription = audioHelper.onPlayPositionChangedStream.listen((Map<String, dynamic> event) {
-      String? playerId = event["id"];
+      String? playerId = event["id"]?.toString();
       // int? duration = event["duration"];
       // Duration? position = event["position"];
-      double? percent = event["percent"];
+      double? percent = double.tryParse(event["percent"]?.toString() ?? "0");
       if (playerId == null || playerId != this._message.msgId || percent == null) {
         if (_playProgress != 0) {
           setState(() {
