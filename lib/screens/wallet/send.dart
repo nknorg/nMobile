@@ -201,10 +201,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
         if (_wallet.type == WalletType.eth) {
           final result = _transferETH(_wallet.name ?? "", keystore, password);
-          Navigator.pop(this.context, result);
+          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, result);
         } else {
           final result = _transferNKN(_wallet.name ?? "", keystore, password);
-          Navigator.pop(this.context, result);
+          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, result);
         }
       }).onError((error, stackTrace) {
         handleError(error, stackTrace: stackTrace);
@@ -401,7 +401,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                         _wallet = finds[0];
                       }
                       // else {
-                      //   Navigator.pop(this.context);
+                      //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                       // }
                       if (_wallet.type == WalletType.nkn) {
                         _ethTrueTokenFalse = false;

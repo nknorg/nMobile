@@ -158,7 +158,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         }
       }
       Loading.dismiss();
-      Navigator.pop(this.context);
+      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     }
   }
 
