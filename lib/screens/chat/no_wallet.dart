@@ -27,7 +27,7 @@ class ChatNoWalletLayout extends BaseStateFulWidget {
 class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayout> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  late WalletBloc _walletBloc;
+  WalletBloc? _walletBloc;
 
   bool _formValid = false;
   TextEditingController _nameController = TextEditingController();
@@ -65,7 +65,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
       WalletSchema wallet = WalletSchema(type: WalletType.nkn, address: nkn.address, publicKey: hexEncode(nkn.publicKey), name: name);
       logger.i("$TAG - wallet create - wallet:${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
+      _walletBloc?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
 
       Loading.dismiss();
       // AppScreen.go(context);
