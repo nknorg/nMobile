@@ -53,9 +53,11 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
         radius: radius,
         backgroundImage: FileImage(File(path!)),
         onBackgroundImageError: (Object exception, StackTrace? stackTrace) {
-          setState(() {
-            _fileError = true;
-          });
+          if (!_fileError) {
+            setState(() {
+              _fileError = true;
+            });
+          }
         },
       );
     }
