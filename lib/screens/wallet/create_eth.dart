@@ -34,7 +34,7 @@ class WalletCreateETHScreen extends BaseStateFulWidget {
 class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateETHScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
-  late WalletBloc _walletBloc;
+  WalletBloc? _walletBloc;
 
   bool _formValid = false;
   TextEditingController _nameController = TextEditingController();
@@ -73,7 +73,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
       WalletSchema wallet = WalletSchema(type: WalletType.eth, address: ethAddress, publicKey: eth.pubKeyHex, name: eth.name);
       logger.i("$TAG - wallet create - ${wallet.toString()}");
 
-      _walletBloc.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
+      _walletBloc?.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
 
       Loading.dismiss();
       AppScreen.go(context);

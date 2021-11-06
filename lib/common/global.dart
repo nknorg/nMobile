@@ -37,10 +37,10 @@ class Global {
   static int topicDefaultSubscribeHeight = 400000; // 93day
   static int topicWarnBlockExpireHeight = 100000; // 23day
 
-  static late int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static late int profileExpireMs = 30 * 60 * 1000; // 30m
-  static late int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
-  static late int txPoolDelayMs = 1 * 60 * 1000; // 1m
+  static int clientReAuthGapMs = 1 * 60 * 1000; // 1m
+  static int profileExpireMs = 30 * 60 * 1000; // 30m
+  static int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
+  static int txPoolDelayMs = 1 * 60 * 1000; // 1m
 
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
