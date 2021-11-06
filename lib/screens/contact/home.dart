@@ -202,7 +202,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   _onTapContactItem(ContactSchema item) async {
     if (this._isSelect) {
-      Navigator.pop(this.context, item);
+      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, item);
     } else {
       ContactProfileScreen.go(context, schema: item);
     }
@@ -406,7 +406,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.delete_contact,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
-                  Navigator.pop(this.context);
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                   await contactCommon.delete(item.id, notify: true);
                 },
               ),
@@ -415,7 +415,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.cancel,
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () => Navigator.pop(this.context),
+                onPressed: () {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                },
               ),
             )
           },
@@ -500,7 +502,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.delete,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
-                  Navigator.pop(this.context);
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                   Loading.show();
                   TopicSchema? deleted = await topicCommon.unsubscribe(item.topic);
                   Loading.dismiss();
@@ -514,7 +516,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 text: _localizations.cancel,
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () => Navigator.pop(this.context),
+                onPressed: () {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                },
               ),
             )
           },

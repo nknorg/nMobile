@@ -211,7 +211,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             backgroundColor: application.theme.strongColor,
                             width: double.infinity,
                             onPressed: () {
-                              Navigator.pop(context);
+                              if (Navigator.of(context).canPop()) Navigator.pop(context);
                               _clearCache(FileType.cache);
                             },
                           ),
@@ -220,7 +220,9 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.of(context).canPop()) Navigator.pop(context);
+                            },
                           ),
                         );
                       },
@@ -293,7 +295,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             ),
                             backgroundColor: application.theme.strongColor,
                             onPressed: () {
-                              Navigator.pop(context);
+                              if (Navigator.of(context).canPop()) Navigator.pop(context);
                               _clearCache(FileType.db);
                             },
                           ),
@@ -302,7 +304,9 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                             text: _localizations.cancel,
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              if (Navigator.of(context).canPop()) Navigator.pop(context);
+                            },
                           ),
                         );
                       },
