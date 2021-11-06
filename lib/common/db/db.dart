@@ -40,8 +40,7 @@ class DB {
   DB();
 
   Future<Database> _openDB(String publicKey, String seed) async {
-    var databasesPath = await getDatabasesPath();
-    String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
+    String path = await getDBFilePath(publicKey);
     String password = hexEncode(sha256(seed));
     logger.i("DB - ready - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
 
@@ -154,6 +153,15 @@ class DB {
 
   bool isOpen() {
     return database != null && database!.isOpen;
+  }
+
+  Future<String> getDBDirPath() async {
+    return getDatabasesPath();
+  }
+
+  Future<String> getDBFilePath(String publicKey) async {
+    var databasesPath = await getDBDirPath();
+    return join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
   }
 
   Future<bool> needUpgrade() async {
