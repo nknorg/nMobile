@@ -205,7 +205,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         var index = (item as MenuItem).userInfo;
         switch (index) {
           case 0:
-            copyText(_message.content, context: context);
+            copyText(_message.content?.toString() ?? "", context: context);
             break;
         }
       },
@@ -614,7 +614,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyText(bool dark) {
-    List contents = getChatFormatString(_message.content);
+    List<String> contents = getChatFormatString(_message.content?.toString());
     if (contents.isNotEmpty) {
       List<InlineSpan> children = [];
       for (String s in contents) {
@@ -634,7 +634,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         )
       ];
     } else {
-      return [Markdown(data: _message.content, dark: dark)];
+      String content = _message.content?.toString() ?? "";
+      if (content.isEmpty) content = " ";
+      return [Markdown(data: content, dark: dark)];
     }
   }
 
