@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
@@ -391,7 +392,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _toggleNotificationOpen() async {
-    S _localizations = S.of(this.context);
     if (this._topic != null) {
       // FUTURE: topic notificationOpen
     } else {
@@ -399,7 +399,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       String? deviceToken = nextOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
       if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
-        Toast.show(_localizations.unavailable_device);
+        Toast.show(S.of(Global.appContext).unavailable_device);
         return;
       }
       setState(() {
