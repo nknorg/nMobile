@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -17,9 +20,8 @@ import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/cache.dart';
 import 'package:nmobile/utils/format.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:nmobile/utils/path.dart';
 
 class FileType {
   static const cache = 0;
@@ -51,45 +53,100 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
   }
 
   _refreshFilesLength() async {
-    var size = await getTotalSizeOfCacheFile(Global.applicationRootDirectory);
-    var databasesPath = Directory(await getDatabasesPath());
-    var dbs = await getTotalSizeOfDbFile(databasesPath);
+    double cacheSize = await _getTotalSizeOfFile(Global.applicationRootDirectory, dirFilter: SubDirType.cache);
+    double dbSize = await _getTotalSizeOfFile(Directory(await dbCommon.getDBDirPath()), filePrefix: DB.NKN_DATABASE_NAME);
     setState(() {
-      _cacheSize = formatFlowSize(size, unitArr: ['B', 'KB', 'MB', 'GB']);
-      _dbSize = formatFlowSize(dbs, unitArr: ['B', 'KB', 'MB', 'GB']);
+      _cacheSize = formatFlowSize(cacheSize, unitArr: ['B', 'KB', 'MB', 'GB']);
+      _dbSize = formatFlowSize(dbSize, unitArr: ['B', 'KB', 'MB', 'GB']);
     });
   }
 
+  Future<double> _getTotalSizeOfFile(final FileSystemEntity file, {String? dirFilter, String? filePrefix, bool can = false}) async {
+    List<String> splits = file.path.split("/");
+    if (splits.length <= 0) return 0;
+    String dirName = splits[splits.length - 1];
+    if (!can) {
+      if (dirFilter?.isNotEmpty == true) {
+        can = (file is Directory) && (dirName == dirFilter);
+      } else if (filePrefix?.isNotEmpty == true) {
+        can = (file is File) && (dirName.startsWith(filePrefix!));
+      } else {
+        can = true;
+      }
+    }
+    if (file is Directory) {
+      double total = 0;
+      final List<FileSystemEntity> children = file.listSync();
+      for (final FileSystemEntity child in children) {
+        total += await _getTotalSizeOfFile(child, can: can, dirFilter: dirFilter, filePrefix: filePrefix);
+      }
+      return total;
+    }
+    if (file is File) {
+      if (can) {
+        int length = await file.length();
+        return double.tryParse(length.toString()) ?? 0;
+      }
+      return 0;
+    }
+    return 0;
+  }
+
+  Future<bool> _delete(FileSystemEntity file) async {
+    // if (path == null || path.isEmpty) return false;
+    // File file = File(path);
+    if (file.existsSync()) {
+      file.deleteSync(recursive: true);
+      return true;
+    }
+    return false;
+  }
+
   _clearCache(int type) async {
-    // auth
-    String? address = await walletCommon.getDefaultAddress();
-    if (address == null || address.isEmpty) {
-      WalletSchema? select = await BottomDialog.of(this.context).showWalletSelect(
+    // wallet
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null || wallet.publicKey.isEmpty == true) {
+      wallet = await BottomDialog.of(this.context).showWalletSelect(
         title: S.of(context).select_another_wallet,
         onlyNKN: true,
       );
-      address = select?.address;
-      if (address == null || address.isEmpty) return;
     }
-    String? input = await authorization.getWalletPassword(address);
-    if (input == null || input.isEmpty) {
+    // pwd
+    String? address = wallet?.address;
+    if (wallet == null || address == null || address.isEmpty) return;
+    String? pwd = await authorization.getWalletPassword(address);
+    if (pwd == null || pwd.isEmpty) {
       Toast.show(S.of(context).input_password);
       return;
     }
-    if (!(await walletCommon.isPasswordRight(address, input))) {
+    if (!(await walletCommon.isPasswordRight(address, pwd))) {
       Toast.show(S.of(context).error_confirm_password);
       return;
     }
-    // clear
-    Loading.show();
-    await clientCommon.signOut(closeDB: true, clearWallet: true);
-    await Future.delayed(Duration(seconds: 1));
-    if (type == FileType.cache) {
-      await clearCacheFile(Global.applicationRootDirectory);
-    } else if (type == FileType.db) {
-      var databasesPath = Directory(await getDatabasesPath());
-      await clearDbFile(databasesPath);
+    // pubKey
+    String pubKey = wallet.publicKey;
+    if (pubKey.isEmpty) {
+      String keystore = await walletCommon.getKeystore(wallet.address);
+      List<String> seedRpcList = await Global.getSeedRpcList(wallet.address, measure: true);
+      Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
+      if (nknWallet.publicKey.isEmpty) return;
+      pubKey = hexEncode(nknWallet.publicKey);
     }
+    // delete
+    Loading.show();
+    if (type == FileType.cache) {
+      String path1 = await Path.getDir(null, SubDirType.cache);
+      String path2 = await Path.getDir(pubKey, SubDirType.cache);
+      await _delete(Directory(path1));
+      await _delete(Directory(path2));
+    } else if (type == FileType.db) {
+      await clientCommon.signOut(closeDB: true, clearWallet: true);
+      await Future.delayed(Duration(seconds: 1));
+      String dbPath = await dbCommon.getDBFilePath(wallet.publicKey);
+      await _delete(File(dbPath));
+    }
+    // refresh
+    await Future.delayed(Duration(milliseconds: 100));
     await _refreshFilesLength();
     Loading.dismiss();
     Toast.show(S.of(context).success);
