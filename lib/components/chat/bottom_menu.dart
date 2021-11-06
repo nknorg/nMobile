@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -9,21 +10,27 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/path.dart';
 
 class ChatBottomMenu extends StatelessWidget {
+  String? target;
   bool show;
   final Function(File image)? onPickedImage;
 
   ChatBottomMenu({
+    this.target,
     this.show = false,
     this.onPickedImage,
   });
 
   _getImageFile({required ImageSource source}) async {
+    if (clientCommon.publicKey == null) return;
+    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
     File? picked = await MediaPicker.pickSingle(
       source: source,
       mediaType: MediaType.image,
       compressQuality: 70,
+      returnPath: returnPath,
     );
     if (picked == null) return;
     onPickedImage?.call(picked);

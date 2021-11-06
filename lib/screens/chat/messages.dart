@@ -653,6 +653,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ),
               isClientOk && (_isJoined != false)
                   ? ChatBottomMenu(
+                      target: targetId,
                       show: _showBottomMenu,
                       onPickedImage: (File picked) async {
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
