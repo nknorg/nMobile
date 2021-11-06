@@ -144,7 +144,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
       // if (!event.joined && !isPopIng) {
       //   isPopIng = true;
-      //   Navigator.pop(this.context);
+      //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       //   return;
       // }
       setState(() {
@@ -154,7 +154,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _refreshTopicSubscribers(fetch: false);
     });
     // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
-    //   Navigator.pop(this.context);
+    //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
 
     // subscriber
@@ -382,7 +382,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         text: S.of(context).ok,
         backgroundColor: application.theme.primaryColor,
         onPressed: () {
-          Navigator.pop(this.context);
+          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
           _toggleNotificationOpen();
         },
       ),

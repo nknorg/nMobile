@@ -265,7 +265,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 text: _localizations.ok,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
-                  Navigator.pop(this.context);
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                   await topicCommon.kick(
                     topic.topic,
                     topic.isPrivate,
@@ -280,7 +280,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 text: _localizations.cancel,
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () => Navigator.pop(this.context),
+                onPressed: () {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                },
               ),
             );
           } else {
