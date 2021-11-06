@@ -338,7 +338,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
-    if (content == null || content.isEmpty) return null;
+    if (content == null || content.trim().isEmpty) return null;
     if (!clientCommon.isClientCreated) return null;
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
