@@ -63,6 +63,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onPlayStateChangedSubscription;
   StreamSubscription? _onPlayPositionChangedSubscription;
 
+  // TODO:GG late
   late MessageSchema _message;
   ContactSchema? _contact;
 
@@ -362,7 +363,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               backgroundColor: application.theme.strongColor,
               onPressed: () {
                 widget.onResend?.call(_message.msgId);
-                Navigator.pop(this.context);
+                if (Navigator.of(context).canPop()) Navigator.pop(this.context);
               },
             ),
           );
