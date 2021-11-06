@@ -32,8 +32,8 @@ class BottomDialog extends BaseStateFulWidget {
   double? height;
   Function? updateHeight;
 
-  close({result}) {
-    if (Navigator.of(this.context).canPop()) Navigator.of(this.context).pop(result);
+  close({BuildContext? ctx, result}) {
+    if (Navigator.of(ctx ?? this.context).canPop()) Navigator.of(this.context).pop(result);
   }
 
   Future<T?> show<T>({
@@ -169,7 +169,7 @@ class BottomDialog extends BaseStateFulWidget {
               ),
             ),
             onTap: () {
-              close(result: walletTypeNkn);
+              close(ctx: context, result: walletTypeNkn);
             },
           ),
           Divider(height: 1, indent: 64),
@@ -218,7 +218,7 @@ class BottomDialog extends BaseStateFulWidget {
               ),
             ),
             onTap: () {
-              close(result: walletTypeEth);
+              close(ctx: context, result: walletTypeEth);
             },
           ),
           Divider(height: 1, indent: 64),
@@ -255,7 +255,7 @@ class BottomDialog extends BaseStateFulWidget {
                       bgColor: application.theme.backgroundLightColor,
                       radius: BorderRadius.circular(0),
                       onTap: () {
-                        close(result: wallet);
+                        close(ctx: context, result: wallet);
                       },
                     ),
                     Divider(
@@ -368,7 +368,7 @@ class BottomDialog extends BaseStateFulWidget {
           backgroundColor: application.theme.primaryColor.withAlpha(20),
           fontColor: application.theme.primaryColor,
           onPressed: () {
-            close();
+            close(ctx: context);
           },
         ),
       ),
@@ -427,7 +427,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
   void _handleDragEnd(DragEndDetails details) {
     if (details.velocity.pixelsPerSecond.dy > _minFlingVelocity) {
       if (_currentHeight < _minHeight) {
-        widget.close();
+        widget.close(ctx: context);
         return;
       }
       _height = _minHeight;
