@@ -178,7 +178,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _uploadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
     // _playProgress = 0;
     // burn
-    _message = chatCommon.burningStart(_message, () => setState(() {}));
+    _message = chatCommon.burningStart(_message, () {
+      // logger.i("$TAG - tick - :${_message.msgId}");
+      setState(() {});
+    });
   }
 
   @override
@@ -215,7 +218,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   Widget build(BuildContext context) {
-    if (_message.deleteAt != null) {
+    if (_message.isDelete) {
+      return SizedBox.shrink();
+    } else if (_message.canBurning && (_message.content == null)) {
+      return SizedBox.shrink();
+    } else if (_message.deleteAt != null) {
       int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;
       if (deleteAt <= DateTime.now().millisecondsSinceEpoch) {
         return SizedBox.shrink();

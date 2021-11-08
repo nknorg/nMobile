@@ -376,7 +376,7 @@ class ChatCommon with Tag {
 
   MessageSchema burningStart(MessageSchema message, Function? tick) {
     if (message.isTopic) return message;
-    if (!message.canBurning) return message;
+    if (!message.canBurning || message.isDelete) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
     if ((message.deleteAt == null) && (burnAfterSeconds != null) && (burnAfterSeconds > 0) && ((message.status != MessageStatus.Sending) && (message.status != MessageStatus.SendFail))) {
@@ -393,7 +393,7 @@ class ChatCommon with Tag {
             return;
           }
           if (message.deleteAt == null || message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
-            // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
+            // logger.d("$TAG - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
           } else {
             logger.i("$TAG - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
             if (message.canBurning) chatCommon.messageDelete(message, notify: true); // await
@@ -403,7 +403,11 @@ class ChatCommon with Tag {
         });
       } else {
         logger.i("$TAG - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-        if (message.canBurning) chatCommon.messageDelete(message, notify: true); // await
+        if (!message.isDelete && message.canBurning) {
+          message.isDelete = true;
+          chatCommon.messageDelete(message, notify: true); // await
+        }
+        // tick?.call(); // will dead loop
       }
     }
     return message;
@@ -464,7 +468,8 @@ class ChatCommon with Tag {
     if (success && notify) _onUpdateSink.add(message);
     // delete later
     if (message.isDelete && (message.content != null)) {
-      if ((status == MessageStatus.SendReceipt) || (status == MessageStatus.Received) || (status == MessageStatus.Read)) {
+      bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
+      if (clearContent) {
         messageDelete(message, notify: false); // await
       } else {
         logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
