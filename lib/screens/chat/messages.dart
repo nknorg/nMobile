@@ -36,6 +36,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:synchronized/synchronized.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -86,8 +87,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _onMessageUpdateStreamSubscription;
 
   ScrollController _scrollController = ScrollController();
+  Lock _fetchMsgLock = Lock();
   bool _moreLoading = false;
   List<MessageSchema> _messages = <MessageSchema>[];
+  int _pageLimit = 30;
+
+  Timer? _delTimer;
 
   bool _showBottomMenu = false;
 
@@ -116,6 +121,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   void initState() {
     super.initState();
     chatCommon.currentChatTargetId = this.targetId;
+    _moreLoading = false;
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
@@ -178,9 +184,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _insertMessage(event);
     });
     _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((event) {
+      var messages = _messages.where((element) => element.msgId != event).toList();
       setState(() {
-        _messages = _messages.where((element) => element.msgId != event).toList();
+        _messages = messages;
       });
+      if ((messages.length < (_pageLimit / 2)) && !_moreLoading) {
+        _delTimer?.cancel();
+        _delTimer = null;
+        _delTimer = Timer(Duration(seconds: 1), () {
+          _moreLoading = true;
+          _getDataMessages(false).then((v) {
+            _moreLoading = false;
+          });
+        });
+      }
     });
     _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
       setState(() {
@@ -191,7 +208,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // loadMore
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
-      if (offsetFromBottom < 50 && !_moreLoading) {
+      // logger.d("$TAG - scroll_listen ->>> offsetBottom:$offsetFromBottom = maxScrollExtent:${_scrollController.position.maxScrollExtent} - pixels:${_scrollController.position.pixels}");
+      if ((offsetFromBottom < 50) && !_moreLoading) {
         _moreLoading = true;
         _getDataMessages(false).then((v) {
           _moreLoading = false;
@@ -247,15 +265,16 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _getDataMessages(bool refresh) async {
-    int _offset = 0;
-    if (refresh) {
-      _messages = [];
-    } else {
-      _offset = _messages.length;
-    }
-    var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, _topic?.topic, offset: _offset, limit: 20);
-    setState(() {
+    await _fetchMsgLock.synchronized(() async {
+      int _offset = 0;
+      if (refresh) {
+        _messages = [];
+      } else {
+        _offset = _messages.length;
+      }
+      var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, _topic?.topic, offset: _offset, limit: _pageLimit);
       _messages = _messages + messages;
+      setState(() {});
     });
   }
 
