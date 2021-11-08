@@ -390,21 +390,20 @@ class ChatCommon with Tag {
           if (senderKey.isNotEmpty && !key.contains(senderKey)) {
             // remove others client burning
             taskService.removeTask1(key);
-            // onRefreshArguments(); // refresh task (will dead loop)
             return;
           }
           if (message.deleteAt == null || message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
             // logger.d("$TAG - tick - key:$key - msgId:${_message.msgId} - deleteTime:${_message.deleteTime?.toString()} - now:${DateTime.now()}");
           } else {
             logger.i("$TAG - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-            chatCommon.messageDelete(message, notify: true); // await
+            if (message.canBurning) chatCommon.messageDelete(message, notify: true); // await
             taskService.removeTask1(key);
           }
           tick?.call();
         });
       } else {
         logger.i("$TAG - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-        chatCommon.messageDelete(message, notify: true); // await
+        if (message.canBurning) chatCommon.messageDelete(message, notify: true); // await
       }
     }
     return message;
@@ -429,7 +428,7 @@ class ChatCommon with Tag {
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Received) || (message.status == MessageStatus.Read)) : true;
+    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
     bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
     if (success && notify) onDeleteSink.add(message.msgId);
     // delete file
