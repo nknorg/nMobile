@@ -606,6 +606,8 @@ class ChatOutCommon with Tag {
       if (!message.canReceipt) {
         int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
         chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
+      } else {
+        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
       }
     } else {
       logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
@@ -654,10 +656,6 @@ class ChatOutCommon with Tag {
     } else {
       logger.d("$TAG - _sendWithContact - to_contact - to:${message.to} - msgData:$msgData");
       pid = (await sendData(clientCommon.address, message.targetId, [message.to], msgData))?.messageId;
-    }
-    // result
-    if (pid?.isNotEmpty == true) {
-      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
     }
     // push
     if (notification && message.canNotification) {
@@ -756,12 +754,9 @@ class ChatOutCommon with Tag {
     if (pid == null || pid.isEmpty) {
       pid = fullOnMessage?.messageId ?? piecesPid;
     }
-    if (pid?.isNotEmpty == true) {
-      chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
-    }
     // push
-    contactCommon.queryListByClientAddress(contactAddressList).then((List<ContactSchema> contactList) async {
-      if (notification && message.canNotification) {
+    if (notification && message.canNotification) {
+      contactCommon.queryListByClientAddress(contactAddressList).then((List<ContactSchema> contactList) async {
         if (piecesPid?.isNotEmpty == true) {
           for (var i = 0; i < targetIdsByPiece.length; i++) {
             int findIndex = contactList.indexWhere((element) => element.clientAddress == targetIdsByPiece[i]);
@@ -776,8 +771,8 @@ class ChatOutCommon with Tag {
             _sendPush(message, _contact?.deviceToken); // await
           }
         }
-      }
-    });
+      });
+    }
     // do not forget delete (replace by setJoined)
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
     //   await topicCommon.delete(topic.id, notify: true);
