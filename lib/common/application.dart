@@ -26,8 +26,8 @@ class Application {
   Application();
 
   void init() {
+    Timer? timer;
     appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
-      Timer? timer;
       if (isFromBackground(states)) {
         logger.i("Application - init - in foreground");
         inBackGround = false;
