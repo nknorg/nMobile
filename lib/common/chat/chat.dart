@@ -359,6 +359,7 @@ class ChatCommon with Tag {
   }
 
   MessageSchema burningHandle(MessageSchema message) {
+    if (message.isTopic) return message;
     if (!message.canBurning) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = (burningOptions.length >= 1) ? burningOptions[0] : null;
@@ -374,6 +375,7 @@ class ChatCommon with Tag {
   }
 
   MessageSchema burningStart(MessageSchema message, Function? tick) {
+    if (message.isTopic) return message;
     if (!message.canBurning) return message;
     List<int?> burningOptions = MessageOptions.getContactBurning(message);
     int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
