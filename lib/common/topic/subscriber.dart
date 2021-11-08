@@ -59,7 +59,7 @@ class SubscriberCommon with Tag {
           logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
           _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
           await chatOutCommon.sendContactRequest(_contact?.clientAddress, RequestType.header, null);
-          await Future.delayed(Duration(milliseconds: 20));
+          await Future.delayed(Duration(milliseconds: 10));
         }
         // deviceInfo
         DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
@@ -67,7 +67,7 @@ class SubscriberCommon with Tag {
           logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
           _deviceInfo = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: sub.clientAddress));
           await chatOutCommon.sendDeviceRequest(_deviceInfo?.contactAddress);
-          await Future.delayed(Duration(milliseconds: 20));
+          await Future.delayed(Duration(milliseconds: 10));
         }
       }
     });
