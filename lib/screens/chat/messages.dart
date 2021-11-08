@@ -126,7 +126,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // client
     _clientStatusSubscription = clientCommon.statusStream.listen((int status) {
-      Future.delayed(Duration(seconds: 1), () {
+      Future.delayed(Duration(milliseconds: 100), () {
         setState(() {
           isClientOk = clientCommon.isClientCreated;
         });
