@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:synchronized/synchronized.dart';
 
 class TaskService with Tag {
   static const KEY_WALLET_BALANCE = "wallet_balance";
@@ -27,6 +28,8 @@ class TaskService with Tag {
 
   Timer? _timer300;
   Map<String, Function(String)> _tasks300 = Map<String, Function(String)>();
+
+  Lock _lock = Lock();
 
   TaskService();
 
@@ -113,71 +116,103 @@ class TaskService with Tag {
     logger.d("$Tag - uninstall");
   }
 
+  bool isTask1Run(String key) {
+    return tasks1[key] != null;
+  }
+
   void addTask1(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask1 - key:$key - func:${func.toString()}");
     if (callNow) func.call(key);
-    tasks1[key] = func;
+    _lock.synchronized(() {
+      tasks1[key] = func;
+    });
   }
 
   void removeTask1(String key) {
-    if (!tasks1.keys.contains(key)) return;
-    Map<String, Function(String)> temp = Map();
-    tasks1.forEach((k, v) {
-      if (k != key) {
-        temp[k] = v;
-      }
+    _lock.synchronized(() {
+      if (!tasks1.keys.contains(key)) return;
+      Map<String, Function(String)> temp = Map();
+      tasks1.forEach((k, v) {
+        if (k != key) {
+          temp[k] = v;
+        }
+      });
+      tasks1 = temp;
     });
-    tasks1 = temp;
+  }
+
+  bool isTask30Run(String key) {
+    return tasks30[key] != null;
   }
 
   void addTask30(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask30 - key:$key - func:${func.toString()}");
     if (callNow) func.call(key);
-    tasks30[key] = func;
+    _lock.synchronized(() {
+      tasks30[key] = func;
+    });
   }
 
   void removeTask30(String key) {
-    if (!tasks30.keys.contains(key)) return;
-    Map<String, Function(String)> temp = Map();
-    tasks30.forEach((k, v) {
-      if (k != key) {
-        temp[k] = v;
-      }
+    _lock.synchronized(() {
+      if (!tasks30.keys.contains(key)) return;
+      Map<String, Function(String)> temp = Map();
+      tasks30.forEach((k, v) {
+        if (k != key) {
+          temp[k] = v;
+        }
+      });
+      tasks30 = temp;
     });
-    tasks30 = temp;
+  }
+
+  bool isTask60Run(String key) {
+    return tasks60[key] != null;
   }
 
   void addTask60(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask60 - key:$key - func:${func.toString()}");
     if (callNow) func.call(key);
-    tasks60[key] = func;
+    _lock.synchronized(() {
+      tasks60[key] = func;
+    });
   }
 
   void removeTask60(String key) {
-    if (!tasks60.keys.contains(key)) return;
-    Map<String, Function(String)> temp = Map();
-    tasks60.forEach((k, v) {
-      if (k != key) {
-        temp[k] = v;
-      }
+    _lock.synchronized(() {
+      if (!tasks60.keys.contains(key)) return;
+      Map<String, Function(String)> temp = Map();
+      tasks60.forEach((k, v) {
+        if (k != key) {
+          temp[k] = v;
+        }
+      });
+      tasks60 = temp;
     });
-    tasks60 = temp;
+  }
+
+  bool isTask300Run(String key) {
+    return _tasks300[key] != null;
   }
 
   void addTask300(String key, Function(String) func, {bool callNow = true}) {
     logger.d("$Tag - addTask300 - key:$key - func:${func.toString()}");
     if (callNow) func.call(key);
-    _tasks300[key] = func;
+    _lock.synchronized(() {
+      _tasks300[key] = func;
+    });
   }
 
   void removeTask300(String key) {
-    if (!_tasks300.keys.contains(key)) return;
-    Map<String, Function(String)> temp = Map();
-    _tasks300.forEach((k, v) {
-      if (k != key) {
-        temp[k] = v;
-      }
+    _lock.synchronized(() {
+      if (!_tasks300.keys.contains(key)) return;
+      Map<String, Function(String)> temp = Map();
+      _tasks300.forEach((k, v) {
+        if (k != key) {
+          temp[k] = v;
+        }
+      });
+      _tasks300 = temp;
     });
-    _tasks300 = temp;
   }
 }
