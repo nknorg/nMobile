@@ -57,7 +57,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
 
-  bool firstConnected = true;
+  bool firstLogin = true;
   int appBackgroundAt = 0;
   int lastSendPangsAt = 0;
   int lastCheckTopicsAt = 0;
@@ -68,6 +68,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
+    firstLogin = true;
 
     // db
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
@@ -86,12 +87,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // app life
     _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        if (!firstConnected) {
+        if (!firstLogin) {
           int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (between >= Global.clientReAuthGapMs) {
             _tryAuth(); // await
           } else {
-            clientCommon.connectCheck();
+            clientCommon.connectCheck(); // await
           }
         }
       } else if (application.isGoBackground(states)) {
@@ -102,7 +103,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
-        firstConnected = false;
         // send pangs (3h)
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
           chatCommon.sendPang2SessionsContact(delayMs: 1000); // await
@@ -177,6 +177,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       logger.i("$TAG - _tryLogin - wallet default is empty");
       return;
     }
+    firstLogin = false;
     if (isLoginProgress) return;
     isLoginProgress = true;
 
@@ -204,7 +205,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   Future _tryAuth() async {
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated && (clientCommon.status != ClientConnectStatus.connecting)) return;
     _toggleSessionListShow(false);
     AppScreen.go(this.context);
 
