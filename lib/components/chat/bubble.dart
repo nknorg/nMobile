@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -60,8 +59,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
   StreamSubscription? _contactUpdateStreamSubscription;
   StreamSubscription? _onPieceOutStreamSubscription;
-  StreamSubscription? _onPlayStateChangedSubscription;
-  StreamSubscription? _onPlayPositionChangedSubscription;
+  StreamSubscription? _onPlayProgressSubscription;
 
   late MessageSchema _message;
   ContactSchema? _contact;
@@ -75,7 +73,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   double _uploadProgress = 1;
 
-  PlayerState _playState = PlayerState.STOPPED;
   double _playProgress = 0;
 
   @override
@@ -110,25 +107,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       }
     });
     // player
-    _onPlayStateChangedSubscription = audioHelper.onPlayStateChangedStream.listen((Map<String, dynamic> event) {
-      String? playerId = event["id"];
-      PlayerState? state = event["state"];
-      if (playerId == null || playerId != this._message.msgId || state == null) {
-        if (_playState != PlayerState.STOPPED) {
-          setState(() {
-            _playState = PlayerState.STOPPED;
-            _playProgress = 0;
-          });
-        }
-        return;
-      }
-      if (state == _playState) return;
-      this.setState(() {
-        _playState = state;
-        _playProgress = 0;
-      });
-    });
-    _onPlayPositionChangedSubscription = audioHelper.onPlayPositionChangedStream.listen((Map<String, dynamic> event) {
+    _onPlayProgressSubscription = audioHelper.onPlayProgressStream.listen((Map<String, dynamic> event) {
       String? playerId = event["id"]?.toString();
       // int? duration = event["duration"];
       // Duration? position = event["position"];
@@ -188,8 +167,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   void dispose() {
     // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
     _contactUpdateStreamSubscription?.cancel();
-    _onPlayStateChangedSubscription?.cancel();
-    _onPlayPositionChangedSubscription?.cancel();
+    _onPlayProgressSubscription?.cancel();
     _onPieceOutStreamSubscription?.cancel();
     super.dispose();
   }
@@ -669,7 +647,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyAudio(bool dark) {
-    bool isPlaying = _playState == PlayerState.PLAYING;
+    bool isPlaying = _playProgress > 0;
 
     Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
     Color textColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.fontColor2.withAlpha(200);
