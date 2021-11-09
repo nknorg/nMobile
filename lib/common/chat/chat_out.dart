@@ -235,7 +235,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (clientAddressList.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getPing(isPing);
     await _sendWithAddressSafe(clientAddressList, data);
   }
@@ -243,7 +243,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     received = (await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await _sendWithAddressSafe([received.from], data, target: received.from);
@@ -252,7 +252,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendRead(String? clientAddress, List<String> msgIds, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getRead(msgIds);
     await _sendWithAddressSafe([clientAddress], data, target: clientAddress);
   }
@@ -260,7 +260,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getMsgStatus(ask, msgIds);
     await _sendWithAddressSafe([clientAddress], data, target: clientAddress);
   }
@@ -268,7 +268,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data = MessageData.getContactRequest(requestType, profileVersion, updateAt);
     await _sendWithAddressSafe([clientAddress], data, target: clientAddress);
@@ -277,7 +277,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me, int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data;
@@ -292,7 +292,7 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -308,7 +308,7 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -323,7 +323,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceRequest(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getDeviceRequest();
     await _sendWithAddressSafe([clientAddress], data, target: clientAddress);
   }
@@ -331,7 +331,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display (1 to 1)
   Future sendDeviceInfo(String? clientAddress, {int tryCount = 1}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getDeviceInfo();
     await _sendWithAddressSafe([clientAddress], data, target: clientAddress);
   }
@@ -339,7 +339,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || content.trim().isEmpty) return null;
-    if (!clientCommon.isClientCreated) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -358,7 +358,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (!clientCommon.isClientCreated) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
     String contentType = DeviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
     MessageSchema message = MessageSchema.fromSend(
@@ -378,7 +378,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
     if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    if (!clientCommon.isClientCreated) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -396,7 +396,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display
   Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {int? bodySize, double percent = -1}) async {
-    if (!clientCommon.isClientCreated) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
@@ -424,7 +424,7 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -438,7 +438,7 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -453,7 +453,7 @@ class ChatOutCommon with Tag {
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
-    if (!clientCommon.isClientCreated) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
@@ -468,7 +468,7 @@ class ChatOutCommon with Tag {
   // NO DB NO single
   Future sendTopicKickOut(String? topic, String? targetAddress, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
-    if (!clientCommon.isClientCreated) return;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address!,
