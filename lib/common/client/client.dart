@@ -274,7 +274,7 @@ class ClientCommon with Tag {
 
   void connectCheck({bool reconnect = false}) {
     if (application.inBackGround && Platform.isIOS) return;
-    if (client == null) return;
+    if ((client == null) && !reconnect) return;
     if (connectChecking) return;
     connectChecking = true;
     _statusSink.add(ClientConnectStatus.connecting);
@@ -289,13 +289,17 @@ class ClientCommon with Tag {
     }
 
     // loop
-    Future.delayed(Duration(milliseconds: 1000), () {
+    if (reconnect) {
       connectChecking = false;
-      if (status == ClientConnectStatus.connecting) {
-        _connectingVisibleSink.add(true);
-        connectCheck(reconnect: reconnect);
-      }
-    });
+    } else {
+      Future.delayed(Duration(milliseconds: 1000), () {
+        connectChecking = false;
+        if (status == ClientConnectStatus.connecting) {
+          _connectingVisibleSink.add(true);
+          connectCheck();
+        }
+      });
+    }
   }
 
   void connectSuccess({bool force = false}) {
