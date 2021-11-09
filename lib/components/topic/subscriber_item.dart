@@ -224,7 +224,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
 
   Widget _getTailAction(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
     if (topic == null || !topic.isPrivate) return SizedBox.shrink();
-    if (!clientCommon.isClientCreated) return SizedBox.shrink();
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return SizedBox.shrink();
     if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
     if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
 

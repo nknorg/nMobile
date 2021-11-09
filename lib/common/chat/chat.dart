@@ -42,7 +42,6 @@ class ChatCommon with Tag {
   }
 
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     if (application.inBackGroundLater && Platform.isIOS) return;
 
@@ -479,7 +478,6 @@ class ChatCommon with Tag {
   }
 
   Future readMessagesBySelf(String? targetId, String? topic, String? clientAddress) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     List<String> msgIds = [];
