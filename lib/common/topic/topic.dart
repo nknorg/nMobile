@@ -317,7 +317,7 @@ class TopicCommon with Tag {
     int tryCount = 1,
     bool toast = false,
   }) async {
-    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
 
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
@@ -508,7 +508,7 @@ class TopicCommon with Tag {
 
   // caller = self
   Future<TopicSchema?> unsubscribe(String? topic, {double fee = 0, bool toast = false}) async {
-    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated) return null;
+    if (topic == null || topic.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     // permission modify in owners message received by owner
 
     // client unsubscribe
@@ -681,7 +681,7 @@ class TopicCommon with Tag {
 
   // caller = everyone
   Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false, bool sendMsg = false}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated) return null;
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (clientAddress == clientCommon.address) {
       if (toast) Toast.show(S.of(Global.appContext).invite_yourself_error);
       return null;
@@ -749,7 +749,7 @@ class TopicCommon with Tag {
 
   // caller = private + owner
   Future<SubscriberSchema?> kick(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated) return null;
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (clientAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
 
