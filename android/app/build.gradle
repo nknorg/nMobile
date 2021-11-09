@@ -60,7 +60,7 @@ android {
             minifyEnabled false
             zipAlignEnabled true
             shrinkResources false
-            applicationIdSuffix ".debug"
+            // applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
