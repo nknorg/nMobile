@@ -87,12 +87,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _onMessageUpdateStreamSubscription;
 
   ScrollController _scrollController = ScrollController();
-  Lock _fetchMsgLock = Lock();
   bool _moreLoading = false;
-  List<MessageSchema> _messages = <MessageSchema>[];
+  Lock _fetchMsgLock = Lock();
   int _pageLimit = 30;
+  List<MessageSchema> _messages = <MessageSchema>[];
 
-  Timer? _delTimer;
+  Timer? _delRefreshTimer;
 
   bool _showBottomMenu = false;
 
@@ -189,9 +189,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _messages = messages;
       });
       if ((messages.length < (_pageLimit / 2)) && !_moreLoading) {
-        _delTimer?.cancel();
-        _delTimer = null;
-        _delTimer = Timer(Duration(seconds: 1), () {
+        _delRefreshTimer?.cancel();
+        _delRefreshTimer = null;
+        _delRefreshTimer = Timer(Duration(milliseconds: 500), () {
           _moreLoading = true;
           _getDataMessages(false).then((v) {
             _moreLoading = false;
