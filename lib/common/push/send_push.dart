@@ -44,7 +44,7 @@ class SendPush {
             'title': title,
             'body': content,
           },
-          // 'badge': 1, // dont set
+          'badge': 1,
           'sound': "default",
         },
       });
