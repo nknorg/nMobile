@@ -726,7 +726,13 @@ class Upgrade4to5 {
         }
         int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
         int newReceiveAt = (oldReceiveAt == null || oldReceiveAt == 0) ? newCreateAt : oldReceiveAt;
-        int? newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
+        int? newDeleteAt;
+        bool isText = newType == MessageContentType.text || newType == MessageContentType.textExtension;
+        bool isImage = newType == MessageContentType.media || newType == MessageContentType.image;
+        bool isAudio = newType == MessageContentType.audio;
+        if (isText || isImage || isAudio) {
+          newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
+        }
         // if (newDeleteAt != null && newDeleteAt < DateTime.now().millisecondsSinceEpoch) {
         //   logger.i("Upgrade4to5 - $oldTableName query - delete time over - data:$result");
         //   newIsDelete = 1;
