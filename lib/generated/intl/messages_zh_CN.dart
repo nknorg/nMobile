@@ -204,6 +204,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "fast": MessageLookupByLibrary.simpleMessage("快"),
         "featured": MessageLookupByLibrary.simpleMessage("精选"),
         "fee": MessageLookupByLibrary.simpleMessage("矿工费"),
+        "file_not_exist": MessageLookupByLibrary.simpleMessage("文件不存在"),
         "file_too_big": MessageLookupByLibrary.simpleMessage("文件尺寸过大"),
         "files": MessageLookupByLibrary.simpleMessage("文件"),
         "first_name": MessageLookupByLibrary.simpleMessage("名"),

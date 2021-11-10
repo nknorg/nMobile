@@ -5,8 +5,10 @@ import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -76,7 +78,7 @@ class AudioHelper with Tag {
     }
     // path
     if (localPath.isEmpty || !File(localPath).existsSync()) {
-      Toast.show("文件不存在"); // TODO:GG locale
+      Toast.show(S.of(Global.appContext).file_not_exist);
       return false;
     }
     if (Platform.isAndroid) localPath = 'file:///' + localPath;

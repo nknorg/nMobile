@@ -236,6 +236,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "fast": MessageLookupByLibrary.simpleMessage("Fast"),
         "featured": MessageLookupByLibrary.simpleMessage("Featured"),
         "fee": MessageLookupByLibrary.simpleMessage("Fee"),
+        "file_not_exist":
+            MessageLookupByLibrary.simpleMessage("The file does not exist"),
         "file_too_big":
             MessageLookupByLibrary.simpleMessage("The file is too big"),
         "files": MessageLookupByLibrary.simpleMessage("Files"),

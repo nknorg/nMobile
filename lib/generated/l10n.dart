@@ -3510,6 +3510,16 @@ class S {
     );
   }
 
+  /// `The file does not exist`
+  String get file_not_exist {
+    return Intl.message(
+      'The file does not exist',
+      name: 'file_not_exist',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `The user has been added`
   String get add_user_duplicated {
     return Intl.message(
