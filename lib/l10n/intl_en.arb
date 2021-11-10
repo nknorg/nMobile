@@ -364,6 +364,7 @@
   "has_left_the_group": "Left group",
   "reject_user_tip": "Are you sure you want to remove this user?",
   "file_too_big": "The file is too big",
+  "file_not_exist": "The file does not exist",
   "add_user_duplicated": "The user has been added",
   "confirm_unsubscribe_group": "Are you sure you want to leave the group chat?",
   "balance_not_enough": "Balance not enough",
