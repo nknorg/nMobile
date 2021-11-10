@@ -119,7 +119,7 @@ class Upgrade4to5 {
         int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // profileExtra
-        String? newProfileVersion = (((result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
+        String? newProfileVersion = Uuid().v4(); // (result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
         int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
         // top + token
         int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
