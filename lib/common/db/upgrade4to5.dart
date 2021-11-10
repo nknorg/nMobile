@@ -157,9 +157,9 @@ class Upgrade4to5 {
         }
         Map<String, dynamic> newDataMap = Map();
         newDataMap['nknWalletAddress'] = oldDataMap['nknWalletAddress']; // too loong to check
-        newDataMap['notes'] = oldDataMap['notes'];
+        newDataMap['firstName'] = oldDataMap['remark_name'];
         newDataMap['avatar'] = oldDataMap['remark_avatar'];
-        newDataMap['firstName'] = oldDataMap['firstName'] ?? oldDataMap['remark_name'] ?? oldDataMap['notes'];
+        newDataMap['notes'] = oldDataMap['notes'];
         String? newData;
         try {
           newData = jsonEncode(newDataMap);
@@ -168,11 +168,11 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
         // profile
-        String? oldAvatar = Path.getLocalFile(oldDataMap['avatar']);
+        String? oldAvatar = Path.getLocalFile(oldDataMap['avatar']); // why oldDataMap?
         String? newAvatar = (oldAvatar?.isNotEmpty == true) ? oldAvatar : Path.getLocalFile(result["avatar"]);
-        String? oldFirstName = ((oldDataMap["first_name"]?.toString().length ?? 0) > 50) ? oldDataMap["first_name"]?.toString().substring(0, 50) : oldDataMap["first_name"];
+        String? oldFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
         String? newFirstName = (oldFirstName?.isNotEmpty == true) ? oldFirstName : (((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"]);
-        String? oldLastName = ((oldDataMap["last_name"]?.toString().length ?? 0) > 50) ? oldDataMap["last_name"]?.toString().substring(0, 50) : oldDataMap["last_name"];
+        String? oldLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
         String? newLastName = (oldLastName?.isNotEmpty == true) ? oldLastName : (((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"]);
 
         // duplicated

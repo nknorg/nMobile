@@ -120,15 +120,6 @@ class ContactSchema {
       if (data!['firstName']?.toString().isNotEmpty == true) {
         displayName = data!['firstName'];
       }
-      // SUPPORT:START
-      else if (data!['first_name']?.toString().isNotEmpty == true) {
-        displayName = data!['first_name'];
-      } else if (data!['remark_name']?.toString().isNotEmpty == true) {
-        displayName = data!['remark_name'];
-      } else if (data!['notes']?.toString().isNotEmpty == true) {
-        displayName = data!['notes'];
-      }
-      // SUPPORT:END
     }
 
     if (displayName == null || displayName.isEmpty) {
@@ -150,11 +141,6 @@ class ContactSchema {
       if (data!['avatar']?.toString().isNotEmpty == true) {
         avatarLocalPath = data!['avatar'];
       }
-      // SUPPORT:START
-      else if (data!['remark_avatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = data!['remark_avatar'];
-      }
-      // SUPPORT:END
     }
 
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
