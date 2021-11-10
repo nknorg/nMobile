@@ -364,6 +364,7 @@
   "has_left_the_group": "已退群",
   "reject_user_tip": "确定要移除该用户吗？",
   "file_too_big": "文件尺寸过大",
+  "file_not_exist": "文件不存在",
   "add_user_duplicated": "已添加该用户",
   "confirm_unsubscribe_group": "确定要退出群聊吗？",
   "balance_not_enough": "余额不足",
