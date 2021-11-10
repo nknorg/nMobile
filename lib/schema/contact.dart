@@ -121,7 +121,9 @@ class ContactSchema {
         displayName = data!['firstName'];
       }
       // SUPPORT:START
-      else if (data!['remark_name']?.toString().isNotEmpty == true) {
+      else if (data!['first_name']?.toString().isNotEmpty == true) {
+        displayName = data!['first_name'];
+      } else if (data!['remark_name']?.toString().isNotEmpty == true) {
         displayName = data!['remark_name'];
       } else if (data!['notes']?.toString().isNotEmpty == true) {
         displayName = data!['notes'];
