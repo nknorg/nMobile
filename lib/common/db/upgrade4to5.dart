@@ -170,9 +170,9 @@ class Upgrade4to5 {
         // profile
         String? oldAvatar = Path.getLocalFile(oldDataMap['avatar']); // why oldDataMap?
         String? newAvatar = (oldAvatar?.isNotEmpty == true) ? oldAvatar : Path.getLocalFile(result["avatar"]);
-        String? oldFirstName = ((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"];
+        String? oldFirstName = ((oldDataMap["firstName"]?.toString().length ?? 0) > 50) ? oldDataMap["firstName"]?.toString().substring(0, 50) : oldDataMap["firstName"];
         String? newFirstName = (oldFirstName?.isNotEmpty == true) ? oldFirstName : (((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"]);
-        String? oldLastName = ((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"];
+        String? oldLastName = ((oldDataMap["lastName"]?.toString().length ?? 0) > 50) ? oldDataMap["lastName"]?.toString().substring(0, 50) : oldDataMap["lastName"];
         String? newLastName = (oldLastName?.isNotEmpty == true) ? oldLastName : (((result["last_name"]?.toString().length ?? 0) > 50) ? result["last_name"]?.toString().substring(0, 50) : result["last_name"]);
 
         // duplicated
