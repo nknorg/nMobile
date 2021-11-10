@@ -420,11 +420,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               fontWeight: FontWeight.w500,
             ),
             SizedBox(height: 15),
-            Label(
-              _localizations.upgrade_db_tips,
-              type: LabelType.display,
-              softWrap: true,
-            ),
+            ((dbUpdateTip ?? "").length >= 3)
+                ? Label(
+                    _localizations.upgrade_db_tips,
+                    type: LabelType.display,
+                    softWrap: true,
+                  )
+                : SizedBox.shrink(),
           ],
         ),
       ),
