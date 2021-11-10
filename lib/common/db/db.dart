@@ -33,6 +33,8 @@ class DB {
   StreamSink<String?> get _upgradeTipSink => _upgradeTipController.sink;
   Stream<String?> get upgradeTipStream => _upgradeTipController.stream;
 
+  Lock _openLock = new Lock();
+
   Lock lock = new Lock();
 
   Database? database;
@@ -40,11 +42,21 @@ class DB {
   DB();
 
   Future<Database> _openDB(String publicKey, String seed) async {
+    return _openLock.synchronized(() async {
+      return await _openDBWithNoLick(publicKey, seed);
+    });
+  }
+
+  Future<Database> _openDBWithNoLick(String publicKey, String seed) async {
     String path = await getDBFilePath(publicKey);
     String password = hexEncode(sha256(seed));
     logger.i("DB - ready - path:$path - pwd:$password"); //  - exists:${await databaseExists(path)}
 
-    _upgradeTipSink.add(null);
+    if (await needUpgrade()) {
+      _upgradeTipSink.add(".");
+    } else {
+      _upgradeTipSink.add(null);
+    }
 
     // test
     // int i = 0;
@@ -61,6 +73,7 @@ class DB {
       singleInstance: true,
       onCreate: (Database db, int version) async {
         logger.i("DB - create - version:$version - path:${db.path}");
+        _upgradeTipSink.add("..");
         await ContactStorage.create(db);
         await DeviceInfoStorage.create(db);
         await TopicStorage.create(db);
@@ -70,6 +83,7 @@ class DB {
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - upgrade - old:$oldVersion - new:$newVersion");
+        _upgradeTipSink.add("...");
 
         // 1 -> 2
         bool v1to2 = false;
@@ -109,9 +123,9 @@ class DB {
         _upgradeTipSink.add(null);
       },
       onOpen: (Database db) async {
+        _upgradeTipSink.add(null);
         int version = await db.getVersion();
         logger.i("DB - opened - version:$version - path:${db.path}");
-        _upgradeTipSink.add(null);
         SettingsStorage.setSettings(SettingsStorage.DATABASE_VERSION, version);
       },
     );
