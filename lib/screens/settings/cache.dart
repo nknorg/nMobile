@@ -142,7 +142,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     } else if (type == FileType.db) {
       await clientCommon.signOut(closeDB: true, clearWallet: true);
       await Future.delayed(Duration(seconds: 1));
-      String dbPath = await dbCommon.getDBFilePath(wallet.publicKey);
+      String dbPath = await dbCommon.getDBFilePath(pubKey);
       await _delete(File(dbPath));
     }
     // refresh
