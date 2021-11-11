@@ -47,7 +47,7 @@ class _ContactAvatarState extends BaseStateFulWidgetState<ContactAvatar> {
     String name = widget.contact.displayName;
     String? path = widget.contact.displayAvatarPath;
 
-    if (_fileError || path?.isNotEmpty == true) {
+    if (!_fileError && (path?.isNotEmpty == true)) {
       // _avatarFile != null
       return CircleAvatar(
         radius: radius,
