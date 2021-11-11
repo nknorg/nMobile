@@ -122,7 +122,7 @@ class Upgrade4to5 {
         String? newProfileVersion = Uuid().v4(); // (result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
         int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
         // top + token
-        int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
+        int newIsTop = 0; // (result["is_top"]?.toString() == '1') ? 1 : 0;
         String? newDeviceToken = result["device_token"];
         // options
         OptionsSchema newOptionsSchema = OptionsSchema();
@@ -323,7 +323,7 @@ class Upgrade4to5 {
         String? newAvatar = Path.getLocalFile(result["avatar"]);
         // count + top
         int? newCount = result["count"];
-        int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
+        int newIsTop = 0; // (result["is_top"]?.toString() == '1') ? 1 : 0;
         // options
         OptionsSchema newOptionsSchema = OptionsSchema();
         try {
@@ -851,6 +851,12 @@ class Upgrade4to5 {
       // loop offset:limit
       for (var i = 0; i < contacts.length; i++) {
         Map<String, dynamic> contact = contacts[i];
+
+        // me
+        if ((contact["type"]?.toString() == ContactType.me.toString()) || (contact["type"]?.toString() == 'me')) {
+          logger.i("Upgrade4to5 - ${SessionStorage.tableName} added skip with contact me - contact:$contact");
+          continue;
+        }
 
         // targetId
         String? targetId = contact["address"];
