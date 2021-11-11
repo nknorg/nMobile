@@ -47,7 +47,7 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
     String name = widget.topic.topicName;
     String? path = widget.topic.displayAvatarPath;
 
-    if (_fileError || path?.isNotEmpty == true) {
+    if (!_fileError && (path?.isNotEmpty == true)) {
       // _avatarFile != null
       return CircleAvatar(
         radius: radius,
