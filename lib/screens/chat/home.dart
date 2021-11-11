@@ -398,6 +398,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       child: Container(
         constraints: BoxConstraints(
           maxWidth: Global.screenHeight() / 4,
+          minWidth: Global.screenHeight() / 4,
         ),
         padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         decoration: BoxDecoration(

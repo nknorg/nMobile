@@ -205,7 +205,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${ContactStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/7)");
+        //upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (1/7)");
       }
     }
     if (total != rawCount) {
@@ -375,7 +375,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${TopicStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/7)");
+        //upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (3/7)");
       }
     }
     if (total != rawCount) {
@@ -513,7 +513,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SubscriberStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/7)");
+        //upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (4/7)");
       }
     }
     if (total != rawCount) {
@@ -813,7 +813,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${MessageStorage.tableName} added fail - data:$entity");
         }
-        upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/7)");
+        //upgradeTipStream?.add("${(total * 100) ~/ (rawCount * 100)}% (5/7)");
       }
     }
     if (total != rawCount) {
@@ -839,7 +839,7 @@ class Upgrade4to5 {
     int rawCount1 = Sqflite.firstIntValue(rawCountMap1) ?? 0;
     final rawCountMap2 = await db.query(TopicStorage.tableName, columns: ['COUNT(id)']);
     int rawCount2 = Sqflite.firstIntValue(rawCountMap2) ?? 0;
-    int rawCount = rawCount1 + rawCount2;
+    // int rawCount = rawCount1 + rawCount2;
 
     // contact
     int contactTotal = 0;
@@ -908,7 +908,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by contact fail - data:$entity");
         }
-        upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/7)");
+        //upgradeTipStream?.add("${(contactTotal * 100) ~/ (rawCount * 100)}% (6/7)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by contact - rawCount:$rawCount1 - total:$contactTotal");
@@ -974,7 +974,7 @@ class Upgrade4to5 {
         } else {
           logger.w("Upgrade4to5 - ${SessionStorage.tableName} added by topic fail - data:$entity");
         }
-        upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/7)");
+        //upgradeTipStream?.add("${((topicTotal + rawCount1) * 100) ~/ (rawCount * 100)}% (6/7)");
       }
     }
     logger.i("Upgrade4to5 - ${SessionStorage.tableName} added end by topic - rawCount:$rawCount2 - total:$topicTotal");
