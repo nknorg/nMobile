@@ -70,7 +70,7 @@ class Upgrade4to5 {
     int limit = 30;
     bool loop = true;
     while (loop) {
-      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
@@ -271,7 +271,7 @@ class Upgrade4to5 {
     int limit = 30;
     bool loop = true;
     while (loop) {
-      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
@@ -428,7 +428,7 @@ class Upgrade4to5 {
     int limit = 30;
     bool loop = true;
     while (loop) {
-      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], offset: offset, limit: limit);
+      List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
       if (results == null || results.isEmpty) {
         loop = false;
         logger.i("Upgrade4to5 - $oldTableName loop over");
@@ -523,6 +523,7 @@ class Upgrade4to5 {
     }
   }
 
+  // TODO:GG
   static Future upgradeMessages(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // pid (TEXT) -> pid (VARCHAR(300))
