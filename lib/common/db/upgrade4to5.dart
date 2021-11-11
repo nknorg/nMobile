@@ -485,7 +485,7 @@ class Upgrade4to5 {
         }
         // permPage
         int? newPermPage = result["prm_p_i"]; // maybe null
-        if (newPermPage == null || newPermPage < 0) {
+        if ((newPermPage == null || newPermPage < 0) && Validate.isPrivateTopicOk(newTopic)) {
           logger.i("Upgrade4to5 - $oldTableName query - permPage is null - data:$result");
         }
 
@@ -673,7 +673,7 @@ class Upgrade4to5 {
         // receiver
         String? oldReceiver = result["receiver"];
         if (oldReceiver == null || oldReceiver.isEmpty) {
-          logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
+          //logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
         } else if (oldReceiver.contains(".__permission__.")) {
           final splits = oldReceiver.split(".__permission__.");
           oldReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
