@@ -778,9 +778,11 @@ class Upgrade4to5 {
         // duplicated
         List<Map<String, dynamic>>? duplicated = await db.query(MessageStorage.tableName, columns: ['*'], where: 'msg_id = ?', whereArgs: [newMsgId], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
-          logger.w("Upgrade4to5 - ${MessageStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
-          // TODO:GG
-          continue;
+          Map<String, dynamic> exist = duplicated[0];
+          if ((newType == exist['type']) && (newTargetId == exist['target_id'])) {
+            logger.w("Upgrade4to5 - ${MessageStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+            continue;
+          }
         }
 
         // insert v5Data
