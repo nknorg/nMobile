@@ -523,7 +523,6 @@ class Upgrade4to5 {
     }
   }
 
-  // TODO:GG
   static Future upgradeMessages(Database db, {StreamSink<String?>? upgradeTipStream}) async {
     // id (NULL) -> id (NOT NULL)
     // pid (TEXT) -> pid (VARCHAR(300))
@@ -590,6 +589,7 @@ class Upgrade4to5 {
         // type
         String? oldType = result["type"];
         String? newType;
+        bool canBurning = false;
         if (oldType == null || oldType.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
           // continue; // old burning delete
@@ -604,8 +604,10 @@ class Upgrade4to5 {
           newType = oldType;
         } else if (oldType == MessageContentType.text || oldType == MessageContentType.textExtension) {
           newType = oldType;
+          canBurning = true;
         } else if (oldType == MessageContentType.media || oldType == MessageContentType.image || oldType == MessageContentType.audio) {
           newType = oldType;
+          canBurning = true;
         } else if (oldType == MessageContentType.piece) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is piece, need skip - data:$result");
           continue;
@@ -620,8 +622,8 @@ class Upgrade4to5 {
         }
         // content
         String? newContent = result['content'];
-        if (newContent == null || newContent.isEmpty) {
-          if (newType == MessageContentType.text || newType == MessageContentType.textExtension || newType == MessageContentType.media || newType == MessageContentType.image || newType == MessageContentType.audio) {
+        if ((newContent == null) || newContent.isEmpty) {
+          if (canBurning) {
             logger.i("Upgrade4to5 - $oldTableName convert - content be delete - data:$result");
             // continue; // old burning delete
             newIsDelete = 1;
@@ -632,7 +634,7 @@ class Upgrade4to5 {
         if (oldPid == null || oldPid.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - pid is null - data:$result");
         }
-        String? newPid = ((oldPid?.isNotEmpty == true) && (oldPid!.length <= 300)) ? oldPid : null;
+        String? newPid = (oldPid?.isNotEmpty == true) ? ((oldPid!.length <= 300) ? oldPid : Uuid().v4()) : null;
         if (newPid == null || newPid.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
         }
@@ -641,10 +643,20 @@ class Upgrade4to5 {
         if (oldMsgId == null || oldMsgId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - msgId is null - data:$result");
         }
-        String? newMsgId = ((oldMsgId?.isNotEmpty == true) && (oldMsgId!.length <= 300)) ? oldMsgId : null;
+        String? newMsgId = (oldMsgId?.isNotEmpty == true) ? ((oldMsgId!.length <= 300) ? oldMsgId : Uuid().v4()) : null;
         if (newMsgId == null || newMsgId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - msgId error - data:$result");
           continue; // old burning no delete
+        }
+        // isOutBound
+        int? newIsOutbound = result["is_outbound"];
+        if (newIsOutbound == null) {
+          if (newIsDelete != 1) {
+            logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
+            continue;
+          } else {
+            logger.i("Upgrade4to5 - $oldTableName convert - isOutBound deleted - data:$result");
+          }
         }
         // sender
         String? oldSender = result["sender"];
@@ -657,43 +669,24 @@ class Upgrade4to5 {
         String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
         if (newSender == null || newSender.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
-          if (newIsDelete != 1) continue;
         }
         // receiver
         String? oldReceiver = result["receiver"];
         if (oldReceiver == null || oldReceiver.isEmpty) {
           logger.i("Upgrade4to5 - $oldTableName query - receiver is null - data:$result");
+        } else if (oldReceiver.contains(".__permission__.")) {
+          final splits = oldReceiver.split(".__permission__.");
+          oldReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
         }
         String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
-        if (newReceiver?.contains(".__permission__.") == true) {
-          final splits = newReceiver!.split(".__permission__.");
-          newReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
+        if ((oldReceiver?.isNotEmpty == true) && (newReceiver == null || newReceiver.isEmpty)) {
+          logger.w("Upgrade4to5 - $oldTableName convert - receiver error - data:$result");
         }
         // topic
         String? oldTopic = result["topic"];
         String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
         if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
           logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
-        }
-        // isOutBound
-        int? newIsOutbound = result["is_outbound"];
-        if (newIsOutbound == null) {
-          logger.w("Upgrade4to5 - $oldTableName convert - isOutBound error - data:$result");
-          if (newIsDelete != 1) continue;
-        }
-        // status
-        int? oldIsSendError = result["is_send_error"];
-        // int? oldIsSuccess = result["is_success"];
-        int? oldIsRead = result["is_read"];
-        int newStatus = MessageStatus.Read;
-        if (newIsOutbound == 1) {
-          if (oldIsSendError == 1) {
-            newStatus = MessageStatus.SendFail;
-          }
-        } else if (newIsOutbound == 0) {
-          if (oldIsRead == null || oldIsRead == 0) {
-            newStatus = MessageStatus.Received;
-          }
         }
         // targetId
         String? oldTargetId = result["target_id"];
@@ -715,8 +708,26 @@ class Upgrade4to5 {
           }
         }
         if (newTargetId == null || newTargetId.isEmpty) {
-          logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
-          if (newIsDelete != 1) continue;
+          if (newIsDelete != 1) {
+            logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
+            continue;
+          } else {
+            logger.i("Upgrade4to5 - $oldTableName convert - targetId deleted - data:$result");
+          }
+        }
+        // status
+        int? oldIsSendError = result["is_send_error"];
+        // int? oldIsSuccess = result["is_success"];
+        int? oldIsRead = result["is_read"];
+        int newStatus = MessageStatus.Read;
+        if (newIsOutbound == 1) {
+          if (oldIsSendError == 1) {
+            newStatus = MessageStatus.SendFail;
+          }
+        } else if (newIsOutbound == 0) {
+          if (oldIsRead == null || oldIsRead == 0) {
+            newStatus = MessageStatus.Received;
+          }
         }
         // at
         int? oldSendAt = result["send_time"];
@@ -727,13 +738,7 @@ class Upgrade4to5 {
         }
         int newCreateAt = (oldSendAt == null || oldSendAt == 0) ? DateTime.now().millisecondsSinceEpoch : oldSendAt;
         int newReceiveAt = (oldReceiveAt == null || oldReceiveAt == 0) ? newCreateAt : oldReceiveAt;
-        int? newDeleteAt;
-        bool isText = newType == MessageContentType.text || newType == MessageContentType.textExtension;
-        bool isImage = newType == MessageContentType.media || newType == MessageContentType.image;
-        bool isAudio = newType == MessageContentType.audio;
-        if (isText || isImage || isAudio) {
-          newDeleteAt = (oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt;
-        }
+        int? newDeleteAt = canBurning ? ((oldDeleteAt == null || oldDeleteAt == 0) ? null : oldDeleteAt) : null;
         // if (newDeleteAt != null && newDeleteAt < DateTime.now().millisecondsSinceEpoch) {
         //   logger.i("Upgrade4to5 - $oldTableName query - delete time over - data:$result");
         //   newIsDelete = 1;
@@ -774,6 +779,7 @@ class Upgrade4to5 {
         List<Map<String, dynamic>>? duplicated = await db.query(MessageStorage.tableName, columns: ['*'], where: 'msg_id = ?', whereArgs: [newMsgId], offset: 0, limit: 1);
         if (duplicated != null && duplicated.length > 0) {
           logger.w("Upgrade4to5 - ${MessageStorage.tableName} query - duplicated - data:$result - duplicated:$duplicated");
+          // TODO:GG
           continue;
         }
 
