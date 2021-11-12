@@ -250,6 +250,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
               padding: EdgeInsets.only(top: 22, bottom: 80 + Global.screenHeight() * 0.05),
               itemCount: state.wallets.length,
               itemBuilder: (context, index) {
+                if (index < 0 || index >= state.wallets.length) return SizedBox.shrink();
                 WalletSchema wallet = state.wallets[index];
                 // if (index == 1) wallet.type = WalletType.eth; // test
                 return Padding(
