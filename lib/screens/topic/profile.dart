@@ -56,6 +56,8 @@ class TopicProfileScreen extends BaseStateFulWidget {
 class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScreen> {
   StreamSubscription? _updateTopicSubscription;
   // StreamSubscription? _deleteTopicSubscription;
+  StreamSubscription? _onSubscriberAddStreamSubscription;
+  StreamSubscription? _onSubscriberUpdateStreamSubscription;
 
   TopicSchema? _topicSchema;
 
@@ -85,6 +87,20 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       _refreshJoined(); // await
       _refreshMembersCount(); // await
     });
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
+      if (schema.clientAddress == clientCommon.address) {
+        _refreshJoined();
+      }
+      _refreshMembersCount();
+    });
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((event) {
+      if (event.clientAddress == clientCommon.address) {
+        _refreshJoined();
+      } else {
+        _refreshMembersCount();
+      }
+    });
+
     // _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
     //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
@@ -93,6 +109,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
+    _onSubscriberAddStreamSubscription?.cancel();
+    _onSubscriberUpdateStreamSubscription?.cancel();
     // _deleteTopicSubscription?.cancel();
     super.dispose();
   }
@@ -131,16 +149,12 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _refreshJoined() async {
     if (_topicSchema == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    bool joined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
-    if (joined && (_topicSchema?.isPrivate == true)) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
-      logger.i("TopicProfileScreen - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
-      joined = _me?.status == SubscriberStatus.Subscribed;
-    }
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
+    bool isJoined = _me?.status == SubscriberStatus.Subscribed;
     // do not topic.setJoined because filed is_joined is action not a tag
-    if (_isJoined != joined) {
+    if (_isJoined != isJoined) {
       setState(() {
-        _isJoined = joined;
+        _isJoined = isJoined;
       });
     }
   }

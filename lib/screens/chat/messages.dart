@@ -166,6 +166,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // subscriber
     _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
+      if (schema.clientAddress == clientCommon.address) {
+        _refreshTopicJoined();
+      }
       _refreshTopicSubscribers(fetch: false);
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
@@ -295,17 +298,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _refreshTopicJoined() async {
     if (_topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    bool isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
-    if (isJoined && (_topic?.isPrivate == true)) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
-      logger.i("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
-      isJoined = _me?.status == SubscriberStatus.Subscribed;
-    }
-    if (!isJoined && mounted) {
-      topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: false).then((value) {
-        Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
-      });
-    }
+    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+    bool isJoined = _me?.status == SubscriberStatus.Subscribed;
     if (_isJoined != isJoined) {
       setState(() {
         _isJoined = isJoined;
