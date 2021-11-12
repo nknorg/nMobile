@@ -149,8 +149,11 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _refreshJoined() async {
     if (_topicSchema == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
-    bool isJoined = _me?.status == SubscriberStatus.Subscribed;
+    bool isJoined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
+    if (isJoined && (_topicSchema?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
+      isJoined = _me?.status == SubscriberStatus.Subscribed;
+    }
     // do not topic.setJoined because filed is_joined is action not a tag
     if (_isJoined != isJoined) {
       setState(() {
