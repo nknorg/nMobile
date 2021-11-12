@@ -298,8 +298,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _refreshTopicJoined() async {
     if (_topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
-    bool isJoined = _me?.status == SubscriberStatus.Subscribed;
+    bool isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
+    if (isJoined && (_topic?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+      isJoined = _me?.status == SubscriberStatus.Subscribed;
+    }
     if (_isJoined != isJoined) {
       setState(() {
         _isJoined = isJoined;
