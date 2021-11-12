@@ -187,10 +187,12 @@ class ChatInCommon with Tag {
         logger.w("$TAG - _messageHandle - deny message - me no permission - me:$me - topic:$topic");
         return;
       }
-      SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
-      if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
-        logger.w("$TAG - _messageHandle - deny message - sender no permission - sender:$sender - topic:$topic");
-        return;
+      if (!received.isTopicAction) {
+        SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
+        if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
+          logger.w("$TAG - _messageHandle - deny message - sender no permission - sender:$sender - topic:$topic");
+          return;
+        }
       }
     }
 
