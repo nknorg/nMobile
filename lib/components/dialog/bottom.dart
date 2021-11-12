@@ -245,6 +245,7 @@ class BottomDialog extends BaseStateFulWidget {
             return ListView.builder(
               itemCount: wallets.length,
               itemBuilder: (BuildContext context, int index) {
+                if (index < 0 || index >= wallets.length) return SizedBox.shrink();
                 WalletSchema wallet = wallets[index];
                 return Column(
                   mainAxisSize: MainAxisSize.min,

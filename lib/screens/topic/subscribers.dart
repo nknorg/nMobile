@@ -316,6 +316,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       controller: _scrollController,
       itemCount: _subscriberList.length,
       itemBuilder: (BuildContext context, int index) {
+        if (index < 0 || index >= _subscriberList.length) return SizedBox.shrink();
         var _subscriber = _subscriberList[index];
         return Column(
           children: [
