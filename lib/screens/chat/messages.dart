@@ -295,20 +295,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _refreshTopicJoined() async {
     if (_topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    bool subscribed = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
-    if (subscribed && (_topic?.isPrivate == true)) {
+    bool isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
+    if (isJoined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
       logger.i("$TAG - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
-      subscribed = _me?.status == SubscriberStatus.Subscribed;
+      isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
-    if (!subscribed && mounted) {
+    if (!isJoined && mounted) {
       topicCommon.checkExpireAndSubscribe(_topic?.topic, refreshSubscribers: false).then((value) {
         Future.delayed(Duration(seconds: 3), () => _refreshTopicJoined());
       });
     }
-    if (_isJoined != subscribed) {
+    if (_isJoined != isJoined) {
       setState(() {
-        _isJoined = subscribed;
+        _isJoined = isJoined;
       });
     }
   }
