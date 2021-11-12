@@ -82,6 +82,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
               itemCount: _populars.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (context, index) {
+                if (index < 0 || index >= _populars.length) return SizedBox.shrink();
                 return _createPopularItemView(index, _populars.length, _populars[index]);
               },
             ),
