@@ -543,6 +543,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       padding: const EdgeInsets.only(bottom: 8, top: 16),
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemBuilder: (BuildContext context, int index) {
+                        if (index < 0 || index >= _messages.length) return SizedBox.shrink();
                         MessageSchema msg = _messages[index];
                         return ChatMessageItem(
                           message: msg,

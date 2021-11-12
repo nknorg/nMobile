@@ -379,6 +379,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       controller: _scrollController,
       itemCount: _sessionList.length,
       itemBuilder: (BuildContext context, int index) {
+        if (index < 0 || index >= _sessionList.length) return SizedBox.shrink();
         var session = _sessionList[index];
         return Column(
           children: [
