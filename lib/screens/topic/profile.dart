@@ -131,7 +131,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _refreshJoined() async {
     if (_topicSchema == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    bool joined = await topicCommon.isJoined(_topicSchema?.topic, clientCommon.address);
+    bool joined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
     if (joined && (_topicSchema?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
       logger.i("TopicProfileScreen - _refreshTopicJoined - expire ok and subscriber me is - me:$_me");
