@@ -600,7 +600,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<bool> isJoined(String? topic, String? clientAddress, {int? globalHeight}) async {
+  Future<bool> isSubscribed(String? topic, String? clientAddress, {int? globalHeight}) async {
     if (topic == null || topic.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topic);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
