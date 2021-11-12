@@ -281,53 +281,33 @@ class ChatCommon with Tag {
             exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
             logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
           } else if (isAccept == true) {
-            // SUPPORT:START
-            if (!DeviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-              logger.w("$TAG - subscriberHandle - accept: add Subscribed(old version) - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+            int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
+            if (expireHeight <= 0) {
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
+              logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
             } else {
-              // SUPPORT:END
-              int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
-              if (expireHeight <= 0) {
-                exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
-                logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-              } else {
-                exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-                logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-              }
-              // some subscriber status wrong in new version need refresh
-              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
+              logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
             }
+            // some subscriber status wrong in new version need refresh
+            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
           } else {
-            // SUPPORT:START
-            if (!DeviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-              logger.w("$TAG - subscriberHandle - none: add Subscribed(old version) - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+            int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
+            if (expireHeight <= 0) {
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
+              logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
             } else {
-              // SUPPORT:END
-              int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
-              if (expireHeight <= 0) {
-                exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
-                logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-              } else {
-                exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
-                logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-              }
-              // some subscriber status wrong in new version need refresh
-              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+              exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
+              logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
             }
+            // some subscriber status wrong in new version need refresh
+            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
           }
         }
       }
     } else if (exist.status != SubscriberStatus.Subscribed) {
-      // SUPPORT:START
-      if (!DeviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-        logger.w("$TAG - subscriberHandle - replace by timer in old version - from:${message.from} - status:${exist.status} - topic:$topic");
-      } else {
-        // SUPPORT:END
-        logger.w("$TAG - subscriberHandle - some subscriber status wrong in new version - from:${message.from} - status:${exist.status} - topic:$topic");
-        // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
-      }
+      logger.w("$TAG - subscriberHandle - some subscriber status wrong in new version - from:${message.from} - status:${exist.status} - topic:$topic");
+      // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
     }
     return exist;
   }
