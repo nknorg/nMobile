@@ -19,7 +19,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
@@ -171,66 +170,66 @@ class ChatOutCommon with Tag {
     }
   }
 
-  Future<List<OnMessage>> _clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
-    if (topic == null || topic.isEmpty) {
-      logger.w("$TAG - _clientPublishData - topic is empty - dest:$topic - data:$data");
-      return [];
-    }
-    if (tryCount >= maxTryCount) {
-      logger.w("$TAG - _clientPublishData - try over - dest:$topic - data:$data");
-      return [];
-    }
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - _clientPublishData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - dest:$topic - data:$data");
-      await Future.delayed(Duration(seconds: 2));
-      return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
-    }
-    if (application.inBackGroundLater && Platform.isIOS) {
-      logger.i("$TAG - _clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
-      await Future.delayed(Duration(seconds: 1));
-      return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
-    }
-    if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
-      int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
-      logger.i("$TAG - _clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
-      await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
-      return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
-    }
-    lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
-    try {
-      // once
-      if (total == null || total <= 1000) {
-        OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
-        return [result];
-      }
-      // split
-      List<Future<OnMessage>> futures = [];
-      for (int i = 0; i < total; i += 1000) {
-        futures.add(clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: i, limit: i + 1000));
-      }
-      List<OnMessage> onMessageList = await Future.wait(futures);
-      logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
-      return onMessageList;
-    } catch (e) {
-      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-        final client = (await clientCommon.reSignIn(false, delayMs: 500))[0];
-        if ((client != null) && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
-          await Future.delayed(Duration(seconds: 1));
-          return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
-        } else {
-          // maybe always no here
-          logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-          return [];
-        }
-      } else {
-        handleError(e);
-        logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
-        await Future.delayed(Duration(seconds: 2));
-        return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
-      }
-    }
-  }
+  // Future<List<OnMessage>> _clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
+  //   if (topic == null || topic.isEmpty) {
+  //     logger.w("$TAG - _clientPublishData - topic is empty - dest:$topic - data:$data");
+  //     return [];
+  //   }
+  //   if (tryCount >= maxTryCount) {
+  //     logger.w("$TAG - _clientPublishData - try over - dest:$topic - data:$data");
+  //     return [];
+  //   }
+  //   if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
+  //     logger.i("$TAG - _clientPublishData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - dest:$topic - data:$data");
+  //     await Future.delayed(Duration(seconds: 2));
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //   }
+  //   if (application.inBackGroundLater && Platform.isIOS) {
+  //     logger.i("$TAG - _clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
+  //     await Future.delayed(Duration(seconds: 1));
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //   }
+  //   if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
+  //     int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
+  //     logger.i("$TAG - _clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
+  //     await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+  //   }
+  //   lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
+  //   try {
+  //     // once
+  //     if (total == null || total <= 1000) {
+  //       OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
+  //       return [result];
+  //     }
+  //     // split
+  //     List<Future<OnMessage>> futures = [];
+  //     for (int i = 0; i < total; i += 1000) {
+  //       futures.add(clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: i, limit: i + 1000));
+  //     }
+  //     List<OnMessage> onMessageList = await Future.wait(futures);
+  //     logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
+  //     return onMessageList;
+  //   } catch (e) {
+  //     if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+  //       final client = (await clientCommon.reSignIn(false, delayMs: 500))[0];
+  //       if ((client != null) && (client.address.isNotEmpty == true)) {
+  //         logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
+  //         await Future.delayed(Duration(seconds: 1));
+  //         return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //       } else {
+  //         // maybe always no here
+  //         logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
+  //         return [];
+  //       }
+  //     } else {
+  //       handleError(e);
+  //       logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
+  //       await Future.delayed(Duration(seconds: 2));
+  //       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //     }
+  //   }
+  // }
 
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
@@ -691,37 +690,24 @@ class ChatOutCommon with Tag {
     }
     // subscribers
     List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
-    // SUPPORT:START
-    List<SubscriberSchema> _oldSubscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.None);
-    for (var i = 0; i < _oldSubscribers.length; i++) {
-      SubscriberSchema element = _oldSubscribers[i];
-      DeviceInfoSchema? value = await deviceInfoCommon.queryLatest(element.clientAddress);
-      if (!DeviceInfoCommon.isTopicPermissionEnable(value?.platform, value?.appVersion)) {
-        logger.i("$TAG - _sendWithTopic - add receiver to support old version - subscriber:$element");
-        _subscribers.add(element);
-      } else {
-        logger.w("$TAG - _sendWithTopic - skip receiver because status is none - subscriber:$element");
-      }
-    }
-    // SUPPORT:END
-    // subscribers check
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
       SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content?.toString(), SubscriberStatus.None, null);
       if (kicked != null) _subscribers.add(kicked);
     }
-    bool privateNormal = topic.isPrivate && !topic.isOwner(clientCommon.address);
-    if (_subscribers.isEmpty || (_subscribers.length == 1 && (_subscribers.first.clientAddress == clientCommon.address) && privateNormal)) {
-      logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
-      // permission checked in received
-      int total = await subscriberCommon.getSubscribersCount(message.topic, false, fetch: _subscribers.isEmpty);
-      List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total);
-      if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
-        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
-        return onMessageList[0].messageId;
-      }
-      return null;
-    }
+    if (_subscribers.isEmpty) return null;
+    // bool privateNormal = topic.isPrivate && !topic.isOwner(clientCommon.address);
+    // if (_subscribers.isEmpty || (_subscribers.length == 1 && (_subscribers.first.clientAddress == clientCommon.address) && privateNormal)) {
+    //   logger.w("$TAG - _sendWithTopic - _subscribers is empty - topic:$topic - message:$message - msgData:$msgData");
+    //   // permission checked in received
+    //   int total = await subscriberCommon.getSubscribersCount(message.topic, false, fetch: _subscribers.isEmpty);
+    //   List<OnMessage> onMessageList = await _clientPublishData(clientCommon.address, message.topic, msgData, total: total);
+    //   if (onMessageList.isNotEmpty && (onMessageList[0].messageId.isNotEmpty == true)) {
+    //     chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
+    //     return onMessageList[0].messageId;
+    //   }
+    //   return null;
+    // }
     // devices
     List<String> contactAddressList = _subscribers.map((e) => e.clientAddress).toList();
     List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(contactAddressList);

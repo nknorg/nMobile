@@ -193,19 +193,8 @@ class ChatInCommon with Tag {
         logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
       } else {
         // joined + message(content) + noSubscribe
-        // SUPPORT:START
-        if (!DeviceInfoCommon.isTopicPermissionEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-          if (subscriber.status == SubscriberStatus.None) {
-            logger.i("$TAG - _messageHandle - accept message - subscriber maybe ok permission (old version) - subscriber:$subscriber - topic:$topic");
-          } else {
-            logger.w("$TAG - _messageHandle - deny message - subscriber no permission (old version) - subscriber:$subscriber - topic:$topic");
-            return;
-          }
-        } else {
-          // SUPPORT:END
-          logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
-          return;
-        }
+        logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
+        return;
       }
     }
 
