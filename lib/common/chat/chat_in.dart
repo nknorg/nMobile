@@ -178,27 +178,18 @@ class ChatInCommon with Tag {
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
     if (topic != null) {
+      if (topic.joined != true) {
+        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - topic:$topic");
+        return;
+      }
       SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topic.topic, clientCommon.address);
       if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
-        logger.w("$TAG - _messageHandle - deny message - mo no permission - me:$me - topic:$topic");
+        logger.w("$TAG - _messageHandle - deny message - me no permission - me:$me - topic:$topic");
         return;
       }
       SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
-      if (topic.joined != true) {
-        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - sender:$sender - topic:$topic");
-        return;
-      } else if (!topic.isPrivate) {
-        logger.v("$TAG - _messageHandle - accept message - public topic - sender:$sender - topic:$topic");
-      } else if (received.isTopicAction) {
-        logger.i("$TAG - _messageHandle - accept message - just action - sender:$sender - topic:$topic");
-      } else if (sender == null) {
-        logger.w("$TAG - _messageHandle - deny message - subscriber is null - sender:$sender - topic:$topic");
-        return;
-      } else if (sender.status == SubscriberStatus.Subscribed) {
-        logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - sender:$sender - topic:$topic");
-      } else {
-        // joined + message(content) + noSubscribe
-        logger.w("$TAG - _messageHandle - deny message - subscriber no permission - sender:$sender - topic:$topic");
+      if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
+        logger.w("$TAG - _messageHandle - deny message - sender no permission - sender:$sender - topic:$topic");
         return;
       }
     }
