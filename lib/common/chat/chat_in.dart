@@ -177,23 +177,28 @@ class ChatInCommon with Tag {
 
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
-    SubscriberSchema? subscriber = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
     if (topic != null) {
+      SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topic.topic, clientCommon.address);
+      if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
+        logger.w("$TAG - _messageHandle - deny message - mo no permission - me:$me - topic:$topic");
+        return;
+      }
+      SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
       if (topic.joined != true) {
-        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - subscriber:$subscriber - topic:$topic");
+        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - sender:$sender - topic:$topic");
         return;
       } else if (!topic.isPrivate) {
-        logger.v("$TAG - _messageHandle - accept message - public topic - subscriber:$subscriber - topic:$topic");
+        logger.v("$TAG - _messageHandle - accept message - public topic - sender:$sender - topic:$topic");
       } else if (received.isTopicAction) {
-        logger.i("$TAG - _messageHandle - accept message - just action - subscriber:$subscriber - topic:$topic");
-      } else if (subscriber == null) {
-        logger.w("$TAG - _messageHandle - deny message - subscriber is null - subscriber:$subscriber - topic:$topic");
+        logger.i("$TAG - _messageHandle - accept message - just action - sender:$sender - topic:$topic");
+      } else if (sender == null) {
+        logger.w("$TAG - _messageHandle - deny message - subscriber is null - sender:$sender - topic:$topic");
         return;
-      } else if (subscriber.status == SubscriberStatus.Subscribed) {
-        logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - subscriber:$subscriber - topic:$topic");
+      } else if (sender.status == SubscriberStatus.Subscribed) {
+        logger.v("$TAG - _messageHandle - accept message - subscriber ok permission - sender:$sender - topic:$topic");
       } else {
         // joined + message(content) + noSubscribe
-        logger.w("$TAG - _messageHandle - deny message - subscriber no permission - subscriber:$subscriber - topic:$topic");
+        logger.w("$TAG - _messageHandle - deny message - subscriber no permission - sender:$sender - topic:$topic");
         return;
       }
     }
