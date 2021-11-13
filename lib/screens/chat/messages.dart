@@ -158,7 +158,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _topic = event;
       });
       _refreshTopicJoined();
-      _refreshTopicSubscribers(fetch: false);
+      _refreshTopicSubscribers();
     });
     // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
     //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -169,13 +169,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if (schema.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       }
-      _refreshTopicSubscribers(fetch: false);
+      _refreshTopicSubscribers();
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       } else {
-        _refreshTopicSubscribers(fetch: false);
+        _refreshTopicSubscribers();
       }
     });
 
@@ -310,19 +310,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _refreshTopicSubscribers({bool fetch = true}) async {
-    if (_topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
-    // refresh count
+  _refreshTopicSubscribers({bool fetch = false}) async {
+    if (_topic == null) return;
     int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {
       await topicCommon.setCount(_topic?.id, count, notify: true);
     }
     // fetch
-    if (fetch || topicCountEmpty) {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
+    bool topicCountSmall = (_topic?.count ?? 0) <= TopicSchema.minRefreshCount;
+    if (fetch || topicCountEmpty || topicCountSmall) {
       int lastRefreshAt = topicsCheck[_topic!.topic] ?? 0;
       if (topicCountEmpty) {
-        logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountError");
+        logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountEmpty");
       } else if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
         logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
         return;

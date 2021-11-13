@@ -16,6 +16,8 @@ class TopicType {
 }
 
 class TopicSchema {
+  static final minRefreshCount = 30;
+
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
   int? type; // (required) <-> type
@@ -215,6 +217,25 @@ class TopicSchema {
     bool? isProgress = data?['unsubscribe_progress'];
     if (isProgress == null) return false;
     return isProgress;
+  }
+
+  Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
+    Map<String, dynamic> newData = data ?? Map();
+    newData['last_refresh_subscribers_at'] = lastRefreshSubscribersAt;
+    return newData;
+  }
+
+  int lastRefreshSubscribersAt() {
+    int? lastRefreshSubscribersAt = data?['last_refresh_subscribers_at'];
+    return lastRefreshSubscribersAt ?? 0;
+  }
+
+  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minBetween = 5 * 60 * 1000}) {
+    if (subscribersCount <= minRefreshCount) return false;
+    int needBetween = subscribersCount * (5 * 60 * 1000); // 300s * count
+    if (needBetween < minBetween) needBetween = minBetween;
+    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needBetween) return false;
+    return true;
   }
 
   Map<String, dynamic> toMap() {
