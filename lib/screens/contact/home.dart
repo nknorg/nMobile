@@ -164,7 +164,13 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   _initData() async {
-    List<ContactSchema> friends = await contactCommon.queryList(contactType: ContactType.friend);
+    int limit = 20;
+    List<ContactSchema> friends = [];
+    for (int offset = 0; true; offset += limit) {
+      List<ContactSchema> result = await contactCommon.queryList(contactType: ContactType.friend, offset: offset, limit: limit);
+      friends.addAll(result);
+      if (result.length < limit) break;
+    }
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
     List<TopicSchema> topics = await topicCommon.queryListJoined();
     topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
