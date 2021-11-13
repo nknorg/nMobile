@@ -124,7 +124,7 @@ class TopicCommon with Tag {
         if (result != null) await subscriberCommon.onSubscribe(topic.topic, clientCommon.address, null);
       } else {
         logger.i("$TAG - checkAndTrySubscribe - topic subscribe OK - topic:$topic");
-        Map<String, dynamic> newData = topic.getDataByAppendSubscribe(true, false);
+        Map<String, dynamic> newData = topic.newDataByAppendSubscribe(true, false);
         await setData(topic.id, newData, notify: true);
       }
     } else {
@@ -133,7 +133,7 @@ class TopicCommon with Tag {
         await unsubscribe(topic.topic);
       } else {
         logger.i("$TAG - checkAndTrySubscribe - topic unsubscribe OK - topic:$topic");
-        Map<String, dynamic> newData = topic.getDataByAppendSubscribe(false, false);
+        Map<String, dynamic> newData = topic.newDataByAppendSubscribe(false, false);
         await setData(topic.id, newData, notify: true);
       }
     }
@@ -201,7 +201,7 @@ class TopicCommon with Tag {
     if (needAccept) {
       if (isAccept == true) {
         logger.i("$TAG - checkAndTryPermission - subscriber permission(accept) OK - subscribe:$subscribe");
-        Map<String, dynamic> newData = subscriber.getDataByAppendStatus(status, false);
+        Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
         logger.i("$TAG - checkAndTryPermission - subscriber try invitee - tryStatus:$status - subscribe:$subscribe");
@@ -210,7 +210,7 @@ class TopicCommon with Tag {
     } else if (needReject) {
       if (isReject == true) {
         logger.i("$TAG - checkAndTryPermission - subscriber permission(reject) OK - subscribe:$subscribe");
-        Map<String, dynamic> newData = subscriber.getDataByAppendStatus(status, false);
+        Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
         logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscribe");
@@ -219,7 +219,7 @@ class TopicCommon with Tag {
     } else if (needNoPermission) {
       if (isAccept != true && isReject != true) {
         logger.i("$TAG - checkAndTryPermission - subscriber permission(none) OK - subscribe:$subscribe");
-        Map<String, dynamic> newData = subscriber.getDataByAppendStatus(status, false);
+        Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
         logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscribe");
@@ -227,7 +227,7 @@ class TopicCommon with Tag {
       }
     } else {
       logger.w("$TAG - checkAndTryPermission - subscriber permission none - tryStatus:$status - subscribe:$subscribe");
-      Map<String, dynamic> newData = subscriber.getDataByAppendStatus(status, false);
+      Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
       await subscriberCommon.setData(subscriber.id, newData, notify: true);
     }
   }
@@ -473,6 +473,15 @@ class TopicCommon with Tag {
           int? nonce = await Global.getNonce(forceFetch: true);
           return _clientSubscribe(topic, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, tryCount: ++tryCount, toast: toast, clientAddress: clientAddress, status: status);
         }
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("$TAG - _clientSubscribe - topic doesn't exist - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        TopicSchema? _schema = await queryByTopic(topic);
+        if (_schema != null) {
+          await setJoined(_schema.id, false, notify: true);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false);
+          await setData(_schema.id, newData, notify: true);
+        }
+        success = false;
       } else {
         await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
@@ -490,7 +499,7 @@ class TopicCommon with Tag {
       if (identifier.isNotEmpty) {
         subscriberCommon.queryByTopicChatId(topic, clientAddress).then((value) async {
           if (value != null && status != null) {
-            Map<String, dynamic> newData = value.getDataByAppendStatus(status, true);
+            Map<String, dynamic> newData = value.newDataByAppendStatus(status, true);
             logger.i("$TAG - _clientSubscribe - add permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
             subscriberCommon.setData(value.id, newData); // await
           } else {
@@ -499,7 +508,7 @@ class TopicCommon with Tag {
         });
       } else {
         queryByTopic(topic).then((value) {
-          Map<String, dynamic> newData = value?.getDataByAppendSubscribe(true, true) ?? Map();
+          Map<String, dynamic> newData = value?.newDataByAppendSubscribe(true, true) ?? Map();
           logger.i("$TAG - _clientSubscribe - add subscribe try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
           setData(value?.id, newData); // await
         });
@@ -578,6 +587,15 @@ class TopicCommon with Tag {
           int? nonce = await Global.getNonce(forceFetch: true);
           return _clientUnsubscribe(topic, fee: fee, nonce: nonce, tryCount: ++tryCount, toast: toast);
         }
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("$TAG - _clientUnsubscribe - topic doesn't exist - topic:$topic - nonce:$nonce");
+        TopicSchema? _schema = await queryByTopic(topic);
+        if (_schema != null) {
+          await setJoined(_schema.id, false, notify: true);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false);
+          await setData(_schema.id, newData, notify: true);
+        }
+        success = false;
       } else {
         await Global.refreshNonce();
         if (e.toString().contains('duplicate subscription exist in block')) {
@@ -593,7 +611,7 @@ class TopicCommon with Tag {
     // data
     if (success) {
       queryByTopic(topic).then((value) {
-        Map<String, dynamic> newData = value?.getDataByAppendSubscribe(false, true) ?? Map();
+        Map<String, dynamic> newData = value?.newDataByAppendSubscribe(false, true) ?? Map();
         logger.i("$TAG - _clientUnsubscribe - add unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
         setData(value?.id, newData); // await
       });

@@ -185,7 +185,7 @@ class TopicSchema {
     }
   }
 
-  Map<String, dynamic> getDataByAppendSubscribe(bool subscribe, bool isProgress) {
+  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress) {
     Map<String, dynamic> newData = data ?? Map();
     if (subscribe) {
       if (isProgress) {
