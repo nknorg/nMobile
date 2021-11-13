@@ -48,7 +48,13 @@ class TopicCommon with Tag {
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
-      List<TopicSchema> topics = await queryList();
+      int limit = 20;
+      List<TopicSchema> topics = [];
+      for (int offset = 0; true; offset += limit) {
+        List<TopicSchema> result = await queryList(offset: offset, limit: limit);
+        topics.addAll(result);
+        if (result.length < limit) break;
+      }
       if (refreshSubscribers) {
         for (var i = 0; i < topics.length; i++) {
           TopicSchema topic = topics[i];
@@ -816,7 +822,7 @@ class TopicCommon with Tag {
     }
 
     // DB meta (maybe in txPool)
-    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage);
+    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage, SubscriberSchema.PermPageSize);
     subscribers.forEach((SubscriberSchema element) {
       if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -1072,11 +1078,11 @@ class TopicCommon with Tag {
     return await _topicStorage.queryByTopic(topic);
   }
 
-  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? offset, int? limit}) {
+  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
     return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int? offset, int? limit}) {
+  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
     return _topicStorage.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
