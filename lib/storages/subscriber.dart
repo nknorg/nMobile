@@ -5,6 +5,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 class SubscriberStorage with Tag {
   // static String get tableName => 'Subscribers';
@@ -12,6 +13,8 @@ class SubscriberStorage with Tag {
   static String get tableName => 'Subscriber_3'; // v5
 
   Database? get db => dbCommon.database;
+
+  Lock _lock = new Lock();
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -42,7 +45,7 @@ class SubscriberStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -83,7 +86,7 @@ class SubscriberStorage with Tag {
   // Future<bool> delete(int? subscriberId) async {
   //   if (db?.isOpen != true) return false;
   //   if (subscriberId == null || subscriberId == 0) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? count = await db?.transaction((txn) {
   //         return txn.delete(
@@ -107,7 +110,7 @@ class SubscriberStorage with Tag {
   // Future<int> deleteByTopic(String? topic) async {
   // if (db?.isOpen != true) return 0;
   //   if (topic == null || topic.isEmpty) return 0;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? count = await db?.transaction((txn) {
   //         return txn.delete(
@@ -131,7 +134,7 @@ class SubscriberStorage with Tag {
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (db?.isOpen != true) return null;
     if (subscriberId == null || subscriberId == 0) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -157,7 +160,7 @@ class SubscriberStorage with Tag {
   Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
     if (db?.isOpen != true) return null;
     if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -183,7 +186,7 @@ class SubscriberStorage with Tag {
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? limit, int? offset}) async {
     if (db?.isOpen != true) return [];
     if (topic == null || topic.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -219,7 +222,7 @@ class SubscriberStorage with Tag {
   Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage) async {
     if (db?.isOpen != true) return [];
     if (topic == null || topic.isEmpty || permPage == null) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -252,7 +255,7 @@ class SubscriberStorage with Tag {
   Future<int> queryCountByTopic(String? topic, {int? status}) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         final res = await db?.transaction((txn) {
           return txn.query(
@@ -275,7 +278,7 @@ class SubscriberStorage with Tag {
   Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         final res = await db?.transaction((txn) {
           return txn.query(
@@ -298,7 +301,7 @@ class SubscriberStorage with Tag {
   Future<int> queryMaxPermPageByTopic(String? topic) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -326,7 +329,7 @@ class SubscriberStorage with Tag {
   Future<bool> setStatus(int? subscriberId, int? status) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0 || status == null) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -354,7 +357,7 @@ class SubscriberStorage with Tag {
   Future<bool> setPermPage(int? subscriberId, int? permPage) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -382,7 +385,7 @@ class SubscriberStorage with Tag {
   Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(

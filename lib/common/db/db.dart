@@ -33,16 +33,14 @@ class DB {
   StreamSink<String?> get _upgradeTipSink => _upgradeTipController.sink;
   Stream<String?> get upgradeTipStream => _upgradeTipController.stream;
 
-  Lock _openLock = new Lock();
-
-  Lock lock = new Lock();
+  Lock _lock = new Lock();
 
   Database? database;
 
   DB();
 
   Future<Database> _openDB(String publicKey, String seed) async {
-    return _openLock.synchronized(() async {
+    return _lock.synchronized(() async {
       return await _openDBWithNoLick(publicKey, seed);
     });
   }
@@ -160,9 +158,11 @@ class DB {
   }
 
   Future close() async {
-    await database?.close();
-    database = null;
-    _openedSink.add(false);
+    await _lock.synchronized(() async {
+      await database?.close();
+      database = null;
+      _openedSink.add(false);
+    });
   }
 
   bool isOpen() {

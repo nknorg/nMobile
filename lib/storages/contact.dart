@@ -6,6 +6,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactStorage with Tag {
@@ -13,6 +14,8 @@ class ContactStorage with Tag {
   static String get tableName => 'Contact_2'; // v5
 
   Database? get db => dbCommon.database;
+
+  Lock _lock = new Lock();
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -50,7 +53,7 @@ class ContactStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = await schema.toMap();
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -91,7 +94,7 @@ class ContactStorage with Tag {
   // Future<bool> delete(int? contactId) async {
   // if (db?.isOpen != true) return false;
   //   if (contactId == null || contactId == 0) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? count = await db?.transaction((txn) {
   //         return txn.delete(
@@ -115,7 +118,7 @@ class ContactStorage with Tag {
   Future<ContactSchema?> query(int? contactId) async {
     if (db?.isOpen != true) return null;
     if (contactId == null || contactId == 0) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -141,7 +144,7 @@ class ContactStorage with Tag {
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (db?.isOpen != true) return null;
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -167,7 +170,7 @@ class ContactStorage with Tag {
   Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
     if (db?.isOpen != true) return [];
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    return dbCommon.lock.synchronized(() async {
+    return _lock.synchronized(() async {
       try {
         List? res = await db?.transaction((txn) {
           Batch batch = txn.batch();
@@ -205,7 +208,7 @@ class ContactStorage with Tag {
   Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int? limit, int? offset}) async {
     if (db?.isOpen != true) return [];
     orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -241,7 +244,7 @@ class ContactStorage with Tag {
   // Future<int> queryCountByClientAddress(String? clientAddress) async {
   // if (db?.isOpen != true) return 0;
   //   if (clientAddress == null || clientAddress.isEmpty) return 0;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
   //         return txn.query(
@@ -264,7 +267,7 @@ class ContactStorage with Tag {
   Future<bool> setType(int? contactId, int? contactType) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0 || contactType == null) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -292,7 +295,7 @@ class ContactStorage with Tag {
   Future<bool> setProfile(int? contactId, Map<String, dynamic> profileInfo) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -324,7 +327,7 @@ class ContactStorage with Tag {
   Future<bool> setProfileOnly(int? contactId, String? profileVersion, int? profileExpiresAt) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -353,7 +356,7 @@ class ContactStorage with Tag {
   Future<bool> setTop(String? clientAddress, bool top) async {
     if (db?.isOpen != true) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -381,7 +384,7 @@ class ContactStorage with Tag {
   Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -412,7 +415,7 @@ class ContactStorage with Tag {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
     options.notificationOpen = open;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -444,7 +447,7 @@ class ContactStorage with Tag {
     OptionsSchema options = old ?? OptionsSchema();
     options.deleteAfterSeconds = burningSeconds ?? 0;
     options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -472,7 +475,7 @@ class ContactStorage with Tag {
   Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? extraInfo) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -502,7 +505,7 @@ class ContactStorage with Tag {
     if (contactId == null || contactId == 0) return false;
     Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
     data['notes'] = notes;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(

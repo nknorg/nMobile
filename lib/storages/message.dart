@@ -8,6 +8,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 class MessageStorage with Tag {
   // static String get tableName => 'Messages';
@@ -16,6 +17,8 @@ class MessageStorage with Tag {
   static MessageStorage instance = MessageStorage();
 
   Database? get db => dbCommon.database;
+
+  Lock _lock = new Lock();
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -56,7 +59,7 @@ class MessageStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null) return null;
     Map<String, dynamic> map = schema.toMap();
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? id = await db?.transaction((txn) {
           return txn.insert(tableName, map);
@@ -77,7 +80,7 @@ class MessageStorage with Tag {
   // Future<bool> delete(String msgId) async {
   //   if (db?.isOpen != true) return false;
   //   if (msgId.isEmpty) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? result = await db?.transaction((txn) {
   //         return txn.delete(
@@ -101,7 +104,7 @@ class MessageStorage with Tag {
   // Future<bool> deleteByPid(String? pid) async {
   //   if (db?.isOpen != true) return false;
   //   if (pid == null || pid.isEmpty) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? result = await db?.transaction((txn) {
   //         return txn.delete(
@@ -125,7 +128,7 @@ class MessageStorage with Tag {
   Future<int> deleteByContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.delete(
@@ -149,7 +152,7 @@ class MessageStorage with Tag {
   Future<int> deleteByTargetIdContentType(String? targetId, String? topic, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty || contentType == null || contentType.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.delete(
@@ -173,7 +176,7 @@ class MessageStorage with Tag {
   // Future<int> deleteList(List<MessageSchema>? list) async {
   //   if (db?.isOpen != true) return 0;
   //   if (list == null || list.isEmpty) return 0;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       Batch? batch = db?.batch();
   //       for (MessageSchema schema in list) {
@@ -210,7 +213,7 @@ class MessageStorage with Tag {
   Future<MessageSchema?> query(String? msgId) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -236,7 +239,7 @@ class MessageStorage with Tag {
   // Future<MessageSchema?> queryByPid(Uint8List? pid) async {
   //   if (db?.isOpen != true) return null;
   //   if (pid == null || pid.isEmpty) return null;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
   //         return txn.query(
@@ -262,7 +265,7 @@ class MessageStorage with Tag {
   Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -288,7 +291,7 @@ class MessageStorage with Tag {
   Future<List<MessageSchema>> queryListByNoContentType(List<String>? msgIds, String? contentType) async {
     if (db?.isOpen != true) return [];
     if (msgIds == null || msgIds.isEmpty || contentType == null || contentType.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List? res = await db?.transaction((txn) {
           Batch batch = txn.batch();
@@ -326,7 +329,7 @@ class MessageStorage with Tag {
   // Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
   //   if (db?.isOpen != true) return null;
   //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
   //         return txn.query(
@@ -352,7 +355,7 @@ class MessageStorage with Tag {
   // Future<List<MessageSchema>> queryList(String? msgId) async {
   //   if (db?.isOpen != true) return [];
   //   if (msgId == null || msgId.isEmpty) return [];
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
   //         return txn.query(
@@ -385,7 +388,7 @@ class MessageStorage with Tag {
   Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -418,7 +421,7 @@ class MessageStorage with Tag {
   // Future<int> queryCountByContentType(String? msgId, String? contentType) async {
   //   if (db?.isOpen != true) return 0;
   //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       final res = await db?.transaction((txn) {
   //         return txn.query(
@@ -440,7 +443,7 @@ class MessageStorage with Tag {
 
   // Future<List<MessageSchema>> queryListUnRead() async {
   //   if (db?.isOpen != true) return [];
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
   //         return txn.query(
@@ -472,7 +475,7 @@ class MessageStorage with Tag {
 
   Future<int> unReadCount() async {
     if (db?.isOpen != true) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         final res = await db?.transaction((txn) {
           return txn.query(
@@ -495,7 +498,7 @@ class MessageStorage with Tag {
   Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -528,7 +531,7 @@ class MessageStorage with Tag {
   Future<int> unReadCountByTargetId(String? targetId, String? topic) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         final res = await db?.transaction((txn) {
           return txn.query(
@@ -551,7 +554,7 @@ class MessageStorage with Tag {
   Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -587,7 +590,7 @@ class MessageStorage with Tag {
   Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -622,7 +625,7 @@ class MessageStorage with Tag {
   Future<bool> updatePid(String? msgId, Uint8List? pid) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -646,7 +649,7 @@ class MessageStorage with Tag {
   Future<bool> updateStatus(String? msgId, int status, {int? receiveAt, String? noType}) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -675,7 +678,7 @@ class MessageStorage with Tag {
   // Future<bool> updateListStatus(List<String>? msgIdList, int status, {int? receiveAt, String? noType}) async {
   //   if (db?.isOpen != true) return false;
   //   if (msgIdList == null || msgIdList.isEmpty) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       await db?.transaction((txn) {
   //         Batch batch = txn.batch();
@@ -708,7 +711,7 @@ class MessageStorage with Tag {
   Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -730,7 +733,7 @@ class MessageStorage with Tag {
   Future<bool> updateIsDeleteByTargetId(String? targetId, String? topic, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -752,7 +755,7 @@ class MessageStorage with Tag {
   Future<bool> updateSendAt(String? msgId, int? sendAt) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -776,7 +779,7 @@ class MessageStorage with Tag {
   // Future<bool> updateReceiveAt(String? msgId, int? receiveAt) async {
   //   if (db?.isOpen != true) return false;
   //   if (msgId == null || msgId.isEmpty) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? count = await db?.transaction((txn) {
   //         return txn.update(
@@ -800,7 +803,7 @@ class MessageStorage with Tag {
   Future<bool> updateDeleteAt(String? msgId, int? deleteAt) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -824,7 +827,7 @@ class MessageStorage with Tag {
   Future<bool> updateOptions(String? msgId, Map<String, dynamic>? options) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
