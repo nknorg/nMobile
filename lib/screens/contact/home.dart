@@ -172,7 +172,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       if (result.length < limit) break;
     }
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
-    List<TopicSchema> topics = await topicCommon.queryListJoined();
+    List<TopicSchema> topics = [];
+    for (int offset = 0; true; offset += limit) {
+      List<TopicSchema> result = await topicCommon.queryListJoined(offset: offset, limit: limit);
+      topics.addAll(result);
+      if (result.length < limit) break;
+    }
     topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
 
     setState(() {

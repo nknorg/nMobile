@@ -87,7 +87,14 @@ class SubscriberCommon with Tag {
   }) async {
     if (topic == null || topic.isEmpty) return [];
 
-    List<SubscriberSchema> dbSubscribers = await queryListByTopic(topic);
+    int limit = 20;
+    List<SubscriberSchema> dbSubscribers = [];
+    // query
+    for (int offset = 0; true; offset += limit) {
+      List<SubscriberSchema> result = await queryListByTopic(topic, offset: offset, limit: limit);
+      dbSubscribers.addAll(result);
+      if (result.length < limit) break;
+    }
     List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(
       topic,
       ownerPubKey: ownerPubKey,
@@ -601,12 +608,12 @@ class SubscriberCommon with Tag {
     return await _subscriberStorage.queryByTopicChatId(topic, chatId);
   }
 
-  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int? offset, int? limit}) {
+  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int offset = 0, int limit = 20}) {
     return _subscriberStorage.queryListByTopic(topic, status: status, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage) {
-    return _subscriberStorage.queryListByTopicPerm(topic, permPage);
+  Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage, int limit) {
+    return _subscriberStorage.queryListByTopicPerm(topic, permPage, limit);
   }
 
   Future<int> queryCountByTopic(String? topic, {int? status}) {
