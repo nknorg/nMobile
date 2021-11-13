@@ -60,30 +60,30 @@ class DeviceInfoStorage with Tag {
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'contact_address = ?',
-            whereArgs: [contactAddress],
-            offset: 0,
-            limit: 1,
-            orderBy: 'update_at DESC',
-          );
-        });
-        if (res != null && res.length > 0) {
-          DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-          logger.v("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'contact_address = ?',
+          whereArgs: [contactAddress],
+          offset: 0,
+          limit: 1,
+          orderBy: 'update_at DESC',
+        );
+      });
+      if (res != null && res.length > 0) {
+        DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+        logger.v("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
@@ -130,30 +130,30 @@ class DeviceInfoStorage with Tag {
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'contact_address = ? AND device_id = ?',
-            whereArgs: [contactAddress, deviceId],
-            offset: 0,
-            limit: 1,
-            orderBy: 'update_at DESC',
-          );
-        });
-        if (res != null && res.length > 0) {
-          DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-          logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'contact_address = ? AND device_id = ?',
+          whereArgs: [contactAddress, deviceId],
+          offset: 0,
+          limit: 1,
+          orderBy: 'update_at DESC',
+        );
+      });
+      if (res != null && res.length > 0) {
+        DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+        logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
   Future<bool> update(int? deviceInfoId, Map<String, dynamic>? newData) async {
