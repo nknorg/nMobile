@@ -55,6 +55,8 @@ class SessionStorage with Tag {
               columns: ['*'],
               where: 'target_id = ? AND type = ?',
               whereArgs: [schema.targetId, schema.type],
+              offset: 0,
+              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - schema:$schema");
@@ -106,60 +108,62 @@ class SessionStorage with Tag {
   Future<SessionSchema?> query(String? targetId, int? type) async {
     if (db?.isOpen != true) return null;
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [targetId, type],
-          );
-        });
-        if (res != null && res.length > 0) {
-          SessionSchema schema = SessionSchema.fromMap(res.first);
-          logger.v("$TAG - query - success - targetId:$targetId - type:$type - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND type = ?',
+          whereArgs: [targetId, type],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        SessionSchema schema = SessionSchema.fromMap(res.first);
+        logger.v("$TAG - query - success - targetId:$targetId - type:$type - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
-  Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) async {
+  Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            offset: offset ?? null,
-            limit: limit ?? null,
-            orderBy: 'is_top desc, last_message_at DESC',
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryListRecent - empty");
-          return [];
-        }
-        List<SessionSchema> result = <SessionSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          SessionSchema item = SessionSchema.fromMap(map);
-          logText += "\n      $item";
-          result.add(item);
-        });
-        logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
-        return result;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          offset: offset,
+          limit: limit,
+          orderBy: 'is_top desc, last_message_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListRecent - empty");
+        return [];
       }
-      return [];
-    });
+      List<SessionSchema> result = <SessionSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        SessionSchema item = SessionSchema.fromMap(map);
+        logText += "\n      $item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
