@@ -213,27 +213,29 @@ class MessageStorage with Tag {
   Future<MessageSchema?> query(String? msgId) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'msg_id = ?',
-            whereArgs: [msgId],
-          );
-        });
-        if (res != null && res.length > 0) {
-          MessageSchema schema = MessageSchema.fromMap(res.first);
-          logger.v("$TAG - queryList - success - msgId:$msgId - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - queryList - success - msgId:$msgId");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'msg_id = ?',
+          whereArgs: [msgId],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.v("$TAG - queryList - success - msgId:$msgId - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - queryList - success - msgId:$msgId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
   // Future<MessageSchema?> queryByPid(Uint8List? pid) async {
@@ -265,65 +267,69 @@ class MessageStorage with Tag {
   Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'msg_id = ? AND NOT type = ?',
-            whereArgs: [msgId, contentType],
-          );
-        });
-        if (res != null && res.length > 0) {
-          MessageSchema schema = MessageSchema.fromMap(res.first);
-          logger.v("$TAG - queryByNoContentType - success - msgId:$msgId - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - queryByNoContentType - empty - msgId:$msgId");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'msg_id = ? AND NOT type = ?',
+          whereArgs: [msgId, contentType],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        logger.v("$TAG - queryByNoContentType - success - msgId:$msgId - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - queryByNoContentType - empty - msgId:$msgId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
   Future<List<MessageSchema>> queryListByNoContentType(List<String>? msgIds, String? contentType) async {
     if (db?.isOpen != true) return [];
     if (msgIds == null || msgIds.isEmpty || contentType == null || contentType.isEmpty) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List? res = await db?.transaction((txn) {
-          Batch batch = txn.batch();
-          msgIds.forEach((msgId) {
-            if (msgId.isNotEmpty) {
-              batch.query(
-                tableName,
-                columns: ['*'],
-                where: 'msg_id = ? AND NOT type = ?',
-                whereArgs: [msgId, contentType],
-              );
-            }
-          });
-          return batch.commit();
-        });
-        if (res != null && res.length > 0) {
-          List<MessageSchema> schemaList = [];
-          for (var i = 0; i < res.length; i++) {
-            if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
-            Map<String, dynamic> map = res[i][0];
-            MessageSchema schema = MessageSchema.fromMap(map);
-            schemaList.add(schema);
+    // return await _lock.synchronized(() async {
+    try {
+      List? res = await db?.transaction((txn) {
+        Batch batch = txn.batch();
+        msgIds.forEach((msgId) {
+          if (msgId.isNotEmpty) {
+            batch.query(
+              tableName,
+              columns: ['*'],
+              where: 'msg_id = ? AND NOT type = ?',
+              whereArgs: [msgId, contentType],
+              offset: 0,
+              limit: 1,
+            );
           }
-          logger.v("$TAG - queryListByNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
-          return schemaList;
+        });
+        return batch.commit();
+      });
+      if (res != null && res.length > 0) {
+        List<MessageSchema> schemaList = [];
+        for (var i = 0; i < res.length; i++) {
+          if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
+          Map<String, dynamic> map = res[i][0];
+          MessageSchema schema = MessageSchema.fromMap(map);
+          schemaList.add(schema);
         }
-        logger.v("$TAG - queryListByNoContentType - empty - msgIds:$msgIds");
-      } catch (e) {
-        handleError(e);
+        logger.v("$TAG - queryListByNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
+        return schemaList;
       }
-      return [];
-    });
+      logger.v("$TAG - queryListByNoContentType - empty - msgIds:$msgIds");
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   // Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
@@ -385,37 +391,39 @@ class MessageStorage with Tag {
   //   });
   // }
 
-  Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType) async {
+  Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType, int limit) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'msg_id = ? AND type = ?',
-            whereArgs: [msgId, contentType],
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.d("$TAG - queryListByContentType - empty - msgId:$msgId - contentType:$contentType");
-          return [];
-        }
-        List<MessageSchema> result = <MessageSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          MessageSchema item = MessageSchema.fromMap(map);
-          logText += "\n$item";
-          result.add(item);
-        });
-        logger.d("$TAG - queryListByContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
-        return result;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'msg_id = ? AND type = ?',
+          whereArgs: [msgId, contentType],
+          offset: 0,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListByContentType - empty - msgId:$msgId - contentType:$contentType");
+        return [];
       }
-      return [];
-    });
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "\n$item";
+        result.add(item);
+      });
+      logger.d("$TAG - queryListByContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   // Future<int> queryCountByContentType(String? msgId, String? contentType) async {
@@ -475,151 +483,153 @@ class MessageStorage with Tag {
 
   Future<int> unReadCount() async {
     if (db?.isOpen != true) return 0;
-    return await _lock.synchronized(() async {
-      try {
-        final res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['COUNT(id)'],
-            where: 'status = ? AND is_delete = ?',
-            whereArgs: [MessageStatus.Received, 0],
-          );
-        });
-        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-        logger.v("$TAG - unReadCount - count:$count");
-        return count ?? 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return 0;
-    });
+    // return await _lock.synchronized(() async {
+    try {
+      final res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['COUNT(id)'],
+          where: 'status = ? AND is_delete = ?',
+          whereArgs: [MessageStatus.Received, 0],
+        );
+      });
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.v("$TAG - unReadCount - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+    // });
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
-            whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
-          return [];
-        }
-        List<MessageSchema> result = <MessageSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          MessageSchema item = MessageSchema.fromMap(map);
-          logText += "    \n$item";
-          result.add(item);
-        });
-        logger.v("$TAG - queryListByTargetIdWithUnRead - success - targetId:$targetId - length:${result.length} - items:$logText");
-        return result;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
+          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
+          offset: offset,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
+        return [];
       }
-      return [];
-    });
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "    \n$item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListByTargetIdWithUnRead - success - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   Future<int> unReadCountByTargetId(String? targetId, String? topic) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
-    return await _lock.synchronized(() async {
-      try {
-        final res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['COUNT(id)'],
-            where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
-            whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
-          );
-        });
-        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-        logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
-        return count ?? 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return 0;
-    });
+    // return await _lock.synchronized(() async {
+    try {
+      final res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['COUNT(id)'],
+          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
+          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
+        );
+      });
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
+      return count ?? 0;
+    } catch (e) {
+      handleError(e);
+    }
+    return 0;
+    // });
   }
 
   Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'target_id = ? AND topic = ? AND is_delete = ? AND NOT type = ?',
-            whereArgs: [targetId, topic ?? "", 0, MessageContentType.piece],
-            offset: offset,
-            limit: limit,
-            orderBy: 'send_at DESC',
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
-          return [];
-        }
-        List<MessageSchema> result = <MessageSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          MessageSchema item = MessageSchema.fromMap(map);
-          logText += "    \n$item";
-          result.add(item);
-        });
-        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
-        return result;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND topic = ? AND is_delete = ? AND NOT type = ?',
+          whereArgs: [targetId, topic ?? "", 0, MessageContentType.piece],
+          offset: offset,
+          limit: limit,
+          orderBy: 'send_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
+        return [];
       }
-      return [];
-    });
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "    \n$item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ? AND topic = ?' : 'status = ?',
-            whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId, topic ?? ""] : [status],
-            offset: offset,
-            limit: limit,
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId");
-          return [];
-        }
-        List<MessageSchema> result = <MessageSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          MessageSchema item = MessageSchema.fromMap(map);
-          logText += "    \n$item";
-          result.add(item);
-        });
-        logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
-        return result;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ? AND topic = ?' : 'status = ?',
+          whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId, topic ?? ""] : [status],
+          offset: offset,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId");
+        return [];
       }
-      return [];
-    });
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "    \n$item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   Future<bool> updatePid(String? msgId, Uint8List? pid) async {

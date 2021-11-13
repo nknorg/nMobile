@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
@@ -676,14 +677,14 @@ class ChatInCommon with Tag {
     int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
     int index = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
-    List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType);
+    List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType, 1);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
       // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
     // piece
-    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(received.msgId, MessageContentType.piece);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(received.msgId, MessageContentType.piece, total + parity);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
       int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
@@ -816,7 +817,7 @@ class ChatInCommon with Tag {
 
   Future<int> _deletePieces(String msgId) async {
     int count = 0;
-    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece, ChatOutCommon.piecesMaxTotal + ChatOutCommon.piecesMaxParity);
     logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
     int result = await MessageStorage.instance.deleteByContentType(msgId, MessageContentType.piece);
     if (result > 0) {
