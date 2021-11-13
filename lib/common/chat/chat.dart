@@ -460,8 +460,16 @@ class ChatCommon with Tag {
   Future readMessagesBySelf(String? targetId, String? topic, String? clientAddress) async {
     if (targetId == null || targetId.isEmpty) return;
     // update messages
+    int limit = 20;
+
+    List<MessageSchema> unreadList = [];
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, offset: offset, limit: limit);
+      unreadList.addAll(result);
+      if (result.length < limit) break;
+    }
+
     List<String> msgIds = [];
-    List<MessageSchema> unreadList = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic);
     for (var i = 0; i < unreadList.length; i++) {
       MessageSchema element = unreadList[i];
       msgIds.add(element.msgId);
@@ -493,7 +501,7 @@ class ChatCommon with Tag {
   Future<int> checkSendingWithFail({bool force = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
-    List<MessageSchema> sendingList = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending, offset: 0, limit: 100);
+    List<MessageSchema> sendingList = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending, offset: 0, limit: 20);
 
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
