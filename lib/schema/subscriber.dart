@@ -45,7 +45,7 @@ class SubscriberSchema {
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
-  Map<String, dynamic> getDataByAppendStatus(int status, bool isProgress) {
+  Map<String, dynamic> newDataByAppendStatus(int status, bool isProgress) {
     Map<String, dynamic> newData = data ?? Map();
     if (isProgress) {
       newData['permission_progress'] = status;
