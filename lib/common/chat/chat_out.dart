@@ -689,7 +689,13 @@ class ChatOutCommon with Tag {
       return null;
     }
     // subscribers
-    List<SubscriberSchema> _subscribers = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed);
+    int limit = 20;
+    List<SubscriberSchema> _subscribers = [];
+    for (int offset = 0; true; offset += limit) {
+      List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed, offset: offset, limit: limit);
+      _subscribers.addAll(result);
+      if (result.length < limit) break;
+    }
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - clientAddress:${message.content}");
       SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content?.toString(), SubscriberStatus.None, null);

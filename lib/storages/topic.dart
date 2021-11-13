@@ -65,6 +65,8 @@ class TopicStorage with Tag {
               columns: ['*'],
               where: 'topic = ?',
               whereArgs: [schema.topic],
+              offset: 0,
+              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - schema:$schema");
@@ -116,123 +118,127 @@ class TopicStorage with Tag {
   Future<TopicSchema?> query(int? topicId) async {
     if (db?.isOpen != true) return null;
     if (topicId == null || topicId == 0) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (res != null && res.length > 0) {
-          TopicSchema? schema = TopicSchema.fromMap(res.first);
-          logger.v("$TAG - query - success - topicId:$topicId - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - query - empty - topicId:$topicId");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'id = ?',
+          whereArgs: [topicId],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        TopicSchema? schema = TopicSchema.fromMap(res.first);
+        logger.v("$TAG - query - success - topicId:$topicId - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - query - empty - topicId:$topicId");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
   Future<TopicSchema?> queryByTopic(String? topic) async {
     if (db?.isOpen != true) return null;
     if (topic == null || topic.isEmpty) return null;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: 'topic = ?',
-            whereArgs: [topic],
-          );
-        });
-        if (res != null && res.length > 0) {
-          TopicSchema? schema = TopicSchema.fromMap(res.first);
-          logger.v("$TAG - queryByTopic - success - topic:$topic - schema:$schema");
-          return schema;
-        }
-        logger.v("$TAG - queryByTopic - empty - topic:$topic");
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'topic = ?',
+          whereArgs: [topic],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        TopicSchema? schema = TopicSchema.fromMap(res.first);
+        logger.v("$TAG - queryByTopic - success - topic:$topic - schema:$schema");
+        return schema;
       }
-      return null;
-    });
+      logger.v("$TAG - queryByTopic - empty - topic:$topic");
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+    // });
   }
 
-  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: (topicType != null) ? 'type = ?' : null,
-            whereArgs: (topicType != null) ? [topicType] : null,
-            offset: offset ?? null,
-            limit: limit ?? null,
-            orderBy: orderBy ?? 'create_at DESC',
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryList - empty - topicType:$topicType");
-          return [];
-        }
-        List<TopicSchema> results = <TopicSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          logText += "\n      $map";
-          TopicSchema? topic = TopicSchema.fromMap(map);
-          if (topic != null) results.add(topic);
-        });
-        logger.v("$TAG - queryList - items:$logText");
-        return results;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: (topicType != null) ? 'type = ?' : null,
+          whereArgs: (topicType != null) ? [topicType] : null,
+          offset: offset,
+          limit: limit,
+          orderBy: orderBy ?? 'create_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryList - empty - topicType:$topicType");
+        return [];
       }
-      return [];
-    });
+      List<TopicSchema> results = <TopicSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n      $map";
+        TopicSchema? topic = TopicSchema.fromMap(map);
+        if (topic != null) results.add(topic);
+      });
+      logger.v("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
-  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int? limit, int? offset}) async {
+  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['*'],
-            where: (topicType != null) ? 'joined = ? AND type = ?' : 'joined = ?',
-            whereArgs: (topicType != null) ? [1, topicType] : [1],
-            offset: offset ?? null,
-            limit: limit ?? null,
-            orderBy: orderBy ?? 'create_at DESC',
-          );
-        });
-        if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryList - empty - topicType:$topicType");
-          return [];
-        }
-        List<TopicSchema> results = <TopicSchema>[];
-        String logText = '';
-        res.forEach((map) {
-          logText += "\n      $map";
-          TopicSchema? topic = TopicSchema.fromMap(map);
-          if (topic != null) results.add(topic);
-        });
-        logger.v("$TAG - queryList - items:$logText");
-        return results;
-      } catch (e) {
-        handleError(e);
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: (topicType != null) ? 'joined = ? AND type = ?' : 'joined = ?',
+          whereArgs: (topicType != null) ? [1, topicType] : [1],
+          offset: offset,
+          limit: limit,
+          orderBy: orderBy ?? 'create_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryList - empty - topicType:$topicType");
+        return [];
       }
-      return [];
-    });
+      List<TopicSchema> results = <TopicSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n      $map";
+        TopicSchema? topic = TopicSchema.fromMap(map);
+        if (topic != null) results.add(topic);
+      });
+      logger.v("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
