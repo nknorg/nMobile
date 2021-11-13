@@ -55,20 +55,35 @@ class TopicCommon with Tag {
         topics.addAll(result);
         if (result.length < limit) break;
       }
-      if (refreshSubscribers) {
-        for (var i = 0; i < topics.length; i++) {
-          TopicSchema topic = topics[i];
-          bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
-          if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined);
+      // if (refreshSubscribers) {
+      for (var i = 0; i < topics.length; i++) {
+        TopicSchema topic = topics[i];
+        bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+        bool longTimeNoRefresh;
+        bool needUpdateRefreshAt = false;
+        int lastRefreshAt = topic.lastRefreshSubscribersAt();
+        if (lastRefreshAt == 0) {
+          longTimeNoRefresh = false;
+          needUpdateRefreshAt = true;
+        } else {
+          longTimeNoRefresh = topic.shouldRefreshSubscribers(lastRefreshAt, topic.count ?? 0);
+          needUpdateRefreshAt = longTimeNoRefresh;
         }
-      } else {
-        List<Future> futures = [];
-        topics.forEach((TopicSchema topic) {
-          bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
-          if (check) futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
-        });
-        await Future.wait(futures);
+        bool refresh = (refreshSubscribers || longTimeNoRefresh) && topic.joined;
+        if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refresh);
+        if (refresh || needUpdateRefreshAt) {
+          Map<String, dynamic> newData = topic.newDataByLastRefreshSubscribersAt(DateTime.now().millisecondsSinceEpoch);
+          await setData(topic.id, newData);
+        }
       }
+      // } else {
+      //   List<Future> futures = [];
+      //   topics.forEach((TopicSchema topic) {
+      //     bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+      //     if (check) futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
+      //   });
+      //   await Future.wait(futures);
+      // }
     });
   }
 
@@ -125,7 +140,7 @@ class TopicCommon with Tag {
       } else {
         logger.i("$TAG - checkAndTrySubscribe - topic subscribe OK - topic:$topic");
         Map<String, dynamic> newData = topic.newDataByAppendSubscribe(true, false);
-        await setData(topic.id, newData, notify: true);
+        await setData(topic.id, newData);
       }
     } else {
       if (expireHeight >= 0) {
@@ -134,7 +149,7 @@ class TopicCommon with Tag {
       } else {
         logger.i("$TAG - checkAndTrySubscribe - topic unsubscribe OK - topic:$topic");
         Map<String, dynamic> newData = topic.newDataByAppendSubscribe(false, false);
-        await setData(topic.id, newData, notify: true);
+        await setData(topic.id, newData);
       }
     }
   }
@@ -479,7 +494,7 @@ class TopicCommon with Tag {
         if (_schema != null) {
           await setJoined(_schema.id, false, notify: true);
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false);
-          await setData(_schema.id, newData, notify: true);
+          await setData(_schema.id, newData);
         }
         success = false;
       } else {
@@ -593,7 +608,7 @@ class TopicCommon with Tag {
         if (_schema != null) {
           await setJoined(_schema.id, false, notify: true);
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false);
-          await setData(_schema.id, newData, notify: true);
+          await setData(_schema.id, newData);
         }
         success = false;
       } else {
