@@ -5,11 +5,14 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 class SessionStorage with Tag {
   static String get tableName => 'Session';
 
   Database? get db => dbCommon.database;
+
+  Lock _lock = new Lock();
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -38,7 +41,7 @@ class SessionStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null) return null;
     Map<String, dynamic> entity = await schema.toMap();
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -79,7 +82,7 @@ class SessionStorage with Tag {
   Future<bool> delete(String? targetId, int? type) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? result = await db?.transaction((txn) {
           return txn.delete(
@@ -103,7 +106,7 @@ class SessionStorage with Tag {
   Future<SessionSchema?> query(String? targetId, int? type) async {
     if (db?.isOpen != true) return null;
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -128,7 +131,7 @@ class SessionStorage with Tag {
 
   Future<List<SessionSchema>> queryListRecent({int? offset, int? limit}) async {
     if (db?.isOpen != true) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -162,7 +165,7 @@ class SessionStorage with Tag {
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
     if (db?.isOpen != true) return false;
     if (schema == null || schema.targetId.isEmpty) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -188,7 +191,7 @@ class SessionStorage with Tag {
   // Future<bool> updateLastMessage(SessionSchema? schema) async {
   // if (db?.isOpen != true) return false;
   //   if (schema == null || schema.targetId.isEmpty) return false;
-  //   return await dbCommon.lock.synchronized(() async {
+  //   return await _lock.synchronized(() async {
   //     try {
   //       int? count = await db?.transaction((txn) {
   //         return txn.update(
@@ -213,7 +216,7 @@ class SessionStorage with Tag {
   Future<bool> updateIsTop(String? targetId, int? type, bool isTop) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
@@ -237,7 +240,7 @@ class SessionStorage with Tag {
   Future<bool> updateUnReadCount(String? targetId, int? type, int unread) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(

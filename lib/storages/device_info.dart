@@ -5,11 +5,14 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 
 class DeviceInfoStorage with Tag {
   static String get tableName => 'DeviceInfo'; // v5
 
   Database? get db => dbCommon.database;
+
+  Lock _lock = new Lock();
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -35,7 +38,7 @@ class DeviceInfoStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? id = await db?.transaction((txn) {
           return txn.insert(tableName, entity);
@@ -57,7 +60,7 @@ class DeviceInfoStorage with Tag {
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -86,7 +89,7 @@ class DeviceInfoStorage with Tag {
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List? res = await db?.transaction((txn) {
           Batch batch = txn.batch();
@@ -127,7 +130,7 @@ class DeviceInfoStorage with Tag {
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         List<Map<String, dynamic>>? res = await db?.transaction((txn) {
           return txn.query(
@@ -156,7 +159,7 @@ class DeviceInfoStorage with Tag {
   Future<bool> update(int? deviceInfoId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
     if (deviceInfoId == null || deviceInfoId == 0) return false;
-    return await dbCommon.lock.synchronized(() async {
+    return await _lock.synchronized(() async {
       try {
         int? count = await db?.transaction((txn) {
           return txn.update(
