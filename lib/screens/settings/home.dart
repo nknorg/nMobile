@@ -105,7 +105,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       headerColor: application.theme.primaryColor,
@@ -258,7 +258,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                     password: true,
                                   );
                                   if (!(await walletCommon.isPasswordRight(_wallet.address, input))) {
-                                    Toast.show(S.of(context).tip_password_error);
+                                    Toast.show(S.of(Global.appContext).tip_password_error);
                                     return;
                                   }
                                   Settings.biometricsAuthentication = value;

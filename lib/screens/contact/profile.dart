@@ -73,24 +73,24 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     Duration(days: 7),
   ];
 
-  static List<String> burnTextArray(BuildContext context) {
+  static List<String> burnTextArray() {
     return [
-      S.of(context).burn_5_seconds,
-      S.of(context).burn_10_seconds,
-      S.of(context).burn_30_seconds,
-      S.of(context).burn_1_minute,
-      S.of(context).burn_5_minutes,
-      S.of(context).burn_10_minutes,
-      S.of(context).burn_30_minutes,
-      S.of(context).burn_1_hour,
-      S.of(context).burn_6_hour,
-      S.of(context).burn_12_hour,
-      S.of(context).burn_1_day,
-      S.of(context).burn_1_week,
+      S.of(Global.appContext).burn_5_seconds,
+      S.of(Global.appContext).burn_10_seconds,
+      S.of(Global.appContext).burn_30_seconds,
+      S.of(Global.appContext).burn_1_minute,
+      S.of(Global.appContext).burn_5_minutes,
+      S.of(Global.appContext).burn_10_minutes,
+      S.of(Global.appContext).burn_30_minutes,
+      S.of(Global.appContext).burn_1_hour,
+      S.of(Global.appContext).burn_6_hour,
+      S.of(Global.appContext).burn_12_hour,
+      S.of(Global.appContext).burn_1_day,
+      S.of(Global.appContext).burn_1_week,
     ];
   }
 
-  static String getStringFromSeconds(context, int seconds) {
+  static String getStringFromSeconds(int seconds) {
     int currentIndex = -1;
     for (int index = 0; index < burnValueArray.length; index++) {
       Duration duration = burnValueArray[index];
@@ -102,7 +102,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     if (currentIndex == -1) {
       return '';
     } else {
-      return burnTextArray(context)[currentIndex];
+      return burnTextArray()[currentIndex];
     }
   }
 
@@ -215,7 +215,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _selectDefaultWallet() async {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
     WalletSchema? selected = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
     if (selected == null || selected.address.isEmpty || selected.address == _contactSchema?.nknWalletAddress) return;
 
@@ -275,7 +275,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _modifyNickname() async {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
     String? newName = await BottomDialog.of(this.context).showInput(
       title: _localizations.edit_nickname,
       inputTip: _localizations.edit_nickname,
@@ -310,7 +310,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken() async {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
     DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
     String? deviceToken = _notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
     if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
@@ -328,14 +328,14 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _addFriend() {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
     if (_contactSchema == null) return;
     contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
     Toast.show(_localizations.success);
   }
 
   _deleteAction() {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     ModalDialog.of(this.context).confirm(
       title: _localizations.tip,
@@ -380,7 +380,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: S.of(context).settings,
+        title: S.of(Global.appContext).settings,
       ),
       body: _contactSchema?.isMe == true
           ? _getSelfView()
@@ -406,7 +406,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     return SingleChildScrollView(
       child: Column(
@@ -558,7 +558,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
@@ -699,7 +699,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                               Padding(
                                 padding: const EdgeInsets.only(left: 16),
                                 child: Label(
-                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(this.context, burnValueArray[_burnProgress].inSeconds),
+                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
                                   type: LabelType.bodyRegular,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -711,7 +711,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                                 activeColor: application.theme.primaryColor,
                                 inactiveColor: application.theme.fontColor2,
                                 divisions: burnValueArray.length - 1,
-                                label: burnTextArray(this.context)[_burnProgress],
+                                label: burnTextArray()[_burnProgress],
                                 onChanged: (value) {
                                   setState(() {
                                     _burnProgress = value.round();
@@ -737,7 +737,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               (!_burnOpen || _burnProgress < 0)
                   ? _localizations.burn_after_reading_desc
                   : _localizations.burn_after_reading_desc_disappear(
-                      burnTextArray(this.context)[_burnProgress],
+                      burnTextArray()[_burnProgress],
                     ),
               type: LabelType.bodySmall,
               fontWeight: FontWeight.w600,

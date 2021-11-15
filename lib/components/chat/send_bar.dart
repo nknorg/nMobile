@@ -368,7 +368,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                 child: FixedTextField(
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
-                                    hintText: S.of(context).type_a_message,
+                                    hintText: S.of(Global.appContext).type_a_message,
                                     hintStyle: TextStyle(color: _theme.fontColor2),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
@@ -424,7 +424,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     height: ActionHeight,
                                     child: Center(
                                       child: Label(
-                                        _audioLockedMode ? S.of(context).cancel : (_audioDragPercent != 0 ? S.of(context).release_to_cancel : S.of(context).slide_to_cancel),
+                                        _audioLockedMode ? S.of(Global.appContext).cancel : (_audioDragPercent != 0 ? S.of(Global.appContext).release_to_cancel : S.of(Global.appContext).slide_to_cancel),
                                         type: LabelType.bodyLarge,
                                         textAlign: TextAlign.center,
                                         color: recordWidgetColor,
@@ -460,7 +460,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                         alignment: Alignment.center,
                         color: application.theme.backgroundColor1,
                         child: Label(
-                          S.of(context).send,
+                          S.of(Global.appContext).send,
                           type: LabelType.bodyLarge,
                           textAlign: TextAlign.center,
                           color: _theme.primaryColor,

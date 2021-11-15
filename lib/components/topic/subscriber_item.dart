@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -160,7 +161,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   Widget _getNameLabels(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     String displayName = contact?.displayName ?? " ";
     String clientAddress = subscriber.clientAddress;
@@ -248,7 +249,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 ),
         ),
         onTap: () async {
-          S _localizations = S.of(context);
+          S _localizations = S.of(Global.appContext);
           if (subscriber.canBeKick) {
             ModalDialog.of(this.context).confirm(
               title: _localizations.reject_user_tip,

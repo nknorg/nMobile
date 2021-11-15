@@ -56,7 +56,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
   }
 
   _import() async {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
@@ -110,7 +110,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Form(
       key: _formKey,

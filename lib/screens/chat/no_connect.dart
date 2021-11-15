@@ -71,7 +71,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     double headImageWidth = Global.screenWidth() * 0.55;
     double headImageHeight = headImageWidth / 3 * 2;
 
