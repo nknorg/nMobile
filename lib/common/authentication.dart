@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -51,11 +50,11 @@ class Authorization {
     return _localAuth.stopAuthentication();
   }
 
-  Future<String?> getWalletPassword(String? walletAddress, {BuildContext? context}) {
+  Future<String?> getWalletPassword(String? walletAddress) {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
     }
-    S _localizations = S.of(context ?? Global.appContext);
+    S _localizations = S.of(Global.appContext);
     return Future(() async {
       if (Settings.biometricsAuthentication) {
         return authenticationIfSupport();
@@ -64,12 +63,12 @@ class Authorization {
     }).then((bool authOk) async {
       String? pwd = await walletCommon.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(context ?? Global.appContext).showInput(
+        return BottomDialog.of(Global.appContext).showInput(
           title: _localizations.verify_wallet_password,
           inputTip: _localizations.wallet_password,
           inputHint: _localizations.input_password,
           actionText: _localizations.continue_text,
-          validator: Validator.of(context ?? Global.appContext).password(),
+          validator: Validator.of(Global.appContext).password(),
           password: true,
         );
       }

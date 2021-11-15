@@ -193,7 +193,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _invitee() async {
     if (_topicSchema == null) return;
-    String? address = await BottomDialog.of(context).showInput(
+    String? address = await BottomDialog.of(Global.appContext).showInput(
       title: S.of(Global.appContext).invite_members,
       inputTip: S.of(Global.appContext).send_to,
       inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,

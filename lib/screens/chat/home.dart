@@ -514,7 +514,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           child: Asset.iconSvg('group', width: 22, color: application.theme.fontLightColor),
                           onPressed: () async {
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                            BottomDialog.of(context).showWithTitle(
+                            BottomDialog.of(Global.appContext).showWithTitle(
                               height: Global.screenHeight() * 0.8,
                               title: _localizations.create_channel,
                               child: ChatTopicSearchLayout(),
@@ -529,7 +529,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
                           child: Asset.iconSvg('user', width: 24, color: application.theme.fontLightColor),
                           onPressed: () async {
-                            String? address = await BottomDialog.of(context).showInput(
+                            String? address = await BottomDialog.of(Global.appContext).showInput(
                               title: _localizations.new_whisper,
                               inputTip: _localizations.send_to,
                               inputHint: _localizations.enter_or_select_a_user_pubkey,

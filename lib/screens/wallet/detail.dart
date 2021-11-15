@@ -113,7 +113,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
   _showChangeNameDialog() async {
     S _localizations = S.of(Global.appContext);
-    String? newName = await BottomDialog.of(context).showInput(
+    String? newName = await BottomDialog.of(Global.appContext).showInput(
       title: _localizations.wallet_name,
       inputTip: _localizations.hint_enter_wallet_name,
       inputHint: _localizations.hint_enter_wallet_name,
@@ -135,7 +135,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
     switch (result) {
       case 0: // export
-        authorization.getWalletPassword(_wallet?.address, context: context).then((String? password) async {
+        authorization.getWalletPassword(_wallet?.address).then((String? password) async {
           if (password == null || password.isEmpty) return;
           String keystore = await walletCommon.getKeystore(_wallet?.address);
 

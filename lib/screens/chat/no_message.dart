@@ -26,7 +26,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
   void onRefreshArguments() {}
 
   void addContact() async {
-    String? address = await BottomDialog.of(context).showInput(
+    String? address = await BottomDialog.of(Global.appContext).showInput(
       title: S.of(Global.appContext).new_whisper,
       inputTip: S.of(Global.appContext).send_to,
       inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,

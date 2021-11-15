@@ -154,7 +154,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                             fontColor: application.theme.primaryColor,
                             width: double.infinity,
                             onPressed: () {
-                              BottomDialog.of(context).showQrcode(
+                              BottomDialog.of(Global.appContext).showQrcode(
                                 title: _localizations.seed + _localizations.qrcode,
                                 desc: _localizations.seed_qrcode_dec,
                                 data: _seed!,
