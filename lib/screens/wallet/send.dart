@@ -357,7 +357,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 logger.i("$TAG - wallet send scan ETH - address:$qrData");
                 _sendToController.text = qrData.toString();
               } else {
-                ModalDialog.of(this.context).show(
+                ModalDialog.of(Global.appContext).show(
                   content: _localizations.error_unknown_nkn_qrcode,
                   hasCloseButton: true,
                 );

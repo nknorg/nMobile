@@ -178,7 +178,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                     child: TextButton(
                       style: _buttonStyle(top: true),
                       onPressed: () async {
-                        await ModalDialog.of(this.context).confirm(
+                        await ModalDialog.of(Global.appContext).confirm(
                           titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,
@@ -262,7 +262,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                     child: TextButton(
                       style: _buttonStyle(bottom: true),
                       onPressed: () async {
-                        await ModalDialog.of(this.context).confirm(
+                        await ModalDialog.of(Global.appContext).confirm(
                           titleWidget: Label(
                             _localizations.tips,
                             type: LabelType.h3,

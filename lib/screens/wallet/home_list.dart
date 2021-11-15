@@ -82,7 +82,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
   _onNotBackedUpTipClicked() {
     S _localizations = S.of(Global.appContext);
-    ModalDialog dialog = ModalDialog.of(this.context);
+    ModalDialog dialog = ModalDialog.of(Global.appContext);
     dialog.show(
       title: _localizations.d_not_backed_up_title,
       content: _localizations.d_not_backed_up_desc,

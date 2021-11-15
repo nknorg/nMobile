@@ -29,6 +29,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -325,6 +326,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true); // await
     // outside update
     chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? ""); // await
+    SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress); // await
   }
 
   _addFriend() {
@@ -337,7 +339,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _deleteAction() {
     S _localizations = S.of(Global.appContext);
 
-    ModalDialog.of(this.context).confirm(
+    ModalDialog.of(Global.appContext).confirm(
       title: _localizations.tip,
       content: _localizations.delete_friend_confirm_title,
       agree: Button(

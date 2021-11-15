@@ -243,7 +243,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                     if (wallets.isNotEmpty) _wallet = wallets[0];
                                   }
                                   if (_wallet == null || _wallet.address.isEmpty) {
-                                    ModalDialog.of(this.context).confirm(
+                                    ModalDialog.of(Global.appContext).confirm(
                                       title: _localizations.wallet_missing,
                                       hasCloseButton: true,
                                     );

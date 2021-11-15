@@ -220,7 +220,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       Loading.dismiss();
       if (result != null) Toast.show(_localizations.subscribed);
     } else {
-      ModalDialog.of(this.context).confirm(
+      ModalDialog.of(Global.appContext).confirm(
         title: _localizations.tip,
         content: _localizations.leave_group_confirm_title,
         agree: Button(
