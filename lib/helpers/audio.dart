@@ -90,9 +90,9 @@ class AudioHelper with Tag {
     Sound.FlutterSoundPlayer? _player;
     try {
       _player = await player.openAudioSession(
-        focus: AudioFocus.requestFocusTransient,
-        category: Sound.SessionCategory.playAndRecord,
-        mode: SessionMode.modeDefault,
+        focus: AudioFocus.requestFocusAndStopOthers,
+        category: Sound.SessionCategory.playback,
+        mode: SessionMode.modeVoiceChat,
         device: AudioDevice.speaker,
       );
     } catch (e) {
@@ -210,9 +210,9 @@ class AudioHelper with Tag {
     FlutterSoundRecorder? _record;
     try {
       _record = await record.openAudioSession(
-        focus: AudioFocus.requestFocusTransient,
-        category: Sound.SessionCategory.playAndRecord,
-        mode: SessionMode.modeDefault,
+        focus: AudioFocus.requestFocusAndStopOthers,
+        category: Sound.SessionCategory.record,
+        mode: SessionMode.modeVoiceChat,
         device: AudioDevice.speaker,
       );
     } catch (e) {
