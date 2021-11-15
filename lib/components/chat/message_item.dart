@@ -366,7 +366,7 @@ class ChatMessageItem extends StatelessWidget {
                     ),
                   ),
                   onTap: () async {
-                    String? topic = await BottomDialog.of(context).showInput(
+                    String? topic = await BottomDialog.of(Global.appContext).showInput(
                       title: _localizations.accept_invitation,
                       desc: inviteDesc,
                       value: message.content?.toString() ?? " ",

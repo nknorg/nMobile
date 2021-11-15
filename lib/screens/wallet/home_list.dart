@@ -93,7 +93,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
           width: double.infinity,
           onPressed: () async {
             await dialog.close();
-            WalletSchema? result = await BottomDialog.of(context).showWalletSelect(title: _localizations.select_asset_to_backup);
+            WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(title: _localizations.select_asset_to_backup);
             _readyExport(result);
           },
         ),
@@ -106,7 +106,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     if (schema == null || schema.address.isEmpty) return;
     S _localizations = S.of(Global.appContext);
 
-    authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
+    authorization.getWalletPassword(schema.address).then((String? password) async {
       if (password == null || password.isEmpty) return;
       String keystore = await walletCommon.getKeystore(schema.address);
 
@@ -203,7 +203,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
             icon: Asset.iconSvg('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
-              String? walletType = await BottomDialog.of(context).showWalletTypeSelect(
+              String? walletType = await BottomDialog.of(Global.appContext).showWalletTypeSelect(
                 title: _localizations.select_wallet_type,
                 desc: _localizations.select_wallet_type_desc,
               );

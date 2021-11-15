@@ -40,7 +40,7 @@ class WalletDropdown extends StatelessWidget with Tag {
         child: Asset.iconSvg('down2', width: 24),
       ),
       onTap: () async {
-        WalletSchema? result = await BottomDialog.of(context).showWalletSelect(
+        WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(
           title: this.selectTitle ?? _localizations.select_another_wallet,
           onlyNKN: this.onlyNKN,
         );
