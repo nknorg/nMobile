@@ -405,7 +405,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(this.context).confirm(
+            ModalDialog.of(Global.appContext).confirm(
               title: _localizations.delete_contact_confirm_title,
               contentWidget: ContactItem(
                 contact: item,
@@ -501,7 +501,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(this.context).confirm(
+            ModalDialog.of(Global.appContext).confirm(
               title: _localizations.confirm_unsubscribe_group,
               contentWidget: TopicItem(
                 topic: item,

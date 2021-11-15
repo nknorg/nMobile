@@ -251,7 +251,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
         onTap: () async {
           S _localizations = S.of(Global.appContext);
           if (subscriber.canBeKick) {
-            ModalDialog.of(this.context).confirm(
+            ModalDialog.of(Global.appContext).confirm(
               title: _localizations.reject_user_tip,
               contentWidget: contact != null
                   ? ContactItem(

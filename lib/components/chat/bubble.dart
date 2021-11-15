@@ -338,7 +338,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         height: 50,
         padding: EdgeInsets.zero,
         onPressed: () {
-          ModalDialog.of(this.context).confirm(
+          ModalDialog.of(Global.appContext).confirm(
             title: _localizations.confirm_resend,
             hasCloseButton: true,
             agree: Button(

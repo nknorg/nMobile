@@ -395,7 +395,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
     if ((sendCount < 3) || (receiveCount < 3) || !mounted) return;
     // tip dialog
-    ModalDialog.of(this.context).confirm(
+    ModalDialog.of(Global.appContext).confirm(
       title: S.of(Global.appContext).tip_open_send_device_token,
       hasCloseButton: true,
       agree: Button(
@@ -429,6 +429,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
       // outside update
       await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken ?? "");
+      SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId); // await
     }
   }
 

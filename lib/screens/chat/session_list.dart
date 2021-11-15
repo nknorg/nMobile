@@ -236,7 +236,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               ),
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                ModalDialog.of(this.context).confirm(
+                ModalDialog.of(Global.appContext).confirm(
                   content: S.of(Global.appContext).delete_session_confirm_title,
                   hasCloseButton: true,
                   agree: Button(
