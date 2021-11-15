@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -210,9 +211,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   _invitee() async {
     if (_topicSchema == null) return;
     String? address = await BottomDialog.of(context).showInput(
-      title: S.of(context).invite_members,
-      inputTip: S.of(context).send_to,
-      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      title: S.of(Global.appContext).invite_members,
+      inputTip: S.of(Global.appContext).send_to,
+      inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -230,7 +231,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     String invitedCount = (_invitedSendCount != null && _invitedReceiptCount != null) ? (_invitedSendCount! + _invitedReceiptCount!).toString() : "--";
     String joinedCount = _subscriberCount?.toString() ?? "--";

@@ -102,7 +102,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
     if (_wallet == null) return;
     WalletSendScreen.go(context, _wallet!).then((FutureOr success) async {
       if (success != null && await success) {
-        S _localizations = S.of(context);
+        S _localizations = S.of(Global.appContext);
         NotificationDialog.of(context).show(
           title: _localizations.transfer_initiated,
           content: _localizations.transfer_initiated_desc,
@@ -112,7 +112,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
   }
 
   _showChangeNameDialog() async {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     String? newName = await BottomDialog.of(context).showInput(
       title: _localizations.wallet_name,
       inputTip: _localizations.hint_enter_wallet_name,
@@ -131,7 +131,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
   }
 
   _onAppBarActionSelected(int result) async {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     switch (result) {
       case 0: // export
@@ -236,7 +236,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       // floatingActionButton: FloatingActionButton(onPressed: () => AppScreen.go(context, index: 1)), // test
@@ -389,7 +389,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                   elevation: 0,
                   child: InkWell(
                     onTap: () {
-                      copyText(this._wallet?.address, context: context);
+                      copyText(this._wallet?.address, context: Global.appContext);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

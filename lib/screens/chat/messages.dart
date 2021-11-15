@@ -396,11 +396,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if ((sendCount < 3) || (receiveCount < 3) || !mounted) return;
     // tip dialog
     ModalDialog.of(this.context).confirm(
-      title: S.of(context).tip_open_send_device_token,
+      title: S.of(Global.appContext).tip_open_send_device_token,
       hasCloseButton: true,
       agree: Button(
         width: double.infinity,
-        text: S.of(context).ok,
+        text: S.of(Global.appContext).ok,
         backgroundColor: application.theme.primaryColor,
         onPressed: () {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -434,12 +434,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     SkinTheme _theme = application.theme;
     int deleteAfterSeconds = (_topic != null ? _topic?.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds) ?? 0;
     Color notifyBellColor = ((_topic != null ? _topic?.options?.notificationOpen : _contact?.options?.notificationOpen) ?? false) ? application.theme.primaryColor : Colors.white38;
 
-    String? disableTip = (_topic != null && _isJoined == false) ? (_topic!.isSubscribeProgress() ? S.of(this.context).subscribing : (_topic!.isPrivate ? S.of(this.context).tip_ask_group_owner_permission : S.of(this.context).need_re_subscribe)) : (!isClientOk ? S.of(this.context).d_chat_not_login : null);
+    String? disableTip = (_topic != null && _isJoined == false) ? (_topic!.isSubscribeProgress() ? _localizations.subscribing : (_topic!.isPrivate ? _localizations.tip_ask_group_owner_permission : _localizations.need_re_subscribe)) : (!isClientOk ? _localizations.d_chat_not_login : null);
 
     return Layout(
       headerColor: _theme.headBarColor2,
@@ -624,7 +624,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       maxDurationS: AudioHelper.MessageRecordMaxDurationS,
                     );
                     if (savePath == null || savePath.isEmpty) {
-                      Toast.show(S.of(context).failure);
+                      Toast.show(S.of(Global.appContext).failure);
                       await audioHelper.recordStop();
                       return false;
                     }
@@ -636,7 +636,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     }
                     String? savePath = await audioHelper.recordStop();
                     if (savePath == null || savePath.isEmpty) {
-                      Toast.show(S.of(context).failure);
+                      Toast.show(S.of(Global.appContext).failure);
                       await audioHelper.recordStop();
                       return null;
                     }
@@ -651,7 +651,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     int size = await content.length();
                     logger.w("$TAG - onRecordTap - saveFileSize:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
                     // if (size >= ChatOutCommon.maxBodySize) {
-                    //   Toast.show(S.of(context).file_too_big);
+                    //   Toast.show(S.of(Global.appContext).file_too_big);
                     //   if (await content.exists()) {
                     //     await content.delete();
                     //   }

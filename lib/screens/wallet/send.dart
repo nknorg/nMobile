@@ -195,7 +195,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         if (password == null || password.isEmpty) return;
         String keystore = await walletCommon.getKeystore(_wallet.address);
         if (keystore.isEmpty || password.isEmpty) {
-          Toast.show(S.of(context).password_wrong);
+          Toast.show(S.of(Global.appContext).password_wrong);
           return;
         }
 
@@ -213,7 +213,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferETH(String name, String keystore, String password) async {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     Loading.show();
     try {
       final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
@@ -266,7 +266,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce}) async {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     Loading.show();
     try {
       List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
@@ -316,7 +316,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     double headIconHeight = Global.screenWidth() / 5;
 
     return Layout(

@@ -333,7 +333,7 @@ class BottomDialog extends BaseStateFulWidget {
                             _inputController.text = contact.clientAddress;
                           }
                         } else {
-                          Toast.show(S.of(context).d_chat_not_login);
+                          Toast.show(S.of(Global.appContext).d_chat_not_login);
                         }
                       },
                       child: Container(

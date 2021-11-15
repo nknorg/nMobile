@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
@@ -51,7 +52,7 @@ class WalletItem extends StatelessWidget {
   }
 
   Widget _getItemBody(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     SkinTheme theme = application.theme;
 
     return Container(

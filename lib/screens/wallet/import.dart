@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -58,7 +59,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     List<String> tabTitles = [_localizations.tab_keystore, _localizations.tab_seed];
 
     return Layout(

@@ -81,7 +81,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   }
 
   _onNotBackedUpTipClicked() {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     ModalDialog dialog = ModalDialog.of(this.context);
     dialog.show(
       title: _localizations.d_not_backed_up_title,
@@ -104,7 +104,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   _readyExport(WalletSchema? schema) {
     logger.i("$TAG - backup picked - $schema");
     if (schema == null || schema.address.isEmpty) return;
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     authorization.getWalletPassword(schema.address, context: context).then((String? password) async {
       if (password == null || password.isEmpty) return;
@@ -159,7 +159,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       // floatingActionButton: FloatingActionButton(onPressed: () => LocalStorage().debugInfo()), // test

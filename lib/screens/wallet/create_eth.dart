@@ -82,7 +82,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     double headIconSize = Global.screenWidth() / 3;
 
     return Layout(

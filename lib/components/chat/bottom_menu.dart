@@ -76,7 +76,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  S.of(context).pictures,
+                  S.of(Global.appContext).pictures,
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
@@ -107,7 +107,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  S.of(context).camera,
+                  S.of(Global.appContext).camera,
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,

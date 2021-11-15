@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -40,7 +41,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -61,7 +62,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                 ),
               ),
               onPressed: () {
-                copyText(this._contactSchema.clientAddress, context: context);
+                copyText(this._contactSchema.clientAddress, context: Global.appContext);
               },
               child: Column(
                 children: <Widget>[

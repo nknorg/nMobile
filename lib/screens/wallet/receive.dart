@@ -62,7 +62,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     RepaintBoundary repaintBoundary = RepaintBoundary(
       key: globalKey,
@@ -79,7 +79,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                 child: InkWell(
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   onTap: () {
-                    copyText(_wallet.address, context: context);
+                    copyText(_wallet.address, context: Global.appContext);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

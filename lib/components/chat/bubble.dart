@@ -178,7 +178,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       items: [
         MenuItem(
           userInfo: 0,
-          title: S.of(context).copy,
+          title: S.of(Global.appContext).copy,
           textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -186,7 +186,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         var index = (item as MenuItem).userInfo;
         switch (index) {
           case 0:
-            copyText(_message.content?.toString() ?? "", context: context);
+            copyText(_message.content?.toString() ?? "", context: Global.appContext);
             break;
         }
       },
@@ -293,7 +293,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getStatusTip(bool self) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     // bool isSending = _message.status == MessageStatus.Sending;
     bool isSendFail = _message.status == MessageStatus.SendFail;

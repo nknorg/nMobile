@@ -107,7 +107,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.publicKey.isEmpty == true) {
       wallet = await BottomDialog.of(this.context).showWalletSelect(
-        title: S.of(context).select_another_wallet,
+        title: S.of(Global.appContext).select_another_wallet,
         onlyNKN: true,
       );
     }
@@ -116,11 +116,11 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     if (wallet == null || address == null || address.isEmpty) return;
     String? pwd = await authorization.getWalletPassword(address);
     if (pwd == null || pwd.isEmpty) {
-      Toast.show(S.of(context).input_password);
+      Toast.show(S.of(Global.appContext).input_password);
       return;
     }
     if (!(await walletCommon.isPasswordRight(address, pwd))) {
-      Toast.show(S.of(context).error_confirm_password);
+      Toast.show(S.of(Global.appContext).error_confirm_password);
       return;
     }
     // pubKey
@@ -149,12 +149,12 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     await Future.delayed(Duration(milliseconds: 100));
     await _refreshFilesLength();
     Loading.dismiss();
-    Toast.show(S.of(context).success);
+    Toast.show(S.of(Global.appContext).success);
   }
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(

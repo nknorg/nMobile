@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -226,7 +227,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     int totalFriendDataCount = _allFriends.length;
     int totalTopicDataCount = _allTopics.length;
@@ -369,7 +370,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   Widget _getFriendItemView(ContactSchema item) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Slidable(
       key: ObjectKey(item),
@@ -468,7 +469,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   Widget _getTopicItemView(TopicSchema item) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Slidable(
       key: ObjectKey(item),

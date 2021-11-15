@@ -22,7 +22,8 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
+
     return Container(
       color: application.theme.backgroundColor4,
       padding: EdgeInsets.fromLTRB(20, 32, 20, 86),

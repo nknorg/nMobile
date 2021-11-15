@@ -223,7 +223,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (password == null) return; // android bug return null when fromBackground
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
-      Toast.show(S.of(this.context).tip_password_error);
+      Toast.show(S.of(Global.appContext).tip_password_error);
       await clientCommon.signOut(closeDB: true, clearWallet: false);
       return;
     }
@@ -332,7 +332,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   Widget _headerBody() {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return StreamBuilder<int>(
       stream: clientCommon.statusStream,
@@ -390,7 +390,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _dbUpgradeTip() {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Container(
       color: Colors.black26,
@@ -435,7 +435,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _showFloatActionMenu() {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     double btnSize = 48;
 
     showDialog(

@@ -152,7 +152,7 @@
 //   }
 //
 //   _toggleNotificationOpen() async {
-//     S _localizations = S.of(this.context);
+//     S _localizations = S.of(Global.appContext);
 //     bool nextOpen = !(_contact.options?.notificationOpen ?? false);
 //     String? deviceToken = nextOpen ? await DeviceToken.get() : null;
 //     if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
@@ -170,7 +170,7 @@
 //
 //   @override
 //   Widget build(BuildContext context) {
-//     S _localizations = S.of(context);
+//     S _localizations = S.of(Global.appContext);
 //     SkinTheme _theme = application.theme;
 //     int deleteAfterSeconds = _contact.options?.deleteAfterSeconds ?? 0;
 //     Color notifyBellColor = (_contact.options?.notificationOpen ?? false) ? application.theme.primaryColor : Colors.white38;
@@ -307,7 +307,7 @@
 //                   if (visible) {
 //                     String? savePath = await audioHelper.recordStart(_contact.clientAddress, maxDurationS: AudioHelper.MessageRecordMaxDurationS);
 //                     if (savePath == null || savePath.isEmpty) {
-//                       Toast.show(S.of(context).failure);
+//                       Toast.show(S.of(Global.appContext).failure);
 //                       await audioHelper.recordStop();
 //                       return false;
 //                     }
@@ -319,7 +319,7 @@
 //                     }
 //                     String? savePath = await audioHelper.recordStop();
 //                     if (savePath == null || savePath.isEmpty) {
-//                       Toast.show(S.of(context).failure);
+//                       Toast.show(S.of(Global.appContext).failure);
 //                       await audioHelper.recordStop();
 //                       return null;
 //                     }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -101,9 +102,9 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                     String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
                     Uint8List imageBytes = await copyFile.readAsBytes();
                     await Common.saveImageToGallery(imageBytes, imageName, Settings.appName);
-                    Toast.show(S.of(context).success);
+                    Toast.show(S.of(Global.appContext).success);
                   } catch (e) {
-                    Toast.show(S.of(context).failure);
+                    Toast.show(S.of(Global.appContext).failure);
                   }
                   break;
               }
@@ -112,7 +113,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
               PopupMenuItem<int>(
                 value: 0,
                 child: Label(
-                  S.of(context).save_to_album,
+                  S.of(Global.appContext).save_to_album,
                   type: LabelType.display,
                 ),
               ),
