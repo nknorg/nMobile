@@ -95,7 +95,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     }
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
-      ModalDialog.of(this.context).show(
+      ModalDialog.of(Global.appContext).show(
         content: S.of(Global.appContext).error_unknown_nkn_qrcode,
         hasCloseButton: true,
       );

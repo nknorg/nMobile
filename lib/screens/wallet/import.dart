@@ -80,7 +80,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               if (qrData != null && qrData.toString().isNotEmpty) {
                 _qrController.sink.add(qrData.toString());
               } else {
-                ModalDialog.of(this.context).show(
+                ModalDialog.of(Global.appContext).show(
                   content: _localizations.error_unknown_nkn_qrcode,
                   hasCloseButton: true,
                 );

@@ -186,7 +186,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         });
         break;
       case 1: // delete
-        ModalDialog.of(this.context).confirm(
+        ModalDialog.of(Global.appContext).confirm(
           title: _localizations.delete_wallet_confirm_title,
           content: _localizations.delete_wallet_confirm_text,
           agree: Button(
