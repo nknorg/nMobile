@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -25,7 +26,7 @@ class WalletDropdown extends StatelessWidget with Tag {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return WalletItem(
       walletType: this.wallet.type,

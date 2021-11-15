@@ -182,7 +182,7 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _contactOptionsWidget(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     Map<String, dynamic> optionData = this.message.content ?? Map<String, dynamic>();
     Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
@@ -309,7 +309,7 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicSubscribeWidget(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
     String content = who + _localizations.joined_channel;
 
@@ -325,7 +325,7 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicInvitedWidget(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
     String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";

@@ -5,6 +5,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -95,7 +96,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
       ModalDialog.of(this.context).show(
-        content: S.of(this.context).error_unknown_nkn_qrcode,
+        content: S.of(Global.appContext).error_unknown_nkn_qrcode,
         hasCloseButton: true,
       );
       return;
@@ -136,7 +137,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         if (exist.type == ContactType.friend) {
-          Toast.show(S.of(context).add_user_duplicated);
+          Toast.show(S.of(Global.appContext).add_user_duplicated);
           Loading.dismiss();
           return;
         } else {
@@ -152,7 +153,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       } else {
         ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);
         if (added == null) {
-          Toast.show(S.of(context).failure);
+          Toast.show(S.of(Global.appContext).failure);
           Loading.dismiss();
           return;
         }
@@ -164,7 +165,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     double avatarSize = 80;
 
     return Layout(

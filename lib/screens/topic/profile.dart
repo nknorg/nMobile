@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -193,9 +194,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   _invitee() async {
     if (_topicSchema == null) return;
     String? address = await BottomDialog.of(context).showInput(
-      title: S.of(context).invite_members,
-      inputTip: S.of(context).send_to,
-      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      title: S.of(Global.appContext).invite_members,
+      inputTip: S.of(Global.appContext).send_to,
+      inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -212,7 +213,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _statusAction(bool nextSubscribe) async {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
     if (nextSubscribe) {
       Loading.show();
       TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic);
@@ -252,7 +253,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(this.context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -285,7 +286,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    copyText(_topicSchema?.topic, context: context);
+                    copyText(_topicSchema?.topic, context: Global.appContext);
                   },
                   child: Row(
                     children: <Widget>[

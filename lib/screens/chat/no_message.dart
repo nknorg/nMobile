@@ -27,9 +27,9 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   void addContact() async {
     String? address = await BottomDialog.of(context).showInput(
-      title: S.of(context).new_whisper,
-      inputTip: S.of(context).send_to,
-      inputHint: S.of(context).enter_or_select_a_user_pubkey,
+      title: S.of(Global.appContext).new_whisper,
+      inputTip: S.of(Global.appContext).send_to,
+      inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -58,7 +58,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return SingleChildScrollView(
       child: Column(
@@ -187,7 +187,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                 },
                 child: Center(
                   child: Text(
-                    S.of(context).subscribe,
+                    S.of(Global.appContext).subscribe,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
