@@ -216,7 +216,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _selectDefaultWallet() async {
     S _localizations = S.of(Global.appContext);
-    WalletSchema? selected = await BottomDialog.of(this.context).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
+    WalletSchema? selected = await BottomDialog.of(Global.appContext).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
     if (selected == null || selected.address.isEmpty || selected.address == _contactSchema?.nknWalletAddress) return;
 
     Loading.show();
@@ -276,7 +276,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _modifyNickname() async {
     S _localizations = S.of(Global.appContext);
-    String? newName = await BottomDialog.of(this.context).showInput(
+    String? newName = await BottomDialog.of(Global.appContext).showInput(
       title: _localizations.edit_nickname,
       inputTip: _localizations.edit_nickname,
       inputHint: _localizations.input_nickname,

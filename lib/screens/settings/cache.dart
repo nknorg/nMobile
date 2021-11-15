@@ -106,7 +106,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.publicKey.isEmpty == true) {
-      wallet = await BottomDialog.of(this.context).showWalletSelect(
+      wallet = await BottomDialog.of(Global.appContext).showWalletSelect(
         title: S.of(Global.appContext).select_another_wallet,
         onlyNKN: true,
       );

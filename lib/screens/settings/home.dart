@@ -249,7 +249,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                     );
                                     return;
                                   }
-                                  String? input = await BottomDialog.of(context).showInput(
+                                  String? input = await BottomDialog.of(Global.appContext).showInput(
                                     title: _localizations.verify_wallet_password,
                                     inputTip: _localizations.wallet_password,
                                     inputHint: _localizations.input_password,
