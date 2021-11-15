@@ -1,19 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validate.dart';
 
 class Validator {
-  final BuildContext context;
-
-  Validator.of(context) : this(context);
+  Validator.of(context) : this();
 
   S? _localizations;
 
-  Validator(this.context) {
-    _localizations = S.of(context);
+  Validator() {
+    _localizations = S.of(Global.appContext);
   }
 
   walletName() {
