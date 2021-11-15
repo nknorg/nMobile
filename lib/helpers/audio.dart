@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -23,6 +24,7 @@ class AudioHelper with Tag {
   String? playerId;
   int? playerDurationMs;
   StreamSubscription? _onPlayProgressSubscription;
+  bool isPlayReleasing = false;
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onPlayProgressController = StreamController<Map<String, dynamic>>.broadcast();
@@ -35,6 +37,7 @@ class AudioHelper with Tag {
   String? recordPath;
   double? recordMaxDurationS;
   StreamSubscription? _onRecordProgressSubscription;
+  bool isRecordReleasing = false;
 
   // ignore: close_sinks
   StreamController<Map<String, dynamic>> _onRecordProgressController = StreamController<Map<String, dynamic>>.broadcast();
@@ -60,6 +63,7 @@ class AudioHelper with Tag {
 
   Future<bool> playStart(String playerId, String localPath, {int? durationMs, Function(PlaybackDisposition)? onProgress}) async {
     logger.i("$TAG - playStart - playerId:$playerId - localPath:$localPath - durationMs:$durationMs");
+    if (isPlayReleasing) return false;
     // permission
     var status = await Permission.storage.request();
     if (status != PermissionStatus.granted) {
@@ -83,12 +87,17 @@ class AudioHelper with Tag {
     }
     if (Platform.isAndroid) localPath = 'file:///' + localPath;
     // init
-    Sound.FlutterSoundPlayer? _player = await player.openAudioSession(
-      focus: AudioFocus.requestFocusTransient,
-      category: Sound.SessionCategory.playAndRecord,
-      mode: SessionMode.modeDefault,
-      device: AudioDevice.speaker,
-    );
+    Sound.FlutterSoundPlayer? _player;
+    try {
+      _player = await player.openAudioSession(
+        focus: AudioFocus.requestFocusTransient,
+        category: Sound.SessionCategory.playAndRecord,
+        mode: SessionMode.modeDefault,
+        device: AudioDevice.speaker,
+      );
+    } catch (e) {
+      handleError(e);
+    }
     if (_player == null) {
       await playStop();
       return false;
@@ -113,20 +122,24 @@ class AudioHelper with Tag {
       });
     });
     // start
-    await player.setSubscriptionDuration(Duration(milliseconds: 50));
-    await player.startPlayer(
-        fromURI: localPath,
-        codec: Codec.defaultCodec,
-        whenFinished: () {
-          logger.i("$TAG - playStart - whenFinished - playerId:$playerId");
-          _onPlayProgressSink.add({
-            "id": this.playerId,
-            "duration": this.playerDurationMs,
-            "position": 0,
-            "percent": 0,
+    try {
+      await player.setSubscriptionDuration(Duration(milliseconds: 50));
+      await player.startPlayer(
+          fromURI: localPath,
+          codec: Codec.defaultCodec,
+          whenFinished: () {
+            logger.i("$TAG - playStart - whenFinished - playerId:$playerId");
+            _onPlayProgressSink.add({
+              "id": this.playerId,
+              "duration": this.playerDurationMs,
+              "position": 0,
+              "percent": 0,
+            });
+            playStop();
           });
-          playStop();
-        });
+    } catch (e) {
+      handleError(e);
+    }
     _onPlayProgressSink.add({
       "id": this.playerId,
       "duration": this.playerDurationMs,
@@ -138,6 +151,7 @@ class AudioHelper with Tag {
 
   Future<bool> playStop() async {
     logger.i("$TAG - playStop - playerId:$playerId");
+    isPlayReleasing = true;
     _onPlayProgressSink.add({
       "id": this.playerId,
       "duration": this.playerDurationMs,
@@ -146,10 +160,16 @@ class AudioHelper with Tag {
     });
     _onPlayProgressSubscription?.cancel();
     _onPlayProgressSubscription = null;
-    await player.stopPlayer();
-    await player.closeAudioSession();
+    try {
+      await player.stopPlayer();
+      await player.closeAudioSession();
+    } catch (e) {
+      handleError(e);
+      isPlayReleasing = false;
+    }
     this.playerId = null;
     // this.playerDuration = null;
+    isPlayReleasing = false;
     return true;
   }
 
@@ -165,6 +185,7 @@ class AudioHelper with Tag {
 
   Future<String?> recordStart(String recordId, {String? savePath, double? maxDurationS, Function(RecordingDisposition)? onProgress}) async {
     logger.i("$TAG - recordStart - recordId:$recordId - savePath:$savePath - maxDurationS:$maxDurationS");
+    if (isRecordReleasing) return null;
     // permission
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
@@ -186,12 +207,17 @@ class AudioHelper with Tag {
       return null;
     }
     // init
-    FlutterSoundRecorder? _record = await record.openAudioSession(
-      focus: AudioFocus.requestFocusTransient,
-      category: Sound.SessionCategory.playAndRecord,
-      mode: SessionMode.modeDefault,
-      device: AudioDevice.speaker,
-    );
+    FlutterSoundRecorder? _record;
+    try {
+      _record = await record.openAudioSession(
+        focus: AudioFocus.requestFocusTransient,
+        category: Sound.SessionCategory.playAndRecord,
+        mode: SessionMode.modeDefault,
+        device: AudioDevice.speaker,
+      );
+    } catch (e) {
+      handleError(e);
+    }
     if (_record == null) {
       await recordStop();
       return null;
@@ -219,20 +245,31 @@ class AudioHelper with Tag {
       }
     });
     // start
-    await record.setSubscriptionDuration(Duration(milliseconds: 50));
-    await record.startRecorder(toFile: recordPath, codec: Sound.Codec.aacADTS);
+    try {
+      await record.setSubscriptionDuration(Duration(milliseconds: 50));
+      await record.startRecorder(toFile: recordPath, codec: Sound.Codec.aacADTS);
+    } catch (e) {
+      handleError(e);
+    }
     return recordPath;
   }
 
   Future<String?> recordStop() async {
     logger.i("$TAG - recordStop - recordId:$recordId");
+    isRecordReleasing = true;
     _onRecordProgressSubscription?.cancel();
     _onRecordProgressSubscription = null;
-    await record.stopRecorder();
-    await record.closeAudioSession();
+    try {
+      await record.stopRecorder();
+      await record.closeAudioSession();
+    } catch (e) {
+      handleError(e);
+      isRecordReleasing = false;
+    }
     this.recordId = null;
     // this.recordPath = null;
     // this.recordMaxDurationS = null;
+    isRecordReleasing = false;
     return recordPath;
   }
 
