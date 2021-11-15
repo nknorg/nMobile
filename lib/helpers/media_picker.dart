@@ -248,25 +248,30 @@ class MediaPicker {
       return original;
     }
     // crop
-    File? cropFile = await ImageCropper.cropImage(
-      sourcePath: original.absolute.path,
-      cropStyle: cropStyle,
-      aspectRatio: cropRatio,
-      compressQuality: 100, // later handle
-      // maxWidth: 300,
-      // maxHeight: 300,
-      iosUiSettings: IOSUiSettings(
-        title: 'Cropper',
-        minimumAspectRatio: 1.0,
-      ),
-      androidUiSettings: AndroidUiSettings(
-        toolbarTitle: 'Cropper',
-        toolbarColor: application.theme.primaryColor,
-        toolbarWidgetColor: Colors.white,
-        initAspectRatio: CropAspectRatioPreset.original,
-        lockAspectRatio: false,
-      ),
-    );
+    File? cropFile;
+    try {
+      cropFile = await ImageCropper.cropImage(
+        sourcePath: original.absolute.path,
+        cropStyle: cropStyle,
+        aspectRatio: cropRatio,
+        compressQuality: 100, // later handle
+        // maxWidth: 300,
+        // maxHeight: 300,
+        iosUiSettings: IOSUiSettings(
+          title: 'Cropper',
+          minimumAspectRatio: 1.0,
+        ),
+        androidUiSettings: AndroidUiSettings(
+          toolbarTitle: 'Cropper',
+          toolbarColor: application.theme.primaryColor,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+        ),
+      );
+    } catch (e) {
+      handleError(e);
+    }
     logger.i('MediaPicker - _cropImage - crop - path:${cropFile?.path}');
     cropFile?.length().then((value) {
       logger.i('MediaPicker - _compressFile - crop - size:${formatFlowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
@@ -350,16 +355,21 @@ class MediaPicker {
       return original;
     }
     // compress
-    File? compressFile = await FlutterImageCompress.compressAndGetFile(
-      original.absolute.path,
-      compressPath,
-      quality: compressQuality,
-      autoCorrectionAngle: true,
-      numberOfRetries: 3,
-      format: format,
-      // minWidth: 300,
-      // minHeight: 300,
-    );
+    File? compressFile;
+    try {
+      compressFile = await FlutterImageCompress.compressAndGetFile(
+        original.absolute.path,
+        compressPath,
+        quality: compressQuality,
+        autoCorrectionAngle: true,
+        numberOfRetries: 3,
+        format: format,
+        // minWidth: 300,
+        // minHeight: 300,
+      );
+    } catch (e) {
+      handleError(e);
+    }
     logger.i('MediaPicker - _compressFile - compress:OK - format:$format - path:${compressFile?.path}');
 
     // limit

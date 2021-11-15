@@ -162,10 +162,15 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                     maxLines: 20,
                     suffixIcon: GestureDetector(
                       onTap: () async {
-                        FilePickerResult? result = await FilePicker.platform.pickFiles(
-                          allowMultiple: false,
-                          type: FileType.any,
-                        );
+                        FilePickerResult? result;
+                        try {
+                          result = await FilePicker.platform.pickFiles(
+                            allowMultiple: false,
+                            type: FileType.any,
+                          );
+                        } catch (e) {
+                          handleError(e);
+                        }
                         logger.i("$TAG - result:$result");
                         if (result != null && result.files.isNotEmpty) {
                           String? path = result.files.first.path;
