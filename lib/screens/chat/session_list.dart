@@ -211,7 +211,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(item.isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top),
                     ),
-                    Label(item.isTop ? S.of(context).top_cancel : S.of(context).top),
+                    Label(item.isTop ? S.of(Global.appContext).top_cancel : S.of(Global.appContext).top),
                   ],
                 ),
               ),
@@ -230,18 +230,18 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(Icons.delete_outline),
                     ),
-                    Label(S.of(context).delete),
+                    Label(S.of(Global.appContext).delete),
                   ],
                 ),
               ),
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                 ModalDialog.of(this.context).confirm(
-                  content: S.of(context).delete_session_confirm_title,
+                  content: S.of(Global.appContext).delete_session_confirm_title,
                   hasCloseButton: true,
                   agree: Button(
                     width: double.infinity,
-                    text: S.of(context).delete_contact,
+                    text: S.of(Global.appContext).delete_contact,
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -321,14 +321,14 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: Label(
-                        S.of(context).private_messages,
+                        S.of(Global.appContext).private_messages,
                         type: LabelType.h3,
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Label(
-                        S.of(context).private_messages_desc,
+                        S.of(Global.appContext).private_messages_desc,
                         type: LabelType.bodyRegular,
                         softWrap: true,
                       ),
@@ -340,7 +340,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                           launchUrl('https://nmobile.nkn.org/');
                         },
                         child: Label(
-                          S.of(context).learn_more,
+                          S.of(Global.appContext).learn_more,
                           type: LabelType.bodySmall,
                           color: application.theme.primaryColor,
                           fontWeight: FontWeight.bold,

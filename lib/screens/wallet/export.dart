@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -86,7 +87,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
@@ -173,14 +174,14 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
 
   _getItemWidgets(String icon, String title, String? value, {bool backupOk = false}) {
     if (value == null || value.isEmpty) return SizedBox.shrink();
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
 
     return Material(
       color: application.theme.backgroundColor1,
       elevation: 0,
       child: InkWell(
         onTap: () {
-          copyText(value, context: context);
+          copyText(value, context: Global.appContext);
           if (backupOk) {
             _setBackupFlag();
           }

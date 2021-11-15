@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
@@ -230,7 +231,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   Widget _contentWidget(SessionSchema session) {
-    S _localizations = S.of(context);
+    S _localizations = S.of(Global.appContext);
     String? msgType = _lastMsg?.contentType;
     String? draft = memoryCache.getDraft(session.targetId);
 
