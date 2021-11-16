@@ -81,7 +81,8 @@ class AudioHelper with Tag {
       if (isSame) return true;
     }
     // path
-    if (localPath.isEmpty || !File(localPath).existsSync()) {
+    File localFile = File(localPath);
+    if (localPath.isEmpty || !localFile.existsSync()) {
       Toast.show(S.of(Global.appContext).file_not_exist);
       return false;
     }
@@ -125,7 +126,7 @@ class AudioHelper with Tag {
     try {
       await player.setSubscriptionDuration(Duration(milliseconds: 50));
       await player.startPlayer(
-          fromURI: localPath,
+          fromDataBuffer: localFile.readAsBytesSync(),
           codec: Codec.defaultCodec,
           whenFinished: () {
             logger.i("$TAG - playStart - whenFinished - playerId:$playerId");
@@ -212,7 +213,7 @@ class AudioHelper with Tag {
       _record = await record.openAudioSession(
         focus: AudioFocus.requestFocusAndStopOthers,
         category: Sound.SessionCategory.record,
-        mode: SessionMode.modeVoiceChat,
+        mode: SessionMode.modeDefault,
         device: AudioDevice.speaker,
       );
     } catch (e) {
