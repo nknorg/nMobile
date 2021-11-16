@@ -69,7 +69,7 @@ class ChatCommon with Tag {
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? initDelay), () async {
       logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec); // await
+      int count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
       if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
       checkNoAckTimers[targetId]?["timer"]?.cancel();
     });
@@ -182,11 +182,12 @@ class ChatCommon with Tag {
         int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
         int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
         if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (exist.options?.deleteAfterSeconds != burnAfterSeconds)) {
+          // no same with self
           if ((exist.options?.updateBurnAfterAt == null) || ((updateBurnAfterAt ?? 0) >= exist.options!.updateBurnAfterAt!)) {
             // side update latest
             exist.options?.deleteAfterSeconds = burnAfterSeconds;
             exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-            contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true); // await
+            await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
           } else {
             // mine update latest
             deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
@@ -208,7 +209,7 @@ class ChatCommon with Tag {
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
     if (contact == null || contact.id == null || contact.id == 0) return null;
-    if (message.contentType == MessageContentType.deviceRequest || message.contentType == MessageContentType.deviceInfo) return null;
+    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceInfo)) return null;
     // duplicated
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.clientAddress);
     if (latest == null) {

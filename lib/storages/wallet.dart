@@ -122,6 +122,7 @@ class WalletStorage with Tag {
     if (keystore == null || keystore.isEmpty) {
       keystore = await _secureStorage.get('NKN_KEYSTORES:$address');
       if (keystore == null || keystore.isEmpty) {
+        // fixed on 208
         // String? decryptKey = await _localStorage.get("WALLET_KEYSTORE_AESVALUE_KEY");
         // if (decryptKey?.isNotEmpty == true) {
         //   String? decodedValue = await _localStorage.get('WALLET_KEYSTORE_ENCRYPT_VALUE');
