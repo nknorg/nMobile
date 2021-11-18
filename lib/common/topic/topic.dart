@@ -827,56 +827,79 @@ class TopicCommon with Tag {
   }
 
   Future<Map<String, dynamic>> _buildMetaByAppend(String? topic, Map<String, dynamic> meta, SubscriberSchema? append) async {
-    if (topic == null || topic.isEmpty || append == null) return Map();
+    if (topic == null || topic.isEmpty || append == null || append.clientAddress.isEmpty) return Map();
     // permPage
     if ((append.permPage ?? -1) <= 0) {
       append.permPage = (await subscriberCommon.findPermissionFromNode(topic, true, append.clientAddress))[0] ?? 0;
     }
 
+    Function removeFromList = (List<dynamic> permList, String clientAddress) {
+      return permList.where((element) {
+        String address;
+        if (element is Map) {
+          address = element["addr"] ?? "";
+        } else {
+          address = element.toString();
+        }
+        return address != clientAddress;
+      }).toList();
+    };
+    Function existFromList = (List<dynamic> permList, String clientAddress) {
+      return permList.where((element) {
+        String address;
+        if (element is Map) {
+          address = element["addr"] ?? "";
+        } else {
+          address = element.toString();
+        }
+        return address == clientAddress;
+      }).toList();
+    };
+
     // node meta
     List<dynamic> acceptList = meta['accept'] ?? [];
     List<dynamic> rejectList = meta['reject'] ?? [];
-    if (append.status == SubscriberStatus.InvitedSend || append.status == SubscriberStatus.InvitedReceipt || append.status == SubscriberStatus.Subscribed) {
+    if ((append.status == SubscriberStatus.InvitedSend) || (append.status == SubscriberStatus.InvitedReceipt) || (append.status == SubscriberStatus.Subscribed)) {
       // add to accepts
-      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      if (acceptList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
+      rejectList = removeFromList(rejectList, append.clientAddress);
+      if (existFromList(acceptList, append.clientAddress).isEmpty) {
         acceptList.add({'addr': append.clientAddress});
       }
     } else if (append.status == SubscriberStatus.Unsubscribed) {
       // add to rejects
-      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      if (rejectList.where((element) => element.toString().contains(append.clientAddress)).toList().isEmpty) {
+      acceptList = removeFromList(acceptList, append.clientAddress);
+      if (existFromList(rejectList, append.clientAddress).isEmpty) {
         rejectList.add({'addr': append.clientAddress});
       }
     } else {
       // remove from all
-      acceptList = acceptList.where((element) => !element.toString().contains(append.clientAddress)).toList();
-      rejectList = rejectList.where((element) => !element.toString().contains(append.clientAddress)).toList();
+      acceptList = removeFromList(acceptList, append.clientAddress);
+      rejectList = removeFromList(rejectList, append.clientAddress);
     }
 
     // DB meta (maybe in txPool)
     List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage, SubscriberSchema.PermPageSize);
     subscribers.forEach((SubscriberSchema element) {
-      if (element.clientAddress.isNotEmpty == true && element.clientAddress != append.clientAddress) {
+      if ((element.clientAddress.isNotEmpty == true) && (element.clientAddress != append.clientAddress)) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
         if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
-          if (element.status == SubscriberStatus.InvitedSend || element.status == SubscriberStatus.InvitedReceipt || element.status == SubscriberStatus.Subscribed) {
+          if ((element.status == SubscriberStatus.InvitedSend) || (element.status == SubscriberStatus.InvitedReceipt) || (element.status == SubscriberStatus.Subscribed)) {
             // add to accepts
-            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            if (acceptList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
+            rejectList = removeFromList(rejectList, element.clientAddress);
+            if (existFromList(acceptList, element.clientAddress).isEmpty) {
               acceptList.add({'addr': element.clientAddress});
             }
           } else if (element.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
-            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            if (rejectList.where((e) => e.toString().contains(element.clientAddress)).toList().isEmpty) {
+            acceptList = removeFromList(acceptList, element.clientAddress);
+            if (existFromList(rejectList, element.clientAddress).isEmpty) {
               rejectList.add({'addr': element.clientAddress});
             }
           } else {
             // remove from all
-            acceptList = acceptList.where((e) => !e.toString().contains(element.clientAddress)).toList();
-            rejectList = rejectList.where((e) => !e.toString().contains(element.clientAddress)).toList();
+            acceptList = removeFromList(acceptList, element.clientAddress);
+            rejectList = removeFromList(rejectList, element.clientAddress);
           }
         } else {
           var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
