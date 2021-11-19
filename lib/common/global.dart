@@ -34,14 +34,6 @@ class Global {
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
-  static int topicDefaultSubscribeHeight = 400000; // 93day
-  static int topicWarnBlockExpireHeight = 100000; // 23day
-
-  static int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static int profileExpireMs = 30 * 60 * 1000; // 30m
-  static int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
-  static int txPoolDelayMs = 1 * 60 * 1000; // 1m
-
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
@@ -55,8 +47,19 @@ class Global {
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
 
-  static Lock _lock = Lock();
+  static Lock _heightLock = Lock();
+  static int? blockHeight;
+
+  static Lock _nonceLock = Lock();
   static Map<String, int> nonceMap = {};
+
+  static int topicDefaultSubscribeHeight = 400000; // 93day
+  static int topicWarnBlockExpireHeight = 100000; // 23day
+
+  static int clientReAuthGapMs = 1 * 60 * 1000; // 1m
+  static int profileExpireMs = 30 * 60 * 1000; // 30m
+  static int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
+  static int txPoolDelayMs = 1 * 60 * 1000; // 1m
 
   static init() async {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
@@ -94,6 +97,29 @@ class Global {
       SettingsStorage.setSeedRpcServers(list, prefix: prefix); // await
     }
     return list;
+  }
+
+  static Future<int?> getBlockHeight() async {
+    return await _heightLock.synchronized(() {
+      return getBlockHeightWithNoLock();
+    });
+  }
+
+  static Future<int?> getBlockHeightWithNoLock() async {
+    int? newBlockHeight;
+    try {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        newBlockHeight = await clientCommon.client?.getHeight();
+      }
+      if ((newBlockHeight == null) || (newBlockHeight <= 0)) {
+        List<String> seedRpcList = await Global.getSeedRpcList(null);
+        newBlockHeight = await Wallet.getHeight(config: RpcConfig(seedRPCServerAddr: seedRpcList));
+      }
+    } catch (e) {
+      handleError(e);
+    }
+    if ((newBlockHeight != null) && (newBlockHeight > 0)) blockHeight = newBlockHeight;
+    return blockHeight;
   }
 
   static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
@@ -137,7 +163,7 @@ class Global {
   }
 
   static Future<int?> refreshNonce({String? walletAddress, bool useNow = false, int? delayMs}) async {
-    return await _lock.synchronized(() {
+    return await _nonceLock.synchronized(() {
       return refreshNonceWithNoLock(walletAddress: walletAddress, useNow: useNow, delayMs: delayMs);
     });
   }

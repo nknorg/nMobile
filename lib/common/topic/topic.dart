@@ -398,14 +398,7 @@ class TopicCommon with Tag {
     }
 
     // subscribe
-    int? globalHeight;
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        globalHeight = await clientCommon.client?.getHeight();
-      }
-    } catch (e) {
-      handleError(e);
-    }
+    int? globalHeight = await Global.getBlockHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // client subscribe
@@ -652,13 +645,7 @@ class TopicCommon with Tag {
       logger.i("$TAG - isJoined - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
       return false;
     }
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        globalHeight = globalHeight ?? await clientCommon.client?.getHeight();
-      }
-    } catch (e) {
-      handleError(e);
-    }
+    globalHeight = globalHeight ?? (await Global.getBlockHeight());
     if (globalHeight == null || globalHeight <= 0) {
       logger.w("$TAG - isJoined - globalHeight <= 0 - topic:$topic");
       return false;
