@@ -264,9 +264,7 @@ class ContactSchema {
         contact.data?.addAll(data);
       }
       contact.nknWalletAddress = data?['nknWalletAddress'];
-      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        contact.nknWalletAddress = await contact.tryNknWalletAddress();
-      }
+      contact.nknWalletAddress = await contact.tryNknWalletAddress();
     }
     return contact;
   }
