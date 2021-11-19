@@ -21,6 +21,7 @@ class SubscriberSchema {
 
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
+  // TODO:GG check
   String clientAddress; // (required) <-> chat_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
@@ -39,6 +40,11 @@ class SubscriberSchema {
     this.permPage,
     this.data,
   });
+
+  // TODO:GG check
+  String get pubKey {
+    return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
+  }
 
   bool get canBeKick {
     int _status = (status ?? SubscriberStatus.None);
