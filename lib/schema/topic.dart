@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
-import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
@@ -173,13 +171,7 @@ class TopicSchema {
 
   Future<bool> shouldResubscribe({int? globalHeight}) async {
     if ((expireBlockHeight == null) || (expireBlockHeight! <= 0)) return true;
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        globalHeight = globalHeight ?? (await clientCommon.client?.getHeight());
-      }
-    } catch (e) {
-      handleError(e);
-    }
+    globalHeight = globalHeight ?? (await Global.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
       return (expireBlockHeight! - globalHeight) < Global.topicWarnBlockExpireHeight;
     } else {
