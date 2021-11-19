@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactCommon with Tag {
@@ -43,14 +40,7 @@ class ContactCommon with Tag {
     }
     if (contact != null) {
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        try {
-          String? pubKey = getPubKeyFromTopicOrChatId(contact.clientAddress);
-          if (pubKey?.isNotEmpty == true) {
-            contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
-          }
-        } catch (e) {
-          handleError(e);
-        }
+        contact.nknWalletAddress = await contact.tryNknWalletAddress();
       }
     }
     return contact;
@@ -65,14 +55,7 @@ class ContactCommon with Tag {
   Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
     if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
-      try {
-        String? pubKey = getPubKeyFromTopicOrChatId(schema.clientAddress);
-        if (pubKey?.isNotEmpty == true) {
-          schema.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
-        }
-      } catch (e) {
-        handleError(e);
-      }
+      schema.nknWalletAddress = await schema.tryNknWalletAddress();
     }
     if (checkDuplicated) {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
