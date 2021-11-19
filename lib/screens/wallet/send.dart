@@ -31,7 +31,6 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 
 class WalletSendScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/send';
@@ -536,14 +535,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                 if (contact != null && (contact is ContactSchema)) {
                                                   String? nknWalletAddress = contact.nknWalletAddress;
                                                   if (nknWalletAddress == null || nknWalletAddress.isEmpty == true) {
-                                                    try {
-                                                      String? pubKey = getPubKeyFromTopicOrChatId(contact.clientAddress);
-                                                      if (pubKey?.isNotEmpty == true) {
-                                                        nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
-                                                      }
-                                                    } catch (e) {
-                                                      handleError(e);
-                                                    }
+                                                    nknWalletAddress = await contact.tryNknWalletAddress();
                                                   }
                                                   _sendToController.text = nknWalletAddress ?? "";
                                                 }

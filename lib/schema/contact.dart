@@ -25,6 +25,7 @@ class RequestType {
 
 class ContactSchema {
   int? id; // <- id
+  // TODO:GG check
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
   int? type; // (required) <-> type
   int? createAt; // <-> create_at
@@ -101,6 +102,11 @@ class ContactSchema {
     return defaultName;
   }
 
+  // TODO:GG check
+  String get pubKey {
+    return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
+  }
+
   bool get isMe {
     if (type == ContactType.me) {
       return true;
@@ -174,6 +180,18 @@ class ContactSchema {
     return data?['notes'];
   }
 
+  Future<String?> tryNknWalletAddress({bool force = false}) async {
+    if (force || (nknWalletAddress?.isNotEmpty == true)) return nknWalletAddress;
+    try {
+      if (pubKey.isNotEmpty == true) {
+        nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey);
+      }
+    } catch (e) {
+      handleError(e);
+    }
+    return nknWalletAddress;
+  }
+
   Future<Map<String, dynamic>> toMap() async {
     if (data == null) {
       data = new Map<String, dynamic>();
@@ -181,14 +199,7 @@ class ContactSchema {
     if (nknWalletAddress?.isNotEmpty == true) {
       data?['nknWalletAddress'] = nknWalletAddress;
     } else {
-      try {
-        String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-        if (pubKey?.isNotEmpty == true) {
-          data?['nknWalletAddress'] = await Wallet.pubKeyToWalletAddr(pubKey!);
-        }
-      } catch (e) {
-        handleError(e);
-      }
+      data?['nknWalletAddress'] = await tryNknWalletAddress();
     }
     if (notes?.isNotEmpty == true) {
       data?['notes'] = notes;
@@ -254,14 +265,7 @@ class ContactSchema {
       }
       contact.nknWalletAddress = data?['nknWalletAddress'];
       if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        try {
-          String? pubKey = getPubKeyFromTopicOrChatId(contact.clientAddress);
-          if (pubKey?.isNotEmpty == true) {
-            contact.nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
-          }
-        } catch (e) {
-          handleError(e);
-        }
+        contact.nknWalletAddress = await contact.tryNknWalletAddress();
       }
     }
     return contact;
