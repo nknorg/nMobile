@@ -533,10 +533,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               if (clientCommon.status == ClientConnectStatus.connected) {
                                                 var contact = await ContactHomeScreen.go(context, isSelect: true);
                                                 if (contact != null && (contact is ContactSchema)) {
-                                                  String? nknWalletAddress = contact.nknWalletAddress;
-                                                  if (nknWalletAddress == null || nknWalletAddress.isEmpty == true) {
-                                                    nknWalletAddress = await contact.tryNknWalletAddress();
-                                                  }
+                                                  String? nknWalletAddress = await contact.tryNknWalletAddress();
                                                   _sendToController.text = nknWalletAddress ?? "";
                                                 }
                                               } else {

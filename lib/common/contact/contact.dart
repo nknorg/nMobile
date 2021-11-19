@@ -38,11 +38,7 @@ class ContactCommon with Tag {
     if (contact == null && canAdd) {
       contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
     }
-    if (contact != null) {
-      if (contact.nknWalletAddress == null || contact.nknWalletAddress!.isEmpty) {
-        contact.nknWalletAddress = await contact.tryNknWalletAddress();
-      }
-    }
+    contact?.nknWalletAddress = await contact.tryNknWalletAddress();
     return contact;
   }
 
@@ -54,9 +50,7 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
-    if (schema.nknWalletAddress == null || schema.nknWalletAddress!.isEmpty) {
-      schema.nknWalletAddress = await schema.tryNknWalletAddress();
-    }
+    schema.nknWalletAddress = await schema.tryNknWalletAddress();
     if (checkDuplicated) {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
