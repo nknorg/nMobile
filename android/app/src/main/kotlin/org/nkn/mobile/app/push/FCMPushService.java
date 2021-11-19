@@ -36,9 +36,13 @@ public class FCMPushService extends FirebaseMessagingService {
             String title = notification.getTitle();
             String content = notification.getBody();
             Log.i(TAG, "onMessageReceived - title: " + title + " - content:" + content);
+            // isApplicationForeground
+            boolean isApplicationForeground = false;
+            MainActivity mActivity = MainActivity.Companion.getInstance();
+            if(mActivity != null) isApplicationForeground = Common.Companion.isApplicationForeground(mActivity);
             // notify flutter
             HashMap<String, Object> resultMap = new HashMap<String, Object>();
-            resultMap.put("isApplicationForeground", Common.Companion.isApplicationForeground(MainActivity.Companion.getInstance()));
+            resultMap.put("isApplicationForeground", isApplicationForeground);
             resultMap.put("title", title);
             resultMap.put("content", content);
             Common.Companion.eventAdd("onRemoteMessageReceived", resultMap);
