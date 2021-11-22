@@ -13,7 +13,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
@@ -52,7 +51,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   _initData() {
     _languageList = <SelectListItem>[
       SelectListItem(
-        text: S.of(Global.appContext).language_auto,
+        text: Global.locale((s) => s.language_auto, ctx: context),
         value: 'auto',
       ),
       SelectListItem(
@@ -70,15 +69,15 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     ];
     _notificationTypeList = <SelectListItem>[
       SelectListItem(
-        text: S.of(Global.appContext).local_notification_only_name,
+        text: Global.locale((s) => s.local_notification_only_name, ctx: context),
         value: NotificationType.only_name,
       ),
       SelectListItem(
-        text: S.of(Global.appContext).local_notification_both_name_message,
+        text: Global.locale((s) => s.local_notification_both_name_message, ctx: context),
         value: NotificationType.name_and_message,
       ),
       SelectListItem(
-        text: S.of(Global.appContext).local_notification_none_display,
+        text: Global.locale((s) => s.local_notification_none_display, ctx: context),
         value: NotificationType.none,
       ),
     ];
@@ -87,12 +86,12 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
   String _getLanguageText(String lang) {
     if (lang == 'auto') {
-      return S.of(Global.appContext).language_auto;
+      return Global.locale((s) => s.language_auto, ctx: context);
     }
     try {
       return _languageList.firstWhere((x) => x.value == lang).text;
     } catch (e) {
-      return S.of(Global.appContext).language_auto;
+      return Global.locale((s) => s.language_auto, ctx: context);
     }
   }
 
@@ -105,15 +104,13 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    S _localizations = S.of(Global.appContext);
-
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Label(
-            _localizations.menu_settings,
+            Global.locale((s) => s.menu_settings, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -130,7 +127,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  _localizations.general,
+                  Global.locale((s) => s.general, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -150,7 +147,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     style: _buttonStyle(top: true, bottom: true),
                     onPressed: () async {
                       Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: _localizations.change_language,
+                        SelectScreen.title: Global.locale((s) => s.change_language, ctx: context),
                         SelectScreen.selectedValue: Settings.locale,
                         SelectScreen.list: _languageList,
                       }).then((lang) {
@@ -166,7 +163,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.language,
+                          Global.locale((s) => s.language, ctx: context),
                           type: LabelType.bodyRegular,
                           fontWeight: FontWeight.bold,
                           color: application.theme.fontColor1,
@@ -201,7 +198,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
             child: Row(
               children: <Widget>[
                 Label(
-                  _localizations.security,
+                  Global.locale((s) => s.security, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -225,7 +222,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.biometrics,
+                          Global.locale((s) => s.biometrics, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -244,21 +241,21 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                   }
                                   if (_wallet == null || _wallet.address.isEmpty) {
                                     ModalDialog.of(Global.appContext).confirm(
-                                      title: _localizations.wallet_missing,
+                                      title: Global.locale((s) => s.wallet_missing),
                                       hasCloseButton: true,
                                     );
                                     return;
                                   }
                                   String? input = await BottomDialog.of(Global.appContext).showInput(
-                                    title: _localizations.verify_wallet_password,
-                                    inputTip: _localizations.wallet_password,
-                                    inputHint: _localizations.input_password,
-                                    actionText: _localizations.continue_text,
+                                    title: Global.locale((s) => s.verify_wallet_password),
+                                    inputTip: Global.locale((s) => s.wallet_password),
+                                    inputHint: Global.locale((s) => s.input_password),
+                                    actionText: Global.locale((s) => s.continue_text),
                                     validator: Validator.of(context).password(),
                                     password: true,
                                   );
                                   if (!(await walletCommon.isPasswordRight(_wallet.address, input))) {
-                                    Toast.show(S.of(Global.appContext).tip_password_error);
+                                    Toast.show(Global.locale((s) => s.tip_password_error));
                                     return;
                                   }
                                   Settings.biometricsAuthentication = value;
@@ -284,7 +281,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
             child: Row(
               children: <Widget>[
                 Label(
-                  _localizations.notification,
+                  Global.locale((s) => s.notification, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -308,7 +305,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.notification_type,
+                          Global.locale((s) => s.notification_type, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -333,7 +330,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     ),
                     onPressed: () {
                       Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: _localizations.local_notification,
+                        SelectScreen.title: Global.locale((s) => s.local_notification),
                         SelectScreen.selectedValue: Settings.notificationType,
                         SelectScreen.list: _notificationTypeList,
                       }).then((type) {
@@ -360,7 +357,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  _localizations.about,
+                  Global.locale((s) => s.about, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -382,7 +379,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.version,
+                          Global.locale((s) => s.version, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -409,7 +406,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.contact_us,
+                          Global.locale((s) => s.contact_us, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -442,7 +439,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.help,
+                          Global.locale((s) => s.help, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -477,7 +474,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  _localizations.advanced,
+                  Global.locale((s) => s.advanced, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -499,7 +496,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          _localizations.cache,
+                          Global.locale((s) => s.cache, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
