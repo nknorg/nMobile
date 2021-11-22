@@ -15,7 +15,6 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -96,7 +95,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
       ModalDialog.of(Global.appContext).show(
-        content: S.of(Global.appContext).error_unknown_nkn_qrcode,
+        content: Global.locale((s) => s.error_unknown_nkn_qrcode),
         hasCloseButton: true,
       );
       return;
@@ -137,7 +136,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
       if (exist != null) {
         if (exist.type == ContactType.friend) {
-          Toast.show(S.of(Global.appContext).add_user_duplicated);
+          Toast.show(Global.locale((s) => s.add_user_duplicated, ctx: context));
           Loading.dismiss();
           return;
         } else {
@@ -153,7 +152,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       } else {
         ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);
         if (added == null) {
-          Toast.show(S.of(Global.appContext).failure);
+          Toast.show(Global.locale((s) => s.failure, ctx: context));
           Loading.dismiss();
           return;
         }
@@ -165,13 +164,12 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     double avatarSize = 80;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: _localizations.add_new_contact,
+        title: Global.locale((s) => s.add_new_contact, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -246,28 +244,28 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Label(
-                          _localizations.nickname,
+                          Global.locale((s) => s.nickname, ctx: context),
                           type: LabelType.h3,
                           textAlign: TextAlign.start,
                         ),
                         FormText(
                           controller: _nameController,
                           focusNode: _nameFocusNode,
-                          hintText: _localizations.input_name,
+                          hintText: Global.locale((s) => s.input_name, ctx: context),
                           validator: Validator.of(context).contactName(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_clientAddressFocusNode),
                         ),
                         SizedBox(height: 14),
                         Label(
-                          _localizations.d_chat_address,
+                          Global.locale((s) => s.d_chat_address, ctx: context),
                           type: LabelType.h3,
                           textAlign: TextAlign.start,
                         ),
                         FormText(
                           controller: _clientAddressController,
                           focusNode: _clientAddressFocusNode,
-                          hintText: _localizations.input_d_chat_address,
+                          hintText: Global.locale((s) => s.input_d_chat_address, ctx: context),
                           validator: Validator.of(context).pubKeyNKN(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_walletAddressFocusNode),
@@ -277,12 +275,12 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                         Row(
                           children: <Widget>[
                             Label(
-                              _localizations.wallet_address,
+                              Global.locale((s) => s.wallet_address, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
                             Label(
-                              ' (${_localizations.optional})',
+                              ' (${Global.locale((s) => s.optional, ctx: context)})',
                               type: LabelType.bodyLarge,
                               textAlign: TextAlign.start,
                             ),
@@ -291,7 +289,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                         FormText(
                           controller: _walletAddressController,
                           focusNode: _walletAddressFocusNode,
-                          hintText: _localizations.input_wallet_address,
+                          hintText: Global.locale((s) => s.input_wallet_address, ctx: context),
                           validator: Validator.of(context).addressNKNOrEmpty(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_notesFocusNode),
@@ -299,12 +297,12 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                         Row(
                           children: <Widget>[
                             Label(
-                              _localizations.notes,
+                              Global.locale((s) => s.notes, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
                             Label(
-                              ' (${_localizations.optional})',
+                              ' (${Global.locale((s) => s.optional, ctx: context)})',
                               type: LabelType.bodyLarge,
                               textAlign: TextAlign.start,
                             ),
@@ -313,7 +311,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                         FormText(
                           controller: _notesController,
                           focusNode: _notesFocusNode,
-                          hintText: _localizations.input_notes,
+                          hintText: Global.locale((s) => s.input_notes, ctx: context),
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                         ),
@@ -331,7 +329,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 30),
                       child: Button(
-                        text: _localizations.save_contact,
+                        text: Global.locale((s) => s.save_contact, ctx: context),
                         width: double.infinity,
                         disabled: !_formValid,
                         onPressed: () {

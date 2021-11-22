@@ -5,7 +5,6 @@ import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -41,12 +40,10 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: _localizations.d_chat_address,
+        title: Global.locale((s) => s.d_chat_address, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: SingleChildScrollView(
@@ -71,7 +68,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Label(
-                        _localizations.d_chat_address,
+                        Global.locale((s) => s.d_chat_address, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -119,7 +116,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                       : SizedBox.shrink(),
                   SizedBox(height: 20),
                   Label(
-                    _localizations.scan_show_me_desc,
+                    Global.locale((s) => s.scan_show_me_desc, ctx: context),
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor2,
                     overflow: TextOverflow.fade,

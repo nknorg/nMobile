@@ -17,7 +17,6 @@ import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -227,8 +226,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     int totalFriendDataCount = _allFriends.length;
     int totalTopicDataCount = _allTopics.length;
     int totalStrangerDataCount = _allStrangers.length;
@@ -257,7 +254,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
-        title: _localizations.contacts,
+        title: Global.locale((s) => s.contacts, ctx: context),
         actions: [
           IconButton(
             icon: Asset.iconSvg(
@@ -303,7 +300,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                         },
                         style: TextStyle(fontSize: 14, height: 1.5),
                         decoration: InputDecoration(
-                          hintText: _localizations.search,
+                          hintText: Global.locale((s) => s.search, ctx: context),
                           contentPadding: const EdgeInsets.only(left: 0, right: 16, top: 9, bottom: 9),
                           border: UnderlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -330,7 +327,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 12, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchFriendDataCount) ${_localizations.friends}',
+                          '($searchFriendDataCount) ${Global.locale((s) => s.friends, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -341,7 +338,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchTopicDataCount) ${_localizations.group_chat}',
+                          '($searchTopicDataCount) ${Global.locale((s) => s.group_chat, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -352,7 +349,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchStrangerDataCount) ${_localizations.recent}',
+                          '($searchStrangerDataCount) ${Global.locale((s) => s.recent, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -370,8 +367,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   Widget _getFriendItemView(ContactSchema item) {
-    S _localizations = S.of(Global.appContext);
-
     return Slidable(
       key: ObjectKey(item),
       direction: Axis.horizontal,
@@ -401,12 +396,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       secondaryActions: [
         IconSlideAction(
-          caption: _localizations.delete,
+          caption: Global.locale((s) => s.delete, ctx: context),
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
             ModalDialog.of(Global.appContext).confirm(
-              title: _localizations.delete_contact_confirm_title,
+              title: Global.locale((s) => s.delete_contact_confirm_title, ctx: context),
               contentWidget: ContactItem(
                 contact: item,
                 bodyTitle: item.displayName,
@@ -415,7 +410,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               agree: Button(
                 width: double.infinity,
-                text: _localizations.delete_contact,
+                text: Global.locale((s) => s.delete_contact, ctx: context),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -424,7 +419,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               reject: Button(
                 width: double.infinity,
-                text: _localizations.cancel,
+                text: Global.locale((s) => s.cancel, ctx: context),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {
@@ -469,8 +464,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   Widget _getTopicItemView(TopicSchema item) {
-    S _localizations = S.of(Global.appContext);
-
     return Slidable(
       key: ObjectKey(item),
       direction: Axis.horizontal,
@@ -497,12 +490,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       secondaryActions: [
         IconSlideAction(
-          caption: _localizations.delete,
+          caption: Global.locale((s) => s.delete, ctx: context),
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
             ModalDialog.of(Global.appContext).confirm(
-              title: _localizations.confirm_unsubscribe_group,
+              title: Global.locale((s) => s.confirm_unsubscribe_group, ctx: context),
               contentWidget: TopicItem(
                 topic: item,
                 bodyTitle: item.topicShort,
@@ -511,7 +504,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               agree: Button(
                 width: double.infinity,
-                text: _localizations.delete,
+                text: Global.locale((s) => s.delete, ctx: context),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -519,13 +512,13 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                   TopicSchema? deleted = await topicCommon.unsubscribe(item.topic);
                   Loading.dismiss();
                   if (deleted != null) {
-                    Toast.show(_localizations.unsubscribed);
+                    Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
                   }
                 },
               ),
               reject: Button(
                 width: double.infinity,
-                text: _localizations.cancel,
+                text: Global.locale((s) => s.cancel, ctx: context),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {
