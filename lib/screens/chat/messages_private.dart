@@ -156,7 +156,7 @@
 //     bool nextOpen = !(_contact.options?.notificationOpen ?? false);
 //     String? deviceToken = nextOpen ? await DeviceToken.get() : null;
 //     if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
-//       Toast.show(_localizations.unavailable_device);
+//       Toast.show(Global.locale((s) => s.unavailable_device);
 //       return;
 //     }
 //     setState(() {
@@ -200,7 +200,7 @@
 //                       ],
 //                     )
 //                   : Label(
-//                       _localizations.click_to_settings,
+//                       Global.locale((s) => s.click_to_settings,
 //                       type: LabelType.h4,
 //                       color: _theme.fontColor2,
 //                     ),
@@ -307,7 +307,7 @@
 //                   if (visible) {
 //                     String? savePath = await audioHelper.recordStart(_contact.clientAddress, maxDurationS: AudioHelper.MessageRecordMaxDurationS);
 //                     if (savePath == null || savePath.isEmpty) {
-//                       Toast.show(S.of(Global.appContext).failure);
+//                       Toast.show(Global.locale((s) => s.failure);
 //                       await audioHelper.recordStop();
 //                       return false;
 //                     }
@@ -319,7 +319,7 @@
 //                     }
 //                     String? savePath = await audioHelper.recordStop();
 //                     if (savePath == null || savePath.isEmpty) {
-//                       Toast.show(S.of(Global.appContext).failure);
+//                       Toast.show(Global.locale((s) => s.failure);
 //                       await audioHelper.recordStop();
 //                       return null;
 //                     }

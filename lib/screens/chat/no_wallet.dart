@@ -13,7 +13,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/import.dart';
@@ -74,15 +73,13 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Label(
-            _localizations.menu_chat,
+            Global.locale((s) => s.menu_chat, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -100,7 +97,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
               Column(
                 children: <Widget>[
                   Label(
-                    _localizations.chat_no_wallet_title,
+                    Global.locale((s) => s.chat_no_wallet_title, ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.center,
                     softWrap: true,
@@ -108,7 +105,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                   Padding(
                     padding: EdgeInsets.only(top: 8, left: 48, right: 48),
                     child: Label(
-                      _localizations.chat_no_wallet_desc,
+                      Global.locale((s) => s.chat_no_wallet_desc, ctx: context),
                       type: LabelType.bodySmall,
                       textAlign: TextAlign.center,
                       softWrap: true,
@@ -141,7 +138,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Label(
-                              _localizations.wallet_name,
+                              Global.locale((s) => s.wallet_name, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
@@ -150,7 +147,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                                   WalletImportScreen.go(context, WalletType.nkn);
                                 },
                                 child: Label(
-                                  _localizations.import_wallet_as_account,
+                                  Global.locale((s) => s.import_wallet_as_account, ctx: context),
                                   type: LabelType.bodyRegular,
                                   color: application.theme.primaryColor,
                                   decoration: TextDecoration.underline,
@@ -164,7 +161,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                         child: FormText(
                           controller: _nameController,
                           focusNode: _nameFocusNode,
-                          hintText: _localizations.hint_enter_wallet_name,
+                          hintText: Global.locale((s) => s.hint_enter_wallet_name, ctx: context),
                           textInputAction: TextInputAction.next,
                           validator: Validator.of(context).walletName(),
                           onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -174,7 +171,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                       Padding(
                         padding: EdgeInsets.only(left: 20, right: 20),
                         child: Label(
-                          _localizations.wallet_password,
+                          Global.locale((s) => s.wallet_password, ctx: context),
                           type: LabelType.h3,
                           textAlign: TextAlign.start,
                         ),
@@ -184,7 +181,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                         child: FormText(
                           controller: _passwordController,
                           focusNode: _passwordFocusNode,
-                          hintText: _localizations.input_password,
+                          hintText: Global.locale((s) => s.input_password, ctx: context),
                           textInputAction: TextInputAction.next,
                           validator: Validator.of(context).password(),
                           onEditingComplete: () => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
@@ -194,7 +191,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                       Padding(
                         padding: EdgeInsets.only(left: 20, right: 20),
                         child: Text(
-                          _localizations.wallet_password_mach,
+                          Global.locale((s) => s.wallet_password_mach, ctx: context),
                           style: application.theme.bodyText2,
                         ),
                       ),
@@ -202,7 +199,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                       Padding(
                         padding: EdgeInsets.only(left: 20, right: 20),
                         child: Label(
-                          _localizations.confirm_password,
+                          Global.locale((s) => s.confirm_password, ctx: context),
                           type: LabelType.h3,
                           textAlign: TextAlign.start,
                         ),
@@ -211,7 +208,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                         padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
                         child: FormText(
                           focusNode: _confirmPasswordFocusNode,
-                          hintText: _localizations.input_password_again,
+                          hintText: Global.locale((s) => s.input_password_again, ctx: context),
                           textInputAction: TextInputAction.done,
                           validator: Validator.of(context).confirmPassword(_passwordController.text),
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
@@ -221,7 +218,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 30),
                         child: Button(
-                          text: _localizations.create_wallet,
+                          text: Global.locale((s) => s.create_wallet, ctx: context),
                           width: double.infinity,
                           disabled: !_formValid,
                           onPressed: _create,
