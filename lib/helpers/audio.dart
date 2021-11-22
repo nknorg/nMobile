@@ -8,7 +8,6 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -83,7 +82,7 @@ class AudioHelper with Tag {
     // path
     File localFile = File(localPath);
     if (localPath.isEmpty || !localFile.existsSync()) {
-      Toast.show(S.of(Global.appContext).file_not_exist);
+      Toast.show(Global.locale((s) => s.file_not_exist));
       return false;
     }
     if (Platform.isAndroid) localPath = 'file:///' + localPath;
