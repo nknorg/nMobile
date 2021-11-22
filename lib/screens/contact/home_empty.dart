@@ -7,7 +7,6 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/utils/asset.dart';
 
@@ -22,13 +21,12 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     double imgSize = Global.screenWidth() / 2;
 
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
-        title: _localizations.my_contact,
+        title: Global.locale((s) => s.my_contact, ctx: context),
         actions: [
           IconButton(
             onPressed: () {
@@ -53,14 +51,14 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
               Column(
                 children: <Widget>[
                   Label(
-                    _localizations.contact_no_contact_title,
+                    Global.locale((s) => s.contact_no_contact_title, ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.center,
                     maxLines: 10,
                   ),
                   SizedBox(height: 50),
                   Label(
-                    _localizations.contact_no_contact_desc,
+                    Global.locale((s) => s.contact_no_contact_desc, ctx: context),
                     type: LabelType.bodySmall,
                     textAlign: TextAlign.center,
                     softWrap: true,
@@ -83,7 +81,7 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
                             Asset.iconSvg('user-plus', color: application.theme.backgroundLightColor, width: 24),
                             SizedBox(width: 24),
                             Label(
-                              _localizations.add_contact,
+                              Global.locale((s) => s.add_contact, ctx: context),
                               type: LabelType.h3,
                               color: application.theme.fontLightColor,
                             )

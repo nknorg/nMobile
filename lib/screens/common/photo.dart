@@ -9,7 +9,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -102,9 +101,9 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                     String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
                     Uint8List imageBytes = await copyFile.readAsBytes();
                     await Common.saveImageToGallery(imageBytes, imageName, Settings.appName);
-                    Toast.show(S.of(Global.appContext).success);
+                    Toast.show(Global.locale((s) => s.success, ctx: context));
                   } catch (e) {
-                    Toast.show(S.of(Global.appContext).failure);
+                    Toast.show(Global.locale((s) => s.failure, ctx: context));
                   }
                   break;
               }
@@ -113,7 +112,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
               PopupMenuItem<int>(
                 value: 0,
                 child: Label(
-                  S.of(Global.appContext).save_to_album,
+                  Global.locale((s) => s.save_to_album, ctx: context),
                   type: LabelType.display,
                 ),
               ),
