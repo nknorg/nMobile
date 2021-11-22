@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/logger.dart';
 
 catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
@@ -50,7 +49,6 @@ String? handleError(dynamic error, {StackTrace? stackTrace, String? toast}) {
 
 String? getErrorShow(dynamic error) {
   if (error == null) return null;
-  S _localizations = S.of(Global.appContext);
 
   String loginError = "failed to create client";
   if (error?.toString().contains(loginError) == true) {
@@ -66,11 +64,11 @@ String? getErrorShow(dynamic error) {
   }
   String pwdWrong = "wrong password";
   if (error?.toString().contains(pwdWrong) == true) {
-    return _localizations.tip_password_error;
+    return Global.locale((s) => s.tip_password_error);
   }
   String ksError = "keystore not exits";
   if (error?.toString().contains(ksError) == true) {
     return ksError;
   }
-  return Settings.debug ? error.toString() : ""; // _localizations.something_went_wrong
+  return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
 }

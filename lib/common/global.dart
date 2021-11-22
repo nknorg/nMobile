@@ -39,14 +39,15 @@ class Global {
 
   static S? s({BuildContext? ctx}) {
     if (_s != null) return _s;
-    BuildContext? context = ctx ?? appContext;
-    if (context == null) return null;
-    S? s = S.maybeOf(context);
-    if ((s != null) && (_s == null)) _s = s;
+    if (ctx != null) return S.maybeOf(ctx);
+    if (appContext != null) {
+      S? s = S.maybeOf(appContext);
+      if ((s != null) && (_s == null)) _s = s;
+    }
     return _s;
   }
 
-  static String locale(Function(S) func, {BuildContext? ctx, String defShow = " "}) {
+  static String locale(Function(S s) func, {BuildContext? ctx, String defShow = " "}) {
     S? __s = s(ctx: ctx);
     if (__s == null) return defShow;
     return func(__s);

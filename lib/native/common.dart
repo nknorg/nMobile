@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,8 +23,8 @@ class Common {
           break;
         case "onRemoteMessageReceived":
           bool? isApplicationForeground = event["isApplicationForeground"];
-          String title = event["title"] ?? S.of(Global.appContext).new_message;
-          String content = event["content"] ?? S.of(Global.appContext).you_have_new_message;
+          String title = event["title"] ?? Global.locale((s) => s.new_message);
+          String content = event["content"] ?? Global.locale((s) => s.you_have_new_message);
           logger.i("Common - onRemoteMessageReceived - isApplicationForeground:$isApplicationForeground - title:$title - content:$content");
           if (!(isApplicationForeground ?? true)) {
             localNotification.show(Uuid().v4(), title, content);

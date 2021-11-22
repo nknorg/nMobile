@@ -290,7 +290,7 @@ class MediaPicker {
 
     if (isGif || !isImage) {
       // if (size >= ChatOutCommon.maxBodySize) {
-      //   Toast.show(S.of(Global.appContext).file_too_big);
+      //   Toast.show(Global.locale((s) => s.file_too_big));
       //   return null;
       // }
       return original;
@@ -377,7 +377,7 @@ class MediaPicker {
     // if (size >= ChatOutCommon.maxBodySize) {
     //   logger.i('MediaPicker - _compressFile - compress:AGAIN - overMaxSize - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     //   if (compressQuality <= 5) {
-    //     Toast.show(S.of(Global.appContext).file_too_big);
+    //     Toast.show(Global.locale((s) => s.file_too_big));
     //     return null;
     //   }
     //   return _compressFile(compressFile, mediaType, compressQuality ~/ 2);
