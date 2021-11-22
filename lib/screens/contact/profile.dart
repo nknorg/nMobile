@@ -21,7 +21,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -76,18 +75,18 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   static List<String> burnTextArray() {
     return [
-      S.of(Global.appContext).burn_5_seconds,
-      S.of(Global.appContext).burn_10_seconds,
-      S.of(Global.appContext).burn_30_seconds,
-      S.of(Global.appContext).burn_1_minute,
-      S.of(Global.appContext).burn_5_minutes,
-      S.of(Global.appContext).burn_10_minutes,
-      S.of(Global.appContext).burn_30_minutes,
-      S.of(Global.appContext).burn_1_hour,
-      S.of(Global.appContext).burn_6_hour,
-      S.of(Global.appContext).burn_12_hour,
-      S.of(Global.appContext).burn_1_day,
-      S.of(Global.appContext).burn_1_week,
+      Global.locale((s) => s.burn_5_seconds),
+      Global.locale((s) => s.burn_10_seconds),
+      Global.locale((s) => s.burn_30_seconds),
+      Global.locale((s) => s.burn_1_minute),
+      Global.locale((s) => s.burn_5_minutes),
+      Global.locale((s) => s.burn_10_minutes),
+      Global.locale((s) => s.burn_30_minutes),
+      Global.locale((s) => s.burn_1_hour),
+      Global.locale((s) => s.burn_6_hour),
+      Global.locale((s) => s.burn_12_hour),
+      Global.locale((s) => s.burn_1_day),
+      Global.locale((s) => s.burn_1_week),
     ];
   }
 
@@ -216,8 +215,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _selectDefaultWallet() async {
-    S _localizations = S.of(Global.appContext);
-    WalletSchema? selected = await BottomDialog.of(Global.appContext).showWalletSelect(title: _localizations.select_another_wallet, onlyNKN: true);
+    WalletSchema? selected = await BottomDialog.of(Global.appContext).showWalletSelect(title: Global.locale((s) => s.select_another_wallet), onlyNKN: true);
     if (selected == null || selected.address.isEmpty || selected.address == _contactSchema?.nknWalletAddress) return;
 
     Loading.show();
@@ -235,7 +233,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       await Future.delayed(Duration(milliseconds: 500)); // wait client create
 
       if (client != null) {
-        Toast.show(S.of(Global.appContext).tip_switch_success); // must global context
+        Toast.show(Global.locale((s) => s.tip_switch_success, ctx: context)); // must global context
         // contact
         ContactSchema? _me = await contactCommon.getMe(canAdd: true);
         await _refreshContactSchema(schema: _me);
@@ -276,13 +274,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _modifyNickname() async {
-    S _localizations = S.of(Global.appContext);
     String? newName = await BottomDialog.of(Global.appContext).showInput(
-      title: _localizations.edit_nickname,
-      inputTip: _localizations.edit_nickname,
-      inputHint: _localizations.input_nickname,
+      title: Global.locale((s) => s.edit_nickname, ctx: context),
+      inputTip: Global.locale((s) => s.edit_nickname, ctx: context),
+      inputHint: Global.locale((s) => s.input_nickname, ctx: context),
       value: _contactSchema?.displayName,
-      actionText: _localizations.save,
+      actionText: Global.locale((s) => s.save, ctx: context),
       maxLength: 20,
     );
     if (newName == null || newName.trim().isEmpty) return;
@@ -311,14 +308,13 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken() async {
-    S _localizations = S.of(Global.appContext);
     DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
     String? deviceToken = _notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
     if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
       setState(() {
         _notificationOpen = false;
       });
-      Toast.show(_localizations.unavailable_device);
+      Toast.show(Global.locale((s) => s.unavailable_device, ctx: context));
       return;
     }
     _contactSchema?.options?.notificationOpen = _notificationOpen;
@@ -330,21 +326,18 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _addFriend() {
-    S _localizations = S.of(Global.appContext);
     if (_contactSchema == null) return;
     contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
-    Toast.show(_localizations.success);
+    Toast.show(Global.locale((s) => s.success, ctx: context));
   }
 
   _deleteAction() {
-    S _localizations = S.of(Global.appContext);
-
     ModalDialog.of(Global.appContext).confirm(
-      title: _localizations.tip,
-      content: _localizations.delete_friend_confirm_title,
+      title: Global.locale((s) => s.tip, ctx: context),
+      content: Global.locale((s) => s.delete_friend_confirm_title, ctx: context),
       agree: Button(
         width: double.infinity,
-        text: _localizations.delete_contact,
+        text: Global.locale((s) => s.delete_contact, ctx: context),
         backgroundColor: application.theme.strongColor,
         onPressed: () async {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -355,7 +348,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       ),
       reject: Button(
         width: double.infinity,
-        text: _localizations.cancel,
+        text: Global.locale((s) => s.cancel, ctx: context),
         fontColor: application.theme.fontColor2,
         backgroundColor: application.theme.backgroundLightColor,
         onPressed: () {
@@ -382,7 +375,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: S.of(Global.appContext).settings,
+        title: Global.locale((s) => s.settings, ctx: context),
       ),
       body: _contactSchema?.isMe == true
           ? _getSelfView()
@@ -408,8 +401,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
-    S _localizations = S.of(Global.appContext);
-
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -446,7 +437,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Label(
-                      _localizations.my_profile,
+                      Global.locale((s) => s.my_profile, ctx: context),
                       type: LabelType.h3,
                     ),
                     SizedBox(height: 24),
@@ -462,7 +453,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
                           SizedBox(width: 10),
                           Label(
-                            _localizations.nickname,
+                            Global.locale((s) => s.nickname, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                           ),
@@ -497,7 +488,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
                           SizedBox(width: 10),
                           Label(
-                            _localizations.d_chat_address,
+                            Global.locale((s) => s.d_chat_address, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                           ),
@@ -539,7 +530,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           ),
                           SizedBox(width: 20),
                           Label(
-                            _localizations.change_default_chat_wallet,
+                            Global.locale((s) => s.change_default_chat_wallet, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.primaryColor,
                             overflow: TextOverflow.fade,
@@ -560,8 +551,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
-    S _localizations = S.of(Global.appContext);
-
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
       child: Column(
@@ -593,7 +582,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
                     SizedBox(width: 10),
                     Label(
-                      _localizations.nickname,
+                      Global.locale((s) => s.nickname, ctx: context),
                       type: LabelType.bodyRegular,
                       color: application.theme.fontColor1,
                     ),
@@ -628,7 +617,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Asset.image('chat/chat-id.png', color: application.theme.primaryColor, width: 24),
                     SizedBox(width: 10),
                     Label(
-                      _localizations.d_chat_address,
+                      Global.locale((s) => s.d_chat_address, ctx: context),
                       type: LabelType.bodyRegular,
                       color: application.theme.fontColor1,
                     ),
@@ -670,7 +659,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
                     SizedBox(width: 10),
                     Label(
-                      _localizations.burn_after_reading,
+                      Global.locale((s) => s.burn_after_reading, ctx: context),
                       type: LabelType.bodyRegular,
                       color: application.theme.fontColor1,
                     ),
@@ -701,7 +690,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                               Padding(
                                 padding: const EdgeInsets.only(left: 16),
                                 child: Label(
-                                  (!_burnOpen || _burnProgress < 0) ? _localizations.off : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
+                                  (!_burnOpen || _burnProgress < 0) ? Global.locale((s) => s.off, ctx: context) : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
                                   type: LabelType.bodyRegular,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -737,10 +726,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
             padding: const EdgeInsets.only(left: 20, right: 20, top: 6),
             child: Label(
               (!_burnOpen || _burnProgress < 0)
-                  ? _localizations.burn_after_reading_desc
-                  : _localizations.burn_after_reading_desc_disappear(
-                      burnTextArray()[_burnProgress],
-                    ),
+                  ? Global.locale((s) => s.burn_after_reading_desc, ctx: context)
+                  : Global.locale(
+                      (s) => s.burn_after_reading_desc_disappear(
+                            burnTextArray()[_burnProgress],
+                          ),
+                      ctx: context),
               type: LabelType.bodySmall,
               fontWeight: FontWeight.w600,
               softWrap: true,
@@ -762,7 +753,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 Asset.iconSvg('notification-bell', color: application.theme.primaryColor, width: 24),
                 SizedBox(width: 10),
                 Label(
-                  _localizations.remote_notification,
+                  Global.locale((s) => s.remote_notification, ctx: context),
                   type: LabelType.bodyRegular,
                   color: application.theme.fontColor1,
                 ),
@@ -783,7 +774,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 20, right: 20),
             child: Label(
-              _localizations.accept_notification,
+              Global.locale((s) => s.accept_notification, ctx: context),
               type: LabelType.bodySmall,
               fontWeight: FontWeight.w600,
               softWrap: true,
@@ -803,7 +794,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
                 SizedBox(width: 10),
                 Label(
-                  _localizations.send_message,
+                  Global.locale((s) => s.send_message, ctx: context),
                   type: LabelType.bodyRegular,
                   color: application.theme.fontColor1,
                 ),
@@ -833,7 +824,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           Icon(Icons.person_add, color: application.theme.primaryColor),
                           SizedBox(width: 10),
                           Label(
-                            _localizations.add_contact,
+                            Global.locale((s) => s.add_contact, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.primaryColor,
                           ),
@@ -860,7 +851,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           Spacer(),
                           Icon(Icons.delete, color: Colors.red),
                           SizedBox(width: 10),
-                          Label(_localizations.delete, type: LabelType.bodyRegular, color: Colors.red),
+                          Label(Global.locale((s) => s.delete, ctx: context), type: LabelType.bodyRegular, color: Colors.red),
                           Spacer(),
                         ],
                       ),
