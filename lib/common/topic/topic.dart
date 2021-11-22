@@ -675,6 +675,7 @@ class TopicCommon with Tag {
     return Map();
   }
 
+  // TODO:GG mean? subscriber = "identifier.publickey"
   Future<Map<String, dynamic>> _clientGetSubscription(String? topic, String? subscriber, {int tryCount = 0}) async {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     try {
