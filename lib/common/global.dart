@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -46,6 +47,16 @@ class Global {
     'http://mainnet-seed-0008.nkn.org:30003',
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
+
+  static S? _locale;
+  static S? locale({BuildContext? ctx}) {
+    if (_locale != null) return _locale;
+    BuildContext? context = ctx ?? appContext;
+    if (context == null) return null;
+    S? s = S.maybeOf(context);
+    if ((s != null) && (_locale == null)) _locale = s;
+    return _locale;
+  }
 
   static Lock _heightLock = Lock();
   static int? blockHeight;
@@ -99,6 +110,10 @@ class Global {
     return list;
   }
 
+  /// ***********************************************************************************************************
+  /// ************************************************* height **************************************************
+  /// ***********************************************************************************************************
+
   static Future<int?> getBlockHeight() async {
     return await _heightLock.synchronized(() {
       return getBlockHeightWithNoLock();
@@ -121,6 +136,10 @@ class Global {
     if ((newBlockHeight != null) && (newBlockHeight > 0)) blockHeight = newBlockHeight;
     return blockHeight;
   }
+
+  /// ***********************************************************************************************************
+  /// ************************************************** nonce **************************************************
+  /// ***********************************************************************************************************
 
   static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
     // // walletAddress
@@ -211,4 +230,33 @@ class Global {
     }
     return nonce;
   }
+
+  /// ***********************************************************************************************************
+  /// *********************************************** subscribe *************************************************
+  /// ***********************************************************************************************************
+
+  // TODO:GG getSubscribersCount
+  // Future<int> getSubscribersCount(String? topic) async {
+  //   if (topic == null || topic.isEmpty) return 0;
+  //   int? count;
+  //   try {
+  //     if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+  //       count = await clientCommon.client?.getSubscribersCount(
+  //         topic: genTopicHash(topic),
+  //         // subscriberHashPrefix: subscriberHashPrefix,
+  //       );
+  //     }
+  //     if ((count == null) || (count <= 0)) {
+  //       List<String> seedRpcList = await Global.getSeedRpcList(null);
+  //       count = await Wallet.getHeight(config: RpcConfig(seedRPCServerAddr: seedRpcList));
+  //     }
+  //   } catch (e) {
+  //     handleError(e);
+  //   }
+  //   return count ?? 0;
+  // }
+
+  // TODO:GG _clientGetSubscribers
+
+  // TODO:GG _clientGetSubscription
 }
