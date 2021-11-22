@@ -59,7 +59,7 @@ class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
                 ),
               ),
               onPressed: () {
-                copyText(this._contactSchema.clientAddress, context: Global.appContext);
+                copyText(this._contactSchema.clientAddress);
               },
               child: Column(
                 children: <Widget>[

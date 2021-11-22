@@ -185,7 +185,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         var index = (item as MenuItem).userInfo;
         switch (index) {
           case 0:
-            copyText(_message.content?.toString() ?? "", context: Global.appContext);
+            copyText(_message.content?.toString() ?? "");
             break;
         }
       },

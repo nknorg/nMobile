@@ -282,7 +282,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    copyText(_topicSchema?.topic, context: Global.appContext);
+                    copyText(_topicSchema?.topic);
                   },
                   child: Row(
                     children: <Widget>[

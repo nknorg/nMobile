@@ -382,7 +382,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                   elevation: 0,
                   child: InkWell(
                     onTap: () {
-                      copyText(this._wallet?.address, context: Global.appContext);
+                      copyText(this._wallet?.address);
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
