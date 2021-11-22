@@ -11,7 +11,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -87,12 +86,10 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: _localizations.export_wallet,
+        title: Global.locale((s) => s.export_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: Column(
@@ -121,10 +118,10 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           ),
                           Column(
                             children: <Widget>[
-                              _getItemWidgets('wallet', _localizations.wallet_address, _address),
-                              _getItemWidgets('key', _localizations.public_key, _publicKey),
-                              _getItemWidgets('key', _localizations.seed, _seed, backupOk: true),
-                              _getItemWidgets('key', _localizations.keystore, _keystore, backupOk: true),
+                              _getItemWidgets('wallet', Global.locale((s) => s.wallet_address, ctx: context), _address),
+                              _getItemWidgets('key', Global.locale((s) => s.public_key, ctx: context), _publicKey),
+                              _getItemWidgets('key', Global.locale((s) => s.seed, ctx: context), _seed, backupOk: true),
+                              _getItemWidgets('key', Global.locale((s) => s.keystore, ctx: context), _keystore, backupOk: true),
                             ],
                           )
                         ],
@@ -146,7 +143,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           padding: EdgeInsets.symmetric(horizontal: 30),
                           child: Button(
                             child: Label(
-                              _localizations.view_qrcode,
+                              Global.locale((s) => s.view_qrcode, ctx: context),
                               type: LabelType.h3,
                               color: application.theme.primaryColor,
                             ),
@@ -155,8 +152,8 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                             width: double.infinity,
                             onPressed: () {
                               BottomDialog.of(Global.appContext).showQrcode(
-                                title: _localizations.seed + _localizations.qrcode,
-                                desc: _localizations.seed_qrcode_dec,
+                                title: Global.locale((s) => s.seed) + Global.locale((s) => s.qrcode),
+                                desc: Global.locale((s) => s.seed_qrcode_dec),
                                 data: _seed!,
                               );
                               _setBackupFlag();
@@ -174,7 +171,6 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
 
   _getItemWidgets(String icon, String title, String? value, {bool backupOk = false}) {
     if (value == null || value.isEmpty) return SizedBox.shrink();
-    S _localizations = S.of(Global.appContext);
 
     return Material(
       color: application.theme.backgroundColor1,
@@ -210,7 +206,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           textAlign: TextAlign.start,
                         ),
                         Label(
-                          _localizations.copy,
+                          Global.locale((s) => s.copy, ctx: context),
                           color: application.theme.primaryColor,
                           type: LabelType.bodyRegular,
                         ),

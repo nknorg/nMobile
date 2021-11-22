@@ -20,7 +20,6 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -194,7 +193,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         if (password == null || password.isEmpty) return;
         String keystore = await walletCommon.getKeystore(_wallet.address);
         if (keystore.isEmpty || password.isEmpty) {
-          Toast.show(S.of(Global.appContext).password_wrong);
+          Toast.show(Global.locale((s) => s.password_wrong));
           return;
         }
 
@@ -212,20 +211,19 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferETH(String name, String keystore, String password) async {
-    S _localizations = S.of(Global.appContext);
     Loading.show();
     try {
       final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
       String ethAddress = (await eth.address).hex;
       if (ethAddress.isEmpty || ethAddress != _wallet.address) {
-        Toast.show(_localizations.password_wrong);
+        Toast.show(Global.locale((s) => s.password_wrong, ctx: context));
         return false;
       }
 
       String amount = _amount?.toString() ?? '0';
       // String fee = _fee.toString();
       if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
-        Toast.show(_localizations.enter_amount);
+        Toast.show(Global.locale((s) => s.enter_amount, ctx: context));
         return false;
       }
 
@@ -236,7 +234,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       // double tradeFee = (double.tryParse(fee) ?? 0);
       double tradeTotal = tradeAmount; // + tradeFee
       if (tradeAmount <= 0 || balance == null || balance < tradeTotal) {
-        Toast.show(_localizations.balance_not_enough);
+        Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
         return false;
       }
 
@@ -257,7 +255,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
             );
       return txHash.length > 10;
     } catch (e) {
-      handleError(e, toast: _localizations.failure);
+      handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
       return false;
     } finally {
       Loading.dismiss();
@@ -265,20 +263,19 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   }
 
   Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce}) async {
-    S _localizations = S.of(Global.appContext);
     Loading.show();
     try {
       List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
       Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
       if (nkn.address.isEmpty || nkn.address != _wallet.address) {
-        Toast.show(_localizations.password_wrong);
+        Toast.show(Global.locale((s) => s.password_wrong, ctx: context));
         return false;
       }
 
       String amount = _amount?.toString() ?? '0';
       String fee = _fee.toString();
       if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
-        Toast.show(_localizations.enter_amount);
+        Toast.show(Global.locale((s) => s.enter_amount, ctx: context));
         return false;
       }
 
@@ -287,7 +284,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       double tradeFee = (double.tryParse(fee) ?? 0);
       double tradeTotal = tradeAmount + tradeFee;
       if (tradeAmount <= 0 || balance < tradeTotal) {
-        Toast.show(_localizations.balance_not_enough);
+        Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
         return false;
       }
 
@@ -297,7 +294,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         walletCommon.queryBalance(delayMs: 3000); // await
         return txHash.length > 10;
       }
-      Toast.show(_localizations.failure);
+      Toast.show(Global.locale((s) => s.failure, ctx: context));
       return false;
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
@@ -306,7 +303,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return _transferNKN(name, keystore, password, nonce: nonce);
       }
       Global.refreshNonce(walletAddress: this._wallet.address); // await
-      handleError(e, toast: _localizations.failure);
+      handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
       return false;
     } finally {
       Loading.dismiss();
@@ -315,14 +312,13 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     double headIconHeight = Global.screenWidth() / 5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       clipAlias: false,
       header: Header(
-        title: _wallet.type == WalletType.eth ? _localizations.send_eth : _localizations.send_nkn,
+        title: _wallet.type == WalletType.eth ? Global.locale((s) => s.send_eth, ctx: context) : Global.locale((s) => s.send_nkn, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -357,7 +353,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                 _sendToController.text = qrData.toString();
               } else {
                 ModalDialog.of(Global.appContext).show(
-                  content: _localizations.error_unknown_nkn_qrcode,
+                  content: Global.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
                   hasCloseButton: true,
                 );
               }
@@ -425,7 +421,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                 children: [
                                   /// wallet
                                   WalletDropdown(
-                                    selectTitle: _localizations.select_asset_to_send,
+                                    selectTitle: Global.locale((s) => s.select_asset_to_send, ctx: context),
                                     wallet: _wallet,
                                     onTapWave: false,
                                     onSelected: (WalletSchema picked) {
@@ -441,14 +437,14 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
                                   /// amount
                                   Label(
-                                    _localizations.amount,
+                                    Global.locale((s) => s.amount, ctx: context),
                                     type: LabelType.h4,
                                     textAlign: TextAlign.start,
                                   ),
                                   FormText(
                                     controller: _amountController,
                                     focusNode: _amountFocusNode,
-                                    hintText: _localizations.enter_amount,
+                                    hintText: Global.locale((s) => s.enter_amount, ctx: context),
                                     validator: Validator.of(context).amount(),
                                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                                     textInputAction: TextInputAction.next,
@@ -461,7 +457,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         width: 20,
                                         alignment: Alignment.centerRight,
                                         child: Label(
-                                          useETH ? _localizations.eth : _localizations.nkn,
+                                          useETH ? Global.locale((s) => s.eth, ctx: context) : Global.locale((s) => s.nkn, ctx: context),
                                           type: LabelType.bodyRegular,
                                           color: application.theme.primaryColor,
                                         ),
@@ -484,7 +480,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                     children: <Widget>[
                                       Row(
                                         children: <Widget>[
-                                          Label(_localizations.available + ': '),
+                                          Label(Global.locale((s) => s.available, ctx: context) + ': '),
                                           Label(
                                             nknFormat(
                                               useETH ? _wallet.balanceEth : _wallet.balance,
@@ -500,7 +496,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                       ),
                                       InkWell(
                                         child: Label(
-                                          _localizations.max,
+                                          Global.locale((s) => s.max, ctx: context),
                                           color: application.theme.primaryColor,
                                           type: LabelType.bodyRegular,
                                         ),
@@ -514,14 +510,14 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
                                   /// sendTo
                                   Label(
-                                    _localizations.send_to,
+                                    Global.locale((s) => s.send_to, ctx: context),
                                     type: LabelType.h4,
                                     textAlign: TextAlign.start,
                                   ),
                                   FormText(
                                     controller: _sendToController,
                                     focusNode: _sendToFocusNode,
-                                    hintText: _localizations.enter_receive_address,
+                                    hintText: Global.locale((s) => s.enter_receive_address, ctx: context),
                                     validator: _wallet.type == WalletType.eth ? Validator.of(context).addressETH() : Validator.of(context).addressNKN(),
                                     textInputAction: TextInputAction.next,
                                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_feeToFocusNode),
@@ -537,7 +533,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                   _sendToController.text = nknWalletAddress ?? "";
                                                 }
                                               } else {
-                                                Toast.show(_localizations.d_chat_not_login);
+                                                Toast.show(Global.locale((s) => s.d_chat_not_login, ctx: context));
                                               }
                                             },
                                             child: Container(
@@ -563,7 +559,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: <Widget>[
                                             Label(
-                                              _localizations.fee,
+                                              Global.locale((s) => s.fee, ctx: context),
                                               color: application.theme.primaryColor,
                                               type: LabelType.h4,
                                               textAlign: TextAlign.start,
@@ -594,7 +590,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                               width: 20,
                                               alignment: Alignment.centerRight,
                                               child: Label(
-                                                _wallet.type == WalletType.eth ? _localizations.eth : _localizations.nkn,
+                                                _wallet.type == WalletType.eth ? Global.locale((s) => s.eth, ctx: context) : Global.locale((s) => s.nkn, ctx: context),
                                                 type: LabelType.label,
                                               ),
                                             ),
@@ -616,7 +612,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                   Padding(
                                                     padding: const EdgeInsets.only(right: 16),
                                                     child: Label(
-                                                      _localizations.gas_price,
+                                                      Global.locale((s) => s.gas_price, ctx: context),
                                                       type: LabelType.h4,
                                                       fontWeight: FontWeight.w600,
                                                     ),
@@ -628,12 +624,12 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                           children: <Widget>[
                                                             Label(
-                                                              _sliderGasPriceMin.toString() + ' ' + _localizations.gwei,
+                                                              _sliderGasPriceMin.toString() + ' ' + Global.locale((s) => s.gwei, ctx: context),
                                                               type: LabelType.bodySmall,
                                                               color: application.theme.primaryColor,
                                                             ),
                                                             Label(
-                                                              _sliderGasPriceMax.toString() + ' ' + _localizations.gwei,
+                                                              _sliderGasPriceMax.toString() + ' ' + Global.locale((s) => s.gwei, ctx: context),
                                                               type: LabelType.bodySmall,
                                                               color: application.theme.primaryColor,
                                                             ),
@@ -657,7 +653,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                   Padding(
                                                     padding: const EdgeInsets.only(right: 22),
                                                     child: Label(
-                                                      _localizations.gas_max,
+                                                      Global.locale((s) => s.gas_max, ctx: context),
                                                       type: LabelType.h4,
                                                       fontWeight: FontWeight.w600,
                                                     ),
@@ -704,17 +700,17 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: <Widget>[
                                                   Label(
-                                                    _localizations.slow,
+                                                    Global.locale((s) => s.slow, ctx: context),
                                                     type: LabelType.bodySmall,
                                                     color: application.theme.primaryColor,
                                                   ),
                                                   Label(
-                                                    _localizations.average,
+                                                    Global.locale((s) => s.average, ctx: context),
                                                     type: LabelType.bodySmall,
                                                     color: application.theme.primaryColor,
                                                   ),
                                                   Label(
-                                                    _localizations.fast,
+                                                    Global.locale((s) => s.fast, ctx: context),
                                                     type: LabelType.bodySmall,
                                                     color: application.theme.primaryColor,
                                                   ),
@@ -743,7 +739,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 30),
                                     child: Button(
-                                      text: _localizations.continue_text,
+                                      text: Global.locale((s) => s.continue_text, ctx: context),
                                       width: double.infinity,
                                       disabled: !_formValid,
                                       onPressed: _goToTransfer,

@@ -20,7 +20,6 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_eth.dart';
@@ -81,19 +80,18 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   }
 
   _onNotBackedUpTipClicked() {
-    S _localizations = S.of(Global.appContext);
     ModalDialog dialog = ModalDialog.of(Global.appContext);
     dialog.show(
-      title: _localizations.d_not_backed_up_title,
-      content: _localizations.d_not_backed_up_desc,
+      title: Global.locale((s) => s.d_not_backed_up_title),
+      content: Global.locale((s) => s.d_not_backed_up_desc),
       hasCloseButton: false,
       actions: [
         Button(
-          text: _localizations.go_backup,
+          text: Global.locale((s) => s.go_backup, ctx: context),
           width: double.infinity,
           onPressed: () async {
             await dialog.close();
-            WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(title: _localizations.select_asset_to_backup);
+            WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(title: Global.locale((s) => s.select_asset_to_backup, ctx: context));
             _readyExport(result);
           },
         ),
@@ -104,7 +102,6 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   _readyExport(WalletSchema? schema) {
     logger.i("$TAG - backup picked - $schema");
     if (schema == null || schema.address.isEmpty) return;
-    S _localizations = S.of(Global.appContext);
 
     authorization.getWalletPassword(schema.address).then((String? password) async {
       if (password == null || password.isEmpty) return;
@@ -118,7 +115,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         Loading.dismiss();
 
         if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != schema.address) {
-          Toast.show(_localizations.password_wrong);
+          Toast.show(Global.locale((s) => s.password_wrong));
           return;
         }
 
@@ -137,7 +134,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         Loading.dismiss();
 
         if (nkn.address.isEmpty || nkn.address != schema.address) {
-          Toast.show(_localizations.password_wrong);
+          Toast.show(Global.locale((s) => s.password_wrong));
           return;
         }
 
@@ -159,8 +156,6 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return Layout(
       // floatingActionButton: FloatingActionButton(onPressed: () => LocalStorage().debugInfo()), // test
       // floatingActionButtonLocation: FloatingActionButtonLocation.centerTop, // test
@@ -169,7 +164,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         titleChild: Padding(
           padding: EdgeInsets.only(left: 20),
           child: Label(
-            _localizations.my_wallets,
+            Global.locale((s) => s.my_wallets, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -187,7 +182,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
                     ),
                     SizedBox(width: 4),
                     Text(
-                      _localizations.not_backed_up,
+                      Global.locale((s) => s.not_backed_up, ctx: context),
                       textAlign: TextAlign.end,
                       style: TextStyle(fontSize: application.theme.bodyText3.fontSize, color: application.theme.strongColor),
                       overflow: TextOverflow.ellipsis,
@@ -204,8 +199,8 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
               String? walletType = await BottomDialog.of(Global.appContext).showWalletTypeSelect(
-                title: _localizations.select_wallet_type,
-                desc: _localizations.select_wallet_type_desc,
+                title: Global.locale((s) => s.select_wallet_type),
+                desc: Global.locale((s) => s.select_wallet_type_desc),
               );
               switch (result) {
                 case 0:
@@ -228,14 +223,14 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
               PopupMenuItem<int>(
                 value: 0,
                 child: Label(
-                  _localizations.no_wallet_create,
+                  Global.locale((s) => s.no_wallet_create, ctx: context),
                   type: LabelType.display,
                 ),
               ),
               PopupMenuItem<int>(
                 value: 1,
                 child: Label(
-                  _localizations.import_wallet,
+                  Global.locale((s) => s.import_wallet, ctx: context),
                   type: LabelType.display,
                 ),
               ),
