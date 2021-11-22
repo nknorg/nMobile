@@ -15,7 +15,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -82,14 +81,13 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     double headIconSize = Global.screenWidth() / 2.5;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       clipAlias: false,
       header: Header(
-        title: _localizations.create_nkn_wallet,
+        title: Global.locale((s) => s.create_nkn_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: Container(
@@ -134,7 +132,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20, top: 32),
                               child: Label(
-                                _localizations.wallet_name,
+                                Global.locale((s) => s.wallet_name, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -144,7 +142,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                               child: FormText(
                                 controller: _nameController,
                                 focusNode: _nameFocusNode,
-                                hintText: _localizations.hint_enter_wallet_name,
+                                hintText: Global.locale((s) => s.hint_enter_wallet_name, ctx: context),
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).walletName(),
                                 onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -154,7 +152,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Label(
-                                _localizations.wallet_password,
+                                Global.locale((s) => s.wallet_password, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -164,7 +162,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                               child: FormText(
                                 controller: _passwordController,
                                 focusNode: _passwordFocusNode,
-                                hintText: _localizations.input_password,
+                                hintText: Global.locale((s) => s.input_password, ctx: context),
                                 textInputAction: TextInputAction.next,
                                 validator: Validator.of(context).password(),
                                 onEditingComplete: () => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
@@ -174,7 +172,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Text(
-                                _localizations.wallet_password_mach,
+                                Global.locale((s) => s.wallet_password_mach, ctx: context),
                                 style: application.theme.bodyText2,
                               ),
                             ),
@@ -182,7 +180,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Label(
-                                _localizations.confirm_password,
+                                Global.locale((s) => s.confirm_password, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -191,7 +189,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                               padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
                               child: FormText(
                                 focusNode: _confirmPasswordFocusNode,
-                                hintText: _localizations.input_password_again,
+                                hintText: Global.locale((s) => s.input_password_again, ctx: context),
                                 textInputAction: TextInputAction.done,
                                 validator: Validator.of(context).confirmPassword(_passwordController.text),
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
@@ -209,7 +207,7 @@ class _WalletCreateNKNScreenState extends BaseStateFulWidgetState<WalletCreateNK
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 30),
                                 child: Button(
-                                  text: _localizations.create_wallet,
+                                  text: Global.locale((s) => s.create_wallet, ctx: context),
                                   width: double.infinity,
                                   disabled: !_formValid,
                                   onPressed: _create,
