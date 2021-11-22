@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/generated/l10n.dart';
 
 String nknFormat(n, {String? symbol, int decimalDigits = 4}) {
   if (n == null) return symbol != null ? '- $symbol' : '-';
@@ -79,9 +78,9 @@ String timeFromNowFormat(DateTime? time) {
   } else if (diff.inHours < Duration.hoursPerDay) {
     return formatDurationToTime(diff);
   } else if (diff.inDays < 7) {
-    return diff.inDays.toString() + ' ' + S.of(Global.appContext).days;
+    return diff.inDays.toString() + ' ' + Global.locale((s) => s.days);
   } else {
-    return (diff.inDays / 7).toStringAsFixed(0) + ' ' + S.of(Global.appContext).weeks;
+    return (diff.inDays / 7).toStringAsFixed(0) + ' ' + Global.locale((s) => s.weeks);
   }
 }
 
@@ -90,18 +89,17 @@ String formatDurationToTime(Duration d) {
 }
 
 String durationFormat(Duration d) {
-  var localizations = S.of(Global.appContext);
   if (d.inSeconds < 0) {
-    return '0 ${localizations.seconds}';
+    return '0 ${Global.locale((s) => s.seconds)}';
   } else if (d.inSeconds < Duration.secondsPerMinute) {
-    return d.inSeconds.toString() + ' ${localizations.seconds}';
+    return d.inSeconds.toString() + ' ${Global.locale((s) => s.seconds)}';
   } else if (d.inMinutes < Duration.minutesPerHour) {
-    return d.inMinutes.toString() + ' ${localizations.minutes}';
+    return d.inMinutes.toString() + ' ${Global.locale((s) => s.minutes)}';
   } else if (d.inHours < Duration.hoursPerDay) {
-    return d.inHours.toString() + ' ${localizations.hours}';
+    return d.inHours.toString() + ' ${Global.locale((s) => s.hours)}';
   } else if (d.inDays < 7) {
-    return d.inDays.toString() + ' ' + localizations.days;
+    return d.inDays.toString() + ' ' + Global.locale((s) => s.days);
   } else {
-    return (d.inDays / 7).toStringAsFixed(0) + ' ' + localizations.weeks;
+    return (d.inDays / 7).toStringAsFixed(0) + ' ' + Global.locale((s) => s.weeks);
   }
 }

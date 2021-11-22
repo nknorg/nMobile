@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/utils/hash.dart';
@@ -18,12 +17,9 @@ const CHECKSUM_LEN = 4;
 const SEED_LENGTH = 32;
 const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
-void copyText(String? content, {BuildContext? context}) {
+void copyText(String? content, {bool toast = true}) {
   Clipboard.setData(ClipboardData(text: content));
-  if (context != null) {
-    S _localizations = S.of(context);
-    Toast.show(_localizations.copy_success);
-  }
+  if (toast) Toast.show(Global.locale((s) => s.copy_success));
 }
 
 void launchUrl(String? url) async {
