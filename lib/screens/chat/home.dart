@@ -18,7 +18,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -223,7 +222,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (password == null) return; // android bug return null when fromBackground
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
-      Toast.show(S.of(Global.appContext).tip_password_error);
+      Toast.show(Global.locale((s) => s.tip_password_error, ctx: context));
       await clientCommon.signOut(closeDB: true, clearWallet: false);
       return;
     }
@@ -332,8 +331,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   Widget _headerBody() {
-    S _localizations = S.of(Global.appContext);
-
     return StreamBuilder<int>(
       stream: clientCommon.statusStream,
       initialData: clientCommon.status,
@@ -345,7 +342,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 Label(
-                  _localizations.disconnect,
+                  Global.locale((s) => s.disconnect, ctx: context),
                   type: LabelType.h4,
                   color: application.theme.strongColor,
                 ),
@@ -357,7 +354,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 Label(
-                  _localizations.connected,
+                  Global.locale((s) => s.connected, ctx: context),
                   type: LabelType.h4,
                   color: application.theme.successColor,
                 ),
@@ -369,7 +366,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 Label(
-                  _localizations.connecting,
+                  Global.locale((s) => s.connecting, ctx: context),
                   type: LabelType.h4,
                   color: application.theme.fontLightColor.withAlpha(200),
                 ),
@@ -390,8 +387,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _dbUpgradeTip() {
-    S _localizations = S.of(Global.appContext);
-
     return Container(
       color: Colors.black26,
       alignment: Alignment.center,
@@ -423,7 +418,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             SizedBox(height: 15),
             ((dbUpdateTip ?? "").length >= 3)
                 ? Label(
-                    _localizations.upgrade_db_tips,
+                    Global.locale((s) => s.upgrade_db_tips, ctx: context),
                     type: LabelType.display,
                     softWrap: true,
                   )
@@ -435,7 +430,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _showFloatActionMenu() {
-    S _localizations = S.of(Global.appContext);
     double btnSize = 48;
 
     showDialog(
@@ -466,7 +460,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               color: Colors.black26,
                             ),
                             child: Label(
-                              _localizations.new_group,
+                              Global.locale((s) => s.new_group, ctx: context),
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,
@@ -486,7 +480,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               color: Colors.black26,
                             ),
                             child: Label(
-                              _localizations.new_whisper,
+                              Global.locale((s) => s.new_whisper, ctx: context),
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,
@@ -516,7 +510,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                             BottomDialog.of(Global.appContext).showWithTitle(
                               height: Global.screenHeight() * 0.8,
-                              title: _localizations.create_channel,
+                              title: Global.locale((s) => s.create_channel, ctx: context),
                               child: ChatTopicSearchLayout(),
                             );
                           },
@@ -530,9 +524,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           child: Asset.iconSvg('user', width: 24, color: application.theme.fontLightColor),
                           onPressed: () async {
                             String? address = await BottomDialog.of(Global.appContext).showInput(
-                              title: _localizations.new_whisper,
-                              inputTip: _localizations.send_to,
-                              inputHint: _localizations.enter_or_select_a_user_pubkey,
+                              title: Global.locale((s) => s.new_whisper, ctx: context),
+                              inputTip: Global.locale((s) => s.send_to, ctx: context),
+                              inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
                               validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );

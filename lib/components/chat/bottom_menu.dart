@@ -75,7 +75,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.pictures),
+                  Global.locale((s) => s.pictures, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
@@ -106,7 +106,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.camera),
+                  Global.locale((s) => s.camera, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
