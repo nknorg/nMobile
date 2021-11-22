@@ -8,7 +8,6 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/layout/tabs.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/wallet/import_by_keystore.dart';
@@ -59,13 +58,12 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-    List<String> tabTitles = [_localizations.tab_keystore, _localizations.tab_seed];
+    List<String> tabTitles = [Global.locale((s) => s.tab_keystore, ctx: context), Global.locale((s) => s.tab_seed, ctx: context)];
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: this._walletType == WalletType.eth ? _localizations.import_ethereum_wallet : _localizations.import_nkn_wallet,
+        title: this._walletType == WalletType.eth ? Global.locale((s) => s.import_ethereum_wallet, ctx: context) : Global.locale((s) => s.import_nkn_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -81,7 +79,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
                 _qrController.sink.add(qrData.toString());
               } else {
                 ModalDialog.of(Global.appContext).show(
-                  content: _localizations.error_unknown_nkn_qrcode,
+                  content: Global.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
                   hasCloseButton: true,
                 );
               }

@@ -15,7 +15,6 @@ import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -68,8 +67,6 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
   }
 
   _import() async {
-    S _localizations = S.of(Global.appContext);
-
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
@@ -111,7 +108,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
         walletCommon.queryBalance(delayMs: 3000); // await
 
         Loading.dismiss();
-        Toast.show(_localizations.success);
+        Toast.show(Global.locale((s) => s.success));
         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       } catch (e) {
         Loading.dismiss();
@@ -122,8 +119,6 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return Form(
       key: _formKey,
       autovalidateMode: AutovalidateMode.always,
@@ -140,7 +135,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
                   child: Label(
-                    _localizations.import_with_seed_title,
+                    Global.locale((s) => s.import_with_seed_title, ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.start,
                   ),
@@ -148,7 +143,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),
                   child: Label(
-                    _localizations.import_with_seed_desc,
+                    Global.locale((s) => s.import_with_seed_desc, ctx: context),
                     type: LabelType.bodyRegular,
                     textAlign: TextAlign.start,
                     softWrap: true,
@@ -157,7 +152,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    _localizations.seed,
+                    Global.locale((s) => s.seed, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -167,7 +162,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _seedController,
                     focusNode: _seedFocusNode,
-                    hintText: _localizations.input_seed,
+                    hintText: Global.locale((s) => s.input_seed, ctx: context),
                     validator: widget.walletType == WalletType.nkn ? Validator.of(context).seedNKN() : Validator.of(context).seedETH(),
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
@@ -177,7 +172,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    _localizations.wallet_name,
+                    Global.locale((s) => s.wallet_name, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -187,7 +182,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _nameController,
                     focusNode: _nameFocusNode,
-                    hintText: _localizations.hint_enter_wallet_name,
+                    hintText: Global.locale((s) => s.hint_enter_wallet_name, ctx: context),
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -196,7 +191,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    _localizations.wallet_password,
+                    Global.locale((s) => s.wallet_password, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -206,7 +201,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   child: FormText(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
-                    hintText: _localizations.input_password,
+                    hintText: Global.locale((s) => s.input_password, ctx: context),
                     validator: Validator.of(context).password(),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
@@ -224,7 +219,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30),
                     child: Button(
-                      text: widget.walletType == WalletType.nkn ? _localizations.import_nkn_wallet : _localizations.import_ethereum_wallet,
+                      text: widget.walletType == WalletType.nkn ? Global.locale((s) => s.import_nkn_wallet, ctx: context) : Global.locale((s) => s.import_ethereum_wallet, ctx: context),
                       width: double.infinity,
                       disabled: !_formValid,
                       onPressed: _import,
