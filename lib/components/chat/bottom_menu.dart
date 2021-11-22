@@ -7,7 +7,6 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/path.dart';
@@ -76,7 +75,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  S.of(Global.appContext).pictures,
+                  Global.locale((s) => s.pictures),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
@@ -107,7 +106,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  S.of(Global.appContext).camera,
+                  Global.locale((s) => s.camera),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,

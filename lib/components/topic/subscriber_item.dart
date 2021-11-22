@@ -9,7 +9,6 @@ import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -161,8 +160,6 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   Widget _getNameLabels(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
-    S _localizations = S.of(Global.appContext);
-
     String displayName = contact?.displayName ?? " ";
     String clientAddress = subscriber.clientAddress;
     int? status = subscriber.status;
@@ -170,21 +167,21 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     // _mark
     List<String> marks = [];
     if (clientAddress == clientCommon.address) {
-      marks.add(_localizations.you);
+      marks.add(Global.locale((s) => s.you));
     }
     if (topic?.isOwner(clientAddress) == true) {
-      marks.add(_localizations.owner);
+      marks.add(Global.locale((s) => s.owner));
     } else if (topic?.isOwner(clientCommon.address) == true) {
       if (status == SubscriberStatus.InvitedSend) {
-        marks.add(_localizations.invitation_sent);
+        marks.add(Global.locale((s) => s.invitation_sent));
       } else if (status == SubscriberStatus.InvitedReceipt) {
-        marks.add(_localizations.invite_and_send_success);
+        marks.add(Global.locale((s) => s.invite_and_send_success));
       } else if (status == SubscriberStatus.Subscribed) {
-        marks.add(_localizations.accepted);
+        marks.add(Global.locale((s) => s.accepted));
       } else if (status == SubscriberStatus.Unsubscribed) {
-        marks.add(_localizations.has_left_the_group);
+        marks.add(Global.locale((s) => s.has_left_the_group));
       } else {
-        marks.add(_localizations.join_but_not_invite);
+        marks.add(Global.locale((s) => s.join_but_not_invite));
       }
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
@@ -249,10 +246,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 ),
         ),
         onTap: () async {
-          S _localizations = S.of(Global.appContext);
           if (subscriber.canBeKick) {
             ModalDialog.of(Global.appContext).confirm(
-              title: _localizations.reject_user_tip,
+              title: Global.locale((s) => s.reject_user_tip),
               contentWidget: contact != null
                   ? ContactItem(
                       contact: contact,
@@ -263,7 +259,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                   : SizedBox.shrink(),
               agree: Button(
                 width: double.infinity,
-                text: _localizations.ok,
+                text: Global.locale((s) => s.ok),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -278,7 +274,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               ),
               reject: Button(
                 width: double.infinity,
-                text: _localizations.cancel,
+                text: Global.locale((s) => s.cancel),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {

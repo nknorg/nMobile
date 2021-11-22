@@ -8,7 +8,6 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -368,7 +367,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                 child: FixedTextField(
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
-                                    hintText: S.of(Global.appContext).type_a_message,
+                                    hintText: Global.locale((s) => s.type_a_message),
                                     hintStyle: TextStyle(color: _theme.fontColor2),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
@@ -424,7 +423,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     height: ActionHeight,
                                     child: Center(
                                       child: Label(
-                                        _audioLockedMode ? S.of(Global.appContext).cancel : (_audioDragPercent != 0 ? S.of(Global.appContext).release_to_cancel : S.of(Global.appContext).slide_to_cancel),
+                                        _audioLockedMode ? Global.locale((s) => s.cancel) : (_audioDragPercent != 0 ? Global.locale((s) => s.release_to_cancel) : Global.locale((s) => s.slide_to_cancel)),
                                         type: LabelType.bodyLarge,
                                         textAlign: TextAlign.center,
                                         color: recordWidgetColor,
@@ -460,7 +459,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                         alignment: Alignment.center,
                         color: application.theme.backgroundColor1,
                         child: Label(
-                          S.of(Global.appContext).send,
+                          Global.locale((s) => s.send),
                           type: LabelType.bodyLarge,
                           textAlign: TextAlign.center,
                           color: _theme.primaryColor,

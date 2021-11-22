@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/wallet/item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -26,8 +25,6 @@ class WalletDropdown extends StatelessWidget with Tag {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return WalletItem(
       walletType: this.wallet.type,
       wallet: this.wallet,
@@ -41,7 +38,7 @@ class WalletDropdown extends StatelessWidget with Tag {
       ),
       onTap: () async {
         WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(
-          title: this.selectTitle ?? _localizations.select_another_wallet,
+          title: this.selectTitle ?? Global.locale((s) => s.select_another_wallet),
           onlyNKN: this.onlyNKN,
         );
         logger.i("$TAG - wallet dropdown select - wallet:$result");

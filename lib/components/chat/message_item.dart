@@ -6,7 +6,6 @@ import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -182,8 +181,6 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _contactOptionsWidget(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     Map<String, dynamic> optionData = this.message.content ?? Map<String, dynamic>();
     Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
     if (content.keys.length <= 0) return SizedBox.shrink();
@@ -226,7 +223,7 @@ class ChatMessageItem extends StatelessWidget {
                           type: LabelType.bodySmall,
                         )
                       : Label(
-                          _localizations.off,
+                          Global.locale((s) => s.off),
                           type: LabelType.bodySmall,
                           fontWeight: FontWeight.bold,
                         ),
@@ -237,12 +234,12 @@ class ChatMessageItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    message.isOutbound ? _localizations.you : (this.contact?.displayName ?? " "),
+                    message.isOutbound ? Global.locale((s) => s.you) : (this.contact?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
-                    ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ',
+                    ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading) : Global.locale((s) => s.close_burn_after_reading)} ',
                     maxWidth: Global.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                     softWrap: true,
@@ -252,7 +249,7 @@ class ChatMessageItem extends StatelessWidget {
               SizedBox(height: 4),
               InkWell(
                 child: Label(
-                  _localizations.click_to_change,
+                  Global.locale((s) => s.click_to_change),
                   color: application.theme.primaryColor,
                   type: LabelType.bodyRegular,
                 ),
@@ -276,13 +273,13 @@ class ChatMessageItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
-                    message.isOutbound ? _localizations.you : (this.contact?.displayName ?? " "),
+                    message.isOutbound ? Global.locale((s) => s.you) : (this.contact?.displayName ?? " "),
                     maxWidth: Global.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
-                    isDeviceTokenOpen ? ' ${_localizations.setting_accept_notification}' : ' ${_localizations.setting_deny_notification}',
+                    isDeviceTokenOpen ? ' ${Global.locale((s) => s.setting_accept_notification)}' : ' ${Global.locale((s) => s.setting_deny_notification)}',
                     maxWidth: Global.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                   ),
@@ -291,7 +288,7 @@ class ChatMessageItem extends StatelessWidget {
               SizedBox(height: 4),
               InkWell(
                 child: Label(
-                  _localizations.click_to_change,
+                  Global.locale((s) => s.click_to_change),
                   color: application.theme.primaryColor,
                   type: LabelType.bodyRegular,
                 ),
@@ -309,9 +306,8 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicSubscribeWidget(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-    String who = message.isOutbound ? _localizations.you : message.from.substring(0, 6);
-    String content = who + _localizations.joined_channel;
+    String who = message.isOutbound ? Global.locale((s) => s.you) : message.from.substring(0, 6);
+    String content = who + Global.locale((s) => s.joined_channel);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 6),
@@ -325,11 +321,9 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicInvitedWidget(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
     String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
-    String inviteDesc = message.isOutbound ? _localizations.invites_desc_other(to) : _localizations.invites_desc_me(from);
+    String inviteDesc = message.isOutbound ? Global.locale((s) => s.invites_desc_other(to)) : Global.locale((s) => s.invites_desc_me(from));
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -359,7 +353,7 @@ class ChatMessageItem extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
                     child: Label(
-                      _localizations.accept,
+                      Global.locale((s) => s.accept),
                       type: LabelType.bodyRegular,
                       fontWeight: FontWeight.bold,
                       color: application.theme.primaryColor,
@@ -367,10 +361,10 @@ class ChatMessageItem extends StatelessWidget {
                   ),
                   onTap: () async {
                     String? topic = await BottomDialog.of(Global.appContext).showInput(
-                      title: _localizations.accept_invitation,
+                      title: Global.locale((s) => s.accept_invitation),
                       desc: inviteDesc,
                       value: message.content?.toString() ?? " ",
-                      actionText: _localizations.accept_invitation,
+                      actionText: Global.locale((s) => s.accept_invitation),
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
@@ -379,7 +373,7 @@ class ChatMessageItem extends StatelessWidget {
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow);
                       Loading.dismiss();
-                      if (result != null) Toast.show(_localizations.subscribed);
+                      if (result != null) Toast.show(Global.locale((s) => s.subscribed));
                     }
                   },
                 )
