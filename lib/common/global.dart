@@ -35,6 +35,23 @@ class Global {
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
+  static S? _s;
+
+  static S? s({BuildContext? ctx}) {
+    if (_s != null) return _s;
+    BuildContext? context = ctx ?? appContext;
+    if (context == null) return null;
+    S? s = S.maybeOf(context);
+    if ((s != null) && (_s == null)) _s = s;
+    return _s;
+  }
+
+  static String locale(Function(S) func, {BuildContext? ctx, String defShow = " "}) {
+    S? __s = s(ctx: ctx);
+    if (__s == null) return defShow;
+    return func(__s);
+  }
+
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
@@ -47,16 +64,6 @@ class Global {
     'http://mainnet-seed-0008.nkn.org:30003',
     'http://mainnet-seed-0009.nkn.org:30003',
   ];
-
-  static S? _locale;
-  static S? locale({BuildContext? ctx}) {
-    if (_locale != null) return _locale;
-    BuildContext? context = ctx ?? appContext;
-    if (context == null) return null;
-    S? s = S.maybeOf(context);
-    if ((s != null) && (_locale == null)) _locale = s;
-    return _locale;
-  }
 
   static Lock _heightLock = Lock();
   static int? blockHeight;
