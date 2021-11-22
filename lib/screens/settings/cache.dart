@@ -16,7 +16,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -107,7 +106,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.publicKey.isEmpty == true) {
       wallet = await BottomDialog.of(Global.appContext).showWalletSelect(
-        title: S.of(Global.appContext).select_another_wallet,
+        title: Global.locale((s) => s.select_another_wallet, ctx: context),
         onlyNKN: true,
       );
     }
@@ -116,11 +115,11 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     if (wallet == null || address == null || address.isEmpty) return;
     String? pwd = await authorization.getWalletPassword(address);
     if (pwd == null || pwd.isEmpty) {
-      Toast.show(S.of(Global.appContext).input_password);
+      Toast.show(Global.locale((s) => s.input_password, ctx: context));
       return;
     }
     if (!(await walletCommon.isPasswordRight(address, pwd))) {
-      Toast.show(S.of(Global.appContext).error_confirm_password);
+      Toast.show(Global.locale((s) => s.error_confirm_password, ctx: context));
       return;
     }
     // pubKey
@@ -149,16 +148,15 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     await Future.delayed(Duration(milliseconds: 100));
     await _refreshFilesLength();
     Loading.dismiss();
-    Toast.show(S.of(Global.appContext).success);
+    Toast.show(Global.locale((s) => s.success, ctx: context));
   }
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: _localizations.cache,
+        title: Global.locale((s) => s.cache, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(
@@ -180,12 +178,12 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                       onPressed: () async {
                         await ModalDialog.of(Global.appContext).confirm(
                           titleWidget: Label(
-                            _localizations.tips,
+                            Global.locale((s) => s.tips, ctx: context),
                             type: LabelType.h3,
                             softWrap: true,
                           ),
                           contentWidget: Label(
-                            _localizations.delete_cache_confirm_title,
+                            Global.locale((s) => s.delete_cache_confirm_title, ctx: context),
                             type: LabelType.bodyRegular,
                             softWrap: true,
                           ),
@@ -202,7 +200,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                                   ),
                                 ),
                                 Label(
-                                  _localizations.delete,
+                                  Global.locale((s) => s.delete, ctx: context),
                                   type: LabelType.h3,
                                   color: application.theme.fontLightColor,
                                 )
@@ -217,7 +215,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                           ),
                           reject: Button(
                             width: double.infinity,
-                            text: _localizations.cancel,
+                            text: Global.locale((s) => s.cancel, ctx: context),
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
                             onPressed: () {
@@ -230,7 +228,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            _localizations.clear_cache,
+                            Global.locale((s) => s.clear_cache, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -264,12 +262,12 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                       onPressed: () async {
                         await ModalDialog.of(Global.appContext).confirm(
                           titleWidget: Label(
-                            _localizations.tips,
+                            Global.locale((s) => s.tips, ctx: context),
                             type: LabelType.h3,
                             softWrap: true,
                           ),
                           contentWidget: Label(
-                            _localizations.delete_db_confirm_title,
+                            Global.locale((s) => s.delete_db_confirm_title, ctx: context),
                             type: LabelType.bodyRegular,
                             softWrap: true,
                           ),
@@ -287,7 +285,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                                   ),
                                 ),
                                 Label(
-                                  _localizations.delete,
+                                  Global.locale((s) => s.delete, ctx: context),
                                   type: LabelType.h3,
                                   color: application.theme.fontLightColor,
                                 )
@@ -301,7 +299,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                           ),
                           reject: Button(
                             width: double.infinity,
-                            text: _localizations.cancel,
+                            text: Global.locale((s) => s.cancel, ctx: context),
                             fontColor: application.theme.fontColor2,
                             backgroundColor: application.theme.backgroundLightColor,
                             onPressed: () {
@@ -314,7 +312,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            _localizations.clear_database + ' [debug]',
+                            Global.locale((s) => s.clear_database + ' [debug]', ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
