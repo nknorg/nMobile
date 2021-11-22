@@ -76,7 +76,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                 child: InkWell(
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   onTap: () {
-                    copyText(_wallet.address, context: Global.appContext);
+                    copyText(_wallet.address);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),

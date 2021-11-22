@@ -177,7 +177,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
       elevation: 0,
       child: InkWell(
         onTap: () {
-          copyText(value, context: Global.appContext);
+          copyText(value);
           if (backupOk) {
             _setBackupFlag();
           }
