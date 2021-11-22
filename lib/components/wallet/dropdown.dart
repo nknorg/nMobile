@@ -38,7 +38,7 @@ class WalletDropdown extends StatelessWidget with Tag {
       ),
       onTap: () async {
         WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(
-          title: this.selectTitle ?? Global.locale((s) => s.select_another_wallet),
+          title: this.selectTitle ?? Global.locale((s) => s.select_another_wallet, ctx: context),
           onlyNKN: this.onlyNKN,
         );
         logger.i("$TAG - wallet dropdown select - wallet:$result");
