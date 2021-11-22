@@ -3,7 +3,6 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 
@@ -23,7 +22,7 @@ class Authorization {
 
   Future<bool> authentication([String? localizedReason]) async {
     if (localizedReason == null || localizedReason.isEmpty) {
-      localizedReason = S.of(Global.appContext).authenticate_to_access;
+      localizedReason = Global.locale((s) => s.authenticate_to_access);
     }
     try {
       bool success = await _localAuth.authenticate(
@@ -54,7 +53,6 @@ class Authorization {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
     }
-    S _localizations = S.of(Global.appContext);
     return Future(() async {
       if (Settings.biometricsAuthentication) {
         return authenticationIfSupport();
@@ -64,10 +62,10 @@ class Authorization {
       String? pwd = await walletCommon.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
         return BottomDialog.of(Global.appContext).showInput(
-          title: _localizations.verify_wallet_password,
-          inputTip: _localizations.wallet_password,
-          inputHint: _localizations.input_password,
-          actionText: _localizations.continue_text,
+          title: Global.locale((s) => s.verify_wallet_password),
+          inputTip: Global.locale((s) => s.wallet_password),
+          inputHint: Global.locale((s) => s.input_password),
+          actionText: Global.locale((s) => s.continue_text),
           validator: Validator.of(Global.appContext).password(),
           password: true,
         );
