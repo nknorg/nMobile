@@ -97,7 +97,7 @@ class WalletItem extends StatelessWidget {
                   color: this.walletType == WalletType.eth ? theme.ethLogoBackground.withAlpha(25) : theme.successColor.withAlpha(25),
                 ),
                 child: Text(
-                  this.walletType == WalletType.eth ? Global.locale((s) => s.ERC_20) : Global.locale((s) => s.mainnet),
+                  this.walletType == WalletType.eth ? Global.locale((s) => s.ERC_20, ctx: context) : Global.locale((s) => s.mainnet, ctx: context),
                   style: TextStyle(
                     color: this.walletType == WalletType.eth ? theme.ethLogoBackground : theme.successColor,
                     fontSize: 10,

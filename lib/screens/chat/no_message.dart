@@ -6,7 +6,6 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
@@ -27,9 +26,9 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   void addContact() async {
     String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: S.of(Global.appContext).new_whisper,
-      inputTip: S.of(Global.appContext).send_to,
-      inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,
+      title: Global.locale((s) => s.new_whisper, ctx: context),
+      inputTip: Global.locale((s) => s.send_to, ctx: context),
+      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -58,8 +57,6 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -69,7 +66,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
             children: [
               SizedBox(width: 20),
               Label(
-                _localizations.popular_channels,
+                Global.locale((s) => s.popular_channels, ctx: context),
                 type: LabelType.h3,
                 textAlign: TextAlign.left,
               ),
@@ -91,13 +88,13 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
           Column(
             children: <Widget>[
               Label(
-                _localizations.chat_no_messages_title,
+                Global.locale((s) => s.chat_no_messages_title, ctx: context),
                 type: LabelType.h2,
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Label(
-                _localizations.chat_no_messages_desc,
+                Global.locale((s) => s.chat_no_messages_desc, ctx: context),
                 type: LabelType.bodyRegular,
                 textAlign: TextAlign.center,
               )
@@ -119,7 +116,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                   ),
                 ),
                 Label(
-                  _localizations.start_chat,
+                  Global.locale((s) => s.start_chat, ctx: context),
                   type: LabelType.h2,
                   dark: true,
                 ),
@@ -187,7 +184,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                 },
                 child: Center(
                   child: Text(
-                    S.of(Global.appContext).subscribe,
+                    Global.locale((s) => s.subscribe, ctx: context),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),

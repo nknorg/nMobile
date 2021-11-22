@@ -177,7 +177,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       items: [
         MenuItem(
           userInfo: 0,
-          title: Global.locale((s) => s.copy),
+          title: Global.locale((s) => s.copy, ctx: context),
           textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -336,11 +336,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         padding: EdgeInsets.zero,
         onPressed: () {
           ModalDialog.of(Global.appContext).confirm(
-            title: Global.locale((s) => s.confirm_resend),
+            title: Global.locale((s) => s.confirm_resend, ctx: context),
             hasCloseButton: true,
             agree: Button(
               width: double.infinity,
-              text: Global.locale((s) => s.send_message),
+              text: Global.locale((s) => s.send_message, ctx: context),
               backgroundColor: application.theme.strongColor,
               onPressed: () {
                 widget.onResend?.call(_message.msgId);

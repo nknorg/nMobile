@@ -11,7 +11,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/dropdown.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/create_nkn.dart';
 import 'package:nmobile/screens/wallet/import.dart';
@@ -71,7 +70,6 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     double headImageWidth = Global.screenWidth() * 0.55;
     double headImageHeight = headImageWidth / 3 * 2;
 
@@ -81,7 +79,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Label(
-            _localizations.menu_chat,
+            Global.locale((s) => s.menu_chat, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -101,13 +99,13 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
             Column(
               children: [
                 Label(
-                  _localizations.chat_no_wallet_title,
+                  Global.locale((s) => s.chat_no_wallet_title, ctx: context),
                   type: LabelType.h2,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 5),
                 Label(
-                  _localizations.click_connect,
+                  Global.locale((s) => s.click_connect, ctx: context),
                   type: LabelType.bodyRegular,
                   textAlign: TextAlign.center,
                 ),
@@ -138,7 +136,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Button(
-                              text: _localizations.no_wallet_create,
+                              text: Global.locale((s) => s.no_wallet_create, ctx: context),
                               width: double.infinity,
                               fontColor: application.theme.fontLightColor,
                               backgroundColor: application.theme.primaryColor,
@@ -151,7 +149,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Button(
-                              text: _localizations.no_wallet_import,
+                              text: Global.locale((s) => s.no_wallet_import, ctx: context),
                               width: double.infinity,
                               fontColor: application.theme.fontLightColor,
                               backgroundColor: application.theme.primaryColor.withAlpha(80),
@@ -168,7 +166,7 @@ class _ChatNoConnectLayoutState extends BaseStateFulWidgetState<ChatNoConnectLay
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Button(
                               width: double.infinity,
-                              text: _localizations.connect,
+                              text: Global.locale((s) => s.connect, ctx: context),
                               onPressed: () {
                                 if (this._selectWallet?.type != WalletType.nkn) return;
                                 this.widget.goConnect?.call(this._selectWallet);

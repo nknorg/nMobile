@@ -10,7 +10,6 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/session_item.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
@@ -211,7 +210,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(item.isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top),
                     ),
-                    Label(item.isTop ? S.of(Global.appContext).top_cancel : S.of(Global.appContext).top),
+                    Label(item.isTop ? Global.locale((s) => s.top_cancel, ctx: context) : Global.locale((s) => s.top, ctx: context)),
                   ],
                 ),
               ),
@@ -230,18 +229,18 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(Icons.delete_outline),
                     ),
-                    Label(S.of(Global.appContext).delete),
+                    Label(Global.locale((s) => s.delete, ctx: context)),
                   ],
                 ),
               ),
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                 ModalDialog.of(Global.appContext).confirm(
-                  content: S.of(Global.appContext).delete_session_confirm_title,
+                  content: Global.locale((s) => s.delete_session_confirm_title, ctx: context),
                   hasCloseButton: true,
                   agree: Button(
                     width: double.infinity,
-                    text: S.of(Global.appContext).delete_contact,
+                    text: Global.locale((s) => s.delete_contact, ctx: context),
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -321,14 +320,14 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: Label(
-                        S.of(Global.appContext).private_messages,
+                        Global.locale((s) => s.private_messages, ctx: context),
                         type: LabelType.h3,
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Label(
-                        S.of(Global.appContext).private_messages_desc,
+                        Global.locale((s) => s.private_messages_desc, ctx: context),
                         type: LabelType.bodyRegular,
                         softWrap: true,
                       ),
@@ -340,7 +339,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                           launchUrl('https://nmobile.nkn.org/');
                         },
                         child: Label(
-                          S.of(Global.appContext).learn_more,
+                          Global.locale((s) => s.learn_more, ctx: context),
                           type: LabelType.bodySmall,
                           color: application.theme.primaryColor,
                           fontWeight: FontWeight.bold,
