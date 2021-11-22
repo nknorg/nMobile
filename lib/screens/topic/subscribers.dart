@@ -11,7 +11,6 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/components/topic/subscriber_item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -211,9 +210,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   _invitee() async {
     if (_topicSchema == null) return;
     String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: S.of(Global.appContext).invite_members,
-      inputTip: S.of(Global.appContext).send_to,
-      inputHint: S.of(Global.appContext).enter_or_select_a_user_pubkey,
+      title: Global.locale((s) => s.invite_members),
+      inputTip: Global.locale((s) => s.send_to),
+      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -231,19 +230,17 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
-
     String invitedCount = (_invitedSendCount != null && _invitedReceiptCount != null) ? (_invitedSendCount! + _invitedReceiptCount!).toString() : "--";
     String joinedCount = _subscriberCount?.toString() ?? "--";
-    String inviteContent = '$invitedCount' + _localizations.members + ':' + _localizations.invitation_sent;
-    String joinedContent = '$joinedCount' + _localizations.members + ':' + _localizations.joined_channel;
+    String inviteContent = '$invitedCount' + Global.locale((s) => s.members, ctx: context) + ':' + Global.locale((s) => s.invitation_sent, ctx: context);
+    String joinedContent = '$joinedCount' + Global.locale((s) => s.members, ctx: context) + ':' + Global.locale((s) => s.joined_channel, ctx: context);
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: _localizations.channel_members,
+        title: Global.locale((s) => s.channel_members, ctx: context),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -292,7 +289,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
                             );
                           } else {
                             return Label(
-                              '${_topicSchema?.count ?? '--'} ' + _localizations.members,
+                              '${_topicSchema?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
                               type: LabelType.bodyRegular,
                               color: application.theme.successColor,
                             );
