@@ -13,7 +13,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/components/wallet/item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
@@ -113,7 +112,6 @@ class BottomDialog extends BaseStateFulWidget {
     String? desc,
     Widget? action,
   }) {
-    S _localizations = S.of(context);
     final walletTypeNkn = WalletType.nkn;
     final walletTypeEth = WalletType.eth;
 
@@ -138,7 +136,7 @@ class BottomDialog extends BaseStateFulWidget {
                   ),
                   Expanded(
                     child: Label(
-                      _localizations.nkn_mainnet,
+                      Global.locale((s) => s.nkn_mainnet, ctx: context),
                       type: LabelType.h3,
                     ),
                   ),
@@ -154,7 +152,7 @@ class BottomDialog extends BaseStateFulWidget {
                           color: application.theme.successColor.withAlpha(25),
                         ),
                         child: Text(
-                          _localizations.mainnet,
+                          Global.locale((s) => s.mainnet, ctx: context),
                           style: TextStyle(
                             color: application.theme.successColor,
                             fontSize: 10,
@@ -187,7 +185,7 @@ class BottomDialog extends BaseStateFulWidget {
                   ),
                   Expanded(
                     child: Label(
-                      _localizations.ethereum,
+                      Global.locale((s) => s.ethereum, ctx: context),
                       type: LabelType.h3,
                     ),
                   ),
@@ -203,7 +201,7 @@ class BottomDialog extends BaseStateFulWidget {
                           color: application.theme.ethLogoBackground.withAlpha(25),
                         ),
                         child: Text(
-                          _localizations.ERC_20,
+                          Global.locale((s) => s.ERC_20, ctx: context),
                           style: TextStyle(
                             color: application.theme.ethLogoBackground,
                             fontSize: 10,
@@ -289,7 +287,6 @@ class BottomDialog extends BaseStateFulWidget {
     bool enable = true,
     bool contactSelect = false,
   }) async {
-    S _localizations = S.of(context);
     TextEditingController _inputController = TextEditingController();
     _inputController.text = value ?? "";
 
@@ -300,7 +297,7 @@ class BottomDialog extends BaseStateFulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: actionText ?? _localizations.continue_text,
+          text: actionText ?? Global.locale((s) => s.continue_text, ctx: context),
           width: double.infinity,
           onPressed: () {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, _inputController.text);
@@ -333,7 +330,7 @@ class BottomDialog extends BaseStateFulWidget {
                             _inputController.text = contact.clientAddress;
                           }
                         } else {
-                          Toast.show(S.of(Global.appContext).d_chat_not_login);
+                          Toast.show(Global.locale((s) => s.d_chat_not_login, ctx: context));
                         }
                       },
                       child: Container(
@@ -355,8 +352,6 @@ class BottomDialog extends BaseStateFulWidget {
     String? desc,
     required String data,
   }) {
-    S _localizations = S.of(context);
-
     return showWithTitle<String>(
       title: title,
       desc: desc,
@@ -364,7 +359,7 @@ class BottomDialog extends BaseStateFulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: _localizations.close,
+          text: Global.locale((s) => s.close, ctx: context),
           width: double.infinity,
           backgroundColor: application.theme.primaryColor.withAlpha(20),
           fontColor: application.theme.primaryColor,
