@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/message.dart';
@@ -279,16 +278,16 @@ class TopicCommon with Tag {
       if ((acceptAll != true)) {
         if (isReject == true) {
           if (justNow) {
-            Toast.show(S.of(Global.appContext).no_permission_join_group);
+            Toast.show(Global.locale((s) => s.no_permission_join_group));
           } else {
-            Toast.show(S.of(Global.appContext).removed_group_tip);
+            Toast.show(Global.locale((s) => s.removed_group_tip));
           }
           return null;
         } else if (isAccept != true) {
           if (justNow) {
-            Toast.show(S.of(Global.appContext).no_permission_join_group);
+            Toast.show(Global.locale((s) => s.no_permission_join_group));
           } else {
-            Toast.show(S.of(Global.appContext).contact_invite_group_tip);
+            Toast.show(Global.locale((s) => s.contact_invite_group_tip));
           }
           return null;
         } else {
@@ -475,7 +474,7 @@ class TopicCommon with Tag {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
           logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isEmpty) Toast.show(S.of(Global.appContext).something_went_wrong);
+          if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = identifier.isNotEmpty;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
@@ -495,7 +494,7 @@ class TopicCommon with Tag {
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.i("$TAG - _clientSubscribe - duplicated - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isEmpty) Toast.show(S.of(Global.appContext).request_processed);
+          if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         } else {
           handleError(e);
         }
@@ -589,7 +588,7 @@ class TopicCommon with Tag {
         // can not append tx to txpool: nonce is not continuous
         if (tryCount >= 3) {
           logger.w("$TAG - _clientUnsubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce");
-          if (toast) Toast.show(S.of(Global.appContext).something_went_wrong);
+          if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
         } else {
           int? nonce = await Global.getNonce(forceFetch: true);
@@ -609,7 +608,7 @@ class TopicCommon with Tag {
         if (e.toString().contains('duplicate subscription exist in block')) {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.w("$TAG - _clientUnsubscribe - duplicated - topic:$topic - nonce:$nonce");
-          if (toast) Toast.show(S.of(Global.appContext).request_processed);
+          if (toast) Toast.show(Global.locale((s) => s.request_processed));
         } else {
           handleError(e);
         }
@@ -710,23 +709,23 @@ class TopicCommon with Tag {
   Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false, bool sendMsg = false}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (clientAddress == clientCommon.address) {
-      if (toast) Toast.show(S.of(Global.appContext).invite_yourself_error);
+      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
       return null;
     }
     if (isPrivate && !isOwner) {
-      if (toast) Toast.show(S.of(Global.appContext).member_no_auth_invite);
+      if (toast) Toast.show(Global.locale((s) => s.member_no_auth_invite));
       return null;
     }
 
     // check status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if (_subscriber != null && _subscriber.status == SubscriberStatus.Subscribed) {
-      if (toast) Toast.show(S.of(Global.appContext).group_member_already);
+      if (toast) Toast.show(Global.locale((s) => s.group_member_already));
       return null;
     }
     bool isOldStatusInvitedReceived = _subscriber?.status == SubscriberStatus.InvitedReceipt;
 
-    // if (isPrivate && toast) Toast.show(S.of(Global.appContext).inviting);
+    // if (isPrivate && toast) Toast.show(Global.locale((s) => s.inviting));
 
     // check permission
     int? appendPermPage;
@@ -738,7 +737,7 @@ class TopicCommon with Tag {
 
       // just owner can invitee reject item
       if (!isOwner && (acceptAll != true) && (isReject == true)) {
-        if (toast) Toast.show(S.of(Global.appContext).blocked_user_disallow_invite);
+        if (toast) Toast.show(Global.locale((s) => s.blocked_user_disallow_invite));
         return null;
       }
 
@@ -764,13 +763,13 @@ class TopicCommon with Tag {
     if (sendMsg) {
       MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
       if (_msg == null) {
-        if (toast) Toast.show(S.of(Global.appContext).failure);
+        if (toast) Toast.show(Global.locale((s) => s.failure));
         return null;
       }
     } else if (isOldStatusInvitedReceived) {
       await subscriberCommon.setStatus(_subscriber?.id, SubscriberStatus.InvitedReceipt, notify: true);
     }
-    if (toast) Toast.show(S.of(Global.appContext).invitation_sent);
+    if (toast) Toast.show(Global.locale((s) => s.invitation_sent));
     return _subscriber;
   }
 
@@ -790,7 +789,7 @@ class TopicCommon with Tag {
     int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
     if (permPage == null) {
-      if (toast) Toast.show(S.of(Global.appContext).failure);
+      if (toast) Toast.show(Global.locale((s) => s.failure));
       return null;
     }
 
@@ -810,7 +809,7 @@ class TopicCommon with Tag {
 
     // send message
     await chatOutCommon.sendTopicKickOut(topic, clientAddress);
-    if (toast) Toast.show(S.of(Global.appContext).rejected);
+    if (toast) Toast.show(Global.locale((s) => s.rejected));
     return _subscriber;
   }
 
