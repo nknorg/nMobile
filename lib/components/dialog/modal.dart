@@ -4,7 +4,6 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class ModalDialog extends StatelessWidget {
@@ -89,14 +88,13 @@ class ModalDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
     List<Widget> actions = List.of(this.actions ?? []);
 
     if (this.hasCloseButton) {
       actions.add(Button(
         backgroundColor: application.theme.backgroundLightColor,
         fontColor: application.theme.fontColor2,
-        text: _localizations.close,
+        text: Global.locale((s) => s.close, ctx: context),
         width: double.infinity,
         onPressed: () => this.close(),
       ));
@@ -125,7 +123,7 @@ class ModalDialog extends StatelessWidget {
                     padding: EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 36),
                     child: this.titleWidget ??
                         Label(
-                          this.title ?? _localizations.warning,
+                          this.title ?? Global.locale((s) => s.warning, ctx: context),
                           type: LabelType.h2,
                           maxLines: 5,
                         ),

@@ -10,7 +10,6 @@ import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
@@ -74,7 +73,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     SkinTheme _theme = application.theme;
 
     return Form(
@@ -97,7 +95,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                 children: <Widget>[
                   SizedBox(width: 20),
                   Label(
-                    _localizations.name,
+                    Global.locale((s) => s.name),
                     type: LabelType.bodyRegular,
                     color: _theme.fontColor1,
                     textAlign: TextAlign.start,
@@ -106,7 +104,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                   Row(
                     children: <Widget>[
                       Label(
-                        _localizations.private_channel,
+                        Global.locale((s) => s.private_channel),
                         type: LabelType.bodyRegular,
                         color: _theme.fontColor1,
                       ),
@@ -133,7 +131,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                     Expanded(
                       child: FormText(
                         controller: _topicController,
-                        hintText: _localizations.input_name,
+                        hintText: Global.locale((s) => s.input_name),
                         validator: Validator.of(context).required(),
                       ),
                     ),
@@ -156,7 +154,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                       children: <Widget>[
                         SizedBox(width: 20),
                         Label(
-                          _localizations.advanced,
+                          Global.locale((s) => s.advanced),
                           type: LabelType.bodyRegular,
                           color: _theme.fontColor1,
                           textAlign: TextAlign.start,
@@ -181,7 +179,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                       children: <Widget>[
                         SizedBox(width: 20),
                         Label(
-                          _localizations.fee,
+                          Global.locale((s) => s.fee),
                           type: LabelType.bodyRegular,
                           color: _theme.fontColor1,
                           textAlign: TextAlign.start,
@@ -213,7 +211,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                               child: Container(
                                 width: 20,
                                 alignment: Alignment.centerRight,
-                                child: Label(_localizations.nkn, type: LabelType.label),
+                                child: Label(Global.locale((s) => s.nkn), type: LabelType.label),
                               ),
                             ),
                           ),
@@ -226,19 +224,19 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                       children: <Widget>[
                         SizedBox(width: 16),
                         Label(
-                          _localizations.slow,
+                          Global.locale((s) => s.slow),
                           type: LabelType.bodySmall,
                           color: _theme.primaryColor,
                         ),
                         Spacer(),
                         Label(
-                          _localizations.average,
+                          Global.locale((s) => s.average),
                           type: LabelType.bodySmall,
                           color: _theme.primaryColor,
                         ),
                         Spacer(),
                         Label(
-                          _localizations.fast,
+                          Global.locale((s) => s.fast),
                           type: LabelType.bodySmall,
                           color: _theme.primaryColor,
                         ),
@@ -265,7 +263,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               Padding(
                 padding: EdgeInsets.only(left: 16, top: 16),
                 child: Label(
-                  _localizations.popular_channels,
+                  Global.locale((s) => s.popular_channels),
                   type: LabelType.h4,
                   textAlign: TextAlign.start,
                 ),
@@ -281,7 +279,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               padding: const EdgeInsets.only(left: 20, right: 20, top: 18, bottom: 18),
               child: Button(
                 width: double.infinity,
-                text: _localizations.continue_text,
+                text: Global.locale((s) => s.continue_text),
                 onPressed: () {
                   if (_formValid) createOrJoinTopic(_topicController.text, _fee);
                 },

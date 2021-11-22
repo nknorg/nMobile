@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class Nav extends BaseStateFulWidget {
@@ -37,7 +37,6 @@ class _NavState extends BaseStateFulWidgetState<Nav> {
 
   @override
   Widget build(BuildContext context) {
-    S _localizations = S.of(context);
     Color _color = Theme.of(context).unselectedWidgetColor;
     Color _selectedColor = _theme.primaryColor;
     return BottomNavigationBar(
@@ -47,17 +46,17 @@ class _NavState extends BaseStateFulWidgetState<Nav> {
         BottomNavigationBarItem(
           icon: Asset.iconSvg('chat', color: _color),
           activeIcon: Asset.iconSvg('chat', color: _selectedColor),
-          label: _localizations.menu_chat,
+          label: Global.locale((s) => s.menu_chat, ctx: context),
         ),
         BottomNavigationBarItem(
           icon: Asset.iconSvg('wallet', color: _color),
           activeIcon: Asset.iconSvg('wallet', color: _selectedColor),
-          label: _localizations.menu_wallet,
+          label: Global.locale((s) => s.menu_wallet, ctx: context),
         ),
         BottomNavigationBarItem(
           icon: Asset.iconSvg('settings', color: _color),
           activeIcon: Asset.iconSvg('settings', color: _selectedColor),
-          label: _localizations.menu_settings,
+          label: Global.locale((s) => s.menu_settings, ctx: context),
         ),
       ],
     );
