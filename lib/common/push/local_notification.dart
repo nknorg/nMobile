@@ -5,7 +5,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/generated/l10n.dart';
 
 class LocalNotification {
   static const String channel_id = "nmobile_d_chat";
@@ -76,16 +75,15 @@ class LocalNotification {
       iOS: iOSPlatformChannelSpecifics,
     );
 
-    S localizations = S.of(Global.appContext);
     switch (Settings.notificationType) {
       case NotificationType.only_name:
-        await _flutterLocalNotificationsPlugin.show(notificationId, title, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await _flutterLocalNotificationsPlugin.show(notificationId, title, Global.locale((s) => s.you_have_new_message), platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.name_and_message:
         await _flutterLocalNotificationsPlugin.show(notificationId, title, content, platformChannelSpecifics, payload: payload);
         break;
       case NotificationType.none:
-        await _flutterLocalNotificationsPlugin.show(notificationId, localizations.new_message, localizations.you_have_new_message, platformChannelSpecifics, payload: payload);
+        await _flutterLocalNotificationsPlugin.show(notificationId, Global.locale((s) => s.new_message), Global.locale((s) => s.you_have_new_message), platformChannelSpecifics, payload: payload);
         break;
     }
   }

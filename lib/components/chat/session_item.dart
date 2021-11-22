@@ -7,7 +7,6 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/item.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
@@ -231,7 +230,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   Widget _contentWidget(SessionSchema session) {
-    S _localizations = S.of(Global.appContext);
     String? msgType = _lastMsg?.contentType;
     String? draft = memoryCache.getDraft(session.targetId);
 
@@ -244,7 +242,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       contentWidget = Row(
         children: <Widget>[
           Label(
-            _localizations.placeholder_draft,
+            Global.locale((s) => s.placeholder_draft),
             type: LabelType.bodyRegular,
             color: Colors.red,
             overflow: TextOverflow.ellipsis,
@@ -271,10 +269,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? _localizations.you : (_lastMsg?.isTopic == true ? topicSenderName : (_contact?.displayName ?? " "));
+      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you) : (_lastMsg?.isTopic == true ? topicSenderName : (_contact?.displayName ?? " "));
 
       if (isBurn) {
-        String burnDecs = ' ${isBurnOpen ? _localizations.update_burn_after_reading : _localizations.close_burn_after_reading} ';
+        String burnDecs = ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading) : Global.locale((s) => s.close_burn_after_reading)} ';
         contentWidget = Label(
           who + burnDecs,
           type: LabelType.bodyRegular,
@@ -282,7 +280,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           overflow: TextOverflow.ellipsis,
         );
       } else if (isDeviceToken) {
-        String deviceDesc = isDeviceTokenOPen ? ' ${_localizations.setting_accept_notification}' : ' ${_localizations.setting_deny_notification}';
+        String deviceDesc = isDeviceTokenOPen ? ' ${Global.locale((s) => s.setting_accept_notification)}' : ' ${Global.locale((s) => s.setting_deny_notification)}';
         contentWidget = Label(
           who + deviceDesc,
           type: LabelType.bodyRegular,
@@ -314,14 +312,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       );
     } else if (msgType == MessageContentType.topicSubscribe) {
       contentWidget = Label(
-        prefix + _localizations.joined_channel,
+        prefix + Global.locale((s) => s.joined_channel),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
     } else if (msgType == MessageContentType.topicInvitation) {
       contentWidget = Label(
-        prefix + _localizations.channel_invitation,
+        prefix + Global.locale((s) => s.channel_invitation),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

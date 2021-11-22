@@ -8,7 +8,6 @@ import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -886,16 +885,15 @@ class ChatOutCommon with Tag {
 
   Future _sendPush(String? deviceToken) async {
     if (deviceToken == null || deviceToken.isEmpty == true) return;
-    S localizations = S.of(Global.appContext);
 
-    String title = localizations.new_message;
+    String title = Global.locale((s) => s.new_message);
     // if (topic != null) {
     //   title = '[${topic.topicShort}] ${contact?.displayName}';
     // } else if (contact != null) {
     //   title = contact.displayName;
     // }
 
-    String content = localizations.you_have_new_message;
+    String content = Global.locale((s) => s.you_have_new_message);
     // switch (message.contentType) {
     //   case MessageContentType.text:
     //   case MessageContentType.textExtension:

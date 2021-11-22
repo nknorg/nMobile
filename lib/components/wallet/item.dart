@@ -3,7 +3,6 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/format.dart';
@@ -52,7 +51,6 @@ class WalletItem extends StatelessWidget {
   }
 
   Widget _getItemBody(BuildContext context) {
-    S _localizations = S.of(Global.appContext);
     SkinTheme theme = application.theme;
 
     return Container(
@@ -99,7 +97,7 @@ class WalletItem extends StatelessWidget {
                   color: this.walletType == WalletType.eth ? theme.ethLogoBackground.withAlpha(25) : theme.successColor.withAlpha(25),
                 ),
                 child: Text(
-                  this.walletType == WalletType.eth ? _localizations.ERC_20 : _localizations.mainnet,
+                  this.walletType == WalletType.eth ? Global.locale((s) => s.ERC_20) : Global.locale((s) => s.mainnet),
                   style: TextStyle(
                     color: this.walletType == WalletType.eth ? theme.ethLogoBackground : theme.successColor,
                     fontSize: 10,

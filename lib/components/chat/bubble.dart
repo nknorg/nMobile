@@ -15,7 +15,6 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/components/tip/popup_menu.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
@@ -178,7 +177,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       items: [
         MenuItem(
           userInfo: 0,
-          title: S.of(Global.appContext).copy,
+          title: Global.locale((s) => s.copy),
           textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -293,8 +292,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getStatusTip(bool self) {
-    S _localizations = S.of(Global.appContext);
-
     // bool isSending = _message.status == MessageStatus.Sending;
     bool isSendFail = _message.status == MessageStatus.SendFail;
     // bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
@@ -339,11 +336,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         padding: EdgeInsets.zero,
         onPressed: () {
           ModalDialog.of(Global.appContext).confirm(
-            title: _localizations.confirm_resend,
+            title: Global.locale((s) => s.confirm_resend),
             hasCloseButton: true,
             agree: Button(
               width: double.infinity,
-              text: _localizations.send_message,
+              text: Global.locale((s) => s.send_message),
               backgroundColor: application.theme.strongColor,
               onPressed: () {
                 widget.onResend?.call(_message.msgId);
