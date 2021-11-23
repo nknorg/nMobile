@@ -124,11 +124,11 @@ class Global {
 
   static Future<int?> getBlockHeight() async {
     return await _heightLock.synchronized(() {
-      return getBlockHeightWithNoLock();
+      return _getBlockHeightWithNoLock();
     });
   }
 
-  static Future<int?> getBlockHeightWithNoLock() async {
+  static Future<int?> _getBlockHeightWithNoLock() async {
     int? newBlockHeight;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
