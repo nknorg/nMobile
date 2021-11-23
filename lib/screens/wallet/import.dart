@@ -14,6 +14,7 @@ import 'package:nmobile/screens/wallet/import_by_keystore.dart';
 import 'package:nmobile/screens/wallet/import_by_seed.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class WalletImportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/import';
@@ -72,7 +73,10 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               if (_tabController.index != 1) {
                 _tabController.index = 1;
               }
-
+              // permission
+              PermissionStatus permissionStatus = await Permission.camera.request();
+              if (permissionStatus != PermissionStatus.granted) return;
+              // scan
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.i("$TAG - QR_DATA:$qrData");
               if (qrData != null && qrData.toString().isNotEmpty) {

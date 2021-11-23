@@ -30,6 +30,7 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class WalletSendScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/send';
@@ -328,6 +329,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               color: application.theme.backgroundLightColor,
             ),
             onPressed: () async {
+              // permission
+              PermissionStatus permissionStatus = await Permission.camera.request();
+              if (permissionStatus != PermissionStatus.granted) return;
+              // scan
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.i("$TAG - QR_DATA:$qrData");
               if (qrData == null) return;
