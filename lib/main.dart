@@ -89,6 +89,8 @@ class _MainState extends State<Main> {
 
   @override
   Widget build(BuildContext context) {
+    Global.appContext = context; // be replace by app.context
+
     return MultiBlocProvider(
       providers: providers,
       child: BlocBuilder<SettingsBloc, SettingsState>(
