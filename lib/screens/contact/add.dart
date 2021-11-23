@@ -25,6 +25,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ContactAddScreen extends StatefulWidget {
   static final String routeName = "contact/add";
@@ -179,6 +180,10 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
               color: application.theme.backgroundLightColor,
             ),
             onPressed: () async {
+              // permission
+              PermissionStatus permissionStatus = await Permission.camera.request();
+              if (permissionStatus != PermissionStatus.granted) return;
+              // scan
               Navigator.pushNamed(context, ScannerScreen.routeName).then((value) {
                 formatQrDate(value?.toString());
               });
