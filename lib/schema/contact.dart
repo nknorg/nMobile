@@ -181,7 +181,7 @@ class ContactSchema {
   }
 
   Future<String?> tryNknWalletAddress({bool force = false}) async {
-    if (force || (nknWalletAddress?.isNotEmpty == true)) return nknWalletAddress;
+    if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {
       if (pubKey.isNotEmpty == true) {
         nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey);
