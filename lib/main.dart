@@ -101,7 +101,7 @@ class _MainState extends State<Main> {
               return child;
             },
             onGenerateTitle: (context) {
-              return S.of(context).app_name;
+              return Settings.appName;
             },
             title: Settings.appName,
             theme: application.theme.themeData,
