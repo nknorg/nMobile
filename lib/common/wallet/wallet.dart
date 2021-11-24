@@ -88,6 +88,7 @@ class WalletCommon with Tag {
   }
 
   queryBalanceWithNoLock({int? delayMs}) async {
+    if (Global.appContext == null) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
