@@ -16,7 +16,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Stream<SettingsState> _mapUpdateLanguageState(UpdateLanguage event) async* {
     Settings.locale = event.lang;
-    _setLanguage(event.lang);
+    await _setLanguage(event.lang);
     yield LocaleUpdated(event.lang);
   }
 

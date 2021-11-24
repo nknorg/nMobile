@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_event.dart';
+import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -13,6 +16,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
@@ -30,6 +34,8 @@ class SettingsHomeScreen extends BaseStateFulWidget {
 
 class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScreen> with AutomaticKeepAliveClientMixin {
   SettingsBloc? _settingsBloc;
+  StreamSubscription? _settingSubscription;
+
   String? _currentLanguage;
   String? _currentNotificationType;
   List<SelectListItem> _languageList = [];
@@ -42,10 +48,26 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   @override
   void initState() {
     super.initState();
-    _initData();
-    _currentLanguage = _getLanguageText(Settings.locale);
     _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _settingSubscription = _settingsBloc?.stream.listen((state) async {
+      if (state is LocaleUpdated) {
+        setState(() {
+          _currentLanguage = _getLanguageText(state.locale);
+        });
+        Future.delayed(Duration(milliseconds: 500), () => setState(() {}));
+      }
+    });
+
+    _initData();
+
+    _currentLanguage = _getLanguageText(Settings.locale);
     _biometricsSelected = Settings.biometricsAuthentication;
+  }
+
+  @override
+  void dispose() {
+    _settingSubscription?.cancel();
+    super.dispose();
   }
 
   _initData() {
@@ -84,13 +106,14 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     _changeNotificationType();
   }
 
-  String _getLanguageText(String lang) {
-    if (lang == 'auto') {
+  String _getLanguageText(String? lang) {
+    if (lang == null || lang.isEmpty || lang == 'auto') {
       return Global.locale((s) => s.language_auto, ctx: context);
     }
     try {
       return _languageList.firstWhere((x) => x.value == lang).text;
     } catch (e) {
+      handleError(e);
       return Global.locale((s) => s.language_auto, ctx: context);
     }
   }
@@ -151,11 +174,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                         SelectScreen.selectedValue: Settings.locale,
                         SelectScreen.list: _languageList,
                       }).then((lang) {
-                        if (lang != null) {
-                          _settingsBloc?.add(UpdateLanguage(lang as String));
-                          setState(() {
-                            _currentLanguage = _getLanguageText(lang as String);
-                          });
+                        if ((lang != null) && (lang is String)) {
+                          _settingsBloc?.add(UpdateLanguage(lang));
                         }
                       });
                     },
