@@ -54,7 +54,11 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
         setState(() {
           _currentLanguage = _getLanguageText(state.locale);
         });
-        Future.delayed(Duration(milliseconds: 500), () => setState(() {}));
+        Future.delayed(Duration(milliseconds: 500), () {
+          setState(() {
+            _initData();
+          });
+        });
       }
     });
 
