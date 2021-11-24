@@ -53,7 +53,7 @@ void main() async {
     await taskService.init();
     await localNotification.init();
     // await backgroundFetchService.install();
-    BlocProvider.of<WalletBloc>(Global.appContext).add(LoadWallet());
+    if (Global.appContext != null) BlocProvider.of<WalletBloc>(Global.appContext).add(LoadWallet());
   });
 
   // error
@@ -88,9 +88,13 @@ class _MainState extends State<Main> {
   final botToastBuilder = BotToastInit();
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     Global.appContext = context; // be replace by app.context
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: providers,
       child: BlocBuilder<SettingsBloc, SettingsState>(
@@ -105,6 +109,13 @@ class _MainState extends State<Main> {
             },
             title: Settings.appName,
             theme: application.theme.themeData,
+            navigatorObservers: [
+              BotToastNavigatorObserver(),
+              SentryNavigatorObserver(),
+              Routes.routeObserver,
+            ],
+            onGenerateRoute: Routes.onGenerateRoute,
+            initialRoute: AppScreen.routeName,
             locale: Settings.locale == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.locale),
             localizationsDelegates: [
               S.delegate,
@@ -115,26 +126,22 @@ class _MainState extends State<Main> {
             supportedLocales: [
               ...S.delegate.supportedLocales,
             ],
-            initialRoute: AppScreen.routeName,
-            onGenerateRoute: Routes.onGenerateRoute,
-            navigatorObservers: [
-              BotToastNavigatorObserver(),
-              SentryNavigatorObserver(),
-              Routes.routeObserver,
-            ],
             localeResolutionCallback: (locale, supportLocales) {
-              if (locale?.languageCode == 'zh') {
-                if (locale?.scriptCode == 'Hant') {
+              if (locale?.languageCode.toLowerCase() == 'en') {
+                return const Locale('en');
+              } else if (locale?.languageCode.toLowerCase() == 'zh') {
+                if (locale?.scriptCode?.toLowerCase() == 'hant') {
                   return const Locale('zh', 'TW');
                 } else {
                   return const Locale('zh', 'CN');
                 }
-              } else if (locale?.languageCode == 'zh_Hant_CN') {
+              } else if (locale?.languageCode.toLowerCase() == 'zh_hant_cn') {
                 return const Locale('zh', 'TW');
-              } else if (locale?.languageCode == 'auto') {
-                return null;
               }
-              return locale;
+              // else if (locale?.languageCode == 'auto') {
+              //   return null;
+              // }
+              return null;
             },
           );
         },
