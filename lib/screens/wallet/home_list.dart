@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/blocs/settings/settings_bloc.dart';
+import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/global.dart';
@@ -36,6 +38,8 @@ class WalletHomeListLayout extends BaseStateFulWidget {
 }
 
 class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListLayout> with Tag {
+  StreamSubscription? _settingSubscription;
+
   WalletBloc? _walletBloc;
   StreamSubscription? _walletSubscription;
 
@@ -50,20 +54,29 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
     // balance query
     walletCommon.queryBalance(delayMs: 2000); // await
 
-    _walletBloc = BlocProvider.of<WalletBloc>(context);
+    // settings
+    SettingsBloc _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _settingSubscription = _settingsBloc.stream.listen((state) async {
+      if (state is LocaleUpdated) {
+        Future.delayed(Duration(milliseconds: 500), () => setState(() {}));
+      }
+    });
 
-    // backup
+    // wallet
+    _walletBloc = BlocProvider.of<WalletBloc>(context);
     _walletSubscription = _walletBloc?.stream.listen((state) async {
       if (state is WalletLoaded) {
         _refreshBackedUp();
       }
     });
+
     // init
     _refreshBackedUp();
   }
 
   @override
   void dispose() {
+    _settingSubscription?.cancel();
     _walletSubscription?.cancel();
     super.dispose();
   }
