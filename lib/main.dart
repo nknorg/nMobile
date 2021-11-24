@@ -141,7 +141,8 @@ class _MainState extends State<Main> {
               // else if (locale?.languageCode == 'auto') {
               //   return null;
               // }
-              return null;
+              // return null;
+              return const Locale('en');
             },
           );
         },
