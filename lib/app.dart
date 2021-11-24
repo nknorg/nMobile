@@ -31,7 +31,11 @@ class AppScreen extends StatefulWidget {
 }
 
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
-  List<Widget> screens = [];
+  List<Widget> screens = <Widget>[
+    ChatHomeScreen(),
+    WalletHomeScreen(),
+    SettingsHomeScreen(),
+  ];
 
   int _currentIndex = 0;
   late PageController _pageController;
@@ -43,14 +47,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     Global.appContext = context; // before at mounted
-
     application.mounted(); // await
-
-    screens = <Widget>[
-      ChatHomeScreen(),
-      WalletHomeScreen(),
-      SettingsHomeScreen(),
-    ];
 
     this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
