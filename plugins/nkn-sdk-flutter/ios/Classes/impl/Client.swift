@@ -404,6 +404,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 let res: NknSubscribers? = try self.client?.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
                 let mapPro = MapProtocol()
                 res?.subscribers?.range(mapPro)
+                if (txPool) {
+                    res?.subscribersInTxPool?.range(mapPro)
+                }
                 self.resultSuccess(result: result, resp: mapPro.result)
                 return
             } catch let error {
