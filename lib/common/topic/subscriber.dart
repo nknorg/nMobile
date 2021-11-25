@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/common/topic/top_sub.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -72,6 +72,22 @@ class SubscriberCommon with Tag {
     });
   }
 
+  // caller = everyone
+  Future<int> getSubscribersCount(String? topic, bool isPrivate, {bool fetch = false}) async {
+    if (topic == null || topic.isEmpty) return 0;
+    int count = 0;
+    if (fetch) {
+      count = await TopSub.getSubscribersCount(topic);
+    } else if (isPrivate) {
+      // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
+      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+    } else {
+      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+    }
+    logger.d("$TAG - getSubscribersCount - topic:$topic - isPrivate:$isPrivate - count:$count");
+    return count;
+  }
+
   /// ***********************************************************************************************************
   /// ********************************************** subscribers ************************************************
   /// ***********************************************************************************************************
@@ -93,12 +109,7 @@ class SubscriberCommon with Tag {
       dbSubscribers.addAll(result);
       if (result.length < limit) break;
     }
-    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(
-      topic,
-      ownerPubKey: ownerPubKey,
-      meta: meta,
-      txPool: txPool,
-    );
+    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey: ownerPubKey, meta: meta, txPool: txPool);
 
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
@@ -201,15 +212,11 @@ class SubscriberCommon with Tag {
   }) async {
     if (topic == null || topic.isEmpty) return [];
     // subscribers(permission)
-    Map<String, dynamic> noMergeResults = await _clientGetSubscribers(
-      topic,
-      meta: meta,
-      txPool: txPool,
-    );
+    Map<String, dynamic> metas = await TopSub.getSubscribers(topic, meta: meta, txPool: txPool);
 
     // subscribers(subscribe)
     List<SubscriberSchema> subscribers = [];
-    noMergeResults.forEach((key, value) {
+    metas.forEach((key, value) {
       if (key.isNotEmpty && !key.contains('.__permission__.')) {
         SubscriberSchema? item = SubscriberSchema.create(topic, key, SubscriberStatus.None, null);
         if (item != null) subscribers.add(item);
@@ -218,19 +225,13 @@ class SubscriberCommon with Tag {
 
     // permissions
     List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
-    if (meta) {
-      permissionsResult = await _getPermissionsFromNode(
-        topic,
-        clientGetSubscribers: noMergeResults,
-        txPool: txPool,
-      );
-    }
+    if (meta) permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool, metas: metas);
     List<SubscriberSchema> permissions = permissionsResult[0];
     bool? _acceptAll = permissionsResult[1];
 
     // merge
     List<SubscriberSchema> results = [];
-    if (!meta || _acceptAll == true) {
+    if (!meta || (_acceptAll == true)) {
       results = subscribers.map((e) {
         e.status = SubscriberStatus.Subscribed;
         return e;
@@ -283,25 +284,21 @@ class SubscriberCommon with Tag {
   /// ********************************************** permission *************************************************
   /// ***********************************************************************************************************
 
-  // caller = everyone
-  Future<List<dynamic>> findPermissionFromNode(String? topic, bool isPrivate, String? clientAddress, {bool txPool = true}) async {
+  // caller = everyone result = [permPage, acceptAll, accept, reject]
+  Future<List<dynamic>> findPermissionFromNode(String? topic, String? clientAddress, {bool txPool = true}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) {
       return [null, null, null, null];
     }
-    if (!isPrivate) {
-      logger.i("$TAG - findPermissionFromNode - isPrivate = false");
-      return [null, true, true, false];
-    }
     // permissions
-    List<dynamic> result = await _getPermissionsFromNode(topic, txPool: txPool);
-    List<SubscriberSchema> subscribers = result[0];
-    bool? _acceptAll = result[1];
+    List<dynamic> permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool);
+    List<SubscriberSchema> permissions = permissionsResult[0];
+    bool? _acceptAll = permissionsResult[1];
     if (_acceptAll == true) {
       logger.i("$TAG - findPermissionFromNode - acceptAll = true");
       return [null, _acceptAll, true, false];
     }
     // find
-    List<SubscriberSchema> finds = subscribers.where((element) => element.clientAddress == clientAddress).toList();
+    List<SubscriberSchema> finds = permissions.where((element) => element.clientAddress == clientAddress).toList();
     if (finds.isNotEmpty) {
       int? permPage = finds[0].permPage;
       bool isAccept = finds[0].status == InitialAcceptStatus;
@@ -313,20 +310,15 @@ class SubscriberCommon with Tag {
     return [null, _acceptAll, null, null];
   }
 
-  Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? clientGetSubscribers}) async {
+  Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? metas}) async {
     if (topic == null || topic.isEmpty) return [[], null];
     // permissions + subscribers
-    Map<String, dynamic> noMergeResults = clientGetSubscribers ??
-        await _clientGetSubscribers(
-          topic,
-          meta: true,
-          txPool: txPool,
-        );
+    metas = metas ?? await TopSub.getSubscribers(topic, meta: true, txPool: txPool);
 
     // permissions
     List<SubscriberSchema> permissions = [];
     bool _acceptAll = false;
-    noMergeResults.forEach((key, value) {
+    metas.forEach((key, value) {
       if (!_acceptAll && key.contains('.__permission__.')) {
         // permPage
         String prefix = key.split("__.__permission__.")[0];
@@ -339,7 +331,8 @@ class SubscriberCommon with Tag {
         for (int i = 0; i < acceptList.length; i++) {
           var element = acceptList[i];
           if (element is Map) {
-            SubscriberSchema? item = SubscriberSchema.create(topic, element["addr"], InitialAcceptStatus, permPage);
+            String? address = element["addr"]?.toString();
+            SubscriberSchema? item = SubscriberSchema.create(topic, address, InitialAcceptStatus, permPage);
             if (item != null) permissions.add(item);
           } else if (element is String) {
             if (element.trim() == "*") {
@@ -358,7 +351,8 @@ class SubscriberCommon with Tag {
         if (!_acceptAll) {
           rejectList.forEach((element) {
             if (element is Map) {
-              SubscriberSchema? item = SubscriberSchema.create(topic, element["addr"], InitialRejectStatus, permPage);
+              String? address = element["addr"]?.toString();
+              SubscriberSchema? item = SubscriberSchema.create(topic, address, InitialRejectStatus, permPage);
               if (item != null) permissions.add(item);
             } else {
               logger.w("$TAG - _getPermissionsFromNode - reject type error - accept:$element");
@@ -369,82 +363,6 @@ class SubscriberCommon with Tag {
     });
     logger.d("$TAG - _getPermissionsFromNode - acceptAll:$_acceptAll - permissions:$permissions");
     return [permissions, _acceptAll];
-  }
-
-  // TODO:GG mean?
-  Future<Map<String, dynamic>> _clientGetSubscribers(
-    String? topic, {
-    int offset = 0,
-    int limit = 10000,
-    bool meta = false,
-    bool txPool = true,
-    // Uint8List? subscriberHashPrefix,
-    Map<String, dynamic>? prefixResult,
-  }) async {
-    if (topic == null || topic.isEmpty) return prefixResult ?? Map();
-    try {
-      Map<String, dynamic>? results = await clientCommon.client?.getSubscribers(
-        topic: genTopicHash(topic),
-        offset: offset,
-        limit: limit,
-        meta: meta,
-        txPool: txPool,
-        // subscriberHashPrefix: subscriberHashPrefix,
-      );
-      if (results?.isNotEmpty == true) {
-        results?.addAll(prefixResult ?? Map());
-        return _clientGetSubscribers(
-          topic,
-          offset: offset + limit,
-          limit: limit,
-          meta: meta,
-          txPool: txPool,
-          // subscriberHashPrefix: subscriberHashPrefix,
-          prefixResult: results,
-        );
-      }
-      logger.d("$TAG - _clientGetSubscribers - offset:$offset - limit:$limit - results:$prefixResult");
-    } catch (e) {
-      handleError(e);
-      return prefixResult ?? Map();
-    }
-    return prefixResult ?? Map();
-  }
-
-  /// ***********************************************************************************************************
-  /// ************************************************** count **************************************************
-  /// ***********************************************************************************************************
-
-  // caller = everyone
-  Future<int> getSubscribersCount(String? topic, bool isPrivate, {bool fetch = false}) async {
-    if (topic == null || topic.isEmpty) return 0;
-    int count = 0;
-    if (fetch) {
-      count = await this._clientGetSubscribersCount(topic);
-    } else if (isPrivate) {
-      // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
-      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
-    } else {
-      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
-    }
-    logger.d("$TAG - getSubscribersCount - topic:$topic - isPrivate:$isPrivate - count:$count");
-    return count;
-  }
-
-  Future<int> _clientGetSubscribersCount(String? topic) async {
-    if (topic == null || topic.isEmpty) return 0;
-    int? count;
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        count = await clientCommon.client?.getSubscribersCount(
-          topic: genTopicHash(topic),
-          // subscriberHashPrefix: subscriberHashPrefix,
-        );
-      }
-    } catch (e) {
-      handleError(e);
-    }
-    return count ?? 0;
   }
 
   /// ***********************************************************************************************************

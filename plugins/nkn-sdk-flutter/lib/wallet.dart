@@ -183,8 +183,8 @@ class Wallet {
   /// time to about 1/256 if there are a lot of subscribers. This is a good way to
   /// sample subscribers randomly with low cost.
   static Future<int> getSubscribersCount(
-      String topic, Uint8List subscriberHashPrefix,
-      {RpcConfig? config}) async {
+      String topic,
+      {Uint8List? subscriberHashPrefix, RpcConfig? config}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         'topic': topic,
