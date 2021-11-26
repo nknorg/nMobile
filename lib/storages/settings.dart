@@ -24,6 +24,7 @@ class SettingsStorage {
     return await _localStorage.set('$SETTINGS_KEY:$key', val);
   }
 
+  // TODO:GG check
   static Future setSeedRpcServers(List<String> val, {String? prefix}) async {
     List<String> list = val;
     list = LinkedHashSet<String>.from(list).toList();
@@ -33,6 +34,7 @@ class SettingsStorage {
     return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
   }
 
+  // TODO:GG check
   static Future addSeedRpcServers(List<String> val, {String? prefix}) async {
     List<String> list = await getSeedRpcServers(prefix: prefix);
     list.addAll(val);
@@ -43,6 +45,7 @@ class SettingsStorage {
     return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
   }
 
+  // TODO:GG check
   static Future<List<String>> getSeedRpcServers({String? prefix}) async {
     List<String> results = [];
     List? list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}'));
