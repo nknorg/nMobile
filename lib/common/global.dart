@@ -238,33 +238,4 @@ class Global {
     }
     return nonce;
   }
-
-  /// ***********************************************************************************************************
-  /// *********************************************** subscribe *************************************************
-  /// ***********************************************************************************************************
-
-  // TODO:GG getSubscribersCount
-  // Future<int> getSubscribersCount(String? topic) async {
-  //   if (topic == null || topic.isEmpty) return 0;
-  //   int? count;
-  //   try {
-  //     if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-  //       count = await clientCommon.client?.getSubscribersCount(
-  //         topic: genTopicHash(topic),
-  //         // subscriberHashPrefix: subscriberHashPrefix,
-  //       );
-  //     }
-  //     if ((count == null) || (count <= 0)) {
-  //       List<String> seedRpcList = await Global.getSeedRpcList(null);
-  //       count = await Wallet.getHeight(config: RpcConfig(seedRPCServerAddr: seedRpcList));
-  //     }
-  //   } catch (e) {
-  //     handleError(e);
-  //   }
-  //   return count ?? 0;
-  // }
-
-  // TODO:GG _clientGetSubscribers
-
-  // TODO:GG _clientGetSubscription
 }
