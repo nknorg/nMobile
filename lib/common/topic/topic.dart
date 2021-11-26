@@ -207,7 +207,7 @@ class TopicCommon with Tag {
     bool needReject = status == SubscriberStatus.Unsubscribed;
     bool needNoPermission = status == SubscriberStatus.None;
 
-    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(subscriber.topic, true, subscriber.clientAddress, txPool: txPool);
+    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(subscriber.topic, subscriber.clientAddress, txPool: txPool);
     // int? permPage = permission[0];
     // bool? acceptAll = permission[1];
     bool? isAccept = permission[2];
@@ -270,7 +270,7 @@ class TopicCommon with Tag {
     // permission(private + normal)
     int? permPage;
     if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, exists.isPrivate, clientCommon.address);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientCommon.address);
       permPage = permission[0];
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
@@ -730,7 +730,7 @@ class TopicCommon with Tag {
     // check permission
     int? appendPermPage;
     if (isPrivate) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, isPrivate, clientAddress);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientAddress);
       appendPermPage = permission[0] ?? (await subscriberCommon.queryMaxPermPageByTopic(topic));
       bool? acceptAll = permission[1];
       bool? isReject = permission[3];
@@ -785,7 +785,7 @@ class TopicCommon with Tag {
     if (_subscriber.canBeKick == false) return null; // checked in UI
 
     // check permission
-    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, isPrivate, clientAddress);
+    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientAddress);
     int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
     if (permPage == null) {
@@ -817,7 +817,7 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty || append == null || append.clientAddress.isEmpty) return Map();
     // permPage
     if ((append.permPage ?? -1) <= 0) {
-      append.permPage = (await subscriberCommon.findPermissionFromNode(topic, true, append.clientAddress))[0] ?? 0;
+      append.permPage = (await subscriberCommon.findPermissionFromNode(topic, append.clientAddress))[0] ?? 0;
     }
 
     Function removeFromList = (List<dynamic> permList, String clientAddress) {
@@ -918,7 +918,7 @@ class TopicCommon with Tag {
 
     // permission check
     if (_topic.isPrivate && !_topic.isOwner(clientAddress)) {
-      List permission = await subscriberCommon.findPermissionFromNode(topic, _topic.isPrivate, clientAddress);
+      List permission = await subscriberCommon.findPermissionFromNode(topic, clientAddress);
       // int? permPage = permission[0];
       bool? acceptAll = permission[1];
       bool? isAccept = permission[2];
@@ -974,7 +974,7 @@ class TopicCommon with Tag {
 
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address != clientAddress) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, _topic.isPrivate, clientAddress);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientAddress);
       int? permPage = permission[0] ?? _subscriber.permPage;
       bool? acceptAll = permission[1];
       if (acceptAll == true) {

@@ -269,7 +269,7 @@ class ChatCommon with Tag {
         logger.i("$TAG - subscriberHandle - private: add Owner - subscriber:$exist");
       } else {
         // will go here when duration(TxPoolDelay) gone in new version
-        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, topic.isPrivate, message.from);
+        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, message.from);
         int? permPage = permission[0];
         bool? acceptAll = permission[1];
         bool? isAccept = permission[2];
