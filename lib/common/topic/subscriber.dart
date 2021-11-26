@@ -93,12 +93,7 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
-  Future refreshSubscribers(
-    String? topic, {
-    String? ownerPubKey,
-    bool meta = false,
-    bool txPool = true,
-  }) async {
+  Future refreshSubscribers(String? topic, {String? ownerPubKey, bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return [];
 
     int limit = 20;
@@ -204,12 +199,7 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(
-    String? topic, {
-    String? ownerPubKey,
-    bool meta = false,
-    bool txPool = true,
-  }) async {
+  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topic, {String? ownerPubKey, bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return [];
     // subscribers(permission)
     Map<String, dynamic> metas = await TopSub.getSubscribers(topic, meta: meta, txPool: txPool);
