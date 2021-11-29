@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/topic/top_sub.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -451,6 +452,7 @@ class TopicCommon with Tag {
 
     bool success;
     try {
+      // TODO:GG top_sub
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
           topic: genTopicHash(topic),
@@ -567,6 +569,7 @@ class TopicCommon with Tag {
 
     bool success;
     try {
+      // TODO:GG top_sub
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.unsubscribe(
           topic: genTopicHash(topic),
@@ -655,7 +658,7 @@ class TopicCommon with Tag {
   Future<int> getExpireAtByNode(String? topic, String? clientAddress) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    Map<String, dynamic> result = await _clientGetSubscription(topic, pubKey);
+    Map<String, dynamic> result = await TopSub.getSubscription(topic, pubKey);
     String? expiresAt = result['expiresAt']?.toString() ?? "0";
     return int.tryParse(expiresAt) ?? 0;
   }
@@ -664,7 +667,7 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty) return Map();
     String? ownerPubKey = getPubKeyFromTopicOrChatId(topic);
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
-    Map<String, dynamic> result = await _clientGetSubscription(topic, indexWithPubKey);
+    Map<String, dynamic> result = await TopSub.getSubscription(topic, indexWithPubKey);
     if (result['meta']?.toString().isNotEmpty == true) {
       Map<String, dynamic> meta = jsonFormat(result['meta']) ?? Map();
       logger.d("$TAG - _getMetaByNodePage - meta:$meta");
@@ -672,33 +675,6 @@ class TopicCommon with Tag {
     }
     logger.d("$TAG - _getMetaByNodePage - meta is null");
     return Map();
-  }
-
-  // TODO:GG mean? subscriber = "identifier.publickey"
-  Future<Map<String, dynamic>> _clientGetSubscription(String? topic, String? subscriber, {int tryCount = 0}) async {
-    if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
-          topic: genTopicHash(topic),
-          subscriber: subscriber,
-        );
-        if (result?.isNotEmpty == true) {
-          logger.d("$TAG - _clientGetSubscription - success - topic:$topic - subscriber:$subscriber - result:$result");
-        } else {
-          logger.w("$TAG - _clientGetSubscription - fail - topic:$topic - subscriber:$subscriber");
-        }
-        return result ?? Map();
-      } else {
-        logger.w("$TAG - _clientGetSubscription - retry - tryCount:$tryCount - topic:$topic - subscriber:$subscriber");
-        if (tryCount >= 5) Map();
-        await Future.delayed(Duration(seconds: 2));
-        return _clientGetSubscription(topic, subscriber, tryCount: ++tryCount);
-      }
-    } catch (e) {
-      handleError(e);
-      return Map();
-    }
   }
 
   /// ***********************************************************************************************************
