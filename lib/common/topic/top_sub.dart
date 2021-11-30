@@ -145,6 +145,7 @@ class TopSub {
           logger.i("TopSub - _unsubscribe - cancel unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
           topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, true, notify: true)); // await
         } else {
+          success = true; // will success by try timer
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true);
           logger.i("TopSub - _unsubscribe - add unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
           topicCommon.setData(_schema.id, newData); // await
