@@ -101,7 +101,7 @@ class TopSub {
     if (!success) {
       if (tryCount < maxTryTimes) {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - tryCount:$tryCount - topic:$topic - identifier:$identifier");
-        await Future.delayed(Duration(seconds: 5));
+        await Future.delayed(Duration(seconds: 2));
         return subscribeWithJoin(
           topic,
           fee: fee,
