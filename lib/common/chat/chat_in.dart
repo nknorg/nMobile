@@ -772,7 +772,7 @@ class ChatInCommon with Tag {
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
-    topicCommon.onSubscribe(received.topic, received.from).then((value) async {
+    topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
       if (!historySubscribed && value != null) {
         // DB
         MessageSchema? inserted = await MessageStorage.instance.insert(received);
@@ -787,7 +787,7 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicUnsubscribe(MessageSchema received) async {
-    topicCommon.onUnsubscribe(received.topic, received.from); // await
+    topicCommon.onUnsubscribe(received.topic, received.from, maxTryTimes: 5); // await
     return true;
   }
 
@@ -811,7 +811,7 @@ class ChatInCommon with Tag {
   // NO single
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
     if ((received.content == null) || !(received.content is String)) return false;
-    topicCommon.onKickOut(received.topic, received.from, received.content); // await
+    topicCommon.onKickOut(received.topic, received.from, received.content, maxTryTimes: 5); // await
     return true;
   }
 
