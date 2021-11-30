@@ -78,7 +78,8 @@ class TopSub {
 
   // TODO:GG identifier可以传马甲吗？
   static Future<bool> subscribeWithJoin(
-    String? topic, {
+    String? topic,
+    bool isJoin, {
     double fee = 0,
     String identifier = "",
     int? nonce,
@@ -86,15 +87,24 @@ class TopSub {
     int tryCount = 1,
     int maxTryTimes = 1,
   }) async {
-    List<bool> results = await _subscribe(
-      topic,
-      fee: fee,
-      identifier: identifier,
-      meta: "",
-      nonce: nonce,
-      toast: toast,
-      tryCount: 0,
-    );
+    List<bool> results = isJoin
+        ? await _subscribe(
+            topic,
+            fee: fee,
+            identifier: identifier,
+            meta: "",
+            nonce: nonce,
+            toast: toast,
+            tryCount: 0,
+          )
+        : await _unsubscribe(
+            topic,
+            fee: fee,
+            identifier: identifier,
+            nonce: nonce,
+            toast: toast,
+            tryCount: 0,
+          );
     bool success = results[0];
     bool canTryTimer = results[1];
 
@@ -104,6 +114,7 @@ class TopSub {
         await Future.delayed(Duration(seconds: 2));
         return subscribeWithJoin(
           topic,
+          isJoin,
           fee: fee,
           identifier: identifier,
           nonce: nonce,
@@ -117,18 +128,103 @@ class TopSub {
 
     TopicSchema? _schema = await topicCommon.queryByTopic(topic);
     if (_schema != null) {
-      if (!canTryTimer) {
-        Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false);
-        logger.w("TopSub - subscribeWithJoin - cancel subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
-        topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, false, notify: true)); // await
+      if (isJoin) {
+        if (!canTryTimer) {
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false);
+          logger.w("TopSub - subscribeWithJoin - cancel subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
+          topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, false, notify: true)); // await
+        } else {
+          success = true; // will success by try timer
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true);
+          logger.i("TopSub - subscribeWithJoin - add subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
+          topicCommon.setData(_schema.id, newData); // await
+        }
       } else {
-        success = true; // will success by try timer
-        Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true);
-        logger.i("TopSub - subscribeWithJoin - add subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
-        topicCommon.setData(_schema.id, newData); // await
+        if (!canTryTimer) {
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false);
+          logger.i("TopSub - _unsubscribe - cancel unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
+          topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, true, notify: true)); // await
+        } else {
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true);
+          logger.i("TopSub - _unsubscribe - add unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
+          topicCommon.setData(_schema.id, newData); // await
+        }
       }
     }
     return success;
+  }
+
+  static Future<List<bool>> _unsubscribe(
+    String? topic, {
+    double fee = 0,
+    String identifier = "",
+    int? nonce,
+    bool toast = false,
+    int tryCount = 0,
+  }) async {
+    if (topic == null || topic.isEmpty) return [false, false];
+    int maxTryTimes = 2; // 3
+    nonce = nonce ?? await Global.getNonce();
+
+    bool? success;
+    bool canTryTimer = true;
+    try {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? topicHash = await clientCommon.client?.unsubscribe(
+          topic: genTopicHash(topic),
+          identifier: identifier,
+          fee: fee.toString(),
+          nonce: nonce,
+        );
+        success = (topicHash != null) && (topicHash.isNotEmpty);
+      } else {
+        canTryTimer = false;
+      }
+    } catch (e) {
+      if (e.toString().contains("nonce is not continuous")) {
+        // can not append tx to txpool: nonce is not continuous
+        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (tryCount >= maxTryTimes) {
+          if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
+          success = false;
+        } else {
+          nonce = await Global.getNonce(forceFetch: true);
+        }
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        success = false;
+        canTryTimer = false;
+      } else if (e.toString().contains('duplicate subscription exist in block')) {
+        // can not append tx to txpool: duplicate subscription exist in block
+        logger.i("TopSub - _unsubscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (toast) Toast.show(Global.locale((s) => s.request_processed));
+        success = false;
+        nonce = await Global.refreshNonce();
+      } else {
+        nonce = await Global.getNonce(forceFetch: true);
+        if (tryCount >= maxTryTimes) {
+          success = false;
+          handleError(e);
+        }
+      }
+    }
+
+    if (success == null) {
+      if (tryCount < maxTryTimes) {
+        await Future.delayed(Duration(seconds: 1));
+        return _unsubscribe(
+          topic,
+          fee: fee,
+          identifier: identifier,
+          nonce: nonce,
+          toast: toast,
+          tryCount: ++tryCount,
+        );
+      } else {
+        success = false; // permission action can add to try timer
+      }
+    }
+    return [success, canTryTimer];
   }
 
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
