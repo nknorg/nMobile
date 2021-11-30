@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:nmobile/common/global.dart';
@@ -304,20 +303,10 @@ class TopicCommon with Tag {
     if (exists == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
 
-    // SUPPORT:START
-    // status + permission
-    if (exists.isPrivate && exists.isOwner(clientCommon.address)) {
-      SubscriberSchema? _subscriberMe = await subscriberCommon.onSubscribe(topic, clientCommon.address, 0);
-      Map<String, dynamic> meta = await _getMetaByNodePage(topic, 0);
-      meta = await _buildMetaByAppend(topic, meta, _subscriberMe);
-      await _clientSubscribe(topic, fee: fee, permissionPage: 0, meta: meta, clientAddress: clientCommon.address, status: SubscriberStatus.Subscribed);
-    } else {
-      await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
-    }
-    // SUPPORT:END
-    // FUTURE:START
-    // await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
-    // FUTURE:END
+    // permission(owner default all permission)
+
+    // status
+    await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
     await Future.delayed(Duration(milliseconds: 250));
 
     // send messages
@@ -335,7 +324,6 @@ class TopicCommon with Tag {
     bool forceSubscribe = false,
     bool enableFirst = false,
     double fee = 0,
-    int tryCount = 1,
     bool toast = false,
   }) async {
     if (topic == null || topic.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
@@ -402,15 +390,10 @@ class TopicCommon with Tag {
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // client subscribe
-      bool subscribeSuccess = await _clientSubscribe(topic, fee: fee, toast: toast, clientAddress: clientCommon.address, status: SubscriberStatus.Subscribed);
+      bool subscribeSuccess = await TopSub.subscribeWithJoin(topic, fee: fee, identifier: "", toast: toast, maxTryTimes: 2);
       if (!subscribeSuccess) {
-        if ((tryCount >= 5) || toast) {
-          logger.e("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
-          return null;
-        }
-        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - tryCount:$tryCount - topic:$exists");
-        await Future.delayed(Duration(seconds: 2));
-        return checkExpireAndSubscribe(topic, refreshSubscribers: refreshSubscribers, forceSubscribe: forceSubscribe, enableFirst: enableFirst, fee: fee, tryCount: ++tryCount, toast: toast);
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$exists");
+        return null;
       }
 
       // db update
@@ -431,99 +414,6 @@ class TopicCommon with Tag {
       await subscriberCommon.refreshSubscribers(topic, ownerPubKey: exists.ownerPubKey, meta: exists.isPrivate);
     }
     return exists;
-  }
-
-  // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
-  Future<bool> _clientSubscribe(
-    String? topic, {
-    double fee = 0,
-    int? permissionPage,
-    Map<String, dynamic>? meta,
-    int? nonce,
-    int tryCount = 1,
-    bool toast = false,
-    String? clientAddress,
-    int? status,
-  }) async {
-    if (topic == null || topic.isEmpty) return false;
-    String identifier = permissionPage != null ? '__${permissionPage}__.__permission__' : "";
-    String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
-    nonce = nonce ?? await Global.getNonce();
-
-    bool success;
-    try {
-      // TODO:GG top_sub
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        String? topicHash = await clientCommon.client?.subscribe(
-          topic: genTopicHash(topic),
-          duration: Global.topicDefaultSubscribeHeight,
-          fee: fee.toString(),
-          identifier: identifier,
-          meta: metaString,
-          nonce: nonce,
-        );
-        if (topicHash != null && topicHash.isNotEmpty) {
-          logger.d("$TAG - _clientSubscribe - success - topic:$topic - nonce:$nonce - topicHash:$topicHash - identifier:$identifier - metaString:$metaString");
-        } else {
-          logger.e("$TAG - _clientSubscribe - fail - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        }
-        success = (topicHash != null) && (topicHash.isNotEmpty);
-      } else {
-        success = false;
-      }
-    } catch (e) {
-      if (e.toString().contains("nonce is not continuous")) {
-        // can not append tx to txpool: nonce is not continuous
-        if (tryCount >= 3) {
-          logger.w("$TAG - _clientSubscribe - try over by nonce is not continuous - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
-          success = identifier.isNotEmpty;
-        } else {
-          int? nonce = await Global.getNonce(forceFetch: true);
-          return _clientSubscribe(topic, fee: fee, permissionPage: permissionPage, meta: meta, nonce: nonce, tryCount: ++tryCount, toast: toast, clientAddress: clientAddress, status: status);
-        }
-      } else if (e.toString().contains("doesn't exist")) {
-        logger.w("$TAG - _clientSubscribe - topic doesn't exist - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        TopicSchema? _schema = await queryByTopic(topic);
-        if (_schema != null) {
-          await setJoined(_schema.id, false, notify: true);
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false);
-          await setData(_schema.id, newData);
-        }
-        success = false;
-      } else {
-        await Global.refreshNonce();
-        if (e.toString().contains('duplicate subscription exist in block')) {
-          // can not append tx to txpool: duplicate subscription exist in block
-          logger.i("$TAG - _clientSubscribe - duplicated - topic:$topic - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
-        } else {
-          handleError(e);
-        }
-        success = identifier.isNotEmpty; // permission action can add to try timer
-      }
-    }
-    // data
-    if (success) {
-      if (identifier.isNotEmpty) {
-        subscriberCommon.queryByTopicChatId(topic, clientAddress).then((value) async {
-          if (value != null && status != null) {
-            Map<String, dynamic> newData = value.newDataByAppendStatus(status, true);
-            logger.i("$TAG - _clientSubscribe - add permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-            subscriberCommon.setData(value.id, newData); // await
-          } else {
-            logger.w("$TAG - _clientSubscribe - add permission try at null - topic:$topic - clientAddress:$clientAddress - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          }
-        });
-      } else {
-        queryByTopic(topic).then((value) {
-          Map<String, dynamic> newData = value?.newDataByAppendSubscribe(true, true) ?? Map();
-          logger.i("$TAG - _clientSubscribe - add subscribe try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-          setData(value?.id, newData); // await
-        });
-      }
-    }
-    return success;
   }
 
   /// ***********************************************************************************************************
@@ -683,13 +573,14 @@ class TopicCommon with Tag {
 
   // caller = everyone
   Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false, bool sendMsg = false}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (clientAddress == clientCommon.address) {
-      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
-      return null;
-    }
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (isPrivate && !isOwner) {
       if (toast) Toast.show(Global.locale((s) => s.member_no_auth_invite));
+      return null;
+    }
+    if (clientAddress == clientCommon.address) {
+      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
       return null;
     }
 
@@ -699,7 +590,7 @@ class TopicCommon with Tag {
       if (toast) Toast.show(Global.locale((s) => s.group_member_already));
       return null;
     }
-    bool isOldStatusInvitedReceived = _subscriber?.status == SubscriberStatus.InvitedReceipt;
+    int? oldStatus = _subscriber?.status;
 
     // if (isPrivate && toast) Toast.show(Global.locale((s) => s.inviting));
 
@@ -724,9 +615,10 @@ class TopicCommon with Tag {
       if (isOwner && (acceptAll != true) && (appendPermPage != null)) {
         Map<String, dynamic> meta = await _getMetaByNodePage(topic, appendPermPage);
         meta = await _buildMetaByAppend(topic, meta, _subscriber);
-        bool subscribeSuccess = await _clientSubscribe(topic, fee: 0, permissionPage: appendPermPage, meta: meta, toast: toast, clientAddress: clientAddress, status: SubscriberStatus.InvitedSend);
+        bool subscribeSuccess = await TopSub.subscribeWithPermission(topic, fee: 0, permissionPage: appendPermPage, meta: meta, clientAddress: clientAddress, newStatus: SubscriberStatus.InvitedSend, oldStatus: oldStatus, toast: toast);
         if (!subscribeSuccess) {
-          logger.w("$TAG - invitee - clientSubscribe error - permPage:$appendPermPage - meta:$meta");
+          logger.w("$TAG - invitee - clientSubscribe error - topic:$topic - permPage:$appendPermPage - meta:$meta");
+          _subscriber?.status = oldStatus;
           return null;
         }
       }
@@ -742,7 +634,7 @@ class TopicCommon with Tag {
         if (toast) Toast.show(Global.locale((s) => s.failure));
         return null;
       }
-    } else if (isOldStatusInvitedReceived) {
+    } else if (oldStatus == SubscriberStatus.InvitedReceipt) {
       await subscriberCommon.setStatus(_subscriber?.id, SubscriberStatus.InvitedReceipt, notify: true);
     }
     if (toast) Toast.show(Global.locale((s) => s.invitation_sent));
@@ -751,7 +643,8 @@ class TopicCommon with Tag {
 
   // caller = private + owner
   Future<SubscriberSchema?> kick(String? topic, bool isPrivate, bool isOwner, String? clientAddress, {bool toast = false}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty || !clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (clientAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
 
@@ -759,6 +652,7 @@ class TopicCommon with Tag {
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if (_subscriber == null) return null;
     if (_subscriber.canBeKick == false) return null; // checked in UI
+    int? oldStatus = _subscriber.status;
 
     // check permission
     List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientAddress);
@@ -776,9 +670,10 @@ class TopicCommon with Tag {
     if (acceptAll != true) {
       Map<String, dynamic> meta = await _getMetaByNodePage(topic, permPage);
       meta = await _buildMetaByAppend(topic, meta, _subscriber);
-      bool subscribeSuccess = await _clientSubscribe(topic, permissionPage: permPage, meta: meta, toast: toast, clientAddress: clientAddress, status: SubscriberStatus.Unsubscribed);
+      bool subscribeSuccess = await TopSub.subscribeWithPermission(topic, fee: 0, permissionPage: permPage, meta: meta, clientAddress: clientAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus, toast: toast);
       if (!subscribeSuccess) {
-        logger.w("$TAG - kick - clientSubscribe error - permPage:$permPage - meta:$meta");
+        logger.w("$TAG - kick - clientSubscribe error - topic:$topic - permPage:$permPage - meta:$meta");
+        _subscriber?.status = oldStatus;
         return null;
       }
     }
@@ -882,7 +777,7 @@ class TopicCommon with Tag {
   /// *********************************************** callback **************************************************
   /// ***********************************************************************************************************
 
-  // caller = everyone
+  // caller = everyone TODO:GG maxTryTimes
   Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // topic exist
@@ -932,7 +827,7 @@ class TopicCommon with Tag {
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress, {int tryCount = 1}) async {
+  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topic);
@@ -947,6 +842,7 @@ class TopicCommon with Tag {
       logger.w("$TAG - onUnsubscribe - subscriber is null - topic:$topic - clientAddress:$clientAddress");
       return null;
     }
+    int? oldStatus = _subscriber.status;
 
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && clientCommon.address != clientAddress) {
@@ -957,7 +853,7 @@ class TopicCommon with Tag {
         // do nothing
       } else {
         if (permPage == null) {
-          logger.w("$TAG - onUnsubscribe - permPage is null - permission:$permission");
+          logger.w("$TAG - onUnsubscribe - permPage is null - topic:$topic - permission:$permission");
           return null;
         } else {
           if (_subscriber.permPage != permPage) {
@@ -970,15 +866,11 @@ class TopicCommon with Tag {
         _subscriber.status = SubscriberStatus.None;
         meta = await _buildMetaByAppend(topic, meta, _subscriber);
         _subscriber.status = SubscriberStatus.Unsubscribed;
-        bool subscribeSuccess = await _clientSubscribe(topic, permissionPage: permPage, meta: meta, clientAddress: clientAddress, status: SubscriberStatus.Unsubscribed);
+        bool subscribeSuccess = await TopSub.subscribeWithPermission(topic, fee: 0, permissionPage: permPage, meta: meta, clientAddress: clientAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus);
         if (!subscribeSuccess) {
-          if (tryCount >= (Global.txPoolDelayMs / (5 * 1000))) {
-            logger.e("$TAG - onUnsubscribe - clientSubscribe error - permPage:$permPage - meta:$meta");
-            return null;
-          }
-          logger.w("$TAG - onUnsubscribe - clientSubscribe error - tryCount:$tryCount - permPage:$permPage - meta:$meta");
-          await Future.delayed(Duration(seconds: 5));
-          return onUnsubscribe(topic, clientAddress, tryCount: ++tryCount);
+          logger.w("$TAG - onUnsubscribe - clientSubscribe error - topic:$topic - permPage:$permPage - meta:$meta");
+          _subscriber.status = oldStatus;
+          return null;
         }
       }
     }
@@ -1002,7 +894,7 @@ class TopicCommon with Tag {
     return _subscriber;
   }
 
-  // caller = everyone
+  // caller = everyone TODO:GG maxTryTimes
   Future<SubscriberSchema?> onKickOut(String? topic, String? senderAddress, String? clientAddress, {int tryCount = 1}) async {
     if (topic == null || topic.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
     // topic exist
