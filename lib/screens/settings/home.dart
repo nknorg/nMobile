@@ -77,7 +77,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   _initData() {
     _languageList = <SelectListItem>[
       SelectListItem(
-        text: Global.locale((s) => s.language_auto, ctx: context),
+        text: Global.locale((s) => s.language_auto),
         value: 'auto',
       ),
       SelectListItem(
@@ -95,15 +95,15 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     ];
     _notificationTypeList = <SelectListItem>[
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_only_name, ctx: context),
+        text: Global.locale((s) => s.local_notification_only_name),
         value: NotificationType.only_name,
       ),
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_both_name_message, ctx: context),
+        text: Global.locale((s) => s.local_notification_both_name_message),
         value: NotificationType.name_and_message,
       ),
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_none_display, ctx: context),
+        text: Global.locale((s) => s.local_notification_none_display),
         value: NotificationType.none,
       ),
     ];
@@ -112,13 +112,13 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
   String _getLanguageText(String? lang) {
     if (lang == null || lang.isEmpty || lang == 'auto') {
-      return Global.locale((s) => s.language_auto, ctx: context);
+      return Global.locale((s) => s.language_auto);
     }
     try {
       return _languageList.firstWhere((x) => x.value == lang).text;
     } catch (e) {
       handleError(e);
-      return Global.locale((s) => s.language_auto, ctx: context);
+      return Global.locale((s) => s.language_auto);
     }
   }
 
