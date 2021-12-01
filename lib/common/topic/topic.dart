@@ -213,33 +213,33 @@ class TopicCommon with Tag {
     bool? isReject = permission[3];
     if (needAccept) {
       if (isAccept == true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(accept) OK - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(accept) OK - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try invitee - tryStatus:$status - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber try invitee - tryStatus:$status - subscribe:$subscriber");
         await invitee(subscriber.topic, true, true, subscriber.clientAddress);
       }
     } else if (needReject) {
       if (isReject == true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(reject) OK - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(reject) OK - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscriber");
         await kick(subscriber.topic, true, true, subscriber.clientAddress);
       }
     } else if (needNoPermission) {
       if (isAccept != true && isReject != true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(none) OK - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(none) OK - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscribe");
+        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscriber");
         await onUnsubscribe(subscriber.topic, subscriber.clientAddress);
       }
     } else {
-      logger.w("$TAG - checkAndTryPermission - subscriber permission none - tryStatus:$status - subscribe:$subscribe");
+      logger.w("$TAG - checkAndTryPermission - subscriber permission none - tryStatus:$status - subscribe:$subscriber");
       Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false);
       await subscriberCommon.setData(subscriber.id, newData, notify: true);
     }
