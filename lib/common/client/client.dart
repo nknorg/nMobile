@@ -15,7 +15,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -89,6 +88,7 @@ class ClientCommon with Tag {
   Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) async {
     // if (client != null) await close(); // async boom!!!
     if (wallet == null || wallet.address.isEmpty) return [null, false];
+    List<String>? seedRpcList;
 
     // pubKey/seed
     String? pubKey = wallet.publicKey;
@@ -127,10 +127,9 @@ class ClientCommon with Tag {
       }
 
       // rpc wallet
-      List<String>? seedRpcList;
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
-        seedRpcList = await Global.getSeedRpcList(wallet.address, measure: true);
+        seedRpcList = await Global.getRpcServers(null, measure: true);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
@@ -164,9 +163,9 @@ class ClientCommon with Tag {
         chatInCommon.clear();
         chatOutCommon.clear();
 
-        seedRpcList = seedRpcList ?? (await Global.getSeedRpcList(wallet.address, measure: true));
-        List<String> singleRpcList = (seedRpcList.isNotEmpty == true) ? [seedRpcList.first] : [];
-        client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: singleRpcList));
+        seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
+        // List<String> singleRpcList = (seedRpcList.isNotEmpty == true) ? [seedRpcList.first] : []; // TODO:GG ??? nonce的问题
+        client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
         loadingVisible?.call(false, tryCount);
 
@@ -180,7 +179,7 @@ class ClientCommon with Tag {
         Completer completer = Completer();
         _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
           logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-          SettingsStorage.addSeedRpcServers(event.rpcServers ?? [], prefix: wallet.address);
+          Global.addRpcServers(wallet.address, event.rpcServers ?? []);
           connectSuccess(force: true);
           if (!completer.isCompleted) completer.complete();
         });
@@ -214,8 +213,12 @@ class ClientCommon with Tag {
       }
       // toast
       if ((tryCount != 0) && (tryCount % 10 == 0)) handleError(e);
+      // // seed refresh
+      // if ((seedRpcList != null) && seedRpcList.isNotEmpty) {
+      //   seedRpcList.removeAt(0);
+      //   await Global.setRpcServers(wallet.address, seedRpcList);
+      // }
       // loop login
-      await SettingsStorage.setSeedRpcServers([], prefix: wallet.address);
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
       return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
     }
