@@ -24,40 +24,6 @@ class SettingsStorage {
     return await _localStorage.set('$SETTINGS_KEY:$key', val);
   }
 
-  // TODO:GG check
-  static Future setSeedRpcServers(List<String> val, {String? prefix}) async {
-    List<String> list = val;
-    list = LinkedHashSet<String>.from(list).toList();
-    if (list.length > 10) {
-      list = list.skip(list.length - 10).take(10).toList();
-    }
-    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
-  }
-
-  // TODO:GG check
-  static Future addSeedRpcServers(List<String> val, {String? prefix}) async {
-    List<String> list = await getSeedRpcServers(prefix: prefix);
-    list.addAll(val);
-    list = LinkedHashSet<String>.from(list).toList();
-    if (list.length > 10) {
-      list = list.skip(list.length - 10).take(10).toList();
-    }
-    return await _localStorage.set('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
-  }
-
-  // TODO:GG check
-  static Future<List<String>> getSeedRpcServers({String? prefix}) async {
-    List<String> results = [];
-    List? list = (await _localStorage.get('$SETTINGS_KEY:$SEED_RPC_SERVERS_KEY${prefix?.isNotEmpty == true ? ":$prefix" : ""}'));
-    if (list?.isNotEmpty == true) {
-      for (var i in list!) {
-        results.add(i.toString());
-      }
-    }
-    results = LinkedHashSet<String>.from(results).toList();
-    return results;
-  }
-
   static Future<bool> isNeedTipNotificationOpen(String prefix, String? targetId) async {
     if (targetId == null || targetId.isEmpty) return false;
     var result = await _localStorage.get('$CHAT_TIP_NOTIFICATION:$prefix:$targetId');

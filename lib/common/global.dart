@@ -63,7 +63,7 @@ class Global {
     'http://mainnet-seed-0006.nkn.org:30003',
     'http://mainnet-seed-0007.nkn.org:30003',
     'http://mainnet-seed-0008.nkn.org:30003',
-    'http://mainnet-seed-0009.nkn.org:30003',
+    // 'http://mainnet-seed-0009.nkn.org:30003', // ali disable
   ];
 
   static Lock _heightLock = Lock();
@@ -100,20 +100,80 @@ class Global {
     }
   }
 
+  /// ***********************************************************************************************************
+  /// ********************************************* SeedRpcServers **********************************************
+  /// ***********************************************************************************************************
+
+  // TODO:GG topic需要prefix吗
   static Future<List<String>> getSeedRpcList(String? prefix, {bool measure = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
 
     // get
-    List<String> list = await SettingsStorage.getSeedRpcServers(prefix: prefix);
-    list.addAll(defaultSeedRpcList);
-    list = LinkedHashSet<String>.from(list).toList();
+    List<String> list = await _getSeedRpcServers(prefix: prefix);
     logger.d("Global - getSeedRpcList - seedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
 
-    // measure
-    if (measure) {
-      list = await Wallet.measureSeedRPCServer(list) ?? defaultSeedRpcList;
-      logger.i("Global - getSeedRpcList - measureSeedRPCServer - prefix:$prefix - length:${list.length} - list:$list");
-      SettingsStorage.setSeedRpcServers(list, prefix: prefix); // await
+    try {
+      // measure
+      if (measure && (list.length > 1)) {
+        list = await Wallet.measureSeedRPCServer(list) ?? [];
+        if (list.isEmpty) {
+          logger.w("Global - getSeedRpcList - measureSeedRPCServer empty - prefix:$prefix");
+        } else {
+          logger.i("Global - getSeedRpcList - measureSeedRPCServer result - prefix:$prefix - length:${list.length} - list:$list");
+        }
+        setSeedRpcServers(list, prefix: prefix); // await
+      }
+
+      // append
+      if (list.length <= 2) {
+        list.addAll(defaultSeedRpcList);
+        list = LinkedHashSet<String>.from(list).toList();
+        list = await Wallet.measureSeedRPCServer(list) ?? [];
+      }
+    } catch (e) {
+      list = defaultSeedRpcList;
+      handleError(e);
+    }
+    return list;
+  }
+
+  static Future setSeedRpcServers(List<String> list, {String? prefix}) async {
+    list = _filterSeedRpcServers(list);
+    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
+  }
+
+  static Future addSeedRpcServers(List<String> inserts, {String? prefix}) async {
+    if (inserts.isEmpty) return;
+    List<String> list = await _getSeedRpcServers(prefix: prefix);
+    list.insertAll(0, inserts);
+    list = _filterSeedRpcServers(list);
+    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
+  }
+
+  static Future<List<String>> _getSeedRpcServers({String? prefix}) async {
+    List<String> results = [];
+    List? list = await SettingsStorage.getSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}');
+    if ((list != null) && list.isNotEmpty) {
+      for (var i in list) {
+        results.add(i.toString());
+      }
+    }
+    results = _filterSeedRpcServers(results);
+    return results;
+  }
+
+  static List<String> _filterSeedRpcServers(List<String> list) {
+    if (list.isEmpty) return list;
+    list = LinkedHashSet<String>.from(list).toList();
+    for (var i = 0; i < defaultSeedRpcList.length; i++) {
+      int index = list.indexOf(defaultSeedRpcList[i]);
+      if ((index >= 0) && index < (list.length)) {
+        list.removeAt(index);
+      }
+    }
+    if (list.isEmpty) return list;
+    if (list.length > 10) {
+      list = list.skip(list.length - 10).take(10).toList();
     }
     return list;
   }
