@@ -126,7 +126,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     String pubKey = wallet.publicKey;
     if (pubKey.isEmpty) {
       String keystore = await walletCommon.getKeystore(wallet.address);
-      List<String> seedRpcList = await Global.getSeedRpcList(wallet.address, measure: true);
+      List<String> seedRpcList = await Global.getRpcServers(null, measure: true);
       Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
       if (nknWallet.publicKey.isEmpty) return;
       pubKey = hexEncode(nknWallet.publicKey);
