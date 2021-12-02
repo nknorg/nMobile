@@ -92,11 +92,11 @@ class TaskService with Tag {
         });
 
     // immediate
-    addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
+    // addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
     addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(delayMs: 1000), callNow: true);
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(delayMs: 1500), callNow: true);
-    addTask30(KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(delayMs: 5000), callNow: true);
-    addTask30(KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(delayMs: 7000), callNow: true);
+    addTask30(KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(delayMs: 3000), callNow: true);
+    addTask30(KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(delayMs: 5000), callNow: true);
 
     // delay
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), callNow: false);
