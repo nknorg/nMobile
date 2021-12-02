@@ -266,7 +266,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce}) async {
     Loading.show();
     try {
-      List<String> seedRpcList = await Global.getSeedRpcList(null, measure: true);
+      List<String> seedRpcList = await Global.getRpcServers(this._wallet.address, measure: true);
       Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
       if (nkn.address.isEmpty || nkn.address != _wallet.address) {
         Toast.show(Global.locale((s) => s.password_wrong, ctx: context));

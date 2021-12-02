@@ -319,7 +319,7 @@ class TopSub {
         );
       }
       if ((results == null) || results.isEmpty) {
-        List<String> seedRpcList = await Global.getSeedRpcList(null);
+        List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
         results = await Wallet.getSubscription(
           genTopicHash(topic),
           subscriber,
@@ -364,7 +364,7 @@ class TopSub {
             // subscriberHashPrefix: subscriberHashPrefix,
           );
           if ((result == null) || result.isEmpty) {
-            List<String> seedRpcList = await Global.getSeedRpcList(null);
+            List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
             result = await Wallet.getSubscribers(
               topic: genTopicHash(topic),
               offset: offset,
@@ -411,7 +411,7 @@ class TopSub {
         );
       }
       if ((count == null) || (count <= 0)) {
-        List<String> seedRpcList = await Global.getSeedRpcList(null);
+        List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
         count = await Wallet.getSubscribersCount(
           genTopicHash(topic),
           // subscriberHashPrefix: subscriberHashPrefix
