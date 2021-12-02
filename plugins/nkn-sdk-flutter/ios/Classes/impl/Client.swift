@@ -99,7 +99,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        config.rpcConcurrency = 1
+        // config.rpcConcurrency = 4
 
         var error: NSError?
         let account = NknNewAccount(seed?.data, &error)!

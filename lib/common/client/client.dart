@@ -164,7 +164,6 @@ class ClientCommon with Tag {
         chatOutCommon.clear();
 
         seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
-        // List<String> singleRpcList = (seedRpcList.isNotEmpty == true) ? [seedRpcList.first] : []; // TODO:GG ??? nonce的问题
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
         loadingVisible?.call(false, tryCount);
