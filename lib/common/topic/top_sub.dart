@@ -76,7 +76,6 @@ class TopSub {
     return success;
   }
 
-  // TODO:GG identifier可以传马甲吗？
   static Future<bool> subscribeWithJoin(
     String? topic,
     bool isJoin, {
@@ -155,79 +154,6 @@ class TopSub {
     return success;
   }
 
-  static Future<List<bool>> _unsubscribe(
-    String? topic, {
-    double fee = 0,
-    String identifier = "",
-    int? nonce,
-    bool toast = false,
-    int tryCount = 0,
-  }) async {
-    if (topic == null || topic.isEmpty) return [false, false];
-    int maxTryTimes = 2; // 3
-    nonce = nonce ?? await Global.getNonce();
-
-    bool? success;
-    bool canTryTimer = true;
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        String? topicHash = await clientCommon.client?.unsubscribe(
-          topic: genTopicHash(topic),
-          identifier: identifier,
-          fee: fee.toString(),
-          nonce: nonce,
-        );
-        success = (topicHash != null) && (topicHash.isNotEmpty);
-      } else {
-        canTryTimer = false;
-      }
-    } catch (e) {
-      if (e.toString().contains("nonce is not continuous")) {
-        // can not append tx to txpool: nonce is not continuous
-        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
-        if (tryCount >= maxTryTimes) {
-          if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
-          success = false;
-        } else {
-          nonce = await Global.getNonce(forceFetch: true);
-        }
-      } else if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
-        success = false;
-        canTryTimer = false;
-      } else if (e.toString().contains('duplicate subscription exist in block')) {
-        // can not append tx to txpool: duplicate subscription exist in block
-        logger.i("TopSub - _unsubscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
-        if (toast) Toast.show(Global.locale((s) => s.request_processed));
-        success = false;
-        nonce = await Global.refreshNonce();
-      } else {
-        nonce = await Global.getNonce(forceFetch: true);
-        if (tryCount >= maxTryTimes) {
-          success = false;
-          handleError(e);
-        }
-      }
-    }
-
-    if (success == null) {
-      if (tryCount < maxTryTimes) {
-        await Future.delayed(Duration(seconds: 1));
-        return _unsubscribe(
-          topic,
-          fee: fee,
-          identifier: identifier,
-          nonce: nonce,
-          toast: toast,
-          tryCount: ++tryCount,
-        );
-      } else {
-        success = false; // permission action can add to try timer
-      }
-    }
-    return [success, canTryTimer];
-  }
-
   // publish(meta = null) / private(meta != null)(owner_create / invitee / kick)
   static Future<List<bool>> _subscribe(
     String? topic, {
@@ -274,7 +200,7 @@ class TopSub {
         canTryTimer = false;
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
-        logger.i("TopSub - _subscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
         nonce = await Global.refreshNonce();
@@ -306,8 +232,80 @@ class TopSub {
     return [success, canTryTimer];
   }
 
-  // TODO:GG mean? subscriber = "identifier.publickey"
-  // TODO:GG 返回的都是啥
+  static Future<List<bool>> _unsubscribe(
+    String? topic, {
+    double fee = 0,
+    String identifier = "",
+    int? nonce,
+    bool toast = false,
+    int tryCount = 0,
+  }) async {
+    if (topic == null || topic.isEmpty) return [false, false];
+    int maxTryTimes = 2; // 3
+    nonce = nonce ?? await Global.getNonce();
+
+    bool? success;
+    bool canTryTimer = true;
+    try {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? topicHash = await clientCommon.client?.unsubscribe(
+          topic: genTopicHash(topic),
+          identifier: identifier,
+          fee: fee.toString(),
+          nonce: nonce,
+        );
+        success = (topicHash != null) && (topicHash.isNotEmpty);
+      } else {
+        canTryTimer = false;
+      }
+    } catch (e) {
+      if (e.toString().contains("nonce is not continuous")) {
+        // can not append tx to txpool: nonce is not continuous
+        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (tryCount >= maxTryTimes) {
+          if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
+          success = false;
+        } else {
+          nonce = await Global.getNonce(forceFetch: true);
+        }
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        success = false;
+        canTryTimer = false;
+      } else if (e.toString().contains('duplicate subscription exist in block')) {
+        // can not append tx to txpool: duplicate subscription exist in block
+        logger.w("TopSub - _unsubscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (toast) Toast.show(Global.locale((s) => s.request_processed));
+        success = false;
+        nonce = await Global.refreshNonce();
+      } else {
+        nonce = await Global.getNonce(forceFetch: true);
+        if (tryCount >= maxTryTimes) {
+          success = false;
+          handleError(e);
+        }
+      }
+    }
+
+    if (success == null) {
+      if (tryCount < maxTryTimes) {
+        await Future.delayed(Duration(seconds: 1));
+        return _unsubscribe(
+          topic,
+          fee: fee,
+          identifier: identifier,
+          nonce: nonce,
+          toast: toast,
+          tryCount: ++tryCount,
+        );
+      } else {
+        success = false; // permission action can add to try timer
+      }
+    }
+    return [success, canTryTimer];
+  }
+
+  // TODO:GG 返回的都是啥? 还有subscriber可以 = "identifier.publickey" 吗?
   static Future<Map<String, dynamic>> getSubscription(String? topic, String? subscriber, {int tryCount = 0}) async {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     Map<String, dynamic>? results;
