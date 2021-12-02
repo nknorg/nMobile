@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:nmobile/helpers/local_storage.dart';
 
 class SettingsStorage {
