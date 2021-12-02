@@ -1090,10 +1090,10 @@ class S {
     );
   }
 
-  /// `Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.`
+  /// `Please save and backup your seed safely. Do not transfer via the internet. If you lose it you will lose access to your assets.`
   String get seed_qrcode_dec {
     return Intl.message(
-      'Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.',
+      'Please save and backup your seed safely. Do not transfer via the internet. If you lose it you will lose access to your assets.',
       name: 'seed_qrcode_dec',
       desc: '',
       args: [],

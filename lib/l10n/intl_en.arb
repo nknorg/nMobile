@@ -111,7 +111,7 @@
   "public_key": "Public Key",
   "view_qrcode": "View QR Code",
   "qrcode": "QR Code",
-  "seed_qrcode_dec": "Please save and backup your seed safetly. Do not transfer via the internet. If you lose it you will lose access to your assets.",
+  "seed_qrcode_dec": "Please save and backup your seed safely. Do not transfer via the internet. If you lose it you will lose access to your assets.",
   "select_asset_to_backup": "Select Asset to Backup",
   "continue_text": "Continue",
   "verify_wallet_password": "Verify Account Password",
