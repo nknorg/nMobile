@@ -60,7 +60,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        eventSink = nil
+        // eventSink = nil
         return nil
     }
     

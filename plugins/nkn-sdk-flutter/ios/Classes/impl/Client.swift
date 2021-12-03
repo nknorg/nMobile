@@ -44,7 +44,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
 
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        eventSink = nil
+        // eventSink = nil
         return nil
     }
 
@@ -192,7 +192,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         resp["rpcServers"] = rpcServers
         NSLog("%@", resp)
-        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
+        self.eventSinkSuccess(eventSink: eventSink, resp: resp)
     }
 
     private func addMessageReceiveQueue(client: NknMultiClient?) {
@@ -218,7 +218,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
         ]
         NSLog("onMessage - %@", String(data: msg.data!, encoding: String.Encoding.utf8)!)
-        self.eventSinkSuccess(eventSink: eventSink!, resp: resp)
+        self.eventSinkSuccess(eventSink: eventSink, resp: resp)
 
         // loop
         self.addMessageReceiveQueue(client: client)
