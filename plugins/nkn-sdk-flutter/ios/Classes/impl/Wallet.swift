@@ -30,7 +30,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
 
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        eventSink = nil
+        // eventSink = nil
         return nil
     }
 
