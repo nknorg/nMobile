@@ -23,7 +23,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     private var clientEventWorkItem: DispatchWorkItem?
 
-    let numSubClients = 3
+    let numSubClients = 4
     var client: NknMultiClient?
 
     func install(binaryMessenger: FlutterBinaryMessenger) {
