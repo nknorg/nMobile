@@ -88,7 +88,6 @@ class ClientCommon with Tag {
   Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) async {
     // if (client != null) await close(); // async boom!!!
     if (wallet == null || wallet.address.isEmpty) return [null, false];
-    List<String>? seedRpcList;
 
     // pubKey/seed
     String? pubKey = wallet.publicKey;
@@ -129,7 +128,7 @@ class ClientCommon with Tag {
       // rpc wallet
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
-        seedRpcList = await Global.getRpcServers(null, measure: true);
+        List<String>? seedRpcList = await Global.getRpcServers(null, measure: true);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
@@ -163,7 +162,7 @@ class ClientCommon with Tag {
         chatInCommon.clear();
         chatOutCommon.clear();
 
-        seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
+        List<String>? seedRpcList = (await Global.getRpcServers(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
         loadingVisible?.call(false, tryCount);

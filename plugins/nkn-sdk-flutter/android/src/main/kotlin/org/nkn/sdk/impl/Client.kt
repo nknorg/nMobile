@@ -18,7 +18,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val EVENT_NAME = "org.nkn.sdk/client/event"
     }
 
-    private val numSubClients = 3L
+    private val numSubClients = 4L
     private var client: MultiClient? = null
 
     lateinit var methodChannel: MethodChannel
