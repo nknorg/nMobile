@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -174,12 +175,11 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, target: _topicSchema?.topic, fileExt: 'jpeg');
     String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
-    File? picked = await MediaPicker.pickSingle(
-      mediaType: MediaType.image,
+    File? picked = await MediaPicker.pickImage(
       source: ImageSource.gallery,
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      compressQuality: 50,
+      maxSize: ChatOutCommon.imgSuggestSize,
       returnPath: remarkAvatarPath,
     );
     if (picked == null) {

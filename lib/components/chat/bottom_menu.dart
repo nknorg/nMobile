@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -25,10 +26,9 @@ class ChatBottomMenu extends StatelessWidget {
   _getImageFile({required ImageSource source}) async {
     if (clientCommon.publicKey == null) return;
     String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
-    File? picked = await MediaPicker.pickSingle(
+    File? picked = await MediaPicker.pickImage(
       source: source,
-      mediaType: MediaType.image,
-      compressQuality: 70,
+      maxSize: ChatOutCommon.imgSuggestSize,
       returnPath: returnPath,
     );
     if (picked == null) return;
