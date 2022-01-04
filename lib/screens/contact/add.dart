@@ -66,7 +66,8 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       source: ImageSource.gallery,
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      maxSize: ChatOutCommon.imgSuggestSize,
+      bestSize: ChatOutCommon.imgBestSize,
+      maxSize: ChatOutCommon.imgMaxSize,
       returnPath: returnPath,
     );
     if (picked == null || !picked.existsSync()) {
