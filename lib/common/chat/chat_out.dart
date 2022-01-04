@@ -8,6 +8,7 @@ import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -23,15 +24,17 @@ import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   // piece
-  static const int piecesPreLength = 5 * 1024; // >= 4k
+  static const int piecesPreMinLen = 4 * 1000; // >= 4K
+  static const int piecesPreMaxLen = 20 * 1000; // <= 20K < 32K
   static const int piecesMinParity = (5 ~/ 5); // >= 1
-  static const int piecesMaxParity = (50 ~/ 5); // <= 10
-  static const int piecesMinTotal = 5 - piecesMinParity; // >= 4
-  static const int piecesMaxTotal = 50 - piecesMaxParity; // <= 40
+  static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
+  static const int piecesMaxParity = (100 ~/ 5); // <= 20
+  static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
 
   // size
-  static const int zipMaxSize = 30 * 1000; // < 32k
-  static const int shouldBodySize = 150 * 1024; // 150k
+  static const int imgBestSize = 400 * 1000; // 400k
+  static const int imgMaxSize = piecesMaxTotal * piecesPreMaxLen; // 1.6M = 80 * 20K
+  static const int msgMaxSize = 4 * 1000 * 1000; // 4,000,000B ~ 4M
   // static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
 
   // ignore: close_sinks
@@ -69,7 +72,7 @@ class ChatOutCommon with Tag {
     }
     int dataSize = bodySize ?? data.length;
     int totalSize = destList.length * dataSize;
-    if ((destList.length <= 1) || (dataSize <= zipMaxSize) || (totalSize <= largeBodyMaxPieceSize)) {
+    if ((destList.length <= 1) || (dataSize <= piecesPreMaxLen) || (totalSize <= largeBodyMaxPieceSize)) {
       logger.d("$TAG - sendData - small message body - totalSizeM:${totalSize / 1024 / 1024} - destList:$destList - data:$data");
       return _clientSendData(selfAddress, destList, data);
     }
@@ -142,7 +145,7 @@ class ChatOutCommon with Tag {
         return onMessage;
       } else {
         logger.w("$TAG - _clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 2)); // TODO:GG locale
         return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     } catch (e) {
@@ -159,11 +162,12 @@ class ChatOutCommon with Tag {
         }
       } else if (e.toString().contains("invalid destination")) {
         logger.w("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
+        Toast.show("用户不存在"); // TODO:GG locale
         return null;
       } else {
         handleError(e);
         logger.w("$TAG - _clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(Duration(seconds: 2)); // TODO:GG locale
         return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
       }
     }
@@ -239,7 +243,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future sendReceipt(MessageSchema received, {int tryCount = 1}) async {
+  Future sendReceipt(MessageSchema received) async {
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     received = (await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
@@ -248,7 +252,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future sendRead(String? clientAddress, List<String> msgIds, {int tryCount = 1}) async {
+  Future sendRead(String? clientAddress, List<String> msgIds) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getRead(msgIds);
@@ -256,7 +260,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds, {int tryCount = 1}) async {
+  Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds) async {
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getMsgStatus(ask, msgIds);
@@ -264,7 +268,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion, {int tryCount = 1}) async {
+  Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
@@ -273,7 +277,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me, int tryCount = 1}) async {
+  Future sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
@@ -288,7 +292,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt, {int tryCount = 1}) async {
+  Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -304,7 +308,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsToken(String? clientAddress, String deviceToken, {int tryCount = 1}) async {
+  Future sendContactOptionsToken(String? clientAddress, String deviceToken) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -319,7 +323,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendDeviceRequest(String? clientAddress, {int tryCount = 1}) async {
+  Future sendDeviceRequest(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getDeviceRequest();
@@ -327,7 +331,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future sendDeviceInfo(String? clientAddress, {int tryCount = 1}) async {
+  Future sendDeviceInfo(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     String data = MessageData.getDeviceInfo();
@@ -420,7 +424,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO single
-  Future sendTopicSubscribe(String? topic, {int tryCount = 1}) async {
+  Future sendTopicSubscribe(String? topic) async {
     if (topic == null || topic.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -434,7 +438,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO single
-  Future sendTopicUnSubscribe(String? topic, {int tryCount = 1}) async {
+  Future sendTopicUnSubscribe(String? topic) async {
     if (topic == null || topic.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -464,7 +468,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO single
-  Future sendTopicKickOut(String? topic, String? targetAddress, {int tryCount = 1}) async {
+  Future sendTopicKickOut(String? topic, String? targetAddress) async {
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -848,18 +852,18 @@ class ChatOutCommon with Tag {
     File? file = message.content as File?;
     if (file == null || !file.existsSync()) return [];
     int length = await file.length();
-    if (length <= piecesPreLength) return [];
+    if (length <= piecesPreMinLen) return [];
     // data
     Uint8List fileBytes = await file.readAsBytes();
     String base64Data = base64.encode(fileBytes);
     int bytesLength = base64Data.length;
     // total (2~192)
     int total;
-    if (bytesLength < piecesPreLength * piecesMinTotal) {
+    if (bytesLength < piecesPreMinLen * piecesMinTotal) {
       return [];
-    } else if (bytesLength <= piecesPreLength * piecesMaxTotal) {
-      total = bytesLength ~/ piecesPreLength;
-      if (bytesLength % piecesPreLength > 0) {
+    } else if (bytesLength <= piecesPreMinLen * piecesMaxTotal) {
+      total = bytesLength ~/ piecesPreMinLen;
+      if (bytesLength % piecesPreMinLen > 0) {
         total += 1;
       }
     } else {
