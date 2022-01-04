@@ -38,6 +38,7 @@ class MediaPicker {
     ImageSource source = ImageSource.gallery,
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
+    int? bestSize,
     int? maxSize,
     String? returnPath,
   }) async {
@@ -46,6 +47,7 @@ class MediaPicker {
       source: source,
       cropStyle: cropStyle,
       cropRatio: cropRatio,
+      bestSize: bestSize,
       maxSize: maxSize,
       returnPath: returnPath,
     );
@@ -146,6 +148,7 @@ class MediaPicker {
     ImageSource source = ImageSource.gallery,
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
+    int? bestSize,
     int? maxSize,
     String? returnPath,
   }) async {
@@ -200,7 +203,7 @@ class MediaPicker {
     }
 
     // compress
-    File? compressFile = await _compressImage(croppedFile, maxSize);
+    File? compressFile = await _compressImage(croppedFile, bestSize, maxSize);
     if (compressFile == null) {
       logger.w('MediaPicker - _pickImageBySystem - compress = null');
       return null;
@@ -265,23 +268,24 @@ class MediaPicker {
     return cropFile;
   }
 
-  static Future<File?> _compressImage(File? original, int? maxSize) async {
+  static Future<File?> _compressImage(File? original, int? bestSize, int? maxSize) async {
     if (original == null) return null;
     // maxSize
     if (maxSize == null) return original;
+    bestSize = bestSize ?? (maxSize ~/ 10);
     int originalSize = await original.length();
-    if (originalSize <= maxSize) {
-      logger.i('MediaPicker - _compressImage - size ok - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    if (originalSize <= bestSize) {
+      logger.i('MediaPicker - _compressImage - size ok - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       return original;
     }
     // gif
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     if (isGif) {
-      logger.w('MediaPicker - _compressImage - gif over - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+      logger.w('MediaPicker - _compressImage - gif over - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
       Toast.show(Global.locale((s) => s.file_too_big));
       return null;
     }
-    logger.i('MediaPicker - _compressImage - compress:START - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    logger.i('MediaPicker - _compressImage - compress:START - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     // File? compressFile;
     // String compressDirPath = await Path.getDir(null, SubDirType.cache);
@@ -347,20 +351,19 @@ class MediaPicker {
           // keepExif: true,
         );
         compressSize = await compressFile?.length() ?? 0;
-        logger.d('MediaPicker - _compressImage - compress:END - tryTimes:$tryTimes - quality:$compressQuality - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-        if (compressSize <= maxSize) break;
+        logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:$tryTimes - quality:$compressQuality - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        if (compressSize <= bestSize) break;
       }
     } catch (e) {
       handleError(e);
     }
 
-    if (compressSize <= maxSize) {
-      logger.i('MediaPicker - _compressImage - compress:OK - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
-    } else {
-      logger.w('MediaPicker - _compressImage - compress:OVER - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
+    if (compressSize > maxSize) {
+      logger.w('MediaPicker - _compressImage - compress:OVER - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
       Toast.show(Global.locale((s) => s.file_too_big));
       return null;
     }
+    logger.i('MediaPicker - _compressImage - compress:END - compressSize:${formatFlowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
     return compressFile;
   }
 }
