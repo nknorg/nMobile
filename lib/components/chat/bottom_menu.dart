@@ -28,7 +28,8 @@ class ChatBottomMenu extends StatelessWidget {
     String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
     File? picked = await MediaPicker.pickImage(
       source: source,
-      maxSize: ChatOutCommon.imgSuggestSize,
+      bestSize: ChatOutCommon.imgBestSize,
+      maxSize: ChatOutCommon.imgMaxSize,
       returnPath: returnPath,
     );
     if (picked == null) return;
