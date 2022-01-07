@@ -179,8 +179,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       source: ImageSource.gallery,
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: ChatOutCommon.imgBestSize,
-      maxSize: ChatOutCommon.imgMaxSize,
+      bestSize: ChatOutCommon.avatarBestSize,
+      maxSize: ChatOutCommon.avatarMaxSize,
       returnPath: remarkAvatarPath,
     );
     if (picked == null) {
