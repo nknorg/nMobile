@@ -108,7 +108,7 @@ class ChatCommon with Tag {
     checkList = checkList.where((element) {
       int msgSendAt = MessageOptions.getOutAt(element) ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      int filter = element.isContentMedia ? (filterSec + 5) : filterSec;
+      int filter = element.isContentFile ? (filterSec + 5) : filterSec;
       if (between < (filter * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;

@@ -133,7 +133,7 @@ class MessageSchema {
     return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
   }
 
-  bool get isContentMedia {
+  bool get isContentFile {
     bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
     bool isAudio = contentType == MessageContentType.audio;
     return isImage || isAudio;
@@ -146,6 +146,26 @@ class MessageSchema {
     if (contact != null || !emptyAdd) return contact;
     contact = await contactCommon.addByType(from, ContactType.none, notify: true, checkDuplicated: false);
     return contact;
+  }
+
+  MessageSchema copy() {
+    MessageSchema copy = MessageSchema(
+      pid: pid,
+      msgId: msgId,
+      from: from,
+      to: to,
+      topic: topic,
+      status: status,
+      isOutbound: isOutbound,
+      isDelete: isDelete,
+      sendAt: sendAt,
+      receiveAt: receiveAt,
+      deleteAt: deleteAt,
+      contentType: contentType,
+      content: content,
+      options: options,
+    );
+    return copy;
   }
 
   /// from receive
