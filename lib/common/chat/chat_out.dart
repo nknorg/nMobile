@@ -522,7 +522,6 @@ class ChatOutCommon with Tag {
     ContactSchema? contact,
     TopicSchema? topic,
     bool resend = false,
-    bool notification = true,
   }) async {
     if (message == null || msgData == null) return null;
     // DB
@@ -541,10 +540,10 @@ class ChatOutCommon with Tag {
     // SDK
     Uint8List? pid;
     if (message.isTopic) {
-      pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification);
+      pid = await _sendWithTopicSafe(topic, message, msgData, notification: message.canNotification);
       logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
-      pid = await _sendWithContactSafe(contact, message, msgData, notification: notification);
+      pid = await _sendWithContactSafe(contact, message, msgData, notification: message.canNotification);
       logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
     }
     // pid
@@ -602,9 +601,19 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData, {bool notification = false}) async {
     if (clientAddressList.isEmpty || msgData == null) return null;
     logger.d("$TAG - _sendWithAddress - clientAddressList:$clientAddressList - msgData:$msgData - msgData:$msgData");
-    // TODO:GG 大小问题？？？头像切片？
-    // TODO:GG notification？？
-    return (await sendData(clientCommon.address, clientAddressList, msgData))?.messageId;
+    Uint8List? pid = (await sendData(clientCommon.address, clientAddressList, msgData))?.messageId;
+    // push
+    if (pid?.isNotEmpty == true) {
+      if (notification) {
+        contactCommon.queryListByClientAddress(clientAddressList).then((List<ContactSchema> contactList) async {
+          for (var i = 0; i < contactList.length; i++) {
+            ContactSchema _contact = contactList[i];
+            if (!_contact.isMe) _sendPush(_contact.deviceToken); // await
+          }
+        });
+      }
+    }
+    return pid;
   }
 
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
@@ -632,8 +641,8 @@ class ChatOutCommon with Tag {
       pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
     }
     // push
-    if (notification && message.canNotification) {
-      if (pid?.isNotEmpty == true) {
+    if (pid?.isNotEmpty == true) {
+      if (notification) {
         if (contact != null && !contact.isMe) _sendPush(contact.deviceToken); // await
       }
     }
@@ -663,6 +672,7 @@ class ChatOutCommon with Tag {
       if (kicked != null) _subscribers.add(kicked);
     }
     if (_subscribers.isEmpty) return null;
+    logger.d("$TAG - _sendWithTopic - topic:${topic.topic} - message:$message - msgData:$msgData");
     // destList
     bool selfIsReceiver = false;
     List<String> subscribersAddressList = [];
@@ -716,8 +726,8 @@ class ChatOutCommon with Tag {
     }
 
     // push
-    if (notification && message.canNotification) {
-      if (pid?.isNotEmpty == true) {
+    if (pid?.isNotEmpty == true) {
+      if (notification) {
         contactCommon.queryListByClientAddress(subscribersAddressList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
