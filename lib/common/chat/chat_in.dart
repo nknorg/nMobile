@@ -37,7 +37,6 @@ class ChatInCommon with Tag {
   Map<String, List<MessageSchema>> receiveMessages = Map();
 
   // check duplicated
-  final int minReceiveIntervalMs = 30;
   MessageSchema? lastReceiveMsg;
   int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
@@ -62,10 +61,12 @@ class ChatInCommon with Tag {
 
     // topic msg published callback can be used receipt
     if (message.isTopic && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
-      if (message.from.isEmpty) message.from = clientCommon.address ?? message.to;
-      if (message.to.isEmpty) message.to = clientCommon.address ?? message.from;
-      message.contentType = MessageContentType.receipt;
-      message.content = message.msgId;
+      if (message.contentType != MessageContentType.receipt) {
+        if (message.from.isEmpty) message.from = clientCommon.address ?? message.to;
+        if (message.to.isEmpty) message.to = clientCommon.address ?? message.from;
+        message.contentType = MessageContentType.receipt;
+        message.content = message.msgId;
+      }
     }
 
     // last (no session filter)
@@ -135,14 +136,6 @@ class ChatInCommon with Tag {
       return;
     }
 
-    // interval
-    int interval = DateTime.now().millisecondsSinceEpoch - lastReceiveTimeStamp;
-    if (interval < minReceiveIntervalMs) {
-      logger.i("$TAG - loopReceiveMessage - interval small - interval:$interval - targetId:$targetId");
-      await Future.delayed(Duration(milliseconds: interval + 1));
-    }
-    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
-
     // handle
     if (receiveMessages[targetId]?[0].pid == receivePid) {
       logger.i("$TAG - loopReceiveMessage - message is duplicated - targetId:$targetId");
@@ -156,6 +149,7 @@ class ChatInCommon with Tag {
     } else {
       logger.w("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
     }
+    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
     // pop
     if ((receiveMessages[targetId]?.length ?? 0) > 0) {
@@ -168,7 +162,7 @@ class ChatInCommon with Tag {
     receiveLoops[targetId] = false;
 
     // loop
-    return _loopReceiveMessage(targetId);
+    Future.delayed(Duration(milliseconds: 10), () => _loopReceiveMessage(targetId));
   }
 
   Future _messageHandle(MessageSchema received) async {
@@ -263,7 +257,7 @@ class ChatInCommon with Tag {
     // receipt (no judge insertOk, maybe just want reply receipt)
     if (received.canReceipt) {
       if (received.isTopic) {
-        // handle in receive message which send by self
+        // handle in send topic with self receipt
       } else {
         chatOutCommon.sendReceipt(received); // await
       }

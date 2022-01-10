@@ -664,22 +664,28 @@ class ChatOutCommon with Tag {
     }
     if (_subscribers.isEmpty) return null;
     // destList
+    bool selfIsReceiver = false;
+    List<String> subscribersAddressList = [];
+    for (var i = 0; i < _subscribers.length; i++) {
+      String clientAddress = _subscribers[i].clientAddress;
+      if (clientAddress == clientCommon.address) {
+        selfIsReceiver = true;
+      } else {
+        subscribersAddressList.add(clientAddress);
+      }
+    }
+    // others
     Uint8List? pid;
-    List<String> contactAddressList = _subscribers.map((e) => e.clientAddress).toList();
     if (message.isContentFile) {
-      // devices
-      List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(contactAddressList);
       // targets
-      bool selfIsReceiver = false;
+      List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(subscribersAddressList);
       List<String> targetIdsByPiece = [];
       List<String> targetIdsByTip = [];
       for (var i = 0; i < _subscribers.length; i++) {
         SubscriberSchema subscriber = _subscribers[i];
         int findIndex = deviceInfoList.indexWhere((element) => element.contactAddress == subscriber.clientAddress);
         DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
-        if (subscriber.clientAddress == clientCommon.address) {
-          selfIsReceiver = true;
-        } else if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+        if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
           targetIdsByPiece.add(subscriber.clientAddress);
         } else {
           targetIdsByTip.add(subscriber.clientAddress);
@@ -689,7 +695,7 @@ class ChatOutCommon with Tag {
       if (targetIdsByPiece.isNotEmpty) {
         pid = await _sendByPieces(targetIdsByPiece, message);
         if ((pid == null) || pid.isEmpty) {
-          pid = (await sendData(clientCommon.address, contactAddressList, msgData))?.messageId;
+          pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
         }
       }
       if (targetIdsByTip.isNotEmpty) {
@@ -700,20 +706,19 @@ class ChatOutCommon with Tag {
         Uint8List? _pid = (await sendData(clientCommon.address, targetIdsByTip, copyData))?.messageId;
         if (targetIdsByPiece.isEmpty) pid = _pid;
       }
-      if (selfIsReceiver) {
-        pid = await _sendByPieces([clientCommon.address ?? ""], message);
-        if ((pid == null) || pid.isEmpty) {
-          pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], msgData))?.messageId;
-        }
-      }
     } else {
-      pid = (await sendData(clientCommon.address, contactAddressList, msgData))?.messageId;
+      pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
+    }
+    // self
+    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
+      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      await sendData(clientCommon.address, [clientCommon.address ?? ""], data);
     }
 
     // push
     if (notification && message.canNotification) {
       if (pid?.isNotEmpty == true) {
-        contactCommon.queryListByClientAddress(contactAddressList).then((List<ContactSchema> contactList) async {
+        contactCommon.queryListByClientAddress(subscribersAddressList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
             if (!_contact.isMe) _sendPush(_contact.deviceToken); // await
@@ -765,7 +770,7 @@ class ChatOutCommon with Tag {
       double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
       MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
       if ((result == null) || (result.pid == null)) {
-        logger.w("$TAG - _sendByPieces:ERROR - piece:$piece");
+        logger.w("$TAG - _sendByPieces:ERROR - msgId:${piece.msgId}");
       } else {
         resultList.add(result);
       }
