@@ -80,6 +80,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     private fun measureSeedRPCServer(call: MethodCall, result: MethodChannel.Result) {
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc") ?: arrayListOf()
+        val timeout = call.argument<Int>("timeout") ?: 3000
 
         var seedRPCServerAddr = StringArray(null)
         for (addr in seedRpc) {
@@ -88,7 +89,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, 1500)
+                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, timeout)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
                 val elements = seedRPCServerAddr.join(",").split(",")
