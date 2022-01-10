@@ -51,13 +51,14 @@ class Wallet {
   /// finished state, returned string array will contain zero elements. Timeout is
   /// in millisecond.
   static Future<List<String>?> measureSeedRPCServer(
-      List<String> seedRPCServerAddr) async {
+      List<String> seedRPCServerAddr, int? timeout) async {
     try {
       final Map data =
           await _methodChannel.invokeMethod('measureSeedRPCServer', {
         'seedRpc': seedRPCServerAddr.isNotEmpty == true
             ? seedRPCServerAddr
             : [DEFAULT_SEED_RPC_SERVER],
+        'timeout': timeout,
       });
       List<String> result = [];
       (data['seedRPCServerAddrList'] as List?)?.forEach((element) {

@@ -66,13 +66,14 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
     private func measureSeedRPCServer(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let seedRpc = args["seedRpc"] as? [String]
+        let timeout = args["timeout"] as? Int32 ?? 3000
 
         walletWorkItem = DispatchWorkItem {
             var seedRPCServerAddr = NknStringArray(from: nil)
             for (_, v) in seedRpc!.enumerated() {
                 seedRPCServerAddr?.append(v)
             }
-            seedRPCServerAddr = NknMeasureSeedRPCServer(seedRPCServerAddr, 1500, nil)
+            seedRPCServerAddr = NknMeasureSeedRPCServer(seedRPCServerAddr, timeout, nil)
 
             var seedRPCServerAddrs = [String]()
             let elements = seedRPCServerAddr?.join(",").split(separator: ",")

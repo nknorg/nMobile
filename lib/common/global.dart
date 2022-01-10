@@ -109,30 +109,41 @@ class Global {
 
     // get
     List<String> list = await _getRpcServers(prefix: prefix);
-    logger.d("Global - getRpcServers - _getRpcServers - prefix:$prefix - length:${list.length} - list:$list");
+    logger.d("Global - getRpcServers - init - prefix:$prefix - length:${list.length} - list:$list");
 
-    try {
-      // measure
-      if (measure && (list.length > 1)) {
-        list = await Wallet.measureSeedRPCServer(list) ?? [];
-        if (list.isEmpty) {
-          logger.w("Global - getRpcServers - measureSeedRPCServer empty - prefix:$prefix");
-        } else {
-          logger.i("Global - getRpcServers - measureSeedRPCServer ok - prefix:$prefix - length:${list.length} - list:$list");
-        }
-        await _setRpcServers(prefix, list);
-      }
-
-      // append
-      if (list.length <= 2) {
-        list.addAll(defaultSeedRpcList);
-        list = LinkedHashSet<String>.from(list).toList();
-        list = await Wallet.measureSeedRPCServer(list) ?? [];
-      }
-    } catch (e) {
-      list = defaultSeedRpcList;
-      handleError(e);
+    // append
+    bool appendDefault = false;
+    if (list.length <= 2) {
+      list.addAll(defaultSeedRpcList);
+      list = LinkedHashSet<String>.from(list).toList();
+      appendDefault = true;
     }
+
+    // measure
+    if (measure || appendDefault) {
+      try {
+        list = await Wallet.measureSeedRPCServer(list, 3 * 1000) ?? [];
+        await _setRpcServers(prefix, list);
+
+        if (prefix?.isNotEmpty == true) {
+          List<String> saved = await _getRpcServers(prefix: prefix);
+          if (saved.isEmpty) {
+            logger.w("Global - getRpcServers - saved empty - prefix:$prefix");
+          } else {
+            logger.i("Global - getRpcServers - saved ok - prefix:$prefix - length:${saved.length} - list:$saved");
+          }
+        }
+      } catch (e) {
+        // list = defaultSeedRpcList;
+        handleError(e);
+      }
+    }
+
+    // again
+    if (list.length <= 2) {
+      if (!appendDefault) return getRpcServers(prefix, measure: measure, delayMs: 0);
+    }
+
     logger.d("Global - getRpcServers - return - prefix:$prefix - length:${list.length} - list:$list");
     return list;
   }
