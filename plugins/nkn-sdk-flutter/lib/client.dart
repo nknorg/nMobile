@@ -122,11 +122,12 @@ class Client {
   /// config value will be used. If config is nil, the default client config will
   /// be used.
   static Future<Client> create(Uint8List seed,
-      {String identifier = '', ClientConfig? config}) async {
+      {String identifier = '', int? numSubClients, ClientConfig? config}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
+        'numSubClients': numSubClients,
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
             ? config?.seedRPCServerAddr
             : null,
