@@ -21,7 +21,7 @@ class TopSub {
     int? newStatus,
     int? nonce,
     bool toast = false,
-    int tryCount = 1,
+    int tryTimes = 1,
     int maxTryTimes = 1,
   }) async {
     if (permissionPage == null) return false;
@@ -34,14 +34,14 @@ class TopSub {
       meta: metaString,
       nonce: nonce,
       toast: toast,
-      tryCount: 0,
+      tryTimes: 0,
     );
     bool success = results[0];
     bool canTryTimer = results[1];
 
     if (!success) {
-      if (tryCount < maxTryTimes) {
-        logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - tryCount:$tryCount - topic:$topic - permPage:$permissionPage - meta:$meta");
+      if (tryTimes < maxTryTimes) {
+        logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - tryTimes:$tryTimes - topic:$topic - permPage:$permissionPage - meta:$meta");
         await Future.delayed(Duration(seconds: 5));
         return subscribeWithPermission(
           topic,
@@ -53,7 +53,7 @@ class TopSub {
           oldStatus: oldStatus,
           nonce: nonce,
           toast: toast,
-          tryCount: ++tryCount,
+          tryTimes: ++tryTimes,
         );
       } else {
         logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - topic:$topic - permPage:$permissionPage - meta:$meta");
@@ -83,7 +83,7 @@ class TopSub {
     String identifier = "",
     int? nonce,
     bool toast = false,
-    int tryCount = 1,
+    int tryTimes = 1,
     int maxTryTimes = 1,
   }) async {
     List<bool> results = isJoin
@@ -94,7 +94,7 @@ class TopSub {
             meta: "",
             nonce: nonce,
             toast: toast,
-            tryCount: 0,
+            tryTimes: 0,
           )
         : await _unsubscribe(
             topic,
@@ -102,14 +102,14 @@ class TopSub {
             identifier: identifier,
             nonce: nonce,
             toast: toast,
-            tryCount: 0,
+            tryTimes: 0,
           );
     bool success = results[0];
     bool canTryTimer = results[1];
 
     if (!success) {
-      if (tryCount < maxTryTimes) {
-        logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - tryCount:$tryCount - topic:$topic - identifier:$identifier");
+      if (tryTimes < maxTryTimes) {
+        logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - tryTimes:$tryTimes - topic:$topic - identifier:$identifier");
         await Future.delayed(Duration(seconds: 2));
         return subscribeWithJoin(
           topic,
@@ -118,7 +118,7 @@ class TopSub {
           identifier: identifier,
           nonce: nonce,
           toast: toast,
-          tryCount: ++tryCount,
+          tryTimes: ++tryTimes,
         );
       } else {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - topic:$topic - identifier:$identifier");
@@ -162,7 +162,7 @@ class TopSub {
     String meta = "",
     int? nonce,
     bool toast = false,
-    int tryCount = 0,
+    int tryTimes = 0,
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
@@ -187,26 +187,26 @@ class TopSub {
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
-        logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
-        if (tryCount >= maxTryTimes) {
+        logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        if (tryTimes >= maxTryTimes) {
           if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
         } else {
           nonce = await Global.getNonce(forceFetch: true);
         }
       } else if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
         success = false;
         canTryTimer = false;
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
-        logger.w("TopSub - _subscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
         nonce = await Global.refreshNonce();
       } else {
         nonce = await Global.getNonce(forceFetch: true);
-        if (tryCount >= maxTryTimes) {
+        if (tryTimes >= maxTryTimes) {
           success = false;
           handleError(e);
         }
@@ -214,7 +214,7 @@ class TopSub {
     }
 
     if (success == null) {
-      if (tryCount < maxTryTimes) {
+      if (tryTimes < maxTryTimes) {
         await Future.delayed(Duration(seconds: 1));
         return _subscribe(
           topic,
@@ -223,7 +223,7 @@ class TopSub {
           meta: meta,
           nonce: nonce,
           toast: toast,
-          tryCount: ++tryCount,
+          tryTimes: ++tryTimes,
         );
       } else {
         success = false; // permission action can add to try timer
@@ -238,7 +238,7 @@ class TopSub {
     String identifier = "",
     int? nonce,
     bool toast = false,
-    int tryCount = 0,
+    int tryTimes = 0,
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
@@ -261,26 +261,26 @@ class TopSub {
     } catch (e) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
-        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
-        if (tryCount >= maxTryTimes) {
+        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (tryTimes >= maxTryTimes) {
           if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
         } else {
           nonce = await Global.getNonce(forceFetch: true);
         }
       } else if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
         success = false;
         canTryTimer = false;
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
-        logger.w("TopSub - _unsubscribe - block duplicated - tryCount:$tryCount - topic:$topic - nonce:$nonce - identifier:$identifier");
+        logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
         nonce = await Global.refreshNonce();
       } else {
         nonce = await Global.getNonce(forceFetch: true);
-        if (tryCount >= maxTryTimes) {
+        if (tryTimes >= maxTryTimes) {
           success = false;
           handleError(e);
         }
@@ -288,7 +288,7 @@ class TopSub {
     }
 
     if (success == null) {
-      if (tryCount < maxTryTimes) {
+      if (tryTimes < maxTryTimes) {
         await Future.delayed(Duration(seconds: 1));
         return _unsubscribe(
           topic,
@@ -296,7 +296,7 @@ class TopSub {
           identifier: identifier,
           nonce: nonce,
           toast: toast,
-          tryCount: ++tryCount,
+          tryTimes: ++tryTimes,
         );
       } else {
         success = false; // permission action can add to try timer
@@ -305,8 +305,8 @@ class TopSub {
     return [success, canTryTimer];
   }
 
-  // TODO:GG 返回的都是啥? 还有subscriber可以 = "identifier.publickey" 吗?
-  static Future<Map<String, dynamic>> getSubscription(String? topic, String? subscriber, {int tryCount = 0}) async {
+  // TODO:GG 还有subscriber可以 = "identifier.publickey" 吗?
+  static Future<Map<String, dynamic>> getSubscription(String? topic, String? subscriber, {int tryTimes = 0}) async {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     Map<String, dynamic>? results;
     try {
@@ -328,9 +328,9 @@ class TopSub {
       handleError(e);
     }
     if ((results == null) || results.isEmpty) {
-      if (tryCount < 2) {
+      if (tryTimes < 2) {
         await Future.delayed(Duration(seconds: 1));
-        return getSubscription(topic, subscriber, tryCount: ++tryCount);
+        return getSubscription(topic, subscriber, tryTimes: ++tryTimes);
       } else {
         results = Map();
       }
@@ -345,7 +345,7 @@ class TopSub {
     bool meta = false,
     bool txPool = true,
     // Uint8List? subscriberHashPrefix,
-    int tryCount = 0,
+    int tryTimes = 0,
   }) async {
     if (topic == null || topic.isEmpty) return Map();
     Map<String, dynamic>? results;
@@ -388,9 +388,9 @@ class TopSub {
       handleError(e);
     }
     if (results == null) {
-      if (tryCount < 2) {
+      if (tryTimes < 2) {
         await Future.delayed(Duration(seconds: 1));
-        return getSubscribers(topic, offset: 0, limit: limit, meta: meta, txPool: txPool, tryCount: ++tryCount);
+        return getSubscribers(topic, offset: 0, limit: limit, meta: meta, txPool: txPool, tryTimes: ++tryTimes);
       } else {
         results = Map();
       }
@@ -398,7 +398,7 @@ class TopSub {
     return results;
   }
 
-  static Future<int> getSubscribersCount(String? topic, {int tryCount = 0}) async {
+  static Future<int> getSubscribersCount(String? topic, {int tryTimes = 0}) async {
     if (topic == null || topic.isEmpty) return 0;
     int? count;
     try {
@@ -420,9 +420,9 @@ class TopSub {
       handleError(e);
     }
     if (count == null) {
-      if (tryCount < 2) {
+      if (tryTimes < 2) {
         await Future.delayed(Duration(seconds: 1));
-        return getSubscribersCount(topic, tryCount: ++tryCount);
+        return getSubscribersCount(topic, tryTimes: ++tryTimes);
       } else {
         count = 0;
       }

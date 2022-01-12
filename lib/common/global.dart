@@ -106,6 +106,7 @@ class Global {
 
   static Future<List<String>> getRpcServers(String? prefix, {bool measure = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     // get
     List<String> list = await _getRpcServers(prefix: prefix);
@@ -268,6 +269,7 @@ class Global {
 
   static Future<int?> refreshNonceWithNoLock({String? walletAddress, bool useNow = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     // // walletAddress
     // if (walletAddress == null || walletAddress.isEmpty) {
