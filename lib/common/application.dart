@@ -17,32 +17,22 @@ class Application {
   // ignore: close_sinks
   StreamController<List<AppLifecycleState>> _appLifeController = StreamController<List<AppLifecycleState>>.broadcast();
   StreamSink<List<AppLifecycleState>> get appLifeSink => _appLifeController.sink;
-  Stream<List<AppLifecycleState>> get appLifeStream => _appLifeController.stream;
+  Stream<List<AppLifecycleState>> get appLifeStream => _appLifeController.stream.distinct((prev, next) => (prev[0] == next[0]) && (prev[1] == next[1]));
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
   bool inBackGround = false;
-  bool inBackGroundLater = false;
 
   Application();
 
   void init() {
-    Timer? timer;
-    appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+    appLifeStream.listen((List<AppLifecycleState> states) {
+      logger.d("Application - init - appLifeStream - states:$states");
       if (isFromBackground(states)) {
         logger.i("Application - init - in foreground");
         inBackGround = false;
-        timer?.cancel();
-        timer = null;
-        timer = Timer(Duration(seconds: 1), () {
-          logger.i("Application - init - in foreground later");
-          inBackGroundLater = false;
-        });
       } else if (isGoBackground(states)) {
         logger.i("Application - init - in background");
         inBackGround = true;
-        inBackGroundLater = true;
-        timer?.cancel();
-        timer = null;
       }
     });
   }
@@ -71,22 +61,23 @@ class Application {
     await Future.wait(futures);
   }
 
+  // paused -> inactive(just ios) -> resumed
   bool isFromBackground(List<AppLifecycleState> states) {
     if (states.length >= 2) {
       if (Platform.isIOS) {
-        return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.resumed);
+        return (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.inactive);
       } else {
-        // android same with inactive
         return (states[0] == AppLifecycleState.paused) && (states[1] == AppLifecycleState.resumed);
       }
     }
     return false;
   }
 
+  // resumed -> inactive -> paused
   bool isGoBackground(List<AppLifecycleState> states) {
     if (states.length >= 2) {
       if (Platform.isIOS) {
-        return (states[0] == AppLifecycleState.resumed) && (states[1] == AppLifecycleState.inactive);
+        return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       } else {
         return (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       }

@@ -43,7 +43,6 @@ class ChatCommon with Tag {
 
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
     if (targetId == null || targetId.isEmpty) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
 
     if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
     Timer? timer = checkNoAckTimers[targetId]?["timer"];
@@ -78,7 +77,6 @@ class ChatCommon with Tag {
   Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
-    if (application.inBackGroundLater && Platform.isIOS) return 0;
 
     int limit = 20;
     int maxCount = 10;

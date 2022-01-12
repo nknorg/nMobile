@@ -126,7 +126,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     String pubKey = wallet.publicKey;
     if (pubKey.isEmpty) {
       String keystore = await walletCommon.getKeystore(wallet.address);
-      List<String> seedRpcList = await Global.getRpcServers(null, measure: true);
+      List<String> seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
       Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
       if (nknWallet.publicKey.isEmpty) return;
       pubKey = hexEncode(nknWallet.publicKey);
@@ -139,7 +139,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
       await _delete(Directory(path1));
       await _delete(Directory(path2));
     } else if (type == FileType.db) {
-      await clientCommon.signOut(closeDB: true, clearWallet: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true);
       await Future.delayed(Duration(seconds: 1));
       String dbPath = await dbCommon.getDBFilePath(pubKey);
       await _delete(File(dbPath));
