@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -41,8 +40,8 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
+    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
@@ -86,8 +85,8 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllSubscribe({int? delayMs, bool txPool = true}) async {
+    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
@@ -125,8 +124,8 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTrySubscribe(TopicSchema? topic, bool subscribed, {int? delayMs}) async {
+    if (application.inBackGround) return;
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
@@ -153,8 +152,8 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllPermission({int? delayMs}) async {
+    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     await _lock.synchronized(() async {
@@ -198,8 +197,8 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryPermission(SubscriberSchema? subscriber, int? status, {int? delayMs, bool txPool = true}) async {
+    if (application.inBackGround) return;
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (application.inBackGroundLater && Platform.isIOS) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);

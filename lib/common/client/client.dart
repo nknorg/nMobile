@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,7 +60,7 @@ class ClientCommon with Tag {
 
   int status = ClientConnectStatus.disconnected;
   bool clientClosing = false;
-  bool connectChecking = false;
+  int checkTimes = 0;
 
   ClientCommon() {
     status = ClientConnectStatus.disconnected;
@@ -73,7 +72,7 @@ class ClientCommon with Tag {
       connectCheck(reconnect: true);
     });
     clientClosing = false;
-    connectChecking = false;
+    checkTimes = 0;
   }
 
   /// ******************************************************   Client   ****************************************************** ///
@@ -93,6 +92,7 @@ class ClientCommon with Tag {
     String? pubKey = wallet.publicKey;
     String? seed = await walletCommon.getSeed(wallet.address);
 
+    bool isClientCreate = true;
     try {
       // password get
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
@@ -113,11 +113,7 @@ class ClientCommon with Tag {
       // database by cache
       if ((pubKey.isNotEmpty == true) && (seed?.isNotEmpty == true)) {
         if (!(dbCommon.isOpen() == true)) {
-          try {
-            await dbCommon.open(pubKey, seed!);
-          } catch (e) {
-            handleError(e);
-          }
+          await dbCommon.open(pubKey, seed!);
           // wallet + contact
           BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
           ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true);
@@ -126,9 +122,10 @@ class ClientCommon with Tag {
       }
 
       // rpc wallet
+      List<String>? seedRpcList;
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
-        List<String>? seedRpcList = await Global.getRpcServers(null, measure: true);
+        seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
@@ -162,7 +159,7 @@ class ClientCommon with Tag {
         chatInCommon.clear();
         chatOutCommon.clear();
 
-        List<String>? seedRpcList = (await Global.getRpcServers(wallet.address, measure: true));
+        seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), numSubClients: 3, config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
         loadingVisible?.call(false, tryCount);
@@ -177,21 +174,20 @@ class ClientCommon with Tag {
         Completer completer = Completer();
         _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
           logger.i("$TAG - signIn - onConnect -> node:${event.node}, rpcServers:${event.rpcServers}");
-          Global.addRpcServers(wallet.address, event.rpcServers ?? []);
-          connectSuccess(force: true);
+          connectSuccess();
+          Global.addRpcServers(wallet.address, event.rpcServers ?? []); // await
           if (!completer.isCompleted) completer.complete();
         });
 
         // client receive (looper)
         _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
           logger.i("$TAG - signIn - onMessage -> src:${event.src} - type:${event.type} - messageId:${event.messageId} - data:${(event.data is String && (event.data as String).length <= 1000) ? event.data : "~~~~~"} - encrypted:${event.encrypted}");
+          connectSuccess();
           chatInCommon.onMessageReceive(MessageSchema.fromReceive(event));
-          if (status != ClientConnectStatus.connected) {
-            connectSuccess(force: true);
-          }
         });
       } else {
         loadingVisible?.call(false, tryCount);
+        isClientCreate = false;
         client?.reconnect(); // await // no onConnect callback
         // no status update (updated by ping/pang)
       }
@@ -209,16 +205,16 @@ class ClientCommon with Tag {
         _statusSink.add(ClientConnectStatus.disconnected);
         return [null, true];
       }
+      // create client
+      if (!isClientCreate) {
+        await _signOut(clearWallet: false, closeDB: false);
+        return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
+      }
       // toast
       if ((tryCount != 0) && (tryCount % 10 == 0)) handleError(e);
-      // // seed refresh
-      // if ((seedRpcList != null) && seedRpcList.isNotEmpty) {
-      //   seedRpcList.removeAt(0);
-      //   await Global.setRpcServers(wallet.address, seedRpcList);
-      // }
       // loop login
       await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
+      return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
     }
   }
 
@@ -243,7 +239,7 @@ class ClientCommon with Tag {
       handleError(e);
       await Future.delayed(Duration(milliseconds: 200));
       clientClosing = false;
-      return _signOut(closeDB: closeDB, clearWallet: clearWallet);
+      return _signOut(clearWallet: clearWallet, closeDB: closeDB);
     }
     client = null;
     clientClosing = false;
@@ -251,12 +247,14 @@ class ClientCommon with Tag {
     if (closeDB) await dbCommon.close();
   }
 
-  Future<List> reSignIn(bool needPwd, {int delayMs = 200}) async {
+  Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
+    await Future.delayed(Duration(milliseconds: delayMs));
+
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null || wallet.address.isEmpty) {
       AppScreen.go(Global.appContext);
-      await signOut(closeDB: true, clearWallet: true);
+      await signOut(clearWallet: true, closeDB: true);
       return [null, false];
     }
 
@@ -265,7 +263,7 @@ class ClientCommon with Tag {
       await signOut(clearWallet: false, closeDB: false);
     }
 
-    await Future.delayed(Duration(milliseconds: delayMs));
+    await Future.delayed(Duration(milliseconds: 100));
     _statusSink.add(ClientConnectStatus.connecting);
 
     // client
@@ -273,50 +271,60 @@ class ClientCommon with Tag {
     return await signIn(wallet, fetchRemote: false, password: walletPwd);
   }
 
-  void connectCheck({bool reconnect = false}) {
-    if (application.inBackGround && Platform.isIOS) return;
-    if ((client == null) && !reconnect) return;
-    if (connectChecking) return;
-    connectChecking = true;
-    _statusSink.add(ClientConnectStatus.connecting);
-
-    // reconnect
+  void connectCheck({bool force = false, bool reconnect = false}) async {
     if (reconnect) {
-      reSignIn(false, delayMs: 0).then((value) {
-        chatOutCommon.sendPing([address ?? ""], true);
-      });
-    } else {
-      chatOutCommon.sendPing([address ?? ""], true);
-    }
-
-    // loop
-    if (reconnect) {
-      connectChecking = false;
-    } else {
-      Future.delayed(Duration(milliseconds: 1000), () {
-        connectChecking = false;
-        if (status == ClientConnectStatus.connecting) {
-          _connectingVisibleSink.add(true);
-          connectCheck();
-        }
-      });
+      // checkTimes = 0;
+      await _connectCheck(force: force, reconnect: reconnect);
+    } else if (checkTimes <= 0) {
+      await _connectCheck(force: force, reconnect: reconnect);
     }
   }
 
-  void connectSuccess({bool force = false}) {
-    if (client == null) return;
-    if (!force && (status != ClientConnectStatus.connecting)) {
-      connectChecking = false;
-      _connectingVisibleSink.add(false);
+  Future _connectCheck({bool force = false, bool reconnect = false}) async {
+    bool isDisClient = (client == null) && !reconnect;
+    bool isDisForce = !force && (status == ClientConnectStatus.connected);
+    bool isConnected = (checkTimes > 0) && (status == ClientConnectStatus.connected);
+    if (isDisClient || isDisForce || isConnected) {
+      logger.d("$TAG - connectCheck - break - checkTimes:$checkTimes - isDisClient:$isDisClient - isDisForce:$isDisForce - isConnected:$isConnected");
+      checkTimes = 0;
       return;
     }
-    _statusSink.add(ClientConnectStatus.connected);
-    // visible
-    Future.delayed(Duration(milliseconds: 500), () {
-      connectChecking = false;
-      if (status == ClientConnectStatus.connected) {
-        _connectingVisibleSink.add(false);
+    if (checkTimes == 0) _statusSink.add(ClientConnectStatus.connecting);
+    checkTimes++;
+    logger.i("$TAG - connectCheck - run - checkTimes:$checkTimes");
+
+    if (checkTimes <= 5) {
+      // reconnect
+      if (reconnect) {
+        await reSignIn(false);
+        await Future.delayed(Duration(milliseconds: 300));
       }
-    });
+      // loop
+      if (checkTimes == 2) _connectingVisibleSink.add(true);
+      if (address?.isNotEmpty == true) await chatOutCommon.sendPing([address ?? ""], true);
+      Future.delayed(Duration(milliseconds: 1000), () => _connectCheck());
+    } else {
+      // create
+      WalletSchema? wallet = await walletCommon.getDefault();
+      if (wallet == null || wallet.address.isEmpty) {
+        AppScreen.go(Global.appContext);
+        await signOut(clearWallet: true, closeDB: true);
+        return;
+      }
+      await _signOut(clearWallet: false, closeDB: false);
+      await Future.delayed(Duration(milliseconds: 100));
+      String? walletPwd = await walletCommon.getPassword(wallet.address);
+      await _signIn(wallet, fetchRemote: true, password: walletPwd);
+    }
+  }
+
+  void connectSuccess() {
+    if (client == null) return;
+    if (status != ClientConnectStatus.connected) {
+      logger.i("$TAG - connectSuccess - ok - checkTimes:$checkTimes");
+      _statusSink.add(ClientConnectStatus.connected);
+    }
+    _connectingVisibleSink.add(false);
+    checkTimes = 0;
   }
 }

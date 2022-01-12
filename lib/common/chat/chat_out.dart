@@ -72,11 +72,6 @@ class ChatOutCommon with Tag {
     }
     if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
       logger.i("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - destList:$destList - data:$data");
-      await Future.delayed(Duration(seconds: 2));
-      return sendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
-    }
-    if (application.inBackGroundLater && Platform.isIOS) {
-      logger.i("$TAG - sendData - in background - tryCount:$tryCount - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 1));
       return sendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
     }
@@ -98,7 +93,7 @@ class ChatOutCommon with Tag {
       }
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-        final client = (await clientCommon.reSignIn(false, delayMs: 500))[0];
+        final client = (await clientCommon.reSignIn(false))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
           logger.i("$TAG - _clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
           await Future.delayed(Duration(milliseconds: 500));
