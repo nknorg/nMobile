@@ -60,7 +60,7 @@ class WalletCommon with Tag {
     } else {
       try {
         final keystore = await getKeystore(walletAddress);
-        seedRpcList = seedRpcList ?? (await Global.getRpcServers(null, measure: true));
+        seedRpcList = seedRpcList ?? (await Global.getRpcServers(walletAddress, measure: true));
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         if (nknWallet.address.isNotEmpty) return true;
       } catch (e) {
@@ -81,13 +81,13 @@ class WalletCommon with Tag {
   }
 
   queryBalance({int? delayMs}) async {
-    if (application.inBackGround) return;
     await _lock.synchronized(() {
       return queryBalanceWithNoLock(delayMs: delayMs);
     });
   }
 
   queryBalanceWithNoLock({int? delayMs}) async {
+    if (application.inBackGround) return;
     if (Global.appContext == null) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);

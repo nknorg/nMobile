@@ -222,7 +222,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     Loading.show();
     try {
       // client signOut
-      await clientCommon.signOut(closeDB: true, clearWallet: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true);
       await Future.delayed(Duration(milliseconds: 500)); // wait client close
       Loading.dismiss();
 
