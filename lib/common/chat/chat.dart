@@ -14,6 +14,7 @@ import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatCommon with Tag {
@@ -30,14 +31,16 @@ class ChatCommon with Tag {
   // current page
   String? currentChatTargetId;
 
-  // check timers
+  // checker
   Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
+  Map<String, Lock> checkLockMap = Map();
 
   ChatCommon();
 
   void clear() {
     currentChatTargetId = null;
     checkNoAckTimers.clear();
+    checkLockMap.clear();
     checkSendingWithFail(force: true); // await
   }
 
@@ -68,10 +71,21 @@ class ChatCommon with Tag {
     // start
     checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? initDelay), () async {
       logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
+      int count = await _checkMsgStatusWithLock(targetId, isTopic, filterSec: filterSec);
       if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
       checkNoAckTimers[targetId]?["timer"]?.cancel();
     });
+  }
+
+  Future<int> _checkMsgStatusWithLock(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
+    String key = targetId ?? "none";
+    Lock? _lock = checkLockMap[key];
+    if (_lock == null) {
+      logger.i("$TAG - _checkMsgStatusWithLock - lock create - targetId:$targetId");
+      _lock = Lock();
+      checkLockMap[key] = _lock;
+    }
+    return await _lock.synchronized(() => _checkMsgStatus(targetId, isTopic, forceResend: forceResend, filterSec: filterSec));
   }
 
   Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
