@@ -295,7 +295,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _messages.insert(0, added);
     });
     // tip
-    Future.delayed(Duration(milliseconds: 50), () => _tipNotificationOpen()); // await
+    Future.delayed(Duration(milliseconds: 100), () => _tipNotificationOpen()); // await
   }
 
   _refreshTopicJoined() async {
@@ -377,6 +377,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _tipNotificationOpen() async {
     if (this._topic != null || this._contact == null) return;
+    if (chatCommon.currentChatTargetId == null) return;
     bool? isOpen = _topic?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if (isOpen == null || isOpen == true) return;
     bool need = await SettingsStorage.isNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId);

@@ -56,7 +56,7 @@ class ChatOutCommon with Tag {
 
   void clear() {}
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 10}) async {
+  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 10}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
@@ -66,38 +66,42 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
       return null;
     }
-    if (tryCount >= maxTryCount) {
+    if (tryTimes >= maxTryTimes) {
       logger.w("$TAG - sendData - try over - destList:$destList - data:$data");
       return null;
     }
     if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - destList:$destList - data:$data");
-      await Future.delayed(Duration(seconds: 1));
-      return sendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+      logger.i("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
+      await Future.delayed(Duration(seconds: 2));
+      return sendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
     }
     return await sendLock.synchronized(() {
       return _clientSendData(selfAddress, destList, data);
     });
   }
 
-  Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryCount = 0, int maxTryCount = 5}) async {
+  Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 5}) async {
+    if (tryTimes >= maxTryTimes) {
+      logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
+      return null;
+    }
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
         logger.d("$TAG - _clientSendData - send success - destList:$destList - data:$data");
         return onMessage;
       } else {
-        logger.w("$TAG - _clientSendData - onMessage msgId is empty - tryCount:$tryCount - destList:$destList - data:$data");
-        // await Future.delayed(Duration(seconds: 2));
-        return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        logger.w("$TAG - _clientSendData - onMessage msgId is empty - tryTimes:$tryTimes - destList:$destList - data:$data");
+        await Future.delayed(Duration(milliseconds: 100));
+        return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
         final client = (await clientCommon.reSignIn(false))[0];
         if ((client != null) && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - _clientSendData - reSignIn success - tryCount:$tryCount - destList:$destList data:$data");
+          logger.i("$TAG - _clientSendData - reSignIn success - tryTimes:$tryTimes - destList:$destList data:$data");
           await Future.delayed(Duration(milliseconds: 500));
-          return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+          return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
         } else {
           // maybe always no here
           logger.w("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
@@ -108,37 +112,37 @@ class ChatOutCommon with Tag {
         return null;
       } else {
         handleError(e);
-        logger.w("$TAG - _clientSendData - try by error - tryCount:$tryCount - destList:$destList - data:$data");
-        // await Future.delayed(Duration(seconds: 2));
-        return _clientSendData(selfAddress, destList, data, tryCount: ++tryCount, maxTryCount: maxTryCount);
+        logger.w("$TAG - _clientSendData - try by error - tryTimes:$tryTimes - destList:$destList - data:$data");
+        await Future.delayed(Duration(milliseconds: 100));
+        return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
     }
   }
 
-  // Future<List<OnMessage>> _clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryCount = 0, int maxTryCount = 10}) async {
+  // Future<List<OnMessage>> _clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryTimes = 0, int maxTryTimes = 10}) async {
   //   if (topic == null || topic.isEmpty) {
   //     logger.w("$TAG - _clientPublishData - topic is empty - dest:$topic - data:$data");
   //     return [];
   //   }
-  //   if (tryCount >= maxTryCount) {
+  //   if (tryTimes >= maxTryTimes) {
   //     logger.w("$TAG - _clientPublishData - try over - dest:$topic - data:$data");
   //     return [];
   //   }
   //   if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-  //     logger.i("$TAG - _clientPublishData - client error - closing:${clientCommon.clientClosing} - tryCount:$tryCount - dest:$topic - data:$data");
+  //     logger.i("$TAG - _clientPublishData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - dest:$topic - data:$data");
   //     await Future.delayed(Duration(seconds: 2));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
   //   }
   //   if (application.inBackGroundLater && Platform.isIOS) {
-  //     logger.i("$TAG - _clientPublishData - ios background - tryCount:$tryCount - dest:$topic - data:$data");
+  //     logger.i("$TAG - _clientPublishData - ios background - tryTimes:$tryTimes - dest:$topic - data:$data");
   //     await Future.delayed(Duration(seconds: 1));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
   //   }
   //   if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
   //     int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
-  //     logger.i("$TAG - _clientPublishData - interval small - interval:$interval - tryCount:$tryCount - dest:$topic - data:$data");
+  //     logger.i("$TAG - _clientPublishData - interval small - interval:$interval - tryTimes:$tryTimes - dest:$topic - data:$data");
   //     await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: tryCount, maxTryCount: maxTryCount);
+  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: tryTimes, maxTryTimes: maxTryTimes);
   //   }
   //   lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
   //   try {
@@ -159,9 +163,9 @@ class ChatOutCommon with Tag {
   //     if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
   //       final client = (await clientCommon.reSignIn(false, delayMs: 500))[0];
   //       if ((client != null) && (client.address.isNotEmpty == true)) {
-  //         logger.i("$TAG - clientPublishData - reSignIn success - tryCount:$tryCount - topic:$topic data:$data");
+  //         logger.i("$TAG - clientPublishData - reSignIn success - tryTimes:$tryTimes - topic:$topic data:$data");
   //         await Future.delayed(Duration(seconds: 1));
-  //         return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //         return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
   //       } else {
   //         // maybe always no here
   //         logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
@@ -169,9 +173,9 @@ class ChatOutCommon with Tag {
   //       }
   //     } else {
   //       handleError(e);
-  //       logger.w("$TAG - clientPublishData - try by error - tryCount:$tryCount - topic:$topic - data:$data");
+  //       logger.w("$TAG - clientPublishData - try by error - tryTimes:$tryTimes - topic:$topic - data:$data");
   //       await Future.delayed(Duration(seconds: 2));
-  //       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryCount: ++tryCount, maxTryCount: maxTryCount);
+  //       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
   //     }
   //   }
   // }
@@ -865,7 +869,7 @@ class ChatOutCommon with Tag {
     await SendPush.send(deviceToken, title, content);
   }
 
-  // Future<bool> _handleSendError(dynamic e, int tryCount, Function? callback) async {
+  // Future<bool> _handleSendError(dynamic e, int tryTimes, Function? callback) async {
   //   if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
   //     await Future.delayed(Duration(milliseconds: 100));
   //     final client = (await clientCommon.reSignIn(false))[0];
@@ -875,7 +879,7 @@ class ChatOutCommon with Tag {
   //         await callback?.call();
   //         return true;
   //       } catch (e) {
-  //         if (tryCount >= 3) {
+  //         if (tryTimes >= 3) {
   //           handleError(e);
   //           return true;
   //         }
@@ -886,7 +890,7 @@ class ChatOutCommon with Tag {
   //       logger.w("$TAG - _handleSendError - reSignIn fail - wallet:$wallet");
   //       return false;
   //     }
-  //   } else if (tryCount >= 3) {
+  //   } else if (tryTimes >= 3) {
   //     handleError(e);
   //     return true;
   //   }
