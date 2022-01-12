@@ -84,14 +84,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     });
 
     // app life
-    _appLifeChangeSubscription = application.appLifeStream.where((event) => event[0] != event[1]).listen((List<AppLifecycleState> states) {
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
         if (!firstLogin) {
           int between = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (between >= Global.clientReAuthGapMs) {
             _tryAuth(); // await
           } else {
-            clientCommon.connectCheck(); // await
+            clientCommon.connectCheck(force: true); // await
           }
         }
       } else if (application.isGoBackground(states)) {
@@ -176,7 +176,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       logger.i("$TAG - _tryLogin - wallet default is empty");
       return;
     }
-    firstLogin = false;
     if (isLoginProgress) return;
     isLoginProgress = true;
 
@@ -191,16 +190,17 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       if (isPwdError) {
         logger.i("$TAG - _tryLogin - signIn - password error, close all");
         _toggleSessionListShow(false);
-        await clientCommon.signOut(closeDB: true, clearWallet: false);
+        await clientCommon.signOut(clearWallet: false, closeDB: true);
       } else {
         logger.w("$TAG - _tryLogin - signIn - other error, should be not go here");
-        await clientCommon.signOut(closeDB: false, clearWallet: false);
+        await clientCommon.signOut(clearWallet: false, closeDB: false);
       }
     } else {
       _toggleSessionListShow(true);
     }
 
     isLoginProgress = false;
+    firstLogin = false;
   }
 
   Future _tryAuth() async {
@@ -213,7 +213,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _authAgain - wallet default is empty");
-      await clientCommon.signOut(closeDB: true, clearWallet: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true);
       return;
     }
 
@@ -223,13 +223,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _authAgain - signIn - password error, close all");
       Toast.show(Global.locale((s) => s.tip_password_error, ctx: context));
-      await clientCommon.signOut(closeDB: true, clearWallet: false);
+      await clientCommon.signOut(clearWallet: false, closeDB: true);
       return;
     }
     _toggleSessionListShow(true);
 
     // connect
-    clientCommon.connectCheck(reconnect: true);
+    clientCommon.connectCheck(force: true, reconnect: true);
   }
 
   _toggleSessionListShow(bool show) {
