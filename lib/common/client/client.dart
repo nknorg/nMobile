@@ -77,14 +77,14 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) {
+  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) {
     return _lock.synchronized(() {
-      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryCount: tryCount);
+      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryTimes: tryTimes);
     });
   }
 
   // return [client, pwdError]
-  Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryCount = 1}) async {
+  Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) async {
     // if (client != null) await close(); // async boom!!!
     if (wallet == null || wallet.address.isEmpty) return [null, false];
 
@@ -101,7 +101,7 @@ class ClientCommon with Tag {
       }
 
       // ui + status
-      loadingVisible?.call(true, tryCount);
+      loadingVisible?.call(true, tryTimes);
       _statusSink.add(ClientConnectStatus.connecting);
 
       // password check
@@ -133,7 +133,7 @@ class ClientCommon with Tag {
 
       // check pubKey/seed
       if (pubKey == null || pubKey.isEmpty || seed == null || seed.isEmpty) {
-        loadingVisible?.call(false, tryCount);
+        loadingVisible?.call(false, tryTimes);
         if (!fetchRemote) {
           logger.w("$TAG - signIn - pubKey/seed error, reSignIn by check - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
@@ -162,7 +162,7 @@ class ClientCommon with Tag {
         seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
         client = await Client.create(hexDecode(seed), numSubClients: 3, config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
-        loadingVisible?.call(false, tryCount);
+        loadingVisible?.call(false, tryTimes);
 
         // client error
         _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
@@ -186,7 +186,7 @@ class ClientCommon with Tag {
           chatInCommon.onMessageReceive(MessageSchema.fromReceive(event));
         });
       } else {
-        loadingVisible?.call(false, tryCount);
+        loadingVisible?.call(false, tryTimes);
         isClientCreate = false;
         client?.reconnect(); // await // no onConnect callback
         // no status update (updated by ping/pang)
@@ -194,7 +194,7 @@ class ClientCommon with Tag {
       // await completer.future;
       return [client, false];
     } catch (e) {
-      loadingVisible?.call(false, tryCount);
+      loadingVisible?.call(false, tryTimes);
       // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
@@ -211,10 +211,10 @@ class ClientCommon with Tag {
         return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
       }
       // toast
-      if ((tryCount != 0) && (tryCount % 10 == 0)) handleError(e);
+      if ((tryTimes != 0) && (tryTimes % 10 == 0)) handleError(e);
       // loop login
-      await Future.delayed(Duration(seconds: tryCount >= 5 ? 5 : tryCount));
-      return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryCount: ++tryCount);
+      await Future.delayed(Duration(seconds: tryTimes >= 5 ? 5 : tryTimes));
+      return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryTimes: ++tryTimes);
     }
   }
 
@@ -237,7 +237,7 @@ class ClientCommon with Tag {
       await client?.close();
     } catch (e) {
       handleError(e);
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(Duration(milliseconds: 100));
       clientClosing = false;
       return _signOut(clearWallet: clearWallet, closeDB: closeDB);
     }
@@ -249,6 +249,7 @@ class ClientCommon with Tag {
 
   Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
     await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
@@ -297,12 +298,12 @@ class ClientCommon with Tag {
       // reconnect
       if (reconnect) {
         await reSignIn(false);
-        await Future.delayed(Duration(milliseconds: 300));
+        await Future.delayed(Duration(milliseconds: 500));
       }
       // loop
       if (checkTimes == 2) _connectingVisibleSink.add(true);
       if (address?.isNotEmpty == true) await chatOutCommon.sendPing([address ?? ""], true);
-      Future.delayed(Duration(milliseconds: 1000), () => _connectCheck());
+      Future.delayed(Duration(seconds: 1), () => _connectCheck());
     } else {
       // create
       WalletSchema? wallet = await walletCommon.getDefault();

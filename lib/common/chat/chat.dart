@@ -441,7 +441,7 @@ class ChatCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = false, int tryCount = 0}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = false}) async {
     if (reQuery) {
       MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
       if (_latest != null) message = _latest;
@@ -513,6 +513,7 @@ class ChatCommon with Tag {
 
   Future<int> checkSendingWithFail({bool force = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     List<MessageSchema> sendingList = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending, offset: 0, limit: 20);
 
@@ -554,6 +555,7 @@ class ChatCommon with Tag {
   Future sendPang2SessionsContact({int? delayMs}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     int max = 20;
     int limit = 20;

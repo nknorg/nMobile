@@ -180,8 +180,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     isLoginProgress = true;
 
     // client
-    List result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryCount) {
-      if (tryCount > 1) return;
+    List result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryTimes) {
+      if (tryTimes > 1) return;
       _toggleSessionListShow(true);
     });
     final client = result[0];
