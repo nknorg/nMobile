@@ -40,9 +40,9 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
-    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int limit = 20;
@@ -85,9 +85,9 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllSubscribe({int? delayMs, bool txPool = true}) async {
-    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int max = 10;
@@ -124,9 +124,9 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTrySubscribe(TopicSchema? topic, bool subscribed, {int? delayMs}) async {
-    if (application.inBackGround) return;
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
     if (subscribed) {
@@ -152,9 +152,9 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllPermission({int? delayMs}) async {
-    if (application.inBackGround) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int topicMax = 10;
@@ -197,9 +197,9 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryPermission(SubscriberSchema? subscriber, int? status, {int? delayMs, bool txPool = true}) async {
-    if (application.inBackGround) return;
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    if (application.inBackGround) return;
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);
     bool needReject = status == SubscriberStatus.Unsubscribed;
@@ -568,7 +568,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, {int tryCount = 1, int maxTryTimes = 1}) async {
+  Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, {int tryTimes = 1, int maxTryTimes = 1}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     // topic exist
     TopicSchema? _topic = await queryByTopic(topic);
@@ -586,14 +586,14 @@ class TopicCommon with Tag {
       bool? isReject = permission[3];
       if (acceptAll == null || acceptAll != true) {
         if (isReject == true || isAccept != true) {
-          if (tryCount >= maxTryTimes) {
+          if (tryTimes >= maxTryTimes) {
             // (Global.txPoolDelayMs / (5 * 1000))
             logger.e("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
             return null;
           }
-          logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryCount:$tryCount - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+          logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryTimes:$tryTimes - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
           await Future.delayed(Duration(seconds: 5));
-          return onSubscribe(topic, clientAddress, tryCount: ++tryCount);
+          return onSubscribe(topic, clientAddress, tryTimes: ++tryTimes);
         } else {
           logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
         }
