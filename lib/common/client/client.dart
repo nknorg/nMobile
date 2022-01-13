@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -58,11 +59,28 @@ class ClientCommon with Tag {
 
   Lock _lock = Lock();
 
+  bool isNetworkOk = true;
+
   int status = ClientConnectStatus.disconnected;
   bool clientClosing = false;
+  bool clientResigning = false;
+
   int checkTimes = 0;
 
   ClientCommon() {
+    // network
+    Connectivity().onConnectivityChanged.listen((status) {
+      if (status == ConnectivityResult.none) {
+        logger.w("$TAG - onConnectivityChanged - status:$status");
+        isNetworkOk = false;
+        _statusSink.add(ClientConnectStatus.connecting);
+      } else {
+        logger.i("$TAG - onConnectivityChanged - status:$status");
+        isNetworkOk = true;
+        if (isClientCreated) connectCheck(force: true, reconnect: true);
+      }
+    });
+    // client
     status = ClientConnectStatus.disconnected;
     statusStream.listen((int event) {
       status = event;
@@ -72,6 +90,8 @@ class ClientCommon with Tag {
       connectCheck(reconnect: true);
     });
     clientClosing = false;
+    clientResigning = false;
+    // check
     checkTimes = 0;
   }
 
@@ -244,6 +264,7 @@ class ClientCommon with Tag {
   }
 
   Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
+    clientResigning = true;
     await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
 
@@ -252,6 +273,7 @@ class ClientCommon with Tag {
     if (wallet == null || wallet.address.isEmpty) {
       AppScreen.go(Global.appContext);
       await signOut(clearWallet: true, closeDB: true);
+      clientResigning = false;
       return [null, false];
     }
 
@@ -265,7 +287,9 @@ class ClientCommon with Tag {
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    return await signIn(wallet, fetchRemote: false, password: walletPwd);
+    List result = await signIn(wallet, fetchRemote: false, password: walletPwd);
+    clientResigning = false;
+    return result;
   }
 
   void connectCheck({bool force = false, bool reconnect = false}) async {
@@ -281,25 +305,24 @@ class ClientCommon with Tag {
     bool isDisClient = (client == null) && !reconnect;
     bool isDisForce = !force && (status == ClientConnectStatus.connected);
     bool isConnected = (checkTimes > 0) && (status == ClientConnectStatus.connected);
-    if (isDisClient || isDisForce || isConnected) {
-      logger.d("$TAG - connectCheck - break - checkTimes:$checkTimes - isDisClient:$isDisClient - isDisForce:$isDisForce - isConnected:$isConnected");
+    if (!isNetworkOk || isDisClient || isDisForce || isConnected) {
+      logger.d("$TAG - connectCheck - break - checkTimes:$checkTimes - isNetworkOk:$isNetworkOk - isDisClient:$isDisClient - isDisForce:$isDisForce - isConnected:$isConnected");
       checkTimes = 0;
       return;
     }
     if (checkTimes == 0) _statusSink.add(ClientConnectStatus.connecting);
-    checkTimes++;
+    if (!reconnect) checkTimes++;
     logger.i("$TAG - connectCheck - run - checkTimes:$checkTimes");
 
-    if (checkTimes <= 5) {
+    if (checkTimes <= 3) {
       // reconnect
       if (reconnect) {
-        await reSignIn(false);
-        await Future.delayed(Duration(milliseconds: 500));
+        reSignIn(false); // await
+      } else {
+        if (checkTimes == 1) _connectingVisibleSink.add(true);
+        if (address?.isNotEmpty == true) chatOutCommon.sendPing([address ?? ""], true); // await tryTimes
+        Future.delayed(Duration(seconds: 2), () => _connectCheck());
       }
-      // loop
-      if (checkTimes == 2) _connectingVisibleSink.add(true);
-      if (address?.isNotEmpty == true) await chatOutCommon.sendPing([address ?? ""], true);
-      Future.delayed(Duration(seconds: 1), () => _connectCheck());
     } else {
       // create
       WalletSchema? wallet = await walletCommon.getDefault();
