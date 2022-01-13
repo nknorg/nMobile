@@ -10,6 +10,9 @@ class SettingsStorage {
   static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
   static const String CHAT_TIP_NOTIFICATION = 'chat_tip_notification'; // not support 'NKN_MESSAGE_NOTIFICATION_ALERT'
 
+  static const String LAST_SEND_PANGS_AT = 'last_send_pangs_at';
+  static const String LAST_CHECK_TOPICS_AT = 'last_check_topic_at';
+
   static const String DATABASE_VERSION = "database_version";
 
   static final LocalStorage _localStorage = LocalStorage();
