@@ -29,6 +29,7 @@ import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/services/task.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -69,6 +70,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   void initState() {
     super.initState();
     firstLogin = true;
+    SettingsStorage.getSettings(SettingsStorage.LAST_SEND_PANGS_AT).then((value) {
+      lastSendPangsAt = int.tryParse(value?.toString() ?? "0") ?? 0;
+    });
+    SettingsStorage.getSettings(SettingsStorage.LAST_CHECK_TOPICS_AT).then((value) {
+      lastCheckTopicsAt = int.tryParse(value?.toString() ?? "0") ?? 0;
+    });
 
     // db
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
@@ -104,7 +111,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
         // topic subscribe+permission
-        taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 3000);
+        taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
         taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
         // send pangs (3h)
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
@@ -112,14 +119,16 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             if (application.inBackGround) return;
             chatCommon.sendPang2SessionsContact(); // await
             lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
+            SettingsStorage.setSettings(SettingsStorage.LAST_SEND_PANGS_AT, lastSendPangsAt);
           });
         }
-        // check topics (1h)
-        if ((DateTime.now().millisecondsSinceEpoch - lastCheckTopicsAt) > (1 * 60 * 60 * 1000)) {
-          Future.delayed(Duration(seconds: 2)).then((value) {
+        // check topics (6h)
+        if ((DateTime.now().millisecondsSinceEpoch - lastCheckTopicsAt) > (6 * 60 * 60 * 1000)) {
+          Future.delayed(Duration(seconds: 1)).then((value) {
             if (application.inBackGround) return;
             topicCommon.checkAllTopics(refreshSubscribers: false); // await
             lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
+            SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastCheckTopicsAt);
           });
         }
       }
