@@ -379,7 +379,7 @@ class ChatCommon with Tag {
       if (senderKey.isNotEmpty && (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
         String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
         taskService.addTask1(taskKey, (String key) {
-          if (senderKey.isNotEmpty && (key != senderKey)) {
+          if (senderKey.isNotEmpty && (key != taskKey)) {
             // remove others client burning
             taskService.removeTask1(key);
             return;
