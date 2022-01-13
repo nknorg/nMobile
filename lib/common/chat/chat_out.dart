@@ -97,15 +97,20 @@ class ChatOutCommon with Tag {
       }
     } catch (e) {
       if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-        final client = (await clientCommon.reSignIn(false))[0];
-        if ((client != null) && (client.address.isNotEmpty == true)) {
-          logger.i("$TAG - _clientSendData - reSignIn success - tryTimes:$tryTimes - destList:$destList data:$data");
-          await Future.delayed(Duration(milliseconds: 500));
+        if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
+          await Future.delayed(Duration(milliseconds: 1000));
           return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
         } else {
-          // maybe always no here
-          logger.w("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-          return null;
+          final client = (await clientCommon.reSignIn(false))[0];
+          if ((client != null) && (client.address.isNotEmpty == true)) {
+            logger.i("$TAG - _clientSendData - reSignIn success - tryTimes:$tryTimes - destList:$destList data:$data");
+            await Future.delayed(Duration(milliseconds: 500));
+            return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+          } else {
+            // maybe always no here
+            logger.w("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
+            return null;
+          }
         }
       } else if (e.toString().contains("invalid destination")) {
         logger.w("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
