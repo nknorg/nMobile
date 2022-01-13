@@ -92,7 +92,6 @@ class ClientCommon with Tag {
     String? pubKey = wallet.publicKey;
     String? seed = await walletCommon.getSeed(wallet.address);
 
-    bool isClientCreate = true;
     try {
       // password get
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
@@ -187,8 +186,8 @@ class ClientCommon with Tag {
         });
       } else {
         loadingVisible?.call(false, tryTimes);
-        isClientCreate = false;
         client?.reconnect(); // await // no onConnect callback
+        connectCheck(force: true);
         // no status update (updated by ping/pang)
       }
       // await completer.future;
@@ -205,15 +204,12 @@ class ClientCommon with Tag {
         _statusSink.add(ClientConnectStatus.disconnected);
         return [null, true];
       }
-      // create client
-      if (!isClientCreate) {
-        await _signOut(clearWallet: false, closeDB: false);
-        return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
-      }
       // toast
       if ((tryTimes != 0) && (tryTimes % 10 == 0)) handleError(e);
+      await Future.delayed(Duration(seconds: tryTimes >= 3 ? 3 : tryTimes));
       // loop login
-      await Future.delayed(Duration(seconds: tryTimes >= 5 ? 5 : tryTimes));
+      await _signOut(clearWallet: false, closeDB: false);
+      await Future.delayed(Duration(milliseconds: 100));
       return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryTimes: ++tryTimes);
     }
   }
