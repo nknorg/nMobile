@@ -261,16 +261,13 @@ class Global {
     return nonce;
   }
 
-  static Future<int?> refreshNonce({String? walletAddress, bool useNow = false, int? delayMs}) async {
+  static Future<int?> refreshNonce({String? walletAddress, bool useNow = false}) async {
     return await _nonceLock.synchronized(() {
-      return refreshNonceWithNoLock(walletAddress: walletAddress, useNow: useNow, delayMs: delayMs);
+      return refreshNonceWithNoLock(walletAddress: walletAddress, useNow: useNow);
     });
   }
 
-  static Future<int?> refreshNonceWithNoLock({String? walletAddress, bool useNow = false, int? delayMs}) async {
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
-
+  static Future<int?> refreshNonceWithNoLock({String? walletAddress, bool useNow = false}) async {
     // // walletAddress
     // if (walletAddress == null || walletAddress.isEmpty) {
     //   if (clientCommon.client?.publicKey.isNotEmpty == true) {
