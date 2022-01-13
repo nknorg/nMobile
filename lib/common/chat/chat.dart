@@ -552,10 +552,8 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  Future sendPang2SessionsContact({int? delayMs}) async {
+  Future sendPang2SessionsContact() async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
 
     int max = 20;
     int limit = 20;

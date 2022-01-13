@@ -4,7 +4,6 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/global.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -89,7 +88,7 @@ class WalletCommon with Tag {
   queryBalanceWithNoLock({int? delayMs}) async {
     if (Global.appContext == null) return;
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
