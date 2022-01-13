@@ -39,10 +39,10 @@ class TopicCommon with Tag {
   /// ************************************************* check ***************************************************
   /// ***********************************************************************************************************
 
-  Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true, int? delayMs}) async {
+  Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int limit = 20;
@@ -84,10 +84,10 @@ class TopicCommon with Tag {
     });
   }
 
-  Future checkAndTryAllSubscribe({int? delayMs, bool txPool = true}) async {
+  Future checkAndTryAllSubscribe({bool txPool = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int max = 10;
@@ -123,10 +123,10 @@ class TopicCommon with Tag {
     });
   }
 
-  Future checkAndTrySubscribe(TopicSchema? topic, bool subscribed, {int? delayMs}) async {
+  Future checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
     if (subscribed) {
@@ -151,10 +151,10 @@ class TopicCommon with Tag {
     }
   }
 
-  Future checkAndTryAllPermission({int? delayMs}) async {
+  Future checkAndTryAllPermission() async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int topicMax = 10;
@@ -196,10 +196,10 @@ class TopicCommon with Tag {
     });
   }
 
-  Future checkAndTryPermission(SubscriberSchema? subscriber, int? status, {int? delayMs, bool txPool = true}) async {
+  Future checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = true}) async {
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    if (application.inBackGround) return;
+    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);
     bool needReject = status == SubscriberStatus.Unsubscribed;
