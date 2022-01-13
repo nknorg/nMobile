@@ -28,6 +28,7 @@ import 'package:nmobile/screens/chat/no_wallet.dart';
 import 'package:nmobile/screens/chat/session_list.dart';
 import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/services/task.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -102,15 +103,24 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
+        // topic subscribe+permission
+        taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 3000);
+        taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
         // send pangs (3h)
         if ((DateTime.now().millisecondsSinceEpoch - lastSendPangsAt) > (3 * 60 * 60 * 1000)) {
-          chatCommon.sendPang2SessionsContact(delayMs: 1000); // await
-          lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            if (application.inBackGround) return;
+            chatCommon.sendPang2SessionsContact(); // await
+            lastSendPangsAt = DateTime.now().millisecondsSinceEpoch;
+          });
         }
         // check topics (1h)
         if ((DateTime.now().millisecondsSinceEpoch - lastCheckTopicsAt) > (1 * 60 * 60 * 1000)) {
-          topicCommon.checkAllTopics(refreshSubscribers: false, delayMs: 2000); // await
-          lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
+          Future.delayed(Duration(seconds: 2)).then((value) {
+            if (application.inBackGround) return;
+            topicCommon.checkAllTopics(refreshSubscribers: false); // await
+            lastCheckTopicsAt = DateTime.now().millisecondsSinceEpoch;
+          });
         }
       }
     });
