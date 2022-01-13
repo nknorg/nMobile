@@ -86,10 +86,10 @@ dependencies:
   package_info_plus: ^1.0.6
   device_info_plus: ^2.1.0
   share_plus: ^2.1.4
+  connectivity_plus: ^2.2.0
   path_provider: ^2.0.3
   shared_preferences: ^2.0.7
   url_launcher: ^6.0.2
-  #  connectivity: ^3.0.6
   #  webview_flutter: ^2.0.12
 
   # common
