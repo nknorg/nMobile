@@ -184,6 +184,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to delete this friend?"),
         "delete_message_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this message?"),
+        "delete_session":
+            MessageLookupByLibrary.simpleMessage("Delete Conversation"),
         "delete_session_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this conversation?"),
         "delete_wallet": MessageLookupByLibrary.simpleMessage("Delete Account"),

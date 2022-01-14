@@ -199,6 +199,7 @@
   "add_contact": "添加联系人",
   "edit_contact": "编辑",
   "delete_contact": "删除",
+  "delete_session": "删除会话",
   "contact_no_contact_title": "您还没有联系人",
   "contact_no_contact_desc": "使用您的联系人列表快速发送消息和资金。",
 
