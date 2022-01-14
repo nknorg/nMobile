@@ -636,7 +636,7 @@ class ChatOutCommon with Tag {
       } else {
         MessageSchema copy = message.copy();
         copy.contentType = MessageContentType.text;
-        copy.content = "当前版本不支持该消息类型"; // TODO:GG locale 英文
+        copy.content = "The current version does not support viewing this message";
         String msgData = MessageData.getText(copy);
         pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
       }
@@ -715,7 +715,7 @@ class ChatOutCommon with Tag {
       if (targetIdsByTip.isNotEmpty) {
         MessageSchema copy = message.copy();
         copy.contentType = MessageContentType.text;
-        copy.content = "当前版本不支持该消息类型"; // TODO:GG locale 英文
+        copy.content = "The current version does not support viewing this message";
         String copyData = MessageData.getText(copy);
         Uint8List? _pid = (await sendData(clientCommon.address, targetIdsByTip, copyData))?.messageId;
         if (targetIdsByPiece.isEmpty) pid = _pid;
