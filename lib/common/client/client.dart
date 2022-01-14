@@ -319,7 +319,7 @@ class ClientCommon with Tag {
       if (reconnect) {
         reSignIn(false); // await
       } else {
-        if (checkTimes == 1) _connectingVisibleSink.add(true);
+        if (checkTimes == 2) _connectingVisibleSink.add(true);
         if (address?.isNotEmpty == true) chatOutCommon.sendPing([address ?? ""], true); // await tryTimes
         Future.delayed(Duration(seconds: 2), () => _connectCheck());
       }

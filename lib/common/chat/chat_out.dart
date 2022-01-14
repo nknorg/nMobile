@@ -62,10 +62,11 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
       return null;
     }
-    if (data.length >= msgMaxSize) {
-      logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
-      return null;
-    }
+    // TODO:GG need avatar pieces
+    // if (data.length >= msgMaxSize) {
+    //   logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
+    //   return null;
+    // }
     if (tryTimes >= maxTryTimes) {
       logger.w("$TAG - sendData - try over - destList:$destList - data:$data");
       return null;
