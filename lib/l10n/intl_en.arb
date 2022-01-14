@@ -199,6 +199,7 @@
   "add_contact": "Add Contact",
   "edit_contact": "Edit Contact",
   "delete_contact": "Delete Contact",
+  "delete_session": "Delete Conversation",
   "contact_no_contact_title": "You haven’t got any\n contacts yet",
   "contact_no_contact_desc": "Use your contact list to quickly message and\n send funds to your friends.",
 

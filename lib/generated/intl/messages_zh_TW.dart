@@ -158,6 +158,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("您確定要刪除該好友嗎？"),
         "delete_message_confirm_title":
             MessageLookupByLibrary.simpleMessage("您確定要刪除此消息嗎?"),
+        "delete_session": MessageLookupByLibrary.simpleMessage("删除會話"),
         "delete_session_confirm_title":
             MessageLookupByLibrary.simpleMessage("你確定要刪除此會話嗎？"),
         "delete_wallet": MessageLookupByLibrary.simpleMessage("刪除帳戶"),
