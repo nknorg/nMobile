@@ -98,7 +98,7 @@ class TaskService {
     // delay
     // addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSendingWithFail());
     addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true));
-    addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false));
+    // addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false));
 
     logger.d("TaskService - install");
   }

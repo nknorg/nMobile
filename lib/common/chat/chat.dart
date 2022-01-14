@@ -447,6 +447,7 @@ class ChatCommon with Tag {
       if (_latest != null) message = _latest;
     }
     if ((status <= message.status) && !force) {
+      if (status == message.status) return message;
       logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
       return message;
     }
