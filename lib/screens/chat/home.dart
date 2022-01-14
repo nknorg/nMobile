@@ -115,8 +115,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
         // send pangs (3h)
         int lastSendPangsBetween = DateTime.now().millisecondsSinceEpoch - lastSendPangsAt;
-        logger.i("$TAG - sendPang2SessionsContact - between:${lastSendPangsBetween - (3 * 60 * 60 * 1000)}");
-        if (lastSendPangsBetween > (3 * 60 * 60 * 1000)) {
+        logger.i("$TAG - sendPang2SessionsContact - between:${lastSendPangsBetween - Global.contactsPingGapMs}");
+        if (lastSendPangsBetween > Global.contactsPingGapMs) {
           Future.delayed(Duration(seconds: 1)).then((value) {
             if (application.inBackGround) return;
             chatCommon.sendPang2SessionsContact(); // await
@@ -126,8 +126,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         }
         // check topics (6h)
         int lastCheckTopicsBetween = DateTime.now().millisecondsSinceEpoch - lastCheckTopicsAt;
-        logger.i("$TAG - checkAllTopics - between:${lastCheckTopicsBetween - (6 * 60 * 60 * 1000)}");
-        if (lastCheckTopicsBetween > (6 * 60 * 60 * 1000)) {
+        logger.i("$TAG - checkAllTopics - between:${lastCheckTopicsBetween - Global.topicSubscribeCheckGapMs}");
+        if (lastCheckTopicsBetween > Global.topicSubscribeCheckGapMs) {
           Future.delayed(Duration(seconds: 1)).then((value) {
             if (application.inBackGround) return;
             topicCommon.checkAllTopics(refreshSubscribers: false); // await
