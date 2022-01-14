@@ -86,6 +86,11 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
       return null;
     }
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
+      logger.i("$TAG - _clientSendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
+      await Future.delayed(Duration(seconds: 1));
+      return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+    }
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
