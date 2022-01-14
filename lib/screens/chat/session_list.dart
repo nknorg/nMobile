@@ -240,7 +240,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                   hasCloseButton: true,
                   agree: Button(
                     width: double.infinity,
-                    text: Global.locale((s) => s.delete_contact, ctx: context),
+                    text: Global.locale((s) => s.delete_session, ctx: context),
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
