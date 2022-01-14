@@ -1880,6 +1880,16 @@ class S {
     );
   }
 
+  /// `Delete Conversation`
+  String get delete_session {
+    return Intl.message(
+      'Delete Conversation',
+      name: 'delete_session',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `You haven’t got any\n contacts yet`
   String get contact_no_contact_title {
     return Intl.message(
