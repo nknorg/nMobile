@@ -317,7 +317,7 @@ class ClientCommon with Tag {
     if (checkTimes <= 3) {
       // reconnect
       if (reconnect) {
-        reSignIn(false); // await
+        if (!clientResigning) reSignIn(false); // await
       } else {
         if (checkTimes == 2) _connectingVisibleSink.add(true);
         if (address?.isNotEmpty == true) chatOutCommon.sendPing([address ?? ""], true); // await tryTimes
