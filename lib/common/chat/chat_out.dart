@@ -690,43 +690,46 @@ class ChatOutCommon with Tag {
     }
     // others
     Uint8List? pid;
-    if (message.isContentFile) {
-      // targets
-      List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(subscribersAddressList);
-      List<String> targetIdsByPiece = [];
-      List<String> targetIdsByTip = [];
-      for (var i = 0; i < _subscribers.length; i++) {
-        SubscriberSchema subscriber = _subscribers[i];
-        int findIndex = deviceInfoList.indexWhere((element) => element.contactAddress == subscriber.clientAddress);
-        DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
-        if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-          targetIdsByPiece.add(subscriber.clientAddress);
-        } else {
-          targetIdsByTip.add(subscriber.clientAddress);
+    if (subscribersAddressList.isNotEmpty) {
+      if (message.isContentFile) {
+        // targets
+        List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(subscribersAddressList);
+        List<String> targetIdsByPiece = [];
+        List<String> targetIdsByTip = [];
+        for (var i = 0; i < _subscribers.length; i++) {
+          SubscriberSchema subscriber = _subscribers[i];
+          int findIndex = deviceInfoList.indexWhere((element) => element.contactAddress == subscriber.clientAddress);
+          DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
+          if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+            targetIdsByPiece.add(subscriber.clientAddress);
+          } else {
+            targetIdsByTip.add(subscriber.clientAddress);
+          }
         }
-      }
-      // send
-      if (targetIdsByPiece.isNotEmpty) {
-        pid = await _sendByPieces(targetIdsByPiece, message);
-        if ((pid == null) || pid.isEmpty) {
-          pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
+        // send
+        if (targetIdsByPiece.isNotEmpty) {
+          pid = await _sendByPieces(targetIdsByPiece, message);
+          if ((pid == null) || pid.isEmpty) {
+            pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
+          }
         }
+        if (targetIdsByTip.isNotEmpty) {
+          MessageSchema copy = message.copy();
+          copy.contentType = MessageContentType.text;
+          copy.content = "The current version does not support viewing this message";
+          String copyData = MessageData.getText(copy);
+          Uint8List? _pid = (await sendData(clientCommon.address, targetIdsByTip, copyData))?.messageId;
+          if (targetIdsByPiece.isEmpty) pid = _pid;
+        }
+      } else {
+        pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
       }
-      if (targetIdsByTip.isNotEmpty) {
-        MessageSchema copy = message.copy();
-        copy.contentType = MessageContentType.text;
-        copy.content = "The current version does not support viewing this message";
-        String copyData = MessageData.getText(copy);
-        Uint8List? _pid = (await sendData(clientCommon.address, targetIdsByTip, copyData))?.messageId;
-        if (targetIdsByPiece.isEmpty) pid = _pid;
-      }
-    } else {
-      pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
     }
     // self
     if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      await sendData(clientCommon.address, [clientCommon.address ?? ""], data);
+      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
+      if (subscribersAddressList.isEmpty) pid = _pid;
     }
 
     // push

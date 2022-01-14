@@ -62,7 +62,7 @@ class TaskService {
     _timer30 = _timer30 ??
         Timer.periodic(Duration(seconds: 30), (timer) {
           _tasks30.keys.forEach((String key) {
-            // logger.d("TaskService - tick_30 - key:$key");
+            logger.d("TaskService - tick_30 - key:$key");
             if (application.inBackGround) return;
             _tasks30[key]?.call(key);
           });
@@ -72,7 +72,7 @@ class TaskService {
     _timer60 = _timer60 ??
         Timer.periodic(Duration(seconds: 60), (timer) {
           _tasks60.keys.forEach((String key) {
-            // logger.d("TaskService - tick_60 - key:$key");
+            logger.d("TaskService - tick_60 - key:$key");
             if (application.inBackGround) return;
             _tasks60[key]?.call(key);
           });
@@ -82,7 +82,7 @@ class TaskService {
     _timer300 = _timer300 ??
         Timer.periodic(Duration(seconds: 300), (timer) {
           _tasks300.keys.forEach((String key) {
-            // logger.d("TaskService - tick_300 - key:$key");
+            logger.d("TaskService - tick_300 - key:$key");
             if (application.inBackGround) return;
             _tasks300[key]?.call(key);
           });
