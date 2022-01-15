@@ -54,6 +54,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   bool isLoginProgress = false;
   bool showSessionList = false;
+  bool showSessionListed = false;
 
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusChangeSubscription;
@@ -226,9 +227,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     firstLogin = false;
   }
 
-  Future _tryAuth() async {
+  Future _tryAuth({bool retry = false}) async {
     if (!clientCommon.isClientCreated && (clientCommon.status != ClientConnectStatus.connecting)) return;
+    if (!retry) showSessionListed = false;
     _toggleSessionListShow(false);
+    if (!showSessionListed) {
+      await Future.delayed(Duration(milliseconds: 100));
+      if (!showSessionListed) return _tryAuth(retry: true);
+    }
     AppScreen.go(this.context);
 
     // wallet
@@ -296,6 +302,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         } else if ((dbUpdateTip?.isNotEmpty == true) && !dbOpen) {
           return _dbUpgradeTip();
         } else if (!showSessionList || (state.defaultWallet() == null)) {
+          showSessionListed = true;
           return ChatNoConnectLayout((wallet) => _tryLogin(wallet: wallet));
         }
 
