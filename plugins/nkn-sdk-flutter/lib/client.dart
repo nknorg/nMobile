@@ -387,6 +387,7 @@ class Client {
   /// false, result only counts transactions in ledger; if txPool is true,
   /// transactions in txPool are also counted.
   Future<int?> getNonce({bool txPool = true}) async {
+    if (this.publicKey == null || this.publicKey.isEmpty) return null;
     try {
       String? walletAddr =
           await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
