@@ -63,6 +63,7 @@ class Global {
     'http://mainnet-seed-0006.nkn.org:30003',
     'http://mainnet-seed-0007.nkn.org:30003',
     'http://mainnet-seed-0008.nkn.org:30003',
+    'http://112.15.9.168:30003',
     // 'http://mainnet-seed-0009.nkn.org:30003', // ali disable
   ];
 
