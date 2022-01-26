@@ -71,7 +71,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # 21/01/14
 # version: 1.2.2+250
 # 21/01/15
-version: 1.2.3+251
+# version: 1.2.3+251
+# 21/01/XX
+version: 1.2.3+252
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -183,6 +185,13 @@ dependencies:
   # plugins
   nkn_sdk_flutter:
     path: ./plugins/nkn-sdk-flutter
+
+# dependency_overrides:
+#   sqflite:
+#     git:
+#       url: https://www.github.com/davidmartos96/sqflite_sqlcipher.git
+#       path: sqflite
+#       ref: fmdb_override
 
 dev_dependencies:
   flutter_test:
