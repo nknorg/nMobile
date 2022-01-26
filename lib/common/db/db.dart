@@ -5,6 +5,7 @@ import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -15,7 +16,7 @@ import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/utils/utils.dart';
+// import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -69,6 +70,9 @@ class DB {
       password: password,
       version: currentDatabaseVersion,
       singleInstance: true,
+      onConfigure: (Database db) {
+        logger.i("DB - config - version:${db.getVersion()} - path:${db.path}");
+      },
       onCreate: (Database db, int version) async {
         logger.i("DB - create - version:$version - path:${db.path}");
         _upgradeTipSink.add("..");
@@ -153,8 +157,13 @@ class DB {
 
   Future open(String publicKey, String seed) async {
     //if (database != null) return; // bug!
-    database = await _openDB(publicKey, seed);
-    _openedSink.add(true);
+    try {
+      database = await _openDB(publicKey, seed);
+    } catch (e) {
+      handleError(e);
+      // Toast.show("database open error");
+    }
+    if (database != null) _openedSink.add(true);
   }
 
   Future close() async {
@@ -198,7 +207,7 @@ class DB {
   // }
 
   static Future<bool> checkTableExists(Database db, String table) async {
-    var count = firstIntValue(await db.query('sqlite_master', columns: ['COUNT(*)'], where: 'type = ? AND name = ?', whereArgs: ['table', table]));
+    var count = Sqflite.firstIntValue(await db.query('sqlite_master', columns: ['COUNT(*)'], where: 'type = ? AND name = ?', whereArgs: ['table', table]));
     return (count ?? 0) > 0;
   }
 
