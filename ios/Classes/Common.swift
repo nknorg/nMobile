@@ -5,6 +5,8 @@
 //  Created by 蒋治国 on 2021/6/4.
 //
 import Nkn
+import FMDB
+import SQLite3
 
 class Common : ChannelBase, FlutterStreamHandler {
     
@@ -80,6 +82,8 @@ class Common : ChannelBase, FlutterStreamHandler {
             splitPieces(call, result: result)
         case "combinePieces":
             combinePieces(call, result: result)
+        case "cleanSQLitePassword":
+            cleanSQLitePassword(call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -262,5 +266,20 @@ class Common : ChannelBase, FlutterStreamHandler {
             //                return
             //            }
         }
+    }
+    
+    private func cleanSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let path = args["path"] as! String
+        let readOnly = args["readOnly"] as? Bool ?? true
+        
+        FMDatabaseQueue.init(path: path, flags: (readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)))?.inDatabase({ _db in
+            let success = _db.rekey("")
+            
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "cleanSQLitePassword"
+            resp["success"] = success
+            self.resultSuccess(result: result, resp: resp)
+        })
     }
 }
