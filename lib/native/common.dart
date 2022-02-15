@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -125,6 +126,19 @@ class Common {
         'bytesLength': bytesLength,
       });
       return resp['data'];
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  static Future<bool?> cleanSQLitePasswordWithIos(String dbPath, {bool readOnly = false}) async {
+    if (!Platform.isIOS) return false;
+    try {
+      final Map resp = await _methodChannel.invokeMethod('cleanSQLitePassword', {
+        'path': dbPath,
+        'readOnly': readOnly,
+      });
+      return resp['success'];
     } catch (e) {
       throw e;
     }
