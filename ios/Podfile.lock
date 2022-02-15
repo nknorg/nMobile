@@ -55,8 +55,11 @@ PODS:
     - flutter_sound_core (= 8.5.0)
     - mobile-ffmpeg-audio (= 4.4.LTS)
   - flutter_sound_core (8.5.0)
+  - FMDB (2.7.5):
+    - FMDB/standard (= 2.7.5)
   - FMDB/SQLCipher (2.7.5):
     - SQLCipher
+  - FMDB/standard (2.7.5)
   - image_cropper (0.0.4):
     - Flutter
     - TOCropViewController (~> 2.6.0)
@@ -73,9 +76,9 @@ PODS:
   - libwebp/webp (1.2.1)
   - local_auth (0.0.1):
     - Flutter
-  - Mantle (2.1.6):
-    - Mantle/extobjc (= 2.1.6)
-  - Mantle/extobjc (2.1.6)
+  - Mantle (2.2.0):
+    - Mantle/extobjc (= 2.2.0)
+  - Mantle/extobjc (2.2.0)
   - mobile-ffmpeg-audio (4.4.LTS)
   - MTBBarcodeScanner (5.0.11)
   - nkn_sdk_flutter (0.0.4):
@@ -90,9 +93,9 @@ PODS:
     - Flutter
     - MTBBarcodeScanner
   - ReachabilitySwift (5.0.0)
-  - SDWebImage (5.10.4):
-    - SDWebImage/Core (= 5.10.4)
-  - SDWebImage/Core (5.10.4)
+  - SDWebImage (5.12.3):
+    - SDWebImage/Core (= 5.12.3)
+  - SDWebImage/Core (5.12.3)
   - SDWebImageWebPCoder (0.8.4):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.10)
@@ -109,8 +112,7 @@ PODS:
     - Flutter
   - sqflite (0.0.2):
     - Flutter
-    - FMDB/SQLCipher (>= 2.7.5)
-    - SQLCipher (~> 4.4.0)
+    - FMDB (>= 2.7.5)
   - sqflite_sqlcipher (0.0.1):
     - Flutter
     - FMDB/SQLCipher (~> 2.7.5)
@@ -120,8 +122,8 @@ PODS:
   - SQLCipher/common (4.4.2)
   - SQLCipher/standard (4.4.2):
     - SQLCipher/common
-  - SwiftyGif (5.4.0)
-  - TOCropViewController (2.6.0)
+  - SwiftyGif (5.4.3)
+  - TOCropViewController (2.6.1)
   - url_launcher_ios (0.0.1):
     - Flutter
   - vibration (1.7.3):
@@ -247,7 +249,7 @@ SPEC CHECKSUMS:
   image_picker: 0d37d1cb66231c2473a0e3ccb8d062d0c2b3d297
   libwebp: 98a37e597e40bfdb4c911fc98f2c53d0b12d05fc
   local_auth: ef62030a2731330b95df7ef1331bd15f6a64b8a6
-  Mantle: 4c0ed6ce47c96eccc4dc3bb071deb3def0e2c3be
+  Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   mobile-ffmpeg-audio: 1e0a053f8a6de57114e50ff48b3a85ff1c60f902
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   nkn_sdk_flutter: 474f0ff5cf11795bd592708a1c707cc15e70e49a
@@ -256,17 +258,17 @@ SPEC CHECKSUMS:
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
   ReachabilitySwift: 985039c6f7b23a1da463388634119492ff86c825
-  SDWebImage: c666b97e1fa9c64b4909816a903322018f0a9c84
+  SDWebImage: 53179a2dba77246efa8a9b85f5c5b21f8f43e38f
   SDWebImageWebPCoder: f93010f3f6c031e2f8fb3081ca4ee6966c539815
   Sentry: 2f7e91f247cfb05b05bd01e0b5d0692557a7687b
   sentry_flutter: 7c3cb050dc23563a4ea5db438c83afdb460a2ae6
   share_plus: 056a1e8ac890df3e33cb503afffaf1e9b4fbae68
   shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
-  sqflite: c0667567fd3e682beb9509976c08bc2325429aab
+  sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
-  SwiftyGif: 5d4af95df24caf1c570dbbcb32a3b8a0763bc6d7
-  TOCropViewController: 3105367e808b7d3d886a74ff59bf4804e7d3ab38
+  SwiftyGif: 6c3eafd0ce693cad58bb63d2b2fb9bacb8552780
+  TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
   url_launcher_ios: 02f1989d4e14e998335b02b67a7590fa34f971af
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc
 
