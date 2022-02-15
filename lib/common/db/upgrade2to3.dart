@@ -1,4 +1,4 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class Upgrade2to3 {
   static Future<void> updateTopicTableToV3ByTopic(Database db) async {
