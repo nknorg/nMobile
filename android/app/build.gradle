@@ -87,40 +87,19 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     packagingOptions {
-        exclude 'META-INFTICE'
-        exclude 'META-INF/INDEX.LIST'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/DEPENDENCIES.txt'
-        exclude 'META-INF/dependencies.txt'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/license.txt'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/notice.txt'
-        exclude 'META-INF/LGPL2.1'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/io.netty.versions.properties'
-        exclude 'META-INF/native-image/io.netty/codec-http/native-image.properties'
-        exclude 'META-INF/native-image/io.netty/common/native-image.properties'
-        exclude 'META-INF/native-image/io.netty/transport/native-image.properties'
-        exclude 'META-INF/native-image/io.netty/transport/reflection-config.json'
-        exclude 'META-INF/native-image/io.netty/buffer/native-image.properties'
-        exclude 'META-INF/native-image/io.netty/handler/native-image.properties'
-    }
-    lintOptions {
-        disable 'MissingTranslation'
-        checkReleaseBuilds false
-        abortOnError false
+        resources {
+            excludes += ['META-INFTICE', 'META-INF/INDEX.LIST', 'META-INF/DEPENDENCIES', 'META-INF/DEPENDENCIES.txt', 'META-INF/dependencies.txt', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/LGPL2.1', 'META-INF/ASL2.0', 'META-INF/io.netty.versions.properties', 'META-INF/native-image/io.netty/codec-http/native-image.properties', 'META-INF/native-image/io.netty/common/native-image.properties', 'META-INF/native-image/io.netty/transport/native-image.properties', 'META-INF/native-image/io.netty/transport/reflection-config.json', 'META-INF/native-image/io.netty/buffer/native-image.properties', 'META-INF/native-image/io.netty/handler/native-image.properties']
+        }
     }
     dexOptions {
         preDexLibraries true
         maxProcessCount 8
         javaMaxHeapSize "4g"
     }
-    aaptOptions {
-        cruncherEnabled = false
-        useNewCruncher = false
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'MissingTranslation'
     }
 }
 
