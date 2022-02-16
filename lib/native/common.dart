@@ -131,11 +131,12 @@ class Common {
     }
   }
 
-  static Future<bool?> cleanSQLitePasswordWithIos(String dbPath, {bool readOnly = false}) async {
+  static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
     if (!Platform.isIOS) return false;
     try {
-      final Map resp = await _methodChannel.invokeMethod('cleanSQLitePassword', {
+      final Map resp = await _methodChannel.invokeMethod('resetSQLitePassword', {
         'path': dbPath,
+        'password': dbPwd,
         'readOnly': readOnly,
       });
       return resp['success'];
