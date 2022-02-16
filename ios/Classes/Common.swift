@@ -82,8 +82,8 @@ class Common : ChannelBase, FlutterStreamHandler {
             splitPieces(call, result: result)
         case "combinePieces":
             combinePieces(call, result: result)
-        case "cleanSQLitePassword":
-            cleanSQLitePassword(call, result: result)
+        case "resetSQLitePassword":
+            resetSQLitePassword(call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -268,16 +268,17 @@ class Common : ChannelBase, FlutterStreamHandler {
         }
     }
     
-    private func cleanSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    private func resetSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let path = args["path"] as! String
-        let readOnly = args["readOnly"] as? Bool ?? true
+        let password = args["password"] as! String
+        let readOnly = args["readOnly"] as? Bool ?? false
         
         FMDatabaseQueue.init(path: path, flags: (readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)))?.inDatabase({ _db in
-            let success = _db.rekey("")
+            let success = _db.rekey(password)
             
             var resp: [String: Any] = [String: Any]()
-            resp["event"] = "cleanSQLitePassword"
+            resp["event"] = "resetSQLitePassword"
             resp["success"] = success
             self.resultSuccess(result: result, resp: resp)
         })
