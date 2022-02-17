@@ -50,17 +50,14 @@ class DB {
     });
   }
 
-  // TODO:GG tryCatch
   Future _openWithFix(String publicKey, String seed) async {
-    //if (database != null) return; // bug!
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
     String password = seed.isEmpty ? "" : hexEncode(sha256(seed));
     logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
-      // TODO:GG test??? android
-      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
+      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true); // TODO:GG test??? android
     } else {
       if (!exists) {
         // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test 15.1
@@ -85,9 +82,13 @@ class DB {
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
-          database = await _tryOpenDB(path, "", publicKey: publicKey, upgradeTip: true);
+          try {
+            database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
+          } catch (e) {
+            _upgradeTipSink.add(null);
+          }
           if (database == null) {
-            database = await _tryOpenDB(path, password, publicKey: publicKey);
+            database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
             if (database != null) {
               if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
                 _upgradeTipSink.add("~ ~ ~ ~ ~");
@@ -130,7 +131,7 @@ class DB {
             return await open(publicKey, seed);
           } else {
             // success
-            logger.i("DB - open - success");
+            logger.i("DB - open - success"); // TODO:GG test log
           }
         }
         // 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
@@ -138,17 +139,22 @@ class DB {
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
-        //   database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
+        //   try {
+        //     database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
+        //   } catch (e) {
+        //     _upgradeTipSink.add(null);
+        //   }
         //   if (database == null) {
-        //     database = await _tryOpenDB(path, "", publicKey: publicKey);
+        //     database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
         //     if (database != null) {
         //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
         //     } else {
         //       Toast.show("database open failed..");
         //     }
         //   } else {
-        //     bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 能返回true吗?
-        //     if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //     SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //     SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
         //   }
         // } else {
         //   if (!reset) {
@@ -172,6 +178,7 @@ class DB {
         //       }
         //     } else {
         //       // success
+        //       logger.i("DB - open - success"); // TODO:GG test log
         //     }
         //   }
         // }
