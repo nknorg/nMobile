@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/storages/device_info.dart';
@@ -51,6 +53,18 @@ class DeviceInfoCommon with Tag {
   //     },
   //   );
   // }
+
+  static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
+    deviceVersion = deviceVersion.isEmpty ? Global.deviceVersion : deviceVersion;
+    List<String> vList = deviceVersion.split(".");
+    String vStr0 = vList.length > 0 ? vList[0] : "";
+    String vStr1 = vList.length > 1 ? vList[1] : "";
+    int? v0 = int.tryParse(vStr0);
+    int? v1 = int.tryParse(vStr1);
+    if ((v0 == null) || (v0 >= 16)) return false;
+    if ((v0 == 15) && ((v1 == null) || (v1 >= 2))) return false;
+    return true;
+  }
 
   static bool isDeviceTokenNoCombineEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;

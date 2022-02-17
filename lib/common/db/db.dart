@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
@@ -43,9 +44,9 @@ class DB {
 
   DB();
 
-  Future<Database?> _tryOpenDB(String publicKey, String path, String password) async {
+  Future<Database?> _tryOpenDB(String path, String password, {String publicKey = ""}) async {
     try {
-      return await _openDB(publicKey, path, password);
+      return await _openDB(path, password, publicKey: publicKey);
     } catch (e) {
       handleError(e);
       _upgradeTipSink.add(null);
@@ -54,13 +55,13 @@ class DB {
     return null;
   }
 
-  Future<Database> _openDB(String publicKey, String path, String password) async {
+  Future<Database> _openDB(String path, String password, {String publicKey = ""}) async {
     return _lock.synchronized(() async {
-      return await _openDBWithNoLick(publicKey, path, password);
+      return await _openDBWithNoLick(path, password, publicKey: publicKey);
     });
   }
 
-  Future<Database> _openDBWithNoLick(String publicKey, String path, String password) async {
+  Future<Database> _openDBWithNoLick(String path, String password, {String publicKey = ""}) async {
     if (await needUpgrade(publicKey)) {
       _upgradeTipSink.add(".");
     } else {
@@ -144,7 +145,7 @@ class DB {
         int version = await db.getVersion();
         logger.i("DB - onOpen - version:$version - path:${db.path}");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
-        SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
+        if (publicKey.isNotEmpty) SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
       },
     );
     return db;
@@ -159,11 +160,12 @@ class DB {
 
     if (!Platform.isIOS) {
       // TODO:GG test??? android
+      database = await _tryOpenDB(path, password, publicKey: publicKey);
     } else {
       if (!exists) {
-        // TODO:GG 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8]
+        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test
         // TODO:GG 2.new_16_v1，create-pwd=empty，tag(clean) -> [8]
-        database = await _tryOpenDB(publicKey, path, "");
+        database = await _tryOpenDB(path, "", publicKey: publicKey);
         if (database != null) {
           SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         } else {
@@ -171,7 +173,7 @@ class DB {
         }
         // TODO:GG 3.new_14_v2，create-pwd=seed，tag(clean+reset)
         // TODO:GG 4.new_16_v2，create-pwd=seed，tag(clean+reset)
-        // database = await _tryOpenDB(publicKey, path, password);
+        // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
@@ -179,30 +181,46 @@ class DB {
         //   Toast.show("database create fail");
         // }
       } else {
-        // TODO:GG 5.old_14_v1，reset-pwd=empty，tag(clean) -> [7/8]
+        // TODO:GG 5.old_14_v1，database_copy，tag(clean) -> [7/8]
         // TODO:GG 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
-          database = await _tryOpenDB(publicKey, path, password);
+          database = await _tryOpenDB(path, password, publicKey: publicKey);
           if (database == null) {
-            database = await _tryOpenDB(publicKey, path, "");
+            database = await _tryOpenDB(path, "", publicKey: publicKey);
             if (database != null) {
               SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
             } else {
               Toast.show("database open failed");
             }
           } else {
-            bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 14上的原reset可行吗？ 16上回返回true吗？
-            if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+            if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
+              String copyPath = await getDBFilePath("${publicKey}_1");
+              bool copyTemp = await _copyDB(path, copyPath, sourcePwd: password, targetPwd: "");
+              if (copyTemp) {
+                bool copyBack = await _copyDB(copyPath, path, sourcePwd: "", targetPwd: "");
+                if (copyBack) {
+                  database = await _tryOpenDB(path, "", publicKey: publicKey);
+                  if (database != null) {
+                    await databaseExists(copyPath);
+                    SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+                  }
+                }
+              }
+            } else {
+              bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 16上回返回true吗?
+              if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+            }
           }
         } else {
-          database = await _tryOpenDB(publicKey, path, "");
+          database = await _tryOpenDB(path, "", publicKey: publicKey);
           if (database == null) {
             await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
             await Future.delayed(Duration(milliseconds: 500));
             return await open(publicKey, seed);
           } else {
             // success
+            logger.i("DB - open - success");
           }
         }
         // TODO:GG 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset)
@@ -210,9 +228,9 @@ class DB {
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
-        //   database = await _tryOpenDB(publicKey, path, password);
+        //   database = await _tryOpenDB(path, password, publicKey: publicKey);
         //   if (database == null) {
-        //     database = await _tryOpenDB(publicKey, path, "");
+        //     database = await _tryOpenDB(path, "", publicKey: publicKey);
         //     if (database != null) {
         //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         //     } else {
@@ -224,19 +242,19 @@ class DB {
         //   }
         // } else {
         //   if (!reset) {
-        //     database = await _tryOpenDB(publicKey, path, "");
+        //     database = await _tryOpenDB(path, "", publicKey: publicKey);
         //     if (database == null) {
         //       await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
         //       await Future.delayed(Duration(milliseconds: 500));
         //       return await open(publicKey, seed);
         //     } else {
-        //       bool success = (await Common.resetSQLitePasswordInIos(path, password)) ?? false;
+        //       bool success = (await Common.resetSQLitePasswordInIos(path, password)) ?? false; // TODO:GG empty能设置密码吗
         //       if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
         //     }
         //   } else {
-        //     database = await _tryOpenDB(publicKey, path, password);
+        //     database = await _tryOpenDB(path, password, publicKey: publicKey);
         //     if (database == null) {
-        //       database = await _tryOpenDB(publicKey, path, "");
+        //       database = await _tryOpenDB(path, "", publicKey: publicKey);
         //       if (database != null) {
         //         SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
         //       } else {
@@ -274,6 +292,7 @@ class DB {
   }
 
   Future<bool> needUpgrade(String publicKey) async {
+    if (publicKey.isEmpty) return false;
     int? savedVersion = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey");
     return savedVersion != currentDatabaseVersion;
   }
@@ -307,5 +326,58 @@ class DB {
       }
     }
     return result;
+  }
+
+  Future<bool> _copyDB(String sourcePath, String targetPath, {String sourcePwd = "", String targetPwd = ""}) async {
+    Database? sourceDB = await _tryOpenDB(sourcePath, sourcePwd);
+    if (sourceDB == null) {
+      logger.e("DB - _copyDB - sourceDB == nil");
+      return false;
+    }
+    bool targetExists = await databaseExists(targetPath);
+    if (targetExists) await deleteDatabase(targetPath);
+    Database? targetDB = await _tryOpenDB(targetPath, targetPwd);
+    if (targetDB == null) {
+      logger.e("DB - _copyDB - targetDB == nil");
+      return false;
+    }
+    try {
+      if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = \'$sourcePwd\'"); // TODO:GG 这个密码对了吗？
+      await sourceDB.execute("Attach DATABASE $targetPath AS copy_1 KEY \'\'");
+      await sourceDB.execute("SELECT sqlcipher_export(\'$targetPath\')");
+      await sourceDB.execute("DETACH DATABASE $targetPath");
+
+      // // create table
+      // await ContactStorage.create(targetDB);
+      // await DeviceInfoStorage.create(targetDB);
+      // await TopicStorage.create(targetDB);
+      // await SubscriberStorage.create(targetDB);
+      // await MessageStorage.create(targetDB);
+      // await SessionStorage.create(targetDB);
+      // // copy tables
+      // List<String> tables = [
+      //   ContactStorage.tableName,
+      //   DeviceInfoStorage.tableName,
+      //   TopicStorage.tableName,
+      //   SubscriberStorage.tableName,
+      //   MessageStorage.tableName,
+      //   SessionStorage.tableName,
+      // ];
+      // for (var i = 0; i < tables.length; i++) {
+      //   targetDB.rawInsert(sql)
+      // }
+      // await targetDB.execute("Attach DATABASE $sourcePath AS copy_1 KEY \'$sourcePwd\'"); // TODO:GG 有密码怎么进去复制？
+      //
+      // await targetDB.execute("CREATE TABLE ${ContactStorage.tableName} AS SELECT * FROM copy_1.${ContactStorage.tableName}");
+      // await targetDB.execute("CREATE TABLE ${DeviceInfoStorage.tableName} AS SELECT * FROM copy_1.${DeviceInfoStorage.tableName}");
+      // await targetDB.execute("CREATE TABLE ${TopicStorage.tableName} AS SELECT * FROM copy_1.${TopicStorage.tableName}");
+      // await targetDB.execute("CREATE TABLE ${SubscriberStorage.tableName} AS SELECT * FROM copy_1.${SubscriberStorage.tableName}");
+      // await targetDB.execute("CREATE TABLE ${MessageStorage.tableName} AS SELECT * FROM copy_1.${MessageStorage.tableName}");
+      // await targetDB.execute("CREATE TABLE ${SessionStorage.tableName} AS SELECT * FROM copy_1.${SessionStorage.tableName}");
+      // await targetDB.execute("DETACH copy_1");
+    } catch (e) {
+      handleError(e);
+    }
+    return true;
   }
 }
