@@ -55,7 +55,7 @@ class DeviceInfoCommon with Tag {
   // }
 
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
-    deviceVersion = deviceVersion.isEmpty ? Global.deviceVersion : deviceVersion;
+    deviceVersion = deviceVersion.isEmpty ? Global.deviceVersionName : deviceVersion;
     List<String> vList = deviceVersion.split(".");
     String vStr0 = vList.length > 0 ? vList[0] : "";
     String vStr1 = vList.length > 1 ? vList[1] : "";
