@@ -151,6 +151,7 @@ class DB {
     return db;
   }
 
+  // TODO:GG lock
   Future open(String publicKey, String seed) async {
     //if (database != null) return; // bug!
     String path = await getDBFilePath(publicKey);
@@ -172,7 +173,7 @@ class DB {
           Toast.show("database create failed");
         }
         // 3.new_14_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 14.4 15.1
-        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test
+        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 15.2
         // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
@@ -181,7 +182,7 @@ class DB {
         //   Toast.show("database create fail");
         // }
       } else {
-        // 5.old_14_v1，database_copy，tag(clean) -> [7/8] TODO:GG test 14.4 15.1
+        // 5.old_14_v1，database_copy，tag(clean) -> [7/8] TODO:GG test 14.4
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
@@ -193,13 +194,13 @@ class DB {
                 await database?.close();
                 await Future.delayed(Duration(milliseconds: 200));
                 String copyPath = await getDBFilePath("${publicKey}_copy");
-                bool copyTemp = await _copyDB(path, copyPath, sourcePwd: password, targetPwd: "");
+                bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
                 if (copyTemp) {
-                  bool copyBack = await _copyDB(copyPath, path, sourcePwd: "", targetPwd: "");
+                  bool copyBack = await _copyDB2Plaintext(copyPath, path, sourcePwd: "");
+                  _delete(copyPath); // await
                   if (copyBack) {
                     database = await _tryOpenDB(path, "", publicKey: publicKey);
                     if (database != null) {
-                      await databaseExists(copyPath);
                       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
                     } else {
                       logger.e("DB - open - open copy fail");
@@ -232,7 +233,7 @@ class DB {
           }
         }
         // 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
-        // 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
+        // 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset) TODO:GG test 15.2
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
@@ -305,15 +306,17 @@ class DB {
     return savedVersion != currentDatabaseVersion;
   }
 
-  // delete() async {
-  //   var databasesPath = await getDatabasesPath();
-  //   String path = join(databasesPath, '${NKN_DATABASE_NAME}_$publicKey.db');
-  //   try {
-  //     await deleteDatabase(path);
-  //   } catch (e) {
-  //     logger.e('DB - Close db error', e);
-  //   }
-  // }
+  Future<bool> _delete(String? filePath) async {
+    if (filePath == null || filePath.isEmpty) return false;
+    await deleteDatabase(filePath);
+    File file = File(filePath);
+    if (!(await file.exists())) return true;
+    if (file.existsSync()) {
+      file.deleteSync(recursive: true);
+      return true;
+    }
+    return false;
+  }
 
   // static Future<void> checkTable(Database db, String table) async {
   //   await db.execute('DROP TABLE IF EXISTS $table;');
@@ -336,53 +339,39 @@ class DB {
     return result;
   }
 
-  Future<bool> _copyDB(String sourcePath, String targetPath, {String sourcePwd = "", String targetPwd = ""}) async {
+  Future<bool> _copyDB2Plaintext(String sourcePath, String targetPath, {String sourcePwd = ""}) async {
     Database? sourceDB = await _tryOpenDB(sourcePath, sourcePwd);
     if (sourceDB == null) {
       logger.e("DB - _copyDB - sourceDB == nil");
       return false;
     }
     bool targetExists = await databaseExists(targetPath);
-    if (targetExists) await deleteDatabase(targetPath);
-    Database? targetDB = await _tryOpenDB(targetPath, targetPwd);
+    if (targetExists) {
+      await _delete(targetPath);
+      await Future.delayed(Duration(milliseconds: 100));
+    }
+    Database? targetDB = await _tryOpenDB(targetPath, "");
     if (targetDB == null) {
       logger.e("DB - _copyDB - targetDB == nil");
       return false;
     }
     try {
-      // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // TODO:GG 这个密码对了吗？
-      await sourceDB.execute("Attach DATABASE $targetPath AS copy_1 KEY ''");
-      await sourceDB.execute("SELECT sqlcipher_export('$targetPath')");
-      await sourceDB.execute("DETACH DATABASE $targetPath");
+      await sourceDB.execute("Attach DATABASE `$targetPath` AS `plaintext` KEY ``");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${ContactStorage.tableName}` SELECT * FROM `${ContactStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${DeviceInfoStorage.tableName}` SELECT * FROM `${DeviceInfoStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${TopicStorage.tableName}` SELECT * FROM `${TopicStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${SubscriberStorage.tableName}` SELECT * FROM `${SubscriberStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${MessageStorage.tableName}` SELECT * FROM `${MessageStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
+      await sourceDB.execute("DETACH `plaintext`");
 
-      // // create table
-      // await ContactStorage.create(targetDB);
-      // await DeviceInfoStorage.create(targetDB);
-      // await TopicStorage.create(targetDB);
-      // await SubscriberStorage.create(targetDB);
-      // await MessageStorage.create(targetDB);
-      // await SessionStorage.create(targetDB);
-      // // copy tables
-      // List<String> tables = [
-      //   ContactStorage.tableName,
-      //   DeviceInfoStorage.tableName,
-      //   TopicStorage.tableName,
-      //   SubscriberStorage.tableName,
-      //   MessageStorage.tableName,
-      //   SessionStorage.tableName,
-      // ];
-      // for (var i = 0; i < tables.length; i++) {
-      //   targetDB.rawInsert(sql)
-      // }
-      // await targetDB.execute("Attach DATABASE $sourcePath AS copy_1 KEY \'$sourcePwd\'"); // TODO:GG 有密码怎么进去复制？
-      //
-      // await targetDB.execute("CREATE TABLE ${ContactStorage.tableName} AS SELECT * FROM copy_1.${ContactStorage.tableName}");
-      // await targetDB.execute("CREATE TABLE ${DeviceInfoStorage.tableName} AS SELECT * FROM copy_1.${DeviceInfoStorage.tableName}");
-      // await targetDB.execute("CREATE TABLE ${TopicStorage.tableName} AS SELECT * FROM copy_1.${TopicStorage.tableName}");
-      // await targetDB.execute("CREATE TABLE ${SubscriberStorage.tableName} AS SELECT * FROM copy_1.${SubscriberStorage.tableName}");
-      // await targetDB.execute("CREATE TABLE ${MessageStorage.tableName} AS SELECT * FROM copy_1.${MessageStorage.tableName}");
-      // await targetDB.execute("CREATE TABLE ${SessionStorage.tableName} AS SELECT * FROM copy_1.${SessionStorage.tableName}");
-      // await targetDB.execute("DETACH copy_1");
+      await sourceDB.close();
+      await targetDB.close();
+
+      // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
+      // await sourceDB.execute("Attach DATABASE `$targetPath` AS copy_1 KEY ''");
+      // await sourceDB.execute("SELECT sqlcipher_export(`copy_1`)"); //  no sqlcipher import
+      // await sourceDB.execute("DETACH DATABASE `copy_1`");
     } catch (e) {
       handleError(e);
     }
