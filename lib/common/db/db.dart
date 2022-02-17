@@ -163,16 +163,16 @@ class DB {
       database = await _tryOpenDB(path, password, publicKey: publicKey);
     } else {
       if (!exists) {
-        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test
-        // TODO:GG 2.new_16_v1，create-pwd=empty，tag(clean) -> [8]
+        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test 15.1
+        // 2.new_16_v1，create-pwd=empty，tag(clean) -> [8]
         database = await _tryOpenDB(path, "", publicKey: publicKey);
         if (database != null) {
           SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         } else {
           Toast.show("database create failed");
         }
-        // TODO:GG 3.new_14_v2，create-pwd=seed，tag(clean+reset)
-        // TODO:GG 4.new_16_v2，create-pwd=seed，tag(clean+reset)
+        // 3.new_14_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 14.4 15.1
+        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test
         // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
@@ -181,21 +181,21 @@ class DB {
         //   Toast.show("database create fail");
         // }
       } else {
-        // TODO:GG 5.old_14_v1，database_copy，tag(clean) -> [7/8]
-        // TODO:GG 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
+        // 5.old_14_v1，database_copy，tag(clean) -> [7/8] TODO:GG test 14.4 15.1
+        // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8] TODO:GG test
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
-          database = await _tryOpenDB(path, password, publicKey: publicKey);
-          if (database == null) {
-            database = await _tryOpenDB(path, "", publicKey: publicKey);
-            if (database != null) {
-              SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+          if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
+            database = await _tryOpenDB(path, password, publicKey: publicKey);
+            if (database == null) {
+              database = await _tryOpenDB(path, "", publicKey: publicKey);
+              if (database != null) {
+                SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+              } else {
+                Toast.show("database open failed");
+              }
             } else {
-              Toast.show("database open failed");
-            }
-          } else {
-            if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
-              String copyPath = await getDBFilePath("${publicKey}_1");
+              String copyPath = await getDBFilePath("${publicKey}_copy");
               bool copyTemp = await _copyDB(path, copyPath, sourcePwd: password, targetPwd: "");
               if (copyTemp) {
                 bool copyBack = await _copyDB(copyPath, path, sourcePwd: "", targetPwd: "");
@@ -204,12 +204,28 @@ class DB {
                   if (database != null) {
                     await databaseExists(copyPath);
                     SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+                  } else {
+                    logger.e("DB - open - open copy fail");
                   }
+                } else {
+                  logger.e("DB - open - copy_2 fail");
                 }
+              } else {
+                logger.e("DB - open - copy_1 fail");
+              }
+            }
+          } else {
+            database = await _tryOpenDB(path, "", publicKey: publicKey);
+            if (database == null) {
+              database = await _tryOpenDB(path, password, publicKey: publicKey);
+              if (database != null) {
+                SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+                SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
+              } else {
+                Toast.show("database open failed");
               }
             } else {
-              bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 16上回返回true吗?
-              if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+              SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
             }
           }
         } else {
@@ -223,8 +239,8 @@ class DB {
             logger.i("DB - open - success");
           }
         }
-        // TODO:GG 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset)
-        // TODO:GG 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset)
+        // 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
+        // 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
@@ -237,7 +253,7 @@ class DB {
         //       Toast.show("database open failed");
         //     }
         //   } else {
-        //     bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false;
+        //     bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 能返回true吗?
         //     if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         //   }
         // } else {

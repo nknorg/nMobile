@@ -30,6 +30,7 @@ class Global {
   }
 
   static String deviceId = "";
+  static String deviceVersionName = "";
   static String deviceVersion = "";
 
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
@@ -94,12 +95,12 @@ class Global {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       Global.deviceId = (await deviceInfo.androidInfo).androidId ?? "";
-      Global.deviceVersion = (await deviceInfo.androidInfo).version.release ?? "";
-      Global.deviceVersion = Global.deviceVersion.split(".")[0];
+      Global.deviceVersionName = (await deviceInfo.androidInfo).version.release ?? "";
+      Global.deviceVersion = Global.deviceVersionName.split(".")[0];
     } else if (Platform.isIOS) {
       Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor ?? "";
-      Global.deviceVersion = (await deviceInfo.iosInfo).systemVersion ?? "";
-      Global.deviceVersion = Global.deviceVersion.split(".")[0];
+      Global.deviceVersionName = (await deviceInfo.iosInfo).systemVersion ?? "";
+      Global.deviceVersion = Global.deviceVersionName.split(".")[0];
     }
   }
 
