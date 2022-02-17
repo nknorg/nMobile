@@ -182,57 +182,49 @@ class DB {
         // }
       } else {
         // 5.old_14_v1，database_copy，tag(clean) -> [7/8] TODO:GG test 14.4 15.1
-        // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8] TODO:GG test
+        // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
-          if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
+          database = await _tryOpenDB(path, "", publicKey: publicKey);
+          if (database == null) {
             database = await _tryOpenDB(path, password, publicKey: publicKey);
-            if (database == null) {
-              database = await _tryOpenDB(path, "", publicKey: publicKey);
-              if (database != null) {
-                SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-              } else {
-                Toast.show("database open failed");
-              }
-            } else {
-              String copyPath = await getDBFilePath("${publicKey}_copy");
-              bool copyTemp = await _copyDB(path, copyPath, sourcePwd: password, targetPwd: "");
-              if (copyTemp) {
-                bool copyBack = await _copyDB(copyPath, path, sourcePwd: "", targetPwd: "");
-                if (copyBack) {
-                  database = await _tryOpenDB(path, "", publicKey: publicKey);
-                  if (database != null) {
-                    await databaseExists(copyPath);
-                    SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+            if (database != null) {
+              if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
+                await database?.close();
+                await Future.delayed(Duration(milliseconds: 200));
+                String copyPath = await getDBFilePath("${publicKey}_copy");
+                bool copyTemp = await _copyDB(path, copyPath, sourcePwd: password, targetPwd: "");
+                if (copyTemp) {
+                  bool copyBack = await _copyDB(copyPath, path, sourcePwd: "", targetPwd: "");
+                  if (copyBack) {
+                    database = await _tryOpenDB(path, "", publicKey: publicKey);
+                    if (database != null) {
+                      await databaseExists(copyPath);
+                      SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+                    } else {
+                      logger.e("DB - open - open copy fail");
+                    }
                   } else {
-                    logger.e("DB - open - open copy fail");
+                    logger.e("DB - open - copy_2 fail");
                   }
                 } else {
-                  logger.e("DB - open - copy_2 fail");
+                  logger.e("DB - open - copy_1 fail");
                 }
               } else {
-                logger.e("DB - open - copy_1 fail");
-              }
-            }
-          } else {
-            database = await _tryOpenDB(path, "", publicKey: publicKey);
-            if (database == null) {
-              database = await _tryOpenDB(path, password, publicKey: publicKey);
-              if (database != null) {
                 SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
                 SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
-              } else {
-                Toast.show("database open failed");
               }
             } else {
-              SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+              Toast.show("database open failed.");
             }
+          } else {
+            SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
           }
         } else {
           database = await _tryOpenDB(path, "", publicKey: publicKey);
           if (database == null) {
             await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
-            await Future.delayed(Duration(milliseconds: 500));
+            await Future.delayed(Duration(milliseconds: 200));
             return await open(publicKey, seed);
           } else {
             // success
@@ -250,7 +242,7 @@ class DB {
         //     if (database != null) {
         //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
         //     } else {
-        //       Toast.show("database open failed");
+        //       Toast.show("database open failed..");
         //     }
         //   } else {
         //     bool success = (await Common.resetSQLitePasswordInIos(path, "")) ?? false; // TODO:GG 能返回true吗?
@@ -274,7 +266,7 @@ class DB {
         //       if (database != null) {
         //         SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
         //       } else {
-        //         Toast.show("database open failed..");
+        //         Toast.show("database open failed...");
         //       }
         //     } else {
         //       // success
@@ -358,9 +350,9 @@ class DB {
       return false;
     }
     try {
-      if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = \'$sourcePwd\'"); // TODO:GG 这个密码对了吗？
-      await sourceDB.execute("Attach DATABASE $targetPath AS copy_1 KEY \'\'");
-      await sourceDB.execute("SELECT sqlcipher_export(\'$targetPath\')");
+      // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // TODO:GG 这个密码对了吗？
+      await sourceDB.execute("Attach DATABASE $targetPath AS copy_1 KEY ''");
+      await sourceDB.execute("SELECT sqlcipher_export('$targetPath')");
       await sourceDB.execute("DETACH DATABASE $targetPath");
 
       // // create table
