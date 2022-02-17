@@ -92,7 +92,8 @@ class DB {
             if (database != null) {
               if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
                 _upgradeTipSink.add("~ ~ ~ ~ ~");
-                await database?.close(); // TODO:GG close?
+                await database?.close();
+                database = null;
                 await Future.delayed(Duration(milliseconds: 200));
                 String copyPath = await getDBFilePath("${publicKey}_copy");
                 bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
