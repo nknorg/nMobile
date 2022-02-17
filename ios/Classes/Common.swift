@@ -6,7 +6,7 @@
 //
 import Nkn
 import FMDB
-import SQLite3
+import SQLCipher
 
 class Common : ChannelBase, FlutterStreamHandler {
     
