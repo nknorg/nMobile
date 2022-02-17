@@ -9,7 +9,6 @@ import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/native/common.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -44,115 +43,14 @@ class DB {
 
   DB();
 
-  Future<Database?> _tryOpenDB(String path, String password, {String publicKey = ""}) async {
-    try {
-      return await _openDB(path, password, publicKey: publicKey);
-    } catch (e) {
-      handleError(e);
-      _upgradeTipSink.add(null);
-      // Toast.show("database open error");
-    }
-    return null;
-  }
-
-  Future<Database> _openDB(String path, String password, {String publicKey = ""}) async {
+  Future<Database> open(String publicKey, String seed) async {
     return _lock.synchronized(() async {
-      return await _openDBWithNoLick(path, password, publicKey: publicKey);
+      return await _openWithFix(publicKey, seed);
     });
   }
 
-  Future<Database> _openDBWithNoLick(String path, String password, {String publicKey = ""}) async {
-    if (await needUpgrade(publicKey)) {
-      _upgradeTipSink.add(".");
-    } else {
-      _upgradeTipSink.add(null);
-    }
-
-    // test
-    // int i = 0;
-    // while (i < 100) {
-    //   _upgradeTipSink.add("test_$i");
-    //   await Future.delayed(Duration(milliseconds: 100));
-    //   i++;
-    // }
-
-    // var db = await openDatabase(":memory:");
-    // var db = await sqflite.openDatabase(path);
-    var db = await openDatabase(
-      path,
-      password: password,
-      version: currentDatabaseVersion,
-      singleInstance: true,
-      onConfigure: (Database db) {
-        logger.i("DB - onConfigure - version:${db.getVersion()} - path:${db.path}");
-        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - config - cipher_version:$value'));
-      },
-      onCreate: (Database db, int version) async {
-        logger.i("DB - onCreate - version:$version - path:${db.path}");
-        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - create - cipher_version:$value'));
-        _upgradeTipSink.add("..");
-        await ContactStorage.create(db);
-        await DeviceInfoStorage.create(db);
-        await TopicStorage.create(db);
-        await SubscriberStorage.create(db);
-        await MessageStorage.create(db);
-        await SessionStorage.create(db);
-      },
-      onUpgrade: (Database db, int oldVersion, int newVersion) async {
-        logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
-        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - upgrade - cipher_version:$value'));
-        _upgradeTipSink.add("...");
-
-        // 1 -> 2
-        bool v1to2 = false;
-        if (oldVersion <= 1 && newVersion >= 2) {
-          v1to2 = true;
-          await Upgrade1to2.upgradeTopicTable2V3(db);
-          await Upgrade1to2.upgradeContactSchema2V3(db);
-        }
-
-        // 2 -> 3
-        bool v2to3 = false;
-        if ((v1to2 || oldVersion == 2) && newVersion >= 3) {
-          v2to3 = true;
-          await Upgrade2to3.updateTopicTableToV3ByTopic(db);
-          await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
-        }
-
-        // 3 -> 4
-        bool v3to4 = false;
-        if ((v2to3 || oldVersion == 3) && newVersion >= 4) {
-          v3to4 = true;
-          await Upgrade3to4.updateSubscriberV3ToV4(db);
-        }
-
-        // 4-> 5
-        if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
-          await Upgrade4to5.upgradeContact(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: _upgradeTipSink);
-        }
-
-        // dismiss tip dialog
-        _upgradeTipSink.add(null);
-      },
-      onOpen: (Database db) async {
-        _upgradeTipSink.add(null);
-        int version = await db.getVersion();
-        logger.i("DB - onOpen - version:$version - path:${db.path}");
-        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
-        if (publicKey.isNotEmpty) SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
-      },
-    );
-    return db;
-  }
-
-  // TODO:GG lock
-  Future open(String publicKey, String seed) async {
+  // TODO:GG lock + _upgradeTipSink + tryCatch
+  Future _openWithFix(String publicKey, String seed) async {
     //if (database != null) return; // bug!
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
@@ -277,6 +175,107 @@ class DB {
       }
     }
     if (database != null) _openedSink.add(true);
+  }
+
+  Future<Database?> _tryOpenDB(String path, String password, {String publicKey = ""}) async {
+    try {
+      return await _openDB(path, password, publicKey: publicKey);
+    } catch (e) {
+      handleError(e);
+      _upgradeTipSink.add(null);
+      // Toast.show("database open error");
+    }
+    return null;
+  }
+
+  Future<Database> _openDB(String path, String password, {String publicKey = ""}) async {
+    if (await needUpgrade(publicKey)) {
+      _upgradeTipSink.add(".");
+    } else {
+      _upgradeTipSink.add(null);
+    }
+
+    // test
+    // int i = 0;
+    // while (i < 100) {
+    //   _upgradeTipSink.add("test_$i");
+    //   await Future.delayed(Duration(milliseconds: 100));
+    //   i++;
+    // }
+
+    // var db = await openDatabase(":memory:");
+    // var db = await sqflite.openDatabase(path);
+    var db = await openDatabase(
+      path,
+      password: password,
+      version: currentDatabaseVersion,
+      singleInstance: true,
+      onConfigure: (Database db) {
+        logger.i("DB - onConfigure - version:${db.getVersion()} - path:${db.path}");
+        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - config - cipher_version:$value'));
+      },
+      onCreate: (Database db, int version) async {
+        logger.i("DB - onCreate - version:$version - path:${db.path}");
+        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - create - cipher_version:$value'));
+        _upgradeTipSink.add("..");
+        await ContactStorage.create(db);
+        await DeviceInfoStorage.create(db);
+        await TopicStorage.create(db);
+        await SubscriberStorage.create(db);
+        await MessageStorage.create(db);
+        await SessionStorage.create(db);
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
+        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - upgrade - cipher_version:$value'));
+        _upgradeTipSink.add("...");
+
+        // 1 -> 2
+        bool v1to2 = false;
+        if (oldVersion <= 1 && newVersion >= 2) {
+          v1to2 = true;
+          await Upgrade1to2.upgradeTopicTable2V3(db);
+          await Upgrade1to2.upgradeContactSchema2V3(db);
+        }
+
+        // 2 -> 3
+        bool v2to3 = false;
+        if ((v1to2 || oldVersion == 2) && newVersion >= 3) {
+          v2to3 = true;
+          await Upgrade2to3.updateTopicTableToV3ByTopic(db);
+          await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
+        }
+
+        // 3 -> 4
+        bool v3to4 = false;
+        if ((v2to3 || oldVersion == 3) && newVersion >= 4) {
+          v3to4 = true;
+          await Upgrade3to4.updateSubscriberV3ToV4(db);
+        }
+
+        // 4-> 5
+        if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
+          await Upgrade4to5.upgradeContact(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: _upgradeTipSink);
+        }
+
+        // dismiss tip dialog
+        _upgradeTipSink.add(null);
+      },
+      onOpen: (Database db) async {
+        _upgradeTipSink.add(null);
+        int version = await db.getVersion();
+        logger.i("DB - onOpen - version:$version - path:${db.path}");
+        // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
+        if (publicKey.isNotEmpty) SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
+      },
+    );
+    return db;
   }
 
   Future close() async {
