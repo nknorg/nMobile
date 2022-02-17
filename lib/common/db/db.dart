@@ -9,6 +9,7 @@ import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -49,7 +50,7 @@ class DB {
     });
   }
 
-  // TODO:GG lock + _upgradeTipSink + tryCatch
+  // TODO:GG tryCatch
   Future _openWithFix(String publicKey, String seed) async {
     //if (database != null) return; // bug!
     String path = await getDBFilePath(publicKey);
@@ -59,7 +60,7 @@ class DB {
 
     if (!Platform.isIOS) {
       // TODO:GG test??? android
-      database = await _tryOpenDB(path, password, publicKey: publicKey);
+      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
     } else {
       if (!exists) {
         // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test 15.1
@@ -84,18 +85,19 @@ class DB {
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
-          database = await _tryOpenDB(path, "", publicKey: publicKey);
+          database = await _tryOpenDB(path, "", publicKey: publicKey, upgradeTip: true);
           if (database == null) {
             database = await _tryOpenDB(path, password, publicKey: publicKey);
             if (database != null) {
               if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
-                await database?.close();
+                _upgradeTipSink.add("~ ~ ~ ~ ~");
+                await database?.close(); // TODO:GG close?
                 await Future.delayed(Duration(milliseconds: 200));
                 String copyPath = await getDBFilePath("${publicKey}_copy");
                 bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
                 if (copyTemp) {
                   bool copyBack = await _copyDB2Plaintext(copyPath, path, sourcePwd: "");
-                  _delete(copyPath); // await
+                  _deleteDBFile(copyPath); // await
                   if (copyBack) {
                     database = await _tryOpenDB(path, "", publicKey: publicKey);
                     if (database != null) {
@@ -109,6 +111,7 @@ class DB {
                 } else {
                   logger.e("DB - open - copy_1 fail");
                 }
+                _upgradeTipSink.add(null);
               } else {
                 SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
                 SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
@@ -120,7 +123,7 @@ class DB {
             SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
           }
         } else {
-          database = await _tryOpenDB(path, "", publicKey: publicKey);
+          database = await _tryOpenDB(path, "", publicKey: publicKey, upgradeTip: true);
           if (database == null) {
             await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
             await Future.delayed(Duration(milliseconds: 200));
@@ -135,7 +138,7 @@ class DB {
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
-        //   database = await _tryOpenDB(path, password, publicKey: publicKey);
+        //   database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
         //   if (database == null) {
         //     database = await _tryOpenDB(path, "", publicKey: publicKey);
         //     if (database != null) {
@@ -149,7 +152,7 @@ class DB {
         //   }
         // } else {
         //   if (!reset) {
-        //     database = await _tryOpenDB(path, "", publicKey: publicKey);
+        //     database = await _tryOpenDB(path, "", publicKey: publicKey, upgradeTip: true);
         //     if (database == null) {
         //       await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
         //       await Future.delayed(Duration(milliseconds: 500));
@@ -159,7 +162,7 @@ class DB {
         //       if (success) SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
         //     }
         //   } else {
-        //     database = await _tryOpenDB(path, password, publicKey: publicKey);
+        //     database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
         //     if (database == null) {
         //       database = await _tryOpenDB(path, "", publicKey: publicKey);
         //       if (database != null) {
@@ -177,9 +180,9 @@ class DB {
     if (database != null) _openedSink.add(true);
   }
 
-  Future<Database?> _tryOpenDB(String path, String password, {String publicKey = ""}) async {
+  Future<Database?> _tryOpenDB(String path, String password, {String publicKey = "", bool upgradeTip = false}) async {
     try {
-      return await _openDB(path, password, publicKey: publicKey);
+      return await _openDB(path, password, publicKey: publicKey, upgradeTip: upgradeTip);
     } catch (e) {
       handleError(e);
       _upgradeTipSink.add(null);
@@ -188,17 +191,19 @@ class DB {
     return null;
   }
 
-  Future<Database> _openDB(String path, String password, {String publicKey = ""}) async {
-    if (await needUpgrade(publicKey)) {
-      _upgradeTipSink.add(".");
-    } else {
-      _upgradeTipSink.add(null);
+  Future<Database> _openDB(String path, String password, {String publicKey = "", bool upgradeTip = false}) async {
+    if (upgradeTip) {
+      if (await needUpgrade(publicKey)) {
+        _upgradeTipSink.add(".");
+      } else {
+        _upgradeTipSink.add(null);
+      }
     }
 
     // test
     // int i = 0;
     // while (i < 100) {
-    //   _upgradeTipSink.add("test_$i");
+    //   if (upgradeTip) _upgradeTipSink.add("test_$i");
     //   await Future.delayed(Duration(milliseconds: 100));
     //   i++;
     // }
@@ -217,7 +222,8 @@ class DB {
       onCreate: (Database db, int version) async {
         logger.i("DB - onCreate - version:$version - path:${db.path}");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - create - cipher_version:$value'));
-        _upgradeTipSink.add("..");
+        if (upgradeTip) _upgradeTipSink.add("..");
+
         await ContactStorage.create(db);
         await DeviceInfoStorage.create(db);
         await TopicStorage.create(db);
@@ -228,7 +234,7 @@ class DB {
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - upgrade - cipher_version:$value'));
-        _upgradeTipSink.add("...");
+        if (upgradeTip) _upgradeTipSink.add("...");
 
         // 1 -> 2
         bool v1to2 = false;
@@ -255,23 +261,24 @@ class DB {
 
         // 4-> 5
         if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
-          await Upgrade4to5.upgradeContact(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.createSession(db, upgradeTipStream: _upgradeTipSink);
-          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: _upgradeTipSink);
+          await Upgrade4to5.upgradeContact(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.createSession(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
         }
 
         // dismiss tip dialog
-        _upgradeTipSink.add(null);
+        if (upgradeTip) _upgradeTipSink.add(null);
       },
       onOpen: (Database db) async {
-        _upgradeTipSink.add(null);
         int version = await db.getVersion();
         logger.i("DB - onOpen - version:$version - path:${db.path}");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
+        if (upgradeTip) _upgradeTipSink.add(null);
+
         if (publicKey.isNotEmpty) SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
       },
     );
@@ -305,7 +312,7 @@ class DB {
     return savedVersion != currentDatabaseVersion;
   }
 
-  Future<bool> _delete(String? filePath) async {
+  Future<bool> _deleteDBFile(String? filePath) async {
     if (filePath == null || filePath.isEmpty) return false;
     await deleteDatabase(filePath);
     File file = File(filePath);
@@ -339,22 +346,17 @@ class DB {
   }
 
   Future<bool> _copyDB2Plaintext(String sourcePath, String targetPath, {String sourcePwd = ""}) async {
-    Database? sourceDB = await _tryOpenDB(sourcePath, sourcePwd);
-    if (sourceDB == null) {
-      logger.e("DB - _copyDB - sourceDB == nil");
-      return false;
-    }
-    bool targetExists = await databaseExists(targetPath);
-    if (targetExists) {
-      await _delete(targetPath);
-      await Future.delayed(Duration(milliseconds: 100));
-    }
-    Database? targetDB = await _tryOpenDB(targetPath, "");
-    if (targetDB == null) {
-      logger.e("DB - _copyDB - targetDB == nil");
-      return false;
-    }
     try {
+      // source
+      Database sourceDB = await _openDB(sourcePath, sourcePwd);
+      // target
+      bool targetExists = await databaseExists(targetPath);
+      if (targetExists) {
+        await _deleteDBFile(targetPath);
+        await Future.delayed(Duration(milliseconds: 100));
+      }
+      Database targetDB = await _openDB(targetPath, "");
+      // copy
       await sourceDB.execute("Attach DATABASE `$targetPath` AS `plaintext` KEY ``");
       await sourceDB.execute("INSERT INTO `plaintext`.`${ContactStorage.tableName}` SELECT * FROM `${ContactStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${DeviceInfoStorage.tableName}` SELECT * FROM `${DeviceInfoStorage.tableName}`");
@@ -363,16 +365,16 @@ class DB {
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessageStorage.tableName}` SELECT * FROM `${MessageStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
       await sourceDB.execute("DETACH `plaintext`");
-
+      // close
       await sourceDB.close();
       await targetDB.close();
-
       // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
       // await sourceDB.execute("Attach DATABASE `$targetPath` AS copy_1 KEY ''");
       // await sourceDB.execute("SELECT sqlcipher_export(`copy_1`)"); //  no sqlcipher import
       // await sourceDB.execute("DETACH DATABASE `copy_1`");
     } catch (e) {
       handleError(e);
+      return false;
     }
     return true;
   }
