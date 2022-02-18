@@ -44,7 +44,7 @@ class DB {
 
   DB();
 
-  Future<Database> open(String publicKey, String seed) async {
+  Future open(String publicKey, String seed) {
     return _lock.synchronized(() async {
       return await _openWithFix(publicKey, seed);
     });
@@ -57,7 +57,7 @@ class DB {
     logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
-      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true); // TODO:GG test??? android
+      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true); // TODO:GG test??? android 测试pub升级后db能打开不？
     } else {
       if (!exists) {
         // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test 15.1
@@ -224,7 +224,7 @@ class DB {
       version: currentDatabaseVersion,
       singleInstance: true,
       onConfigure: (Database db) {
-        logger.i("DB - onConfigure - version:${db.getVersion()} - path:${db.path}");
+        logger.i("DB - onConfigure - path:${db.path}");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - config - cipher_version:$value'));
       },
       onCreate: (Database db, int version) async {
