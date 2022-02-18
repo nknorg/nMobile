@@ -60,7 +60,7 @@ class DB {
       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true); // TODO:GG test??? android 测试pub升级后db能打开不？
     } else {
       if (!exists) {
-        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8] TODO:GG test 15.1
+        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8]
         // 2.new_16_v1，create-pwd=empty，tag(clean) -> [8]
         database = await _tryOpenDB(path, "", publicKey: publicKey);
         if (database != null) {
@@ -68,8 +68,8 @@ class DB {
         } else {
           Toast.show("database create failed");
         }
-        // 3.new_14_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 14.4 15.1
-        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 15.2
+        // 3.new_14_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 放到16_v2测试
+        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 外部tools测试
         // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
@@ -78,7 +78,7 @@ class DB {
         //   Toast.show("database create fail");
         // }
       } else {
-        // 5.old_14_v1，database_copy，tag(clean) -> [7/8] TODO:GG test 14.4
+        // 5.old_14_v1，database_copy，tag(clean) -> [7/8]
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
@@ -135,8 +135,8 @@ class DB {
             logger.i("DB - open - success"); // TODO:GG test log
           }
         }
-        // 7.old_14_v2，[5/(1)] -> reset-pwd=seed，tag(reset) TODO:GG test 14.4 15.1
-        // 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset) TODO:GG test 15.2
+        // 7.old_14_v2，[5/(1)] -> database_copy，tag(reset) TODO:GG test 放到16_v2测试
+        // 8.old_16_v2，[5/6/(1/2)] -> reset-pwd=seed，tag(reset) TODO:GG 外部tools测试
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
