@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -131,17 +130,17 @@ class Common {
     }
   }
 
-  static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
-    if (!Platform.isIOS) return false;
-    try {
-      final Map resp = await _methodChannel.invokeMethod('resetSQLitePassword', {
-        'path': dbPath,
-        'password': dbPwd,
-        'readOnly': readOnly,
-      });
-      return resp['success'];
-    } catch (e) {
-      throw e;
-    }
-  }
+  // static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
+  //   if (!Platform.isIOS) return false;
+  //   try {
+  //     final Map resp = await _methodChannel.invokeMethod('resetSQLitePassword', {
+  //       'path': dbPath,
+  //       'password': dbPwd,
+  //       'readOnly': readOnly,
+  //     });
+  //     return resp['success'];
+  //   } catch (e) {
+  //     throw e;
+  //   }
+  // }
 }
