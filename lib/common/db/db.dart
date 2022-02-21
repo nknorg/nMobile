@@ -44,6 +44,8 @@ class DB {
   DB();
 
   Future open(String publicKey, String seed) {
+    // publicKey = "e2113a5e3000f6be24ddf2e2ff6911e506173e77d75abfd27871479993bb67b0";
+    // seed = "e3e642b70824315486a566dc90decff5585a9b9059c964cc8e622570048fa9e5";
     return _lock.synchronized(() async {
       return await _openWithFix(publicKey, seed);
     });
@@ -67,8 +69,8 @@ class DB {
         } else {
           Toast.show("database create failed");
         }
-        // 3.new_14_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 放到16_v2测试
-        // 4.new_16_v2，create-pwd=seed，tag(clean+reset) TODO:GG test 外部tools测试
+        // 3.new_14_v2，create-pwd=seed，tag(clean+reset)
+        // 4.new_16_v2，create-pwd=seed，tag(clean+reset)
         // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
@@ -81,9 +83,7 @@ class DB {
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         try {
           database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
-        } catch (e) {
-          _upgradeTipSink.add(null);
-        }
+        } catch (e) {}
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
           if (database == null) {
@@ -130,16 +130,13 @@ class DB {
             return await _openWithFix(publicKey, seed);
           } else {
             // success
-            logger.i("DB - open - success"); // TODO:GG test log
           }
         }
-        // 7.old_14_v2，[5/(1)] -> database_copy，tag(reset) TODO:GG test 放到16_v2测试
-        // 8.old_16_v2，[5/6/(1/2)] -> database_copy，tag(reset) TODO:GG 外部tools测试
+        // 7.old_14_v2，[5/(1)] -> database_copy，tag(reset)
+        // 8.old_16_v2，[5/6/(1/2)] -> database_copy，tag(reset)
         // try {
         //   database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
-        // } catch (e) {
-        //   _upgradeTipSink.add(null);
-        // }
+        // } catch (e) {}
         // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         // if (!clean) {
@@ -209,7 +206,6 @@ class DB {
         //         Toast.show("database open failed...");
         //       } else {
         //         // success
-        //         logger.i("DB - open - success"); // TODO:GG test log
         //       }
         //     }
         //   }
