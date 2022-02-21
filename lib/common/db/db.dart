@@ -171,12 +171,14 @@ class DB {
         //       database = null;
         //       await Future.delayed(Duration(milliseconds: 200));
         //       String copyPath = await getDBFilePath("${publicKey}_copy");
-        //       bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
+        //       bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: "");
         //       if (copyTemp) {
         //         bool copyBack = await _copyDB2Encrypted(copyPath, path, password);
         //         _deleteDBFile(copyPath); // await
         //         if (copyBack) {
-        //           database = await _tryOpenDB(path, "", publicKey: publicKey);
+        //           try {
+        //             database = await _openDB(path, "", publicKey: publicKey);
+        //           } catch (e) {}
         //           if (database == null) {
         //             database = await _tryOpenDB(path, password, publicKey: publicKey);
         //             if (database != null) {
