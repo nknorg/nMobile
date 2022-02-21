@@ -127,7 +127,7 @@ class DB {
           if (database == null) {
             await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
             await Future.delayed(Duration(milliseconds: 200));
-            return await open(publicKey, seed);
+            return await _openWithFix(publicKey, seed);
           } else {
             // success
             logger.i("DB - open - success"); // TODO:GG test log
@@ -166,7 +166,6 @@ class DB {
         //         Toast.show("database open failed.");
         //       }
         //     } else {
-        //       // TODO:GG copy 2 entry
         //       _upgradeTipSink.add("~ ~ ~ ~ ~");
         //       await database?.close();
         //       database = null;
@@ -174,14 +173,21 @@ class DB {
         //       String copyPath = await getDBFilePath("${publicKey}_copy");
         //       bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
         //       if (copyTemp) {
-        //         bool copyBack = await _copyDB2Plaintext(copyPath, path, sourcePwd: "");
+        //         bool copyBack = await _copyDB2Encrypted(copyPath, path, password);
         //         _deleteDBFile(copyPath); // await
         //         if (copyBack) {
         //           database = await _tryOpenDB(path, "", publicKey: publicKey);
-        //           if (database != null) {
-        //             SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //           if (database == null) {
+        //             database = await _tryOpenDB(path, password, publicKey: publicKey);
+        //             if (database != null) {
+        //               SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //               SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
+        //             } else {
+        //               logger.e("DB - open - open copy fail");
+        //             }
         //           } else {
-        //             logger.e("DB - open - open copy fail");
+        //             SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+        //             SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
         //           }
         //         } else {
         //           logger.e("DB - open - copy_2 fail");
@@ -190,7 +196,6 @@ class DB {
         //         logger.e("DB - open - copy_1 fail");
         //       }
         //       _upgradeTipSink.add(null);
-        //       // TODO:GG copy 2 entry
         //     }
         //   } else {
         //     if (database != null) {
