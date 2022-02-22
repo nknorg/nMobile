@@ -145,7 +145,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     });
 
     // login
-    _tryLogin();
+    _tryLogin(first: true);
   }
 
   @override
@@ -192,9 +192,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
-  Future _tryLogin({WalletSchema? wallet}) async {
-    await dbCommon.fixIOS_152();
-    await Future.delayed(Duration(milliseconds: 100));
+  Future _tryLogin({WalletSchema? wallet, bool first = false}) async {
+    if (first) await dbCommon.fixIOS_152();
+    if (first) await Future.delayed(Duration(milliseconds: 100));
 
     // wallet
     wallet = wallet ?? await walletCommon.getDefault();
