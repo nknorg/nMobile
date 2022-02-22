@@ -60,7 +60,7 @@ class DB {
     logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
-      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true); // TODO:GG test??? android 测试pub升级后db能打开不？
+      database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
     } else {
       if (!exists) {
         // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8]
