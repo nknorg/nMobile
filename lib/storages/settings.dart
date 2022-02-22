@@ -14,6 +14,7 @@ class SettingsStorage {
   static const String LAST_CHECK_TOPICS_AT = 'last_check_topic_at';
 
   static const String DATABASE_VERSION = "database_version";
+  static const String DATABASE_FIXED_IOS_152 = "database_fixed_ios_152";
   static const String DATABASE_CLEAN_PWD_ON_IOS_14 = "database_clean_pwd_on_ios_14";
   static const String DATABASE_RESET_PWD_ON_IOS_16 = "database_reset_pwd_on_ios_16";
 

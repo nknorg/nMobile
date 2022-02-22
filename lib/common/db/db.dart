@@ -7,8 +7,10 @@ import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -296,13 +298,13 @@ class DB {
 
         // 4-> 5
         if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
-          await Upgrade4to5.upgradeContact(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.createDeviceInfo(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.upgradeTopic(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.upgradeSubscriber(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.upgradeMessages(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.createSession(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
-          await Upgrade4to5.deletesOldTables(db, upgradeTipStream: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeContact(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.createDeviceInfo(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeTopic(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeSubscriber(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.upgradeMessages(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.createSession(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade4to5.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
         // dismiss tip dialog
@@ -446,5 +448,30 @@ class DB {
       return false;
     }
     return true;
+  }
+
+  Future fixIOS_152() async {
+    if (!Platform.isIOS) return;
+    if (!DeviceInfoCommon.isIOSDeviceVersionLess152()) return;
+    bool fixed = (await SettingsStorage.getSettings(SettingsStorage.DATABASE_FIXED_IOS_152)) ?? false;
+    if (fixed) return;
+    _upgradeTipSink.add("...");
+    List<WalletSchema> wallets = await walletCommon.getWallets();
+    for (var i = 0; i < wallets.length; i++) {
+      WalletSchema wallet = wallets[i];
+      String publicKey = wallet.publicKey;
+      String path = await getDBFilePath(publicKey);
+      bool exists = await databaseExists(path);
+      bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
+      if (exists && !clean) {
+        String seed = await walletCommon.getSeed(wallet.address);
+        await _openWithFix(publicKey, seed);
+        await database?.close();
+        database = null;
+        await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true);
+      }
+    }
+    await SettingsStorage.setSettings(SettingsStorage.DATABASE_FIXED_IOS_152, true);
+    _upgradeTipSink.add(null);
   }
 }
