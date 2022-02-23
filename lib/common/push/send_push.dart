@@ -98,7 +98,7 @@ class SendPush {
         // Uri.parse('https://fcm.googleapis.com/v1/projects/nmobile/messages:send'),
         headers: <String, String>{
           'Content-Type': 'application/json',
-          'Authorization': 'key=${Settings.F_C_M_SERVICE_TOKEN}',
+          'Authorization': 'key=${Settings.getGooglePushToken()}',
         },
         body: body,
       );
