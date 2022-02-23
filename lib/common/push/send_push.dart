@@ -49,7 +49,7 @@ class SendPush {
         },
       });
       await Common.sendPushAPNS(deviceToken, payload);
-      logger.d("SendPush - sendPushMessage - apns - success - payload:$payload");
+      logger.d("SendPush - sendAPNS - success - payload:$payload");
       return true;
     } catch (e) {
       handleError(e);
@@ -95,18 +95,19 @@ class SendPush {
       // http
       http.Response response = await http.post(
         Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        // Uri.parse('https://fcm.googleapis.com/v1/projects/nmobile/messages:send'),
         headers: <String, String>{
           'Content-Type': 'application/json',
-          'Authorization': 'key=${Settings.fcmServerToken}',
+          'Authorization': 'key=${Settings.F_C_M_SERVICE_TOKEN}',
         },
         body: body,
       );
       // response
       if (response.statusCode == 200) {
-        logger.d("SendPush - sendPushMessage - fcm - success - body:$body");
+        logger.d("SendPush - sendFCM - success - body:$body");
         return true;
       } else {
-        logger.e("SendPush - sendPushMessage - fcm - fail - code:${response.statusCode} - body:$body");
+        logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:$body");
         return false;
       }
     } catch (e) {
