@@ -193,9 +193,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future _tryLogin({WalletSchema? wallet, bool first = false}) async {
-    if (first) await dbCommon.fixIOS_152();
-    if (first) await Future.delayed(Duration(milliseconds: 100));
-
     // wallet
     wallet = wallet ?? await walletCommon.getDefault();
     if (wallet == null) {
@@ -205,6 +202,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     }
     if (isLoginProgress) return;
     isLoginProgress = true;
+
+    // fixed ios_152_db
+    if (first) await dbCommon.fixIOS_152();
 
     // client
     List result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryTimes) {
