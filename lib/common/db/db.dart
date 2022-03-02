@@ -73,6 +73,7 @@ class DB {
         }
         // 3.new_14_v2，create-pwd=seed，tag(clean+reset)
         // 4.new_16_v2，create-pwd=seed，tag(clean+reset)
+        // FUTURE_IOS_152_V2
         // database = await _tryOpenDB(path, password, publicKey: publicKey);
         // if (database != null) {
         //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
@@ -136,6 +137,7 @@ class DB {
         }
         // 7.old_14_v2，[5/(1)] -> database_copy，tag(reset)
         // 8.old_16_v2，[5/6/(1/2)] -> database_copy，tag(reset)
+        // FUTURE_IOS_152_V2
         // try {
         //   database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
         // } catch (e) {}
@@ -462,16 +464,16 @@ class DB {
       String publicKey = wallet.publicKey;
       String path = await getDBFilePath(publicKey);
       bool exists = await databaseExists(path);
-      bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
+      bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false; // FUTURE_IOS_152_V2
       if (exists && !clean) {
         String seed = await walletCommon.getSeed(wallet.address);
         await _openWithFix(publicKey, seed);
         await database?.close();
         database = null;
-        await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true);
+        await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // FUTURE_IOS_152_V2
       }
     }
-    await SettingsStorage.setSettings(SettingsStorage.DATABASE_FIXED_IOS_152, true);
+    await SettingsStorage.setSettings(SettingsStorage.DATABASE_FIXED_IOS_152, true); // FUTURE_IOS_152_V2
     _upgradeTipSink.add(null);
   }
 }
