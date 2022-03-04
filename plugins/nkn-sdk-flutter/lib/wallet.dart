@@ -23,8 +23,7 @@ class RpcConfig {
 /// Wallet manages assets, query state from blockchain, and send transactions to
 /// blockchain.
 class Wallet {
-  static const MethodChannel _methodChannel =
-      MethodChannel('org.nkn.sdk/wallet');
+  static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/wallet');
 
   /// Need to [install] before use.
   static install() {}
@@ -50,14 +49,10 @@ class Wallet {
   /// to high). If none of the given seed rpc node is accessable or in persist
   /// finished state, returned string array will contain zero elements. Timeout is
   /// in millisecond.
-  static Future<List<String>?> measureSeedRPCServer(
-      List<String> seedRPCServerAddr, int? timeout) async {
+  static Future<List<String>?> measureSeedRPCServer(List<String> seedRPCServerAddr, int? timeout) async {
     try {
-      final Map data =
-          await _methodChannel.invokeMethod('measureSeedRPCServer', {
-        'seedRpc': seedRPCServerAddr.isNotEmpty == true
-            ? seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+      final Map data = await _methodChannel.invokeMethod('measureSeedRPCServer', {
+        'seedRpc': seedRPCServerAddr.isNotEmpty == true ? seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
         'timeout': timeout,
       });
       List<String> result = [];
@@ -78,15 +73,12 @@ class Wallet {
   /// strongly recommended to use non-empty password in config to protect the
   /// wallet, otherwise anyone can recover the wallet and control all assets in the
   /// wallet from the generated wallet JSON.
-  static Future<Wallet> create(Uint8List? seed,
-      {required WalletConfig config}) async {
+  static Future<Wallet> create(Uint8List? seed, {required WalletConfig config}) async {
     try {
       final Map data = await _methodChannel.invokeMethod('create', {
         'seed': seed,
         'password': config.password,
-        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       Wallet wallet = Wallet(walletConfig: config);
       wallet.keystore = data['keystore'];
@@ -101,15 +93,12 @@ class Wallet {
 
   /// [restore] recovers a wallet from wallet JSON and wallet config. The
   /// password in config must match the password used to create the wallet
-  static Future<Wallet> restore(String keystore,
-      {required WalletConfig config}) async {
+  static Future<Wallet> restore(String keystore, {required WalletConfig config}) async {
     try {
       final Map data = await _methodChannel.invokeMethod('restore', {
         'keystore': keystore,
         'password': config.password,
-        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true
-            ? config.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config.seedRPCServerAddr?.isNotEmpty == true ? config.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       Wallet wallet = Wallet(walletConfig: config);
       wallet.keystore = data['keystore'];
@@ -123,14 +112,11 @@ class Wallet {
   }
 
   /// [getBalanceByAddr] is the same as [getBalance]
-  static Future<double> getBalanceByAddr(String address,
-      {WalletConfig? config}) async {
+  static Future<double> getBalanceByAddr(String address, {WalletConfig? config}) async {
     try {
       return await _methodChannel.invokeMethod('getBalance', {
         'address': address,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
@@ -146,8 +132,7 @@ class Wallet {
   /// Amount is the string representation of the amount in unit of NKN to avoid
   /// precision loss. For example, "0.1" will be parsed as 0.1 NKN. The
   /// signerRPCClient can be a client, multiclient or wallet.
-  Future<String?> transfer(String address, String amount,
-      {String fee = '0', int? nonce, Uint8List? attributes}) async {
+  Future<String?> transfer(String address, String amount, {String fee = '0', int? nonce, Uint8List? attributes}) async {
     try {
       return await _methodChannel.invokeMethod('transfer', {
         'seed': this.seed,
@@ -156,8 +141,7 @@ class Wallet {
         'fee': fee,
         'nonce': nonce,
         'attributes': attributes,
-        'seedRpc':
-            this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
@@ -167,8 +151,7 @@ class Wallet {
   /// [pubKeyToWalletAddr] converts a public key to its NKN wallet address
   static Future<String?> pubKeyToWalletAddr(String publicKey) async {
     try {
-      final String address =
-          await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
+      final String address = await _methodChannel.invokeMethod('pubKeyToWalletAddr', {
         'publicKey': publicKey,
       });
       return address;
@@ -183,16 +166,12 @@ class Wallet {
   /// prefix byte will reduce result count to about 1/256, and also reduce response
   /// time to about 1/256 if there are a lot of subscribers. This is a good way to
   /// sample subscribers randomly with low cost.
-  static Future<int> getSubscribersCount(
-      String topic,
-      {Uint8List? subscriberHashPrefix, RpcConfig? config}) async {
+  static Future<int> getSubscribersCount(String topic, {Uint8List? subscriberHashPrefix, RpcConfig? config}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         'topic': topic,
         'subscriberHashPrefix': subscriberHashPrefix,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       return count;
     } catch (e) {
@@ -201,16 +180,12 @@ class Wallet {
   }
 
   /// [getSubscription] RPC gets the subscription details of a subscriber in a topic.
-  static Future<Map<String, dynamic>?> getSubscription(
-      String topic, String subscriber,
-      {RpcConfig? config}) async {
+  static Future<Map<String, dynamic>?> getSubscription(String topic, String subscriber, {RpcConfig? config}) async {
     try {
       Map? resp = await _methodChannel.invokeMethod('getSubscription', {
         'topic': topic,
         'subscriber': subscriber,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       if (resp == null) {
         return null;
@@ -244,9 +219,7 @@ class Wallet {
         'meta': meta,
         'txPool': txPool,
         'subscriberHashPrefix': subscriberHashPrefix,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
       if (resp == null) {
         return null;
@@ -261,9 +234,7 @@ class Wallet {
   static Future<int?> getHeight({RpcConfig? config}) async {
     try {
       return await _methodChannel.invokeMethod('getHeight', {
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
@@ -278,8 +249,7 @@ class Wallet {
       return await _methodChannel.invokeMethod('getNonce', {
         'address': this.address,
         'txPool': txPool,
-        'seedRpc':
-            this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
@@ -287,15 +257,12 @@ class Wallet {
   }
 
   /// [getNonceByAddress] is the same as [getNonce]
-  static Future<int?> getNonceByAddress(String address,
-      {bool txPool = true, RpcConfig? config}) async {
+  static Future<int?> getNonceByAddress(String address, {bool txPool = true, RpcConfig? config}) async {
     try {
       return await _methodChannel.invokeMethod('getNonce', {
         'address': address,
         'txPool': txPool,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : [DEFAULT_SEED_RPC_SERVER],
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : [DEFAULT_SEED_RPC_SERVER],
       });
     } catch (e) {
       throw e;
