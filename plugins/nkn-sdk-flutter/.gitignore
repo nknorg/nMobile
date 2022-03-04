@@ -18,3 +18,5 @@ pubspec.lock
 
 .DS_Store
 build/
+
+example/
