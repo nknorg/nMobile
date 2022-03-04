@@ -1,3 +1,11 @@
+## 0.1.17
+
+* Upgrade NKN SDK
+
+## 0.1.15
+
+* Upgrade NKN SDK
+
 ## 0.1.14
 
 * Fix iOS client onMessage
