@@ -9,8 +9,10 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import nkn.*
+import nkngomobile.StringArray
 import org.bouncycastle.util.encoders.Hex
 import org.nkn.sdk.IChannelHandler
+import utils.Utils
 
 class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
     companion object {
@@ -89,7 +91,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, timeout)
+                seedRPCServerAddr = Utils.measureSeedRPCServerReturnStringArray(seedRPCServerAddr, timeout)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
                 val elements = seedRPCServerAddr.join(",").split(",")

@@ -9,6 +9,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.*
 import nkn.*
+import nkngomobile.Nkngomobile.newStringArrayFromString
+import nkngomobile.StringArray
 import org.nkn.sdk.IChannelHandler
 import org.nkn.sdk.NknSdkFlutterPlugin
 
@@ -222,7 +224,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         var nknDests: StringArray? = null
         for (d in dests) {
             if (nknDests == null) {
-                nknDests = Nkn.newStringArrayFromString(d)
+                nknDests = newStringArrayFromString(d)
             } else {
                 nknDests.append(d)
             }
