@@ -65,10 +65,8 @@ class ClientConfig {
 /// network condition without setting up a server or relying on any third party
 /// services. Data are end to end encrypted by default.
 class Client {
-  static const MethodChannel _methodChannel =
-      MethodChannel('org.nkn.sdk/client');
-  static const EventChannel _eventChannel =
-      EventChannel('org.nkn.sdk/client/event');
+  static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/client');
+  static const EventChannel _eventChannel = EventChannel('org.nkn.sdk/client/event');
 
   static Stream? _stream;
 
@@ -88,24 +86,19 @@ class Client {
 
   ClientConfig? clientConfig;
 
-  StreamController<OnConnect> _onConnectStreamController =
-      StreamController<OnConnect>.broadcast();
+  StreamController<OnConnect> _onConnectStreamController = StreamController<OnConnect>.broadcast();
 
-  StreamSink<OnConnect> get _onConnectStreamSink =>
-      _onConnectStreamController.sink;
+  StreamSink<OnConnect> get _onConnectStreamSink => _onConnectStreamController.sink;
 
   Stream<OnConnect> get onConnect => _onConnectStreamController.stream;
 
-  StreamController<OnMessage> _onMessageStreamController =
-      StreamController<OnMessage>.broadcast();
+  StreamController<OnMessage> _onMessageStreamController = StreamController<OnMessage>.broadcast();
 
-  StreamSink<OnMessage> get _onMessageStreamSink =>
-      _onMessageStreamController.sink;
+  StreamSink<OnMessage> get _onMessageStreamSink => _onMessageStreamController.sink;
 
   Stream<OnMessage> get onMessage => _onMessageStreamController.stream;
 
-  StreamController<dynamic> _onErrorStreamController =
-      StreamController<dynamic>.broadcast();
+  StreamController<dynamic> _onErrorStreamController = StreamController<dynamic>.broadcast();
 
   StreamSink<dynamic> get _onErrorStreamSink => _onErrorStreamController.sink;
 
@@ -121,32 +114,26 @@ class Client {
   /// clients created. For any zero value field in config, the default client
   /// config value will be used. If config is nil, the default client config will
   /// be used.
-  static Future<Client> create(Uint8List seed,
-      {String identifier = '', int? numSubClients, ClientConfig? config}) async {
+  static Future<Client> create(Uint8List seed, {String identifier = '', int? numSubClients, ClientConfig? config}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
         'numSubClients': numSubClients,
-        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true
-            ? config?.seedRPCServerAddr
-            : null,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
       });
       Client client = Client();
       client.address = resp['address'];
       client.publicKey = resp['publicKey'];
       client.seed = resp['seed'];
 
-      client.eventChannelStreamSubscription =
-          _stream!.where((res) => res['_id'] == client.address).listen((res) {
+      client.eventChannelStreamSubscription = _stream!.where((res) => res['_id'] == client.address).listen((res) {
         if (res['_id'] != client.address) {
           return;
         }
         switch (res['event']) {
           case 'onConnect':
-            client._onConnectStreamSink.add(OnConnect(
-                node: res['node'],
-                rpcServers: res['rpcServers']?.cast<String>()));
+            client._onConnectStreamSink.add(OnConnect(node: res['node'], rpcServers: res['rpcServers']?.cast<String>()));
             break;
           case 'onMessage':
             Map data = res['data'];
@@ -198,8 +185,7 @@ class Client {
   /// [sendText] sends bytes or string data to one or multiple destinations with an
   /// optional config. Returned [OnMessage] will emit if a reply or ACK for
   /// this message is received.
-  Future<OnMessage> sendText(List<String> dests, String data,
-      {int maxHoldingSeconds = 8640000, noReply = true}) async {
+  Future<OnMessage> sendText(List<String> dests, String data, {int maxHoldingSeconds = 8640000, noReply = true}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('sendText', {
         '_id': this.address,
@@ -223,8 +209,7 @@ class Client {
 
   /// [publishText] sends bytes or string data to all subscribers of a topic with an
   /// optional config.
-  Future<OnMessage> publishText(String topic, String data,
-      {int maxHoldingSeconds = 8640000, bool txPool = false, int offset = 0, int limit = 1000}) async {
+  Future<OnMessage> publishText(String topic, String data, {int maxHoldingSeconds = 8640000, bool txPool = false, int offset = 0, int limit = 1000}) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('publishText', {
         '_id': this.address,
@@ -307,8 +292,7 @@ class Client {
   /// prefix byte will reduce result count to about 1/256, and also reduce response
   /// time to about 1/256 if there are a lot of subscribers. This is a good way to
   /// sample subscribers randomly with low cost.
-  Future<int> getSubscribersCount(
-      {required String topic, Uint8List? subscriberHashPrefix}) async {
+  Future<int> getSubscribersCount({required String topic, Uint8List? subscriberHashPrefix}) async {
     try {
       int count = await _methodChannel.invokeMethod('getSubscribersCount', {
         '_id': this.address,
@@ -322,8 +306,7 @@ class Client {
   }
 
   /// [getSubscription] RPC gets the subscription details of a subscriber in a topic.
-  Future<Map<String, dynamic>?> getSubscription(
-      {required String topic, required String subscriber}) async {
+  Future<Map<String, dynamic>?> getSubscription({required String topic, required String subscriber}) async {
     try {
       Map? resp = await _methodChannel.invokeMethod('getSubscription', {
         '_id': this.address,
@@ -375,8 +358,7 @@ class Client {
   /// [getHeight] RPC returns the latest block height.
   Future<int?> getHeight() async {
     try {
-      int? resp =
-          await _methodChannel.invokeMethod('getHeight', {'_id': this.address});
+      int? resp = await _methodChannel.invokeMethod('getHeight', {'_id': this.address});
       return resp;
     } catch (e) {
       throw e;
@@ -389,8 +371,7 @@ class Client {
   Future<int?> getNonce({bool txPool = true}) async {
     if (this.publicKey == null || this.publicKey.isEmpty) return null;
     try {
-      String? walletAddr =
-          await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
+      String? walletAddr = await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
       int? resp = await _methodChannel.invokeMethod('getNonce', {
         '_id': this.address,
         'address': walletAddr,
