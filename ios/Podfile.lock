@@ -81,7 +81,7 @@ PODS:
   - Mantle/extobjc (2.2.0)
   - mobile-ffmpeg-audio (4.4.LTS)
   - MTBBarcodeScanner (5.0.11)
-  - nkn_sdk_flutter (0.0.4):
+  - nkn_sdk_flutter (0.1.15):
     - Flutter
   - package_info_plus (0.4.5):
     - Flutter
@@ -252,7 +252,7 @@ SPEC CHECKSUMS:
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   mobile-ffmpeg-audio: 1e0a053f8a6de57114e50ff48b3a85ff1c60f902
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
-  nkn_sdk_flutter: 474f0ff5cf11795bd592708a1c707cc15e70e49a
+  nkn_sdk_flutter: cb83324eb3ef17419f715707b59bee20a9adfd34
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
   path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
