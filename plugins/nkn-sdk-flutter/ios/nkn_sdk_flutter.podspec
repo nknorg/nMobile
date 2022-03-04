@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'nkn_sdk_flutter'
-  s.version          = '0.0.4'
+  s.version          = '0.1.15'
   s.summary          = 'nkn-sdk-flutter'
   s.description      = <<-DESC
 nkn-sdk-flutter
@@ -17,7 +17,7 @@ nkn-sdk-flutter
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
-  s.vendored_frameworks = 'Frameworks/*.framework'
+  s.vendored_frameworks = 'Frameworks/*.xcframework'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }

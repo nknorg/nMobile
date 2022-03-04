@@ -95,7 +95,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
         let config: NknClientConfig = NknClientConfig()
         if(seedRpc != nil){
-            config.seedRPCServerAddr = NknStringArray(from: nil)
+            config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
@@ -238,10 +238,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             result(FlutterError(code: "", message: "client is null", details: ""))
             return
         }
-        let nknDests = NknStringArray(from: nil)!
+        let nknDests: NkngomobileStringArray? = NkngomobileNewStringArrayFromString(nil)
         if(!dests.isEmpty) {
             for dest in dests {
-                nknDests.append(dest)
+                nknDests?.append(dest)
             }
         }
 
