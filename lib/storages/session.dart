@@ -192,30 +192,30 @@ class SessionStorage with Tag {
     });
   }
 
-  // Future<bool> updateLastMessage(SessionSchema? schema) async {
-  // if (db?.isOpen != true) return false;
-  //   if (schema == null || schema.targetId.isEmpty) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.update(
-  //           tableName,
-  //           {
-  //             'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
-  //             'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-  //           },
-  //           where: 'target_id = ?',
-  //           whereArgs: [schema.targetId],
-  //         );
-  //       });
-  //       logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
-  //       return (count ?? 0) > 0;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> updateLastMessage(SessionSchema? schema) async {
+  if (db?.isOpen != true) return false;
+    if (schema == null || schema.targetId.isEmpty) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+              'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+            },
+            where: 'target_id = ?',
+            whereArgs: [schema.targetId],
+          );
+        });
+        logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
+        return (count ?? 0) > 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
   Future<bool> updateIsTop(String? targetId, int? type, bool isTop) async {
     if (db?.isOpen != true) return false;
