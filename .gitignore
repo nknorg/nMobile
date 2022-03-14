@@ -41,6 +41,11 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-/ios/Classes/Push/Resource/
-/android/app/src/main/assets/push/
+# android build
+**.keystore
+**/key.properties
 /android/app/release/
+
+# psuh resource
+**.p12
+**.cer
