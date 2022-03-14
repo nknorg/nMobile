@@ -85,53 +85,53 @@ class SubscriberStorage with Tag {
     });
   }
 
-  // Future<bool> delete(int? subscriberId) async {
-  //   if (db?.isOpen != true) return false;
-  //   if (subscriberId == null || subscriberId == 0) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.delete(
-  //           tableName,
-  //           where: 'id = ?',
-  //           whereArgs: [subscriberId],
-  //         );
-  //       });
-  //       if (count != null && count > 0) {
-  //         logger.v("$TAG - delete - success - subscriberId:$subscriberId");
-  //         return true;
-  //       }
-  //       logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> delete(int? subscriberId) async {
+    if (db?.isOpen != true) return false;
+    if (subscriberId == null || subscriberId == 0) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'id = ?',
+            whereArgs: [subscriberId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - delete - success - subscriberId:$subscriberId");
+          return true;
+        }
+        logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
-  // Future<int> deleteByTopic(String? topic) async {
-  // if (db?.isOpen != true) return 0;
-  //   if (topic == null || topic.isEmpty) return 0;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.delete(
-  //           tableName,
-  //           where: 'topic = ?',
-  //           whereArgs: [topic],
-  //         );
-  //       });
-  //       if (count != null && count > 0) {
-  //         logger.v("$TAG - deleteByTopic - success - topic:$topic");
-  //         return count;
-  //       }
-  //       logger.w("$TAG - deleteByTopic - fail - topic:$topic");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return 0;
-  //   });
-  // }
+  /*Future<int> deleteByTopic(String? topic) async {
+  if (db?.isOpen != true) return 0;
+    if (topic == null || topic.isEmpty) return 0;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'topic = ?',
+            whereArgs: [topic],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - deleteByTopic - success - topic:$topic");
+          return count;
+        }
+        logger.w("$TAG - deleteByTopic - fail - topic:$topic");
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
+  }*/
 
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (db?.isOpen != true) return null;

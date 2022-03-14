@@ -26,10 +26,6 @@ mixin Tag {
   String _tagInner(int length, int lenHashCode) {
     final String name = this.runtimeType.toString() + '@' + hashCode.toString().substring(0, lenHashCode);
     return name;
-    // if (name.length > length) {
-    //   return name.substring(name.length - length);
-    // } else
-    //   return name.padLeft(length, '.');
   }
 }
 

@@ -93,29 +93,29 @@ class ContactStorage with Tag {
     });
   }
 
-  // Future<bool> delete(int? contactId) async {
-  // if (db?.isOpen != true) return false;
-  //   if (contactId == null || contactId == 0) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.delete(
-  //           tableName,
-  //           where: 'id = ?',
-  //           whereArgs: [contactId],
-  //         );
-  //       });
-  //       if (count != null && count > 0) {
-  //         logger.v("$TAG - delete - success - contactId:$contactId");
-  //         return true;
-  //       }
-  //       logger.w("$TAG - delete - fail - contactId:$contactId");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> delete(int? contactId) async {
+  if (db?.isOpen != true) return false;
+    if (contactId == null || contactId == 0) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'id = ?',
+            whereArgs: [contactId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - delete - success - contactId:$contactId");
+          return true;
+        }
+        logger.w("$TAG - delete - fail - contactId:$contactId");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
   Future<ContactSchema?> query(int? contactId) async {
     if (db?.isOpen != true) return null;
@@ -249,28 +249,28 @@ class ContactStorage with Tag {
     // });
   }
 
-  // Future<int> queryCountByClientAddress(String? clientAddress) async {
-  // if (db?.isOpen != true) return 0;
-  //   if (clientAddress == null || clientAddress.isEmpty) return 0;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['COUNT(id)'],
-  //           where: 'address = ?',
-  //           whereArgs: [clientAddress],
-  //         );
-  //       });
-  //       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-  //       logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
-  //       return count ?? 0;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return 0;
-  //   });
-  // }
+  /*Future<int> queryCountByClientAddress(String? clientAddress) async {
+  if (db?.isOpen != true) return 0;
+    if (clientAddress == null || clientAddress.isEmpty) return 0;
+    return await _lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['COUNT(id)'],
+            where: 'address = ?',
+            whereArgs: [clientAddress],
+          );
+        });
+        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+        logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
+        return count ?? 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
+  }*/
 
   Future<bool> setType(int? contactId, int? contactType) async {
     if (db?.isOpen != true) return false;
