@@ -87,15 +87,15 @@ class SessionCommon with Tag {
     return success;
   }
 
-  // Future<bool> setLastMessage(String? targetId, MessageSchema lastMessage, {bool notify = false}) async {
-  //   if (targetId == null || targetId.isEmpty) return false;
-  //   SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
-  //   session.lastMessageAt = lastMessage.sendAt ?? DateTime.now().millisecondsSinceEpoch;
-  //   session.lastMessageOptions = lastMessage.toMap();
-  //   bool success = await _sessionStorage.updateLastMessage(session);
-  //   if (success && notify) queryAndNotify(session.targetId);
-  //   return success;
-  // }
+  /*Future<bool> setLastMessage(String? targetId, MessageSchema lastMessage, {bool notify = false}) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
+    session.lastMessageAt = lastMessage.sendAt ?? DateTime.now().millisecondsSinceEpoch;
+    session.lastMessageOptions = lastMessage.toMap();
+    bool success = await _sessionStorage.updateLastMessage(session);
+    if (success && notify) queryAndNotify(session.targetId);
+    return success;
+  }*/
 
   Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
@@ -119,19 +119,19 @@ class SessionCommon with Tag {
     }
   }
 
-  // Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
-  //   if (session == null) return null;
-  //   MessageSchema? message;
-  //   if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
-  //     message = MessageSchema.fromMap(session.lastMessageOptions!);
-  //   } else {
-  //     List<MessageSchema> history = await _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(session.targetId, offset: 0, limit: 1);
-  //     if (history.isNotEmpty) {
-  //       message = history[0];
-  //       // session.lastMessageOptions = message.toMap();
-  //     }
-  //   }
-  //   // session.lastMessageTime = message?.sendTime;
-  //   return message;
-  // }
+  /*Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
+    if (session == null) return null;
+    MessageSchema? message;
+    if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
+      message = MessageSchema.fromMap(session.lastMessageOptions!);
+    } else {
+      List<MessageSchema> history = await _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(session.targetId, offset: 0, limit: 1);
+      if (history.isNotEmpty) {
+        message = history[0];
+        // session.lastMessageOptions = message.toMap();
+      }
+    }
+    // session.lastMessageTime = message?.sendTime;
+    return message;
+  }*/
 }

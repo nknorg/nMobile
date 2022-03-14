@@ -488,18 +488,18 @@ class SubscriberCommon with Tag {
     return added;
   }
 
-  // Future<bool> delete(int? subscriberId, {bool notify = false}) async {
-  //   if (subscriberId == null || subscriberId == 0) return false;
-  //   bool success = await _subscriberStorage.delete(subscriberId);
-  //   if (success && notify) _deleteSink.add(subscriberId);
-  //   return success;
-  // }
+  /*Future<bool> delete(int? subscriberId, {bool notify = false}) async {
+    if (subscriberId == null || subscriberId == 0) return false;
+    bool success = await _subscriberStorage.delete(subscriberId);
+    if (success && notify) _deleteSink.add(subscriberId);
+    return success;
+  }*/
 
-  // Future<int> deleteByTopic(String? topic) async {
-  //   if (topic == null || topic.isEmpty) return 0;
-  //   int count = await _subscriberStorage.deleteByTopic(topic);
-  //   return count;
-  // }
+  /*Future<int> deleteByTopic(String? topic) async {
+    if (topic == null || topic.isEmpty) return 0;
+    int count = await _subscriberStorage.deleteByTopic(topic);
+    return count;
+  }*/
 
   Future<SubscriberSchema?> query(int? subscriberId) {
     return _subscriberStorage.query(subscriberId);

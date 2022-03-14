@@ -894,14 +894,14 @@ class TopicCommon with Tag {
     return added;
   }
 
-  // Future<bool> delete(int? topicId, {bool notify = false}) async {
-  //   if (topicId == null || topicId == 0) return false;
-  //   TopicSchema? topic = await query(topicId);
-  //   if (topic == null) return false;
-  //   bool success = await _topicStorage.delete(topicId);
-  //   // if (success && notify) _deleteSink.add(topic.topic);
-  //   return success;
-  // }
+  /*Future<bool> delete(int? topicId, {bool notify = false}) async {
+    if (topicId == null || topicId == 0) return false;
+    TopicSchema? topic = await query(topicId);
+    if (topic == null) return false;
+    bool success = await _topicStorage.delete(topicId);
+    // if (success && notify) _deleteSink.add(topic.topic);
+    return success;
+  }*/
 
   Future<TopicSchema?> query(int? topicId) {
     return _topicStorage.query(topicId);

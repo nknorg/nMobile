@@ -226,15 +226,7 @@ class Global {
   /// ***********************************************************************************************************
 
   static Future<int?> getNonce({String? walletAddress, bool forceFetch = false}) async {
-    // // walletAddress
-    // if ((walletAddress == null || walletAddress.isEmpty) && (clientCommon.client?.publicKey.isNotEmpty == true)) {
-    //   try {
-    //     walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
-    //   } catch (e) {
-    //     handleError(e);
-    //   }
-    // }
-
+    // walletAddress no check
     int? nonce;
 
     // cached
@@ -272,19 +264,7 @@ class Global {
   }
 
   static Future<int?> refreshNonceWithNoLock({String? walletAddress, bool useNow = false}) async {
-    // // walletAddress
-    // if (walletAddress == null || walletAddress.isEmpty) {
-    //   if (clientCommon.client?.publicKey.isNotEmpty == true) {
-    //     try {
-    //       walletAddress = await Wallet.pubKeyToWalletAddr(hexEncode(clientCommon.client!.publicKey));
-    //     } catch (e) {
-    //       handleError(e);
-    //     }
-    //   } else {
-    //     return null;
-    //   }
-    // }
-
+    // walletAddress no check
     int? nonce;
 
     // rpc

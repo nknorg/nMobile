@@ -77,53 +77,53 @@ class MessageStorage with Tag {
     });
   }
 
-  // Future<bool> delete(String msgId) async {
-  //   if (db?.isOpen != true) return false;
-  //   if (msgId.isEmpty) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? result = await db?.transaction((txn) {
-  //         return txn.delete(
-  //           tableName,
-  //           where: 'msg_id = ?',
-  //           whereArgs: [msgId],
-  //         );
-  //       });
-  //       if (result != null && result > 0) {
-  //         logger.v("$TAG - delete - success - msgId:$msgId");
-  //         return true;
-  //       }
-  //       logger.w("$TAG - delete - empty - msgId:$msgId");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> delete(String msgId) async {
+    if (db?.isOpen != true) return false;
+    if (msgId.isEmpty) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? result = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'msg_id = ?',
+            whereArgs: [msgId],
+          );
+        });
+        if (result != null && result > 0) {
+          logger.v("$TAG - delete - success - msgId:$msgId");
+          return true;
+        }
+        logger.w("$TAG - delete - empty - msgId:$msgId");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
-  // Future<bool> deleteByPid(String? pid) async {
-  //   if (db?.isOpen != true) return false;
-  //   if (pid == null || pid.isEmpty) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? result = await db?.transaction((txn) {
-  //         return txn.delete(
-  //           tableName,
-  //           where: 'pid = ?',
-  //           whereArgs: [pid],
-  //         );
-  //       });
-  //       if (result != null && result > 0) {
-  //         logger.v("$TAG - deleteByPid - success - pid:$pid");
-  //         return true;
-  //       }
-  //       logger.w("$TAG - deleteByPid - empty - pid:$pid");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> deleteByPid(String? pid) async {
+    if (db?.isOpen != true) return false;
+    if (pid == null || pid.isEmpty) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? result = await db?.transaction((txn) {
+          return txn.delete(
+            tableName,
+            where: 'pid = ?',
+            whereArgs: [pid],
+          );
+        });
+        if (result != null && result > 0) {
+          logger.v("$TAG - deleteByPid - success - pid:$pid");
+          return true;
+        }
+        logger.w("$TAG - deleteByPid - empty - pid:$pid");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
   Future<int> deleteByContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return 0;
@@ -173,42 +173,42 @@ class MessageStorage with Tag {
     });
   }
 
-  // Future<int> deleteList(List<MessageSchema>? list) async {
-  //   if (db?.isOpen != true) return 0;
-  //   if (list == null || list.isEmpty) return 0;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       Batch? batch = db?.batch();
-  //       for (MessageSchema schema in list) {
-  //         batch?.delete(
-  //           tableName,
-  //           where: 'msg_id = ?',
-  //           whereArgs: [schema.msgId],
-  //         );
-  //       }
-  //       List<Object?>? results = await batch?.commit();
-  //       int count = 0;
-  //       if (results != null && results.isNotEmpty) {
-  //         for (Object? result in results) {
-  //           if (result != null && (result as int) > 0) {
-  //             count += result;
-  //           }
-  //         }
-  //       }
-  //       if (count >= list.length) {
-  //         logger.v("$TAG - deleteList - success - count:$count");
-  //         return count;
-  //       } else if (count > 0) {
-  //         logger.w("$TAG - deleteList - lost - lost:${list.length - count}");
-  //         return count;
-  //       }
-  //       logger.w("$TAG - deleteList - empty - list:$list");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return 0;
-  //   });
-  // }
+  /*Future<int> deleteList(List<MessageSchema>? list) async {
+    if (db?.isOpen != true) return 0;
+    if (list == null || list.isEmpty) return 0;
+    return await _lock.synchronized(() async {
+      try {
+        Batch? batch = db?.batch();
+        for (MessageSchema schema in list) {
+          batch?.delete(
+            tableName,
+            where: 'msg_id = ?',
+            whereArgs: [schema.msgId],
+          );
+        }
+        List<Object?>? results = await batch?.commit();
+        int count = 0;
+        if (results != null && results.isNotEmpty) {
+          for (Object? result in results) {
+            if (result != null && (result as int) > 0) {
+              count += result;
+            }
+          }
+        }
+        if (count >= list.length) {
+          logger.v("$TAG - deleteList - success - count:$count");
+          return count;
+        } else if (count > 0) {
+          logger.w("$TAG - deleteList - lost - lost:${list.length - count}");
+          return count;
+        }
+        logger.w("$TAG - deleteList - empty - list:$list");
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
+  }*/
 
   Future<MessageSchema?> query(String? msgId) async {
     if (db?.isOpen != true) return null;
@@ -238,31 +238,31 @@ class MessageStorage with Tag {
     // });
   }
 
-  // Future<MessageSchema?> queryByPid(Uint8List? pid) async {
-  //   if (db?.isOpen != true) return null;
-  //   if (pid == null || pid.isEmpty) return null;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['*'],
-  //           where: 'pid = ?',
-  //           whereArgs: [pid],
-  //         );
-  //       });
-  //       if (res != null && res.length > 0) {
-  //         MessageSchema schema = MessageSchema.fromMap(res.first);
-  //         logger.v("$TAG - queryByPid - success - pid:$pid - schema:$schema");
-  //         return schema;
-  //       }
-  //       logger.v("$TAG - queryByPid - empty - pid:$pid");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return null;
-  //   });
-  // }
+  /*Future<MessageSchema?> queryByPid(Uint8List? pid) async {
+    if (db?.isOpen != true) return null;
+    if (pid == null || pid.isEmpty) return null;
+    return await _lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'pid = ?',
+            whereArgs: [pid],
+          );
+        });
+        if (res != null && res.length > 0) {
+          MessageSchema schema = MessageSchema.fromMap(res.first);
+          logger.v("$TAG - queryByPid - success - pid:$pid - schema:$schema");
+          return schema;
+        }
+        logger.v("$TAG - queryByPid - empty - pid:$pid");
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    });
+  }*/
 
   Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return null;
@@ -332,64 +332,64 @@ class MessageStorage with Tag {
     // });
   }
 
-  // Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
-  //   if (db?.isOpen != true) return null;
-  //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['*'],
-  //           where: 'msg_id = ? AND type = ?',
-  //           whereArgs: [msgId, contentType],
-  //         );
-  //       });
-  //       if (res != null && res.length > 0) {
-  //         MessageSchema schema = MessageSchema.fromMap(res.first);
-  //         logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
-  //         return schema;
-  //       }
-  //       logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return null;
-  //   });
-  // }
+  /*Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
+    if (db?.isOpen != true) return null;
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
+    return await _lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'msg_id = ? AND type = ?',
+            whereArgs: [msgId, contentType],
+          );
+        });
+        if (res != null && res.length > 0) {
+          MessageSchema schema = MessageSchema.fromMap(res.first);
+          logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
+          return schema;
+        }
+        logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    });
+  }*/
 
-  // Future<List<MessageSchema>> queryList(String? msgId) async {
-  //   if (db?.isOpen != true) return [];
-  //   if (msgId == null || msgId.isEmpty) return [];
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['*'],
-  //           where: 'msg_id = ?',
-  //           whereArgs: [msgId],
-  //         );
-  //       });
-  //       if (res == null || res.isEmpty) {
-  //         logger.v("$TAG - queryList - empty - msgId:$msgId");
-  //         return [];
-  //       }
-  //       List<MessageSchema> result = <MessageSchema>[];
-  //       String logText = '';
-  //       res.forEach((map) {
-  //         MessageSchema item = MessageSchema.fromMap(map);
-  //         logText += "    \n$item";
-  //         result.add(item);
-  //       });
-  //       logger.v("$TAG - queryList - success - msgId:$msgId - length:${result.length} - items:$logText");
-  //       return result;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return [];
-  //   });
-  // }
+  /*Future<List<MessageSchema>> queryList(String? msgId) async {
+    if (db?.isOpen != true) return [];
+    if (msgId == null || msgId.isEmpty) return [];
+    return await _lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'msg_id = ?',
+            whereArgs: [msgId],
+          );
+        });
+        if (res == null || res.isEmpty) {
+          logger.v("$TAG - queryList - empty - msgId:$msgId");
+          return [];
+        }
+        List<MessageSchema> result = <MessageSchema>[];
+        String logText = '';
+        res.forEach((map) {
+          MessageSchema item = MessageSchema.fromMap(map);
+          logText += "    \n$item";
+          result.add(item);
+        });
+        logger.v("$TAG - queryList - success - msgId:$msgId - length:${result.length} - items:$logText");
+        return result;
+      } catch (e) {
+        handleError(e);
+      }
+      return [];
+    });
+  }*/
 
   Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType, int limit) async {
     if (db?.isOpen != true) return [];
@@ -426,60 +426,60 @@ class MessageStorage with Tag {
     // });
   }
 
-  // Future<int> queryCountByContentType(String? msgId, String? contentType) async {
-  //   if (db?.isOpen != true) return 0;
-  //   if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       final res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['COUNT(id)'],
-  //           where: 'msg_id = ? AND type = ?',
-  //           whereArgs: [msgId, contentType],
-  //         );
-  //       });
-  //       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-  //       logger.v("$TAG - queryCountByContentType - msgId:$msgId - count:$count");
-  //       return count ?? 0;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return 0;
-  //   });
-  // }
+  /*Future<int> queryCountByContentType(String? msgId, String? contentType) async {
+    if (db?.isOpen != true) return 0;
+    if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
+    return await _lock.synchronized(() async {
+      try {
+        final res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['COUNT(id)'],
+            where: 'msg_id = ? AND type = ?',
+            whereArgs: [msgId, contentType],
+          );
+        });
+        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+        logger.v("$TAG - queryCountByContentType - msgId:$msgId - count:$count");
+        return count ?? 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return 0;
+    });
+  }*/
 
-  // Future<List<MessageSchema>> queryListUnRead() async {
-  //   if (db?.isOpen != true) return [];
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-  //         return txn.query(
-  //           tableName,
-  //           columns: ['*'],
-  //           where: 'status = ? AND is_delete = ?',
-  //           whereArgs: [MessageStatus.Received, 0],
-  //         );
-  //       });
-  //       if (res == null || res.isEmpty) {
-  //         logger.v("$TAG - queryListUnRead - empty");
-  //         return [];
-  //       }
-  //       List<MessageSchema> result = <MessageSchema>[];
-  //       String logText = '';
-  //       res.forEach((map) {
-  //         MessageSchema item = MessageSchema.fromMap(map);
-  //         logText += "    \n$item";
-  //         result.add(item);
-  //       });
-  //       logger.v("$TAG - queryListUnRead- length:${result.length} - items:$logText");
-  //       return result;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return [];
-  //   });
-  // }
+  /*Future<List<MessageSchema>> queryListUnRead() async {
+    if (db?.isOpen != true) return [];
+    return await _lock.synchronized(() async {
+      try {
+        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+          return txn.query(
+            tableName,
+            columns: ['*'],
+            where: 'status = ? AND is_delete = ?',
+            whereArgs: [MessageStatus.Received, 0],
+          );
+        });
+        if (res == null || res.isEmpty) {
+          logger.v("$TAG - queryListUnRead - empty");
+          return [];
+        }
+        List<MessageSchema> result = <MessageSchema>[];
+        String logText = '';
+        res.forEach((map) {
+          MessageSchema item = MessageSchema.fromMap(map);
+          logText += "    \n$item";
+          result.add(item);
+        });
+        logger.v("$TAG - queryListUnRead- length:${result.length} - items:$logText");
+        return result;
+      } catch (e) {
+        handleError(e);
+      }
+      return [];
+    });
+  }*/
 
   Future<int> unReadCount() async {
     if (db?.isOpen != true) return 0;
@@ -685,38 +685,38 @@ class MessageStorage with Tag {
     });
   }
 
-  // Future<bool> updateListStatus(List<String>? msgIdList, int status, {int? receiveAt, String? noType}) async {
-  //   if (db?.isOpen != true) return false;
-  //   if (msgIdList == null || msgIdList.isEmpty) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       await db?.transaction((txn) {
-  //         Batch batch = txn.batch();
-  //         msgIdList.forEach((msgId) {
-  //           batch.update(
-  //             tableName,
-  //             receiveAt == null
-  //                 ? {
-  //                     'status': status,
-  //                   }
-  //                 : {
-  //                     'status': status,
-  //                     'receive_at': receiveAt,
-  //                   },
-  //             where: (noType?.isNotEmpty == true) ? 'msg_id = ? AND NOT type = ?' : 'msg_id = ?',
-  //             whereArgs: (noType?.isNotEmpty == true) ? [msgId, noType] : [msgId],
-  //           );
-  //         });
-  //         return batch.commit();
-  //       });
-  //       logger.v("$TAG - updateListStatus - status:$status - msgIdList:$msgIdList");
-  //       return true;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> updateListStatus(List<String>? msgIdList, int status, {int? receiveAt, String? noType}) async {
+    if (db?.isOpen != true) return false;
+    if (msgIdList == null || msgIdList.isEmpty) return false;
+    return await _lock.synchronized(() async {
+      try {
+        await db?.transaction((txn) {
+          Batch batch = txn.batch();
+          msgIdList.forEach((msgId) {
+            batch.update(
+              tableName,
+              receiveAt == null
+                  ? {
+                      'status': status,
+                    }
+                  : {
+                      'status': status,
+                      'receive_at': receiveAt,
+                    },
+              where: (noType?.isNotEmpty == true) ? 'msg_id = ? AND NOT type = ?' : 'msg_id = ?',
+              whereArgs: (noType?.isNotEmpty == true) ? [msgId, noType] : [msgId],
+            );
+          });
+          return batch.commit();
+        });
+        logger.v("$TAG - updateListStatus - status:$status - msgIdList:$msgIdList");
+        return true;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
   Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
@@ -786,29 +786,29 @@ class MessageStorage with Tag {
     });
   }
 
-  // Future<bool> updateReceiveAt(String? msgId, int? receiveAt) async {
-  //   if (db?.isOpen != true) return false;
-  //   if (msgId == null || msgId.isEmpty) return false;
-  //   return await _lock.synchronized(() async {
-  //     try {
-  //       int? count = await db?.transaction((txn) {
-  //         return txn.update(
-  //           tableName,
-  //           {
-  //             'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
-  //           },
-  //           where: 'msg_id = ?',
-  //           whereArgs: [msgId],
-  //         );
-  //       });
-  //       logger.v("$TAG - updateReceiveAt - count:$count - msgId:$msgId - receiveAt:$receiveAt");
-  //       return (count ?? 0) > 0;
-  //     } catch (e) {
-  //       handleError(e);
-  //     }
-  //     return false;
-  //   });
-  // }
+  /*Future<bool> updateReceiveAt(String? msgId, int? receiveAt) async {
+    if (db?.isOpen != true) return false;
+    if (msgId == null || msgId.isEmpty) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'receive_at': receiveAt ?? DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'msg_id = ?',
+            whereArgs: [msgId],
+          );
+        });
+        logger.v("$TAG - updateReceiveAt - count:$count - msgId:$msgId - receiveAt:$receiveAt");
+        return (count ?? 0) > 0;
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }*/
 
   Future<bool> updateDeleteAt(String? msgId, int? deleteAt) async {
     if (db?.isOpen != true) return false;

@@ -130,67 +130,6 @@ class ChatOutCommon with Tag {
     }
   }
 
-  // Future<List<OnMessage>> _clientPublishData(String? selfAddress, String? topic, String data, {bool txPool = true, int? total, int tryTimes = 0, int maxTryTimes = 10}) async {
-  //   if (topic == null || topic.isEmpty) {
-  //     logger.w("$TAG - _clientPublishData - topic is empty - dest:$topic - data:$data");
-  //     return [];
-  //   }
-  //   if (tryTimes >= maxTryTimes) {
-  //     logger.w("$TAG - _clientPublishData - try over - dest:$topic - data:$data");
-  //     return [];
-  //   }
-  //   if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-  //     logger.i("$TAG - _clientPublishData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - dest:$topic - data:$data");
-  //     await Future.delayed(Duration(seconds: 2));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-  //   }
-  //   if (application.inBackGroundLater && Platform.isIOS) {
-  //     logger.i("$TAG - _clientPublishData - ios background - tryTimes:$tryTimes - dest:$topic - data:$data");
-  //     await Future.delayed(Duration(seconds: 1));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-  //   }
-  //   if (DateTime.now().millisecondsSinceEpoch < (lastSendTimeStamp + minSendIntervalMs)) {
-  //     int interval = DateTime.now().millisecondsSinceEpoch - lastSendTimeStamp;
-  //     logger.i("$TAG - _clientPublishData - interval small - interval:$interval - tryTimes:$tryTimes - dest:$topic - data:$data");
-  //     await Future.delayed(Duration(milliseconds: minSendIntervalMs * 2));
-  //     return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: tryTimes, maxTryTimes: maxTryTimes);
-  //   }
-  //   lastSendTimeStamp = DateTime.now().millisecondsSinceEpoch;
-  //   try {
-  //     // once
-  //     if (total == null || total <= 1000) {
-  //       OnMessage result = await clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: 0, limit: 1000);
-  //       return [result];
-  //     }
-  //     // split
-  //     List<Future<OnMessage>> futures = [];
-  //     for (int i = 0; i < total; i += 1000) {
-  //       futures.add(clientCommon.client!.publishText(genTopicHash(topic), data, txPool: txPool, offset: i, limit: i + 1000));
-  //     }
-  //     List<OnMessage> onMessageList = await Future.wait(futures);
-  //     logger.i("$TAG - clientPublishData - topic:$topic - total:$total - data$data - onMessageList:$onMessageList");
-  //     return onMessageList;
-  //   } catch (e) {
-  //     if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-  //       final client = (await clientCommon.reSignIn(false, delayMs: 500))[0];
-  //       if ((client != null) && (client.address.isNotEmpty == true)) {
-  //         logger.i("$TAG - clientPublishData - reSignIn success - tryTimes:$tryTimes - topic:$topic data:$data");
-  //         await Future.delayed(Duration(seconds: 1));
-  //         return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-  //       } else {
-  //         // maybe always no here
-  //         logger.w("$TAG - clientPublishData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-  //         return [];
-  //       }
-  //     } else {
-  //       handleError(e);
-  //       logger.w("$TAG - clientPublishData - try by error - tryTimes:$tryTimes - topic:$topic - data:$data");
-  //       await Future.delayed(Duration(seconds: 2));
-  //       return _clientPublishData(selfAddress, topic, data, txPool: txPool, total: total, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-  //     }
-  //   }
-  // }
-
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (clientAddressList.isEmpty) return;
@@ -882,32 +821,4 @@ class ChatOutCommon with Tag {
 
     await SendPush.send(deviceToken, title, content);
   }
-
-  // Future<bool> _handleSendError(dynamic e, int tryTimes, Function? callback) async {
-  //   if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
-  //     await Future.delayed(Duration(milliseconds: 100));
-  //     final client = (await clientCommon.reSignIn(false))[0];
-  //     if (client != null && (client.address.isNotEmpty == true)) {
-  //       logger.i("$TAG - _handleSendError - callback - callback:${callback?.toString()}");
-  //       try {
-  //         await callback?.call();
-  //         return true;
-  //       } catch (e) {
-  //         if (tryTimes >= 3) {
-  //           handleError(e);
-  //           return true;
-  //         }
-  //         return false;
-  //       }
-  //     } else {
-  //       final wallet = await walletCommon.getDefault();
-  //       logger.w("$TAG - _handleSendError - reSignIn fail - wallet:$wallet");
-  //       return false;
-  //     }
-  //   } else if (tryTimes >= 3) {
-  //     handleError(e);
-  //     return true;
-  //   }
-  //   return false;
-  // }
 }
