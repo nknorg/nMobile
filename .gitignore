@@ -41,6 +41,13 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# nkn build(android)
+nkn-sources.jar
+nkn.aar
+
+# nkn build(ios)
+**/Nkn.xcframework/
+
 # android build
 **.keystore
 **/key.properties
