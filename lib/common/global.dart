@@ -84,6 +84,8 @@ class Global {
   static int deviceInfoExpireMs = 12 * 60 * 60 * 1000; // 12h
   static int txPoolDelayMs = 1 * 60 * 1000; // 1m
 
+  static double topicSubscribeFeeDefault = 0.00000005; // 5*10(-8)
+
   static init() async {
     Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
 
