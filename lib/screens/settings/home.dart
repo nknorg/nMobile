@@ -21,6 +21,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/screens/settings/cache.dart';
+import 'package:nmobile/screens/settings/subscribe.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -458,7 +459,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
-                    style: _buttonStyle(),
+                    style: _buttonStyle(bottom: true),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
@@ -515,7 +516,39 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
-                    style: _buttonStyle(top: true, bottom: true),
+                    style: _buttonStyle(top: true),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          "订阅", // TODO:GG locale
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor1,
+                          fontWeight: FontWeight.bold,
+                          height: 1,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Asset.iconSvg(
+                              'right',
+                              width: 24,
+                              color: application.theme.fontColor2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, SettingsSubscribeScreen.routeName);
+                    },
+                  ),
+                ),
+                Divider(height: 0, color: application.theme.dividerColor),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(bottom: true),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[

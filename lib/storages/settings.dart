@@ -18,6 +18,8 @@ class SettingsStorage {
   static const String DATABASE_CLEAN_PWD_ON_IOS_14 = "database_clean_pwd_on_ios_14";
   static const String DATABASE_RESET_PWD_ON_IOS_16 = "database_reset_pwd_on_ios_16";
 
+  static const String DEFAULT_TOPIC_SUBSCRIBE_FEE = "default_topic_subscribe_fee";
+
   static final LocalStorage _localStorage = LocalStorage();
 
   static Future getSettings(String key) async {
