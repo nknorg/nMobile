@@ -95,7 +95,6 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                                   textInputAction: TextInputAction.done,
                                   inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
-                                  // onSaved: (v) => _fee = double.tryParse(v ?? '0') ?? 0,
                                   textAlign: TextAlign.end,
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
@@ -103,7 +102,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                     hintStyle: TextStyle(color: application.theme.fontColor2.withAlpha(100)),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
-                                      // borderRadius: BorderRadius.all(Radius.circular(20)),
+                                      borderRadius: BorderRadius.all(Radius.circular(20)),
                                       borderSide: const BorderSide(width: 0, style: BorderStyle.none),
                                     ),
                                   ),

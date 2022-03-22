@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
-import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -30,25 +29,17 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
   TextEditingController _topicController = TextEditingController();
   bool _privateSelected = false;
 
-  TextEditingController _feeController = TextEditingController();
-  FocusNode _feeFocusNode = FocusNode();
-  bool _showFeeLayout = false;
-  double _fee = 0;
-  double _sliderFee = 0.1;
-  double _sliderFeeMin = 0;
-  double _sliderFeeMax = 10;
-
   @override
   void onRefreshArguments() {}
 
   @override
   void initState() {
     super.initState();
-    _feeController.text = _fee.toString();
   }
 
-  Future<bool> createOrJoinTopic(String? topicName, double fee) async {
+  Future<bool> createOrJoinTopic(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return false;
+    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
 
     if (_privateSelected) {
       if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
@@ -61,12 +52,13 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
+    double fee = (await BottomDialog.of(Global.appContext).showSubscribeFee()) ?? 0;
+
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
     Loading.dismiss();
 
     if (_topic == null) return false;
-    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     ChatMessagesScreen.go(Global.appContext, _topic);
     return true;
   }
@@ -138,128 +130,6 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                   ],
                 ),
               ),
-              SizedBox(height: 2),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _showFeeLayout = !_showFeeLayout;
-                      });
-                    },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(width: 20),
-                        Label(
-                          Global.locale((s) => s.advanced),
-                          type: LabelType.bodyRegular,
-                          color: _theme.fontColor1,
-                          textAlign: TextAlign.start,
-                        ),
-                        RotatedBox(
-                          quarterTurns: _showFeeLayout ? 2 : 0,
-                          child: Asset.iconSvg('down', color: _theme.primaryColor, width: 20),
-                        ),
-                        SizedBox(width: 20),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              ExpansionLayout(
-                isExpanded: _showFeeLayout,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(width: 20),
-                        Label(
-                          Global.locale((s) => s.fee),
-                          type: LabelType.bodyRegular,
-                          color: _theme.fontColor1,
-                          textAlign: TextAlign.start,
-                        ),
-                        Spacer(),
-                        SizedBox(
-                          width: Global.screenWidth() / 3,
-                          child: FormText(
-                            controller: _feeController,
-                            focusNode: _feeFocusNode,
-                            padding: const EdgeInsets.only(bottom: 0),
-                            keyboardType: TextInputType.numberWithOptions(decimal: true),
-                            textInputAction: TextInputAction.done,
-                            inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
-                            onSaved: (v) => _fee = double.tryParse(v ?? '0') ?? 0,
-                            onChanged: (v) {
-                              setState(() {
-                                double fee = v.isNotEmpty ? (double.tryParse(v) ?? 0) : 0;
-                                if (fee > _sliderFeeMax) {
-                                  fee = _sliderFeeMax;
-                                } else if (fee < _sliderFeeMin) {
-                                  fee = _sliderFeeMin;
-                                }
-                                _sliderFee = fee;
-                              });
-                            },
-                            suffixIcon: GestureDetector(
-                              onTap: () {},
-                              child: Container(
-                                width: 20,
-                                alignment: Alignment.centerRight,
-                                child: Label(Global.locale((s) => s.nkn), type: LabelType.label),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: <Widget>[
-                        SizedBox(width: 16),
-                        Label(
-                          Global.locale((s) => s.slow),
-                          type: LabelType.bodySmall,
-                          color: _theme.primaryColor,
-                        ),
-                        Spacer(),
-                        Label(
-                          Global.locale((s) => s.average),
-                          type: LabelType.bodySmall,
-                          color: _theme.primaryColor,
-                        ),
-                        Spacer(),
-                        Label(
-                          Global.locale((s) => s.fast),
-                          type: LabelType.bodySmall,
-                          color: _theme.primaryColor,
-                        ),
-                        SizedBox(width: 20),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 6, right: 6),
-                      child: Slider(
-                        value: _sliderFee,
-                        onChanged: (v) {
-                          setState(() {
-                            _sliderFee = _fee = v;
-                            _feeController.text = _fee.toStringAsFixed(2);
-                          });
-                        },
-                        max: _sliderFeeMax,
-                        min: _sliderFeeMin,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Padding(
                 padding: EdgeInsets.only(left: 16, top: 16),
                 child: Label(
@@ -281,7 +151,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                 width: double.infinity,
                 text: Global.locale((s) => s.continue_text),
                 onPressed: () {
-                  if (_formValid) createOrJoinTopic(_topicController.text, _fee);
+                  if (_formValid) createOrJoinTopic(_topicController.text);
                 },
               ),
             ),
@@ -298,7 +168,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     for (PopularChannel item in PopularChannel.defaultData()) {
       list.add(InkWell(
         onTap: () {
-          createOrJoinTopic(item.topic, 0);
+          createOrJoinTopic(item.topic);
         },
         child: Container(
           width: double.infinity,
