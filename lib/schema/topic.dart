@@ -168,13 +168,19 @@ class TopicSchema {
     }
   }
 
-  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, {int? nonce}) {
+  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, int? nonce) {
     Map<String, dynamic> newData = data ?? Map();
+    if ((nonce != null) && (nonce >= 0)) {
+      newData['progress_subscribe_nonce'] = nonce;
+    } else {
+      newData.remove('progress_subscribe_nonce');
+    }
     if (subscribe) {
       if (isProgress) {
         newData['subscribe_progress'] = true;
       } else {
         newData.remove('subscribe_progress');
+        newData.remove('progress_subscribe_nonce');
       }
       newData.remove('unsubscribe_progress');
     } else {
@@ -182,13 +188,9 @@ class TopicSchema {
         newData['unsubscribe_progress'] = true;
       } else {
         newData.remove('unsubscribe_progress');
+        newData.remove('progress_subscribe_nonce');
       }
       newData.remove('subscribe_progress');
-    }
-    if ((nonce != null) && (nonce >= 0)) {
-      newData['progress_nonce'] = nonce;
-    } else {
-      newData.remove('progress_nonce');
     }
     return newData;
   }
@@ -205,8 +207,22 @@ class TopicSchema {
     return isProgress;
   }
 
-  int? getProgressNonce() {
-    return data?['progress_nonce'];
+  int? getProgressSubscribeNonce() {
+    return data?['progress_subscribe_nonce'];
+  }
+
+  Map<String, dynamic> newProgressPermissionNonce(int? nonce) {
+    Map<String, dynamic> newData = data ?? Map();
+    if ((nonce != null) && (nonce >= 0)) {
+      newData['progress_permission_nonce'] = nonce;
+    } else {
+      newData.remove('progress_permission_nonce');
+    }
+    return newData;
+  }
+
+  int? getProgressPermissionNonce() {
+    return data?['progress_permission_nonce'];
   }
 
   Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
