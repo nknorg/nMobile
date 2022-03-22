@@ -168,7 +168,7 @@ class TopicSchema {
     }
   }
 
-  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress) {
+  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, {int? nonce}) {
     Map<String, dynamic> newData = data ?? Map();
     if (subscribe) {
       if (isProgress) {
@@ -185,6 +185,11 @@ class TopicSchema {
       }
       newData.remove('subscribe_progress');
     }
+    if ((nonce != null) && (nonce >= 0)) {
+      newData['progress_nonce'] = nonce;
+    } else {
+      newData.remove('progress_nonce');
+    }
     return newData;
   }
 
@@ -198,6 +203,10 @@ class TopicSchema {
     bool? isProgress = data?['unsubscribe_progress'];
     if (isProgress == null) return false;
     return isProgress;
+  }
+
+  int? getProgressNonce() {
+    return data?['progress_nonce'];
   }
 
   Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
