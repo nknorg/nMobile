@@ -175,7 +175,7 @@ class TopSub {
         String? topicHash = await clientCommon.client?.subscribe(
           topic: genTopicHash(topic),
           duration: Global.topicDefaultSubscribeHeight,
-          fee: fee.toString(),
+          fee: fee.toStringAsFixed(8),
           identifier: identifier,
           meta: meta,
           nonce: nonce,
@@ -185,7 +185,11 @@ class TopSub {
         canTryTimer = false;
       }
     } catch (e) {
-      if (e.toString().contains("nonce is not continuous")) {
+      if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        success = false;
+        canTryTimer = false;
+      } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
         if (tryTimes >= maxTryTimes) {
@@ -194,16 +198,18 @@ class TopSub {
         } else {
           nonce = await Global.getNonce(forceFetch: true);
         }
-      } else if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
-        success = false;
-        canTryTimer = false;
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
         nonce = await Global.refreshNonce();
+      } else if (e.toString().contains('not sufficient funds')) {
+        // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        if (toast && identifier.isEmpty) Toast.show("订阅所需NKN不足"); // TODO:GG locale
+        success = false;
+        canTryTimer = false;
       } else {
         nonce = await Global.getNonce(forceFetch: true);
         if (tryTimes >= maxTryTimes) {
@@ -251,7 +257,7 @@ class TopSub {
         String? topicHash = await clientCommon.client?.unsubscribe(
           topic: genTopicHash(topic),
           identifier: identifier,
-          fee: fee.toString(),
+          fee: fee.toStringAsFixed(8),
           nonce: nonce,
         );
         success = (topicHash != null) && (topicHash.isNotEmpty);
@@ -259,7 +265,11 @@ class TopSub {
         canTryTimer = false;
       }
     } catch (e) {
-      if (e.toString().contains("nonce is not continuous")) {
+      if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        success = false;
+        canTryTimer = false;
+      } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
         if (tryTimes >= maxTryTimes) {
@@ -268,16 +278,18 @@ class TopSub {
         } else {
           nonce = await Global.getNonce(forceFetch: true);
         }
-      } else if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
-        success = false;
-        canTryTimer = false;
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
         nonce = await Global.refreshNonce();
+      } else if (e.toString().contains('not sufficient funds')) {
+        // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        if (toast && identifier.isEmpty) Toast.show("退订所需NKN不足"); // TODO:GG locale
+        success = false;
+        canTryTimer = false;
       } else {
         nonce = await Global.getNonce(forceFetch: true);
         if (tryTimes >= maxTryTimes) {
