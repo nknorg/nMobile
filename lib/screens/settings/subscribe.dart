@@ -96,6 +96,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                   textInputAction: TextInputAction.done,
                                   inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                                   // onSaved: (v) => _fee = double.tryParse(v ?? '0') ?? 0,
+                                  textAlign: TextAlign.end,
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
                                     hintText: "请输入费率", // TODO:GG locale
@@ -118,7 +119,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                 child: Label(Global.locale((s) => s.nkn), type: LabelType.bodyRegular),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
