@@ -11,7 +11,23 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class TopSub {
-  // TODO:GG handle all
+  static subscribeEmpty(int nonce, double fee) async {
+    bool? success;
+    try {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? topicHash = await clientCommon.client?.subscribe(
+          topic: "",
+          fee: fee.toStringAsFixed(8),
+        );
+        success = (topicHash != null) && (topicHash.isNotEmpty);
+      }
+    } catch (e) {
+      logger.w("TopSub - subscribeEmpty - nonce:$nonce - fee:${fee.toStringAsFixed(8)}");
+      success = false;
+    }
+    return success;
+  }
+
   static Future<bool> subscribeWithPermission(
     String? topic, {
     double fee = 0,
@@ -62,23 +78,27 @@ class TopSub {
       }
     }
 
-    SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
-    if (_schema != null && newStatus != null) {
+    TopicSchema? _topic = await topicCommon.queryByTopic(topic);
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
+    if (_topic != null && _subscriber != null && newStatus != null) {
       if (!canTryTimer) {
-        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, nonce: _nonce);
-        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_schema.id, newData).then((_) => subscriberCommon.setStatus(_schema.id, oldStatus, notify: true)); // await
+        Map<String, dynamic> newData1 = _topic.newProgressPermissionNonce(null);
+        topicCommon.setData(_topic.id, newData1); // await
+        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, false);
+        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$_nonce - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_subscriber.id, newData2).then((_) => subscriberCommon.setStatus(_subscriber.id, oldStatus, notify: true)); // await
       } else {
         success = true; // will success by try timer
-        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, nonce: _nonce);
-        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_schema.id, newData); // await
+        Map<String, dynamic> newData1 = _topic.newProgressPermissionNonce(_nonce);
+        topicCommon.setData(_topic.id, newData1); // await
+        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, true);
+        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$_nonce - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_subscriber.id, newData2); // await
       }
     }
     return success;
   }
 
-  // TODO:GG handle all
   static Future<bool> subscribeWithJoin(
     String? topic,
     bool isJoin, {
@@ -133,23 +153,23 @@ class TopSub {
     if (_schema != null) {
       if (isJoin) {
         if (!canTryTimer) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, nonce: _nonce);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, null);
           logger.w("TopSub - subscribeWithJoin - cancel subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
           topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, false, notify: true)); // await
         } else {
           success = true; // will success by try timer
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true, nonce: _nonce);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true, _nonce);
           logger.i("TopSub - subscribeWithJoin - add subscribe try - topic:$topic - newData:$newData - nonce:$nonce - identifier:$identifier");
           topicCommon.setData(_schema.id, newData); // await
         }
       } else {
         if (!canTryTimer) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, nonce: _nonce);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, null);
           logger.i("TopSub - _unsubscribe - cancel unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
           topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, true, notify: true)); // await
         } else {
           success = true; // will success by try timer
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true, nonce: _nonce);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true, _nonce);
           logger.i("TopSub - _unsubscribe - add unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce");
           topicCommon.setData(_schema.id, newData); // await
         }
@@ -190,13 +210,13 @@ class TopSub {
       }
     } catch (e) {
       if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier - meta:$meta");
         success = false;
         canTryTimer = false;
       } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
-        logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
-        if (tryTimes >= maxTryTimes) {
+        logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier - meta:$meta");
+        if ((nonce != null) || (tryTimes >= maxTryTimes)) {
           if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
         } else {
@@ -204,18 +224,16 @@ class TopSub {
         }
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
-        logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
-        nonce = await Global.refreshNonce();
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show("订阅所需NKN不足"); // TODO:GG locale
         success = false;
         canTryTimer = false;
       } else {
-        nonce = await Global.getNonce(forceFetch: true);
         if (tryTimes >= maxTryTimes) {
           success = false;
           handleError(e);
@@ -270,13 +288,13 @@ class TopSub {
       }
     } catch (e) {
       if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier");
         success = false;
         canTryTimer = false;
       } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
-        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
-        if (tryTimes >= maxTryTimes) {
+        logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier");
+        if ((nonce != null) || (tryTimes >= maxTryTimes)) {
           if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
         } else {
@@ -284,18 +302,16 @@ class TopSub {
         }
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
-        logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
-        nonce = await Global.refreshNonce();
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - identifier:$identifier");
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - identifier:$identifier");
         if (toast && identifier.isEmpty) Toast.show("退订所需NKN不足"); // TODO:GG locale
         success = false;
         canTryTimer = false;
       } else {
-        nonce = await Global.getNonce(forceFetch: true);
         if (tryTimes >= maxTryTimes) {
           success = false;
           handleError(e);
