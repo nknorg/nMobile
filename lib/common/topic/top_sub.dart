@@ -11,6 +11,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class TopSub {
+  // TODO:GG handle all
   static Future<bool> subscribeWithPermission(
     String? topic, {
     double fee = 0,
@@ -61,31 +62,23 @@ class TopSub {
       }
     }
 
-    TopicSchema? _topic = await topicCommon.queryByTopic(topic);
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
-    if (_topic != null && _subscriber != null && newStatus != null) {
+    SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
+    if (_schema != null && newStatus != null) {
       if (!canTryTimer) {
-        // nonce
-        Map<String, dynamic> newData1 = _topic.newProgressPermissionNonce(_nonce);
-        topicCommon.setData(_topic.id, newData1); // await
-        // permission
-        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, false);
-        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_subscriber.id, newData2).then((_) => subscriberCommon.setStatus(_subscriber.id, oldStatus, notify: true)); // await
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, nonce: _nonce);
+        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_schema.id, newData).then((_) => subscriberCommon.setStatus(_schema.id, oldStatus, notify: true)); // await
       } else {
         success = true; // will success by try timer
-        // nonce
-        Map<String, dynamic> newData1 = _topic.newProgressPermissionNonce(null);
-        topicCommon.setData(_topic.id, newData1); // await
-        // permission
-        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, true);
-        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$nonce - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_subscriber.id, newData2); // await
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, nonce: _nonce);
+        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData - nonce:$nonce - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_schema.id, newData); // await
       }
     }
     return success;
   }
 
+  // TODO:GG handle all
   static Future<bool> subscribeWithJoin(
     String? topic,
     bool isJoin, {
