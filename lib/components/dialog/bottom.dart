@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
@@ -13,9 +14,11 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/components/wallet/item.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/contact/home.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BottomDialog extends BaseStateFulWidget {
@@ -376,6 +379,79 @@ class BottomDialog extends BaseStateFulWidget {
             version: QrVersions.auto,
             size: 240.0,
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<double?> showSubscribeFee({double? fee}) async {
+    TextEditingController _inputController = TextEditingController();
+
+    fee = fee ?? double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE)) ?? 0;
+    if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+    _inputController.text = fee.toStringAsFixed(8);
+
+    return showWithTitle<double>(
+      title: "是否加速订阅", // TODO:GG locale
+      desc: "加速订阅需要额外的NKN,将会从钱包里扣除", // TODO:GG locale
+      height: 300,
+      action: Padding(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Button(
+                text: "订阅", // TODO:GG locale
+                // width: double.infinity,
+                onPressed: () {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                },
+              ),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              flex: 3,
+              child: Button(
+                text: "加速订阅", // TODO:GG locale
+                width: double.infinity,
+                backgroundColor: application.theme.strongColor,
+                onPressed: () {
+                  double fee = _inputController.text.isNotEmpty ? (double.tryParse(_inputController.text) ?? 0) : 0;
+                  if (fee <= 0) fee = 0;
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, fee);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: [
+                Label(
+                  "加速订阅支付NKN", // TODO:GG locale
+                  type: LabelType.h4,
+                  textAlign: TextAlign.start,
+                ),
+                SizedBox(width: 20),
+                Expanded(
+                  child: FormText(
+                    controller: _inputController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
+                    textAlign: TextAlign.start,
+                    hintText: "请输入费率", // TODO:GG locale
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
