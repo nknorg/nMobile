@@ -25,6 +25,7 @@ class FormText extends BaseStateFulWidget {
   final bool maxLengthEnforced;
   List<TextInputFormatter>? inputFormatters;
   final TextInputAction? textInputAction;
+  TextAlign textAlign = TextAlign.start;
   ValueChanged<String>? onChanged;
   VoidCallback? onEditingComplete;
   ValueChanged<String>? onFieldSubmitted;
@@ -55,6 +56,7 @@ class FormText extends BaseStateFulWidget {
     this.maxLengthEnforced = true,
     this.inputFormatters,
     this.textInputAction,
+    this.textAlign = TextAlign.start,
     this.onChanged,
     this.onEditingComplete,
     this.onFieldSubmitted,
@@ -105,6 +107,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
           maxLengthEnforced: widget.maxLengthEnforced,
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
+          textAlign: widget.textAlign,
           onChanged: widget.onChanged,
           onEditingComplete: widget.onEditingComplete,
           onFieldSubmitted: widget.onFieldSubmitted,
@@ -144,6 +147,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
           maxLengthEnforced: widget.maxLengthEnforced,
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
+          textAlign: widget.textAlign,
           onChanged: widget.onChanged,
           onEditingComplete: widget.onEditingComplete,
           onFieldSubmitted: widget.onFieldSubmitted,
