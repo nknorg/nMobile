@@ -90,7 +90,7 @@ class TaskService {
 
     // immediate
     // addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
-    addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNonce(), delayMs: 1000);
+    // addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNativeNonce(), delayMs: 1000);
     addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), delayMs: 1000);
     // addTask30(KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
     // addTask30(KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
