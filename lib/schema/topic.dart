@@ -223,30 +223,6 @@ class TopicSchema {
     return fee;
   }
 
-  Map<String, dynamic> newProgressPermission(int? nonce, double fee) {
-    Map<String, dynamic> newData = data ?? Map();
-    if ((nonce != null) && (nonce >= 0)) {
-      newData['progress_permission_nonce'] = nonce;
-      newData['progress_permission_fee'] = fee;
-    } else {
-      newData.remove('progress_permission_nonce');
-      newData.remove('progress_permission_fee');
-    }
-    return newData;
-  }
-
-  int? getProgressPermissionNonce() {
-    int? nonce = data?['progress_permission_nonce'];
-    if (nonce == null || nonce < 0) return null;
-    return nonce;
-  }
-
-  double getProgressPermissionFee() {
-    double? fee = data?['progress_permission_fee'];
-    if (fee == null || fee < 0) return 0;
-    return fee;
-  }
-
   Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
     Map<String, dynamic> newData = data ?? Map();
     newData['last_refresh_subscribers_at'] = lastRefreshSubscribersAt;

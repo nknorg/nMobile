@@ -78,22 +78,17 @@ class TopSub {
       }
     }
 
-    TopicSchema? _topic = await topicCommon.queryByTopic(topic);
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
-    if (_topic != null && _subscriber != null && newStatus != null) {
+    SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
+    if (_schema != null && newStatus != null) {
       if (!canTryTimer) {
-        Map<String, dynamic> newData1 = _topic.newProgressPermission(null, fee);
-        topicCommon.setData(_topic.id, newData1); // await
-        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, false);
-        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_subscriber.id, newData2).then((_) => subscriberCommon.setStatus(_subscriber.id, oldStatus, notify: true)); // await
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, null, fee);
+        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_schema.id, newData).then((_) => subscriberCommon.setStatus(_schema.id, oldStatus, notify: true)); // await
       } else {
         success = true; // will success by try timer
-        Map<String, dynamic> newData1 = _topic.newProgressPermission(_nonce, fee);
-        topicCommon.setData(_topic.id, newData1); // await
-        Map<String, dynamic> newData2 = _subscriber.newDataByAppendStatus(newStatus, true);
-        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData1:$newData1 - newData2:$newData2 - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_subscriber.id, newData2); // await
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, null, fee);
+        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
+        subscriberCommon.setData(_schema.id, newData); // await
       }
     }
     return success;
@@ -213,12 +208,14 @@ class TopSub {
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         success = false;
         canTryTimer = false;
+        _nonce = null;
       } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
           if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
+          _nonce = null;
         } else {
           nonce = await Global.getNonce();
         }
@@ -227,15 +224,18 @@ class TopSub {
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
+        _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show("订阅所需NKN不足"); // TODO:GG locale
         success = false;
         canTryTimer = false;
+        _nonce = null;
       } else {
         if (tryTimes >= maxTryTimes) {
           success = false;
+          _nonce = null;
           handleError(e);
         }
       }
@@ -291,12 +291,14 @@ class TopSub {
         logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         success = false;
         canTryTimer = false;
+        _nonce = null;
       } else if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
           if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
           success = false;
+          _nonce = null;
         } else {
           nonce = await Global.getNonce();
         }
@@ -305,15 +307,18 @@ class TopSub {
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
+        _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if (toast && identifier.isEmpty) Toast.show("退订所需NKN不足"); // TODO:GG locale
         success = false;
         canTryTimer = false;
+        _nonce = null;
       } else {
         if (tryTimes >= maxTryTimes) {
           success = false;
+          _nonce = null;
           handleError(e);
         }
       }
