@@ -168,12 +168,14 @@ class TopicSchema {
     }
   }
 
-  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, int? nonce) {
+  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, int? nonce, double fee) {
     Map<String, dynamic> newData = data ?? Map();
     if ((nonce != null) && (nonce >= 0)) {
       newData['progress_subscribe_nonce'] = nonce;
+      newData['progress_subscribe_fee'] = fee;
     } else {
       newData.remove('progress_subscribe_nonce');
+      newData.remove('progress_subscribe_fee');
     }
     if (subscribe) {
       if (isProgress) {
@@ -181,6 +183,7 @@ class TopicSchema {
       } else {
         newData.remove('subscribe_progress');
         newData.remove('progress_subscribe_nonce');
+        newData.remove('progress_subscribe_fee');
       }
       newData.remove('unsubscribe_progress');
     } else {
@@ -189,6 +192,7 @@ class TopicSchema {
       } else {
         newData.remove('unsubscribe_progress');
         newData.remove('progress_subscribe_nonce');
+        newData.remove('progress_subscribe_fee');
       }
       newData.remove('subscribe_progress');
     }
@@ -208,21 +212,39 @@ class TopicSchema {
   }
 
   int? getProgressSubscribeNonce() {
-    return data?['progress_subscribe_nonce'];
+    int? nonce = data?['progress_subscribe_nonce'];
+    if (nonce == null || nonce < 0) return null;
+    return nonce;
   }
 
-  Map<String, dynamic> newProgressPermissionNonce(int? nonce) {
+  double getProgressSubscribeFee() {
+    double? fee = data?['progress_subscribe_fee'];
+    if (fee == null || fee < 0) return 0;
+    return fee;
+  }
+
+  Map<String, dynamic> newProgressPermission(int? nonce, double fee) {
     Map<String, dynamic> newData = data ?? Map();
     if ((nonce != null) && (nonce >= 0)) {
       newData['progress_permission_nonce'] = nonce;
+      newData['progress_permission_fee'] = fee;
     } else {
       newData.remove('progress_permission_nonce');
+      newData.remove('progress_permission_fee');
     }
     return newData;
   }
 
   int? getProgressPermissionNonce() {
-    return data?['progress_permission_nonce'];
+    int? nonce = data?['progress_permission_nonce'];
+    if (nonce == null || nonce < 0) return null;
+    return nonce;
+  }
+
+  double getProgressPermissionFee() {
+    double? fee = data?['progress_permission_fee'];
+    if (fee == null || fee < 0) return 0;
+    return fee;
   }
 
   Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
