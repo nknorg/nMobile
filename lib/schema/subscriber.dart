@@ -51,12 +51,21 @@ class SubscriberSchema {
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
-  Map<String, dynamic> newDataByAppendStatus(int status, bool isProgress) {
+  Map<String, dynamic> newDataByAppendStatus(int status, bool isProgress, int? nonce, double fee) {
     Map<String, dynamic> newData = data ?? Map();
+    if ((nonce != null) && (nonce >= 0)) {
+      newData['progress_permission_nonce'] = nonce;
+      newData['progress_permission_fee'] = fee;
+    } else {
+      newData.remove('progress_permission_nonce');
+      newData.remove('progress_permission_fee');
+    }
     if (isProgress) {
       newData['permission_progress'] = status;
     } else {
       newData.remove('permission_progress');
+      newData.remove('progress_permission_nonce');
+      newData.remove('progress_permission_fee');
     }
     return newData;
   }
@@ -64,6 +73,18 @@ class SubscriberSchema {
   int? isPermissionProgress() {
     int? status = data?['permission_progress'];
     return status;
+  }
+
+  int? getProgressPermissionNonce() {
+    int? nonce = data?['progress_permission_nonce'];
+    if (nonce == null || nonce < 0) return null;
+    return nonce;
+  }
+
+  double getProgressPermissionFee() {
+    double? fee = data?['progress_permission_fee'];
+    if (fee == null || fee < 0) return 0;
+    return fee;
   }
 
   static SubscriberSchema? create(String? topic, String? clientAddress, int? status, int? permPage) {
