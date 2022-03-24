@@ -55,10 +55,25 @@ class TopSub {
     );
     bool success = results[0];
     bool canTryTimer = results[1];
-    int? _nonce = results[2];
+    bool exists = results[2];
+    int? _nonce = results[3];
 
     if (!success) {
-      if (tryTimes < maxTryTimes) {
+      if (exists && fee > 0) {
+        int? blockNonce = await Global.getNonce(txPool: false);
+        int? poolNonce = await Global.getNonce(txPool: true);
+        if (blockNonce != null && blockNonce >= 0 && poolNonce != null && poolNonce > blockNonce) {
+          for (var i = (blockNonce + 1); i < poolNonce; i++) {
+            List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
+            if (results[0] != true) {
+              await subscribeEmpty(i, fee);
+            } else {
+              nonce = i;
+              break;
+            }
+          }
+        }
+      } else if (tryTimes < maxTryTimes) {
         logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - tryTimes:$tryTimes - topic:$topic - permPage:$permissionPage - meta:$meta");
         await Future.delayed(Duration(seconds: 5));
         return subscribeWithPermission(
@@ -81,12 +96,12 @@ class TopSub {
     SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if (_schema != null && newStatus != null) {
       if (!canTryTimer) {
-        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, null, fee);
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, null, 0);
         logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
         subscriberCommon.setData(_schema.id, newData).then((_) => subscriberCommon.setStatus(_schema.id, oldStatus, notify: true)); // await
       } else {
         success = true; // will success by try timer
-        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, null, fee);
+        Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, _nonce, fee);
         logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
         subscriberCommon.setData(_schema.id, newData); // await
       }
@@ -124,10 +139,25 @@ class TopSub {
           );
     bool success = results[0];
     bool canTryTimer = results[1];
-    int? _nonce = results[2];
+    bool exists = results[2];
+    int? _nonce = results[3];
 
     if (!success) {
-      if (tryTimes < maxTryTimes) {
+      if (exists && fee > 0) {
+        int? blockNonce = await Global.getNonce(txPool: false);
+        int? poolNonce = await Global.getNonce(txPool: true);
+        if (blockNonce != null && blockNonce >= 0 && poolNonce != null && poolNonce > blockNonce) {
+          for (var i = (blockNonce + 1); i < poolNonce; i++) {
+            List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
+            if (results[0] != true) {
+              await subscribeEmpty(i, fee);
+            } else {
+              nonce = i;
+              break;
+            }
+          }
+        }
+      } else if (tryTimes < maxTryTimes) {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - tryTimes:$tryTimes - topic:$topic - identifier:$identifier");
         await Future.delayed(Duration(seconds: 2));
         return subscribeWithJoin(
@@ -148,7 +178,7 @@ class TopSub {
     if (_schema != null) {
       if (isJoin) {
         if (!canTryTimer) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, null, fee);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, null, 0);
           logger.w("TopSub - subscribeWithJoin - cancel subscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee - identifier:$identifier");
           topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, false, notify: true)); // await
         } else {
@@ -159,7 +189,7 @@ class TopSub {
         }
       } else {
         if (!canTryTimer) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, null, fee);
+          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, null, 0);
           logger.i("TopSub - _unsubscribe - cancel unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee");
           topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, true, notify: true)); // await
         } else {
@@ -189,6 +219,7 @@ class TopSub {
 
     bool? success;
     bool canTryTimer = true;
+    bool exists = false;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
@@ -224,6 +255,7 @@ class TopSub {
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
+        exists = true;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
@@ -257,7 +289,7 @@ class TopSub {
         success = false; // permission action can add to try timer
       }
     }
-    return [success, canTryTimer, _nonce];
+    return [success, canTryTimer, exists, _nonce];
   }
 
   static Future<List> _unsubscribe(
@@ -274,6 +306,7 @@ class TopSub {
 
     bool? success;
     bool canTryTimer = true;
+    bool exists = false;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.unsubscribe(
@@ -307,6 +340,7 @@ class TopSub {
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
+        exists = true;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
@@ -339,7 +373,7 @@ class TopSub {
         success = false; // permission action can add to try timer
       }
     }
-    return [success, canTryTimer, _nonce];
+    return [success, canTryTimer, exists, _nonce];
   }
 
   // TODO:GG 还有subscriber可以 = "identifier.publickey" 吗?
