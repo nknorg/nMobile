@@ -68,7 +68,11 @@ class TopicCommon with Tag {
           needUpdateRefreshAt = longTimeNoRefresh;
         }
         bool refresh = (refreshSubscribers || longTimeNoRefresh) && topic.joined;
-        if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refresh);
+        double fee = 0;
+        if (topic.isSubscribeProgress() || topic.isUnSubscribeProgress()) {
+          fee = topic.getProgressSubscribeFee();
+        }
+        if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refresh, fee: fee);
         if (refresh || needUpdateRefreshAt) {
           Map<String, dynamic> newData = topic.newDataByLastRefreshSubscribersAt(DateTime.now().millisecondsSinceEpoch);
           await setData(topic.id, newData);
