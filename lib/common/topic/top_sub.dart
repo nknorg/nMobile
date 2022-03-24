@@ -11,12 +11,12 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class TopSub {
-  static subscribeEmpty(int nonce, double fee) async {
+  static subscribeEmpty(String? topic, int nonce, double fee) async {
     bool? success;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
-          topic: "",
+          topic: topic ?? "",
           fee: fee.toStringAsFixed(8),
         );
         success = (topicHash != null) && (topicHash.isNotEmpty);
@@ -62,11 +62,11 @@ class TopSub {
       if (exists && fee > 0) {
         int? blockNonce = await Global.getNonce(txPool: false);
         int? poolNonce = await Global.getNonce(txPool: true);
-        if (blockNonce != null && blockNonce >= 0 && poolNonce != null && poolNonce > blockNonce) {
-          for (var i = (blockNonce + 1); i < poolNonce; i++) {
+        if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
+          for (var i = blockNonce; i <= poolNonce; i++) {
             List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
             if (results[0] != true) {
-              await subscribeEmpty(i, fee);
+              await subscribeEmpty(topic, i, fee);
             } else {
               nonce = i;
               break;
@@ -90,6 +90,13 @@ class TopSub {
         );
       } else {
         logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - topic:$topic - permPage:$permissionPage - meta:$meta");
+      }
+    } else if (success && (fee > 0)) {
+      int? blockNonce = await Global.getNonce(txPool: false);
+      if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
+        for (var i = blockNonce; i < _nonce; i++) {
+          await subscribeEmpty(topic, i, fee);
+        }
       }
     }
 
@@ -146,11 +153,11 @@ class TopSub {
       if (exists && fee > 0) {
         int? blockNonce = await Global.getNonce(txPool: false);
         int? poolNonce = await Global.getNonce(txPool: true);
-        if (blockNonce != null && blockNonce >= 0 && poolNonce != null && poolNonce > blockNonce) {
-          for (var i = (blockNonce + 1); i < poolNonce; i++) {
+        if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
+          for (var i = blockNonce; i <= poolNonce; i++) {
             List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
             if (results[0] != true) {
-              await subscribeEmpty(i, fee);
+              await subscribeEmpty(topic, i, fee);
             } else {
               nonce = i;
               break;
@@ -171,6 +178,13 @@ class TopSub {
         );
       } else {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - topic:$topic - identifier:$identifier");
+      }
+    } else if (success && (fee > 0)) {
+      int? blockNonce = await Global.getNonce(txPool: false);
+      if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
+        for (var i = blockNonce; i < _nonce; i++) {
+          await subscribeEmpty(topic, i, fee);
+        }
       }
     }
 
