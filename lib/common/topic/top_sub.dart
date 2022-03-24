@@ -11,23 +11,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class TopSub {
-  static subscribeEmpty(String? topic, int nonce, double fee) async {
-    bool? success;
-    try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
-        String? topicHash = await clientCommon.client?.subscribe(
-          topic: topic ?? "",
-          fee: fee.toStringAsFixed(8),
-        );
-        success = (topicHash != null) && (topicHash.isNotEmpty);
-      }
-    } catch (e) {
-      logger.w("TopSub - subscribeEmpty - nonce:$nonce - fee:${fee.toStringAsFixed(8)}");
-      success = false;
-    }
-    return success;
-  }
-
   static Future<bool> subscribeWithPermission(
     String? topic, {
     double fee = 0,
@@ -66,7 +49,7 @@ class TopSub {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
             if (results[0] != true) {
-              await subscribeEmpty(topic, i, fee);
+              await _subscribeReplace(topic, i, fee);
             } else {
               nonce = i;
               break;
@@ -95,7 +78,7 @@ class TopSub {
       int? blockNonce = await Global.getNonce(txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
-          await subscribeEmpty(topic, i, fee);
+          await _subscribeReplace(topic, i, fee);
         }
       }
     }
@@ -157,7 +140,7 @@ class TopSub {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
             if (results[0] != true) {
-              await subscribeEmpty(topic, i, fee);
+              await _subscribeReplace(topic, i, fee);
             } else {
               nonce = i;
               break;
@@ -183,7 +166,7 @@ class TopSub {
       int? blockNonce = await Global.getNonce(txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
-          await subscribeEmpty(topic, i, fee);
+          await _subscribeReplace(topic, i, fee);
         }
       }
     }
@@ -264,6 +247,10 @@ class TopSub {
         } else {
           nonce = await Global.getNonce();
         }
+      } else if (e.toString().contains("nonce is too low")) {
+        // can not append tx to txpool: nonce is too low
+        logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
+        nonce = await Global.getNonce();
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
@@ -272,7 +259,7 @@ class TopSub {
         exists = true;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
-        // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
+        // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show("订阅所需NKN不足"); // TODO:GG locale
         success = false;
@@ -349,6 +336,10 @@ class TopSub {
         } else {
           nonce = await Global.getNonce();
         }
+      } else if (e.toString().contains("nonce is too low")) {
+        // can not append tx to txpool: nonce is too low
+        logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
+        nonce = await Global.getNonce();
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
@@ -357,7 +348,7 @@ class TopSub {
         exists = true;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
-        // INTERNAL ERROR, can not append tx to txpool: not sufficient funds
+        // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if (toast && identifier.isEmpty) Toast.show("退订所需NKN不足"); // TODO:GG locale
         success = false;
@@ -388,6 +379,28 @@ class TopSub {
       }
     }
     return [success, canTryTimer, exists, _nonce];
+  }
+
+  static _subscribeReplace(String? topic, int nonce, double fee) async {
+    bool? success;
+    try {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+        String? address = await walletCommon.getDefaultAddress();
+        if (address == null || address.isEmpty) return false;
+        String keystore = await walletCommon.getKeystore(address);
+        if (keystore.isEmpty) return false;
+        String? password = await walletCommon.getPassword(address);
+        if (password == null || password.isEmpty) return false;
+        List<String> seedRpcList = await Global.getRpcServers(address);
+        Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+        String? txHash = await nkn.transfer(address, "0", fee: fee.toStringAsFixed(8), nonce: nonce);
+        success = (txHash != null) && (txHash.isNotEmpty);
+      }
+    } catch (e) {
+      logger.w("TopSub - subscribeEmpty - nonce:$nonce - fee:${fee.toStringAsFixed(8)} - error:${e.toString()}");
+      success = false;
+    }
+    return success;
   }
 
   // TODO:GG 还有subscriber可以 = "identifier.publickey" 吗?
