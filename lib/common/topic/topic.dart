@@ -606,7 +606,7 @@ class TopicCommon with Tag {
       // db update
       var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
       var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Global.topicDefaultSubscribeHeight;
-      bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
+      bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, refreshCreateAt: true, notify: true);
       if (setSuccess) {
         exists.joined = true;
         exists.subscribeAt = subscribeAt;
@@ -711,7 +711,7 @@ class TopicCommon with Tag {
     await Future.delayed(Duration(milliseconds: 250));
 
     // topic update
-    bool setSuccess = await setJoined(exists?.id, false, notify: true);
+    bool setSuccess = await setJoined(exists?.id, false, refreshCreateAt: true, notify: true);
     if (setSuccess) {
       exists?.joined = false;
       exists?.subscribeAt = 0;
@@ -926,7 +926,7 @@ class TopicCommon with Tag {
         logger.w("$TAG - onKickOut - clientUnsubscribe error - topic:$topic - subscriber:$_subscriber");
         return null;
       }
-      bool setSuccess = await setJoined(_exist.id, false, notify: true);
+      bool setSuccess = await setJoined(_exist.id, false, refreshCreateAt: true, notify: true);
       if (setSuccess) {
         _exist.joined = false;
         _exist.subscribeAt = 0;
@@ -1132,14 +1132,14 @@ class TopicCommon with Tag {
     return _topicStorage.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool notify = false}) async {
+  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool refreshCreateAt = false, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
     bool success = await _topicStorage.setJoined(
       topicId,
       joined,
       subscribeAt: subscribeAt,
       expireBlockHeight: expireBlockHeight,
-      createAt: DateTime.now().millisecondsSinceEpoch,
+      createAt: refreshCreateAt ? DateTime.now().millisecondsSinceEpoch : null,
     );
     if (success && notify) queryAndNotify(topicId);
     return success;
