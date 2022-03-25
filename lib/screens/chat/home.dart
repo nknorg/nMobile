@@ -60,6 +60,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _clientStatusChangeSubscription;
 
   bool firstLogin = true;
+  bool firstConnect = true;
   int appBackgroundAt = 0;
   int lastSendPangsAt = 0;
   int lastCheckTopicsAt = 0;
@@ -70,7 +71,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
-    firstLogin = true;
     SettingsStorage.getSettings(SettingsStorage.LAST_SEND_PANGS_AT).then((value) {
       lastSendPangsAt = int.tryParse(value?.toString() ?? "0") ?? 0;
     });
@@ -112,8 +112,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
         // topic subscribe+permission
-        taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
-        taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
+        if (firstConnect) {
+          firstConnect = false;
+          taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
+          taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
+        }
         // send pangs (3h)
         int lastSendPangsBetween = DateTime.now().millisecondsSinceEpoch - lastSendPangsAt;
         logger.i("$TAG - sendPang2SessionsContact - between:${lastSendPangsBetween - Global.contactsPingGapMs}");

@@ -310,9 +310,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _isJoined = isJoined;
       });
     }
-    if (_topic?.joined != isJoined) {
-      topicCommon.setJoined(_topic?.id, isJoined, notify: true); // await
-    }
   }
 
   _refreshTopicSubscribers({bool fetch = false}) async {

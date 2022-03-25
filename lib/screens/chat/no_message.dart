@@ -49,8 +49,10 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
 
   void subscribePopularTopic(String? topicName) async {
     if (topicName == null || topicName.isEmpty) return;
+    double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+    if (fee == null) return;
     Loading.show();
-    TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true);
+    TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
     Loading.dismiss();
     if (_topic != null) ChatMessagesScreen.go(Global.appContext, _topic);
   }
