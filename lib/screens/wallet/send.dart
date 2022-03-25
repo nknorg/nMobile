@@ -264,7 +264,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     }
   }
 
-  Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce}) async {
+  Future<bool> _transferNKN(String name, String keystore, String password, {int? nonce, double? replaceFee}) async {
     Loading.show();
     try {
       List<String> seedRpcList = await Global.getRpcServers(this._wallet.address, measure: true);
@@ -294,9 +294,11 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       int? blockNonce = await Global.getNonce(txPool: false);
 
       if (blockNonce != null && nonce != null) {
-        Loading.dismiss();
-        double? replaceFee = await BottomDialog.of(Global.appContext).showSubscribeFee(fee: _fee);
-        Loading.show();
+        if (replaceFee == null || replaceFee <= 0) {
+          Loading.dismiss();
+          replaceFee = await BottomDialog.of(Global.appContext).showSubscribeFee(fee: _fee);
+          Loading.show();
+        }
         if (replaceFee != null && replaceFee > 0) {
           String? address = await walletCommon.getDefaultAddress();
           if (address != null && address.isNotEmpty && (blockNonce >= 0) && (nonce > blockNonce)) {
@@ -324,7 +326,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       } else if (e.toString().contains("nonce is not continuous") || e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is not continuous
         int? nonce = await Global.getNonce(walletAddress: this._wallet.address);
-        return _transferNKN(name, keystore, password, nonce: nonce);
+        return _transferNKN(name, keystore, password, nonce: nonce, replaceFee: replaceFee);
       } else {
         handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
       }
