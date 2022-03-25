@@ -368,10 +368,12 @@ class ChatMessageItem extends StatelessWidget {
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
+                      double? fee = await BottomDialog.of(Global.appContext).showSubscribeFee();
+                      if (fee == null) return;
                       Loading.show();
                       int sendAt = message.sendAt ?? MessageOptions.getInAt(message) ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
-                      TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow);
+                      TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow, fee: fee);
                       Loading.dismiss();
                       if (result != null) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
                     }

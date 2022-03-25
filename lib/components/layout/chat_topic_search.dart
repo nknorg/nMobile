@@ -52,8 +52,8 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
-    double fee = (await BottomDialog.of(Global.appContext).showSubscribeFee()) ?? 0;
-
+    double? fee = await BottomDialog.of(Global.appContext).showSubscribeFee();
+    if (fee == null) return false;
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
     Loading.dismiss();
