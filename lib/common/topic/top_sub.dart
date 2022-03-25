@@ -49,7 +49,7 @@ class TopSub {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
             if (results[0] != true) {
-              await _subscribeReplace(topic, i, fee);
+              await _subscribeReplace(i, fee);
             } else {
               nonce = i;
               break;
@@ -78,7 +78,7 @@ class TopSub {
       int? blockNonce = await Global.getNonce(txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
-          await _subscribeReplace(topic, i, fee);
+          await _subscribeReplace(i, fee);
         }
       }
     }
@@ -141,7 +141,7 @@ class TopSub {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
             if (results[0] != true) {
-              await _subscribeReplace(topic, i, fee);
+              await _subscribeReplace(i, fee);
             } else {
               nonce = i;
               break;
@@ -167,7 +167,7 @@ class TopSub {
       int? blockNonce = await Global.getNonce(txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
-          await _subscribeReplace(topic, i, fee);
+          await _subscribeReplace(i, fee);
         }
       }
     }
@@ -384,7 +384,7 @@ class TopSub {
     return [success, canTryTimer, exists, _nonce];
   }
 
-  static _subscribeReplace(String? topic, int nonce, double fee) async {
+  static _subscribeReplace(int nonce, double fee) async {
     bool? success;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {

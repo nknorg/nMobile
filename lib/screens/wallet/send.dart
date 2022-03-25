@@ -11,6 +11,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -274,7 +275,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
 
       String amount = _amount?.toString() ?? '0';
-      String fee = _fee.toString();
+      String fee = _fee.toStringAsFixed(8);
       if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
         Toast.show(Global.locale((s) => s.enter_amount, ctx: context));
         return false;
@@ -282,14 +283,34 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       double balance = await nkn.getBalance();
       double tradeAmount = double.tryParse(amount) ?? 0;
-      double tradeFee = (double.tryParse(fee) ?? 0);
+      double tradeFee = double.tryParse(fee) ?? 0;
       double tradeTotal = tradeAmount + tradeFee;
       if (tradeAmount <= 0 || balance < tradeTotal) {
         Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
         return false;
       }
 
-      nonce = nonce ?? await Global.getNonce(walletAddress: this._wallet.address);
+      nonce = nonce ?? await Global.getNonce(txPool: true, walletAddress: this._wallet.address);
+      int? blockNonce = await Global.getNonce(txPool: false);
+
+      if (blockNonce != null && nonce != null) {
+        Loading.dismiss();
+        double? replaceFee = await BottomDialog.of(Global.appContext).showSubscribeFee(fee: _fee);
+        Loading.show();
+        if (replaceFee != null && replaceFee > 0) {
+          String? address = await walletCommon.getDefaultAddress();
+          if (address != null && address.isNotEmpty && (blockNonce >= 0) && (nonce > blockNonce)) {
+            for (var i = blockNonce; i < nonce; i++) {
+              try {
+                await nkn.transfer(address, "0", fee: replaceFee.toStringAsFixed(8), nonce: i);
+              } catch (e) {
+                logger.w("WalletSendScreen - _transferNKN - replace - error:${e.toString()}");
+              }
+            }
+          }
+        }
+      }
+
       String? txHash = await nkn.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
       if (txHash != null) {
         walletCommon.queryBalance(delayMs: 3000); // await
@@ -298,13 +319,15 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       Toast.show(Global.locale((s) => s.failure, ctx: context));
       return false;
     } catch (e) {
-      if (e.toString().contains("nonce is not continuous")) {
+      if (e.toString().contains('not sufficient funds')) {
+        Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
+      } else if (e.toString().contains("nonce is not continuous") || e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is not continuous
-        int? nonce = await Global.getNonce(walletAddress: this._wallet.address, forceFetch: true);
+        int? nonce = await Global.getNonce(walletAddress: this._wallet.address);
         return _transferNKN(name, keystore, password, nonce: nonce);
+      } else {
+        handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
       }
-      Global.refreshNonce(walletAddress: this._wallet.address); // await
-      handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
       return false;
     } finally {
       Loading.dismiss();
