@@ -170,16 +170,11 @@ class TopicSchema {
 
   Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, int? nonce, double fee) {
     Map<String, dynamic> newData = data ?? Map();
-    if ((nonce != null) && (nonce >= 0)) {
-      newData['progress_subscribe_nonce'] = nonce;
-      newData['progress_subscribe_fee'] = fee;
-    } else {
-      newData.remove('progress_subscribe_nonce');
-      newData.remove('progress_subscribe_fee');
-    }
     if (subscribe) {
       if (isProgress) {
         newData['subscribe_progress'] = true;
+        newData['progress_subscribe_nonce'] = nonce;
+        newData['progress_subscribe_fee'] = fee;
       } else {
         newData.remove('subscribe_progress');
         newData.remove('progress_subscribe_nonce');
@@ -189,6 +184,8 @@ class TopicSchema {
     } else {
       if (isProgress) {
         newData['unsubscribe_progress'] = true;
+        newData['progress_subscribe_nonce'] = nonce;
+        newData['progress_subscribe_fee'] = fee;
       } else {
         newData.remove('unsubscribe_progress');
         newData.remove('progress_subscribe_nonce');

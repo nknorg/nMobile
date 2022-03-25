@@ -371,7 +371,6 @@ class TopicStorage with Tag {
             tableName,
             {
               'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'id = ?',
             whereArgs: [topicId],
