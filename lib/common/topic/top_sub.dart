@@ -87,13 +87,14 @@ class TopSub {
     if (_schema != null && newStatus != null) {
       if (!canTryTimer) {
         Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, false, null, 0);
-        logger.w("TopSub - subscribeWithPermission - cancel permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_schema.id, newData).then((_) => subscriberCommon.setStatus(_schema.id, oldStatus, notify: true)); // await
+        logger.w("TopSub - subscribeWithPermission - cancel permission try - nonce:$_nonce - fee:$fee - topic:$topic - clientAddress:$clientAddress - newData:$newData - identifier:$identifier - metaString:$metaString");
+        await subscriberCommon.setData(_schema.id, newData); // await
+        await subscriberCommon.setStatus(_schema.id, oldStatus, notify: true);
       } else {
         success = true; // will success by try timer
         Map<String, dynamic> newData = _schema.newDataByAppendStatus(newStatus, true, _nonce, fee);
-        logger.i("TopSub - subscribeWithPermission - add permission try - topic:$topic - clientAddress:$clientAddress - newData:$newData - nonce:$_nonce - fee:$fee - identifier:$identifier - metaString:$metaString");
-        subscriberCommon.setData(_schema.id, newData); // await
+        logger.i("TopSub - subscribeWithPermission - add permission try - nonce:$_nonce - fee:$fee - topic:$topic - clientAddress:$clientAddress - newData:$newData - identifier:$identifier - metaString:$metaString");
+        await subscriberCommon.setData(_schema.id, newData); // await
       }
     }
     return success;
@@ -176,24 +177,26 @@ class TopSub {
       if (isJoin) {
         if (!canTryTimer) {
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, null, 0);
-          logger.w("TopSub - subscribeWithJoin - cancel subscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee - identifier:$identifier");
-          topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, false, notify: true)); // await
+          logger.w("TopSub - subscribeWithJoin - cancel subscribe try - nonce:$nonce - fee:$fee - topic:$topic - newData:$newData - identifier:$identifier");
+          await topicCommon.setData(_schema.id, newData); // await
+          await topicCommon.setJoined(_schema.id, false, notify: true);
         } else {
           success = true; // will success by try timer
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true, _nonce, fee);
-          logger.i("TopSub - subscribeWithJoin - add subscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee - identifier:$identifier");
-          topicCommon.setData(_schema.id, newData); // await
+          logger.i("TopSub - subscribeWithJoin - add subscribe try - nonce:$nonce - fee:$fee - topic:$topic - newData:$newData - identifier:$identifier");
+          await topicCommon.setData(_schema.id, newData); // await
         }
       } else {
         if (!canTryTimer) {
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, null, 0);
-          logger.i("TopSub - _unsubscribe - cancel unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee");
-          topicCommon.setData(_schema.id, newData).then((_) => topicCommon.setJoined(_schema.id, true, notify: true)); // await
+          logger.i("TopSub - _unsubscribe - cancel unsubscribe try - nonce:$nonce - fee:$fee - topic:$topic - newData:$newData");
+          await topicCommon.setData(_schema.id, newData); // await
+          await topicCommon.setJoined(_schema.id, true, notify: true);
         } else {
           success = true; // will success by try timer
           Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true, _nonce, fee);
-          logger.i("TopSub - _unsubscribe - add unsubscribe try - topic:$topic - newData:$newData - nonce:$nonce - fee:$fee");
-          topicCommon.setData(_schema.id, newData); // await
+          logger.i("TopSub - _unsubscribe - add unsubscribe try - nonce:$nonce - fee:$fee - topic:$topic - newData:$newData");
+          await topicCommon.setData(_schema.id, newData); // await
         }
       }
     }
