@@ -89,193 +89,6 @@ class TopicCommon with Tag {
     });
   }
 
-  // Future checkAndTryProgress({int? delayMs}) async {
-  //   if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-  //   if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-  //   // if (application.inBackGround) return;
-  //
-  //   await _lock.synchronized(() async {
-  //     int topicMax = 100; // 10
-  //     int subscriberMax = 200; // 20
-  //     int limit = 20;
-  //
-  //     // subscribe
-  //     List<TopicSchema> subscribeTopicList = [];
-  //     List<int> subscribeNonceList = [];
-  //     Map<int, double> subscribeFeeMap = Map();
-  //     Map<int, TopicSchema> subscribeTopicMap = Map();
-  //     for (int offset = 0; true; offset += limit) {
-  //       List<TopicSchema> result = await queryList(offset: offset, limit: limit);
-  //       result.forEach((element) {
-  //         if (element.isSubscribeProgress() || element.isUnSubscribeProgress()) {
-  //           int? nonce = element.getProgressSubscribeNonce();
-  //           double fee = element.getProgressSubscribeFee();
-  //           if (nonce != null && nonce >= 0) {
-  //             logger.i("$TAG - checkAndTryProgress - subscribe progress - nonce:$nonce - fee:$fee - topic:$element");
-  //             subscribeNonceList.add(nonce);
-  //             subscribeFeeMap[nonce] = fee;
-  //             subscribeTopicMap[nonce] = element;
-  //           } else {
-  //             logger.i("$TAG - checkAndTryProgress - subscribe progress - nonce:null - topic:$element");
-  //             subscribeTopicList.add(element);
-  //           }
-  //         }
-  //       });
-  //       if ((result.length < limit) || ((subscribeTopicList.length + subscribeNonceList.length) >= topicMax)) break;
-  //     }
-  //
-  //     // permission
-  //     List<SubscriberSchema> permissionSubscriberList = [];
-  //     List<int> permissionNonceList = [];
-  //     Map<int, double> permissionFeeMap = Map();
-  //     Map<int, SubscriberSchema> permissionSubscriberMap = Map();
-  //     for (int offset = 0; true; offset += limit) {
-  //       List<TopicSchema> result = await queryList(topicType: TopicType.privateTopic, offset: offset, limit: limit);
-  //       for (int i = 0; i < result.length; i++) {
-  //         TopicSchema topic = result[i];
-  //         if (topic.isOwner(clientCommon.address)) {
-  //           for (int offset = 0; true; offset += limit) {
-  //             List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, offset: offset, limit: limit);
-  //             result.forEach((element) {
-  //               if (element.isPermissionProgress() != null) {
-  //                 int? nonce = element.getProgressPermissionNonce();
-  //                 double fee = element.getProgressPermissionFee();
-  //                 if (nonce != null && nonce >= 0) {
-  //                   logger.i("$TAG - checkAndTryProgress - permission progress - nonce:$nonce - fee:$fee - subscriber:$element");
-  //                   permissionNonceList.add(nonce);
-  //                   permissionFeeMap[nonce] = fee;
-  //                   permissionSubscriberMap[nonce] = element;
-  //                 } else {
-  //                   logger.i("$TAG - checkAndTryProgress - permission progress - nonce:null - subscriber:$element");
-  //                   permissionSubscriberList.add(element);
-  //                 }
-  //               }
-  //             });
-  //             if ((result.length < limit) || ((permissionSubscriberList.length + permissionNonceList.length) >= subscriberMax)) break;
-  //           }
-  //           if ((permissionSubscriberList.length + permissionNonceList.length) >= subscriberMax) break;
-  //         }
-  //       }
-  //       if ((result.length < limit) || ((permissionSubscriberList.length + permissionNonceList.length) >= subscriberMax)) break;
-  //     }
-  //
-  //     // fee
-  //     subscribeNonceList.sort((prev, next) => prev.compareTo(next));
-  //     double subscribeMaxFee = 0;
-  //     int firstFeeNonceBySubscribeIndex = -1;
-  //     for (var i = 0; i < subscribeNonceList.length; i++) {
-  //       int nonce = subscribeNonceList[i];
-  //       TopicSchema? topic = subscribeTopicMap[nonce];
-  //       if (topic == null) continue;
-  //       double fee = topic.getProgressSubscribeFee();
-  //       if (fee > subscribeMaxFee) {
-  //         if (firstFeeNonceBySubscribeIndex <= 0) firstFeeNonceBySubscribeIndex = i;
-  //         subscribeMaxFee = fee;
-  //       }
-  //     }
-  //     permissionNonceList.sort((prev, next) => prev.compareTo(next));
-  //     double permissionMaxFee = 0;
-  //     int firstFeeNonceByPermissionIndex = -1;
-  //     for (var i = 0; i < permissionNonceList.length; i++) {
-  //       int nonce = permissionNonceList[i];
-  //       SubscriberSchema? subscriber = permissionSubscriberMap[nonce];
-  //       if (subscriber == null) continue;
-  //       double fee = subscriber.getProgressPermissionFee();
-  //       if (fee > permissionMaxFee) {
-  //         if (firstFeeNonceByPermissionIndex <= 0) firstFeeNonceByPermissionIndex = i;
-  //         permissionMaxFee = fee;
-  //       }
-  //     }
-  //
-  //     // all fee zone + old version
-  //     if ((subscribeMaxFee <= 0) && (permissionMaxFee <= 0)) {
-  //       for (var i = 0; i < subscribeTopicList.length; i++) {
-  //         TopicSchema topic = subscribeTopicList[i];
-  //         if (topic.isSubscribeProgress()) {
-  //           await checkAndTrySubscribe(topic, true);
-  //         } else if (topic.isUnSubscribeProgress()) {
-  //           await checkAndTrySubscribe(topic, false);
-  //         }
-  //       }
-  //       for (var i = 0; i < permissionSubscriberList.length; i++) {
-  //         SubscriberSchema subscribe = permissionSubscriberList[i];
-  //         int? progressStatus = subscribe.isPermissionProgress();
-  //         await checkAndTryPermission(subscribe, progressStatus);
-  //       }
-  //     }
-  //
-  //     // nonce
-  //     int? blockNonce = await Global.getNonce(txPool: false);
-  //     if (blockNonce == null) return;
-  //
-  //     // 有nonce，说明已经在交易池或账本里了
-  //     // 没nonce，说明是老版本(提交一次即可纠正)或是前面有想同类型的在交易池里
-  //
-  //     // clean trans with no nonce (clean trans created by old version)
-  //     if (nonceList.isEmpty || topicsMap.isEmpty) {
-  //       if (nativeNonce - remoteNonce > 0) {
-  //         double fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE)) ?? Global.topicSubscribeFeeDefault;
-  //         for (int i = (remoteNonce + 1); i < nativeNonce; i++) {
-  //           await TopSub.subscribeEmpty(i, fee);
-  //         }
-  //       }
-  //       return;
-  //     }
-  //
-  //     // check foreword
-  //     nonceList.sort((prev, next) => prev.compareTo(next));
-  //     if (nonceList[0] == (remoteNonce + 1)) {
-  //       // nonce is continue, just push replace
-  //       for (var i = 0; i < nonceList.length; i++) {
-  //         TopicSchema? topic = topicsMap[nonceList[i]];
-  //         bool over = await checkAndTrySubscribe(topic, true);
-  //         if (over)
-  //           continue;
-  //         else
-  //           break;
-  //       }
-  //     } else if (nonceList[0] < (remoteNonce + 1)) {
-  //       // nonce used, just push new
-  //       TopicSchema? topic = topicsMap[nonceList[0]];
-  //       if (topic == null) return;
-  //       Map<String, dynamic> newData = topic.newDataByAppendSubscribe(true, false, null, 0);
-  //       await setData(topic.id, newData);
-  //     } else {
-  //       // nonce not continue, replace empty start
-  //       int nativeNonce = nonceList[0];
-  //       for (int i = (remoteNonce + 1); i < nativeNonce; i++) {
-  //         //
-  //         TopSub.subscribeEmpty(nonce, fee);
-  //       }
-  //     }
-  //
-  //     // check + try
-  //     for (var i = 0; i < subscribers.length; i++) {
-  //       SubscriberSchema subscribe = subscribers[i];
-  //       int? progressStatus = subscribe.isPermissionProgress();
-  //       await checkAndTryPermission(subscribe, progressStatus);
-  //     }
-  //
-  //     // check + try
-  //     for (var i = 0; i < topicsWithSubscribe.length; i++) {
-  //       TopicSchema topic = topicsWithSubscribe[i];
-  //       bool over = await checkAndTrySubscribe(topic, true);
-  //       if (over)
-  //         continue;
-  //       else
-  //         break;
-  //     }
-  //     for (var i = 0; i < topicsWithUnSubscribe.length; i++) {
-  //       TopicSchema topic = topicsWithUnSubscribe[i];
-  //       bool over = await checkAndTrySubscribe(topic, false);
-  //       if (over)
-  //         continue;
-  //       else
-  //         break;
-  //     }
-  //   });
-  // }
-
   Future checkAndTryAllSubscribe({bool txPool = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
@@ -320,26 +133,29 @@ class TopicCommon with Tag {
     // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
 
+    int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
+
+    topic = await query(topic.id);
+    if (topic == null) return false;
     double fee = topic.getProgressSubscribeFee();
 
-    int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
     if (subscribed) {
       if (expireHeight <= 0) {
-        logger.i("$TAG - checkAndTrySubscribe - topic try subscribe - trySubscribe:$subscribed - topic:$topic");
+        logger.i("$TAG - checkAndTrySubscribe - topic try subscribe - fee:$fee - trySubscribe:$subscribed - topic:$topic");
         final result = await checkExpireAndSubscribe(topic.topic, enableFirst: true, forceSubscribe: true, refreshSubscribers: false, fee: fee, toast: false);
         if (result != null) await subscriberCommon.onSubscribe(topic.topic, clientCommon.address, null);
       } else {
-        logger.i("$TAG - checkAndTrySubscribe - topic subscribe OK - topic:$topic");
+        logger.i("$TAG - checkAndTrySubscribe - topic subscribe OK - fee:$fee - topic:$topic");
         Map<String, dynamic> newData = topic.newDataByAppendSubscribe(true, false, null, 0);
         await setData(topic.id, newData);
         return true;
       }
     } else {
       if (expireHeight >= 0) {
-        logger.i("$TAG - checkAndTrySubscribe - topic try unsubscribe - trySubscribe:$subscribed - topic:$topic");
+        logger.i("$TAG - checkAndTrySubscribe - topic try unsubscribe - fee:$fee - trySubscribe:$subscribed - topic:$topic");
         await unsubscribe(topic.topic, fee: fee);
       } else {
-        logger.i("$TAG - checkAndTrySubscribe - topic unsubscribe OK - topic:$topic");
+        logger.i("$TAG - checkAndTrySubscribe - topic unsubscribe OK - fee:$fee - topic:$topic");
         Map<String, dynamic> newData = topic.newDataByAppendSubscribe(false, false, null, 0);
         await setData(topic.id, newData);
         return true;
@@ -393,12 +209,10 @@ class TopicCommon with Tag {
     });
   }
 
-  Future<bool> checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = true}) async {
+  Future<bool> checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = false}) async {
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
-
-    double fee = subscriber.getProgressPermissionFee();
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);
     bool needReject = status == SubscriberStatus.Unsubscribed;
@@ -409,38 +223,43 @@ class TopicCommon with Tag {
     // bool? acceptAll = permission[1];
     bool? isAccept = permission[2];
     bool? isReject = permission[3];
+
+    subscriber = await subscriberCommon.query(subscriber.id);
+    if (subscriber == null) return false;
+    double fee = subscriber.getProgressPermissionFee();
+
     if (needAccept) {
       if (isAccept == true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(accept) OK - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(accept) OK - fee:$fee - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false, null, 0);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
         return true;
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try invitee - tryStatus:$status - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber try invitee - fee:$fee - tryStatus:$status - subscribe:$subscriber");
         await invitee(subscriber.topic, true, true, subscriber.clientAddress, fee: fee);
       }
     } else if (needReject) {
       if (isReject == true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(reject) OK - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(reject) OK - fee:$fee - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false, null, 0);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
         return true;
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber try kick - fee:$fee - tryStatus:$status - subscribe:$subscriber");
         await kick(subscriber.topic, true, true, subscriber.clientAddress, fee: fee);
       }
     } else if (needNoPermission) {
       if (isAccept != true && isReject != true) {
-        logger.i("$TAG - checkAndTryPermission - subscriber permission(none) OK - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber permission(none) OK - fee:$fee - subscribe:$subscriber");
         Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false, null, 0);
         await subscriberCommon.setData(subscriber.id, newData, notify: true);
         return true;
       } else {
-        logger.i("$TAG - checkAndTryPermission - subscriber try kick - tryStatus:$status - subscribe:$subscriber");
+        logger.i("$TAG - checkAndTryPermission - subscriber try kick - fee:$fee - tryStatus:$status - subscribe:$subscriber");
         await onUnsubscribe(subscriber.topic, subscriber.clientAddress);
       }
     } else {
-      logger.w("$TAG - checkAndTryPermission - subscriber permission none - tryStatus:$status - subscribe:$subscriber");
+      logger.w("$TAG - checkAndTryPermission - subscriber permission none - fee:$fee - tryStatus:$status - subscribe:$subscriber");
       Map<String, dynamic> newData = subscriber.newDataByAppendStatus(status, false, null, 0);
       await subscriberCommon.setData(subscriber.id, newData, notify: true);
       return true;
