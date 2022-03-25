@@ -53,15 +53,10 @@ class SubscriberSchema {
 
   Map<String, dynamic> newDataByAppendStatus(int status, bool isProgress, int? nonce, double fee) {
     Map<String, dynamic> newData = data ?? Map();
-    if ((nonce != null) && (nonce >= 0)) {
-      newData['progress_permission_nonce'] = nonce;
-      newData['progress_permission_fee'] = fee;
-    } else {
-      newData.remove('progress_permission_nonce');
-      newData.remove('progress_permission_fee');
-    }
     if (isProgress) {
       newData['permission_progress'] = status;
+      newData['progress_permission_nonce'] = nonce;
+      newData['progress_permission_fee'] = fee;
     } else {
       newData.remove('permission_progress');
       newData.remove('progress_permission_nonce');
