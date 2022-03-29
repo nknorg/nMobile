@@ -86,6 +86,7 @@ class BottomDialog extends BaseStateFulWidget {
               child: Label(
                 title ?? "",
                 type: LabelType.h2,
+                maxLines: 10,
               ),
             ),
             Builder(builder: (BuildContext context) {
