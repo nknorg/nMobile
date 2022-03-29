@@ -1500,6 +1500,16 @@ class S {
     );
   }
 
+  /// `Topic renewal acceleration`
+  String get topic_resubscribe_speed_enable {
+    return Intl.message(
+      'Topic renewal acceleration',
+      name: 'topic_resubscribe_speed_enable',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Max`
   String get max {
     return Intl.message(

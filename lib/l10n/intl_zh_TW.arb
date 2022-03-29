@@ -155,6 +155,7 @@
   "pay_nkn": "支付NKN數量",
   "accelerate": "加速",
   "accelerate_no": "不加速",
+  "topic_resubscribe_speed_enable": "群聊續訂加速",
 
   "max": "全部",
   "min": "最小",
