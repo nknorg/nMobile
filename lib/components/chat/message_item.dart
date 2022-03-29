@@ -368,7 +368,7 @@ class ChatMessageItem extends StatelessWidget {
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
-                      double? fee = await BottomDialog.of(Global.appContext).showSubscribeFee();
+                      double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
                       if (fee == null) return;
                       Loading.show();
                       int sendAt = message.sendAt ?? MessageOptions.getInAt(message) ?? 0;

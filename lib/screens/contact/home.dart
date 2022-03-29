@@ -509,7 +509,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
                   if (fee == null) return;
                   Loading.show();
                   TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee);

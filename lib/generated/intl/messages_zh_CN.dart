@@ -32,6 +32,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "ERC_20": MessageLookupByLibrary.simpleMessage("ERC-20"),
         "about": MessageLookupByLibrary.simpleMessage("关于"),
+        "accelerate": MessageLookupByLibrary.simpleMessage("加速"),
+        "accelerate_no": MessageLookupByLibrary.simpleMessage("不加速"),
         "accept": MessageLookupByLibrary.simpleMessage("接受"),
         "accept_invitation": MessageLookupByLibrary.simpleMessage("接受邀请"),
         "accept_notification":
@@ -333,6 +335,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "owner": MessageLookupByLibrary.simpleMessage("群主"),
         "password_wrong":
             MessageLookupByLibrary.simpleMessage("账户密码或keystore错误"),
+        "pay_nkn": MessageLookupByLibrary.simpleMessage("支付NKN数量"),
         "pending": MessageLookupByLibrary.simpleMessage("待定"),
         "pictures": MessageLookupByLibrary.simpleMessage("图片"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[草稿]"),
@@ -428,6 +431,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "transfer_initiated": MessageLookupByLibrary.simpleMessage("转账初始化"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。"),
+        "transfer_speed_up_desc":
+            MessageLookupByLibrary.simpleMessage("加速功能需要额外费用，请确保您的钱包中有足够的NKN。"),
+        "transfer_speed_up_enable":
+            MessageLookupByLibrary.simpleMessage("是否开启加速"),
+        "transfer_speed_up_fee":
+            MessageLookupByLibrary.simpleMessage("设置合理的矿工费可以加快交易过程。"),
         "type_a_message": MessageLookupByLibrary.simpleMessage("请输入"),
         "unavailable_device":
             MessageLookupByLibrary.simpleMessage("暂不支持没有Google服务的机型"),

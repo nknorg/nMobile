@@ -1440,6 +1440,66 @@ class S {
     );
   }
 
+  /// `Setting a reasonable miner fee can speed up the transaction process.`
+  String get transfer_speed_up_fee {
+    return Intl.message(
+      'Setting a reasonable miner fee can speed up the transaction process.',
+      name: 'transfer_speed_up_fee',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet.`
+  String get transfer_speed_up_desc {
+    return Intl.message(
+      'There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet.',
+      name: 'transfer_speed_up_desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Whether to enable acceleration`
+  String get transfer_speed_up_enable {
+    return Intl.message(
+      'Whether to enable acceleration',
+      name: 'transfer_speed_up_enable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pay NKN amount`
+  String get pay_nkn {
+    return Intl.message(
+      'Pay NKN amount',
+      name: 'pay_nkn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `accelerate`
+  String get accelerate {
+    return Intl.message(
+      'accelerate',
+      name: 'accelerate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `no accelerate`
+  String get accelerate_no {
+    return Intl.message(
+      'no accelerate',
+      name: 'accelerate_no',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Max`
   String get max {
     return Intl.message(
