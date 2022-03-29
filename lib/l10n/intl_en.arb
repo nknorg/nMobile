@@ -149,6 +149,12 @@
   "enter_receive_address": "Enter receive address",
   "transfer_initiated": "Transfer Initiated",
   "transfer_initiated_desc": "Your transfer is in progress. It could take a few seconds to appear on the blockchain.",
+  "transfer_speed_up_fee": "Setting a reasonable miner fee can speed up the transaction process.",
+  "transfer_speed_up_desc": "There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet.",
+  "transfer_speed_up_enable": "Whether to enable acceleration",
+  "pay_nkn": "Pay NKN amount",
+  "accelerate": "accelerate",
+  "accelerate_no": "no accelerate",
 
   "max": "Max",
   "min": "Min",

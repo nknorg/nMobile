@@ -149,6 +149,12 @@
   "enter_receive_address": "请输入接受地址",
   "transfer_initiated": "转账初始化",
   "transfer_initiated_desc": "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。",
+  "transfer_speed_up_fee": "设置合理的矿工费可以加快交易过程。",
+  "transfer_speed_up_desc": "加速功能需要额外费用，请确保您的钱包中有足够的NKN。",
+  "transfer_speed_up_enable": "是否开启加速",
+  "pay_nkn": "支付NKN数量",
+  "accelerate": "加速",
+  "accelerate_no": "不加速",
 
   "max": "全部",
   "min": "最小",

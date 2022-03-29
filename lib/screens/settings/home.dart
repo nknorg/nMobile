@@ -521,7 +521,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          "订阅", // TODO:GG locale
+                          Global.locale((s) => s.fee, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,

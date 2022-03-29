@@ -53,12 +53,13 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: "订阅", // TODO:GG locale
+        title: Global.locale((s) => s.fee, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(
         padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
               decoration: BoxDecoration(
@@ -79,7 +80,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            "加速fee", // TODO:GG locale
+                            Global.locale((s) => s.fee, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -98,7 +99,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                   textAlign: TextAlign.end,
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
-                                    hintText: "请输入费率", // TODO:GG locale
+                                    hintText: Global.locale((s) => s.enter_amount, ctx: context),
                                     hintStyle: TextStyle(color: application.theme.fontColor2.withAlpha(100)),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
@@ -126,6 +127,16 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
+              child: Label(
+                Global.locale((s) => s.transfer_speed_up_fee, ctx: context),
+                type: LabelType.bodySmall,
+                fontWeight: FontWeight.w600,
+                softWrap: true,
+              ),
+            ),
+            SizedBox(height: 28),
           ],
         ),
       ),

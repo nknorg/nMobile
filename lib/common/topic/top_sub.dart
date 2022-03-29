@@ -264,7 +264,7 @@ class TopSub {
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        if (toast && identifier.isEmpty) Toast.show("订阅所需NKN不足"); // TODO:GG locale
+        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
         _nonce = null;
@@ -353,7 +353,7 @@ class TopSub {
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        if (toast && identifier.isEmpty) Toast.show("退订所需NKN不足"); // TODO:GG locale
+        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
         _nonce = null;
