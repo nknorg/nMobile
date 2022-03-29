@@ -16,66 +16,16 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 
-# 21/04/26 last by HaoNan
-# version: 1.1.2+223
-# 21/07/XX test ios notification
-# version: 1.2.0+224
-# 21/08/XX
-# version: 1.2.0+225
-# 21/09/XX
-# version: 1.2.0+226
-# 21/09/29
-# version: 1.2.0+227
-# 21/10/01
-# version: 1.2.0+228
-# 21/10/08
-# version: 1.2.0+229
-# 21/10/12
-# version: 1.2.0+230
-# 21/10/13
-# version: 1.2.0+231
-# 21/10/18
-# version: 1.2.0+232
-# 21/10/27
-# version: 1.2.0+233
-# 21/10/28
-# version: 1.2.0+234
-# 21/10/29
-# version: 1.2.0+235
-# 21/10/30
-# version: 1.2.0+236
-# 21/11/01
-# version: 1.2.0+237
-# 21/11/07
-# version: 1.2.0+238
-# 21/11/10
-# version: 1.2.0+239
-# 21/11/11
-# version: 1.2.0+240
-# 21/11/12
-# version: 1.2.0+241
-# 21/11/13
-# version: 1.2.0+242
-# 21/11/14
-# version: 1.2.0+243
-# 21/11/15
-# version: 1.2.0+244
-# 21/11/16
-# version: 1.2.0+245
-# 21/11/23
-# version: 1.2.1+246
-# 21/11/23
-# version: 1.2.1+247
-# 21/11/24
-# version: 1.2.1+249
-# 21/01/14
-# version: 1.2.2+250
-# 21/01/15
+# 22/01/15
 # version: 1.2.3+251
-# 21/02/22
+# 22/02/22
 #version: 1.2.4+252
-# 21/02/28
-version: 1.2.5+253
+# 22/02/28
+#version: 1.2.5+253
+# 22/03/09
+#version: 1.2.6+254
+# 22/03/29
+version: 1.2.7+255
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
