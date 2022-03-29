@@ -42,14 +42,16 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
   }
 
   _refreshSubscribeFee() async {
-    _fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? 0;
+    _fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
     if (_fee <= 0) _fee = Global.topicSubscribeFeeDefault;
     _feeController.text = _fee.toStringAsFixed(8);
   }
 
   _refreshSubscribeSpeedEnable() async {
     var enable = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-    _subscribeSpeedEnable = (enable?.toString() == "true") || (enable == true);
+    setState(() {
+      _subscribeSpeedEnable = (enable?.toString() == "true") || (enable == true);
+    });
   }
 
   _saveSubscribeFee() async {

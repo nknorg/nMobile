@@ -414,7 +414,7 @@ class TopicCommon with Tag {
       if ((exists.joined && shouldResubscribe) && (fee <= 0)) {
         var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
         if (isAuto != null && (isAuto.toString() == "true" || isAuto == true)) {
-          fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? 0;
+          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
           if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
         }
       }
