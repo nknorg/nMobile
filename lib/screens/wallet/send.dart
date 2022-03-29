@@ -200,10 +200,10 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         }
 
         if (_wallet.type == WalletType.eth) {
-          final result = _transferETH(_wallet.name ?? "", keystore, password);
+          final result = await _transferETH(_wallet.name ?? "", keystore, password);
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, result);
         } else {
-          final result = _transferNKN(_wallet.name ?? "", keystore, password);
+          final result = await _transferNKN(_wallet.name ?? "", keystore, password);
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, result);
         }
       }).onError((error, stackTrace) {
@@ -293,7 +293,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       nonce = nonce ?? await Global.getNonce(txPool: true, walletAddress: this._wallet.address);
       int? blockNonce = await Global.getNonce(txPool: false);
 
-      if (blockNonce != null && nonce != null) {
+      if ((blockNonce != null) && (nonce != null) && (blockNonce != nonce)) {
         if (replaceFee == null || replaceFee <= 0) {
           Loading.dismiss();
           replaceFee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp(fee: _fee);
