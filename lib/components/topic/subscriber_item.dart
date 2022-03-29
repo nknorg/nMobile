@@ -287,8 +287,11 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               ),
             );
           } else {
-            double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
-            if (fee == null) return;
+            double? fee = 0.0;
+            if (topic.isPrivate == true) {
+              fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+              if (fee == null) return;
+            }
             await topicCommon.invitee(
               topic.topic,
               topic.isPrivate,
