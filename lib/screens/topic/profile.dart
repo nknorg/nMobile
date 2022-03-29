@@ -201,7 +201,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+      double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
       if (fee == null) return;
       await topicCommon.invitee(
         _topicSchema?.topic,
@@ -217,7 +217,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _statusAction(bool nextSubscribe) async {
     if (nextSubscribe) {
-      double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+      double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
       if (fee == null) return;
       Loading.show();
       TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic, fee: fee);
@@ -233,7 +233,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           backgroundColor: application.theme.strongColor,
           onPressed: () async {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-            double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+            double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
             if (fee == null) return;
             Loading.show();
             TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, fee: fee, toast: true);

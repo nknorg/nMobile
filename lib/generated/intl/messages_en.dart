@@ -33,6 +33,8 @@ class MessageLookup extends MessageLookupByLibrary {
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "ERC_20": MessageLookupByLibrary.simpleMessage("ERC-20"),
         "about": MessageLookupByLibrary.simpleMessage("About"),
+        "accelerate": MessageLookupByLibrary.simpleMessage("accelerate"),
+        "accelerate_no": MessageLookupByLibrary.simpleMessage("no accelerate"),
         "accept": MessageLookupByLibrary.simpleMessage("Accept"),
         "accept_invitation":
             MessageLookupByLibrary.simpleMessage("Accept Invitation"),
@@ -392,6 +394,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "owner": MessageLookupByLibrary.simpleMessage("Owner"),
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
+        "pay_nkn": MessageLookupByLibrary.simpleMessage("Pay NKN amount"),
         "pending": MessageLookupByLibrary.simpleMessage("pending"),
         "pictures": MessageLookupByLibrary.simpleMessage("Pictures"),
         "placeholder_draft": MessageLookupByLibrary.simpleMessage("[Draft]"),
@@ -499,6 +502,12 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Transfer Initiated"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "Your transfer is in progress. It could take a few seconds to appear on the blockchain."),
+        "transfer_speed_up_desc": MessageLookupByLibrary.simpleMessage(
+            "There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet."),
+        "transfer_speed_up_enable": MessageLookupByLibrary.simpleMessage(
+            "Whether to enable acceleration"),
+        "transfer_speed_up_fee": MessageLookupByLibrary.simpleMessage(
+            "Setting a reasonable miner fee can speed up the transaction process."),
         "type_a_message":
             MessageLookupByLibrary.simpleMessage("Type a message"),
         "unavailable_device": MessageLookupByLibrary.simpleMessage(

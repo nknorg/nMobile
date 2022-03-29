@@ -384,7 +384,7 @@ class BottomDialog extends BaseStateFulWidget {
     );
   }
 
-  Future<double?> showSubscribeFee({double? fee}) async {
+  Future<double?> showTransactionSpeedUp({double? fee}) async {
     TextEditingController _inputController = TextEditingController();
 
     fee = fee ?? double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE)) ?? 0;
@@ -392,17 +392,17 @@ class BottomDialog extends BaseStateFulWidget {
     _inputController.text = fee.toStringAsFixed(8);
 
     return showWithTitle<double>(
-      title: "是否加速订阅", // TODO:GG locale
-      desc: "加速订阅需要额外的NKN,将会从钱包里扣除", // TODO:GG locale
-      height: 300,
+      title: Global.locale((s) => s.transfer_speed_up_enable, ctx: context),
+      desc: Global.locale((s) => s.transfer_speed_up_desc, ctx: context),
+      height: 350,
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Row(
           children: [
             Expanded(
-              flex: 2,
+              flex: 1,
               child: Button(
-                text: "订阅", // TODO:GG locale
+                text: Global.locale((s) => s.accelerate_no, ctx: context),
                 // width: double.infinity,
                 onPressed: () {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
@@ -411,9 +411,9 @@ class BottomDialog extends BaseStateFulWidget {
             ),
             SizedBox(width: 20),
             Expanded(
-              flex: 3,
+              flex: 1,
               child: Button(
-                text: "加速订阅", // TODO:GG locale
+                text: Global.locale((s) => s.accelerate, ctx: context),
                 width: double.infinity,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () {
@@ -429,12 +429,12 @@ class BottomDialog extends BaseStateFulWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Row(
               children: [
                 Label(
-                  "加速订阅支付NKN", // TODO:GG locale
+                  Global.locale((s) => s.pay_nkn, ctx: context),
                   type: LabelType.h4,
                   textAlign: TextAlign.start,
                 ),
@@ -446,7 +446,7 @@ class BottomDialog extends BaseStateFulWidget {
                     textInputAction: TextInputAction.done,
                     inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                     textAlign: TextAlign.start,
-                    hintText: "请输入费率", // TODO:GG locale
+                    hintText: Global.locale((s) => s.enter_amount, ctx: context),
                   ),
                 ),
               ],

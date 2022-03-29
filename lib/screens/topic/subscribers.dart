@@ -217,7 +217,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+      double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
       if (fee == null) return;
       await topicCommon.invitee(
         _topicSchema?.topic,

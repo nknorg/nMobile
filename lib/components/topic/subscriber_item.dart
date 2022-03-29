@@ -264,7 +264,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
                   if (fee == null) return;
                   await topicCommon.kick(
                     topic.topic,
@@ -287,7 +287,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               ),
             );
           } else {
-            double? fee = await BottomDialog.of(this.context).showSubscribeFee();
+            double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
             if (fee == null) return;
             await topicCommon.invitee(
               topic.topic,

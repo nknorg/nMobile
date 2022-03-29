@@ -296,7 +296,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       if (blockNonce != null && nonce != null) {
         if (replaceFee == null || replaceFee <= 0) {
           Loading.dismiss();
-          replaceFee = await BottomDialog.of(Global.appContext).showSubscribeFee(fee: _fee);
+          replaceFee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp(fee: _fee);
           Loading.show();
         }
         if (replaceFee != null && replaceFee > 0) {
