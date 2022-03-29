@@ -42,18 +42,18 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
   }
 
   _refreshSubscribeFee() async {
-    _fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE)) ?? 0;
+    _fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? 0;
     if (_fee <= 0) _fee = Global.topicSubscribeFeeDefault;
     _feeController.text = _fee.toStringAsFixed(8);
   }
 
   _refreshSubscribeSpeedEnable() async {
-    var enable = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE);
+    var enable = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
     _subscribeSpeedEnable = (enable?.toString() == "true") || (enable == true);
   }
 
   _saveSubscribeFee() async {
-    await SettingsStorage.setSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE, _fee.toStringAsFixed(8));
+    await SettingsStorage.setSettings(SettingsStorage.DEFAULT_FEE, _fee.toStringAsFixed(8));
   }
 
   @override
@@ -173,7 +173,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                   value: _subscribeSpeedEnable,
                                   activeColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
-                                    SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE}', value);
+                                    SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE}', value);
                                     setState(() {
                                       _subscribeSpeedEnable = value;
                                     });
