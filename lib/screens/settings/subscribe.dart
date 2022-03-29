@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
@@ -22,6 +23,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
   FocusNode _feeFocusNode = FocusNode();
 
   double _fee = 0;
+  bool _subscribeSpeedEnable = false;
 
   @override
   void onRefreshArguments() {}
@@ -30,6 +32,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
   void initState() {
     super.initState();
     _refreshSubscribeFee();
+    _refreshSubscribeSpeedEnable();
   }
 
   @override
@@ -42,6 +45,11 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
     _fee = double.tryParse(await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_FEE)) ?? 0;
     if (_fee <= 0) _fee = Global.topicSubscribeFeeDefault;
     _feeController.text = _fee.toStringAsFixed(8);
+  }
+
+  _refreshSubscribeSpeedEnable() async {
+    var enable = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE);
+    _subscribeSpeedEnable = (enable?.toString() == "true") || (enable == true);
   }
 
   _saveSubscribeFee() async {
@@ -70,7 +78,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                 children: <Widget>[
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
+                    height: 50,
                     child: TextButton(
                       style: _buttonStyle(top: true, bottom: true),
                       onPressed: () async {
@@ -137,6 +145,49 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
               ),
             ),
             SizedBox(height: 28),
+            Container(
+              decoration: BoxDecoration(
+                color: application.theme.backgroundLightColor,
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: TextButton(
+                      style: _buttonStyle(top: true, bottom: true),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Label(
+                            Global.locale((s) => s.topic_resubscribe_speed_enable, ctx: context),
+                            type: LabelType.bodyRegular,
+                            color: application.theme.fontColor1,
+                            fontWeight: FontWeight.bold,
+                            height: 1,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              CupertinoSwitch(
+                                  value: _subscribeSpeedEnable,
+                                  activeColor: application.theme.primaryColor,
+                                  onChanged: (bool value) async {
+                                    SettingsStorage.setSettings('${SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE}', value);
+                                    setState(() {
+                                      _subscribeSpeedEnable = value;
+                                    });
+                                  }),
+                            ],
+                          ),
+                        ],
+                      ),
+                      onPressed: () {},
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

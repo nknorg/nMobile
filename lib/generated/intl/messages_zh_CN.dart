@@ -426,6 +426,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("置顶"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("取消置顶"),
         "topic": MessageLookupByLibrary.simpleMessage("群组"),
+        "topic_resubscribe_speed_enable":
+            MessageLookupByLibrary.simpleMessage("群聊续订加速"),
         "total_balance": MessageLookupByLibrary.simpleMessage("余额"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "transfer_initiated": MessageLookupByLibrary.simpleMessage("转账初始化"),
