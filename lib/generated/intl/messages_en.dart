@@ -496,6 +496,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("Top"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("Cancel Top"),
         "topic": MessageLookupByLibrary.simpleMessage("Topic"),
+        "topic_resubscribe_speed_enable":
+            MessageLookupByLibrary.simpleMessage("Topic renewal acceleration"),
         "total_balance": MessageLookupByLibrary.simpleMessage("TOTAL BALANCE"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "transfer_initiated":

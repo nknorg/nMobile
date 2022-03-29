@@ -155,6 +155,7 @@
   "pay_nkn": "Pay NKN amount",
   "accelerate": "accelerate",
   "accelerate_no": "no accelerate",
+  "topic_resubscribe_speed_enable": "Topic renewal acceleration",
 
   "max": "Max",
   "min": "Min",
