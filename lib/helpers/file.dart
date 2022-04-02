@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -9,28 +10,26 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 
 class FileHelper {
+  static Future<String?> convertFileToBase64(File? file) async {
+    if (file == null) return null;
+    if (!file.existsSync()) return null;
+    return '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+  }
+
   static Future<File?> convertBase64toFile(String? base64Data, String dirType, {String? extension, String? target}) async {
     if (base64Data == null || base64Data.isEmpty || clientCommon.publicKey == null) return null;
     if (extension == null || extension.isEmpty) {
+      // head
       var match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
       var mimeType = match?.group(1) ?? "";
       var fileBase64 = match?.group(2);
+
       // mimeType
-      if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
-        extension = 'jpg';
-      } else if (mimeType.indexOf('image/png') > -1) {
-        extension = 'png';
-      } else if (mimeType.indexOf('image/gif') > -1) {
-        extension = 'gif';
-      } else if (mimeType.indexOf('image/webp') > -1) {
-        extension = 'webp';
-      } else if (mimeType.indexOf('image/') > -1) {
-        extension = mimeType.split('/').last;
-      } else if (mimeType.indexOf('aac') > -1) {
-        extension = 'aac';
-      } else {
+      extension = getExtension(mimeType);
+      if (extension == null || extension.isEmpty) {
         logger.w('FileHelper - convertBase64toFile - no_extension');
       }
+
       // fileBase64
       if (fileBase64 != null && fileBase64.isNotEmpty) {
         base64Data = fileBase64;
@@ -49,7 +48,7 @@ class FileHelper {
     }
     // String name = hexEncode(Uint8List.fromList(md5.convert(bytes).bytes));
     // String localPath = Path.createLocalFile(hexEncode(clientCommon.publicKey!), dirType, '$name.$extension', chatTarget: chatTarget);
-    String localPath = await Path.getRandomFile(clientCommon.publicKey != null ? hexEncode(clientCommon.publicKey) : null, dirType, target: target, fileExt: '$extension');
+    String localPath = await Path.getRandomFile(clientCommon.publicKey != null ? hexEncode(clientCommon.publicKey) : null, dirType, target: target, fileExt: extension);
     File? file = Path.getCompleteFile(localPath) != null ? File(Path.getCompleteFile(localPath)!) : null;
     logger.d('MessageSchema - loadMediaFile - path:${file?.absolute}');
     if (file == null) return null;

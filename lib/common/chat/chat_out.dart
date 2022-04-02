@@ -33,8 +33,8 @@ class ChatOutCommon with Tag {
   // size
   static const int imgBestSize = 400 * 1000; // 400k
   static const int imgMaxSize = piecesMaxTotal * piecesPreMaxLen; // 1.6M = 80 * 20K
-  static const int avatarBestSize = 100 * 1000; // 400k
-  static const int avatarMaxSize = 500 * 1000; // 1.6M = 80 * 20K
+  static const int avatarBestSize = 100 * 1000; // 100k
+  static const int avatarMaxSize = 500 * 1000; // 500K
   static const int msgMaxSize = 32 * 1000; // < 32K
   // static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
 

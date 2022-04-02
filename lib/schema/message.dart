@@ -8,6 +8,7 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/utils.dart';
@@ -728,7 +729,8 @@ class MessageData {
   static Future<String?> getImage(MessageSchema message) async {
     File? file = message.content as File?;
     if (file == null) return null;
-    String content = '![image](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    String? content = await FileHelper.convertFileToBase64(file);
+    if (content == null) return null;
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
