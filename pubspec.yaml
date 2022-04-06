@@ -118,6 +118,7 @@ dependencies:
   wechat_assets_picker: ^7.0.5
   #  flutter_luban: ^0.1.13
   #  octo_image: ^1.0.0+1
+  #  wechat_camera_picker
 
   # audio
   flutter_sound: ^8.3.10

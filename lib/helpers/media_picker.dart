@@ -99,9 +99,11 @@ class MediaPicker {
     for (var i = 0; i < compressFiles.length; i++) {
       String? returnPath;
       if (returnPaths.length > i) returnPath = returnPaths[i];
+      String fileExt = Path.getFileExt(compressFiles[i], 'jpeg');
       if (returnPath == null || returnPath.isEmpty) {
-        String fileExt = Path.getFileExt(compressFiles[i], 'jpeg');
         returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+      } else {
+        returnPath = Path.joinFileExt(returnPath, fileExt);
       }
       File returnFile = File(returnPath);
       if (!await returnFile.exists()) {
@@ -172,9 +174,11 @@ class MediaPicker {
     }
 
     // save
+    String fileExt = Path.getFileExt(pickedFile, 'jpeg');
     if (returnPath == null || returnPath.isEmpty) {
-      String fileExt = Path.getFileExt(pickedFile, 'jpeg');
       returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+    } else {
+      returnPath = Path.joinFileExt(returnPath, fileExt);
     }
     File returnFile = File(returnPath);
     if (!await returnFile.exists()) {
@@ -186,12 +190,11 @@ class MediaPicker {
     return returnFile;
   }
 
-  // TODO:GG 替换成flutter_wechat_camera_picker???
   static Future<File?> takeImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
-    int bestSize = 0,
-    int maxSize = 0,
+    int? bestSize,
+    int? maxSize,
     String? returnPath,
   }) async {
     // pick
@@ -219,16 +222,18 @@ class MediaPicker {
     }
 
     // compress
-    pickedFile = await _compressImage(pickedFile, maxSize: maxSize, bestSize: bestSize, toast: true);
+    pickedFile = await _compressImage(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
     if (pickedFile == null) {
       logger.w('MediaPicker - _pickImageBySystem - compress = null');
       return null;
     }
 
     // save
+    String fileExt = Path.getFileExt(pickedFile, 'jpeg');
     if (returnPath == null || returnPath.isEmpty) {
-      String fileExt = Path.getFileExt(pickedFile, 'jpeg');
       returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+    } else {
+      returnPath = Path.joinFileExt(returnPath, fileExt);
     }
     File returnFile = File(returnPath);
     if (!await returnFile.exists()) {
@@ -406,26 +411,3 @@ class MediaPicker {
     return true;
   }
 }
-
-// TODO:GG 替换成LuBan吗？
-// File? compressFile;
-// String compressDirPath = await Path.getDir(null, SubDirType.cache);
-// CompressObject compressObject = CompressObject(
-//   imageFile: original,
-//   path: compressDirPath,
-//   quality: compressQuality, // first compress quality, default 80
-//   step: 8, // compress quality step, The bigger the fast, Smaller is more accurate, default 6
-//   mode: CompressMode.LARGE2SMALL, //default AUTO
-// );
-// try {
-//   String? returnPath = await Luban.compressImage(compressObject);
-//   compressFile = (returnPath?.isNotEmpty == true) ? File(returnPath!) : null;
-// } catch (e) {
-//   handleError(e);
-// }
-// if (compressFile == null || !compressFile.existsSync()) {
-//   logger.i('MediaPicker - _compressImage - compress:FAIL - compressQuality:$compressQuality - path:${compressFile?.path}');
-//   return original;
-// }
-// size = await compressFile.length();
-// logger.i('MediaPicker - _compressImage - compress:OK - compressQuality:$compressQuality - size:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - path:${compressFile.path}');
