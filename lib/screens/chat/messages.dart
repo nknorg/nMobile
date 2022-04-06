@@ -676,21 +676,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   ? ChatBottomMenu(
                       target: targetId,
                       show: _showBottomMenu,
-                      onPickedImage: (File picked) async {
+                      onPickedImage: (List<File> picks) async {
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
-                        // save
-                        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-                        String? imagePath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: this.targetId, fileExt: 'jpg');
-                        var outputFile = File(imagePath);
-                        if (await outputFile.exists()) {
-                          await outputFile.delete();
+                        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return;
+                        if (picks.isEmpty) return;
+                        for (var i = 0; i < picks.length; i++) {
+                          await chatOutCommon.sendImage(picks[i], topic: _topic, contact: _contact);
                         }
-                        outputFile = await outputFile.create(recursive: true);
-                        outputFile = await picked.copy(outputFile.path);
-                        picked.delete(); // await
-                        logger.i("$TAG - onPickedImage - create chat file - path:${outputFile.path}");
-                        // send message
-                        return await chatOutCommon.sendImage(outputFile, topic: _topic, contact: _contact);
                       },
                     )
                   : SizedBox.shrink(),

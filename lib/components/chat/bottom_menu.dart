@@ -15,7 +15,7 @@ import 'package:nmobile/utils/path.dart';
 class ChatBottomMenu extends StatelessWidget {
   String? target;
   bool show;
-  final Function(File image)? onPickedImage;
+  final Function(List<File> images)? onPickedImage;
 
   ChatBottomMenu({
     this.target,
@@ -25,15 +25,31 @@ class ChatBottomMenu extends StatelessWidget {
 
   _getImageFile({required ImageSource source}) async {
     if (clientCommon.publicKey == null) return;
-    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
-    File? picked = await MediaPicker.pickImage(
-      source: source,
-      bestSize: ChatOutCommon.imgBestSize,
-      maxSize: ChatOutCommon.imgMaxSize,
-      returnPath: returnPath,
-    );
-    if (picked == null) return;
-    onPickedImage?.call(picked);
+    if (source == ImageSource.camera) {
+      String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
+      File? picked = await MediaPicker.takeImage(
+        bestSize: ChatOutCommon.imgBestSize,
+        maxSize: ChatOutCommon.imgMaxSize,
+        returnPath: returnPath,
+      );
+      if (picked == null) return;
+      onPickedImage?.call([picked]);
+    } else {
+      int maxNum = 9;
+      List<String> returnPaths = [];
+      for (var i = 0; i < maxNum; i++) {
+        String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpeg');
+        returnPaths.add(returnPath);
+      }
+      List<File> picks = await MediaPicker.pickImages(
+        maxNum,
+        bestSize: ChatOutCommon.imgBestSize,
+        maxSize: ChatOutCommon.imgMaxSize,
+        returnPaths: returnPaths,
+      );
+      if (picks.isEmpty) return;
+      onPickedImage?.call(picks);
+    }
   }
 
   @override

@@ -63,7 +63,6 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     if (clientCommon.publicKey == null) return;
     String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: null, fileExt: 'jpeg');
     File? picked = await MediaPicker.pickImage(
-      source: ImageSource.gallery,
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
       bestSize: ChatOutCommon.avatarBestSize,
