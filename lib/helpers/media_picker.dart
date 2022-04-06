@@ -27,7 +27,6 @@ class MediaPicker {
     return null;
   }
 
-  // TODO:GG bottomMenu选这个
   static Future<List<File>> pickImages(
     int maxNum, {
     int? bestSize,
@@ -116,7 +115,6 @@ class MediaPicker {
   }
 
   static Future<File?> pickImage({
-    ImageSource source = ImageSource.gallery,
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
     int? bestSize,
@@ -124,21 +122,8 @@ class MediaPicker {
     String? returnPath,
   }) async {
     // permission, same with AssetPicker.permissionCheck();
-    bool permissionOK = await _isPermissionOK(source);
+    bool permissionOK = await _isPermissionOK(ImageSource.gallery);
     if (!permissionOK) return null;
-
-    // TODO:GG 替换成flutter_wechat_camera_picker???
-    // take picture
-    // if (source == ImageSource.camera) {
-    //   return _pickImageBySystem(
-    //     source: source,
-    //     cropStyle: cropStyle,
-    //     cropRatio: cropRatio,
-    //     bestSize: bestSize,
-    //     maxSize: maxSize,
-    //     returnPath: returnPath,
-    //   );
-    // }
 
     // pick
     List<AssetEntity>? pickedResults;
@@ -201,8 +186,8 @@ class MediaPicker {
     return returnFile;
   }
 
-  static Future<File?> _pickImageBySystem({
-    ImageSource source = ImageSource.gallery,
+  // TODO:GG 替换成flutter_wechat_camera_picker???
+  static Future<File?> takeImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
     int bestSize = 0,
@@ -212,7 +197,7 @@ class MediaPicker {
     // pick
     XFile? pickedResult;
     try {
-      pickedResult = await ImagePicker().pickImage(source: source); // imageQuality: compressQuality  -> ios no enable
+      pickedResult = await ImagePicker().pickImage(source: ImageSource.camera); // imageQuality: compressQuality  -> ios no enable
     } catch (e) {
       handleError(e);
     }
@@ -220,44 +205,38 @@ class MediaPicker {
       logger.w("MediaPicker - _pickImageBySystem - pickedResult = null");
       return null;
     }
-    File pickedFile = File(pickedResult.path);
+    File? pickedFile = File(pickedResult.path);
     logger.i("MediaPicker - _pickImageBySystem - picked - path:${pickedFile.path}");
     pickedFile.length().then((value) {
       logger.i('MediaPicker - _pickImageBySystem - picked - size:${formatFlowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
     });
 
     // crop
-    File? croppedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio);
-    if (croppedFile == null) {
+    pickedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio);
+    if (pickedFile == null) {
       logger.w('MediaPicker - _pickImageBySystem - croppedFile = null');
       return null;
     }
 
     // compress
-    File? compressFile = await _compressImage(croppedFile, maxSize: maxSize, bestSize: bestSize, toast: true);
-    if (compressFile == null) {
+    pickedFile = await _compressImage(pickedFile, maxSize: maxSize, bestSize: bestSize, toast: true);
+    if (pickedFile == null) {
       logger.w('MediaPicker - _pickImageBySystem - compress = null');
       return null;
     }
 
     // save
-    File returnFile;
-    if (returnPath != null && returnPath.isNotEmpty) {
-      returnFile = File(returnPath);
-      if (!await returnFile.exists()) {
-        await returnFile.create(recursive: true);
-      }
-      returnFile = await compressFile.copy(returnPath);
-    } else {
+    if (returnPath == null || returnPath.isEmpty) {
       String fileExt = Path.getFileExt(pickedFile, 'jpeg');
-      String randomPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
-      returnFile = File(randomPath);
-      if (!await returnFile.exists()) {
-        await returnFile.create(recursive: true);
-      }
-      returnFile = await compressFile.copy(randomPath);
+      returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
     }
-    logger.i('MediaPicker - _pickImageBySystem - return - path:${returnFile.path}');
+    File returnFile = File(returnPath);
+    if (!await returnFile.exists()) {
+      await returnFile.create(recursive: true);
+    }
+    returnFile = await pickedFile.copy(returnPath);
+
+    logger.i('MediaPicker - takeImage - return - path:${returnFile.path}');
     return returnFile;
   }
 
