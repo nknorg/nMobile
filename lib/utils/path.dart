@@ -26,27 +26,31 @@ class Path {
     return hexEncode(Uint8List.fromList(md5.convert(fileBytes).bytes));
   }
 
-  static String? getFileExt(File? file) {
+  // TODO:GG 修改所有的jpg
+  // TODO:GG 所有文件的后缀，统一管理
+  static String getFileExt(File? file, String defExt) {
     String? fullName = file?.path.split('/').last;
     String? fileExt;
     int? index = fullName?.lastIndexOf('.');
     if (index != null && index > -1) {
       fileExt = fullName?.split('.').last;
     }
+    if (fileExt == null || fileExt.isEmpty) return defExt;
     return fileExt;
   }
 
-  static String joinFileExt(String fileName, String? fileExt) {
+  static String joinFileExt(String filePath, String? fileExt) {
     if (fileExt == null || fileExt.isEmpty) {
-      return fileName;
+      return filePath;
     } else {
-      List<String> party = fileName.split("/");
+      List<String> party = filePath.split("/");
       int index = party[(party.length - 1) >= 0 ? party.length - 1 : 0].lastIndexOf(".");
       if (index < 0) {
-        return join(fileName + '.' + fileExt);
+        return join(filePath + '.' + fileExt);
       }
-      fileName = fileName.substring(0, index);
-      return join(fileName + '.' + fileExt);
+      index = filePath.lastIndexOf(".");
+      filePath = filePath.substring(0, index);
+      return join(filePath + '.' + fileExt);
     }
   }
 
