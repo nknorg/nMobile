@@ -255,7 +255,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
-      source: ImageSource.gallery,
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
       bestSize: ChatOutCommon.avatarBestSize,
