@@ -484,7 +484,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip_ask_group_owner_permission": MessageLookupByLibrary.simpleMessage(
             "You are not in this group,ask the group owner for permission"),
         "tip_open_send_device_token": MessageLookupByLibrary.simpleMessage(
-            "Send your device token to him?\nThen he can send you remote notification!"),
+            "Whether to open the other party\'s message notification reminder?"),
         "tip_password_error":
             MessageLookupByLibrary.simpleMessage("Wrong password"),
         "tip_switch_success":

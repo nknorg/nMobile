@@ -359,7 +359,7 @@
   "group_member_already": "该成员已经加入本群",
   "invite_yourself_error": "不能邀请你自己!",
   "member_no_auth_invite": "私有群聊群成员暂不能支持邀请他人，联系群主邀请他人",
-  "tip_open_send_device_token": "发送你的设备token给他?\n他将可以给你发送远程推送!",
+  "tip_open_send_device_token": "是否开启对方的消息通知提醒?",
   "tip_switch_success": "切换成功!",
   "tip_ask_group_owner_permission": "您已不在此群，联系群主邀请您",
   "left_group_tip": "已离开群组，请稍后再试。",
