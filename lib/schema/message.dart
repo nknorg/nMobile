@@ -646,7 +646,7 @@ class MessageData {
       // SUPPORT:END
     }
     if (avatar != null && await avatar.exists()) {
-      // TODO:GG change to piece!!!
+      // TODO:GG avatar pieces
       String base64 = base64Encode(await avatar.readAsBytes());
       if (base64.isNotEmpty == true) {
         content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, "jpg")};

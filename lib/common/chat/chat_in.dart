@@ -493,7 +493,7 @@ class ChatInCommon with Tag {
               }
               String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
               if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, target: received.targetId, extension: fileExt);
+              avatar = await FileHelper.saveBase64toFile(avatarData, SubDirType.contact, fileExt, target: received.targetId);
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
@@ -618,16 +618,16 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "jpg";
     if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? fileExt : null);
+    received.content = await FileHelper.saveBase64toFile(received.content, SubDirType.chat, fileExt, target: received.targetId);
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
       return false;
     }
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -647,16 +647,16 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "aac";
     if (fileExt == null || fileExt.isEmpty) fileExt = "aac";
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? fileExt : null);
+    received.content = await FileHelper.saveBase64toFile(received.content, SubDirType.chat, fileExt, target: received.targetId);
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
       return false;
     }
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
+    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -693,7 +693,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
     } else {
       // received.status = MessageStatus.Read; // modify in before
-      received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.cache, extension: parentType);
+      received.content = await FileHelper.saveBase64toFile(received.content, SubDirType.cache, parentType);
       piece = await MessageStorage.instance.insert(received);
       if (piece != null) {
         pieces.add(piece);

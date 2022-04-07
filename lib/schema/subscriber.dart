@@ -21,7 +21,7 @@ class SubscriberSchema {
 
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
-  // TODO:GG check
+  // TODO:GG check pubKey
   String clientAddress; // (required) <-> chat_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
@@ -41,7 +41,7 @@ class SubscriberSchema {
     this.data,
   });
 
-  // TODO:GG check
+  // TODO:GG check pubKey
   String get pubKey {
     return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
   }
