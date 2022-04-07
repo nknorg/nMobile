@@ -359,7 +359,7 @@
   "group_member_already": "The member is in group already",
   "invite_yourself_error": "Can not invite yourself!",
   "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
-  "tip_open_send_device_token": "Send your device token to him?\nThen he can send you remote notification!",
+  "tip_open_send_device_token": "Whether to open the other party's message notification reminder?",
   "tip_switch_success": "Switch Success!",
   "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission",
   "left_group_tip": "Left the group, please try again later.",

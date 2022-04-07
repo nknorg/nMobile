@@ -3460,10 +3460,10 @@ class S {
     );
   }
 
-  /// `Send your device token to him?\nThen he can send you remote notification!`
+  /// `Whether to open the other party's message notification reminder?`
   String get tip_open_send_device_token {
     return Intl.message(
-      'Send your device token to him?\nThen he can send you remote notification!',
+      'Whether to open the other party\'s message notification reminder?',
       name: 'tip_open_send_device_token',
       desc: '',
       args: [],
