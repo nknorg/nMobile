@@ -42,7 +42,7 @@ Map<String, dynamic>? jsonFormat(raw) {
   return null;
 }
 
-// TODO:GG check
+// TODO:GG check pubKey
 String? getPubKeyFromTopicOrChatId(String s) {
   final i = s.lastIndexOf('.');
   final pubKey = i >= 0 ? s.substring(i + 1) : s;
