@@ -251,7 +251,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: _contactSchema?.clientAddress, fileExt: 'jpeg');
+    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: _contactSchema?.clientAddress, fileExt: 'jpg');
     String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
@@ -264,7 +264,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
+    } else {
+      remarkAvatarPath = picked.path;
+      remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     }
+    if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
 
     if (_contactSchema?.type == ContactType.me) {
       contactCommon.setSelfAvatar(_contactSchema, remarkAvatarLocalPath, notify: true); // await

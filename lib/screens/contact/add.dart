@@ -61,7 +61,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: null, fileExt: 'jpeg');
+    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: null, fileExt: 'jpg');
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),

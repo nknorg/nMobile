@@ -317,17 +317,17 @@ class MessageSchema {
     double? audioDurationS,
     int? deleteAfterSeconds,
     int? burningUpdateAt,
+    String? fileExt,
   }) {
     // at
     this.sendAt = DateTime.now().millisecondsSinceEpoch;
     this.receiveAt = null; // set in receive ACK
     this.deleteAt = null; // set in messages bubble
 
+    if (this.options == null) this.options = Map();
+
     // piece
     if (parentType != null || total != null) {
-      if (this.options == null) {
-        this.options = Map();
-      }
       if (this.options![MessageOptions.KEY_PIECE] == null) {
         this.options![MessageOptions.KEY_PIECE] = Map();
       }
@@ -345,6 +345,10 @@ class MessageSchema {
     // burn
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
       MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
+    }
+    // fileExt
+    if (fileExt != null && fileExt.isNotEmpty) {
+      this.options?[MessageOptions.KEY_FILE_EXT] = fileExt;
     }
   }
 
@@ -485,6 +489,8 @@ class MessageOptions {
   static const KEY_PIECE_PARITY = "parity";
   static const KEY_PIECE_TOTAL = "total";
   static const KEY_PIECE_INDEX = "index";
+
+  static const KEY_FILE_EXT = "file_ext";
 
   static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
     if (message.options == null) message.options = Map<String, dynamic>();
@@ -643,7 +649,7 @@ class MessageData {
       // TODO:GG change to piece!!!
       String base64 = base64Encode(await avatar.readAsBytes());
       if (base64.isNotEmpty == true) {
-        content['avatar'] = {'type': 'base64', 'data': base64};
+        content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, "jpg")};
       }
     }
     data['content'] = content;
@@ -729,7 +735,7 @@ class MessageData {
   static Future<String?> getImage(MessageSchema message) async {
     File? file = message.content as File?;
     if (file == null) return null;
-    String? content = await FileHelper.convertFileToBase64(file);
+    String? content = await FileHelper.convertFileToBase64("image", file);
     if (content == null) return null;
     Map data = {
       'id': message.msgId,
@@ -752,7 +758,8 @@ class MessageData {
     if (file == null) return null;
     var mimeType = mime(file.path) ?? "";
     if (mimeType.split('aac').length <= 0) return null;
-    String content = '![audio](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    String? content = await FileHelper.convertFileToBase64("audio", file);
+    if (content == null) return null;
     Map data = {
       'id': message.msgId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,

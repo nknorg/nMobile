@@ -18,6 +18,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
@@ -268,6 +269,7 @@ class ChatOutCommon with Tag {
       content: content,
       deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
+      fileExt: Path.getFileExt(content, "jpg"),
     );
     String? data = await MessageData.getImage(message);
     return _sendAndDB(message, data, contact: contact, topic: topic);
@@ -287,6 +289,7 @@ class ChatOutCommon with Tag {
       audioDurationS: durationS,
       deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
       burningUpdateAt: contact?.options?.updateBurnAfterAt,
+      fileExt: Path.getFileExt(content, "aac"),
     );
     String? data = await MessageData.getAudio(message);
     return _sendAndDB(message, data, contact: contact, topic: topic);
