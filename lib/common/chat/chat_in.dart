@@ -491,7 +491,9 @@ class ChatInCommon with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, target: received.targetId, extension: "jpg");
+              String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
+              if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
+              avatar = await FileHelper.convertBase64toFile(avatarData, SubDirType.contact, target: received.targetId, extension: fileExt);
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
@@ -617,7 +619,9 @@ class ChatInCommon with Tag {
     }
     // File
     bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? "jpg" : null);
+    String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "jpg";
+    if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? fileExt : null);
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
       return false;
@@ -644,7 +648,9 @@ class ChatInCommon with Tag {
     }
     // File
     bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
-    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? "aac" : null);
+    String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "aac";
+    if (fileExt == null || fileExt.isEmpty) fileExt = "aac";
+    received.content = await FileHelper.convertBase64toFile(received.content, SubDirType.chat, target: received.targetId, extension: isPieceCombine ? fileExt : null);
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
       return false;

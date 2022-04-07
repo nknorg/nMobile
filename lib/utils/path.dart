@@ -26,8 +26,6 @@ class Path {
     return hexEncode(Uint8List.fromList(md5.convert(fileBytes).bytes));
   }
 
-  // TODO:GG 修改所有的jpg
-  // TODO:GG 所有文件的后缀，统一管理
   static String getFileExt(File? file, String defExt) {
     String? fullName = file?.path.split('/').last;
     String? fileExt;

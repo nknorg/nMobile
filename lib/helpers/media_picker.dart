@@ -99,7 +99,7 @@ class MediaPicker {
     for (var i = 0; i < compressFiles.length; i++) {
       String? returnPath;
       if (returnPaths.length > i) returnPath = returnPaths[i];
-      String fileExt = Path.getFileExt(compressFiles[i], 'jpeg');
+      String fileExt = Path.getFileExt(compressFiles[i], 'jpg');
       if (returnPath == null || returnPath.isEmpty) {
         returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
       } else {
@@ -174,7 +174,7 @@ class MediaPicker {
     }
 
     // save
-    String fileExt = Path.getFileExt(pickedFile, 'jpeg');
+    String fileExt = Path.getFileExt(pickedFile, 'jpg');
     if (returnPath == null || returnPath.isEmpty) {
       returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
     } else {
@@ -208,6 +208,8 @@ class MediaPicker {
       logger.w("MediaPicker - _pickImageBySystem - pickedResult = null");
       return null;
     }
+
+    // convert
     File? pickedFile = File(pickedResult.path);
     logger.i("MediaPicker - _pickImageBySystem - picked - path:${pickedFile.path}");
     pickedFile.length().then((value) {
@@ -229,7 +231,7 @@ class MediaPicker {
     }
 
     // save
-    String fileExt = Path.getFileExt(pickedFile, 'jpeg');
+    String fileExt = Path.getFileExt(pickedFile, 'jpg');
     if (returnPath == null || returnPath.isEmpty) {
       returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
     } else {
@@ -329,7 +331,7 @@ class MediaPicker {
     logger.i('MediaPicker - _compressImage - compress:START - originalSize:${formatFlowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${formatFlowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${formatFlowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     // filePath
-    String fileExt = Path.getFileExt(original, 'jpeg');
+    String fileExt = Path.getFileExt(original, 'jpg');
     String compressPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
     // format
     CompressFormat? format;

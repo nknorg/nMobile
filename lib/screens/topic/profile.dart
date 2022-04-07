@@ -172,7 +172,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, target: _topicSchema?.topic, fileExt: 'jpeg');
+    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, target: _topicSchema?.topic, fileExt: 'jpg');
     String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
@@ -185,6 +185,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
+    } else {
+      remarkAvatarPath = picked.path;
+      remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
     }
 
     topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true); // await
