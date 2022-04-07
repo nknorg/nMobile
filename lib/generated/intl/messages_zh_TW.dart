@@ -415,8 +415,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip": MessageLookupByLibrary.simpleMessage("提示"),
         "tip_ask_group_owner_permission":
             MessageLookupByLibrary.simpleMessage("您已不在此群，聯繫群主邀請您"),
-        "tip_open_send_device_token": MessageLookupByLibrary.simpleMessage(
-            "發送你的設備token給他?\n他將可以給你發送遠程推送!"),
+        "tip_open_send_device_token":
+            MessageLookupByLibrary.simpleMessage("是否開啟對方的消息通知提醒?"),
         "tip_password_error": MessageLookupByLibrary.simpleMessage("密碼錯誤"),
         "tip_switch_success": MessageLookupByLibrary.simpleMessage("切換成功!"),
         "tips": MessageLookupByLibrary.simpleMessage("提示"),
