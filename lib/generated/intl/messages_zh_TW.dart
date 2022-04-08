@@ -61,7 +61,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "balance_not_enough": MessageLookupByLibrary.simpleMessage("餘額不足"),
         "biometrics": MessageLookupByLibrary.simpleMessage("生物識別"),
         "blocked_user_disallow_invite":
-            MessageLookupByLibrary.simpleMessage("改用戶已經被拉黑，不允許普通成員邀請"),
+            MessageLookupByLibrary.simpleMessage("該用戶已經被拉黑，不允許普通成員邀請"),
         "burn_10_minutes": MessageLookupByLibrary.simpleMessage("10 分鐘"),
         "burn_10_seconds": MessageLookupByLibrary.simpleMessage("10 秒"),
         "burn_12_hour": MessageLookupByLibrary.simpleMessage("12 小時"),
@@ -299,8 +299,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "minutes": MessageLookupByLibrary.simpleMessage("分鐘"),
         "my_contact": MessageLookupByLibrary.simpleMessage("我的聯繫人"),
         "my_details": MessageLookupByLibrary.simpleMessage("我的"),
-        "my_details_desc":
-            MessageLookupByLibrary.simpleMessage("所有訂閱和礦工費都將來自您選擇的賬戶。"),
         "my_group": MessageLookupByLibrary.simpleMessage("我的群組"),
         "my_profile": MessageLookupByLibrary.simpleMessage("個人資料"),
         "my_wallets": MessageLookupByLibrary.simpleMessage("我的賬戶"),
@@ -416,7 +414,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip_ask_group_owner_permission":
             MessageLookupByLibrary.simpleMessage("您已不在此群，聯繫群主邀請您"),
         "tip_open_send_device_token":
-            MessageLookupByLibrary.simpleMessage("是否開啟對方的消息通知提醒?"),
+            MessageLookupByLibrary.simpleMessage("是否開啟來自對方的消息通知提醒?"),
         "tip_password_error": MessageLookupByLibrary.simpleMessage("密碼錯誤"),
         "tip_switch_success": MessageLookupByLibrary.simpleMessage("切換成功!"),
         "tips": MessageLookupByLibrary.simpleMessage("提示"),
@@ -426,19 +424,23 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("置頂"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("取消置頂"),
         "topic": MessageLookupByLibrary.simpleMessage("群組"),
-        "topic_resubscribe_speed_enable":
-            MessageLookupByLibrary.simpleMessage("群聊續訂加速"),
+        "topic_renewal_speed_up_auto":
+            MessageLookupByLibrary.simpleMessage("已開啟群聊續訂時自動加速。"),
+        "topic_renewal_speed_up_auto_no":
+            MessageLookupByLibrary.simpleMessage("已關閉群聊續訂時自動加速。"),
+        "topic_resubscribe_enable":
+            MessageLookupByLibrary.simpleMessage("群聊續訂"),
         "total_balance": MessageLookupByLibrary.simpleMessage("余額"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "transfer_initiated": MessageLookupByLibrary.simpleMessage("轉賬初始化"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "您的轉帳正在進行中，可能需要花一些時間才能出現在區塊鏈上。"),
-        "transfer_speed_up_desc":
-            MessageLookupByLibrary.simpleMessage("加速功能需要額外費用，請確保您的錢包中有足夠的NKN。"),
+        "transfer_speed_up_desc": MessageLookupByLibrary.simpleMessage(
+            "加速功能需要額外NKN，請確保您的錢包中有足夠的NKN。"),
         "transfer_speed_up_enable":
             MessageLookupByLibrary.simpleMessage("是否開啟加速"),
         "transfer_speed_up_fee":
-            MessageLookupByLibrary.simpleMessage("設置合理的礦工費可以加快交易過程。"),
+            MessageLookupByLibrary.simpleMessage("設置合理的NKN可以加快交易過程。"),
         "type_a_message": MessageLookupByLibrary.simpleMessage("請輸入"),
         "unavailable_device":
             MessageLookupByLibrary.simpleMessage("暫不支持沒有Google服務的機型"),

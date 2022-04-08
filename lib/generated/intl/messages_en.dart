@@ -351,8 +351,6 @@ class MessageLookup extends MessageLookupByLibrary {
         "minutes": MessageLookupByLibrary.simpleMessage("minutes"),
         "my_contact": MessageLookupByLibrary.simpleMessage("My Contact"),
         "my_details": MessageLookupByLibrary.simpleMessage("My Details"),
-        "my_details_desc": MessageLookupByLibrary.simpleMessage(
-            "All subscriptions and tipping will come from your selected wallet."),
         "my_group": MessageLookupByLibrary.simpleMessage("My Group"),
         "my_profile": MessageLookupByLibrary.simpleMessage("My Profile"),
         "my_wallets": MessageLookupByLibrary.simpleMessage("My Accounts"),
@@ -484,7 +482,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "tip_ask_group_owner_permission": MessageLookupByLibrary.simpleMessage(
             "You are not in this group,ask the group owner for permission"),
         "tip_open_send_device_token": MessageLookupByLibrary.simpleMessage(
-            "Whether to open the other party\'s message notification reminder?"),
+            "Whether to open the notification reminder from the other party?"),
         "tip_password_error":
             MessageLookupByLibrary.simpleMessage("Wrong password"),
         "tip_switch_success":
@@ -496,8 +494,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("Top"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("Cancel Top"),
         "topic": MessageLookupByLibrary.simpleMessage("Topic"),
-        "topic_resubscribe_speed_enable":
-            MessageLookupByLibrary.simpleMessage("Topic renewal acceleration"),
+        "topic_renewal_speed_up_auto": MessageLookupByLibrary.simpleMessage(
+            "Group chat renewal is turned on and auto-accelerate."),
+        "topic_renewal_speed_up_auto_no": MessageLookupByLibrary.simpleMessage(
+            "Group chat renewal is turned on and does not auto-accelerate."),
+        "topic_resubscribe_enable":
+            MessageLookupByLibrary.simpleMessage("Topic renewal"),
         "total_balance": MessageLookupByLibrary.simpleMessage("TOTAL BALANCE"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "transfer_initiated":
@@ -505,11 +507,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "Your transfer is in progress. It could take a few seconds to appear on the blockchain."),
         "transfer_speed_up_desc": MessageLookupByLibrary.simpleMessage(
-            "There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet."),
+            "The acceleration function requires additional NKN, please make sure you have enough NKN in your wallet."),
         "transfer_speed_up_enable": MessageLookupByLibrary.simpleMessage(
             "Whether to enable acceleration"),
         "transfer_speed_up_fee": MessageLookupByLibrary.simpleMessage(
-            "Setting a reasonable miner fee can speed up the transaction process."),
+            "Setting a reasonable NKN can speed up the transaction process."),
         "type_a_message":
             MessageLookupByLibrary.simpleMessage("Type a message"),
         "unavailable_device": MessageLookupByLibrary.simpleMessage(
