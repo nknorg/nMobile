@@ -11,14 +11,14 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/storages/settings.dart';
 
-class SettingsSubscribeScreen extends BaseStateFulWidget {
+class SettingsAccelerateScreen extends BaseStateFulWidget {
   static const String routeName = '/settings/subscribe';
 
   @override
-  _SettingsSubscribeScreenState createState() => _SettingsSubscribeScreenState();
+  _SettingsAccelerateScreenState createState() => _SettingsAccelerateScreenState();
 }
 
-class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubscribeScreen> {
+class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAccelerateScreen> {
   TextEditingController _feeController = TextEditingController();
   FocusNode _feeFocusNode = FocusNode();
 
@@ -63,7 +63,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: Global.locale((s) => s.fee, ctx: context),
+        title: Global.locale((s) => s.accelerate, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(
@@ -88,9 +88,10 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.fee, ctx: context),
+                            Global.locale((s) => s.nkn, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -124,10 +125,10 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                                   },
                                 ),
                               ),
-                              Container(
-                                alignment: Alignment.centerRight,
-                                child: Label(Global.locale((s) => s.nkn), type: LabelType.bodyRegular),
-                              ),
+                              // Container(
+                              //   alignment: Alignment.centerRight,
+                              //   child: Label(Global.locale((s) => s.nkn), type: LabelType.bodyRegular),
+                              // ),
                             ],
                           ),
                         ],
@@ -163,7 +164,7 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.topic_resubscribe_speed_enable, ctx: context),
+                            Global.locale((s) => s.topic_resubscribe_enable, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -189,7 +190,16 @@ class _SettingsSubscribeScreenState extends BaseStateFulWidgetState<SettingsSubs
                   ),
                 ],
               ),
-            )
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
+              child: Label(
+                Global.locale((s) => _subscribeSpeedEnable ? s.topic_renewal_speed_up_auto : s.topic_renewal_speed_up_auto_no, ctx: context),
+                type: LabelType.bodySmall,
+                fontWeight: FontWeight.w600,
+                softWrap: true,
+              ),
+            ),
           ],
         ),
       ),

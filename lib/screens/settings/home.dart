@@ -521,7 +521,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.fee, ctx: context),
+                          Global.locale((s) => s.accelerate, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -539,7 +539,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, SettingsSubscribeScreen.routeName);
+                      Navigator.pushNamed(context, SettingsAccelerateScreen.routeName);
                     },
                   ),
                 ),

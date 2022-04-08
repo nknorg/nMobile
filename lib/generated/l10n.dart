@@ -1440,20 +1440,40 @@ class S {
     );
   }
 
-  /// `Setting a reasonable miner fee can speed up the transaction process.`
+  /// `Setting a reasonable NKN can speed up the transaction process.`
   String get transfer_speed_up_fee {
     return Intl.message(
-      'Setting a reasonable miner fee can speed up the transaction process.',
+      'Setting a reasonable NKN can speed up the transaction process.',
       name: 'transfer_speed_up_fee',
       desc: '',
       args: [],
     );
   }
 
-  /// `There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet.`
+  /// `Group chat renewal is turned on and auto-accelerate.`
+  String get topic_renewal_speed_up_auto {
+    return Intl.message(
+      'Group chat renewal is turned on and auto-accelerate.',
+      name: 'topic_renewal_speed_up_auto',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group chat renewal is turned on and does not auto-accelerate.`
+  String get topic_renewal_speed_up_auto_no {
+    return Intl.message(
+      'Group chat renewal is turned on and does not auto-accelerate.',
+      name: 'topic_renewal_speed_up_auto_no',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The acceleration function requires additional NKN, please make sure you have enough NKN in your wallet.`
   String get transfer_speed_up_desc {
     return Intl.message(
-      'There is an additional fee for the acceleration function, please make sure you have enough NKN in your wallet.',
+      'The acceleration function requires additional NKN, please make sure you have enough NKN in your wallet.',
       name: 'transfer_speed_up_desc',
       desc: '',
       args: [],
@@ -1500,11 +1520,11 @@ class S {
     );
   }
 
-  /// `Topic renewal acceleration`
-  String get topic_resubscribe_speed_enable {
+  /// `Topic renewal`
+  String get topic_resubscribe_enable {
     return Intl.message(
-      'Topic renewal acceleration',
-      name: 'topic_resubscribe_speed_enable',
+      'Topic renewal',
+      name: 'topic_resubscribe_enable',
       desc: '',
       args: [],
     );
@@ -3210,16 +3230,6 @@ class S {
     );
   }
 
-  /// `All subscriptions and tipping will come from your selected wallet.`
-  String get my_details_desc {
-    return Intl.message(
-      'All subscriptions and tipping will come from your selected wallet.',
-      name: 'my_details_desc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Change`
   String get change_default_chat_wallet {
     return Intl.message(
@@ -3460,10 +3470,10 @@ class S {
     );
   }
 
-  /// `Whether to open the other party's message notification reminder?`
+  /// `Whether to open the notification reminder from the other party?`
   String get tip_open_send_device_token {
     return Intl.message(
-      'Whether to open the other party\'s message notification reminder?',
+      'Whether to open the notification reminder from the other party?',
       name: 'tip_open_send_device_token',
       desc: '',
       args: [],
