@@ -527,13 +527,13 @@ class SubscriberCommon with Tag {
   }
 
   Future<int> queryMaxPermPageByTopic(String? topic) async {
-    int mexPermPage = await _subscriberStorage.queryMaxPermPageByTopic(topic);
-    mexPermPage = mexPermPage < 0 ? 0 : mexPermPage;
-    int maxPageCount = await queryCountByTopicPermPage(topic, mexPermPage);
+    int maxPermPage = await _subscriberStorage.queryMaxPermPageByTopic(topic);
+    maxPermPage = maxPermPage < 0 ? 0 : maxPermPage;
+    int maxPageCount = await queryCountByTopicPermPage(topic, maxPermPage);
     if (maxPageCount >= SubscriberSchema.PermPageSize) {
-      mexPermPage++;
+      maxPermPage++;
     }
-    return mexPermPage;
+    return maxPermPage;
   }
 
   Future<bool> setStatus(int? subscriberId, int? status, {bool notify = false}) async {

@@ -40,8 +40,8 @@ Future addTestData(
   int topicCount = 1 * 1000,
   int subscribersPerTopicMaxCount = 1 * 1000,
   int messageCount = 1 * 1000 * 1000,
-  int messagePerContactMexCount = 10 * 1000,
-  int messagePerTopicMexCount = 100 * 1000,
+  int messagePerContactMaxCount = 10 * 1000,
+  int messagePerTopicMaxCount = 100 * 1000,
 }) async {
   List<Map<String, dynamic>>? res = await db.query(
     ContactStorage.tableName,
@@ -242,7 +242,7 @@ Future addTestData(
   Map<String, dynamic> entity5 = _message.toMap();
   logger.i("DB - _addTestData - message start - eg:$entity5");
   // final batch5 = db.batch();
-  for (var i = 0; i < messagePerContactMexCount; i++) {
+  for (var i = 0; i < messagePerContactMaxCount; i++) {
     entity5['pid'] = hexEncode(Uint8List(128));
     entity5['msg_id'] = Uuid().v4();
     entity5['sender'] = (i % 2 == 0) ? clientAddressList[0] : clientAddressList[1];
@@ -262,7 +262,7 @@ Future addTestData(
     // futures.add(db.insert(MessageStorage.tableName, entity5));
     // batch5.insert(MessageStorage.tableName, entity5);
   }
-  for (var i = 0; i < messagePerTopicMexCount; i++) {
+  for (var i = 0; i < messagePerTopicMaxCount; i++) {
     entity5['pid'] = hexEncode(Uint8List(128));
     entity5['msg_id'] = Uuid().v4();
     entity5['sender'] = (i % 10 == 0) ? clientAddressList[0] : clientAddressList[Random().nextInt(clientAddressList.length - 1) + 1];
@@ -282,7 +282,7 @@ Future addTestData(
     // futures.add(db.insert(MessageStorage.tableName, entity5));
     // batch5.insert(MessageStorage.tableName, entity5);
   }
-  for (var i = 0; i < (messageCount - messagePerContactMexCount - messagePerTopicMexCount); i++) {
+  for (var i = 0; i < (messageCount - messagePerContactMaxCount - messagePerTopicMaxCount); i++) {
     entity5['pid'] = hexEncode(Uint8List(128));
     entity5['msg_id'] = Uuid().v4();
     entity5['sender'] = (i % 2 == 0) ? clientAddressList[0] : clientAddressList[Random().nextInt(clientAddressList.length - 1) + 1];
