@@ -42,8 +42,6 @@ class TopicCommon with Tag {
 
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int limit = 20;
@@ -91,8 +89,6 @@ class TopicCommon with Tag {
 
   Future checkAndTryAllSubscribe({bool txPool = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int max = 10;
@@ -130,10 +126,8 @@ class TopicCommon with Tag {
 
   Future<bool> checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return false;
-    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
-    int expireHeight = await getExpireAtByNode(topic.topic, clientCommon.address);
+    int expireHeight = await getSubscribeExpireAtByNode(topic.topic, clientCommon.address);
 
     topic = await query(topic.id);
     if (topic == null) return false;
@@ -166,8 +160,6 @@ class TopicCommon with Tag {
 
   Future checkAndTryAllPermission() async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
     await _lock.synchronized(() async {
       int topicMax = 10;
@@ -176,7 +168,7 @@ class TopicCommon with Tag {
       List<TopicSchema> topics = [];
       List<SubscriberSchema> subscribers = [];
 
-      // query
+      // topic permission
       for (int offset = 0; true; offset += limit) {
         List<TopicSchema> result = await queryList(topicType: TopicType.privateTopic, offset: offset, limit: limit);
         result.forEach((element) {
@@ -186,6 +178,20 @@ class TopicCommon with Tag {
         });
         if ((result.length < limit) || (topics.length >= topicMax)) break;
       }
+      int? globalHeight = await Global.getBlockHeight();
+      if (globalHeight != null && globalHeight > 0) {
+        double fee = 0;
+        var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+        if ((isAuto != null) && (isAuto.toString() == "true" || isAuto == true)) {
+          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+          if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+        }
+        for (var i = 0; i < topics.length; i++) {
+          TopicSchema topic = topics[i];
+          await checkAndTryPermissionExpire(topic, globalHeight, fee);
+        }
+      }
+      // subscribers permission
       for (var i = 0; i < topics.length; i++) {
         TopicSchema topic = topics[i];
         for (int offset = 0; true; offset += limit) {
@@ -200,7 +206,6 @@ class TopicCommon with Tag {
         }
         if (subscribers.length >= subscriberMax) break;
       }
-      // check + try
       for (var i = 0; i < subscribers.length; i++) {
         SubscriberSchema subscribe = subscribers[i];
         int? progressStatus = subscribe.isPermissionProgress();
@@ -209,10 +214,22 @@ class TopicCommon with Tag {
     });
   }
 
+  Future checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee, {int? nonce}) async {
+    if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
+
+    int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topic.topic);
+    for (var i = 0; i <= maxPermPage; i++) {
+      List result = await getPermissionExpireAtByNode(topic.topic, i);
+      int expireHeight = result[0];
+      Map<String, dynamic> meta = result[1];
+      if ((expireHeight - globalHeight) < Global.topicWarnBlockExpireHeight) {
+        await TopSub.subscribeWithPermission(topic.topic, fee: fee, permissionPage: i, meta: meta, nonce: nonce, toast: false);
+      }
+    }
+  }
+
   Future<bool> checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = false}) async {
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return false;
-    // if (delayMs != null) await await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);
     bool needReject = status == SubscriberStatus.Unsubscribed;
@@ -278,7 +295,7 @@ class TopicCommon with Tag {
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
     if (exists == null) {
-      int expireHeight = await getExpireAtByNode(topic, clientCommon.address);
+      int expireHeight = await getSubscribeExpireAtByNode(topic, clientCommon.address);
       exists = await add(TopicSchema.create(topic, expireHeight: expireHeight), notify: true, checkDuplicated: false);
       logger.d("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
       // refreshSubscribers later
@@ -358,7 +375,7 @@ class TopicCommon with Tag {
 
     // check expire
     bool noSubscribed;
-    int expireHeight = await getExpireAtByNode(exists.topic, clientCommon.address);
+    int expireHeight = await getSubscribeExpireAtByNode(exists.topic, clientCommon.address);
     if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
       if (expireHeight > 0) {
         // DB no joined + node is joined
@@ -786,7 +803,7 @@ class TopicCommon with Tag {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
-    int expireHeight = await getExpireAtByNode(exists?.topic, clientAddress);
+    int expireHeight = await getSubscribeExpireAtByNode(exists?.topic, clientAddress);
     if (expireHeight <= 0) {
       logger.i("$TAG - isJoined - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
       return false;
@@ -799,12 +816,26 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  Future<int> getExpireAtByNode(String? topic, String? clientAddress) async {
+  Future<int> getSubscribeExpireAtByNode(String? topic, String? clientAddress) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
     Map<String, dynamic> result = await TopSub.getSubscription(topic, pubKey);
     String? expiresAt = result['expiresAt']?.toString() ?? "0";
     return int.tryParse(expiresAt) ?? 0;
+  }
+
+  Future<List> getPermissionExpireAtByNode(String? topic, int permPage) async {
+    if (topic == null || topic.isEmpty) return [0, Map()];
+    String? ownerPubKey = getPubKeyFromTopicOrChatId(topic);
+    String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
+    Map<String, dynamic> result = await TopSub.getSubscription(topic, indexWithPubKey);
+    String? expiresAt = result['expiresAt']?.toString() ?? "0";
+    int expireSec = int.tryParse(expiresAt) ?? 0;
+    Map<String, dynamic> meta = Map();
+    if (result['meta']?.toString().isNotEmpty == true) {
+      meta = jsonFormat(result['meta']) ?? Map();
+    }
+    return [expireSec, meta];
   }
 
   Future<Map<String, dynamic>> _getMetaByNodePage(String? topic, int permPage) async {

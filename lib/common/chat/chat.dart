@@ -253,7 +253,7 @@ class ChatCommon with Tag {
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
-      int expireHeight = await topicCommon.getExpireAtByNode(message.topic, clientCommon.address);
+      int expireHeight = await topicCommon.getSubscribeExpireAtByNode(message.topic, clientCommon.address);
       exists = await topicCommon.add(TopicSchema.create(message.topic, expireHeight: expireHeight), notify: true, checkDuplicated: false);
       // expire + permission + subscribers
       if (exists != null) {
@@ -294,7 +294,7 @@ class ChatCommon with Tag {
             exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
             logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
           } else if (isAccept == true) {
-            int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
+            int expireHeight = await topicCommon.getSubscribeExpireAtByNode(topic.topic, message.from);
             if (expireHeight <= 0) {
               exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
               logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
@@ -305,7 +305,7 @@ class ChatCommon with Tag {
             // some subscriber status wrong in new version need refresh
             // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
           } else {
-            int expireHeight = await topicCommon.getExpireAtByNode(topic.topic, message.from);
+            int expireHeight = await topicCommon.getSubscribeExpireAtByNode(topic.topic, message.from);
             if (expireHeight <= 0) {
               exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
               logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");

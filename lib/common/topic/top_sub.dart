@@ -406,7 +406,6 @@ class TopSub {
     return success;
   }
 
-  // TODO:GG 还有subscriber可以 = "identifier.publickey" 吗?
   static Future<Map<String, dynamic>> getSubscription(String? topic, String? subscriber, {int tryTimes = 0}) async {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     Map<String, dynamic>? results;
