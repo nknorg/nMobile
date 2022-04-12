@@ -148,6 +148,59 @@ class Wallet {
     }
   }
 
+  /// [subscribe] to a topic with an identifier for a number of blocks. Client
+  /// using the same key pair and identifier will be able to receive messages from
+  /// this topic. If this (identifier, public key) pair is already subscribed to
+  /// this topic, the subscription expiration will be extended to current block
+  /// height + duration. The signerRPCClient can be a client, multiclient or
+  /// wallet.
+  Future<String?> subscribe({
+    String identifier = '',
+    required String topic,
+    int duration = 400000,
+    String fee = '0',
+    String meta = '',
+    int? nonce,
+  }) async {
+    try {
+      return await _methodChannel.invokeMethod('subscribe', {
+        'seed': this.seed,
+        'identifier': identifier,
+        'topic': topic,
+        'duration': duration,
+        'fee': fee,
+        'meta': meta,
+        'nonce': nonce,
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /// [unsubscribe] from a topic for an identifier. Client using the same key
+  /// pair and identifier will no longer receive messages from this topic. The
+  /// signerRPCClient can be a client, multiclient or wallet.
+  Future<String?> unsubscribe({
+    String identifier = '',
+    required String topic,
+    String fee = '0',
+    int? nonce,
+  }) async {
+    try {
+      return await _methodChannel.invokeMethod('unsubscribe', {
+        'seed': this.seed,
+        'identifier': identifier,
+        'topic': topic,
+        'fee': fee,
+        'nonce': nonce,
+        'seedRpc': this.walletConfig.seedRPCServerAddr ?? [DEFAULT_SEED_RPC_SERVER],
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
+
   /// [pubKeyToWalletAddr] converts a public key to its NKN wallet address
   static Future<String?> pubKeyToWalletAddr(String publicKey) async {
     try {

@@ -1,3 +1,7 @@
+## 0.1.18
+
+* Upgrade NKN SDK, add fixNonce config
+
 ## 0.1.17
 
 * Upgrade NKN SDK
@@ -72,7 +76,7 @@
 
 ## 0.0.13
 
-* Create client, on connect add rpcServers 
+* Create client, on connect add rpcServers
 
 ## 0.0.12
 
@@ -96,7 +100,7 @@
 
 ## 0.0.7
 
-* Fix client create failure handling 
+* Fix client create failure handling
 
 ## 0.0.6
 

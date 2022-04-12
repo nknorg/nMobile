@@ -12,7 +12,6 @@ import nkn.*
 import nkngomobile.StringArray
 import org.bouncycastle.util.encoders.Hex
 import org.nkn.sdk.IChannelHandler
-import utils.Utils
 
 class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
     companion object {
@@ -59,6 +58,12 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "transfer" -> {
                 transfer(call, result)
             }
+            "subscribe" -> {
+                subscribe(call, result)
+            }
+            "unsubscribe" -> {
+                unsubscribe(call, result)
+            }
             "getSubscribersCount" -> {
                 getSubscribersCount(call, result)
             }
@@ -91,7 +96,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                seedRPCServerAddr = Utils.measureSeedRPCServerReturnStringArray(seedRPCServerAddr, timeout)
+                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, timeout)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
                 val elements = seedRPCServerAddr.join(",").split(",")
@@ -245,6 +250,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 transactionConfig.fee = fee
                 if (nonce != null) {
                     transactionConfig.nonce = nonce.toLong()
+                    transactionConfig.fixNonce = true
                 }
                 if (attributes != null) {
                     transactionConfig.attributes = attributes
@@ -254,6 +260,82 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 resultSuccess(result, hash)
                 return@launch
             } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun subscribe(call: MethodCall, result: MethodChannel.Result) {
+        val seed = call.argument<ByteArray>("seed")
+        val identifier = call.argument<String>("identifier") ?: ""
+        val topic = call.argument<String>("topic")!!
+        val duration = call.argument<Int>("duration")!!
+        val meta = call.argument<String>("meta")
+        val fee = call.argument<String>("fee") ?: "0"
+        val nonce = call.argument<Int>("nonce")
+        val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+
+        val transactionConfig = TransactionConfig()
+        transactionConfig.fee = fee
+        if (nonce != null) {
+            transactionConfig.nonce = nonce.toLong()
+            transactionConfig.fixNonce = true
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val config = WalletConfig()
+                if (seedRpc != null) {
+                    config.seedRPCServerAddr = StringArray(null)
+                    for (addr in seedRpc) {
+                        config.seedRPCServerAddr.append(addr)
+                    }
+                }
+                val account = Nkn.newAccount(seed)
+                val wallet = Nkn.newWallet(account, config)
+                val hash = wallet.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
+
+                resultSuccess(result, hash)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun unsubscribe(call: MethodCall, result: MethodChannel.Result) {
+        val seed = call.argument<ByteArray>("seed")
+        val identifier = call.argument<String>("identifier") ?: ""
+        val topic = call.argument<String>("topic")!!
+        val fee = call.argument<String>("fee") ?: "0"
+        val nonce = call.argument<Int>("nonce")
+        val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+
+        val transactionConfig = TransactionConfig()
+        transactionConfig.fee = fee
+        if (nonce != null) {
+            transactionConfig.nonce = nonce.toLong()
+            transactionConfig.fixNonce = true
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val config = WalletConfig()
+                if (seedRpc != null) {
+                    config.seedRPCServerAddr = StringArray(null)
+                    for (addr in seedRpc) {
+                        config.seedRPCServerAddr.append(addr)
+                    }
+                }
+                val account = Nkn.newAccount(seed)
+                val wallet = Nkn.newWallet(account, config)
+                val hash = wallet.unsubscribe(identifier, topic, transactionConfig)
+
+                resultSuccess(result, hash)
+                return@launch
+            } catch (e: Exception) {
                 resultError(result, e)
                 return@launch
             }

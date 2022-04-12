@@ -5,3 +5,5 @@ vendor
 *.framework
 *.aar
 *.jar
+
+gomobile
