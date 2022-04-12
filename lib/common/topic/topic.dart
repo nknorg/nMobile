@@ -220,9 +220,9 @@ class TopicCommon with Tag {
     int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topic.topic);
     for (var i = 0; i <= maxPermPage; i++) {
       List result = await getPermissionExpireAtByNode(topic.topic, i);
-      int expireHeight = result[0];
-      Map<String, dynamic> meta = result[1];
-      if ((expireHeight - globalHeight) < Global.topicWarnBlockExpireHeight) {
+      int expireHeight = result[0] ?? 0;
+      Map<String, dynamic> meta = result[1] ?? Map();
+      if ((expireHeight > 0) && ((expireHeight - globalHeight) < Global.topicWarnBlockExpireHeight)) {
         await TopSub.subscribeWithPermission(topic.topic, fee: fee, permissionPage: i, meta: meta, nonce: nonce, toast: false);
       }
     }
