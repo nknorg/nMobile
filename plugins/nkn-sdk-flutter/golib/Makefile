@@ -13,7 +13,7 @@ ANDROID_ARTIFACT=$(ANDROID_BUILDDIR)/nkn.aar
 IOS_BUILDDIR=$(BUILDDIR)/ios
 IOS_ARTIFACT=$(IOS_BUILDDIR)/Nkn.xcframework
 
-BUILD_PACKAGE=./utils github.com/nknorg/nkn-sdk-go github.com/nknorg/ncp-go github.com/nknorg/nkn/v2/transaction github.com/nknorg/nkngomobile github.com/nknorg/reedsolomon
+BUILD_PACKAGE=github.com/nknorg/nkn-sdk-go github.com/nknorg/ncp-go github.com/nknorg/nkn/v2/transaction github.com/nknorg/nkngomobile github.com/nknorg/reedsolomon
 ANDROID_BUILD_CMD="$(GOBIND) -ldflags $(ANDROID_LDFLAGS) -target=android -o $(ANDROID_ARTIFACT) $(BUILD_PACKAGE)"
 IOS_BUILD_CMD="$(GOBIND) -ldflags $(LDFLAGS) -target=ios -o $(IOS_ARTIFACT) $(BUILD_PACKAGE)"
 

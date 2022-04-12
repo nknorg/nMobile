@@ -643,7 +643,7 @@ packages:
       path: "plugins/nkn-sdk-flutter"
       relative: true
     source: path
-    version: "0.1.17"
+    version: "0.1.18"
   nm:
     dependency: transitive
     description:
