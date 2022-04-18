@@ -38,11 +38,11 @@ class TopSub {
     );
     bool success = results[0];
     bool canTryTimer = results[1];
-    bool exists = results[2];
+    bool isBlock = results[2];
     int? _nonce = results[3];
 
     if (!success) {
-      if (exists && fee > 0) {
+      if (isBlock && fee > 0) {
         int? blockNonce = await Global.getNonce(txPool: false);
         int? poolNonce = await Global.getNonce(txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
@@ -130,11 +130,11 @@ class TopSub {
           );
     bool success = results[0];
     bool canTryTimer = results[1];
-    bool exists = results[2];
+    bool isBlock = results[2];
     int? _nonce = results[3];
 
     if (!success) {
-      if (exists && fee > 0) {
+      if (isBlock && fee > 0) {
         int? blockNonce = await Global.getNonce(txPool: false);
         int? poolNonce = await Global.getNonce(txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
@@ -219,7 +219,7 @@ class TopSub {
 
     bool? success;
     bool canTryTimer = true;
-    bool exists = false;
+    bool isBlock = false;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
@@ -235,12 +235,7 @@ class TopSub {
         canTryTimer = false;
       }
     } catch (e) {
-      if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        success = false;
-        canTryTimer = false;
-        _nonce = null;
-      } else if (e.toString().contains("nonce is not continuous")) {
+      if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
@@ -259,11 +254,23 @@ class TopSub {
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
-        exists = true;
+        isBlock = true;
+        _nonce = null;
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
+        success = false;
+        canTryTimer = false;
+        _nonce = null;
+      } else if (e.toString().contains("txpool full")) {
+        // txpool full, rejecting transaction with low priority
+        logger.w("TopSub - _subscribe - txpool full - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
+        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
+        success = false;
+        canTryTimer = false;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
+        logger.w("TopSub - _subscribe - not sufficient funds - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
@@ -293,7 +300,7 @@ class TopSub {
         success = false; // permission action can add to try timer
       }
     }
-    return [success, canTryTimer, exists, _nonce];
+    return [success, canTryTimer, isBlock, _nonce];
   }
 
   static Future<List> _unsubscribe(
@@ -310,7 +317,7 @@ class TopSub {
 
     bool? success;
     bool canTryTimer = true;
-    bool exists = false;
+    bool isBlock = false;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.unsubscribe(
@@ -324,12 +331,7 @@ class TopSub {
         canTryTimer = false;
       }
     } catch (e) {
-      if (e.toString().contains("doesn't exist")) {
-        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        success = false;
-        canTryTimer = false;
-        _nonce = null;
-      } else if (e.toString().contains("nonce is not continuous")) {
+      if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
@@ -348,12 +350,24 @@ class TopSub {
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if (toast) Toast.show(Global.locale((s) => s.request_processed));
         success = false;
-        exists = true;
+        isBlock = true;
+        _nonce = null;
+      } else if (e.toString().contains("doesn't exist")) {
+        logger.w("TopSub - _unsubscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
+        success = false;
+        canTryTimer = false;
+        _nonce = null;
+      } else if (e.toString().contains("txpool full")) {
+        // txpool full, rejecting transaction with low priority
+        logger.w("TopSub - _unsubscribe - txpool full - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
+        if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
+        success = false;
+        canTryTimer = false;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
-        logger.w("TopSub - _subscribe - topic doesn't exist - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.balance_not_enough));
+        logger.w("TopSub - _unsubscribe - not sufficient funds - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
+        if (toast) Toast.show(Global.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
         _nonce = null;
@@ -381,7 +395,7 @@ class TopSub {
         success = false; // permission action can add to try timer
       }
     }
-    return [success, canTryTimer, exists, _nonce];
+    return [success, canTryTimer, isBlock, _nonce];
   }
 
   static _subscribeReplace(int nonce, double fee) async {
