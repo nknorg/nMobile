@@ -291,7 +291,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
 
       nonce = nonce ?? await Global.getNonce(txPool: true, walletAddress: this._wallet.address);
-      int? blockNonce = await Global.getNonce(txPool: false);
+      int? blockNonce = await Global.getNonce(txPool: false, walletAddress: this._wallet.address);
 
       if ((blockNonce != null) && (nonce != null) && (blockNonce != nonce)) {
         if (replaceFee == null || replaceFee <= 0) {
