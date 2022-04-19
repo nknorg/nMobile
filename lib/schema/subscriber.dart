@@ -65,6 +65,7 @@ class SubscriberSchema {
     return newData;
   }
 
+  // TODO:GG no clear in end
   int? isPermissionProgress() {
     int? status = data?['permission_progress'];
     return status;
