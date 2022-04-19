@@ -226,6 +226,7 @@ class Global {
   /// ************************************************** nonce **************************************************
   /// ***********************************************************************************************************
 
+  // TODO:GG move to wallet/client
   static Future<int?> getNonce({bool txPool = true, String? walletAddress}) async {
     return await _nonceLock.synchronized(() {
       return _getNonceWithNoLock(txPool: txPool, walletAddress: walletAddress);
