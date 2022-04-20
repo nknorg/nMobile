@@ -410,7 +410,7 @@ class TopSub {
         if (password == null || password.isEmpty) return false;
         List<String> seedRpcList = await Global.getRpcServers(address);
         Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
-        String? txHash = await nkn.transfer(address, "0", fee: fee.toStringAsFixed(8), nonce: nonce);
+        String? txHash = await nkn.transfer(address, "0.00000001", fee: fee.toStringAsFixed(8), nonce: nonce);
         success = (txHash != null) && (txHash.isNotEmpty);
       }
     } catch (e) {
