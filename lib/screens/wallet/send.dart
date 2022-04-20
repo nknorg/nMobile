@@ -304,7 +304,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
           if (address != null && address.isNotEmpty && (blockNonce >= 0) && (nonce > blockNonce)) {
             for (var i = blockNonce; i < nonce; i++) {
               try {
-                await nkn.transfer(address, "0", fee: replaceFee.toStringAsFixed(8), nonce: i);
+                await nkn.transfer(address, "0.00000001", fee: replaceFee.toStringAsFixed(8), nonce: i);
               } catch (e) {
                 logger.w("WalletSendScreen - _transferNKN - replace - error:${e.toString()}");
               }
