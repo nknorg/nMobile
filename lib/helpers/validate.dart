@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:web3dart/credentials.dart';
+import 'package:nmobile/utils/base_x.dart';
 
 class Validate {
   static const ADDRESS_GEN_PREFIX = '02b825';
@@ -11,6 +12,10 @@ class Validate {
   static const CHECKSUM_LEN = 4;
   static const SEED_LENGTH = 32;
   static const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
+
+  static final String ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  static final base58 = BaseXCodec(ALPHABET);
+
   // static final regAddress = RegExp('NKN[0-9A-Za-z]{33}');
   static isNknAddressOk(String? address) {
     if (address == null || address.isEmpty) return false;
@@ -47,7 +52,7 @@ class Validate {
 
   static List<int> genAddressVerifyBytesFromProgramHash(String programHash) {
     programHash = ADDRESS_GEN_PREFIX + programHash;
-    var verifyBytes = doubleSha256Hex(programHash);
+    var verifyBytes = Hash.doubleSha256Hex(programHash);
     return verifyBytes.sublist(0, CHECKSUM_LEN);
   }
 

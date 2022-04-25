@@ -147,9 +147,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _updateFee(bool eth, {gweiFee, gasFee, nknFee}) {
     if (eth) {
-      _feeController.text = nknFormat((_gasPriceInGwei.gwei.ether * _maxGas), decimalDigits: 8).trim();
+      _feeController.text = Format.nknBalance((_gasPriceInGwei.gwei.ether * _maxGas), decimalDigits: 8).trim();
       if (_ethTrueTokenFalse && _amountController.text.isNotEmpty) {
-        _amountController.text = nknFormat((_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)), decimalDigits: 8).trim();
+        _amountController.text = Format.nknBalance((_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)), decimalDigits: 8).trim();
       }
       setState(() {
         if (gasFee != null) {
@@ -171,7 +171,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _setAmountToMax(bool eth) {
     if (eth) {
-      _amountController.text = nknFormat(_ethTrueTokenFalse ? (_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)) : _wallet.balance, decimalDigits: 8).trim();
+      _amountController.text = Format.nknBalance(_ethTrueTokenFalse ? (_wallet.balanceEth - (_gasPriceInGwei.gwei.ether * _maxGas)) : _wallet.balance, decimalDigits: 8).trim();
     } else {
       _amountController.text = _wallet.balance.toString();
     }
@@ -513,7 +513,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         children: <Widget>[
                                           Label(Global.locale((s) => s.available, ctx: context) + ': '),
                                           Label(
-                                            nknFormat(
+                                            Format.nknBalance(
                                               useETH ? _wallet.balanceEth : _wallet.balance,
                                               decimalDigits: 8,
                                               symbol: useETH ? 'ETH' : 'NKN',

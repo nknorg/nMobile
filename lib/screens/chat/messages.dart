@@ -35,6 +35,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
@@ -460,7 +461,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                               Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
                               SizedBox(width: 4),
                               Label(
-                                durationFormat(Duration(seconds: deleteAfterSeconds)),
+                                Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
                                 type: LabelType.bodySmall,
                                 color: _theme.backgroundLightColor,
                               ),
@@ -486,7 +487,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                               Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
                               SizedBox(width: 4),
                               Label(
-                                durationFormat(Duration(seconds: deleteAfterSeconds)),
+                                Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
                                 type: LabelType.bodySmall,
                                 color: _theme.backgroundLightColor,
                               ),
@@ -649,7 +650,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       return null;
                     }
                     int size = await content.length();
-                    logger.w("$TAG - onRecordTap - saveFileSize:${formatFlowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+                    logger.w("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
                     // if (size >= ChatOutCommon.maxBodySize) {
                     //   Toast.show(Global.locale((s) => s.file_too_big);
                     //   if (await content.exists()) {

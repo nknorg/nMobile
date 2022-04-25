@@ -56,8 +56,8 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     double cacheSize = await _getTotalSizeOfFile(Global.applicationRootDirectory, dirFilter: DirType.cache);
     double dbSize = await _getTotalSizeOfFile(Directory(await dbCommon.getDBDirPath()), filePrefix: DB.NKN_DATABASE_NAME);
     setState(() {
-      _cacheSize = formatFlowSize(cacheSize, unitArr: ['B', 'KB', 'MB', 'GB']);
-      _dbSize = formatFlowSize(dbSize, unitArr: ['B', 'KB', 'MB', 'GB']);
+      _cacheSize = Format.flowSize(cacheSize, unitArr: ['B', 'KB', 'MB', 'GB']);
+      _dbSize = Format.flowSize(dbSize, unitArr: ['B', 'KB', 'MB', 'GB']);
     });
   }
 

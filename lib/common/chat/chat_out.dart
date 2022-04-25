@@ -710,7 +710,7 @@ class ChatOutCommon with Tag {
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty) return null;
 
-    logger.i("$TAG - _sendByPieces:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _sendByPieces:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
 
     List<MessageSchema> resultList = [];
     for (var index = 0; index < dataList.length; index++) {
@@ -788,7 +788,7 @@ class ChatOutCommon with Tag {
     }
 
     // (total + parity) < 256
-    logger.i("$TAG - _convert2Pieces - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _convert2Pieces - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     return [base64Data, bytesLength, total, parity];
   }
 

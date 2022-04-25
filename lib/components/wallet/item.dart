@@ -77,7 +77,7 @@ class WalletItem extends StatelessWidget {
                   type: LabelType.h3,
                 ),
                 Label(
-                  nknFormat(this.wallet.balance, decimalDigits: 4, symbol: 'NKN'),
+                  Format.nknBalance(this.wallet.balance, decimalDigits: 4, symbol: 'NKN'),
                   type: LabelType.bodySmall,
                 ),
               ],
@@ -110,7 +110,7 @@ class WalletItem extends StatelessWidget {
                   ? Padding(
                       padding: EdgeInsets.only(right: 4, top: 4),
                       child: Label(
-                        nknFormat(this.wallet.balanceEth, symbol: 'ETH'),
+                        Format.nknBalance(this.wallet.balanceEth, symbol: 'ETH'),
                         type: LabelType.bodySmall,
                       ),
                     )

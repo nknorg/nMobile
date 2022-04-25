@@ -20,9 +20,9 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/screens/contact/profile.dart';
-import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/util.dart';
 
 class ChatBubble extends BaseStateFulWidget {
@@ -429,7 +429,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
     int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getInAt(_message));
-    String sendTime = ((sendAt != null) && (sendAt != 0)) ? formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
+    String sendTime = ((sendAt != null) && (sendAt != 0)) ? Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
     bool isSending = _message.status == MessageStatus.Sending;
 
     bool showTime = isSending || _showTimeAndStatus;
@@ -596,11 +596,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyText(bool dark) {
-    List<String> contents = getChatFormatString(_message.content?.toString());
+    List<String> contents = Format.chatText(_message.content?.toString());
     if (contents.isNotEmpty) {
       List<InlineSpan> children = [];
       for (String s in contents) {
-        if (s.contains(chatRegSpecial)) {
+        if (s.contains(Format.chatRegSpecial)) {
           children.add(TextSpan(text: s, style: TextStyle(height: 1.15, color: Color(0xFFF5B800), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
         } else {
           children.add(TextSpan(text: s, style: TextStyle(color: dark ? application.theme.fontLightColor : application.theme.fontColor3, height: 1.25)));

@@ -298,7 +298,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                         children: [
                           _wallet != null
                               ? Label(
-                                  nknFormat(_wallet?.balance ?? 0, decimalDigits: 4),
+                                  Format.nknBalance(_wallet?.balance ?? 0, decimalDigits: 4),
                                   maxWidth: Global.screenWidth() * 0.7,
                                   type: LabelType.h1,
                                   maxLines: 10,
@@ -313,7 +313,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Label(nknFormat(_wallet?.balanceEth ?? 0, decimalDigits: 4), type: LabelType.bodySmall),
+                                Label(Format.nknBalance(_wallet?.balanceEth ?? 0, decimalDigits: 4), type: LabelType.bodySmall),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 6, right: 2),
                                   child: Label('ETH', type: LabelType.bodySmall, color: application.theme.fontColor1),

@@ -548,6 +548,6 @@ class TopSub {
 
   static String genTopicHash(String topic) {
     var t = topic.replaceFirst(RegExp(r'^#*'), '');
-    return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
+    return 'dchat' + hexEncode(Uint8List.fromList(Hash.sha1(t)));
   }
 }
