@@ -493,7 +493,7 @@ class ChatInCommon with Tag {
               }
               String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
               if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-              avatar = await FileHelper.saveBase64toFile(avatarData, DirType.contact, fileExt, subPath: received.targetId);
+              avatar = await FileHelper.saveBase64toFile(avatarData, DirType.profile, fileExt, subPath: received.targetId);
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {

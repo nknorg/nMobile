@@ -32,6 +32,15 @@ String? getPubKeyFromTopicOrChatId(String s) {
   return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
+Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) async {
+  if (walletAddress == null || walletAddress.isEmpty || walletPwd == null || walletPwd.isEmpty) return null;
+  String keystore = await walletCommon.getKeystore(walletAddress);
+  List<String> seedRpcList = await Global.getRpcServers(walletAddress, measure: true);
+  Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
+  if (nknWallet.publicKey.isEmpty) return null;
+  return hexEncode(nknWallet.publicKey);
+}
+
 class ClientCommon with Tag {
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
@@ -39,9 +48,6 @@ class ClientCommon with Tag {
 
   // == chat_id
   String? get address => client?.address;
-
-  // == wallet publicKey
-  Uint8List? get publicKey => client?.publicKey;
 
   bool get isClientCreated => (client != null) && (client?.address.isNotEmpty == true);
 
@@ -100,6 +106,18 @@ class ClientCommon with Tag {
     clientResigning = false;
     // check
     checkTimes = 0;
+  }
+
+  String? getPublicKey() {
+    if (client?.publicKey == null || client!.publicKey.isEmpty) return null;
+    String? pk;
+    try {
+      pk = hexEncode(client!.publicKey);
+    } catch (e) {
+      handleError(e);
+    }
+    if (pk == null || pk.isEmpty) return null;
+    return pk;
   }
 
   /// ******************************************************   Client   ****************************************************** ///
