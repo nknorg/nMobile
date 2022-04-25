@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/utils/base_x.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:web3dart/credentials.dart';
-import 'package:nmobile/utils/base_x.dart';
 
 class Validate {
   static const ADDRESS_GEN_PREFIX = '02b825';

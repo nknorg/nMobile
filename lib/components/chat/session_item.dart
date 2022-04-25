@@ -12,7 +12,6 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/time.dart';
 
 class ChatSessionItem extends BaseStateFulWidget {
