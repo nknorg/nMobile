@@ -1,21 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/helpers/validate.dart';
-import 'package:nmobile/utils/hash.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-const ADDRESS_GEN_PREFIX = '02b825';
-const ADDRESS_GEN_PREFIX_LEN = ADDRESS_GEN_PREFIX.length ~/ 2;
-const UINT160_LEN = 20;
-const CHECKSUM_LEN = 4;
-const SEED_LENGTH = 32;
-const ADDRESS_LEN = ADDRESS_GEN_PREFIX_LEN + UINT160_LEN + CHECKSUM_LEN;
 
 void copyText(String? content, {bool toast = true}) {
   Clipboard.setData(ClipboardData(text: content));
@@ -32,26 +21,13 @@ void launchUrl(String? url) async {
 }
 
 Map<String, dynamic>? jsonFormat(raw) {
-  Map<String, dynamic> jsonData;
+  Map<String, dynamic>? jsonData;
   try {
     jsonData = jsonDecode(raw);
-    return jsonData;
   } on Exception catch (e) {
     handleError(e);
   }
-  return null;
-}
-
-// TODO:GG check pubKey
-String? getPubKeyFromTopicOrChatId(String s) {
-  final i = s.lastIndexOf('.');
-  final pubKey = i >= 0 ? s.substring(i + 1) : s;
-  return Validate.isNknPublicKey(pubKey) ? pubKey : null;
-}
-
-String genTopicHash(String topic) {
-  var t = topic.replaceFirst(RegExp(r'^#*'), '');
-  return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
+  return jsonData;
 }
 
 num? getNumByValueDouble(double? value, int fractionDigits) {

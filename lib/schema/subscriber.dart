@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/utils/utils.dart';
 
 class SubscriberStatus {
