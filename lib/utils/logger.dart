@@ -59,7 +59,7 @@ class ColorPrinter extends LogPrinter {
     var messageStr = color(_stringifyMessage(event.message));
     var errorStr = event.error != null ? '  ERROR: ${event.error}' : '';
     var timeStr = printTime ? color('TIME: ${DateTime.now().toIso8601String()}') : '';
-    return ['${_labelFor(event.level)}  $timeStr  $messageStr  <<<ERROR>>>:$errorStr'];
+    return ['${_labelFor(event.level)}  $timeStr  $messageStr  $errorStr'];
   }
 
   String _labelFor(Level level) {
