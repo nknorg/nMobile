@@ -25,7 +25,6 @@ import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ContactAddScreen extends StatefulWidget {
@@ -61,7 +60,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.contact, target: null, fileExt: 'jpg');
+    String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.contact, subPath: null, fileExt: 'jpg');
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
@@ -120,7 +119,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       String defaultName = ContactSchema.getDefaultName(clientAddress);
       String? remarkName = _nameController.text != defaultName ? _nameController.text : null;
 
-      String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.getLocalFile(_headImage?.path) : null;
+      String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.convert2Local(_headImage?.path) : null;
 
       logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 

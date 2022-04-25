@@ -6,7 +6,7 @@ import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactType {
@@ -156,7 +156,7 @@ class ContactSchema {
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
       return null;
     }
-    String? completePath = Path.getCompleteFile(avatarLocalPath);
+    String? completePath = Path.convert2Complete(avatarLocalPath);
     if (completePath == null || completePath.isEmpty) {
       return null;
     }
@@ -218,7 +218,7 @@ class ContactSchema {
       'type': type,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'avatar': Path.getLocalFile(avatar?.path),
+      'avatar': Path.convert2Local(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
       'profile_version': profileVersion ?? Uuid().v4(),
@@ -238,7 +238,7 @@ class ContactSchema {
       type: e['type'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
+      avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
       profileVersion: e['profile_version'],
@@ -248,7 +248,7 @@ class ContactSchema {
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = jsonFormat(e['options']);
+      Map<String, dynamic>? options = Util.jsonFormat(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (contact.options == null) {
@@ -256,7 +256,7 @@ class ContactSchema {
     }
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
 
       if (contact.data == null) {
         contact.data = new Map<String, dynamic>();

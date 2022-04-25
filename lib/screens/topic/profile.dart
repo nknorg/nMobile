@@ -27,7 +27,7 @@ import 'package:nmobile/screens/topic/subscribers.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class TopicProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/profile';
@@ -171,8 +171,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _selectAvatarPicture() async {
     if (clientCommon.publicKey == null) return;
-    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.topic, target: _topicSchema?.topic, fileExt: 'jpg');
-    String? remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
+    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.topic, subPath: _topicSchema?.topic, fileExt: 'jpg');
+    String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
@@ -186,7 +186,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       return;
     } else {
       remarkAvatarPath = picked.path;
-      remarkAvatarLocalPath = Path.getLocalFile(remarkAvatarPath);
+      remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     }
 
     topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true); // await
@@ -294,7 +294,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    copyText(_topicSchema?.topic);
+                    Util.copyText(_topicSchema?.topic);
                   },
                   child: Row(
                     children: <Widget>[

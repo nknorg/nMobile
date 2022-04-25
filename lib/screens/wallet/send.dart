@@ -31,6 +31,7 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class WalletSendScreen extends BaseStateFulWidget {
@@ -365,7 +366,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               var jsonFormat;
               var jsonData;
               try {
-                jsonData = jsonFormat(qrData);
+                jsonData = Util.jsonFormat(qrData);
                 jsonFormat = true;
               } catch (e) {
                 jsonFormat = false;

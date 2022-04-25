@@ -46,7 +46,7 @@ class AudioHelper with Tag {
 
   Future<String?> _getRecordPath(String? targetId) async {
     if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-    String recordPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: targetId, fileExt: 'aac');
+    String recordPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.chat, subPath: targetId, fileExt: 'aac');
     var outputFile = File(recordPath);
     if (await outputFile.exists()) {
       await outputFile.delete();

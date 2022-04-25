@@ -120,7 +120,7 @@ class ContactCommon with Tag {
     bool success = await _contactStorage.setProfile(
       old.id,
       {
-        'avatar': Path.getLocalFile(old.avatar?.path),
+        'avatar': Path.convert2Local(old.avatar?.path),
         'first_name': firstName,
         'last_name': lastName,
         'profile_version': Uuid().v4(),

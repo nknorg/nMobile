@@ -26,7 +26,7 @@ class ChatBottomMenu extends StatelessWidget {
   _getImageFile({required ImageSource source}) async {
     if (clientCommon.publicKey == null) return;
     if (source == ImageSource.camera) {
-      String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpg');
+      String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.chat, subPath: target, fileExt: 'jpg');
       File? picked = await MediaPicker.takeImage(
         bestSize: ChatOutCommon.imgBestSize,
         maxSize: ChatOutCommon.imgMaxSize,
@@ -38,7 +38,7 @@ class ChatBottomMenu extends StatelessWidget {
       int maxNum = 9;
       List<String> returnPaths = [];
       for (var i = 0; i < maxNum; i++) {
-        String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), SubDirType.chat, target: target, fileExt: 'jpg');
+        String returnPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.chat, subPath: target, fileExt: 'jpg');
         returnPaths.add(returnPath);
       }
       List<File> picks = await MediaPicker.pickImages(

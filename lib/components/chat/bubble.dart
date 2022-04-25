@@ -23,7 +23,7 @@ import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/chat.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
@@ -185,7 +185,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         var index = (item as MenuItem).userInfo;
         switch (index) {
           case 0:
-            copyText(_message.content?.toString() ?? "");
+            Util.copyText(_message.content?.toString() ?? "");
             break;
         }
       },
@@ -658,7 +658,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.3 : 0.35);
     double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
 
-    num durationText = getNumByValueDouble(durationS ?? 0, 2) ?? 0;
+    num durationText = Util.getNumByValueDouble(durationS ?? 0, 2) ?? 0;
 
     return [
       Row(

@@ -18,7 +18,7 @@ import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
   ContactSchema current;
@@ -336,7 +336,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(top: 6),
                       child: GestureDetector(
                         onTap: () {
-                          launchUrl('https://nmobile.nkn.org/');
+                          Util.launchUrl('https://nmobile.nkn.org/');
                         },
                         child: Label(
                           Global.locale((s) => s.learn_more, ctx: context),

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class DeviceInfoSchema {
   int? id; // <- id
@@ -96,7 +96,7 @@ class DeviceInfoSchema {
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
 
       if (deviceInfo.data == null) {
         deviceInfo.data = new Map<String, dynamic>();

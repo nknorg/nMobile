@@ -7,7 +7,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
-class SubDirType {
+class DirType {
   static const cache = "cache";
   static const download = "nkn";
   static const chat = "chat";
@@ -58,39 +58,51 @@ class Path {
    */
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/
-  static Future<String> getDir(String? mPubKey, String? dirType, {String? target}) async {
+  static String getDir(String? uid, String? dirType, {String? subPath}) {
     String dirPath = Global.applicationRootDirectory.path;
-    if (mPubKey != null && mPubKey.isNotEmpty) {
-      dirPath = join(dirPath, mPubKey);
+    if (uid != null && uid.isNotEmpty) {
+      dirPath = join(dirPath, uid);
     }
     if (dirType != null && dirType.isNotEmpty) {
       dirPath = join(dirPath, dirType);
     }
-    if (target != null && target.isNotEmpty) {
-      dirPath = join(dirPath, target);
+    if (subPath != null && subPath.isNotEmpty) {
+      dirPath = join(dirPath, subPath);
     }
+    return dirPath;
+  }
+
+  static Future<String> createDir(String? uid, String? dirType, {String? subPath}) async {
+    String dirPath = getDir(uid, dirType, subPath: subPath);
     Directory dir = Directory(dirPath);
-    if (!await dir.exists()) {
-      dir = await dir.create(recursive: true);
-    }
+    if (!dir.existsSync()) dir = await dir.create(recursive: true);
     return dir.path;
   }
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{fileName}.{fileExt}
-  static Future<String> _getFile(String? mPubKey, String? dirType, String fileName, {String? target, String? fileExt}) async {
-    String dirPath = await getDir(mPubKey, dirType, target: target);
-    String path = join(dirPath, joinFileExt(fileName, fileExt));
-    return path;
+  static Future<String> getFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt}) async {
+    String dirPath = await createDir(uid, dirType, subPath: subPath);
+    return join(dirPath, joinFileExt(fileName, fileExt));
+  }
+
+  static Future<String> createFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt}) async {
+    String filePath = await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
+    File file = File(filePath);
+    if (!file.existsSync()) await file.create(recursive: true);
+    return file.path;
   }
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{random}.{fileExt}
-  static Future<String> getRandomFile(String? mPubKey, String dirType, {String? target, String? fileExt}) async {
+  static Future<String> getRandomFile(String? uid, String dirType, {String? subPath, String? fileExt}) async {
     String fileName = new DateTime.now().second.toString() + "_" + Uuid().v4() + '_temp';
-    if (fileExt != null && fileExt.isNotEmpty) {
-      fileName += ".$fileExt";
-    }
-    String path = await _getFile(mPubKey, dirType, fileName, target: target, fileExt: fileExt);
-    return path;
+    return await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
+  }
+
+  static Future<String> createRandomFile(String? uid, String dirType, {String? subPath, String? fileExt}) async {
+    String filePath = await getRandomFile(uid, dirType, subPath: subPath, fileExt: fileExt);
+    File file = File(filePath);
+    if (!file.existsSync()) await file.create(recursive: true);
+    return file.path;
   }
 
   /**
@@ -99,13 +111,13 @@ class Path {
    */
 
   /// eg:{rootPath}/{localPath}
-  static String? getCompleteFile(String? localPath) {
+  static String? convert2Complete(String? localPath) {
     if (localPath == null || localPath.isEmpty) return null;
     return join(Global.applicationRootDirectory.path, localPath);
   }
 
   /// eg:{localPath}
-  static String? getLocalFile(String? completePath) {
+  static String? convert2Local(String? completePath) {
     if (completePath == null || completePath.isEmpty) return null;
     String rootDir = Global.applicationRootDirectory.path.endsWith("/") ? Global.applicationRootDirectory.path : (Global.applicationRootDirectory.path + "/");
     return completePath.split(rootDir).last;
