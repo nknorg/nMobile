@@ -24,7 +24,7 @@ import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/screens/settings/subscribe.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class SettingsHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/settings';
@@ -450,7 +450,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () async {
-                      launchUrl('mailto:nmobile@nkn.org');
+                      Util.launchUrl('mailto:nmobile@nkn.org');
                     },
                   ),
                 ),
@@ -483,7 +483,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       ],
                     ),
                     onPressed: () {
-                      launchUrl('https://forum.nkn.org');
+                      Util.launchUrl('https://forum.nkn.org');
                     },
                   ),
                 ),

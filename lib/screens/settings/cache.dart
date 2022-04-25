@@ -52,7 +52,7 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
   }
 
   _refreshFilesLength() async {
-    double cacheSize = await _getTotalSizeOfFile(Global.applicationRootDirectory, dirFilter: SubDirType.cache);
+    double cacheSize = await _getTotalSizeOfFile(Global.applicationRootDirectory, dirFilter: DirType.cache);
     double dbSize = await _getTotalSizeOfFile(Directory(await dbCommon.getDBDirPath()), filePrefix: DB.NKN_DATABASE_NAME);
     setState(() {
       _cacheSize = formatFlowSize(cacheSize, unitArr: ['B', 'KB', 'MB', 'GB']);
@@ -134,8 +134,8 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     // delete
     Loading.show();
     if (type == FileType.cache) {
-      String path1 = await Path.getDir(null, SubDirType.cache);
-      String path2 = await Path.getDir(pubKey, SubDirType.cache);
+      String path1 = Path.getDir(null, DirType.cache);
+      String path2 = Path.getDir(pubKey, DirType.cache);
       await _delete(Directory(path1));
       await _delete(Directory(path2));
     } else if (type == FileType.db) {

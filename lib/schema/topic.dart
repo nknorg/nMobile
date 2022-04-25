@@ -7,7 +7,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class TopicType {
   static const publicTopic = 1;
@@ -132,7 +132,7 @@ class TopicSchema {
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
       return null;
     }
-    String? completePath = Path.getCompleteFile(avatarLocalPath);
+    String? completePath = Path.convert2Complete(avatarLocalPath);
     if (completePath == null || completePath.isEmpty) {
       return null;
     }
@@ -255,7 +255,7 @@ class TopicSchema {
       'joined': joined ? 1 : 0,
       'subscribe_at': subscribeAt,
       'expire_height': expireBlockHeight,
-      'avatar': Path.getLocalFile(avatar?.path),
+      'avatar': Path.convert2Local(avatar?.path),
       'count': count,
       'is_top': isTop ? 1 : 0,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
@@ -275,14 +275,14 @@ class TopicSchema {
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       subscribeAt: e['subscribe_at'],
       expireBlockHeight: e['expire_height'],
-      avatar: Path.getCompleteFile(e['avatar']) != null ? File(Path.getCompleteFile(e['avatar'])!) : null,
+      avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       count: e['count'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
-      data: (e['data']?.toString().isNotEmpty == true) ? jsonFormat(e['data']) : null,
+      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormat(e['data']) : null,
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = jsonFormat(e['options']);
+      Map<String, dynamic>? options = Util.jsonFormat(e['options']);
       topicSchema.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (topicSchema.options == null) {
@@ -290,7 +290,7 @@ class TopicSchema {
     }
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
 
       if (topicSchema.data == null) {
         topicSchema.data = new Map<String, dynamic>();

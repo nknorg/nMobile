@@ -8,7 +8,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:synchronized/synchronized.dart';
 
 class SubscriberCommon with Tag {
@@ -315,7 +315,7 @@ class SubscriberCommon with Tag {
         String permIndex = prefix.split("__")[prefix.split("__").length - 1];
         int permPage = int.tryParse(permIndex) ?? 0;
         // meta (same with client_subscription[meta])
-        Map<String, dynamic>? meta = jsonFormat(value);
+        Map<String, dynamic>? meta = Util.jsonFormat(value);
         // accept
         List<dynamic> acceptList = meta?['accept'] ?? [];
         for (int i = 0; i < acceptList.length; i++) {

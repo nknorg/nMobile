@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class SubscriberStatus {
   static const int None = 0;
@@ -125,7 +125,7 @@ class SubscriberSchema {
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
 
       if (subscribeSchema.data == null) {
         subscribeSchema.data = new Map<String, dynamic>();
