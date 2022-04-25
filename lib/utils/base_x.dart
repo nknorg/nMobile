@@ -1,6 +1,6 @@
-import 'dart:typed_data' show Uint8List;
 import 'dart:convert' show Codec, Converter;
 import 'dart:math' show log;
+import 'dart:typed_data' show Uint8List;
 
 class BaseXDecoder extends Converter<String, Uint8List> {
   String alphabet;
@@ -39,8 +39,7 @@ class BaseXDecoder extends Converter<String, Uint8List> {
     }
 
     /// Allocate enough space in big-endian base256 representation.
-    var size = (((input.length - psz) * (log(alphabet.length) / log(256))) + 1)
-        .toInt();
+    var size = (((input.length - psz) * (log(alphabet.length) / log(256))) + 1).toInt();
     var b256 = Uint8List(size);
 
     /// Process the characters.
@@ -53,9 +52,7 @@ class BaseXDecoder extends Converter<String, Uint8List> {
         return Uint8List(0);
       }
       var i = 0;
-      for (var it3 = size - 1;
-      (carry != 0 || i < length) && (it3 != -1);
-      it3--, i++) {
+      for (var it3 = size - 1; (carry != 0 || i < length) && (it3 != -1); it3--, i++) {
         carry += (alphabet.length * b256[it3]);
         b256[it3] = (carry % 256);
         carry = (carry ~/ 256);
@@ -91,6 +88,7 @@ class BaseXDecoder extends Converter<String, Uint8List> {
 
 class BaseXEncoder extends Converter<Uint8List, String> {
   final String alphabet;
+
   BaseXEncoder(this.alphabet);
 
   @override
@@ -118,9 +116,7 @@ class BaseXEncoder extends Converter<Uint8List, String> {
 
       /// Apply "b58 = b58 * 256 + ch".
       var i = 0;
-      for (var it1 = size - 1;
-      (carry != 0 || i < length) && (it1 != -1);
-      it1--, i++) {
+      for (var it1 = size - 1; (carry != 0 || i < length) && (it1 != -1); it1--, i++) {
         carry += (256 * b58[it1]);
         b58[it1] = (carry % alphabet.length);
         carry = (carry ~/ alphabet.length);
@@ -151,6 +147,7 @@ class BaseXCodec extends Codec<Uint8List, String> {
   String alphabet;
   late BaseXEncoder _encoder;
   late BaseXDecoder _decoder;
+
   BaseXCodec(this.alphabet);
 
   @override

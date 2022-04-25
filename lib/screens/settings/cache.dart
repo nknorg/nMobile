@@ -1,9 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';

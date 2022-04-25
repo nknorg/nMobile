@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
@@ -34,7 +33,6 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
 

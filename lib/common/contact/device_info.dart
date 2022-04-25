@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';

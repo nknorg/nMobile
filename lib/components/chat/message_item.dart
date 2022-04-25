@@ -10,7 +10,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
-import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/time.dart';
 
 class ChatMessageItem extends StatelessWidget {

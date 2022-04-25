@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
