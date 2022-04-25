@@ -10,9 +10,8 @@ import 'package:uuid/uuid.dart';
 class DirType {
   static const cache = "cache";
   static const download = "nkn";
+  static const profile = "profile";
   static const chat = "chat";
-  static const contact = "contact";
-  static const topic = "topic";
 }
 
 class Path {
@@ -85,10 +84,16 @@ class Path {
     return join(dirPath, joinFileExt(fileName, fileExt));
   }
 
-  static Future<String> createFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt}) async {
+  static Future<String> createFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt, bool reCreate = false}) async {
     String filePath = await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
     File file = File(filePath);
-    if (!file.existsSync()) await file.create(recursive: true);
+    if (!file.existsSync()) {
+      if (reCreate)
+        await file.delete();
+      else
+        await file.create(recursive: true);
+    }
+    if (reCreate) await file.create(recursive: true);
     return file.path;
   }
 
@@ -98,10 +103,16 @@ class Path {
     return await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
   }
 
-  static Future<String> createRandomFile(String? uid, String dirType, {String? subPath, String? fileExt}) async {
+  static Future<String> createRandomFile(String? uid, String dirType, {String? subPath, String? fileExt, bool reCreate = false}) async {
     String filePath = await getRandomFile(uid, dirType, subPath: subPath, fileExt: fileExt);
     File file = File(filePath);
-    if (!file.existsSync()) await file.create(recursive: true);
+    if (!file.existsSync()) {
+      if (reCreate)
+        await file.delete();
+      else
+        await file.create(recursive: true);
+    }
+    if (reCreate) await file.create(recursive: true);
     return file.path;
   }
 

@@ -17,7 +17,7 @@ class FileHelper {
   }
 
   static Future<File?> saveBase64toFile(String? base64Data, String dirType, String? extension, {String? subPath}) async {
-    if (base64Data == null || base64Data.isEmpty || clientCommon.publicKey == null) return null;
+    if (base64Data == null || base64Data.isEmpty) return null;
 
     RegExpMatch? match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
     String? mimeType = match?.group(1) ?? "";
@@ -41,15 +41,14 @@ class FileHelper {
       return null;
     }
 
-    String localPath = await Path.getRandomFile(clientCommon.publicKey != null ? hexEncode(clientCommon.publicKey) : null, dirType, subPath: subPath, fileExt: extension);
-    File? file = Path.convert2Complete(localPath) != null ? File(Path.convert2Complete(localPath)!) : null;
-    logger.d('MessageSchema - loadMediaFile - path:${file?.absolute}');
-    if (file == null) return null;
-
+    String filePath = await Path.getRandomFile(clientCommon.getPublicKey(), dirType, subPath: subPath, fileExt: extension);
+    File file = File(filePath);
     if (!await file.exists()) {
       await file.create(recursive: true);
-      logger.d('MessageSchema - loadMediaFile - write:${file.absolute}');
+      logger.d('MessageSchema - loadMediaFile - success - path:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
+    } else {
+      logger.d('MessageSchema - loadMediaFile - exists - path:$filePath');
     }
     return file;
   }

@@ -678,7 +678,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       show: _showBottomMenu,
                       onPickedImage: (List<File> picks) async {
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
-                        if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return;
                         if (picks.isEmpty) return;
                         for (var i = 0; i < picks.length; i++) {
                           await chatOutCommon.sendImage(picks[i], topic: _topic, contact: _contact);

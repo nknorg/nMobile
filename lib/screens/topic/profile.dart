@@ -170,8 +170,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _selectAvatarPicture() async {
-    if (clientCommon.publicKey == null) return;
-    String remarkAvatarPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.topic, subPath: _topicSchema?.topic, fileExt: 'jpg');
+    String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _topicSchema?.topic, fileExt: 'jpg');
     String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
