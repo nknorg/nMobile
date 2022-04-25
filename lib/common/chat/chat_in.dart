@@ -703,7 +703,7 @@ class ChatInCommon with Tag {
     }
     logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
-    logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${formatFlowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // recover
     List<Uint8List> recoverList = <Uint8List>[];

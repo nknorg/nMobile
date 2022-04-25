@@ -14,6 +14,7 @@ import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
@@ -508,7 +509,7 @@ class ChatCommon with Tag {
     }
     // loop
     if (noReads.length >= limit) return readMessageBySide(targetId, topic, sendAt, offset: offset + limit, limit: limit);
-    logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${timeFormat(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
+    logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${Time.formatTime(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
     return offset + noReads.length;
   }
 

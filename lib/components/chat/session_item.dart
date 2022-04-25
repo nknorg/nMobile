@@ -13,6 +13,7 @@ import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:nmobile/utils/time.dart';
 
 class ChatSessionItem extends BaseStateFulWidget {
   final SessionSchema session;
@@ -207,7 +208,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                         Padding(
                           padding: const EdgeInsets.only(right: 0, bottom: 6),
                           child: Label(
-                            timeFormat(DateTime.fromMillisecondsSinceEpoch(session.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch)),
+                            Time.formatTime(DateTime.fromMillisecondsSinceEpoch(session.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch)),
                             type: LabelType.bodyRegular,
                           ),
                         ),

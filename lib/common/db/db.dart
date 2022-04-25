@@ -56,7 +56,7 @@ class DB {
   Future _openWithFix(String publicKey, String seed) async {
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
-    String password = seed.isEmpty ? "" : hexEncode(sha256(seed));
+    String password = seed.isEmpty ? "" : hexEncode(Hash.sha256(seed));
     logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {

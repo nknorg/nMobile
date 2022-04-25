@@ -27,6 +27,7 @@ import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/time.dart';
 
 class ContactHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/home';
@@ -382,7 +383,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             },
             bgColor: Colors.transparent,
             bodyTitle: item.displayName,
-            bodyDesc: timeFormat(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
+            bodyDesc: Time.formatTime(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             tail: Padding(
               padding: const EdgeInsets.only(right: 8, left: 16),
@@ -445,7 +446,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           },
           bgColor: Colors.transparent,
           bodyTitle: item.displayName,
-          bodyDesc: timeFormat(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
+          bodyDesc: Time.formatTime(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           tail: Padding(
             padding: const EdgeInsets.only(right: 8, left: 16),

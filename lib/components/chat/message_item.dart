@@ -11,6 +11,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/format.dart';
+import 'package:nmobile/utils/time.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final MessageSchema message;
@@ -219,7 +220,7 @@ class ChatMessageItem extends StatelessWidget {
                   SizedBox(width: 4),
                   isBurnOpen
                       ? Label(
-                          durationFormat(Duration(seconds: deleteAfterSeconds)),
+                          Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
                           type: LabelType.bodySmall,
                         )
                       : Label(
