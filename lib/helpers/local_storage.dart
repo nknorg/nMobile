@@ -54,7 +54,14 @@ class LocalStorage {
     var result = prefs.get('$key:$n');
     if (result == null) return null;
     String? item = prefs.getString('$key:$n');
-    return item != null ? jsonDecode(item) : null;
+    if (item != null && item.isNotEmpty) {
+      try {
+        return jsonDecode(item);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   Future<List<Map<String, dynamic>>> getArray(String key) async {

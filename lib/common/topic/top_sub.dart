@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -7,8 +9,8 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
 
 class TopSub {
   static Future<bool> subscribeWithPermission(
@@ -542,5 +544,10 @@ class TopSub {
       }
     }
     return count;
+  }
+
+  static String genTopicHash(String topic) {
+    var t = topic.replaceFirst(RegExp(r'^#*'), '');
+    return 'dchat' + hexEncode(Uint8List.fromList(sha1(t)));
   }
 }
