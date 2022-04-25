@@ -90,10 +90,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                   logger.i("PhotoScreen - save image file - path:${file?.path}");
                   if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
 
-                  File copyFile = File(await Path.getRandomFile(null, DirType.download, fileExt: ext));
-                  if (!await copyFile.exists()) {
-                    await copyFile.create(recursive: true);
-                  }
+                  File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext, reCreate: true));
                   copyFile = await file.copy(copyFile.path);
                   logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
 

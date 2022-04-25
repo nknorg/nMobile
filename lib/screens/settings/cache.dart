@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -125,11 +126,9 @@ class _SettingsCacheScreenState extends BaseStateFulWidgetState<SettingsCacheScr
     // pubKey
     String pubKey = wallet.publicKey;
     if (pubKey.isEmpty) {
-      String keystore = await walletCommon.getKeystore(wallet.address);
-      List<String> seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
-      Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: pwd, seedRPCServerAddr: seedRpcList));
-      if (nknWallet.publicKey.isEmpty) return;
-      pubKey = hexEncode(nknWallet.publicKey);
+      String? pk = await getPubKeyFromWallet(wallet.address, pwd);
+      if (pk == null || pk.isEmpty) return;
+      pubKey = pk;
     }
     // delete
     Loading.show();

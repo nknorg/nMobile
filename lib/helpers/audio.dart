@@ -44,17 +44,6 @@ class AudioHelper with Tag {
 
   AudioHelper();
 
-  Future<String?> _getRecordPath(String? targetId) async {
-    if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return null;
-    String recordPath = await Path.getRandomFile(hexEncode(clientCommon.publicKey!), DirType.chat, subPath: targetId, fileExt: 'aac');
-    var outputFile = File(recordPath);
-    if (await outputFile.exists()) {
-      await outputFile.delete();
-    }
-    outputFile = await outputFile.create(recursive: true);
-    return outputFile.path;
-  }
-
   ///***********************************************************************************************************************
   ///******************************************************* Player ********************************************************
   ///***********************************************************************************************************************
@@ -200,7 +189,7 @@ class AudioHelper with Tag {
       await recordStop();
     }
     // path
-    this.recordPath = savePath ?? await _getRecordPath(recordId);
+    this.recordPath = savePath ?? await Path.createRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: recordId, fileExt: 'aac');
     if (recordPath == null || recordPath!.isEmpty) {
       await recordStop();
       return null;

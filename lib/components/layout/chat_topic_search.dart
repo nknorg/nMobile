@@ -42,13 +42,13 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
 
     if (_privateSelected) {
-      if (clientCommon.publicKey == null || clientCommon.publicKey!.isEmpty) return false;
+      if (clientCommon.getPublicKey() == null) return false;
       if (Validate.isPrivateTopicOk(topicName)) {
         int index = topicName.lastIndexOf('.');
         String owner = topicName.substring(index + 1);
-        if (owner != hexEncode(clientCommon.publicKey!)) return false;
+        if (owner != clientCommon.getPublicKey()) return false;
       } else {
-        topicName = '$topicName.${hexEncode(clientCommon.publicKey!)}';
+        topicName = '$topicName.${clientCommon.getPublicKey()}';
       }
     }
 
