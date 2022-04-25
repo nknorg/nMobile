@@ -11,7 +11,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
 class MessageStatus {
@@ -172,7 +172,7 @@ class MessageSchema {
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null || raw.data == null || raw.src == null) return null;
-    Map<String, dynamic>? data = jsonFormat(raw.data);
+    Map<String, dynamic>? data = Util.jsonFormat(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
 
     MessageSchema schema = MessageSchema(
@@ -388,7 +388,7 @@ class MessageSchema {
       case MessageContentType.audio:
       case MessageContentType.piece:
         if (content is File) {
-          map['content'] = Path.getLocalFile((content as File).path);
+          map['content'] = Path.convert2Local((content as File).path);
         }
         break;
       // case MessageContentType.ping:
@@ -426,7 +426,7 @@ class MessageSchema {
       deleteAt: e['delete_at'] != null ? e['delete_at'] : null,
       // data
       contentType: e['type'] ?? "",
-      options: (e['options']?.toString().isNotEmpty == true) ? jsonFormat(e['options']) : null,
+      options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormat(e['options']) : null,
     );
 
     // content = File/Map/String...
@@ -436,7 +436,7 @@ class MessageSchema {
       case MessageContentType.deviceInfo:
       case MessageContentType.deviceRequest:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
-          schema.content = jsonFormat(e['content']);
+          schema.content = Util.jsonFormat(e['content']);
         } else {
           schema.content = e['content'];
         }
@@ -445,7 +445,7 @@ class MessageSchema {
       case MessageContentType.image:
       case MessageContentType.audio:
       case MessageContentType.piece:
-        String? completePath = Path.getCompleteFile(e['content']);
+        String? completePath = Path.convert2Complete(e['content']);
         schema.content = (completePath?.isNotEmpty == true) ? File(completePath!) : null;
         break;
       // case MessageContentType.ping:

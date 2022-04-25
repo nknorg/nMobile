@@ -168,8 +168,8 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
         // profile
-        String? oldAvatar = Path.getLocalFile(oldDataMap['avatar']); // why oldDataMap?
-        String? newAvatar = (oldAvatar?.isNotEmpty == true) ? oldAvatar : Path.getLocalFile(result["avatar"]);
+        String? oldAvatar = Path.convert2Local(oldDataMap['avatar']); // why oldDataMap?
+        String? newAvatar = (oldAvatar?.isNotEmpty == true) ? oldAvatar : Path.convert2Local(result["avatar"]);
         String? oldFirstName = ((oldDataMap["firstName"]?.toString().length ?? 0) > 50) ? oldDataMap["firstName"]?.toString().substring(0, 50) : oldDataMap["firstName"];
         String? newFirstName = (oldFirstName?.isNotEmpty == true) ? oldFirstName : (((result["first_name"]?.toString().length ?? 0) > 50) ? result["first_name"]?.toString().substring(0, 50) : result["first_name"]);
         String? oldLastName = ((oldDataMap["lastName"]?.toString().length ?? 0) > 50) ? oldDataMap["lastName"]?.toString().substring(0, 50) : oldDataMap["lastName"];
@@ -320,7 +320,7 @@ class Upgrade4to5 {
         // joined
         int newJoined = (newExpireHeight ?? 0) > 0 ? 1 : 0; // result["joined"] ?? 1; // result["joined"] always is 0
         // profile
-        String? newAvatar = Path.getLocalFile(result["avatar"]);
+        String? newAvatar = Path.convert2Local(result["avatar"]);
         // count + top
         int? newCount = result["count"];
         int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;

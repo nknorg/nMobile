@@ -16,7 +16,7 @@ class FileHelper {
     return '![$type](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
   }
 
-  static Future<File?> saveBase64toFile(String? base64Data, String dirType, String? extension, {String? target}) async {
+  static Future<File?> saveBase64toFile(String? base64Data, String dirType, String? extension, {String? subPath}) async {
     if (base64Data == null || base64Data.isEmpty || clientCommon.publicKey == null) return null;
 
     RegExpMatch? match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
@@ -41,8 +41,8 @@ class FileHelper {
       return null;
     }
 
-    String localPath = await Path.getRandomFile(clientCommon.publicKey != null ? hexEncode(clientCommon.publicKey) : null, dirType, target: target, fileExt: extension);
-    File? file = Path.getCompleteFile(localPath) != null ? File(Path.getCompleteFile(localPath)!) : null;
+    String localPath = await Path.getRandomFile(clientCommon.publicKey != null ? hexEncode(clientCommon.publicKey) : null, dirType, subPath: subPath, fileExt: extension);
+    File? file = Path.convert2Complete(localPath) != null ? File(Path.convert2Complete(localPath)!) : null;
     logger.d('MessageSchema - loadMediaFile - path:${file?.absolute}');
     if (file == null) return null;
 

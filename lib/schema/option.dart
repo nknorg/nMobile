@@ -55,7 +55,7 @@ class OptionsSchema {
     map['muteExpireAt'] = muteExpireAt;
     map['avatarBgColor'] = avatarBgColor?.value;
     map['avatarNameColor'] = avatarNameColor?.value;
-    map['chatBgFile'] = Path.getLocalFile(chatBgFile?.path);
+    map['chatBgFile'] = Path.convert2Local(chatBgFile?.path);
     map['chatBgColor'] = chatBgColor?.value;
     map['chatBubbleBgColor'] = chatBubbleBgColor?.value;
     map['chatBubbleTextColor'] = chatBubbleTextColor?.value;
@@ -72,7 +72,7 @@ class OptionsSchema {
     schema.muteExpireAt = map['muteExpireAt'];
     schema.avatarBgColor = map['avatarBgColor'] != null ? Color(map['avatarBgColor']) : schema.avatarBgColor;
     schema.avatarNameColor = map['avatarNameColor'] != null ? Color(map['avatarNameColor']) : schema.avatarNameColor;
-    schema.chatBgFile = Path.getCompleteFile(map['chatBgFile']) != null ? File(Path.getCompleteFile(map['chatBgFile'])!) : null;
+    schema.chatBgFile = Path.convert2Complete(map['chatBgFile']) != null ? File(Path.convert2Complete(map['chatBgFile'])!) : null;
     schema.chatBgColor = map['chatBgColor'] != null ? Color(map['avatarBgColor']) : schema.chatBgColor;
     schema.chatBubbleBgColor = map['chatBubbleBgColor'] != null ? Color(map['chatBubbleBgColor']) : schema.chatBubbleBgColor;
     schema.chatBubbleTextColor = map['chatBubbleTextColor'] != null ? Color(map['chatBubbleTextColor']) : schema.chatBubbleTextColor;

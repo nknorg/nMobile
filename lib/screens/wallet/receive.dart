@@ -20,7 +20,7 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -76,7 +76,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                 child: InkWell(
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   onTap: () {
-                    copyText(_wallet.address);
+                    Util.copyText(_wallet.address);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -156,7 +156,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               var qrImg = await boundary?.toImage();
               ByteData? imgData = await qrImg?.toByteData(format: ImageByteFormat.png);
               Uint8List? imgBytes = imgData?.buffer.asUint8List();
-              String path = await Path.getRandomFile(null, SubDirType.download, fileExt: "png");
+              String path = await Path.getRandomFile(null, DirType.download, fileExt: "png");
               if (imgBytes == null || imgBytes.isEmpty || path.isEmpty) {
                 Loading.dismiss();
                 return;

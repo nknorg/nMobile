@@ -101,7 +101,7 @@ class MediaPicker {
       if (returnPaths.length > i) returnPath = returnPaths[i];
       String fileExt = Path.getFileExt(compressFiles[i], 'jpg');
       if (returnPath == null || returnPath.isEmpty) {
-        returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+        returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
       } else {
         returnPath = Path.joinFileExt(returnPath, fileExt);
       }
@@ -176,7 +176,7 @@ class MediaPicker {
     // save
     String fileExt = Path.getFileExt(pickedFile, 'jpg');
     if (returnPath == null || returnPath.isEmpty) {
-      returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+      returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
     } else {
       returnPath = Path.joinFileExt(returnPath, fileExt);
     }
@@ -233,7 +233,7 @@ class MediaPicker {
     // save
     String fileExt = Path.getFileExt(pickedFile, 'jpg');
     if (returnPath == null || returnPath.isEmpty) {
-      returnPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+      returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
     } else {
       returnPath = Path.joinFileExt(returnPath, fileExt);
     }
@@ -332,7 +332,7 @@ class MediaPicker {
 
     // filePath
     String fileExt = Path.getFileExt(original, 'jpg');
-    String compressPath = await Path.getRandomFile(null, SubDirType.cache, fileExt: fileExt);
+    String compressPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
     // format
     CompressFormat? format;
     if (compressPath.toLowerCase().endsWith(".jpg") || compressPath.toLowerCase().endsWith(".jpeg")) {

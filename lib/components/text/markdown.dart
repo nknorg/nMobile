@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/theme/theme.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class Markdown extends StatelessWidget {
   final String data;
@@ -30,7 +30,7 @@ class Markdown extends StatelessWidget {
     }
     return MarkdownBody(
       data: data,
-      onTapLink: (text, href, title) => launchUrl(href),
+      onTapLink: (text, href, title) => Util.launchUrl(href),
       styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
         code: textStyle,
         p: textStyle.copyWith(fontSize: _theme.bodyText1.fontSize),

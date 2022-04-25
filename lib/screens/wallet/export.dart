@@ -14,7 +14,7 @@ import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/utils.dart';
+import 'package:nmobile/utils/util.dart';
 
 class WalletExportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/export_nkn';
@@ -177,7 +177,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
       elevation: 0,
       child: InkWell(
         onTap: () {
-          copyText(value);
+          Util.copyText(value);
           if (backupOk) {
             _setBackupFlag();
           }
