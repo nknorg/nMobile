@@ -12,7 +12,6 @@ import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
