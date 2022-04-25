@@ -84,35 +84,37 @@ class Path {
     return join(dirPath, joinFileExt(fileName, fileExt));
   }
 
-  static Future<String> createFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt, bool reCreate = false}) async {
+  static Future<String> createFile(String? uid, String? dirType, String fileName, {String? subPath, String? fileExt, bool reCreate = true}) async {
     String filePath = await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
     File file = File(filePath);
-    if (!file.existsSync()) {
-      if (reCreate)
+    if (file.existsSync()) {
+      if (reCreate) {
         await file.delete();
-      else
         await file.create(recursive: true);
+      }
+    } else {
+      await file.create(recursive: true);
     }
-    if (reCreate) await file.create(recursive: true);
     return file.path;
   }
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/{random}.{fileExt}
   static Future<String> getRandomFile(String? uid, String dirType, {String? subPath, String? fileExt}) async {
-    String fileName = new DateTime.now().second.toString() + "_" + Uuid().v4() + '_temp';
+    String fileName = new DateTime.now().millisecondsSinceEpoch.toString() + '_temp_' + Uuid().v4();
     return await getFile(uid, dirType, fileName, subPath: subPath, fileExt: fileExt);
   }
 
-  static Future<String> createRandomFile(String? uid, String dirType, {String? subPath, String? fileExt, bool reCreate = false}) async {
+  static Future<String> createRandomFile(String? uid, String dirType, {String? subPath, String? fileExt, bool reCreate = true}) async {
     String filePath = await getRandomFile(uid, dirType, subPath: subPath, fileExt: fileExt);
     File file = File(filePath);
-    if (!file.existsSync()) {
-      if (reCreate)
+    if (file.existsSync()) {
+      if (reCreate) {
         await file.delete();
-      else
         await file.create(recursive: true);
+      }
+    } else {
+      await file.create(recursive: true);
     }
-    if (reCreate) await file.create(recursive: true);
     return file.path;
   }
 
