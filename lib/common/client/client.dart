@@ -12,6 +12,7 @@ import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -23,6 +24,12 @@ class ClientConnectStatus {
   static const int connecting = 1;
   static const int connected = 2;
   // static const int stopping = 3;
+}
+
+String? getPubKeyFromTopicOrChatId(String s) {
+  final i = s.lastIndexOf('.');
+  final pubKey = i >= 0 ? s.substring(i + 1) : s;
+  return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
 class ClientCommon with Tag {

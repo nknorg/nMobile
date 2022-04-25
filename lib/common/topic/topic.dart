@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/topic/top_sub.dart';
