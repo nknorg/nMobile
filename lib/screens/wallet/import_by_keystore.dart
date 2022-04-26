@@ -77,6 +77,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           logger.i("$TAG - import_nkn - wallet:${wallet.toString()}");
 
           _walletBloc?.add(AddWallet(wallet, nkn.keystore, password, hexEncode(nkn.seed)));
+          walletCommon.queryNKNBalance(wallet, notifyIfNeed: true, delayMs: 1000); // await
         } else {
           final eth = await Ethereum.restoreByKeyStore(name: name, keystore: keystore, password: password);
           String ethAddress = (await eth.address).hex;
@@ -91,9 +92,8 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           logger.i("$TAG - import_eth - wallet:${wallet.toString()}");
 
           _walletBloc?.add(AddWallet(wallet, ethKeystore, password, eth.privateKeyHex));
+          walletCommon.queryETHBalance(wallet, notifyIfNeed: true, delayMs: 1000); // await
         }
-        walletCommon.queryBalance(delayMs: 3000); // await
-
         Loading.dismiss();
         Toast.show(Global.locale((s) => s.success, ctx: context));
         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);

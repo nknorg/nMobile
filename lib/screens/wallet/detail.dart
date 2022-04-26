@@ -85,6 +85,13 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         isDefault = value == _wallet?.address;
       });
     });
+
+    // balance query
+    if (this._wallet?.type == WalletType.eth) {
+      walletCommon.queryETHBalance(this._wallet!, notifyIfNeed: true, delayMs: 500); // await
+    } else if (this._wallet?.type == WalletType.nkn) {
+      walletCommon.queryNKNBalance(this._wallet!, notifyIfNeed: true, delayMs: 500); // await
+    }
   }
 
   @override

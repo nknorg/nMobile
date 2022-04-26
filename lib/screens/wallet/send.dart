@@ -96,7 +96,11 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   void initState() {
     super.initState();
     // balance query
-    walletCommon.queryBalance(delayMs: 500); // await
+    if (this._wallet.type == WalletType.eth) {
+      walletCommon.queryETHBalance(this._wallet, notifyIfNeed: true, delayMs: 500); // await
+    } else {
+      walletCommon.queryNKNBalance(this._wallet, notifyIfNeed: true, delayMs: 500); // await
+    }
     // init
     _init(this._wallet.type == WalletType.eth);
     _updateFee(this._wallet.type == WalletType.eth);
@@ -316,7 +320,6 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       String? txHash = await nkn.transfer(_sendTo!, amount, fee: fee, nonce: nonce);
       if (txHash != null) {
-        walletCommon.queryBalance(delayMs: 3000); // await
         return txHash.length > 10;
       }
       Toast.show(Global.locale((s) => s.failure, ctx: context));
