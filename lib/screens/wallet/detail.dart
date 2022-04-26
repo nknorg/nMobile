@@ -157,7 +157,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               ethKeystore,
             );
           } else {
-            List<String> seedRpcList = await Global.getRpcServers(null, measure: true);
+            List<String> seedRpcList = await Global.getRpcServers(_wallet?.address, measure: true);
             Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
             Loading.dismiss();
 

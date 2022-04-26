@@ -109,13 +109,13 @@ class Global {
   /// ********************************************* SeedRpcServers **********************************************
   /// ***********************************************************************************************************
 
-  static Future<List<String>> getRpcServers(String? prefix, {bool measure = false, int? delayMs}) async {
+  static Future<List<String>> getRpcServers(String? walletAddress, {bool measure = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
 
     // get
-    List<String> list = await _getRpcServers(prefix: prefix);
-    logger.d("Global - getRpcServers - init - prefix:$prefix - length:${list.length} - list:$list");
+    List<String> list = await _getRpcServers(walletAddress: walletAddress);
+    logger.d("Global - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
 
     // append
     bool appendDefault = false;
@@ -129,14 +129,14 @@ class Global {
     if (measure || appendDefault) {
       try {
         list = await Wallet.measureSeedRPCServer(list, 3 * 1000) ?? [];
-        await _setRpcServers(prefix, list);
+        await _setRpcServers(walletAddress, list);
 
-        if (prefix?.isNotEmpty == true) {
-          List<String> saved = await _getRpcServers(prefix: prefix);
+        if (walletAddress?.isNotEmpty == true) {
+          List<String> saved = await _getRpcServers(walletAddress: walletAddress);
           if (saved.isEmpty) {
-            logger.w("Global - getRpcServers - saved empty - prefix:$prefix");
+            logger.w("Global - getRpcServers - saved empty - walletAddress:$walletAddress");
           } else {
-            logger.i("Global - getRpcServers - saved ok - prefix:$prefix - length:${saved.length} - list:$saved");
+            logger.i("Global - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
           }
         }
       } catch (e) {
@@ -147,24 +147,24 @@ class Global {
 
     // again
     if (list.length <= 2) {
-      if (!appendDefault) return getRpcServers(prefix, measure: measure, delayMs: 0);
+      if (!appendDefault) return getRpcServers(walletAddress, measure: measure, delayMs: 0);
     }
 
-    logger.d("Global - getRpcServers - return - prefix:$prefix - length:${list.length} - list:$list");
+    logger.d("Global - getRpcServers - return - walletAddress:$walletAddress - length:${list.length} - list:$list");
     return list;
   }
 
-  static Future addRpcServers(String? prefix, List<String> rpcServers) async {
+  static Future addRpcServers(String? walletAddress, List<String> rpcServers) async {
     if (rpcServers.isEmpty) return;
-    List<String> list = await _getRpcServers(prefix: prefix);
+    List<String> list = await _getRpcServers(walletAddress: walletAddress);
     list.insertAll(0, rpcServers);
     list = _filterRepeatAndSeedsFromRpcServers(list);
-    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
+    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}', list);
   }
 
-  static Future<List<String>> _getRpcServers({String? prefix}) async {
+  static Future<List<String>> _getRpcServers({String? walletAddress}) async {
     List<String> results = [];
-    List? list = await SettingsStorage.getSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}');
+    List? list = await SettingsStorage.getSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}');
     if ((list != null) && list.isNotEmpty) {
       for (var i in list) {
         results.add(i.toString());
@@ -174,9 +174,9 @@ class Global {
     return results;
   }
 
-  static Future _setRpcServers(String? prefix, List<String> list) async {
+  static Future _setRpcServers(String? walletAddress, List<String> list) async {
     list = _filterRepeatAndSeedsFromRpcServers(list);
-    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${prefix?.isNotEmpty == true ? ":$prefix" : ""}', list);
+    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}', list);
   }
 
   static List<String> _filterRepeatAndSeedsFromRpcServers(List<String> list) {
@@ -226,20 +226,19 @@ class Global {
   /// ************************************************** nonce **************************************************
   /// ***********************************************************************************************************
 
-  // TODO:GG move to wallet/client
-  static Future<int?> getNonce({bool txPool = true, String? walletAddress}) async {
+  static Future<int?> getNonce(String? walletAddress, {bool txPool = true}) async {
     return await _nonceLock.synchronized(() {
-      return _getNonceWithNoLock(txPool: txPool, walletAddress: walletAddress);
+      return _getNonceWithNoLock(walletAddress, txPool: txPool);
     });
   }
 
-  static Future<int?> _getNonceWithNoLock({bool txPool = true, String? walletAddress}) async {
+  static Future<int?> _getNonceWithNoLock(String? walletAddress, {bool txPool = true}) async {
     int? nonce;
     // rpc
     try {
       if (walletAddress?.isNotEmpty == true) {
         // walletAddress no check
-        List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
+        List<String> seedRpcList = await Global.getRpcServers(walletAddress);
         nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
       } else if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         // client no check rpcSeed
