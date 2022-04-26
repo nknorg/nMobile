@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:nmobile/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorage {
@@ -12,7 +13,7 @@ class SecureStorage {
     } else if (val is Map) {
       await _storage.write(key: key, value: jsonEncode(val));
     } else {
-      throw ArgumentError('val type fail');
+      logger.e("SecureStorage - set ---> val type fail:$val");
     }
   }
 

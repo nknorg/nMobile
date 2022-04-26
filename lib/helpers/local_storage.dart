@@ -91,7 +91,8 @@ class LocalStorage {
   setItem(String key, int n, val) async {
     int length = await getArrayLength(key);
     if (n >= length) {
-      throw RangeError('n is out index: ${length - 1}');
+      logger.e("LocalStorage - setItem ---> n is out index:$n > $length");
+      return;
     }
     await set('$key:$n', val);
   }
