@@ -7,13 +7,10 @@ import 'package:synchronized/synchronized.dart';
 
 class TaskService {
   static const KEY_WALLET_BALANCE = "wallet_balance";
-  static const KEY_RPC_REFRESH = "rpc_refresh";
-  static const KEY_NONCE_REFRESH = "nonce_refresh";
   static const KEY_SUBSCRIBE_CHECK = "subscribe_check";
   static const KEY_PERMISSION_CHECK = "permission_check";
   static const KEY_CLIENT_CONNECT = "client_connect";
-  static const KEY_TOPIC_CHECK = "topic_check";
-  static const KEY_MSG_BURNING = "message_burning"; // FUTURE:burning
+  static const KEY_MSG_BURNING = "message_burning";
 
   Timer? _timer1;
   Map<String, Function(String)> _tasks1 = Map<String, Function(String)>();
@@ -86,18 +83,6 @@ class TaskService {
             _tasks300[key]?.call(key);
           });
         });
-
-    // immediate
-    // addTask300(KEY_RPC_REFRESH, (key) => Global.getSeedRpcList(null, measure: true, delayMs: 500), callNow: true);
-    // addTask300(KEY_NONCE_REFRESH, (key) => Global.refreshNativeNonce(), delayMs: 1000);
-    addTask60(KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), delayMs: 1000);
-    // addTask30(KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
-    // addTask30(KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
-
-    // delay
-    // addTask60(KEY_MSG_FAIL_CHECK, (key) => chatCommon.checkSendingWithFail());
-    addTask60(KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true));
-    // addTask300(KEY_TOPIC_CHECK, (key) => topicCommon.checkAllTopics(refreshSubscribers: false));
 
     logger.d("TaskService - install");
   }

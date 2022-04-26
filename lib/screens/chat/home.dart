@@ -114,6 +114,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         // topic subscribe+permission
         if (firstConnect) {
           firstConnect = false;
+          taskService.addTask60(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true), delayMs: 1000);
           taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
           taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
         }
@@ -146,6 +147,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
       _refreshContactMe();
     });
+
+    // wallet
+    taskService.addTask60(TaskService.KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), delayMs: 1000);
 
     // login
     _tryLogin(first: true);
