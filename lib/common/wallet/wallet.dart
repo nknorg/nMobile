@@ -9,13 +9,11 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:synchronized/synchronized.dart';
+import 'package:web3dart/web3dart.dart' as Web3;
 
 class WalletCommon with Tag {
   WalletStorage _walletStorage = WalletStorage();
   EthErc20Client _erc20client = EthErc20Client();
-
-  Lock _lock = Lock();
 
   WalletCommon();
 
@@ -79,49 +77,64 @@ class WalletCommon with Tag {
     return w1.balance == w2.balance && w1.balanceEth == w2.balanceEth;
   }
 
-  queryBalance({int? delayMs}) async {
-    await _lock.synchronized(() {
-      return queryBalanceWithNoLock(delayMs: delayMs);
-    });
-  }
-
-  queryBalanceWithNoLock({int? delayMs}) async {
+  queryAllBalance({int? delayMs}) async {
     if (Global.appContext == null) return;
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
-      logger.d("$TAG - queryBalance: START");
-      final seedRpcList = await Global.getRpcServers(null, measure: true);
-      state.wallets.forEach((w) async {
-        if (w.type == WalletType.eth) {
-          _erc20client.getBalanceEth(address: w.address).then((balance) {
-            logger.d("$TAG - queryBalance: END - eth - old:${w.balanceEth} - new:${balance?.ether} - wallet_address:${w.address}");
-            if (balance != null && w.balanceEth != (balance.ether as double?)) {
-              w.balanceEth = (balance.ether as double?) ?? 0;
-              _walletBloc.add(UpdateWallet(w));
-            }
-          });
-          _erc20client.getBalanceNkn(address: w.address).then((balance) {
-            logger.d("$TAG - queryBalance: END - eth_nkn - old:${w.balanceEth} - new:${balance?.ether} - wallet_address:${w.address}");
-            if (balance != null && w.balanceEth != (balance.ether as double?)) {
-              w.balance = (balance.ether as double?) ?? 0;
-              _walletBloc.add(UpdateWallet(w));
-            }
-          });
+      logger.d("$TAG - queryAllBalance");
+      for (var i = 0; i < state.wallets.length; i++) {
+        WalletSchema wallet = state.wallets[i];
+        if (wallet.type == WalletType.eth) {
+          await queryETHBalance(wallet, notifyIfNeed: true, delayMs: delayMs);
         } else {
-          Wallet.getBalanceByAddr(w.address, config: WalletConfig(seedRPCServerAddr: seedRpcList)).then((balance) {
-            logger.d("$TAG - queryBalance: END - nkn - old:${w.balance} - new:$balance - wallet_address:${w.address}");
-            if (w.balance != balance) {
-              w.balance = balance;
-              _walletBloc.add(UpdateWallet(w));
-            }
-          }).catchError((e) {
-            handleError(e);
-          });
+          await queryNKNBalance(wallet, notifyIfNeed: true, delayMs: delayMs);
         }
-      });
+      }
     }
+  }
+
+  Future<double?> queryNKNBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
+    if (Global.appContext == null) return null;
+    if (wallet.address.isEmpty || wallet.type == WalletType.eth) return null;
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
+    try {
+      final seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
+      double balance = await Wallet.getBalanceByAddr(wallet.address, config: WalletConfig(seedRPCServerAddr: seedRpcList));
+      logger.d("$TAG - queryNKNBalance - old:${wallet.balance} - new:$balance - wallet_address:${wallet.address}");
+      if (notifyIfNeed && (wallet.balance != balance)) {
+        wallet.balance = balance;
+        _walletBloc.add(UpdateWallet(wallet));
+      }
+      return balance;
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
+  Future<List<double?>> queryETHBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
+    if (Global.appContext == null) return [null, null];
+    if (wallet.address.isEmpty || wallet.type == WalletType.nkn) return [null, null];
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
+    try {
+      Web3.EtherAmount? ethAmount = await _erc20client.getBalanceEth(address: wallet.address);
+      Web3.EtherAmount? nknAmount = await _erc20client.getBalanceNkn(address: wallet.address);
+      logger.d("$TAG - queryETHBalance - eth - old:${wallet.balanceEth} - new:${ethAmount?.ether} - wallet_address:${wallet.address}");
+      logger.d("$TAG - queryETHBalance - nkn - old:${wallet.balance} - new:${nknAmount?.ether} - wallet_address:${wallet.address}");
+      bool ethDiff = (ethAmount != null) && (wallet.balanceEth != (ethAmount.ether as double?));
+      bool nknDiff = (nknAmount != null) && (wallet.balance != (nknAmount.ether as double?));
+      if (notifyIfNeed && (ethDiff || nknDiff)) {
+        wallet.balanceEth = (ethAmount?.ether as double?) ?? 0;
+        wallet.balance = (nknAmount?.ether as double?) ?? 0;
+        _walletBloc.add(UpdateWallet(wallet));
+      }
+      return [(ethAmount?.ether as double?), (nknAmount?.ether as double?)];
+    } catch (e) {
+      handleError(e);
+    }
+    return [null, null];
   }
 }

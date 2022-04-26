@@ -149,7 +149,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     });
 
     // wallet
-    taskService.addTask60(TaskService.KEY_WALLET_BALANCE, (key) => walletCommon.queryBalance(), delayMs: 1000);
+    taskService.addTask60(TaskService.KEY_WALLET_BALANCE, (key) => walletCommon.queryAllBalance(), delayMs: 1000);
 
     // login
     _tryLogin(first: true);
