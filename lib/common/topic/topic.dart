@@ -13,7 +13,6 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:synchronized/synchronized.dart';
 
 class TopicCommon with Tag {
   TopicStorage _topicStorage = TopicStorage();
@@ -33,8 +32,6 @@ class TopicCommon with Tag {
   StreamSink<TopicSchema> get _updateSink => _updateController.sink;
   Stream<TopicSchema> get updateStream => _updateController.stream;
 
-  Lock _lock = Lock();
-
   TopicCommon();
 
   /// ***********************************************************************************************************
@@ -44,85 +41,81 @@ class TopicCommon with Tag {
   Future checkAllTopics({bool refreshSubscribers = true, bool enablePublic = true, bool enablePrivate = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
 
-    await _lock.synchronized(() async {
-      int limit = 20;
-      List<TopicSchema> topics = [];
-      for (int offset = 0; true; offset += limit) {
-        List<TopicSchema> result = await queryList(offset: offset, limit: limit);
-        topics.addAll(result);
-        if (result.length < limit) break;
+    int limit = 20;
+    List<TopicSchema> topics = [];
+    for (int offset = 0; true; offset += limit) {
+      List<TopicSchema> result = await queryList(offset: offset, limit: limit);
+      topics.addAll(result);
+      if (result.length < limit) break;
+    }
+    // if (refreshSubscribers) {
+    for (var i = 0; i < topics.length; i++) {
+      TopicSchema topic = topics[i];
+      bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+      bool longTimeNoRefresh;
+      bool needUpdateRefreshAt = false;
+      int lastRefreshAt = topic.lastRefreshSubscribersAt();
+      if (lastRefreshAt == 0) {
+        longTimeNoRefresh = false;
+        needUpdateRefreshAt = true;
+      } else {
+        longTimeNoRefresh = topic.shouldRefreshSubscribers(lastRefreshAt, topic.count ?? 0);
+        needUpdateRefreshAt = longTimeNoRefresh;
       }
-      // if (refreshSubscribers) {
-      for (var i = 0; i < topics.length; i++) {
-        TopicSchema topic = topics[i];
-        bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
-        bool longTimeNoRefresh;
-        bool needUpdateRefreshAt = false;
-        int lastRefreshAt = topic.lastRefreshSubscribersAt();
-        if (lastRefreshAt == 0) {
-          longTimeNoRefresh = false;
-          needUpdateRefreshAt = true;
-        } else {
-          longTimeNoRefresh = topic.shouldRefreshSubscribers(lastRefreshAt, topic.count ?? 0);
-          needUpdateRefreshAt = longTimeNoRefresh;
-        }
-        bool refresh = (refreshSubscribers || longTimeNoRefresh) && topic.joined;
-        double fee = 0;
-        if (topic.isSubscribeProgress() || topic.isUnSubscribeProgress()) {
-          fee = topic.getProgressSubscribeFee();
-        }
-        if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refresh, fee: fee);
-        if (refresh || needUpdateRefreshAt) {
-          Map<String, dynamic> newData = topic.newDataByLastRefreshSubscribersAt(DateTime.now().millisecondsSinceEpoch);
-          await setData(topic.id, newData);
-        }
+      bool refresh = (refreshSubscribers || longTimeNoRefresh) && topic.joined;
+      double fee = 0;
+      if (topic.isSubscribeProgress() || topic.isUnSubscribeProgress()) {
+        fee = topic.getProgressSubscribeFee();
       }
-      // } else {
-      //   List<Future> futures = [];
-      //   topics.forEach((TopicSchema topic) {
-      //     bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
-      //     if (check) futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
-      //   });
-      //   await Future.wait(futures);
-      // }
-    });
+      if (check) await checkExpireAndSubscribe(topic.topic, refreshSubscribers: refresh, fee: fee);
+      if (refresh || needUpdateRefreshAt) {
+        Map<String, dynamic> newData = topic.newDataByLastRefreshSubscribersAt(DateTime.now().millisecondsSinceEpoch);
+        await setData(topic.id, newData);
+      }
+    }
+    // } else {
+    //   List<Future> futures = [];
+    //   topics.forEach((TopicSchema topic) {
+    //     bool check = (!topic.isPrivate && enablePublic) || (topic.isPrivate && enablePrivate);
+    //     if (check) futures.add(checkExpireAndSubscribe(topic.topic, refreshSubscribers: refreshSubscribers && topic.joined));
+    //   });
+    //   await Future.wait(futures);
+    // }
   }
 
   Future checkAndTryAllSubscribe({bool txPool = true}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
 
-    await _lock.synchronized(() async {
-      int max = 10;
-      int limit = 20;
-      List<TopicSchema> topicsWithSubscribe = [];
-      List<TopicSchema> topicsWithUnSubscribe = [];
+    int max = 10;
+    int limit = 20;
+    List<TopicSchema> topicsWithSubscribe = [];
+    List<TopicSchema> topicsWithUnSubscribe = [];
 
-      // query
-      for (int offset = 0; true; offset += limit) {
-        List<TopicSchema> result = await queryList(offset: offset, limit: limit);
-        result.forEach((element) {
-          if (element.isSubscribeProgress()) {
-            logger.i("$TAG - checkAndTryAllSubscribe - topic is subscribe progress - topic:$element");
-            topicsWithSubscribe.add(element);
-          } else if (element.isUnSubscribeProgress()) {
-            logger.i("$TAG - checkAndTryAllSubscribe - topic is unsubscribe progress - topic:$element");
-            topicsWithUnSubscribe.add(element);
-          } else {
-            logger.v("$TAG - checkAndTryAllSubscribe - topic is over - topic:$element");
-          }
-        });
-        if ((result.length < limit) || ((topicsWithSubscribe.length + topicsWithUnSubscribe.length) >= max)) break;
-      }
-      // check + try
-      for (var i = 0; i < topicsWithSubscribe.length; i++) {
-        TopicSchema topic = topicsWithSubscribe[i];
-        await checkAndTrySubscribe(topic, true);
-      }
-      for (var i = 0; i < topicsWithUnSubscribe.length; i++) {
-        TopicSchema topic = topicsWithUnSubscribe[i];
-        await checkAndTrySubscribe(topic, false);
-      }
-    });
+    // query
+    for (int offset = 0; true; offset += limit) {
+      List<TopicSchema> result = await queryList(offset: offset, limit: limit);
+      result.forEach((element) {
+        if (element.isSubscribeProgress()) {
+          logger.i("$TAG - checkAndTryAllSubscribe - topic is subscribe progress - topic:$element");
+          topicsWithSubscribe.add(element);
+        } else if (element.isUnSubscribeProgress()) {
+          logger.i("$TAG - checkAndTryAllSubscribe - topic is unsubscribe progress - topic:$element");
+          topicsWithUnSubscribe.add(element);
+        } else {
+          logger.v("$TAG - checkAndTryAllSubscribe - topic is over - topic:$element");
+        }
+      });
+      if ((result.length < limit) || ((topicsWithSubscribe.length + topicsWithUnSubscribe.length) >= max)) break;
+    }
+    // check + try
+    for (var i = 0; i < topicsWithSubscribe.length; i++) {
+      TopicSchema topic = topicsWithSubscribe[i];
+      await checkAndTrySubscribe(topic, true);
+    }
+    for (var i = 0; i < topicsWithUnSubscribe.length; i++) {
+      TopicSchema topic = topicsWithUnSubscribe[i];
+      await checkAndTrySubscribe(topic, false);
+    }
   }
 
   Future<bool> checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
@@ -162,57 +155,55 @@ class TopicCommon with Tag {
   Future checkAndTryAllPermission() async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
 
-    await _lock.synchronized(() async {
-      int topicMax = 10;
-      int subscriberMax = 20;
-      int limit = 20;
-      List<TopicSchema> topics = [];
-      List<SubscriberSchema> subscribers = [];
+    int topicMax = 10;
+    int subscriberMax = 20;
+    int limit = 20;
+    List<TopicSchema> topics = [];
+    List<SubscriberSchema> subscribers = [];
 
-      // topic permission
-      for (int offset = 0; true; offset += limit) {
-        List<TopicSchema> result = await queryList(topicType: TopicType.privateTopic, offset: offset, limit: limit);
-        result.forEach((element) {
-          if (element.isOwner(clientCommon.address)) {
-            topics.add(element);
-          }
-        });
-        if ((result.length < limit) || (topics.length >= topicMax)) break;
-      }
-      int? globalHeight = await Global.getBlockHeight();
-      if (globalHeight != null && globalHeight > 0) {
-        double fee = 0;
-        var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-        if ((isAuto != null) && (isAuto.toString() == "true" || isAuto == true)) {
-          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-          if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+    // topic permission
+    for (int offset = 0; true; offset += limit) {
+      List<TopicSchema> result = await queryList(topicType: TopicType.privateTopic, offset: offset, limit: limit);
+      result.forEach((element) {
+        if (element.isOwner(clientCommon.address)) {
+          topics.add(element);
         }
-        for (var i = 0; i < topics.length; i++) {
-          TopicSchema topic = topics[i];
-          await checkAndTryPermissionExpire(topic, globalHeight, fee);
-        }
+      });
+      if ((result.length < limit) || (topics.length >= topicMax)) break;
+    }
+    int? globalHeight = await Global.getBlockHeight();
+    if (globalHeight != null && globalHeight > 0) {
+      double fee = 0;
+      var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+      if ((isAuto != null) && (isAuto.toString() == "true" || isAuto == true)) {
+        fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+        if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
       }
-      // subscribers permission
       for (var i = 0; i < topics.length; i++) {
         TopicSchema topic = topics[i];
-        for (int offset = 0; true; offset += limit) {
-          List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, offset: offset, limit: limit);
-          result.forEach((element) {
-            if (element.isPermissionProgress() != null) {
-              logger.i("$TAG - checkAndTryAllPermission - topic permission progress - topic:$topic");
-              subscribers.add(element);
-            }
-          });
-          if ((result.length < limit) || (subscribers.length >= subscriberMax)) break;
-        }
-        if (subscribers.length >= subscriberMax) break;
+        await checkAndTryPermissionExpire(topic, globalHeight, fee);
       }
-      for (var i = 0; i < subscribers.length; i++) {
-        SubscriberSchema subscribe = subscribers[i];
-        int? progressStatus = subscribe.isPermissionProgress();
-        await checkAndTryPermission(subscribe, progressStatus);
+    }
+    // subscribers permission
+    for (var i = 0; i < topics.length; i++) {
+      TopicSchema topic = topics[i];
+      for (int offset = 0; true; offset += limit) {
+        List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, offset: offset, limit: limit);
+        result.forEach((element) {
+          if (element.isPermissionProgress() != null) {
+            logger.i("$TAG - checkAndTryAllPermission - topic permission progress - topic:$topic");
+            subscribers.add(element);
+          }
+        });
+        if ((result.length < limit) || (subscribers.length >= subscriberMax)) break;
       }
-    });
+      if (subscribers.length >= subscriberMax) break;
+    }
+    for (var i = 0; i < subscribers.length; i++) {
+      SubscriberSchema subscribe = subscribers[i];
+      int? progressStatus = subscribe.isPermissionProgress();
+      await checkAndTryPermission(subscribe, progressStatus);
+    }
   }
 
   Future checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee, {int? nonce}) async {

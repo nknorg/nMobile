@@ -12,7 +12,6 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:synchronized/synchronized.dart';
 
 class Global {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
@@ -68,10 +67,7 @@ class Global {
     // 'http://mainnet-seed-0009.nkn.org:30003', // ali disable
   ];
 
-  static Lock _heightLock = Lock();
   static int? blockHeight;
-
-  static Lock _nonceLock = Lock();
 
   static int topicDefaultSubscribeHeight = 400000; // 93day
   static int topicWarnBlockExpireHeight = 100000; // 23day
@@ -200,12 +196,6 @@ class Global {
   /// ***********************************************************************************************************
 
   static Future<int?> getBlockHeight() async {
-    return await _heightLock.synchronized(() {
-      return _getBlockHeightWithNoLock();
-    });
-  }
-
-  static Future<int?> _getBlockHeightWithNoLock() async {
     int? newBlockHeight;
     try {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
@@ -227,12 +217,6 @@ class Global {
   /// ***********************************************************************************************************
 
   static Future<int?> getNonce(String? walletAddress, {bool txPool = true}) async {
-    return await _nonceLock.synchronized(() {
-      return _getNonceWithNoLock(walletAddress, txPool: txPool);
-    });
-  }
-
-  static Future<int?> _getNonceWithNoLock(String? walletAddress, {bool txPool = true}) async {
     int? nonce;
     // rpc
     try {
