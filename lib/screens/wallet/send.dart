@@ -291,8 +291,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         return false;
       }
 
-      nonce = nonce ?? await Global.getNonce(txPool: true, walletAddress: this._wallet.address);
-      int? blockNonce = await Global.getNonce(txPool: false, walletAddress: this._wallet.address);
+      nonce = nonce ?? await Global.getNonce(this._wallet.address, txPool: true);
+      int? blockNonce = await Global.getNonce(this._wallet.address, txPool: false);
 
       if ((blockNonce != null) && (nonce != null) && (blockNonce != nonce)) {
         if (replaceFee == null || replaceFee <= 0) {
@@ -326,7 +326,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
       } else if (e.toString().contains("nonce is not continuous") || e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is not continuous
-        int? nonce = await Global.getNonce(walletAddress: this._wallet.address);
+        int? nonce = await Global.getNonce(this._wallet.address);
         return _transferNKN(name, keystore, password, nonce: nonce, replaceFee: replaceFee);
       } else {
         handleError(e, toast: Global.locale((s) => s.failure, ctx: context));

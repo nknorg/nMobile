@@ -45,8 +45,8 @@ class TopSub {
 
     if (!success) {
       if (isBlock && fee > 0) {
-        int? blockNonce = await Global.getNonce(txPool: false);
-        int? poolNonce = await Global.getNonce(txPool: true);
+        int? blockNonce = await Global.getNonce(null, txPool: false);
+        int? poolNonce = await Global.getNonce(null, txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
@@ -77,7 +77,7 @@ class TopSub {
         logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - topic:$topic - permPage:$permissionPage - meta:$meta");
       }
     } else if (success && (fee > 0)) {
-      int? blockNonce = await Global.getNonce(txPool: false);
+      int? blockNonce = await Global.getNonce(null, txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
           await _subscribeReplace(i, fee);
@@ -137,8 +137,8 @@ class TopSub {
 
     if (!success) {
       if (isBlock && fee > 0) {
-        int? blockNonce = await Global.getNonce(txPool: false);
-        int? poolNonce = await Global.getNonce(txPool: true);
+        int? blockNonce = await Global.getNonce(null, txPool: false);
+        int? poolNonce = await Global.getNonce(null, txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
@@ -166,7 +166,7 @@ class TopSub {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - topic:$topic - identifier:$identifier");
       }
     } else if (success && (fee > 0)) {
-      int? blockNonce = await Global.getNonce(txPool: false);
+      int? blockNonce = await Global.getNonce(null, txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
           await _subscribeReplace(i, fee);
@@ -217,7 +217,7 @@ class TopSub {
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
-    int? _nonce = nonce ?? await Global.getNonce();
+    int? _nonce = nonce ?? await Global.getNonce(null);
 
     bool? success;
     bool canTryTimer = true;
@@ -245,12 +245,12 @@ class TopSub {
           success = false;
           _nonce = null;
         } else {
-          nonce = await Global.getNonce();
+          nonce = await Global.getNonce(null);
         }
       } else if (e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is too low
         logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        nonce = await Global.getNonce();
+        nonce = await Global.getNonce(null);
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
@@ -315,7 +315,7 @@ class TopSub {
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
-    int? _nonce = nonce ?? await Global.getNonce();
+    int? _nonce = nonce ?? await Global.getNonce(null);
 
     bool? success;
     bool canTryTimer = true;
@@ -341,12 +341,12 @@ class TopSub {
           success = false;
           _nonce = null;
         } else {
-          nonce = await Global.getNonce();
+          nonce = await Global.getNonce(null);
         }
       } else if (e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is too low
         logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        nonce = await Global.getNonce();
+        nonce = await Global.getNonce(null);
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
