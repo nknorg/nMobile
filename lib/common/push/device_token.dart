@@ -30,8 +30,8 @@ class DeviceToken {
 
   static Future<String> getAPNS({String? platform, int? appVersion}) async {
     String? token = await Common.getAPNSToken();
-    if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
-      if (token?.isNotEmpty == true) {
+    if (token?.isNotEmpty == true) {
+      if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
         token = PREFIX_APNS + token!;
       }
     }
@@ -40,8 +40,8 @@ class DeviceToken {
 
   static Future<String> getFCM({String? platform, int? appVersion}) async {
     String? token = await Common.getFCMToken();
-    if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
-      if (token?.isNotEmpty == true) {
+    if (token?.isNotEmpty == true) {
+      if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
         token = PREFIX_FCM + token!;
       }
     }

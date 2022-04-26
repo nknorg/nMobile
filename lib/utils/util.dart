@@ -6,6 +6,8 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'logger.dart';
+
 class Util {
   static void copyText(String? content, {bool toast = true}) {
     Clipboard.setData(ClipboardData(text: content));
@@ -17,7 +19,7 @@ class Util {
     try {
       await launch(url, forceSafariVC: false);
     } catch (e) {
-      throw e;
+      logger.w("Util - launchUrl ---> $e");
     }
   }
 
@@ -26,7 +28,7 @@ class Util {
     try {
       jsonData = jsonDecode(raw);
     } on Exception catch (e) {
-      handleError(e);
+      logger.w("Util - jsonFormat ---> $e");
     }
     return jsonData;
   }

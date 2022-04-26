@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -37,22 +38,25 @@ class Common {
   static Future<bool> backDesktop() async {
     try {
       await _methodChannel.invokeMethod('backDesktop');
+      return true;
     } catch (e) {
-      throw e;
+      handleError(e);
     }
     return false;
   }
 
-  static Future saveImageToGallery(Uint8List imageData, String imageName, String albumName) async {
+  static Future<bool> saveImageToGallery(Uint8List imageData, String imageName, String albumName) async {
     try {
       await _methodChannel.invokeMethod('saveImageToGallery', {
         'imageData': imageData,
         'imageName': imageName,
         'albumName': albumName,
       });
+      return true;
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return false;
   }
 
   static Future<String?> getAPNSToken() async {
@@ -60,19 +64,22 @@ class Common {
       final Map resp = await _methodChannel.invokeMethod('getAPNSToken', {});
       return resp['token'];
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return null;
   }
 
-  static Future sendPushAPNS(String deviceToken, String pushPayload) async {
+  static Future<bool> sendPushAPNS(String deviceToken, String pushPayload) async {
     try {
       await _methodChannel.invokeMethod('sendPushAPNS', {
         'deviceToken': deviceToken,
         'pushPayload': pushPayload,
       });
+      return true;
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return false;
   }
 
   static Future<bool> isGoogleServiceAvailable() async {
@@ -80,8 +87,9 @@ class Common {
       final Map resp = await _methodChannel.invokeMethod('isGoogleServiceAvailable', {});
       return resp['availability'] ?? false;
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return false;
   }
 
   static Future<String?> getFCMToken() async {
@@ -89,18 +97,21 @@ class Common {
       final Map resp = await _methodChannel.invokeMethod('getFCMToken', {});
       return resp['token'];
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return null;
   }
 
-  static Future updateBadgeCount(int count) async {
+  static Future<bool> updateBadgeCount(int count) async {
     try {
       await _methodChannel.invokeMethod('updateBadgeCount', {
         'badge_count': count,
       });
+      return true;
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return false;
   }
 
   static Future<List<Object?>> splitPieces(String dataBytesString, int dataShards, int parityShards) async {
@@ -112,8 +123,9 @@ class Common {
       });
       return resp['data'] ?? [];
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return [];
   }
 
   static Future<String?> combinePieces(List<Uint8List> dataList, int dataShards, int parityShards, int bytesLength) async {
@@ -126,8 +138,9 @@ class Common {
       });
       return resp['data'];
     } catch (e) {
-      throw e;
+      handleError(e);
     }
+    return null;
   }
 
   /*static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
@@ -140,7 +153,7 @@ class Common {
       });
       return resp['success'];
     } catch (e) {
-      throw e;
+      handleError(e);
     }
   }*/
 }
