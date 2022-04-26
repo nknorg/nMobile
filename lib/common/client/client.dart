@@ -33,11 +33,16 @@ String? getPubKeyFromTopicOrChatId(String s) {
 
 Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) async {
   if (walletAddress == null || walletAddress.isEmpty || walletPwd == null || walletPwd.isEmpty) return null;
-  String keystore = await walletCommon.getKeystore(walletAddress);
-  List<String> seedRpcList = await Global.getRpcServers(walletAddress, measure: true);
-  Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
-  if (nknWallet.publicKey.isEmpty) return null;
-  return hexEncode(nknWallet.publicKey);
+  try {
+    String keystore = await walletCommon.getKeystore(walletAddress);
+    List<String> seedRpcList = await Global.getRpcServers(walletAddress, measure: true);
+    Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
+    if (nknWallet.publicKey.isEmpty) return null;
+    return hexEncode(nknWallet.publicKey);
+  } catch (e) {
+    handleError(e);
+  }
+  return null;
 }
 
 class ClientCommon with Tag {

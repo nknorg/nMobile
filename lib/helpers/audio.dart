@@ -53,8 +53,7 @@ class AudioHelper with Tag {
     // permission
     var status = await Permission.storage.request();
     if (status != PermissionStatus.granted) {
-      await playStop();
-      throw RecordingPermissionException('Storage permission not granted');
+      await playStop(); // throw RecordingPermissionException('Storage permission not granted');
     }
     if (status != PermissionStatus.granted) {
       await playStop();
@@ -176,8 +175,7 @@ class AudioHelper with Tag {
     // permission
     var status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
-      await recordStop();
-      throw RecordingPermissionException('Microphone permission not granted');
+      await recordStop(); // throw RecordingPermissionException('Microphone permission not granted');
     }
     if (status != PermissionStatus.granted) {
       await recordStop();
