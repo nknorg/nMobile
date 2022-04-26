@@ -12,17 +12,18 @@ class FileHelper {
   static Future<String?> convertFileToBase64(String type, File? file) async {
     if (file == null) return null;
     if (!file.existsSync()) return null;
-    return '![$type](data:${mime(file.path)};base64,${base64Encode(file.readAsBytesSync())})';
+    String base64Data = base64Encode(file.readAsBytesSync());
+    return '![$type](data:${mime(file.path)};base64,$base64Data)';
   }
 
-  static Future<File?> saveBase64toFile(String? base64Data, String dirType, String? extension, {String? subPath}) async {
+  static Future<File?> convertBase64toFile(String? base64Data, String dirType, String? extension, {String? subPath}) async {
     if (base64Data == null || base64Data.isEmpty) return null;
 
     RegExpMatch? match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
     String? mimeType = match?.group(1) ?? "";
-    String? fileBase64 = match?.group(2);
-    if (fileBase64 != null && fileBase64.isNotEmpty) {
-      base64Data = fileBase64;
+    String? base64Real = match?.group(2);
+    if (base64Real != null && base64Real.isNotEmpty) {
+      base64Data = base64Real;
       String? ext = getExtension(mimeType);
       if (ext != null && ext.isNotEmpty) {
         extension = ext;
