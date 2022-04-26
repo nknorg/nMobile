@@ -730,12 +730,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // combine
-    String? base64String;
-    try {
-      base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
-    } catch (e) {
-      handleError(e);
-    }
+    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
         logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");

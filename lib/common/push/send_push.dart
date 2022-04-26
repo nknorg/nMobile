@@ -37,24 +37,22 @@ class SendPush {
   }
 
   static Future<bool> sendAPNS(String deviceToken, String title, String content) async {
-    try {
-      String payload = jsonEncode({
-        'aps': {
-          'alert': {
-            'title': title,
-            'body': content,
-          },
-          'badge': 1,
-          'sound': "default",
+    String payload = jsonEncode({
+      'aps': {
+        'alert': {
+          'title': title,
+          'body': content,
         },
-      });
-      await Common.sendPushAPNS(deviceToken, payload);
+        'badge': 1,
+        'sound': "default",
+      },
+    });
+    bool ok = await Common.sendPushAPNS(deviceToken, payload);
+    if (ok)
       logger.d("SendPush - sendAPNS - success - payload:$payload");
-      return true;
-    } catch (e) {
-      handleError(e);
-    }
-    return false;
+    else
+      logger.w("SendPush - sendAPNS - fail - payload:$payload");
+    return ok;
   }
 
   static Future<bool> sendFCM(String deviceToken, String title, String content) async {

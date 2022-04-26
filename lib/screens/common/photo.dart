@@ -94,14 +94,10 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                   copyFile = await file.copy(copyFile.path);
                   logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
 
-                  try {
-                    String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-                    Uint8List imageBytes = await copyFile.readAsBytes();
-                    await Common.saveImageToGallery(imageBytes, imageName, Settings.appName);
-                    Toast.show(Global.locale((s) => s.success, ctx: context));
-                  } catch (e) {
-                    Toast.show(Global.locale((s) => s.failure, ctx: context));
-                  }
+                  String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+                  Uint8List imageBytes = await copyFile.readAsBytes();
+                  bool ok = await Common.saveImageToGallery(imageBytes, imageName, Settings.appName);
+                  Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
                   break;
               }
             },
