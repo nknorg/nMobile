@@ -9,7 +9,6 @@ import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:synchronized/synchronized.dart';
 
 class SubscriberCommon with Tag {
   SubscriberStorage _subscriberStorage = SubscriberStorage();
@@ -32,8 +31,6 @@ class SubscriberCommon with Tag {
   static const int InitialAcceptStatus = SubscriberStatus.InvitedSend;
   static const int InitialRejectStatus = SubscriberStatus.Unsubscribed;
 
-  Lock _lock = Lock();
-
   SubscriberCommon();
 
   Future fetchSubscribersInfo(String? topic, {bool contact = true, bool deviceInfo = true}) async {
@@ -48,28 +45,26 @@ class SubscriberCommon with Tag {
     }
     if (subscribers.isEmpty) return;
     // fetch
-    await _lock.synchronized(() async {
-      for (var i = 0; i < subscribers.length; i++) {
-        SubscriberSchema sub = subscribers[i];
-        if (sub.clientAddress.isEmpty) continue;
-        // contact
-        ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
-        if (_contact == null) {
-          logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
-          _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
-          await chatOutCommon.sendContactRequest(_contact?.clientAddress, RequestType.header, null);
-          await Future.delayed(Duration(milliseconds: 10));
-        }
-        // deviceInfo
-        DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
-        if (_deviceInfo == null) {
-          logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
-          _deviceInfo = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: sub.clientAddress));
-          await chatOutCommon.sendDeviceRequest(_deviceInfo?.contactAddress);
-          await Future.delayed(Duration(milliseconds: 10));
-        }
+    for (var i = 0; i < subscribers.length; i++) {
+      SubscriberSchema sub = subscribers[i];
+      if (sub.clientAddress.isEmpty) continue;
+      // contact
+      ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
+      if (_contact == null) {
+        logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
+        _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+        await chatOutCommon.sendContactRequest(_contact?.clientAddress, RequestType.header, null);
+        await Future.delayed(Duration(milliseconds: 10));
       }
-    });
+      // deviceInfo
+      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
+      if (_deviceInfo == null) {
+        logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
+        _deviceInfo = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: sub.clientAddress));
+        await chatOutCommon.sendDeviceRequest(_deviceInfo?.contactAddress);
+        await Future.delayed(Duration(milliseconds: 10));
+      }
+    }
   }
 
   // caller = everyone
