@@ -493,7 +493,7 @@ class ChatInCommon with Tag {
               }
               String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
               if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-              avatar = await FileHelper.saveBase64toFile(avatarData, DirType.profile, fileExt, subPath: received.targetId);
+              avatar = await FileHelper.convertBase64toFile(avatarData, DirType.profile, fileExt, subPath: received.targetId);
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
@@ -620,7 +620,7 @@ class ChatInCommon with Tag {
     // File
     String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "jpg";
     if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-    received.content = await FileHelper.saveBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
+    received.content = await FileHelper.convertBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
       return false;
@@ -649,7 +649,7 @@ class ChatInCommon with Tag {
     // File
     String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "aac";
     if (fileExt == null || fileExt.isEmpty) fileExt = "aac";
-    received.content = await FileHelper.saveBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
+    received.content = await FileHelper.convertBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
       return false;
@@ -693,7 +693,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
     } else {
       // received.status = MessageStatus.Read; // modify in before
-      received.content = await FileHelper.saveBase64toFile(received.content, DirType.cache, parentType);
+      received.content = await FileHelper.convertBase64toFile(received.content, DirType.cache, parentType);
       piece = await MessageStorage.instance.insert(received);
       if (piece != null) {
         pieces.add(piece);

@@ -29,36 +29,36 @@ class Validate {
       if (addressPrefix != ADDRESS_GEN_PREFIX) {
         return false;
       }
-      var programHash = addressStringToProgramHash(address);
-      var addressVerifyCode = getAddressStringVerifyCode(address);
-      var programHashVerifyCode = genAddressVerifyCodeFromProgramHash(programHash);
+      var programHash = _addressStringToProgramHash(address);
+      var addressVerifyCode = _getAddressStringVerifyCode(address);
+      var programHashVerifyCode = _genAddressVerifyCodeFromProgramHash(programHash);
       return addressVerifyCode == programHashVerifyCode;
     } catch (e) {
       return false;
     }
   }
 
-  static String addressStringToProgramHash(String address) {
+  static String _addressStringToProgramHash(String address) {
     var addressBytes = base58.decode(address);
     var programHashBytes = addressBytes.sublist(ADDRESS_GEN_PREFIX_LEN, addressBytes.length - CHECKSUM_LEN);
     return hexEncode(programHashBytes);
   }
 
-  static String getAddressStringVerifyCode(String address) {
+  static String _getAddressStringVerifyCode(String address) {
     var addressBytes = base58.decode(address);
     var verifyBytes = addressBytes.sublist(addressBytes.length - CHECKSUM_LEN);
     return hexEncode(verifyBytes);
   }
 
-  static List<int> genAddressVerifyBytesFromProgramHash(String programHash) {
+  static String _genAddressVerifyCodeFromProgramHash(String programHash) {
+    var verifyBytes = _genAddressVerifyBytesFromProgramHash(programHash);
+    return hexEncode(Uint8List.fromList(verifyBytes));
+  }
+
+  static List<int> _genAddressVerifyBytesFromProgramHash(String programHash) {
     programHash = ADDRESS_GEN_PREFIX + programHash;
     var verifyBytes = Hash.doubleSha256Hex(programHash);
     return verifyBytes.sublist(0, CHECKSUM_LEN);
-  }
-
-  static String genAddressVerifyCodeFromProgramHash(String programHash) {
-    var verifyBytes = genAddressVerifyBytesFromProgramHash(programHash);
-    return hexEncode(Uint8List.fromList(verifyBytes));
   }
 
   static isEthAddressOk(String? address) {
