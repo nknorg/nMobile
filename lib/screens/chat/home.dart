@@ -115,8 +115,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         if (firstConnect) {
           firstConnect = false;
           taskService.addTask60(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true), delayMs: 1000);
-          taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2000);
-          taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3000);
+          taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
+          taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
         }
         // send pangs (3h)
         int lastSendPangsBetween = DateTime.now().millisecondsSinceEpoch - lastSendPangsAt;
