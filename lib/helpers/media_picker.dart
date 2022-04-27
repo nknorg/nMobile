@@ -17,21 +17,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaPicker {
-  static Future<File?> pickVideo({
-    ImageSource source = ImageSource.gallery,
-    int? maxSize,
-    Duration? maxDuration,
-    String? returnPath,
-  }) async {
-    // await ImagePicker().pickVideo(source: source, maxDuration: maxDuration);
-    return null;
-  }
-
-  static Future<List<File>> pickImages(
-    int maxNum, {
-    int? bestSize,
-    int? maxSize,
-    List<String> returnPaths = const [],
+  static Future<List<Map<String, dynamic>>> pickCommons({
+    int maxNum = 9,
+    bool compressImage = true,
+    bool compressVideo = true,
   }) async {
     if (maxNum < 1) maxNum = 1;
     if (maxNum > 9) maxNum = 9;
@@ -47,73 +36,133 @@ class MediaPicker {
         Global.appContext,
         pickerConfig: AssetPickerConfig(
           themeColor: application.theme.primaryColor,
-          requestType: RequestType.image,
+          requestType: RequestType.common,
           maxAssets: maxNum,
-          gridCount: 3,
-          pageSize: 30,
+          gridCount: 4,
+          pageSize: 32,
         ),
       );
     } catch (e) {
       handleError(e);
     }
     if (pickedResults == null || pickedResults.isEmpty) {
-      logger.w("MediaPicker - pickImages - pickedResults = null");
+      logger.w("MediaPicker - pickCommons - pickedResults = null");
       return [];
+    }
+
+    // result
+    List<Map<String, dynamic>> pickedMaps = [];
+    for (var i = 0; i < pickedResults.length; i++) {
+      AssetEntity entity = pickedResults[i];
+      bool isImage = entity.type == AssetType.image;
+      bool isVideo = entity.type == AssetType.video;
+      File? file = (await entity.originFile) ?? (await entity.loadFile(isOrigin: true));
+      if (file == null || file.path.isEmpty) {
+        logger.w("MediaPicker - pickCommons - pickedResults originFile = null");
+        continue;
+      }
+      // compress
+      try {
+        if (isImage && compressImage) {
+          // TODO:GG compress
+        } else if (isVideo && compressVideo) {
+          // TODO:GG compress
+        } else {
+          // TODO:GG original
+        }
+      } catch (e) {
+        handleError(e);
+      }
+      // ext
+      String ext = "";
+      List<String>? splits = entity.mimeType?.split("/");
+      if (splits != null && splits.length > 1) {
+        ext = splits[splits.length - 1];
+      }
+      // map
+      if (file != null && file.path.isNotEmpty) {
+        if (isImage) {
+          pickedMaps.add({
+            "file": file,
+            "width": entity.orientatedWidth,
+            "height": entity.orientatedHeight,
+            "mimeType": entity.mimeType,
+            "ext": ext,
+          });
+        } else if (isVideo) {
+          pickedMaps.add({
+            "file": file,
+            "width": entity.orientatedWidth,
+            "height": entity.orientatedHeight,
+            "mimeType": entity.mimeType,
+            "ext": ext,
+            "duration": entity.duration,
+            "thumbnail": await entity.thumbnailData,
+          });
+        } else {
+          logger.w("MediaPicker - pickCommons - picked type:${entity.type}");
+        }
+      }
+      logger.i("MediaPicker - pickCommons - picked success - entity${entity.toString()}");
+    }
+    return pickedMaps;
+  }
+
+  static Future<File?> takeCommons({
+    CropStyle? cropStyle,
+    CropAspectRatio? cropRatio,
+    int? bestSize,
+    int? maxSize,
+    String? returnPath,
+  }) async {
+    // pick
+    XFile? pickedResult;
+    try {
+      pickedResult = await ImagePicker().pickImage(source: ImageSource.camera); // imageQuality: compressQuality  -> ios no enable
+    } catch (e) {
+      handleError(e);
+    }
+    if (pickedResult == null || pickedResult.path.isEmpty) {
+      logger.w("MediaPicker - _pickImageBySystem - pickedResult = null");
+      return null;
     }
 
     // convert
-    List<File> pickFiles = [];
-    for (var i = 0; i < pickedResults.length; i++) {
-      File? file = (await pickedResults[i].originFile) ?? (await pickedResults[i].loadFile(isOrigin: false));
-      if (file != null && file.path.isNotEmpty) {
-        logger.i("MediaPicker - pickImages - picked - path:${file.path}");
-        file.length().then((value) {
-          logger.i('MediaPicker - pickImages - picked - index:$i - size:${Format.flowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-        });
-        pickFiles.add(file);
-      }
-    }
-    if (pickFiles.isEmpty) {
-      logger.w("MediaPicker - pickImages - pickedFiles = null");
-      return [];
+    File? pickedFile = File(pickedResult.path);
+    logger.i("MediaPicker - _pickImageBySystem - picked - path:${pickedFile.path}");
+    pickedFile.length().then((value) {
+      logger.i('MediaPicker - _pickImageBySystem - picked - size:${Format.flowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    });
+
+    // crop
+    pickedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio);
+    if (pickedFile == null) {
+      logger.w('MediaPicker - _pickImageBySystem - croppedFile = null');
+      return null;
     }
 
     // compress
-    List<File> compressFiles = [];
-    for (var i = 0; i < pickFiles.length; i++) {
-      File? file = await _compressImage(pickFiles[i], maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
-      if (file != null) {
-        logger.i("MediaPicker - pickImages - compress success - index:$i");
-        compressFiles.add(file);
-      } else {
-        logger.w("MediaPicker - pickImages - compress fail - index:$i");
-      }
-    }
-    if (compressFiles.isEmpty) {
-      logger.w('MediaPicker - pickImages - compress = null');
-      return [];
+    pickedFile = await _compressImageBySize(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
+    if (pickedFile == null) {
+      logger.w('MediaPicker - _pickImageBySystem - compress = null');
+      return null;
     }
 
     // save
-    List<File> returnFiles = [];
-    for (var i = 0; i < compressFiles.length; i++) {
-      String? returnPath;
-      if (returnPaths.length > i) returnPath = returnPaths[i];
-      String fileExt = Path.getFileExt(compressFiles[i], 'jpg');
-      if (returnPath == null || returnPath.isEmpty) {
-        returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
-      } else {
-        returnPath = Path.joinFileExt(returnPath, fileExt);
-      }
-      File returnFile = File(returnPath);
-      if (!await returnFile.exists()) {
-        await returnFile.create(recursive: true);
-      }
-      returnFile = await compressFiles[i].copy(returnPath);
-      returnFiles.add(returnFile);
-      logger.i('MediaPicker - pickImages - return - index:$i - path:${returnFile.path}');
+    String fileExt = Path.getFileExt(pickedFile, 'jpg');
+    if (returnPath == null || returnPath.isEmpty) {
+      returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
+    } else {
+      returnPath = Path.joinFileExt(returnPath, fileExt);
     }
-    return returnFiles;
+    File returnFile = File(returnPath);
+    if (!await returnFile.exists()) {
+      await returnFile.create(recursive: true);
+    }
+    returnFile = await pickedFile.copy(returnPath);
+
+    logger.i('MediaPicker - takeImage - return - path:${returnFile.path}');
+    return returnFile;
   }
 
   static Future<File?> pickImage({
@@ -167,7 +216,7 @@ class MediaPicker {
     }
 
     // compress
-    pickedFile = await _compressImage(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
+    pickedFile = await _compressImageBySize(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
     if (pickedFile == null) {
       logger.w('MediaPicker - pickImage - compress = null');
       return null;
@@ -187,63 +236,6 @@ class MediaPicker {
     returnFile = await pickedFile.copy(returnPath);
 
     logger.i('MediaPicker - pickImage - return - path:${returnFile.path}');
-    return returnFile;
-  }
-
-  static Future<File?> takeImage({
-    CropStyle? cropStyle,
-    CropAspectRatio? cropRatio,
-    int? bestSize,
-    int? maxSize,
-    String? returnPath,
-  }) async {
-    // pick
-    XFile? pickedResult;
-    try {
-      pickedResult = await ImagePicker().pickImage(source: ImageSource.camera); // imageQuality: compressQuality  -> ios no enable
-    } catch (e) {
-      handleError(e);
-    }
-    if (pickedResult == null || pickedResult.path.isEmpty) {
-      logger.w("MediaPicker - _pickImageBySystem - pickedResult = null");
-      return null;
-    }
-
-    // convert
-    File? pickedFile = File(pickedResult.path);
-    logger.i("MediaPicker - _pickImageBySystem - picked - path:${pickedFile.path}");
-    pickedFile.length().then((value) {
-      logger.i('MediaPicker - _pickImageBySystem - picked - size:${Format.flowSize(value.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
-    });
-
-    // crop
-    pickedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio);
-    if (pickedFile == null) {
-      logger.w('MediaPicker - _pickImageBySystem - croppedFile = null');
-      return null;
-    }
-
-    // compress
-    pickedFile = await _compressImage(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
-    if (pickedFile == null) {
-      logger.w('MediaPicker - _pickImageBySystem - compress = null');
-      return null;
-    }
-
-    // save
-    String fileExt = Path.getFileExt(pickedFile, 'jpg');
-    if (returnPath == null || returnPath.isEmpty) {
-      returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
-    } else {
-      returnPath = Path.joinFileExt(returnPath, fileExt);
-    }
-    File returnFile = File(returnPath);
-    if (!await returnFile.exists()) {
-      await returnFile.create(recursive: true);
-    }
-    returnFile = await pickedFile.copy(returnPath);
-
-    logger.i('MediaPicker - takeImage - return - path:${returnFile.path}');
     return returnFile;
   }
 
@@ -284,7 +276,7 @@ class MediaPicker {
     return cropFile;
   }
 
-  static Future<File?> _compressImage(File? original, {int maxSize = 0, int bestSize = 0, bool toast = false}) async {
+  static Future<File?> _compressImageBySize(File? original, {int maxSize = 0, int bestSize = 0, bool toast = false}) async {
     if (original == null) return null;
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     // size
