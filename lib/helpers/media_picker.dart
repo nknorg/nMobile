@@ -17,15 +17,18 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaPicker {
-  static Future<List<Map<String, dynamic>>> pickCommons({
+  static Future<List<Map<String, dynamic>>> pickCommons(
+    List<String> savePaths, {
     int maxNum = 9,
     bool compressImage = true,
     bool compressVideo = true,
   }) async {
-    if (maxNum < 1) maxNum = 1;
+    // maxNum
+    maxNum = savePaths.length;
     if (maxNum > 9) maxNum = 9;
+    if (maxNum < 1) return [];
 
-    // permission, same with AssetPicker.permissionCheck();
+    // permission, == AssetPicker.permissionCheck();
     bool permissionOK = await _isPermissionOK(ImageSource.gallery);
     if (!permissionOK) return [];
 
@@ -54,14 +57,21 @@ class MediaPicker {
     List<Map<String, dynamic>> pickedMaps = [];
     for (var i = 0; i < pickedResults.length; i++) {
       AssetEntity entity = pickedResults[i];
-      bool isImage = entity.type == AssetType.image;
-      bool isVideo = entity.type == AssetType.video;
+      // exist
       File? file = (await entity.originFile) ?? (await entity.loadFile(isOrigin: true));
       if (file == null || file.path.isEmpty) {
         logger.w("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
+      // ext
+      String ext = "";
+      List<String>? splits = entity.mimeType?.split("/");
+      if (splits != null && splits.length > 1) {
+        ext = splits[splits.length - 1];
+      }
       // compress
+      bool isImage = entity.type == AssetType.image;
+      bool isVideo = entity.type == AssetType.video;
       try {
         if (isImage && compressImage) {
           // TODO:GG compress
@@ -73,34 +83,32 @@ class MediaPicker {
       } catch (e) {
         handleError(e);
       }
-      // ext
-      String ext = "";
-      List<String>? splits = entity.mimeType?.split("/");
-      if (splits != null && splits.length > 1) {
-        ext = splits[splits.length - 1];
+      // save
+      String savePath;
+      if (savePaths.length > i) {
+        savePath = Path.joinFileExt(File(savePaths[i]).path, ext);
+        File saveFile = File(savePath);
+        if (!await saveFile.exists()) {
+          await saveFile.create(recursive: true);
+        }
+        saveFile = await file.copy(savePath);
+      } else {
+        savePath = file.absolute.path;
       }
       // map
-      if (file != null && file.path.isNotEmpty) {
-        if (isImage) {
+      if (savePath.isNotEmpty) {
+        pickedMaps.add({
+          "path": savePath,
+          "width": entity.orientatedWidth,
+          "height": entity.orientatedHeight,
+          "mimeType": entity.mimeType,
+          "fileExt": ext.isEmpty ? null : ext,
+        });
+        if (isVideo) {
           pickedMaps.add({
-            "file": file,
-            "width": entity.orientatedWidth,
-            "height": entity.orientatedHeight,
-            "mimeType": entity.mimeType,
-            "ext": ext,
-          });
-        } else if (isVideo) {
-          pickedMaps.add({
-            "file": file,
-            "width": entity.orientatedWidth,
-            "height": entity.orientatedHeight,
-            "mimeType": entity.mimeType,
-            "ext": ext,
             "duration": entity.duration,
             "thumbnail": await entity.thumbnailData,
           });
-        } else {
-          logger.w("MediaPicker - pickCommons - picked type:${entity.type}");
         }
       }
       logger.i("MediaPicker - pickCommons - picked success - entity${entity.toString()}");
@@ -108,6 +116,7 @@ class MediaPicker {
     return pickedMaps;
   }
 
+  // TODO:GG 适配拍视频
   static Future<File?> takeCommons({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
@@ -165,6 +174,7 @@ class MediaPicker {
     return returnFile;
   }
 
+  // TODO:GG 还需要压缩码(头像等还需要)？
   static Future<File?> pickImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
