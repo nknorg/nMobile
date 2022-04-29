@@ -47,7 +47,6 @@ class ChatBottomMenu extends StatelessWidget {
       }
       List<Map<String, dynamic>> results = await MediaPicker.pickCommons(
         returnPaths,
-        maxNum: maxNum,
         compressImage: false,
         compressVideo: false,
       );
@@ -60,6 +59,7 @@ class ChatBottomMenu extends StatelessWidget {
     if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
+      // TODO:GG 选取预览？？？
       result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.any,
@@ -75,9 +75,10 @@ class ChatBottomMenu extends StatelessWidget {
       String? path = picked.path;
       if (path == null || path.isEmpty) continue;
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
-      await File(savePath).copy(savePath);
+      await File(path).copy(savePath);
       results.add({
         "path": savePath,
+        "size": picked.size,
         "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : null,
       });
     }
