@@ -19,12 +19,11 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
     List<String> savePaths, {
-    int maxNum = 9,
     bool compressImage = true,
     bool compressVideo = true,
   }) async {
     // maxNum
-    maxNum = savePaths.length;
+    int maxNum = savePaths.length;
     if (maxNum > 9) maxNum = 9;
     if (maxNum < 1) return [];
 
@@ -99,6 +98,7 @@ class MediaPicker {
       if (savePath.isNotEmpty) {
         pickedMaps.add({
           "path": savePath,
+          "size": entity.size,
           "fileExt": ext.isEmpty ? null : ext,
           "mimeType": entity.mimeType,
           "width": entity.orientatedWidth,
