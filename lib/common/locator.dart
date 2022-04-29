@@ -14,6 +14,7 @@ import 'package:nmobile/common/topic/subscriber.dart';
 import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
 import 'package:nmobile/helpers/audio.dart';
+import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/helpers/memory_cache.dart';
 import 'package:nmobile/services/task.dart';
 
@@ -25,6 +26,7 @@ late Authorization authorization;
 late LocalNotification localNotification;
 // late BackgroundFetchService backgroundFetchService;
 late AudioHelper audioHelper;
+late IpfsHelper ipfsHelper;
 late MemoryCache memoryCache;
 
 late DB dbCommon;
@@ -47,6 +49,7 @@ void setupLocator() {
   locator.registerSingleton(LocalNotification());
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(AudioHelper());
+  locator.registerSingleton(IpfsHelper());
   locator.registerSingleton(MemoryCache());
 
   locator.registerSingleton(DB());
@@ -67,6 +70,7 @@ void setupLocator() {
   authorization = locator.get<Authorization>();
   localNotification = locator.get<LocalNotification>();
   // backgroundFetchService = locator.get<BackgroundFetchService>();
+  ipfsHelper = locator.get<IpfsHelper>();
   audioHelper = locator.get<AudioHelper>();
   memoryCache = locator.get<MemoryCache>();
 
