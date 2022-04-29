@@ -99,10 +99,10 @@ class MediaPicker {
       if (savePath.isNotEmpty) {
         pickedMaps.add({
           "path": savePath,
+          "fileExt": ext.isEmpty ? null : ext,
+          "mimeType": entity.mimeType,
           "width": entity.orientatedWidth,
           "height": entity.orientatedHeight,
-          "mimeType": entity.mimeType,
-          "fileExt": ext.isEmpty ? null : ext,
         });
         if (isVideo) {
           pickedMaps.add({
@@ -117,7 +117,7 @@ class MediaPicker {
   }
 
   // TODO:GG 适配拍视频
-  static Future<File?> takeCommons({
+  static Future<File?> takeCommon({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
     int? bestSize,

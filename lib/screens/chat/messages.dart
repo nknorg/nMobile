@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
@@ -675,11 +676,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   ? ChatBottomMenu(
                       target: targetId,
                       show: _showBottomMenu,
-                      onPickedImage: (List<File> picks) async {
+                      onPicked: (List<Map<String, dynamic>> results) async {
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
-                        if (picks.isEmpty) return;
-                        for (var i = 0; i < picks.length; i++) {
-                          await chatOutCommon.sendImage(picks[i], topic: _topic, contact: _contact);
+                        if (results.isEmpty) return;
+                        for (var i = 0; i < results.length; i++) {
+                          Map<String, dynamic> result = results[i];
+                          String path = result["path"] ?? "";
+                          String? mimeType = result["mimeType"];
+                          if (path.isEmpty) continue;
+                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= ChatOutCommon.imgMaxSize)) {
+                            await chatOutCommon.sendImage(File(path), topic: _topic, contact: _contact);
+                          } else {
+                            await chatOutCommon.startIpfs(result, target: _topic ?? _contact);
+                          }
                         }
                       },
                     )
