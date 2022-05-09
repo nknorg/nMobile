@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/app.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
@@ -24,6 +23,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
@@ -254,8 +254,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: ChatOutCommon.avatarBestSize,
-      maxSize: ChatOutCommon.avatarMaxSize,
+      bestSize: MessageSchema.avatarBestSize,
+      maxSize: MessageSchema.avatarMaxSize,
       returnPath: remarkAvatarPath,
     );
     if (picked == null) {

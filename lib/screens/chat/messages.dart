@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
@@ -684,7 +683,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           String path = result["path"] ?? "";
                           String? mimeType = result["mimeType"];
                           if (path.isEmpty) continue;
-                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= ChatOutCommon.imgMaxSize)) {
+                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.imgMaxSize)) {
+                            // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType
                             await chatOutCommon.sendImage(File(path), topic: _topic, contact: _contact);
                           } else {
                             await chatOutCommon.startIpfs(result, target: _topic ?? _contact);

@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -18,6 +17,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -174,8 +174,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: ChatOutCommon.avatarBestSize,
-      maxSize: ChatOutCommon.avatarMaxSize,
+      bestSize: MessageSchema.avatarBestSize,
+      maxSize: MessageSchema.avatarMaxSize,
       returnPath: remarkAvatarPath,
     );
     if (picked == null) {
