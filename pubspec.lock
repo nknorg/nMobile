@@ -804,7 +804,7 @@ packages:
       name: photo_manager
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.6"
+    version: "2.0.8"
   photo_view:
     dependency: "direct main"
     description:
@@ -1236,7 +1236,7 @@ packages:
       name: wechat_assets_picker
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.0.5"
+    version: "7.1.1"
   win32:
     dependency: transitive
     description:
