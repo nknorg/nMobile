@@ -84,6 +84,7 @@ class MediaPicker {
       }
       // save
       String savePath;
+      int size;
       if (savePaths.length > i) {
         savePath = Path.joinFileExt(File(savePaths[i]).path, ext);
         File saveFile = File(savePath);
@@ -91,32 +92,35 @@ class MediaPicker {
           await saveFile.create(recursive: true);
         }
         saveFile = await file.copy(savePath);
+        size = saveFile.lengthSync();
       } else {
         savePath = file.absolute.path;
+        size = file.lengthSync();
       }
       // map
       if (savePath.isNotEmpty) {
-        pickedMaps.add({
+        Map<String, dynamic> params = {
           "path": savePath,
-          "size": entity.size,
+          "size": size,
           "fileExt": ext.isEmpty ? null : ext,
           "mimeType": entity.mimeType,
           "width": entity.orientatedWidth,
           "height": entity.orientatedHeight,
-        });
+        };
         if (isVideo) {
-          pickedMaps.add({
+          params.addAll({
             "duration": entity.duration,
-            "thumbnail": await entity.thumbnailData,
+            // "thumbnail": await entity.thumbnailData, // TODO:GG 后续再加
           });
         }
+        pickedMaps.add(params);
       }
       logger.i("MediaPicker - pickCommons - picked success - entity${entity.toString()}");
     }
     return pickedMaps;
   }
 
-  // TODO:GG 适配拍视频
+  // TODO:GG 适配拍视频（压缩?）注意返回格式
   static Future<File?> takeCommon({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
@@ -174,7 +178,7 @@ class MediaPicker {
     return returnFile;
   }
 
-  // TODO:GG 还需要压缩码(头像等还需要)？
+  // TODO:GG 还需要压缩码(目前只用于头像)？
   static Future<File?> pickImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
