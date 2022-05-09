@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/media_picker.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -30,8 +30,8 @@ class ChatBottomMenu extends StatelessWidget {
     if (source == ImageSource.camera) {
       String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'jpg');
       File? result = await MediaPicker.takeCommon(
-        bestSize: ChatOutCommon.imgBestSize,
-        maxSize: ChatOutCommon.imgMaxSize,
+        bestSize: MessageSchema.imgBestSize,
+        maxSize: MessageSchema.imgMaxSize,
         returnPath: returnPath,
       );
       if (result == null) return;

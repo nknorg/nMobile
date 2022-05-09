@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -20,6 +19,7 @@ import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -62,8 +62,8 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: ChatOutCommon.avatarBestSize,
-      maxSize: ChatOutCommon.avatarMaxSize,
+      bestSize: MessageSchema.avatarBestSize,
+      maxSize: MessageSchema.avatarMaxSize,
       returnPath: returnPath,
     );
     if (picked == null || !picked.existsSync()) {
