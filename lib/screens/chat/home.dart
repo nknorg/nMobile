@@ -214,12 +214,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (first) await dbCommon.fixIOS_152();
 
     // client
-    List result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryTimes) {
+    Map<String, dynamic> result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryTimes) {
       if (tryTimes > 1) return;
       _toggleSessionListShow(true);
     });
-    final client = result[0];
-    final isPwdError = result[1];
+    final client = result["client"];
+    final isPwdError = result["pwd_error"];
     if (client == null) {
       if (isPwdError) {
         logger.i("$TAG - _tryLogin - signIn - password error, close all");

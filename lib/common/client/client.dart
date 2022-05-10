@@ -126,16 +126,16 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  Future<List> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) {
+  Future<Map<String, dynamic>> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) {
     return _lock.synchronized(() {
       return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryTimes: tryTimes);
     });
   }
 
   // return [client, pwdError]
-  Future<List> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) async {
     // if (client != null) await close(); // async boom!!!
-    if (wallet == null || wallet.address.isEmpty) return [null, false];
+    if (wallet == null || wallet.address.isEmpty) return {"client": null, "pwd_error": false};
 
     // pubKey/seed
     String? pubKey = wallet.publicKey;
@@ -145,7 +145,7 @@ class ClientCommon with Tag {
       // password get
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
       if (password == null || password.isEmpty) {
-        return [null, true];
+        return {"client": null, "pwd_error": true};
       }
 
       // ui + status
@@ -188,7 +188,7 @@ class ClientCommon with Tag {
         } else {
           logger.e("$TAG - signIn - pubKey/seed error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
           _statusSink.add(ClientConnectStatus.disconnected);
-          return [null, false];
+          return {"client": null, "pwd_error": false};
         }
       }
 
@@ -240,7 +240,7 @@ class ClientCommon with Tag {
         // no status update (updated by ping/pang)
       }
       // await completer.future;
-      return [client, false];
+      return {"client": client, "pwd_error": false};
     } catch (e) {
       loadingVisible?.call(false, tryTimes);
       // password/keystore
@@ -251,7 +251,7 @@ class ClientCommon with Tag {
         }
         handleError(e);
         _statusSink.add(ClientConnectStatus.disconnected);
-        return [null, true];
+        return {"client": null, "pwd_error": true};
       }
       // toast
       if ((tryTimes != 0) && (tryTimes % 10 == 0)) handleError(e);
@@ -292,7 +292,7 @@ class ClientCommon with Tag {
     if (closeDB) await dbCommon.close();
   }
 
-  Future<List> reSignIn(bool needPwd, {int delayMs = 0}) async {
+  Future<Map<String, dynamic>> reSignIn(bool needPwd, {int delayMs = 0}) async {
     clientResigning = true;
     await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
@@ -303,7 +303,7 @@ class ClientCommon with Tag {
       AppScreen.go(Global.appContext);
       await signOut(clearWallet: true, closeDB: true);
       clientResigning = false;
-      return [null, false];
+      return {"client": null, "pwd_error": false};
     }
 
     if (!isClientCreated) {
@@ -316,7 +316,7 @@ class ClientCommon with Tag {
 
     // client
     String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    List result = await signIn(wallet, fetchRemote: false, password: walletPwd);
+    Map<String, dynamic> result = await signIn(wallet, fetchRemote: false, password: walletPwd);
     clientResigning = false;
     return result;
   }
