@@ -7,8 +7,6 @@ import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class SessionCommon with Tag {
-  SessionStorage _sessionStorage = SessionStorage();
-
   // ignore: close_sinks
   StreamController<SessionSchema> _addController = StreamController<SessionSchema>.broadcast();
   StreamSink<SessionSchema> get _addSink => _addController.sink;
@@ -54,14 +52,14 @@ class SessionCommon with Tag {
       }
     }
     // insert
-    SessionSchema? added = await _sessionStorage.insert(schema);
+    SessionSchema? added = await SessionStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(String? targetId, int? type, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await _sessionStorage.delete(targetId, type);
+    bool success = await SessionStorage.instance.delete(targetId, type);
     if (success && notify) _deleteSink.add([targetId, type]);
     chatCommon.deleteByTargetId(targetId, type == SessionType.TOPIC ? targetId : ""); // await
     return success;
@@ -69,11 +67,11 @@ class SessionCommon with Tag {
 
   Future<SessionSchema?> query(String? targetId, int? type) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    return await _sessionStorage.query(targetId, type);
+    return await SessionStorage.instance.query(targetId, type);
   }
 
   Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) {
-    return _sessionStorage.queryListRecent(offset: offset, limit: limit);
+    return SessionStorage.instance.queryListRecent(offset: offset, limit: limit);
   }
 
   Future<bool> setLastMessageAndUnReadCount(String? targetId, int? type, MessageSchema? lastMessage, int? unread, {int? sendAt, bool notify = false}) async {
@@ -82,7 +80,7 @@ class SessionCommon with Tag {
     session.lastMessageAt = sendAt ?? lastMessage?.sendAt ?? MessageOptions.getInAt(lastMessage);
     session.lastMessageOptions = lastMessage?.toMap();
     session.unReadCount = unread ?? await chatCommon.unReadCountByTargetId(targetId, type == SessionType.TOPIC ? session.targetId : "");
-    bool success = await _sessionStorage.updateLastMessageAndUnReadCount(session);
+    bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId, type);
     return success;
   }
@@ -92,21 +90,21 @@ class SessionCommon with Tag {
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageAt = lastMessage.sendAt ?? DateTime.now().millisecondsSinceEpoch;
     session.lastMessageOptions = lastMessage.toMap();
-    bool success = await _sessionStorage.updateLastMessage(session);
+    bool success = await SessionStorage.instance.updateLastMessage(session);
     if (success && notify) queryAndNotify(session.targetId);
     return success;
   }*/
 
   Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await _sessionStorage.updateIsTop(targetId, type, top);
+    bool success = await SessionStorage.instance.updateIsTop(targetId, type, top);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
 
   Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await _sessionStorage.updateUnReadCount(targetId, type, unread);
+    bool success = await SessionStorage.instance.updateUnReadCount(targetId, type, unread);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }

@@ -13,6 +13,8 @@ class ContactStorage with Tag {
   // static String get tableName => 'Contact';
   static String get tableName => 'Contact_2'; // v5
 
+  static ContactStorage instance = ContactStorage();
+
   Database? get db => dbCommon.database;
 
   Lock _lock = new Lock();

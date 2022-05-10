@@ -12,6 +12,8 @@ class TopicStorage with Tag {
   // static String get tableName => 'topic';
   static String get tableName => 'Topic_3'; // v5
 
+  static TopicStorage instance = TopicStorage();
+
   Database? get db => dbCommon.database;
 
   Lock _lock = new Lock();
