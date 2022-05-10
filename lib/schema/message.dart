@@ -34,18 +34,23 @@ class MessageContentType {
   static const String msgStatus = 'msgStatus'; // status + resend
 
   static const String contact = 'contact'; // .
+  // static const String contactProfile = 'contact:profile'; // . TODO:GG replace 'contact'
   static const String contactOptions = 'event:contactOptions'; // db + visible
+  // static const String contactOptions = 'contact:options'; // . TODO:GG replace 'contactOptions'
 
   static const String deviceRequest = 'device:request'; // .
   static const String deviceInfo = 'device:info'; // db
+  // static const String deviceResponse = 'device:response'; // db TODO:GG replace 'device:info'
 
   static const String text = 'text'; // db + visible
-  static const String textExtension = 'textExtension'; // db + visible
-  static const String media = 'media'; // db + visible
-  static const String image = 'nknImage'; // db + visible
+  static const String textExtension = 'textExtension'; // db + visible TODO:GG maybe remove
+  static const String ipfs = 'ipfs'; // db + visible
+  static const String media = 'media'; // db + visible // TODO:GG adapter d-chat，maybe remove
+  static const String image = 'nknImage'; // db + visible // TODO:GG rename to image
   static const String audio = 'audio'; // db + visible
-
-  static const String piece = 'nknOnePiece'; // db(delete)
+  static const String video = 'video'; // just bubble visible
+  static const String file = 'file'; // just bubble visible
+  static const String piece = 'nknOnePiece'; // db(delete) // TODO:GG rename to piece
 
   static const String topicSubscribe = 'event:subscribe'; // db + visible
   static const String topicUnsubscribe = 'event:unsubscribe'; // .
@@ -54,6 +59,23 @@ class MessageContentType {
 }
 
 class MessageSchema {
+  // piece
+  static const int piecesPreMinLen = 4 * 1000; // >= 4K
+  static const int piecesPreMaxLen = 20 * 1000; // <= 20K < 32K
+  static const int piecesMinParity = (5 ~/ 5); // >= 1
+  static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
+  static const int piecesMaxParity = (100 ~/ 5); // <= 20
+  static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
+
+  // size
+  static const int imgBestSize = 400 * 1000; // 400k (TODO:GG 是不是可以删掉了)
+  static const int imgMaxSize = piecesMaxTotal * piecesPreMaxLen; // 1.6M = 80 * 20K
+  static const int avatarBestSize = 100 * 1000; // 100k
+  static const int avatarMaxSize = 500 * 1000; // 500K
+  static const int msgMaxSize = 32 * 1000; // < 32K
+  static const int ipfsMaxSize = 100 * 1000 * 1000; // 100M
+  // static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
+
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
   String from; // (required) <-> sender / -> target_id(session_id)
@@ -103,9 +125,10 @@ class MessageSchema {
   // burning
   bool get canBurning {
     bool isText = contentType == MessageContentType.text || contentType == MessageContentType.textExtension;
+    bool isIpfs = contentType == MessageContentType.ipfs;
     bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
     bool isAudio = contentType == MessageContentType.audio;
-    return isText || isImage || isAudio;
+    return isText || isIpfs || isImage || isAudio;
   }
 
   // ++ resend
@@ -209,6 +232,9 @@ class MessageSchema {
       case MessageContentType.deviceRequest:
         schema.content = data;
         break;
+      case MessageContentType.ipfs:
+        schema.content = null;
+        break;
       // case MessageContentType.ping:
       // case MessageContentType.text:
       // case MessageContentType.textExtension:
@@ -225,29 +251,26 @@ class MessageSchema {
         break;
     }
 
+    // options
     if (schema.options == null) {
       schema.options = Map();
     }
 
+    // getAt
+    schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
+
     // piece
     if (data['parentType'] != null || data['total'] != null) {
-      if (schema.options![MessageOptions.KEY_PIECE] == null) {
-        schema.options![MessageOptions.KEY_PIECE] = Map();
-      }
-      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] = data['parentType'];
-      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = data['bytesLength'];
-      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
-      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
-      schema.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
+      schema.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = data['parentType'];
+      schema.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = data['bytesLength'];
+      schema.options?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
+      schema.options?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
+      schema.options?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
     }
-
-    // getAt
-    schema = MessageOptions.setInAt(schema, DateTime.now().millisecondsSinceEpoch);
-
     return schema;
   }
 
-  static MessageSchema? fromPiecesReceive(List<MessageSchema> sortPieces, String base64String) {
+  static MessageSchema? combinePiecesMsg(List<MessageSchema> sortPieces, String base64String) {
     List<MessageSchema> finds = sortPieces.where((element) => element.pid != null).toList();
     if (finds.isEmpty) return null;
     MessageSchema piece = finds[0];
@@ -267,24 +290,29 @@ class MessageSchema {
       receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
-      contentType: piece.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
+      contentType: piece.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
       content: base64String,
       // options: piece.options,
     );
 
-    piece.options?.remove(MessageOptions.KEY_PIECE);
+    // options
     schema.options = piece.options;
-
     if (schema.options == null) {
       schema.options = Map();
     }
 
+    // getAt
+    schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
+
     // diff with no pieces image
     schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
 
-    // getAt
-    schema = MessageOptions.setInAt(schema, DateTime.now().millisecondsSinceEpoch);
-
+    // pieces
+    schema.options?.remove(MessageOptions.KEY_PIECE_PARENT_TYPE);
+    schema.options?.remove(MessageOptions.KEY_PIECE_BYTES_LENGTH);
+    schema.options?.remove(MessageOptions.KEY_PIECE_TOTAL);
+    schema.options?.remove(MessageOptions.KEY_PIECE_PARITY);
+    schema.options?.remove(MessageOptions.KEY_PIECE_INDEX);
     return schema;
   }
 
@@ -307,17 +335,7 @@ class MessageSchema {
     required this.contentType,
     this.content,
     this.options,
-    // piece
-    String? parentType,
-    int? bytesLength,
-    int? total,
-    int? parity,
-    int? index,
-    // other
-    double? audioDurationS,
-    int? deleteAfterSeconds,
-    int? burningUpdateAt,
-    String? fileExt,
+    Map<String, dynamic>? extra,
   }) {
     // at
     this.sendAt = DateTime.now().millisecondsSinceEpoch;
@@ -326,30 +344,70 @@ class MessageSchema {
 
     if (this.options == null) this.options = Map();
 
-    // piece
-    if (parentType != null || total != null) {
-      if (this.options![MessageOptions.KEY_PIECE] == null) {
-        this.options![MessageOptions.KEY_PIECE] = Map();
-      }
-      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] = parentType;
-      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = bytesLength;
-      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] = total;
-      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] = parity;
-      this.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] = index;
-    }
-
-    // duration
-    if (audioDurationS != null && audioDurationS > 0) {
-      MessageOptions.setAudioDuration(this, audioDurationS);
-    }
     // burn
+    int? deleteAfterSeconds = extra?["deleteAfterSeconds"];
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-      MessageOptions.setContactBurning(this, deleteAfterSeconds, burningUpdateAt);
+      this.options = MessageOptions.setContactBurningDeleteSec(this.options, deleteAfterSeconds);
     }
-    // fileExt
+    int? burningUpdateAt = extra?["burningUpdateAt"];
+    if (burningUpdateAt != null && burningUpdateAt > 0) {
+      this.options = MessageOptions.setContactBurningUpdateAt(this.options, burningUpdateAt);
+    }
+    // media
+    int? size = int.tryParse(extra?["size"]?.toString() ?? "");
+    if (size != null && size != 0) {
+      this.options = MessageOptions.setFileSize(this.options, size);
+    }
+    String? fileExt = extra?["fileExt"];
     if (fileExt != null && fileExt.isNotEmpty) {
-      this.options?[MessageOptions.KEY_FILE_EXT] = fileExt;
+      this.options = MessageOptions.setFileExt(this.options, fileExt);
     }
+    String? fileMimeType = extra?["mimeType"];
+    if (fileMimeType != null && fileMimeType.isNotEmpty) {
+      this.options = MessageOptions.setFileMimeType(this.options, fileMimeType);
+    }
+    int? fileType = int.tryParse(extra?["content_type"]?.toString() ?? "");
+    if (fileType != null && fileType >= 0) {
+      this.options = MessageOptions.setContentType(this.options, fileType);
+    } else if (((size ?? 0) > 0) || (fileExt?.isNotEmpty == true) || (fileMimeType?.isNotEmpty == true)) {
+      if ((fileMimeType?.contains("image") == true) || (fileExt?.contains("jpg") == true) || (fileExt?.contains("png") == true)) {
+        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeImage);
+      } else if ((fileMimeType?.contains("audio") == true) || (fileMimeType?.contains("aac") == true) || (fileExt?.contains("aac") == true)) {
+        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeAudio);
+      } else if ((fileMimeType?.contains("video") == true) || (fileMimeType?.contains("mp4") == true) || (fileExt?.contains("mp4") == true)) {
+        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeVideo);
+      } else {
+        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeFile);
+      }
+    }
+    int? mediaWidth = int.tryParse(extra?["width"]?.toString() ?? "");
+    int? mediaHeight = int.tryParse(extra?["height"]?.toString() ?? "");
+    if (mediaWidth != null && mediaWidth != 0 && mediaHeight != null && mediaHeight != 0) {
+      this.options = MessageOptions.setMediaSizeWH(this.options, mediaWidth, mediaHeight);
+    }
+    double? duration = double.tryParse(extra?["duration"]?.toString() ?? "");
+    if (duration != null && duration > 0) {
+      this.options = MessageOptions.setMediaDuration(this.options, duration);
+    }
+    // piece
+    String? parentType = extra?["piece_parent_type"];
+    int? bytesLength = extra?["piece_bytes_length"];
+    int? total = extra?["piece_total"];
+    int? parity = extra?["piece_parity"];
+    int? index = extra?["piece_index"];
+    if (parentType != null || total != null) {
+      this.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = parentType;
+      this.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = bytesLength;
+      this.options?[MessageOptions.KEY_PIECE_TOTAL] = total;
+      this.options?[MessageOptions.KEY_PIECE_PARITY] = parity;
+      this.options?[MessageOptions.KEY_PIECE_INDEX] = index;
+    }
+    // SUPPORT:START
+    double? audioDurationS = extra?["audioDurationS"];
+    if (audioDurationS != null && audioDurationS > 0) {
+      this.options = MessageOptions.setAudioDuration(this.options, audioDurationS);
+    }
+    // SUPPORT:END
   }
 
   /// to sqlite
@@ -383,11 +441,12 @@ class MessageSchema {
       case MessageContentType.deviceInfo:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
+      case MessageContentType.ipfs: // maybe null
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
       case MessageContentType.piece:
-        if (content is File) {
+        if ((content != null) && (content is File)) {
           map['content'] = Path.convert2Local((content as File).path);
         }
         break;
@@ -441,6 +500,7 @@ class MessageSchema {
           schema.content = e['content'];
         }
         break;
+      case MessageContentType.ipfs: // maybe null
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
@@ -465,6 +525,50 @@ class MessageSchema {
     return schema;
   }
 
+  Future<Map<String, dynamic>> piecesInfo() async {
+    if (!(this.content is File?)) return {};
+    File? file = this.content as File?;
+    if (file == null || !file.existsSync()) return {};
+    int length = await file.length();
+    if (length <= piecesPreMinLen) return {};
+    // data
+    Uint8List fileBytes = await file.readAsBytes();
+    String base64Data = base64.encode(fileBytes);
+    int bytesLength = base64Data.length;
+    // total (2~192)
+    int total;
+    if (bytesLength < piecesPreMinLen * piecesMinTotal) {
+      return {};
+    } else if (bytesLength <= piecesPreMinLen * piecesMaxTotal) {
+      total = bytesLength ~/ piecesPreMinLen;
+      if (bytesLength % piecesPreMinLen > 0) {
+        total += 1;
+      }
+    } else {
+      total = piecesMaxTotal;
+    }
+    // parity(1~63)
+    int parity = (total * (piecesMaxParity / (piecesMaxTotal + piecesMaxParity))).toInt();
+    if (total % (piecesMaxParity / (piecesMaxTotal + piecesMaxParity)) > 0) {
+      parity += 1;
+    }
+    if (parity > piecesMaxParity) {
+      parity = piecesMaxParity;
+    } else if (parity >= total) {
+      parity = total - 1;
+    } else if (parity < 1) {
+      parity = 1;
+    }
+
+    // (total + parity) < 256
+    return {
+      "data": base64Data,
+      "length": bytesLength,
+      "total": total,
+      "parity": parity,
+    };
+  }
+
   @override
   String toString() {
     return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, status: $status, isOutbound: $isOutbound, isDelete: $isDelete, sendAt: $sendAt, receiveAt: $receiveAt, deleteAt: $deleteAt, contentType: $contentType, options: $options, content: $content}';
@@ -472,171 +576,307 @@ class MessageSchema {
 }
 
 class MessageOptions {
-  static const KEY_AUDIO_DURATION = "audioDuration";
-
-  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
-  static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
-  static const KEY_DEVICE_TOKEN = "deviceToken";
-
   static const KEY_OUT_AT = "out_at";
   static const KEY_IN_AT = "in_at";
 
+  static const KEY_DEVICE_TOKEN = "deviceToken";
+
+  static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
+  static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
+
+  static const KEY_FILE_SIZE = "file_size";
+  static const KEY_FILE_EXT = "file_ext";
+  static const KEY_FILE_MIME_TYPE = "file_mime_type";
+  static const KEY_MEDIA_WIDTH = "media_width";
+  static const KEY_MEDIA_HEIGHT = "media_height";
+  static const KEY_AUDIO_DURATION = "audioDuration";
+  static const KEY_MEDIA_DURATION = "media_duration"; // TODO:GG replace 'audioDuration'
+
+  static const KEY_CONTENT_TYPE = "content_type";
+
+  static const int contentTypeText = 0;
+  static const int contentTypeImage = 1;
+  static const int contentTypeAudio = 2;
+  static const int contentTypeVideo = 3;
+  static const int contentTypeFile = 4;
+
+  static const KEY_IPFS_STATE = "ipfs_result_name";
+  static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
+  static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
+  static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
+
   static const KEY_FROM_PIECE = "from_piece";
 
-  static const KEY_PIECE = 'piece';
-  static const KEY_PIECE_PARENT_TYPE = "parentType";
-  static const KEY_PIECE_BYTES_LENGTH = "bytesLength";
-  static const KEY_PIECE_PARITY = "parity";
-  static const KEY_PIECE_TOTAL = "total";
-  static const KEY_PIECE_INDEX = "index";
+  static const KEY_PIECE_PARENT_TYPE = "piece_parent_type";
+  static const KEY_PIECE_BYTES_LENGTH = "piece_bytes_length";
+  static const KEY_PIECE_PARITY = "piece_parity";
+  static const KEY_PIECE_TOTAL = "piece_total";
+  static const KEY_PIECE_INDEX = "piece_index";
 
-  static const KEY_FILE_EXT = "file_ext";
-
-  static MessageSchema setAudioDuration(MessageSchema message, double? durationS) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_AUDIO_DURATION] = durationS;
-    return message;
+  static Map<String, dynamic>? setOutAt(Map<String, dynamic>? options, int sendAt) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_OUT_AT] = sendAt;
+    return options;
   }
 
-  static double? getAudioDuration(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    var duration = message.options![MessageOptions.KEY_AUDIO_DURATION]?.toString();
+  static int? getOutAt(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_OUT_AT];
+  }
+
+  static Map<String, dynamic>? setInAt(Map<String, dynamic>? options, int sendAt) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IN_AT] = sendAt;
+    return options;
+  }
+
+  static int? getInAt(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IN_AT];
+  }
+
+  static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
+    return options;
+  }
+
+  static String? getDeviceToken(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+  }
+
+  static Map<String, dynamic>? setContactBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
+    return options;
+  }
+
+  static int? getContactBurningDeleteSec(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var seconds = options[MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
+    return (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
+  }
+
+  static Map<String, dynamic>? setContactBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
+    return options;
+  }
+
+  static int? getContactBurningUpdateAt(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
+    return (update == null || update.isEmpty) ? null : int.tryParse(update);
+  }
+
+  static Map<String, dynamic> setContentType(Map<String, dynamic>? options, int type) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_CONTENT_TYPE] = type;
+    return options;
+  }
+
+  static int? getContentType(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var type = options[MessageOptions.KEY_CONTENT_TYPE]?.toString();
+    if (type == null || type.isEmpty) return null;
+    return int.tryParse(type) ?? -1;
+  }
+
+  static Map<String, dynamic> setFileSize(Map<String, dynamic>? options, int? size) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_FILE_SIZE] = size;
+    return options;
+  }
+
+  static int? getFileSize(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var size = options[MessageOptions.KEY_FILE_SIZE]?.toString();
+    if (size == null || size.isEmpty) return null;
+    return int.tryParse(size) ?? 0;
+  }
+
+  static Map<String, dynamic> setFileExt(Map<String, dynamic>? options, String? ext) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_FILE_EXT] = ext;
+    return options;
+  }
+
+  static String? getFileExt(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_FILE_EXT]?.toString();
+  }
+
+  static Map<String, dynamic> setFileMimeType(Map<String, dynamic>? options, String? mimeType) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_FILE_MIME_TYPE] = mimeType;
+    return options;
+  }
+
+  static String? getFileMimeType(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_FILE_MIME_TYPE]?.toString();
+  }
+
+  static Map<String, dynamic> setMediaSizeWH(Map<String, dynamic>? options, int? width, int? height) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_MEDIA_WIDTH] = width;
+    options[MessageOptions.KEY_MEDIA_HEIGHT] = height;
+    return options;
+  }
+
+  static List<double?> getMediaWH(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return [];
+    var width = options[MessageOptions.KEY_MEDIA_WIDTH]?.toString();
+    var height = options[MessageOptions.KEY_MEDIA_HEIGHT]?.toString();
+    if (width == null || width.isEmpty || height == null || height.isEmpty) return [];
+    return [double.tryParse(width) ?? 0, double.tryParse(height) ?? 0];
+  }
+
+  static Map<String, dynamic> setMediaDuration(Map<String, dynamic>? options, double? durationS) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_MEDIA_DURATION] = durationS;
+    return options;
+  }
+
+  static double? getMediaDuration(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var duration = options[MessageOptions.KEY_MEDIA_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
     return double.tryParse(duration) ?? 0;
   }
 
-  static MessageSchema setContactBurning(MessageSchema message, int deleteTimeSec, int? updateAt) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
-    message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
-    return message;
+  static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, bool complete) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_STATE] = complete ? 1 : 0;
+    return options;
   }
 
-  static List<int?> getContactBurning(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return [];
-    var seconds = message.options![MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    var update = message.options![MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
-    int? t1 = (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
-    int? t2 = (update == null || update.isEmpty) ? null : int.tryParse(update);
-    return [t1, t2];
+  static bool? getIpfsState(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var complete = options[MessageOptions.KEY_IPFS_STATE]?.toString();
+    if (complete == null || complete.isEmpty) return null;
+    return ((int.tryParse(complete) ?? 0) == 0) ? false : true;
   }
 
-  static MessageSchema setDeviceToken(MessageSchema message, String deviceToken) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
-    return message;
+  static Map<String, dynamic> setIpfsResult(Map<String, dynamic>? options, String? hash, String? size, String? name) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_RESULT_HASH] = hash;
+    options[MessageOptions.KEY_IPFS_RESULT_SIZE] = int.tryParse(size ?? "");
+    options[MessageOptions.KEY_IPFS_RESULT_NAME] = name;
+    return options;
   }
 
-  static String? getDeviceToken(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+  static String? getIpfsResultHash(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_HASH]?.toString();
   }
 
-  static MessageSchema setOutAt(MessageSchema message, int sendAt) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_OUT_AT] = sendAt;
-    return message;
+  static int? getIpfsResultSize(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var size = options[MessageOptions.KEY_IPFS_RESULT_SIZE]?.toString();
+    if (size == null || size.isEmpty) return null;
+    return int.tryParse(size) ?? 0;
   }
 
-  static int? getOutAt(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_OUT_AT];
+  static String? getIpfsResultName(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_NAME]?.toString();
   }
 
-  static MessageSchema setInAt(MessageSchema message, int sendAt) {
-    if (message.options == null) message.options = Map<String, dynamic>();
-    message.options![MessageOptions.KEY_IN_AT] = sendAt;
-    return message;
+  // SUPPORT:START
+  static Map<String, dynamic>? setAudioDuration(Map<String, dynamic>? options, double? durationS) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_AUDIO_DURATION] = durationS;
+    return options;
   }
 
-  static int? getInAt(MessageSchema? message) {
-    if (message == null || message.options == null || message.options!.keys.length == 0) return null;
-    return message.options![MessageOptions.KEY_IN_AT];
+  static double? getAudioDuration(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var duration = options[MessageOptions.KEY_AUDIO_DURATION]?.toString();
+    if (duration == null || duration.isEmpty) return null;
+    return double.tryParse(duration) ?? 0;
   }
+  // SUPPORT:END
 }
 
 class MessageData {
-  static String getPing(bool isPing) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.ping,
-      'content': isPing ? "ping" : "pong",
+  static Map _base(String contentType, {String? id, int? timestamp, int? sendTimestamp}) {
+    return {
+      'id': id ?? Uuid().v4(),
+      'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
+      'contentType': contentType,
     };
+  }
+
+  static String getPing(bool isPing) {
+    Map map = _base(MessageContentType.ping)
+      ..addAll({
+        'content': isPing ? "ping" : "pong",
+      });
     return jsonEncode(map);
   }
 
   static String getReceipt(String targetId, int? readAt) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.receipt,
-      'targetID': targetId,
-      'readAt': readAt,
-    };
+    Map map = _base(MessageContentType.receipt)
+      ..addAll({
+        'targetID': targetId,
+        'readAt': readAt,
+      });
     return jsonEncode(map);
   }
 
   static String getRead(List<String> msgIdList) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.read,
-      'readIds': msgIdList,
-    };
+    Map map = _base(MessageContentType.read)
+      ..addAll({
+        'readIds': msgIdList,
+      });
     return jsonEncode(map);
   }
 
   static String getMsgStatus(bool ask, List<String>? msgIdList) {
-    Map map = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.msgStatus,
-      'requestType': ask ? "ask" : "reply",
-      'messageIds': msgIdList,
-    };
+    Map map = _base(MessageContentType.msgStatus)
+      ..addAll({
+        'requestType': ask ? "ask" : "reply",
+        'messageIds': msgIdList,
+      });
     return jsonEncode(map);
   }
 
   static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'requestType': requestType,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-    };
+    Map data = _base(MessageContentType.contact)
+      ..addAll({
+        'requestType': requestType,
+        'version': profileVersion,
+        'expiresAt': expiresAt,
+      });
     return jsonEncode(data);
   }
 
   static String getContactResponseHeader(String? profileVersion, int expiresAt) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'responseType': RequestType.header,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-      // SUPPORT:START
-      'onePieceReady': '1',
-      // SUPPORT:END
-    };
+    Map data = _base(MessageContentType.contact)
+      ..addAll({
+        'responseType': RequestType.header,
+        'version': profileVersion,
+        'expiresAt': expiresAt,
+        // SUPPORT:START
+        'onePieceReady': '1',
+        // SUPPORT:END
+      });
     return jsonEncode(data);
   }
 
   static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contact,
-      'responseType': RequestType.full,
-      'version': profileVersion,
-      'expiresAt': expiresAt,
-      // SUPPORT:START
-      'onePieceReady': '1',
-      // SUPPORT:END
-    };
+    Map data = _base(MessageContentType.contact)
+      ..addAll({
+        'responseType': RequestType.full,
+        'version': profileVersion,
+        'expiresAt': expiresAt,
+        // SUPPORT:START
+        'onePieceReady': '1',
+        // SUPPORT:END
+      });
     Map<String, dynamic> content = Map();
     if (firstName?.isNotEmpty == true) {
       content['first_name'] = firstName;
@@ -657,98 +897,89 @@ class MessageData {
   }
 
   static String getContactOptionsBurn(MessageSchema message) {
-    List<int?> burningOptions = MessageOptions.getContactBurning(message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-    int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contactOptions,
-      'optionType': '0',
-      'content': {
-        'deleteAfterSeconds': burnAfterSeconds,
-        'updateBurnAfterAt': updateBurnAfterAt,
-        // SUPPORT:START
-        'updateBurnAfterTime': updateBurnAfterAt,
-        // SUPPORT:END
-      },
-    };
+    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
+    int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
+    Map data = _base(MessageContentType.contactOptions, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'optionType': '0',
+        'content': {
+          'deleteAfterSeconds': burnAfterSeconds,
+          'updateBurnAfterAt': updateBurnAfterAt,
+          // SUPPORT:START
+          'updateBurnAfterTime': updateBurnAfterAt,
+          // SUPPORT:END
+        },
+      });
     return jsonEncode(data);
   }
 
   static String getContactOptionsToken(MessageSchema message) {
-    String? deviceToken = MessageOptions.getDeviceToken(message);
-    Map data = {
-      'id': message.msgId,
-      'timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.contactOptions,
-      'optionType': '1',
-      'content': {
-        'deviceToken': deviceToken,
-      },
-    };
+    String? deviceToken = MessageOptions.getDeviceToken(message.options);
+    Map data = _base(MessageContentType.contactOptions, id: message.msgId, timestamp: message.sendAt, sendTimestamp: message.sendAt)
+      ..addAll({
+        'optionType': '1',
+        'content': {
+          'deviceToken': deviceToken,
+        },
+      });
     return jsonEncode(data);
   }
 
   static String getDeviceRequest() {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.deviceRequest,
-    };
+    Map data = _base(MessageContentType.deviceRequest);
     return jsonEncode(data);
   }
 
   static String getDeviceInfo() {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.deviceInfo,
-      'deviceId': Global.deviceId,
-      'appName': Settings.appName,
-      'appVersion': Global.build,
-      'platform': PlatformName.get(),
-      'platformVersion': Global.deviceVersion,
-    };
+    Map data = _base(MessageContentType.deviceInfo)
+      ..addAll({
+        'deviceId': Global.deviceId,
+        'appName': Settings.appName,
+        'appVersion': Global.build,
+        'platform': PlatformName.get(),
+        'platformVersion': Global.deviceVersion,
+      });
     return jsonEncode(data);
   }
 
   static String getText(MessageSchema message) {
-    Map map = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': message.content,
-    };
+    Map map = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': message.content,
+        'options': message.options,
+      });
     if (message.isTopic) {
       map['topic'] = message.topic;
     }
-    if (message.options != null && message.options!.keys.length > 0) {
-      map['options'] = message.options;
-    }
     return jsonEncode(map);
+  }
+
+  static Future<String?> getIpfs(MessageSchema message) async {
+    String? content = MessageOptions.getIpfsResultHash(message.options);
+    if (content == null || content.isEmpty) return null;
+    Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': content,
+        'options': message.options,
+      });
+    if (message.isTopic) {
+      data['topic'] = message.topic;
+    }
+    return jsonEncode(data);
   }
 
   static Future<String?> getImage(MessageSchema message) async {
     File? file = message.content as File?;
     if (file == null) return null;
-    String? content = await FileHelper.convertFileToBase64("image", file);
+    String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': content,
-    };
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': content,
+        'options': message.options,
+      });
     if (message.isTopic) {
       data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
@@ -758,88 +989,66 @@ class MessageData {
     if (file == null) return null;
     var mimeType = mime(file.path) ?? "";
     if (mimeType.split('aac').length <= 0) return null;
-    String? content = await FileHelper.convertFileToBase64("audio", file);
+    String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': content,
-    };
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': content,
+        'options': message.options,
+      });
     if (message.isTopic) {
       data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': message.contentType,
-      'content': message.content,
-      'parentType': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
-      'bytesLength': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
-      'total': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL],
-      'parity': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY],
-      'index': message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX],
-    };
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': message.content,
+        'options': message.options,
+        'parentType': message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
+        'bytesLength': message.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
+        'total': message.options?[MessageOptions.KEY_PIECE_TOTAL],
+        'parity': message.options?[MessageOptions.KEY_PIECE_PARITY],
+        'index': message.options?[MessageOptions.KEY_PIECE_INDEX],
+      });
     if (message.isTopic) {
       data['topic'] = message.topic;
-    }
-    if (message.options != null && message.options!.keys.length > 0) {
-      data['options'] = message.options;
     }
     return jsonEncode(data);
   }
 
   static String getTopicSubscribe(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicSubscribe,
-    };
+    Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'topic': message.topic,
+      });
     return jsonEncode(data);
   }
 
   static String getTopicUnSubscribe(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicUnsubscribe,
-    };
+    Map data = _base(MessageContentType.topicUnsubscribe, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'topic': message.topic,
+      });
     return jsonEncode(data);
   }
 
   static String getTopicInvitee(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.topicInvitation,
-      'content': message.content,
-    };
+    Map data = _base(MessageContentType.topicInvitation, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'content': message.content,
+      });
     return jsonEncode(data);
   }
 
   static String getTopicKickOut(MessageSchema message) {
-    Map data = {
-      'id': message.msgId,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': message.sendAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': message.topic,
-      'contentType': MessageContentType.topicKickOut,
-      'content': message.content,
-    };
+    Map data = _base(MessageContentType.topicKickOut, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
+        'topic': message.topic,
+        'content': message.content,
+      });
     return jsonEncode(data);
   }
 }
