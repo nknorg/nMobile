@@ -15,8 +15,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 
 class TopicCommon with Tag {
-  TopicStorage _topicStorage = TopicStorage();
-
   // ignore: close_sinks
   StreamController<TopicSchema> _addController = StreamController<TopicSchema>.broadcast();
   StreamSink<TopicSchema> get _addSink => _addController.sink;
@@ -947,7 +945,7 @@ class TopicCommon with Tag {
         return null;
       }
     }
-    TopicSchema? added = await _topicStorage.insert(schema);
+    TopicSchema? added = await TopicStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
   }
@@ -956,31 +954,31 @@ class TopicCommon with Tag {
     if (topicId == null || topicId == 0) return false;
     TopicSchema? topic = await query(topicId);
     if (topic == null) return false;
-    bool success = await _topicStorage.delete(topicId);
+    bool success = await TopicStorage.instance.delete(topicId);
     // if (success && notify) _deleteSink.add(topic.topic);
     return success;
   }*/
 
   Future<TopicSchema?> query(int? topicId) {
-    return _topicStorage.query(topicId);
+    return TopicStorage.instance.query(topicId);
   }
 
   Future<TopicSchema?> queryByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return null;
-    return await _topicStorage.queryByTopic(topic);
+    return await TopicStorage.instance.queryByTopic(topic);
   }
 
   Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
-    return _topicStorage.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
+    return TopicStorage.instance.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
-    return _topicStorage.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
+    return TopicStorage.instance.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool refreshCreateAt = false, bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setJoined(
+    bool success = await TopicStorage.instance.setJoined(
       topicId,
       joined,
       subscribeAt: subscribeAt,
@@ -993,28 +991,28 @@ class TopicCommon with Tag {
 
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setAvatar(topicId, avatarLocalPath);
+    bool success = await TopicStorage.instance.setAvatar(topicId, avatarLocalPath);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
   Future<bool> setCount(int? topicId, int? count, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setCount(topicId, count ?? 0);
+    bool success = await TopicStorage.instance.setCount(topicId, count ?? 0);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
   Future<bool> setTop(int? topicId, bool top, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setTop(topicId, top);
+    bool success = await TopicStorage.instance.setTop(topicId, top);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
   Future<bool> setData(int? topicId, Map<String, dynamic>? newData, {bool notify = false}) async {
     if (topicId == null || topicId == 0) return false;
-    bool success = await _topicStorage.setData(topicId, newData);
+    bool success = await TopicStorage.instance.setData(topicId, newData);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }

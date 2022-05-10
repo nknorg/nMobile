@@ -7,19 +7,17 @@ import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class DeviceInfoCommon with Tag {
-  DeviceInfoStorage _deviceInfoStorage = DeviceInfoStorage();
-
   DeviceInfoCommon();
 
   Future<DeviceInfoSchema?> set(DeviceInfoSchema? schema) async {
     if (schema == null || schema.contactAddress.isEmpty) return null;
-    DeviceInfoSchema? exist = await _deviceInfoStorage.queryByDeviceId(schema.contactAddress, schema.deviceId);
+    DeviceInfoSchema? exist = await DeviceInfoStorage.instance.queryByDeviceId(schema.contactAddress, schema.deviceId);
     if (exist == null) {
       schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
       schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      exist = await _deviceInfoStorage.insert(schema);
+      exist = await DeviceInfoStorage.instance.insert(schema);
     } else {
-      bool success = await _deviceInfoStorage.update(exist.id, schema.data);
+      bool success = await DeviceInfoStorage.instance.update(exist.id, schema.data);
       if (success) {
         exist.updateAt = DateTime.now().millisecondsSinceEpoch;
         exist.data = schema.data;
@@ -30,12 +28,12 @@ class DeviceInfoCommon with Tag {
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await _deviceInfoStorage.queryLatest(contactAddress);
+    return await DeviceInfoStorage.instance.queryLatest(contactAddress);
   }
 
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
-    return await _deviceInfoStorage.queryListLatest(contactAddressList);
+    return await DeviceInfoStorage.instance.queryListLatest(contactAddressList);
   }
 
   // DeviceInfoSchema createMe() {

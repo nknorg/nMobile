@@ -10,6 +10,8 @@ import 'package:synchronized/synchronized.dart';
 class SessionStorage with Tag {
   static String get tableName => 'Session';
 
+  static SessionStorage instance = SessionStorage();
+
   Database? get db => dbCommon.database;
 
   Lock _lock = new Lock();

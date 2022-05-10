@@ -10,6 +10,8 @@ import 'package:synchronized/synchronized.dart';
 class DeviceInfoStorage with Tag {
   static String get tableName => 'DeviceInfo'; // v5
 
+  static DeviceInfoStorage instance = DeviceInfoStorage();
+
   Database? get db => dbCommon.database;
 
   Lock _lock = new Lock();
