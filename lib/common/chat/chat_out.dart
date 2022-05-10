@@ -23,22 +23,6 @@ import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
-  // piece
-  static const int piecesPreMinLen = 4 * 1000; // >= 4K
-  static const int piecesPreMaxLen = 20 * 1000; // <= 20K < 32K
-  static const int piecesMinParity = (5 ~/ 5); // >= 1
-  static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
-  static const int piecesMaxParity = (100 ~/ 5); // <= 20
-  static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
-
-  // size
-  static const int imgBestSize = 400 * 1000; // 400k
-  static const int imgMaxSize = piecesMaxTotal * piecesPreMaxLen; // 1.6M = 80 * 20K
-  static const int avatarBestSize = 100 * 1000; // 100k
-  static const int avatarMaxSize = 500 * 1000; // 500K
-  static const int msgMaxSize = 32 * 1000; // < 32K
-  // static const int maxBodySize = piecesMaxTotal * (piecesPreLength * 10); // 1,843,200 < 4,000,000(nkn-go-sdk)
-
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
@@ -50,8 +34,8 @@ class ChatOutCommon with Tag {
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
 
   // lock
-  Lock sendLock = Lock();
-  Lock resendLock = Lock();
+  Lock sendLock = Lock(); // TODO:GG to queue
+  Lock resendLock = Lock(); // TODO:GG to queue
 
   ChatOutCommon();
 
@@ -133,16 +117,16 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing) async {
-    if (clientAddressList.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddressList.isEmpty) return;
     String data = MessageData.getPing(isPing);
     await _sendWithAddressSafe(clientAddressList, data, notification: false);
   }
 
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received) async {
-    if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
     received = (await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await _sendWithAddressSafe([received.from], data, notification: false);
@@ -150,24 +134,24 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future sendRead(String? clientAddress, List<String> msgIds) async {
-    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     String data = MessageData.getRead(msgIds);
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
   // NO DB NO display NO topic (1 to 1)
   Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds) async {
-    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     String data = MessageData.getMsgStatus(ask, msgIds);
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
   // NO DB NO display (1 to 1)
   Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data = MessageData.getContactRequest(requestType, profileVersion, updateAt);
     await _sendWithAddressSafe([clientAddress], data, notification: false);
@@ -175,8 +159,8 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data;
@@ -190,109 +174,229 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.contactOptions,
       to: clientAddress,
-      deleteAfterSeconds: deleteSeconds,
-      burningUpdateAt: updateAt,
+      extra: {
+        "deleteAfterSeconds": deleteSeconds,
+        "burningUpdateAt": updateAt,
+      },
     );
     send.content = MessageData.getContactOptionsBurn(send); // same with receive and old version
-    await _sendAndDB(send, send.content);
+    await _saveAndSend(send, send.content);
   }
 
   // NO topic (1 to 1)
   Future sendContactOptionsToken(String? clientAddress, String deviceToken) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.contactOptions,
       to: clientAddress,
     );
-    send = MessageOptions.setDeviceToken(send, deviceToken);
+    send.options = MessageOptions.setDeviceToken(send.options, deviceToken);
     send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
-    await _sendAndDB(send, send.content);
+    await _saveAndSend(send, send.content);
   }
 
   // NO DB NO display (1 to 1)
   Future sendDeviceRequest(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     String data = MessageData.getDeviceRequest();
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
   // NO DB NO display (1 to 1)
   Future sendDeviceInfo(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return;
     String data = MessageData.getDeviceInfo();
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
-  Future<MessageSchema?> sendText(String? content, {ContactSchema? contact, TopicSchema? topic}) async {
-    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
+  Future<MessageSchema?> sendText(String? content, {dynamic target}) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    String contentType = ((contact?.options?.deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text;
+    // target
+    String targetAddress = "";
+    String targetTopic = "";
+    int? deleteAfterSeconds;
+    int? burningUpdateAt;
+    if (target is ContactSchema) {
+      targetAddress = target.clientAddress;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
+      burningUpdateAt = target.options?.updateBurnAfterAt;
+    } else if (target is TopicSchema) {
+      targetTopic = target.topic;
+    }
+    if (targetAddress.isEmpty && targetTopic.isEmpty) {
+      return null;
+    }
+    // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
-      contentType: contentType,
-      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
-      topic: topic?.topic ?? "",
+      from: clientCommon.address ?? "",
+      contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
+      to: targetAddress,
+      topic: targetTopic,
       content: content,
-      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
-      burningUpdateAt: contact?.options?.updateBurnAfterAt,
+      extra: {
+        "deleteAfterSeconds": deleteAfterSeconds,
+        "burningUpdateAt": burningUpdateAt,
+      },
     );
+    // data
     String data = MessageData.getText(message);
-    return _sendAndDB(message, data, contact: contact, topic: topic);
+    return _saveAndSend(message, data);
   }
 
-  Future<MessageSchema?> sendImage(File? content, {ContactSchema? contact, TopicSchema? topic}) async {
-    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
-    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+  Future<MessageSchema?> startIpfs(Map<String, dynamic> data, {dynamic target}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(contact?.clientAddress);
+    // content
+    String contentPath = data["path"]?.toString() ?? "";
+    File? content = contentPath.isEmpty ? null : File(contentPath);
+    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) {
+      return null;
+    }
+    // target
+    String targetAddress = "";
+    String targetTopic = "";
+    int? deleteAfterSeconds;
+    int? burningUpdateAt;
+    if (target is ContactSchema) {
+      targetAddress = target.clientAddress;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
+      burningUpdateAt = target.options?.updateBurnAfterAt;
+    } else if (target is TopicSchema) {
+      targetTopic = target.topic;
+    }
+    if (targetAddress.isEmpty && targetTopic.isEmpty) {
+      return null;
+    }
+    // schema
+    MessageSchema message = MessageSchema.fromSend(
+      msgId: Uuid().v4(),
+      from: clientCommon.address ?? "",
+      contentType: MessageContentType.ipfs,
+      to: targetAddress,
+      topic: targetTopic,
+      content: content,
+      extra: data
+        ..addAll({
+          "deleteAfterSeconds": deleteAfterSeconds,
+          "burningUpdateAt": burningUpdateAt,
+          "fileExt": data["fileExt"] ?? Path.getFileExt(content, "jpg"),
+        }),
+    );
+    // insert
+    message.options = MessageOptions.setIpfsState(message.options, false);
+    MessageSchema? inserted = await _insertMessage(message);
+    if (inserted == null) return null;
+    // ipfs
+    ipfsHelper.uploadFile(inserted.msgId, content.absolute.path, onProgress: (msgId, percent) {
+      _onPieceOutSink.add({"msg_id": msgId, "percent": percent});
+    }, onSuccess: (msgId, result) async {
+      await sendIpfs(msgId, result);
+    });
+    return inserted;
+  }
+
+  Future<MessageSchema?> sendIpfs(String? msgId, Map<String, dynamic> result) async {
+    if (msgId == null || msgId.isEmpty) return null;
+    // schema
+    MessageSchema? message = await MessageStorage.instance.query(msgId);
+    if (message == null) return null;
+    message.options = MessageOptions.setIpfsResult(message.options, result["Hash"], result["Size"], result["Name"]);
+    message.options = MessageOptions.setIpfsState(message.options, true);
+    await MessageStorage.instance.updateOptions(message.msgId, message.options);
+    // data
+    String? data = await MessageData.getIpfs(message);
+    return _saveAndSend(message, data, insert: false);
+  }
+
+  Future<MessageSchema?> sendImage(File? content, {dynamic target}) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+    // target
+    String targetAddress = "";
+    String targetTopic = "";
+    int? deleteAfterSeconds;
+    int? burningUpdateAt;
+    if (target is ContactSchema) {
+      targetAddress = target.clientAddress;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
+      burningUpdateAt = target.options?.updateBurnAfterAt;
+    } else if (target is TopicSchema) {
+      targetTopic = target.topic;
+    }
+    if (targetAddress.isEmpty && targetTopic.isEmpty) {
+      return null;
+    }
+    // contentType
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress);
     String contentType = DeviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
+    // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: contentType,
-      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
-      topic: topic?.topic ?? "",
+      to: targetAddress,
+      topic: targetTopic,
       content: content,
-      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
-      burningUpdateAt: contact?.options?.updateBurnAfterAt,
-      fileExt: Path.getFileExt(content, "jpg"),
+      extra: {
+        "deleteAfterSeconds": deleteAfterSeconds,
+        "burningUpdateAt": burningUpdateAt,
+        "fileExt": Path.getFileExt(content, "jpg"),
+      },
     );
+    // data
     String? data = await MessageData.getImage(message);
-    return _sendAndDB(message, data, contact: contact, topic: topic);
+    return _saveAndSend(message, data);
   }
 
-  Future<MessageSchema?> sendAudio(File? content, double? durationS, {ContactSchema? contact, TopicSchema? topic}) async {
-    if ((contact?.clientAddress == null || contact?.clientAddress.isEmpty == true) && (topic?.topic == null || topic?.topic.isEmpty == true)) return null;
-    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+  Future<MessageSchema?> sendAudio(File? content, double? durationS, {dynamic target}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+    // target
+    String targetAddress = "";
+    String targetTopic = "";
+    int? deleteAfterSeconds;
+    int? burningUpdateAt;
+    if (target is ContactSchema) {
+      targetAddress = target.clientAddress;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
+      burningUpdateAt = target.options?.updateBurnAfterAt;
+    } else if (target is TopicSchema) {
+      targetTopic = target.topic;
+    }
+    if (targetAddress.isEmpty && targetTopic.isEmpty) {
+      return null;
+    }
+    // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.audio,
-      to: (topic?.topic.isNotEmpty == true) ? "" : (contact?.clientAddress ?? ""),
-      topic: topic?.topic ?? "",
+      to: targetAddress,
+      topic: targetTopic,
       content: content,
-      audioDurationS: durationS,
-      deleteAfterSeconds: contact?.options?.deleteAfterSeconds,
-      burningUpdateAt: contact?.options?.updateBurnAfterAt,
-      fileExt: Path.getFileExt(content, "aac"),
+      extra: {
+        "audioDurationS": durationS,
+        "deleteAfterSeconds": deleteAfterSeconds,
+        "burningUpdateAt": burningUpdateAt,
+        "fileExt": Path.getFileExt(content, "aac"),
+      },
     );
+    // data
     String? data = await MessageData.getAudio(message);
-    return _sendAndDB(message, data, contact: contact, topic: topic);
+    return _saveAndSend(message, data);
   }
 
   // NO DB NO display
@@ -311,8 +415,8 @@ class ChatOutCommon with Tag {
         _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
       }
     } else {
-      int? total = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL];
-      int? index = message.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
+      int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
+      int? index = message.options?[MessageOptions.KEY_PIECE_INDEX];
       double percent = (index ?? 0) / (total ?? 1);
       if (percent <= 1.05) {
         // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
@@ -324,25 +428,25 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicSubscribe(String? topic) async {
-    if (topic == null || topic.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (topic == null || topic.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.topicSubscribe,
       topic: topic,
     );
     String data = MessageData.getTopicSubscribe(send);
-    await _sendAndDB(send, data);
+    await _saveAndSend(send, data);
   }
 
   // NO DB NO single
   Future sendTopicUnSubscribe(String? topic) async {
-    if (topic == null || topic.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (topic == null || topic.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.topicUnsubscribe,
       topic: topic,
     );
@@ -353,26 +457,26 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
-    if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.topicInvitation,
       to: clientAddress,
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
-    return _sendAndDB(message, data);
+    return _saveAndSend(message, data);
   }
 
   // NO DB NO single
   Future sendTopicKickOut(String? topic, String? targetAddress) async {
-    if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address!,
+      from: clientCommon.address ?? "",
       contentType: MessageContentType.topicKickOut,
       topic: topic,
       content: targetAddress,
@@ -382,7 +486,7 @@ class ChatOutCommon with Tag {
     await _sendWithTopicSafe(_schema, send, data, notification: false);
   }
 
-  Future<MessageSchema?> resend(MessageSchema? message, {ContactSchema? contact, DeviceInfoSchema? deviceInfo, TopicSchema? topic}) async {
+  Future<MessageSchema?> resend(MessageSchema? message) async {
     if (message == null) return null;
     message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
     await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
@@ -396,6 +500,10 @@ class ChatOutCommon with Tag {
         case MessageContentType.textExtension:
           msgData = MessageData.getText(message);
           break;
+        case MessageContentType.ipfs:
+          // TODO:GG type_ipfs 应该直接走startIpfs?
+          msgData = await MessageData.getIpfs(message);
+          break;
         case MessageContentType.media:
         case MessageContentType.image:
           msgData = await MessageData.getImage(message);
@@ -404,7 +512,7 @@ class ChatOutCommon with Tag {
           msgData = await MessageData.getAudio(message);
           break;
       }
-      return await _sendAndDB(message, msgData, contact: contact, topic: topic, resend: true);
+      return await _saveAndSend(message, msgData, insert: false);
     });
   }
 
@@ -423,6 +531,11 @@ class ChatOutCommon with Tag {
       case MessageContentType.textExtension:
         msgData = MessageData.getText(message);
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.ipfs:
+        // TODO:GG type_ipfs 应该直接走startIpfs?
+        msgData = await MessageData.getIpfs(message);
+        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.media:
       case MessageContentType.image:
@@ -468,33 +581,28 @@ class ChatOutCommon with Tag {
     return message;
   }
 
-  Future<MessageSchema?> _sendAndDB(
-    MessageSchema? message,
-    String? msgData, {
-    ContactSchema? contact,
-    TopicSchema? topic,
-    bool resend = false,
-  }) async {
-    if (message == null || msgData == null) return null;
-    // DB
-    if (!resend) {
-      message = await MessageStorage.instance.insert(message);
-    }
+  Future<MessageSchema?> _insertMessage(MessageSchema? message, {bool notify = true}) async {
     if (message == null) return null;
-    // display
-    if (!resend) _onSavedSink.add(message); // resend just update sendTime
-    // contact
-    contact = contact ?? await chatCommon.contactHandle(message);
-    // topic
-    topic = topic ?? await chatCommon.topicHandle(message);
+    message = await MessageStorage.instance.insert(message); // DB
+    if (message == null) return null;
+    if (notify) _onSavedSink.add(message); // display, resend just update sendTime
+    return message;
+  }
+
+  Future<MessageSchema?> _saveAndSend(MessageSchema? message, String? msgData, {bool insert = true}) async {
+    if (message == null || msgData == null) return null;
+    if (insert) message = await _insertMessage(message);
+    if (message == null) return null;
     // session
     await chatCommon.sessionHandle(message);
     // SDK
     Uint8List? pid;
     if (message.isTopic) {
+      TopicSchema? topic = await chatCommon.topicHandle(message);
       pid = await _sendWithTopicSafe(topic, message, msgData, notification: message.canNotification);
       logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
+      ContactSchema? contact = await chatCommon.contactHandle(message);
       pid = await _sendWithContactSafe(contact, message, msgData, notification: message.canNotification);
       logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
     }
@@ -699,12 +807,12 @@ class ChatOutCommon with Tag {
   }
 
   Future<Uint8List?> _sendByPieces(List<String> clientAddressList, MessageSchema message, {double totalPercent = -1}) async {
-    List results = await _convert2Pieces(message);
+    Map<String, dynamic> results = await message.piecesInfo();
     if (results.isEmpty) return null;
-    String dataBytesString = results[0];
-    int bytesLength = results[1];
-    int total = results[2];
-    int parity = results[3];
+    String dataBytesString = results["data"];
+    int bytesLength = results["length"];
+    int total = results["total"];
+    int parity = results["parity"];
 
     // dataList.size = (total + parity) <= 255
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
@@ -726,11 +834,13 @@ class ChatOutCommon with Tag {
         contentType: MessageContentType.piece,
         content: base64Encode(data),
         options: options,
-        parentType: message.contentType,
-        bytesLength: bytesLength,
-        total: total,
-        parity: parity,
-        index: index,
+        extra: {
+          "piece_parent_type": message.contentType,
+          "piece_bytes_length": bytesLength,
+          "piece_total": total,
+          "piece_parity": parity,
+          "piece_index": index,
+        },
       );
       double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
       MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
@@ -742,7 +852,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(milliseconds: 1000 ~/ 100));
     }
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
-    finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
+    finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     if (finds.length >= total) {
       logger.i("$TAG - _sendByPieces:SUCCESS - count:${resultList.length} - total:$total - message:$message");
       if (finds.isNotEmpty) return finds[0].pid;
@@ -750,46 +860,6 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _sendByPieces:FAIL - count:${resultList.length} - total:$total - message:$message");
     }
     return null;
-  }
-
-  Future<List<dynamic>> _convert2Pieces(MessageSchema message) async {
-    if (!(message.content is File?)) return [];
-    File? file = message.content as File?;
-    if (file == null || !file.existsSync()) return [];
-    int length = await file.length();
-    if (length <= piecesPreMinLen) return [];
-    // data
-    Uint8List fileBytes = await file.readAsBytes();
-    String base64Data = base64.encode(fileBytes);
-    int bytesLength = base64Data.length;
-    // total (2~192)
-    int total;
-    if (bytesLength < piecesPreMinLen * piecesMinTotal) {
-      return [];
-    } else if (bytesLength <= piecesPreMinLen * piecesMaxTotal) {
-      total = bytesLength ~/ piecesPreMinLen;
-      if (bytesLength % piecesPreMinLen > 0) {
-        total += 1;
-      }
-    } else {
-      total = piecesMaxTotal;
-    }
-    // parity(1~63)
-    int parity = (total * (piecesMaxParity / (piecesMaxTotal + piecesMaxParity))).toInt();
-    if (total % (piecesMaxParity / (piecesMaxTotal + piecesMaxParity)) > 0) {
-      parity += 1;
-    }
-    if (parity > piecesMaxParity) {
-      parity = piecesMaxParity;
-    } else if (parity >= total) {
-      parity = total - 1;
-    } else if (parity < 1) {
-      parity = 1;
-    }
-
-    // (total + parity) < 256
-    logger.i("$TAG - _convert2Pieces - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    return [base64Data, bytesLength, total, parity];
   }
 
   Future _sendPush(String? deviceToken) async {
@@ -808,6 +878,7 @@ class ChatOutCommon with Tag {
     //   case MessageContentType.textExtension:
     //     content = message.content;
     //     break;
+    //   case MessageContentType.ipfs:
     //   case MessageContentType.media:
     //   case MessageContentType.image:
     //     content = '[${localizations.image}]';
