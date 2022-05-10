@@ -45,7 +45,7 @@ class Common {
     return false;
   }
 
-  static Future<bool> saveImageToGallery(Uint8List imageData, String imageName, String albumName) async {
+  static Future<bool> saveMediaToGallery(Uint8List imageData, String imageName, String albumName) async {
     try {
       await _methodChannel.invokeMethod('saveImageToGallery', {
         'imageData': imageData,
