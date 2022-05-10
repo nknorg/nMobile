@@ -514,8 +514,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "Setting a reasonable NKN can speed up the transaction process."),
         "type_a_message":
             MessageLookupByLibrary.simpleMessage("Type a message"),
-        "unavailable_device": MessageLookupByLibrary.simpleMessage(
-            "Not available for Android device without Google Service Currently"),
+        "unavailable_device":
+            MessageLookupByLibrary.simpleMessage("unsupported device"),
         "unsubscribe": MessageLookupByLibrary.simpleMessage("Leave"),
         "unsubscribed": MessageLookupByLibrary.simpleMessage("Leaved"),
         "update_burn_after_reading": MessageLookupByLibrary.simpleMessage(

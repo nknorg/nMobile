@@ -349,7 +349,7 @@
   "burn_after_reading_desc_disappear": "Messages sent and received in this conversation will disappear {time} after they have been seen.",
   "burn_after_reading_desc": "Your messages will not expire.",
   "something_went_wrong": "Oops, something went wrong! Please try again later.",
-  "unavailable_device": "Not available for Android device without Google Service Currently",
+  "unavailable_device": "unsupported device",
   "slide_to_cancel": "< Slide Cancel <",
   "invite_and_send_success": "invite and send success",
   "join_but_not_invite": "not invited",

@@ -3360,10 +3360,10 @@ class S {
     );
   }
 
-  /// `Not available for Android device without Google Service Currently`
+  /// `unsupported device`
   String get unavailable_device {
     return Intl.message(
-      'Not available for Android device without Google Service Currently',
+      'unsupported device',
       name: 'unavailable_device',
       desc: '',
       args: [],
