@@ -349,7 +349,7 @@
   "burn_after_reading_desc_disappear": "該對話接收和發送的消息將於 {time} 後消失。",
   "burn_after_reading_desc": "該對話接收和發送的消息不會消失。",
   "something_went_wrong": "啊哦~哪裏出錯了！請稍後重試。",
-  "unavailable_device": "暫不支持沒有Google服務的機型",
+  "unavailable_device": "不支持的設備",
   "slide_to_cancel": "< 左滑取消 <",
   "invite_and_send_success": "邀請發送成功",
   "join_but_not_invite": "未邀請",

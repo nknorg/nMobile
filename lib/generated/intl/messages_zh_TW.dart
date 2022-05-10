@@ -442,8 +442,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "transfer_speed_up_fee":
             MessageLookupByLibrary.simpleMessage("設置合理的NKN可以加快交易過程。"),
         "type_a_message": MessageLookupByLibrary.simpleMessage("請輸入"),
-        "unavailable_device":
-            MessageLookupByLibrary.simpleMessage("暫不支持沒有Google服務的機型"),
+        "unavailable_device": MessageLookupByLibrary.simpleMessage("不支持的設備"),
         "unsubscribe": MessageLookupByLibrary.simpleMessage("退出"),
         "unsubscribed": MessageLookupByLibrary.simpleMessage("已退出"),
         "update_burn_after_reading":
