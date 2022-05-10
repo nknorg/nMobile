@@ -16,8 +16,6 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 
-# 22/03/29
-#version: 1.2.7+255
 # 22/04/08
 #version: 1.2.8+256
 # 22/04/12
@@ -25,7 +23,9 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # 22/04/19
 #version: 1.2.10+258
 # 22/04/20
-version: 1.2.11+259
+#version: 1.2.11+259
+# 22/05/X
+version: 1.2.12+261
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -115,7 +115,7 @@ dependencies:
   photo_view: ^0.12.0
   flutter_image_compress: ^1.0.0
   image_cropper: ^1.4.1
-  wechat_assets_picker: ^7.0.5
+  wechat_assets_picker: ^7.1.1
   #  flutter_luban: ^0.1.13
   #  octo_image: ^1.0.0+1
   #  wechat_camera_picker
@@ -126,7 +126,7 @@ dependencies:
   #  just_audio: ^0.9.10
 
   # video
-  #  video_player: ^2.1.15
+  video_player: ^2.4.0
 
   # QR
   qr_code_scanner: ^0.5.2
