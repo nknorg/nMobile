@@ -8,8 +8,6 @@ import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactCommon with Tag {
-  ContactStorage _contactStorage = ContactStorage();
-
   // ignore: close_sinks
   StreamController<ContactSchema> _addController = StreamController<ContactSchema>.broadcast();
   StreamSink<ContactSchema> get _addSink => _addController.sink;
@@ -33,8 +31,8 @@ class ContactCommon with Tag {
   ContactCommon();
 
   Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false}) async {
-    List<ContactSchema> contacts = await _contactStorage.queryList(contactType: ContactType.me, limit: 1);
-    ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await _contactStorage.queryByClientAddress(clientAddress ?? clientCommon.address);
+    List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
+    ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await ContactStorage.instance.queryByClientAddress(clientAddress ?? clientCommon.address);
     if (contact == null && canAdd) {
       contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
     }
@@ -58,50 +56,50 @@ class ContactCommon with Tag {
         return null;
       }
     }
-    ContactSchema? added = await _contactStorage.insert(schema);
+    ContactSchema? added = await ContactStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
   }
 
   Future<bool> delete(int? contactId, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
-    // bool success = await _contactStorage.delete(contactId);
+    // bool success = await ContactStorage.instance.delete(contactId);
     // if (success) _deleteSink.add(contactId);
     // return success;
-    bool success = await _contactStorage.setType(contactId, ContactType.none);
+    bool success = await ContactStorage.instance.setType(contactId, ContactType.none);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
   Future<ContactSchema?> query(int? contactId) async {
     if (contactId == null || contactId == 0) return null;
-    return await _contactStorage.query(contactId);
+    return await ContactStorage.instance.query(contactId);
   }
 
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await _contactStorage.queryByClientAddress(clientAddress);
+    return await ContactStorage.instance.queryByClientAddress(clientAddress);
   }
 
   Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    return await _contactStorage.queryListByClientAddress(clientAddressList);
+    return await ContactStorage.instance.queryListByClientAddress(clientAddressList);
   }
 
   Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int offset = 0, int limit = 20}) {
-    return _contactStorage.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
+    return ContactStorage.instance.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<bool> setType(int? contactId, int? contactType, {bool notify = false}) async {
     if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
-    bool success = await _contactStorage.setType(contactId, contactType);
+    bool success = await ContactStorage.instance.setType(contactId, contactType);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
   Future<bool> setSelfAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setProfile(
+    bool success = await ContactStorage.instance.setProfile(
       old.id,
       {
         'avatar': avatarLocalPath,
@@ -117,7 +115,7 @@ class ContactCommon with Tag {
 
   Future<bool> setSelfName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setProfile(
+    bool success = await ContactStorage.instance.setProfile(
       old.id,
       {
         'avatar': Path.convert2Local(old.avatar?.path),
@@ -133,7 +131,7 @@ class ContactCommon with Tag {
 
   Future<bool> setOtherProfile(ContactSchema? old, String? firstName, String? lastName, String? avatarLocalPath, String? profileVersion, {bool notify = false}) async {
     if (old == null || old.id == 0) return false; //  || name == null || name.isEmpty || avatarLocalPath == null || avatarLocalPath.isEmpty
-    bool success = await _contactStorage.setProfile(
+    bool success = await ContactStorage.instance.setProfile(
       old.id,
       {
         'avatar': avatarLocalPath,
@@ -149,7 +147,7 @@ class ContactCommon with Tag {
 
   Future<bool> setProfileOnly(ContactSchema? old, String? profileVersion, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setProfileOnly(
+    bool success = await ContactStorage.instance.setProfileOnly(
       old.id,
       profileVersion ?? Uuid().v4(),
       DateTime.now().millisecondsSinceEpoch,
@@ -160,35 +158,35 @@ class ContactCommon with Tag {
 
   Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    bool success = await _contactStorage.setTop(clientAddress, top);
+    bool success = await ContactStorage.instance.setTop(clientAddress, top);
     if (success && notify) queryAndNotifyByClientAddress(clientAddress);
     return success;
   }
 
   Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
-    bool success = await _contactStorage.setDeviceToken(contactId, deviceToken);
+    bool success = await ContactStorage.instance.setDeviceToken(contactId, deviceToken);
     if (success && notify) queryAndNotify(contactId);
     return success;
   }
 
   Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setNotificationOpen(schema.id, open, old: schema.options);
+    bool success = await ContactStorage.instance.setNotificationOpen(schema.id, open, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
   Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateAt, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setBurning(schema.id, burningSeconds, updateAt, old: schema.options);
+    bool success = await ContactStorage.instance.setBurning(schema.id, burningSeconds, updateAt, old: schema.options);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
   Future<bool> setRemarkAvatar(ContactSchema? old, String avatarLocalPath, {bool notify = false}) async {
     if (old == null || old.id == 0) return Future.value(false);
-    bool success = await _contactStorage.setRemarkProfile(
+    bool success = await ContactStorage.instance.setRemarkProfile(
       old.id,
       {
         'firstName': old.data?['firstName'],
@@ -202,7 +200,7 @@ class ContactCommon with Tag {
 
   Future<bool> setRemarkName(ContactSchema? old, String firstName, String lastName, {bool notify = false}) async {
     if (old == null || old.id == 0) return false;
-    bool success = await _contactStorage.setRemarkProfile(
+    bool success = await ContactStorage.instance.setRemarkProfile(
       old.id,
       {
         'firstName': firstName,
@@ -216,14 +214,14 @@ class ContactCommon with Tag {
 
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await _contactStorage.setNotes(schema.id, notes, oldExtraInfo: schema.data);
+    bool success = await ContactStorage.instance.setNotes(schema.id, notes, oldExtraInfo: schema.data);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
   Future queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
-    ContactSchema? updated = await _contactStorage.query(contactId);
+    ContactSchema? updated = await ContactStorage.instance.query(contactId);
     if (updated != null) {
       _updateSink.add(updated);
       if (updated.type == ContactType.me) {

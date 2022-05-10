@@ -12,6 +12,8 @@ class SubscriberStorage with Tag {
   // static String get tableName => 'subscriber';
   static String get tableName => 'Subscriber_3'; // v5
 
+  static SubscriberStorage instance = SubscriberStorage();
+
   Database? get db => dbCommon.database;
 
   Lock _lock = new Lock();

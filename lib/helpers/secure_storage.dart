@@ -7,6 +7,8 @@ class SecureStorage {
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   static const String LENGTH_SUFFIX = 'length';
 
+  static SecureStorage instance = SecureStorage();
+
   set(String key, val) async {
     if (val is String) {
       await _storage.write(key: key, value: val);

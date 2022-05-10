@@ -11,8 +11,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 
 class SubscriberCommon with Tag {
-  SubscriberStorage _subscriberStorage = SubscriberStorage();
-
   // ignore: close_sinks
   StreamController<SubscriberSchema> _addController = StreamController<SubscriberSchema>.broadcast();
   StreamSink<SubscriberSchema> get _addSink => _addController.sink;
@@ -478,51 +476,51 @@ class SubscriberCommon with Tag {
         return null;
       }
     }
-    SubscriberSchema? added = await _subscriberStorage.insert(schema);
+    SubscriberSchema? added = await SubscriberStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
   }
 
   /*Future<bool> delete(int? subscriberId, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await _subscriberStorage.delete(subscriberId);
+    bool success = await SubscriberStorage.instance.delete(subscriberId);
     if (success && notify) _deleteSink.add(subscriberId);
     return success;
   }*/
 
   /*Future<int> deleteByTopic(String? topic) async {
     if (topic == null || topic.isEmpty) return 0;
-    int count = await _subscriberStorage.deleteByTopic(topic);
+    int count = await SubscriberStorage.instance.deleteByTopic(topic);
     return count;
   }*/
 
   Future<SubscriberSchema?> query(int? subscriberId) {
-    return _subscriberStorage.query(subscriberId);
+    return SubscriberStorage.instance.query(subscriberId);
   }
 
   Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
     if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    return await _subscriberStorage.queryByTopicChatId(topic, chatId);
+    return await SubscriberStorage.instance.queryByTopicChatId(topic, chatId);
   }
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int offset = 0, int limit = 20}) {
-    return _subscriberStorage.queryListByTopic(topic, status: status, orderBy: orderBy, offset: offset, limit: limit);
+    return SubscriberStorage.instance.queryListByTopic(topic, status: status, orderBy: orderBy, offset: offset, limit: limit);
   }
 
   Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage, int limit) {
-    return _subscriberStorage.queryListByTopicPerm(topic, permPage, limit);
+    return SubscriberStorage.instance.queryListByTopicPerm(topic, permPage, limit);
   }
 
   Future<int> queryCountByTopic(String? topic, {int? status}) {
-    return _subscriberStorage.queryCountByTopic(topic, status: status);
+    return SubscriberStorage.instance.queryCountByTopic(topic, status: status);
   }
 
   Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) {
-    return _subscriberStorage.queryCountByTopicPermPage(topic, permPage, status: status);
+    return SubscriberStorage.instance.queryCountByTopicPermPage(topic, permPage, status: status);
   }
 
   Future<int> queryMaxPermPageByTopic(String? topic) async {
-    int maxPermPage = await _subscriberStorage.queryMaxPermPageByTopic(topic);
+    int maxPermPage = await SubscriberStorage.instance.queryMaxPermPageByTopic(topic);
     maxPermPage = maxPermPage < 0 ? 0 : maxPermPage;
     int maxPageCount = await queryCountByTopicPermPage(topic, maxPermPage);
     if (maxPageCount >= SubscriberSchema.PermPageSize) {
@@ -533,7 +531,7 @@ class SubscriberCommon with Tag {
 
   Future<bool> setStatus(int? subscriberId, int? status, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await _subscriberStorage.setStatus(subscriberId, status);
+    bool success = await SubscriberStorage.instance.setStatus(subscriberId, status);
     if (success && notify) queryAndNotify(subscriberId);
     return success;
   }
@@ -541,14 +539,14 @@ class SubscriberCommon with Tag {
   Future<bool> setPermPage(int? subscriberId, int? permPage, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
     if (permPage != null && permPage < 0) return false;
-    bool success = await _subscriberStorage.setPermPage(subscriberId, permPage);
+    bool success = await SubscriberStorage.instance.setPermPage(subscriberId, permPage);
     if (success && notify) queryAndNotify(subscriberId);
     return success;
   }
 
   Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await _subscriberStorage.setData(subscriberId, newData);
+    bool success = await SubscriberStorage.instance.setData(subscriberId, newData);
     if (success && notify) queryAndNotify(subscriberId);
     return success;
   }

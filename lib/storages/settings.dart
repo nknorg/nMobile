@@ -21,24 +21,22 @@ class SettingsStorage {
   static const String DEFAULT_FEE = "default_fee";
   static const String DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE = "default_topic_resubscribe_speed_enable";
 
-  static final LocalStorage _localStorage = LocalStorage();
-
   static Future getSettings(String key) async {
-    return await _localStorage.get('$SETTINGS_KEY:$key');
+    return await LocalStorage.instance.get('$SETTINGS_KEY:$key');
   }
 
   static Future setSettings(String key, val) async {
-    return await _localStorage.set('$SETTINGS_KEY:$key', val);
+    return await LocalStorage.instance.set('$SETTINGS_KEY:$key', val);
   }
 
   static Future<bool> isNeedTipNotificationOpen(String prefix, String? targetId) async {
     if (targetId == null || targetId.isEmpty) return false;
-    var result = await _localStorage.get('$CHAT_TIP_NOTIFICATION:$prefix:$targetId');
+    var result = await LocalStorage.instance.get('$CHAT_TIP_NOTIFICATION:$prefix:$targetId');
     return result?.toString() != "1";
   }
 
   static Future setNeedTipNotificationOpen(String prefix, String? targetId) async {
     if (targetId == null || targetId.isEmpty) return;
-    await _localStorage.set('$CHAT_TIP_NOTIFICATION:$prefix:$targetId', "1");
+    await LocalStorage.instance.set('$CHAT_TIP_NOTIFICATION:$prefix:$targetId', "1");
   }
 }

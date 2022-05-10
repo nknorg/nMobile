@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocalStorage {
   static const String LENGTH_SUFFIX = 'length';
 
+  static LocalStorage instance = LocalStorage();
+
   set(String key, val) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (val == null) {
