@@ -19,8 +19,9 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
     List<String> savePaths, {
-    bool compressImage = true,
-    bool compressVideo = true,
+    bool compressImage = false,
+    bool compressVideo = false,
+    int? maxSize,
   }) async {
     // maxNum
     int maxNum = savePaths.length;
@@ -82,9 +83,16 @@ class MediaPicker {
       } catch (e) {
         handleError(e);
       }
-      // save
+      // size
+      int size = file.lengthSync();
+      if (maxSize != null && maxSize > 0) {
+        if (size >= maxSize) {
+          Toast.show(Global.locale((s) => s.file_too_big));
+          continue;
+        }
+      }
       String savePath;
-      int size;
+      // save
       if (savePaths.length > i) {
         savePath = Path.joinFileExt(File(savePaths[i]).path, ext);
         File saveFile = File(savePath);
@@ -92,10 +100,8 @@ class MediaPicker {
           await saveFile.create(recursive: true);
         }
         saveFile = await file.copy(savePath);
-        size = saveFile.lengthSync();
       } else {
         savePath = file.absolute.path;
-        size = file.lengthSync();
       }
       // map
       if (savePath.isNotEmpty) {

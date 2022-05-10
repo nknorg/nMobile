@@ -3,22 +3,25 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:mime_type/mime_type.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/path.dart';
 
 class FileHelper {
-  static Future<String?> convertFileToBase64(String type, File? file) async {
+  static Future<String?> convertFileToBase64(File? file, {String? type}) async {
     if (file == null) return null;
     if (!file.existsSync()) return null;
     String base64Data = base64Encode(file.readAsBytesSync());
-    return '![$type](data:${mime(file.path)};base64,$base64Data)';
+    if (type?.isNotEmpty == true) {
+      return '![$type](data:${mime(file.path)};base64,$base64Data)';
+    } else {
+      return base64Data;
+    }
   }
 
-  static Future<File?> convertBase64toFile(String? base64Data, String dirType, String? extension, {String? subPath}) async {
+  static Future<File?> convertBase64toFile(String? base64Data, Function(String?) getSavePath) async {
     if (base64Data == null || base64Data.isEmpty) return null;
 
+    String? extension;
     RegExpMatch? match = RegExp(r'\(data:(.*);base64,(.*)\)').firstMatch(base64Data);
     String? mimeType = match?.group(1) ?? "";
     String? base64Real = match?.group(2);
@@ -41,7 +44,7 @@ class FileHelper {
       return null;
     }
 
-    String filePath = await Path.getRandomFile(clientCommon.getPublicKey(), dirType, subPath: subPath, fileExt: extension);
+    String filePath = await getSavePath(extension);
     File file = File(filePath);
     if (!await file.exists()) {
       await file.create(recursive: true);

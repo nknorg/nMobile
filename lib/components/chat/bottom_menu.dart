@@ -30,8 +30,8 @@ class ChatBottomMenu extends StatelessWidget {
     if (source == ImageSource.camera) {
       String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'jpg');
       File? result = await MediaPicker.takeCommon(
-        bestSize: MessageSchema.imgBestSize,
-        maxSize: MessageSchema.imgMaxSize,
+        // bestSize: MessageSchema.imgBestSize,
+        maxSize: MessageSchema.ipfsMaxSize,
         returnPath: returnPath,
       );
       if (result == null) return;
@@ -49,6 +49,7 @@ class ChatBottomMenu extends StatelessWidget {
         returnPaths,
         compressImage: false,
         compressVideo: false,
+        maxSize: MessageSchema.ipfsMaxSize,
       );
       if (results.isEmpty) return;
       onPicked?.call(results);
