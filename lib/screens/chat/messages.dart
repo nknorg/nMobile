@@ -568,7 +568,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             this.setState(() {
                               _messages = messages;
                             });
-                            await chatOutCommon.resend(find, topic: _topic, contact: _contact);
+                            await chatOutCommon.resend(find);
                           },
                         );
                       },
@@ -607,7 +607,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  return await chatOutCommon.sendText(content, topic: _topic, contact: _contact);
+                  return await chatOutCommon.sendText(content, target: _topic ?? _contact);
                 },
                 onInputFocus: (bool focus) {
                   if (focus && _showBottomMenu) {
@@ -657,7 +657,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     //   await audioHelper.recordStop();
                     //   return null;
                     // }
-                    return await chatOutCommon.sendAudio(content, durationMs / 1000, topic: _topic, contact: _contact);
+                    return await chatOutCommon.sendAudio(content, durationMs / 1000, target: _topic ?? _contact);
                   }
                 },
                 onRecordLock: (bool visible, bool lock) {
@@ -685,7 +685,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           if (path.isEmpty) continue;
                           if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.imgMaxSize)) {
                             // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType
-                            await chatOutCommon.sendImage(File(path), topic: _topic, contact: _contact);
+                            await chatOutCommon.sendImage(File(path), target: _topic ?? _contact);
                           } else {
                             await chatOutCommon.startIpfs(result, target: _topic ?? _contact);
                           }
