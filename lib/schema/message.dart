@@ -628,6 +628,10 @@ class MessageOptions {
   static const int fileTypeVideo = 3;
 
   static const KEY_IPFS_STATE = "ipfs_state";
+  static const int ipfsStateNo = 0;
+  static const int ipfsStateIng = 1;
+  static const int ipfsStateYes = 2;
+
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
@@ -773,17 +777,17 @@ class MessageOptions {
     return double.tryParse(duration) ?? 0;
   }
 
-  static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, bool complete) {
+  static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, int state) {
     if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_IPFS_STATE] = complete ? 1 : 0;
+    options[MessageOptions.KEY_IPFS_STATE] = state;
     return options;
   }
 
-  static bool? getIpfsState(Map<String, dynamic>? options) {
+  static int? getIpfsState(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     var complete = options[MessageOptions.KEY_IPFS_STATE]?.toString();
     if (complete == null || complete.isEmpty) return null;
-    return ((int.tryParse(complete) ?? 0) == 0) ? false : true;
+    return int.tryParse(complete) ?? ipfsStateNo;
   }
 
   static Map<String, dynamic> setIpfsResult(Map<String, dynamic>? options, String? hash, String? size, String? name) {
@@ -917,7 +921,7 @@ class MessageData {
       // TODO:GG avatar pieces
       String base64 = base64Encode(await avatar.readAsBytes());
       if (base64.isNotEmpty == true) {
-        content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, "jpg")};
+        content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, "png")};
       }
     }
     data['content'] = content;

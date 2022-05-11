@@ -20,11 +20,6 @@ import 'package:nmobile/utils/path.dart';
 
 class ChatInCommon with Tag {
   // ignore: close_sinks
-  // StreamController<MessageSchema> _onReceiveController = StreamController<MessageSchema>(); //.broadcast();
-  // StreamSink<MessageSchema> get _onReceiveSink => _onReceiveController.sink;
-  // Stream<MessageSchema> get _onReceiveStream => _onReceiveController.stream.distinct((prev, next) => prev.pid == next.pid);
-
-  // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
@@ -493,8 +488,8 @@ class ChatInCommon with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
-              if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
+              String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "png";
+              if (fileExt == null || fileExt.isEmpty) fileExt = "png";
               avatar = await FileHelper.convertBase64toFile(avatarData, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: received.targetId, fileExt: ext ?? fileExt));
             }
           }
@@ -619,7 +614,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // state
-    received.options = MessageOptions.setIpfsState(received.options, false);
+    received.options = MessageOptions.setIpfsState(received.options, MessageOptions.ipfsStateNo);
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
@@ -640,8 +635,8 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    String fileExt = MessageOptions.getFileExt(received.options) ?? "jpg";
-    if (fileExt.isEmpty) fileExt = "jpg";
+    String fileExt = MessageOptions.getFileExt(received.options) ?? "png";
+    if (fileExt.isEmpty) fileExt = "png";
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");

@@ -161,7 +161,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                 return;
               }
               // file
-              String path = await Path.createRandomFile(null, DirType.download, fileExt: "jpg");
+              String path = await Path.createRandomFile(null, DirType.download, fileExt: "png");
               File qrFile = File(path);
               qrFile = await qrFile.writeAsBytes(imgBytes);
               Loading.dismiss();

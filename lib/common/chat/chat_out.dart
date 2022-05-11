@@ -28,11 +28,6 @@ class ChatOutCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
-  // ignore: close_sinks
-  StreamController<Map<String, dynamic>> _onPieceOutController = StreamController<Map<String, dynamic>>.broadcast();
-  StreamSink<Map<String, dynamic>> get _onPieceOutSink => _onPieceOutController.sink;
-  Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
-
   // lock
   Lock sendLock = Lock(); // TODO:GG change to queue
   Lock resendLock = Lock(); // TODO:GG change to queue
@@ -221,7 +216,7 @@ class ChatOutCommon with Tag {
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
-  Future<MessageSchema?> sendText(String? content, {dynamic target}) async {
+  Future<MessageSchema?> sendText(dynamic target, String? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
     // target
@@ -257,7 +252,7 @@ class ChatOutCommon with Tag {
     return _saveAndSend(message, data);
   }
 
-  Future<MessageSchema?> startIpfs(Map<String, dynamic> data, {dynamic target}) async {
+  Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     // content
     String contentPath = data["path"]?.toString() ?? "";
@@ -292,19 +287,15 @@ class ChatOutCommon with Tag {
         ..addAll({
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
-          "fileExt": data["fileExt"] ?? Path.getFileExt(content, "jpg"),
+          "fileExt": data["fileExt"] ?? Path.getFileExt(content, "png"),
         }),
     );
     // insert
-    message.options = MessageOptions.setIpfsState(message.options, false);
+    message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
     MessageSchema? inserted = await _insertMessage(message);
     if (inserted == null) return null;
     // ipfs
-    ipfsHelper.uploadFile(inserted.msgId, content.absolute.path, onProgress: (msgId, percent) {
-      _onPieceOutSink.add({"msg_id": msgId, "percent": percent});
-    }, onSuccess: (msgId, result) async {
-      await sendIpfs(msgId, result);
-    });
+    chatCommon.startIpfsUpload(inserted.msgId); // await
     return inserted;
   }
 
@@ -314,14 +305,14 @@ class ChatOutCommon with Tag {
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
     message.options = MessageOptions.setIpfsResult(message.options, result["Hash"], result["Size"], result["Name"]);
-    message.options = MessageOptions.setIpfsState(message.options, true);
+    message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     // data
     String? data = await MessageData.getIpfs(message);
     return _saveAndSend(message, data, insert: false);
   }
 
-  Future<MessageSchema?> sendImage(File? content, {dynamic target}) async {
+  Future<MessageSchema?> sendImage(dynamic target, File? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
@@ -353,7 +344,7 @@ class ChatOutCommon with Tag {
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "fileExt": Path.getFileExt(content, "jpg"),
+        "fileExt": Path.getFileExt(content, "png"),
       },
     );
     // data
@@ -361,7 +352,7 @@ class ChatOutCommon with Tag {
     return _saveAndSend(message, data);
   }
 
-  Future<MessageSchema?> sendAudio(File? content, double? durationS, {dynamic target}) async {
+  Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
@@ -412,7 +403,7 @@ class ChatOutCommon with Tag {
     if (percent > 0 && percent <= 1) {
       if (percent <= 1.05) {
         // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+        chatCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       }
     } else {
       int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
@@ -420,7 +411,7 @@ class ChatOutCommon with Tag {
       double percent = (index ?? 0) / (total ?? 1);
       if (percent <= 1.05) {
         // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        _onPieceOutSink.add({"msg_id": message.msgId, "percent": percent});
+        chatCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       }
     }
     return message;

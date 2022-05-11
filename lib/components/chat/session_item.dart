@@ -330,7 +330,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         child: Row(
           children: <Widget>[
             Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
-            Icon(CupertinoIcons.video_camera, size: 16, color: application.theme.fontColor2),
+            Icon(CupertinoIcons.video_camera, size: 18, color: application.theme.fontColor2),
           ],
         ),
       );
