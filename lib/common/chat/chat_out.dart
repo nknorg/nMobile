@@ -807,7 +807,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<Uint8List?> _sendByPieces(List<String> clientAddressList, MessageSchema message, {double totalPercent = -1}) async {
-    Map<String, dynamic> results = await message.piecesInfo();
+    Map<String, dynamic> results = await MessageSchema.piecesSplits(message);
     if (results.isEmpty) return null;
     String dataBytesString = results["data"];
     int bytesLength = results["length"];

@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
@@ -270,52 +271,6 @@ class MessageSchema {
     return schema;
   }
 
-  static MessageSchema? combinePiecesMsg(List<MessageSchema> sortPieces, String base64String) {
-    List<MessageSchema> finds = sortPieces.where((element) => element.pid != null).toList();
-    if (finds.isEmpty) return null;
-    MessageSchema piece = finds[0];
-
-    MessageSchema schema = MessageSchema(
-      pid: piece.pid,
-      msgId: piece.msgId,
-      from: piece.from,
-      to: piece.to,
-      topic: piece.topic,
-      // status
-      status: MessageStatus.Received,
-      isOutbound: false,
-      isDelete: false,
-      // at
-      sendAt: piece.sendAt,
-      receiveAt: null, // set in ack(isTopic) / read(contact)
-      deleteAt: null, // set in messages bubble
-      // data
-      contentType: piece.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
-      content: base64String,
-      // options: piece.options,
-    );
-
-    // options
-    schema.options = piece.options;
-    if (schema.options == null) {
-      schema.options = Map();
-    }
-
-    // getAt
-    schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
-
-    // diff with no pieces image
-    schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
-
-    // pieces
-    schema.options?.remove(MessageOptions.KEY_PIECE_PARENT_TYPE);
-    schema.options?.remove(MessageOptions.KEY_PIECE_BYTES_LENGTH);
-    schema.options?.remove(MessageOptions.KEY_PIECE_TOTAL);
-    schema.options?.remove(MessageOptions.KEY_PIECE_PARITY);
-    schema.options?.remove(MessageOptions.KEY_PIECE_INDEX);
-    return schema;
-  }
-
   /// to send
   MessageSchema.fromSend({
     // this.pid, // SDK create
@@ -525,9 +480,9 @@ class MessageSchema {
     return schema;
   }
 
-  Future<Map<String, dynamic>> piecesInfo() async {
-    if (!(this.content is File?)) return {};
-    File? file = this.content as File?;
+  static Future<Map<String, dynamic>> piecesSplits(MessageSchema msg) async {
+    if (!(msg.content is File?)) return {};
+    File? file = msg.content as File?;
     if (file == null || !file.existsSync()) return {};
     int length = await file.length();
     if (length <= piecesPreMinLen) return {};
@@ -567,6 +522,79 @@ class MessageSchema {
       "total": total,
       "parity": parity,
     };
+  }
+
+  static Future<String?> piecesCombine(List<MessageSchema> pieces, int total, int parity, int bytesLength) async {
+    List<Uint8List> recoverList = <Uint8List>[];
+    for (int i = 0; i < (total + parity); i++) {
+      recoverList.add(Uint8List(0)); // fill
+    }
+    int recoverCount = 0;
+    for (int i = 0; i < pieces.length; i++) {
+      MessageSchema item = pieces[i];
+      File? file = item.content as File?;
+      if (file == null || !file.existsSync()) {
+        // logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+        continue;
+      }
+      Uint8List itemBytes = file.readAsBytesSync();
+      int? pieceIndex = item.options?[MessageOptions.KEY_PIECE_INDEX];
+      if (itemBytes.isNotEmpty && (pieceIndex != null) && (pieceIndex >= 0) && (pieceIndex < recoverList.length)) {
+        recoverList[pieceIndex] = itemBytes;
+        recoverCount++;
+      }
+    }
+    if (recoverCount < total) {
+      // logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
+      return null;
+    }
+    return Common.combinePieces(recoverList, total, parity, bytesLength);
+  }
+
+  static MessageSchema? combinePiecesMsg(List<MessageSchema> sortPieces, String base64String) {
+    List<MessageSchema> finds = sortPieces.where((element) => element.pid != null).toList();
+    if (finds.isEmpty) return null;
+    MessageSchema piece = finds[0];
+
+    MessageSchema schema = MessageSchema(
+      pid: piece.pid,
+      msgId: piece.msgId,
+      from: piece.from,
+      to: piece.to,
+      topic: piece.topic,
+      // status
+      status: MessageStatus.Received,
+      isOutbound: false,
+      isDelete: false,
+      // at
+      sendAt: piece.sendAt,
+      receiveAt: null, // set in ack(isTopic) / read(contact)
+      deleteAt: null, // set in messages bubble
+      // data
+      contentType: piece.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
+      content: base64String,
+      // options: piece.options,
+    );
+
+    // options
+    schema.options = piece.options;
+    if (schema.options == null) {
+      schema.options = Map();
+    }
+
+    // getAt
+    schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
+
+    // diff with no pieces image
+    schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
+
+    // pieces
+    schema.options?.remove(MessageOptions.KEY_PIECE_PARENT_TYPE);
+    schema.options?.remove(MessageOptions.KEY_PIECE_BYTES_LENGTH);
+    schema.options?.remove(MessageOptions.KEY_PIECE_TOTAL);
+    schema.options?.remove(MessageOptions.KEY_PIECE_PARITY);
+    schema.options?.remove(MessageOptions.KEY_PIECE_INDEX);
+    return schema;
   }
 
   @override
