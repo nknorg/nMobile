@@ -44,6 +44,7 @@ class ChatCommon with Tag {
     checkSendingWithFail(force: true); // await
   }
 
+  // TODO:GG maybe can better?
   void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
     if (targetId == null || targetId.isEmpty) return;
 
@@ -82,7 +83,7 @@ class ChatCommon with Tag {
     Lock? _lock = checkLockMap[key];
     if (_lock == null) {
       logger.i("$TAG - _checkMsgStatusWithLock - lock create - targetId:$targetId");
-      _lock = Lock();
+      _lock = Lock(); // TODO:GG change to queue
       checkLockMap[key] = _lock;
     }
     return await _lock.synchronized(() => _checkMsgStatus(targetId, isTopic, forceResend: forceResend, filterSec: filterSec));
@@ -118,7 +119,7 @@ class ChatCommon with Tag {
 
     // filter
     checkList = checkList.where((element) {
-      int msgSendAt = MessageOptions.getOutAt(element) ?? 0;
+      int msgSendAt = MessageOptions.getOutAt(element.options) ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       int filter = element.isContentFile ? (filterSec + 5) : filterSec;
       if (between < (filter * 1000)) {
@@ -192,9 +193,8 @@ class ChatCommon with Tag {
       if (!message.isTopic) {
         int? existSeconds = exist.options?.deleteAfterSeconds;
         int? existUpdateAt = exist.options?.updateBurnAfterAt;
-        List<int?> burningOptions = MessageOptions.getContactBurning(message);
-        int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
-        int? updateBurnAfterAt = burningOptions.length >= 2 ? burningOptions[1] : null;
+        int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
+        int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
         if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
           // no same with self
           if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
@@ -339,7 +339,7 @@ class ChatCommon with Tag {
     // update
     var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
     exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
-    int newLastMessageAt = message.sendAt ?? MessageOptions.getInAt(message) ?? DateTime.now().millisecondsSinceEpoch;
+    int newLastMessageAt = message.sendAt ?? MessageOptions.getInAt(message.options) ?? DateTime.now().millisecondsSinceEpoch;
     if ((exist.lastMessageAt == null) || (exist.lastMessageAt! <= newLastMessageAt)) {
       exist.lastMessageAt = newLastMessageAt;
       exist.lastMessageOptions = message.toMap();
@@ -353,8 +353,7 @@ class ChatCommon with Tag {
   MessageSchema burningHandle(MessageSchema message) {
     if (message.isTopic) return message;
     if (!message.canBurning) return message;
-    List<int?> burningOptions = MessageOptions.getContactBurning(message);
-    int? burnAfterSeconds = (burningOptions.length >= 1) ? burningOptions[0] : null;
+    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
     if ((burnAfterSeconds != null) && (burnAfterSeconds > 0)) {
       // set delete time
       logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
@@ -366,11 +365,11 @@ class ChatCommon with Tag {
     return message;
   }
 
+  // TODO:GG change to global
   MessageSchema burningStart(MessageSchema message, Function? tick) {
     if (message.isTopic) return message;
     if (!message.canBurning || message.isDelete) return message;
-    List<int?> burningOptions = MessageOptions.getContactBurning(message);
-    int? burnAfterSeconds = burningOptions.length >= 1 ? burningOptions[0] : null;
+    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
     if ((message.deleteAt == null) && (burnAfterSeconds != null) && (burnAfterSeconds > 0) && ((message.status != MessageStatus.Sending) && (message.status != MessageStatus.SendFail))) {
       message = chatCommon.burningHandle(message);
     }
@@ -455,7 +454,7 @@ class ChatCommon with Tag {
     message.status = status;
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (status == MessageStatus.SendSuccess) {
-      message = MessageOptions.setOutAt(message, DateTime.now().millisecondsSinceEpoch);
+      message.options = MessageOptions.setOutAt(message.options, DateTime.now().millisecondsSinceEpoch);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
     }
     if (success && notify) _onUpdateSink.add(message);
