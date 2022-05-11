@@ -63,11 +63,33 @@ class MediaPicker {
         logger.w("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
-      // ext
+      // type
+      String mimetype = entity.mimeType ?? "";
+      if (mimetype.isEmpty) {
+        if (entity.typeInt == AssetType.image.index) {
+          mimetype = "image";
+        } else if (entity.typeInt == AssetType.audio.index) {
+          mimetype = "audio";
+        } else if (entity.typeInt == AssetType.video.index) {
+          mimetype = "video";
+        }
+      }
       String ext = "";
       List<String>? splits = entity.mimeType?.split("/");
       if (splits != null && splits.length > 1) {
         ext = splits[splits.length - 1];
+      }
+      if (ext.isEmpty) {
+        ext = Path.getFileExt(file, "");
+      }
+      if (ext.isEmpty) {
+        if (entity.typeInt == AssetType.image.index) {
+          ext = "png";
+        } else if (entity.typeInt == AssetType.audio.index) {
+          ext = "aac";
+        } else if (entity.typeInt == AssetType.video.index) {
+          ext = "mp4";
+        }
       }
       // compress
       bool isImage = entity.type == AssetType.image;
