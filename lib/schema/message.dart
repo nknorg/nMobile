@@ -323,16 +323,16 @@ class MessageSchema {
     }
     int? fileType = int.tryParse(extra?["content_type"]?.toString() ?? "");
     if (fileType != null && fileType >= 0) {
-      this.options = MessageOptions.setContentType(this.options, fileType);
+      this.options = MessageOptions.setFileType(this.options, fileType);
     } else if (((size ?? 0) > 0) || (fileExt?.isNotEmpty == true) || (fileMimeType?.isNotEmpty == true)) {
       if ((fileMimeType?.contains("image") == true) || (fileExt?.contains("jpg") == true) || (fileExt?.contains("png") == true)) {
-        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeImage);
+        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeImage);
       } else if ((fileMimeType?.contains("audio") == true) || (fileMimeType?.contains("aac") == true) || (fileExt?.contains("aac") == true)) {
-        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeAudio);
+        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeAudio);
       } else if ((fileMimeType?.contains("video") == true) || (fileMimeType?.contains("mp4") == true) || (fileMimeType?.contains("MOV") == true) || (fileExt?.contains("mp4") == true) || (fileExt?.contains("MOV") == true) || (fileExt?.contains("mov") == true)) {
-        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeVideo);
+        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeVideo);
       } else {
-        this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeFile);
+        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeNormal);
       }
     }
     int? mediaWidth = int.tryParse(extra?["width"]?.toString() ?? "");
@@ -620,13 +620,12 @@ class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration";
   static const KEY_MEDIA_DURATION = "media_duration"; // TODO:GG replace 'audioDuration'
 
-  static const KEY_CONTENT_TYPE = "content_type";
+  static const KEY_FILE_TYPE = "file_type";
 
-  static const int contentTypeText = 0;
-  static const int contentTypeImage = 1;
-  static const int contentTypeAudio = 2;
-  static const int contentTypeVideo = 3;
-  static const int contentTypeFile = 4;
+  static const int fileTypeNormal = 0;
+  static const int fileTypeImage = 1;
+  static const int fileTypeAudio = 2;
+  static const int fileTypeVideo = 3;
 
   static const KEY_IPFS_STATE = "ipfs_state";
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
@@ -698,15 +697,15 @@ class MessageOptions {
     return (update == null || update.isEmpty) ? null : int.tryParse(update);
   }
 
-  static Map<String, dynamic> setContentType(Map<String, dynamic>? options, int type) {
+  static Map<String, dynamic> setFileType(Map<String, dynamic>? options, int type) {
     if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_CONTENT_TYPE] = type;
+    options[MessageOptions.KEY_FILE_TYPE] = type;
     return options;
   }
 
-  static int? getContentType(Map<String, dynamic>? options) {
+  static int? getFileType(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    var type = options[MessageOptions.KEY_CONTENT_TYPE]?.toString();
+    var type = options[MessageOptions.KEY_FILE_TYPE]?.toString();
     if (type == null || type.isEmpty) return null;
     return int.tryParse(type) ?? -1;
   }
