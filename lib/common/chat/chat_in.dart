@@ -3,13 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/common/chat/chat_out.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
-import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -31,6 +29,7 @@ class ChatInCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
+  // TODO:GG change to really queue
   // receive queue
   Uint8List? receivePid;
   Map<String, bool> receiveLoops = Map();
@@ -224,6 +223,9 @@ class ChatInCommon with Tag {
       case MessageContentType.text:
       case MessageContentType.textExtension:
         insertOk = await _receiveText(received);
+        break;
+      case MessageContentType.ipfs:
+        insertOk = await _receiveIpfs(received);
         break;
       case MessageContentType.media:
       case MessageContentType.image:
@@ -493,7 +495,7 @@ class ChatInCommon with Tag {
               }
               String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "jpg";
               if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-              avatar = await FileHelper.convertBase64toFile(avatarData, DirType.profile, fileExt, subPath: received.targetId);
+              avatar = await FileHelper.convertBase64toFile(avatarData, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: received.targetId, fileExt: ext ?? fileExt));
             }
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
@@ -606,6 +608,26 @@ class ChatInCommon with Tag {
     return true;
   }
 
+  Future<bool> _receiveIpfs(MessageSchema received) async {
+    if (received.content == null) {
+      // nothing
+    }
+    // duplicated
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
+    if (exists != null) {
+      logger.d("$TAG - _receiveIpfs - duplicated - message:$exists");
+      return false;
+    }
+    // state
+    received.options = MessageOptions.setIpfsState(received.options, false);
+    // DB
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
+    if (inserted == null) return false;
+    // display
+    _onSavedSink.add(inserted);
+    return true;
+  }
+
   Future<bool> _receiveImage(MessageSchema received) async {
     if (received.content == null) {
       logger.w("$TAG - _receiveImage - content null - message:$received");
@@ -618,9 +640,9 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "jpg";
-    if (fileExt == null || fileExt.isEmpty) fileExt = "jpg";
-    received.content = await FileHelper.convertBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
+    String fileExt = MessageOptions.getFileExt(received.options) ?? "jpg";
+    if (fileExt.isEmpty) fileExt = "jpg";
+    received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
       return false;
@@ -647,9 +669,9 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    String? fileExt = received.options != null ? received.options![MessageOptions.KEY_FILE_EXT] : "aac";
-    if (fileExt == null || fileExt.isEmpty) fileExt = "aac";
-    received.content = await FileHelper.convertBase64toFile(received.content, DirType.chat, fileExt, subPath: received.targetId);
+    String fileExt = MessageOptions.getFileExt(received.options) ?? "aac";
+    if (fileExt.isEmpty) fileExt = "aac";
+    received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");
       return false;
@@ -666,11 +688,11 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receivePiece(MessageSchema received) async {
-    String? parentType = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
-    int bytesLength = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
-    int total = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
-    int parity = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
-    int index = received.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
+    String? parentType = received.options?[MessageOptions.KEY_PIECE_PARENT_TYPE];
+    int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
+    int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
+    int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
+    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType, 1);
     if (existsCombine.isNotEmpty) {
@@ -682,7 +704,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(received.msgId, MessageContentType.piece, total + parity);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
-      int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
+      int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX];
       if (insertIndex == index) {
         piece = pieces[i];
         break;
@@ -693,7 +715,7 @@ class ChatInCommon with Tag {
       logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
     } else {
       // received.status = MessageStatus.Read; // modify in before
-      received.content = await FileHelper.convertBase64toFile(received.content, DirType.cache, parentType);
+      received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.cache, fileExt: ext ?? parentType));
       piece = await MessageStorage.instance.insert(received);
       if (piece != null) {
         pieces.add(piece);
@@ -704,33 +726,9 @@ class ChatInCommon with Tag {
     logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-    pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
-    // recover
-    List<Uint8List> recoverList = <Uint8List>[];
-    for (int i = 0; i < (total + parity); i++) {
-      recoverList.add(Uint8List(0)); // fill
-    }
-    int recoverCount = 0;
-    for (int i = 0; i < pieces.length; i++) {
-      MessageSchema item = pieces[i];
-      File? file = item.content as File?;
-      if (file == null || !file.existsSync()) {
-        logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
-        continue;
-      }
-      Uint8List itemBytes = file.readAsBytesSync();
-      int? pieceIndex = item.options?[MessageOptions.KEY_PIECE]?[MessageOptions.KEY_PIECE_INDEX];
-      if (itemBytes.isNotEmpty && (pieceIndex != null) && (pieceIndex >= 0) && (pieceIndex < recoverList.length)) {
-        recoverList[pieceIndex] = itemBytes;
-        recoverCount++;
-      }
-    }
-    if (recoverCount < total) {
-      logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
-      return false;
-    }
+    pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // combine
-    String? base64String = await Common.combinePieces(recoverList, total, parity, bytesLength);
+    String? base64String = await MessageSchema.piecesCombine(pieces, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
         logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");
@@ -740,7 +738,7 @@ class ChatInCommon with Tag {
       }
       return false;
     }
-    MessageSchema? combine = MessageSchema.fromPiecesReceive(pieces, base64String);
+    MessageSchema? combine = MessageSchema.combinePiecesMsg(pieces, base64String);
     if (combine == null) {
       logger.e("$TAG - receivePiece - COMBINE:FAIL - message combine is empty");
       return false;
@@ -807,7 +805,7 @@ class ChatInCommon with Tag {
 
   Future<int> _deletePieces(String msgId) async {
     int count = 0;
-    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece, ChatOutCommon.piecesMaxTotal + ChatOutCommon.piecesMaxParity);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece, MessageSchema.piecesMaxTotal + MessageSchema.piecesMaxParity);
     logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
     int result = await MessageStorage.instance.deleteByContentType(msgId, MessageContentType.piece);
     if (result > 0) {
