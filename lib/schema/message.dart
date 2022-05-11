@@ -600,7 +600,7 @@ class MessageOptions {
   static const int contentTypeVideo = 3;
   static const int contentTypeFile = 4;
 
-  static const KEY_IPFS_STATE = "ipfs_result_name";
+  static const KEY_IPFS_STATE = "ipfs_state";
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
@@ -805,6 +805,7 @@ class MessageData {
     return {
       'id': id ?? Uuid().v4(),
       'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
+      'sendTimestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
       'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
       'contentType': contentType,
     };
