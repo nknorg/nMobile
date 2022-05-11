@@ -607,7 +607,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  return await chatOutCommon.sendText(content, target: _topic ?? _contact);
+                  return await chatOutCommon.sendText(_topic ?? _contact, content);
                 },
                 onInputFocus: (bool focus) {
                   if (focus && _showBottomMenu) {
@@ -657,7 +657,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     //   await audioHelper.recordStop();
                     //   return null;
                     // }
-                    return await chatOutCommon.sendAudio(content, durationMs / 1000, target: _topic ?? _contact);
+                    return await chatOutCommon.sendAudio(_topic ?? _contact, content, durationMs / 1000);
                   }
                 },
                 onRecordLock: (bool visible, bool lock) {
@@ -685,9 +685,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           if (path.isEmpty) continue;
                           if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.imgMaxSize)) {
                             // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType
-                            await chatOutCommon.sendImage(File(path), target: _topic ?? _contact);
+                            await chatOutCommon.sendImage(_topic ?? _contact, File(path));
                           } else {
-                            await chatOutCommon.startIpfs(result, target: _topic ?? _contact);
+                            await chatOutCommon.saveIpfs(_topic ?? _contact, result);
                           }
                         }
                       },
