@@ -86,7 +86,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                   }
 
                   File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                  String ext = Path.getFileExt(file, 'jpg');
+                  String ext = Path.getFileExt(file, 'png');
                   logger.i("PhotoScreen - save image file - path:${file?.path}");
                   if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
 

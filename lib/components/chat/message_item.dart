@@ -159,6 +159,7 @@ class ChatMessageItem extends StatelessWidget {
         contentsWidget.add(
           ChatBubble(
             message: this.message,
+            topic: this.topic,
             contact: this.contact,
             showProfile: showProfile,
             hideProfile: hideProfile,

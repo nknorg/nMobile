@@ -28,7 +28,7 @@ class ChatBottomMenu extends StatelessWidget {
   _pickImages({required ImageSource source}) async {
     if (!clientCommon.isClientCreated) return;
     if (source == ImageSource.camera) {
-      String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'jpg');
+      String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'png');
       File? result = await MediaPicker.takeCommon(
         // bestSize: MessageSchema.imgBestSize,
         maxSize: MessageSchema.ipfsMaxSize,
@@ -42,7 +42,7 @@ class ChatBottomMenu extends StatelessWidget {
       int maxNum = 9;
       List<String> returnPaths = [];
       for (var i = 0; i < maxNum; i++) {
-        String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'jpg');
+        String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'png');
         returnPaths.add(returnPath);
       }
       List<Map<String, dynamic>> results = await MediaPicker.pickCommons(
