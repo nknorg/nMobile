@@ -34,8 +34,8 @@ class ChatOutCommon with Tag {
   Stream<Map<String, dynamic>> get onPieceOutStream => _onPieceOutController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
 
   // lock
-  Lock sendLock = Lock(); // TODO:GG to queue
-  Lock resendLock = Lock(); // TODO:GG to queue
+  Lock sendLock = Lock(); // TODO:GG change to queue
+  Lock resendLock = Lock(); // TODO:GG change to queue
 
   ChatOutCommon();
 
