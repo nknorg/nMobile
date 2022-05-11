@@ -36,7 +36,7 @@ android {
     defaultConfig {
         applicationId "org.nkn.mobile.app"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
 
