@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
@@ -230,8 +231,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   Widget _contentWidget(SessionSchema session) {
-    String? msgType = _lastMsg?.contentType;
     String? draft = memoryCache.getDraft(session.targetId);
+
+    String? msgType = _lastMsg?.contentType;
+    if (_lastMsg?.contentType == MessageContentType.ipfs) {
+      int? fileType = MessageOptions.getFileType(_lastMsg?.options);
+      if (fileType == MessageOptions.fileTypeImage) {
+        msgType = MessageContentType.image;
+      } else if (fileType == MessageOptions.fileTypeAudio) {
+        msgType = MessageContentType.audio;
+      } else if (fileType == MessageOptions.fileTypeVideo) {
+        msgType = MessageContentType.video;
+      } else {
+        msgType = MessageContentType.file;
+      }
+    }
 
     String topicSenderName = _topicSender?.displayName ?? " ";
     String prefix = session.isTopic ? ((_lastMsg?.isOutbound == true) ? "" : "$topicSenderName: ") : "";
@@ -307,6 +321,26 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           children: <Widget>[
             Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
+    } else if (msgType == MessageContentType.video) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Icon(CupertinoIcons.video_camera, size: 16, color: application.theme.fontColor2),
+          ],
+        ),
+      );
+    } else if (msgType == MessageContentType.file) {
+      contentWidget = Padding(
+        padding: const EdgeInsets.only(top: 0),
+        child: Row(
+          children: <Widget>[
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Icon(CupertinoIcons.doc, size: 16, color: application.theme.fontColor2),
           ],
         ),
       );
