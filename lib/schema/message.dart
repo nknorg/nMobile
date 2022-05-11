@@ -374,7 +374,7 @@ class MessageSchema {
         this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeImage);
       } else if ((fileMimeType?.contains("audio") == true) || (fileMimeType?.contains("aac") == true) || (fileExt?.contains("aac") == true)) {
         this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeAudio);
-      } else if ((fileMimeType?.contains("video") == true) || (fileMimeType?.contains("mp4") == true) || (fileExt?.contains("mp4") == true)) {
+      } else if ((fileMimeType?.contains("video") == true) || (fileMimeType?.contains("mp4") == true) || (fileMimeType?.contains("MOV") == true) || (fileExt?.contains("mp4") == true) || (fileExt?.contains("MOV") == true) || (fileExt?.contains("mov") == true)) {
         this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeVideo);
       } else {
         this.options = MessageOptions.setContentType(this.options, MessageOptions.contentTypeFile);
