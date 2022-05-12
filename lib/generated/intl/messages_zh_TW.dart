@@ -48,6 +48,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "address_book": MessageLookupByLibrary.simpleMessage("查看地址簿"),
         "advanced": MessageLookupByLibrary.simpleMessage("高級"),
         "agree": MessageLookupByLibrary.simpleMessage("同意"),
+        "album": MessageLookupByLibrary.simpleMessage("相冊"),
         "amount": MessageLookupByLibrary.simpleMessage("數量"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("版本號"),
