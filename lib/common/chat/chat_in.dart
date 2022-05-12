@@ -604,15 +604,16 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveIpfs(MessageSchema received) async {
-    if (received.content == null) {
-      // nothing
-    }
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receiveIpfs - duplicated - message:$exists");
       return false;
     }
+    // content
+    String? fileExt = MessageOptions.getFileExt(received.options);
+    String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: fileExt);
+    received.content = File(savePath);
     // state
     received.options = MessageOptions.setIpfsState(received.options, MessageOptions.ipfsStateNo);
     // DB

@@ -304,7 +304,7 @@ class ChatOutCommon with Tag {
     // schema
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
-    message.options = MessageOptions.setIpfsResult(message.options, result["Hash"], result["Size"], result["Name"]);
+    message.options = MessageOptions.setIpfsResult(message.options, result["Hash"] ?? result[MessageOptions.KEY_IPFS_RESULT_HASH], result["Size"] ?? result[MessageOptions.KEY_IPFS_RESULT_SIZE], result["Name"] ?? result[MessageOptions.KEY_IPFS_RESULT_NAME]);
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     // data
@@ -485,15 +485,19 @@ class ChatOutCommon with Tag {
     // send
     return resendLock.synchronized(() async {
       if (message == null) return null;
+      if (message.contentType == MessageContentType.ipfs) {
+        int state = MessageOptions.getIpfsState(message.options) ?? MessageOptions.ipfsStateNo;
+        if (state == MessageOptions.ipfsStateYes) {
+          return await chatOutCommon.sendIpfs(message.msgId, message.options ?? Map());
+        } else {
+          return await chatCommon.startIpfsUpload(message.msgId);
+        }
+      }
       String? msgData;
       switch (message.contentType) {
         case MessageContentType.text:
         case MessageContentType.textExtension:
           msgData = MessageData.getText(message);
-          break;
-        case MessageContentType.ipfs:
-          // TODO:GG type_ipfs 应该直接走startIpfs?
-          msgData = await MessageData.getIpfs(message);
           break;
         case MessageContentType.media:
         case MessageContentType.image:
@@ -524,7 +528,6 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
-        // TODO:GG type_ipfs 应该直接走startIpfs?
         msgData = await MessageData.getIpfs(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
