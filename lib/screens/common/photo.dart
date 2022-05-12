@@ -3,11 +3,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -57,6 +57,27 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
       _contentType = TYPE_NET;
       _content = netUrl;
     }
+  }
+
+  Future _save() async {
+    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
+      return null;
+    }
+    if ((await Permission.storage.request()) != PermissionStatus.granted) {
+      return null;
+    }
+
+    File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
+    String ext = Path.getFileExt(file, 'png');
+    logger.i("PhotoScreen - save image file - path:${file?.path}");
+    if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+    String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+
+    Uint8List bytes = await file.readAsBytes();
+    Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
+
+    logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
+    Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
   }
 
   @override
@@ -125,26 +146,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                       onSelected: (int result) async {
                         switch (result) {
                           case 0:
-                            if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-                              return null;
-                            }
-                            if ((await Permission.storage.request()) != PermissionStatus.granted) {
-                              return null;
-                            }
-
-                            File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                            String ext = Path.getFileExt(file, 'png');
-                            logger.i("PhotoScreen - save image file - path:${file?.path}");
-                            if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
-
-                            File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
-                            copyFile = await file.copy(copyFile.path);
-                            logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
-
-                            String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-                            Uint8List imageBytes = await copyFile.readAsBytes();
-                            bool ok = await Common.saveMediaToGallery(imageBytes, imageName, Settings.appName);
-                            Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
+                            await _save();
                             break;
                         }
                       },

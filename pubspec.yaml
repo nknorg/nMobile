@@ -110,6 +110,7 @@ dependencies:
   # file
   path: ^1.8.0
   file_picker: ^4.5.1
+  image_gallery_saver: ^1.7.1
 
   # image
   photo_view: ^0.12.0
