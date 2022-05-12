@@ -13,7 +13,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
@@ -588,12 +587,13 @@ class ChatCommon with Tag {
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
     // file
-    String? filePath = message.options?["path"];
-    if (filePath == null || filePath.isEmpty) {
+    if (!(message.content is File)) {
+      logger.w("$TAG - startIpfsUpload - content is no file - message:$message");
       return null;
     }
-    File? file = File(filePath);
+    File file = message.content as File;
     if (!file.existsSync()) {
+      logger.w("$TAG - startIpfsUpload - file is no exists - message:$message");
       return null;
     }
     // state
@@ -601,35 +601,41 @@ class ChatCommon with Tag {
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     _onUpdateSink.add(message);
     // ipfs
-    ipfsHelper.uploadFile(message.msgId, filePath, onProgress: (msgId, percent) {
+    ipfsHelper.uploadFile(message.msgId, file.absolute.path, onProgress: (msgId, percent) {
       onProgressSink.add({"msg_id": msgId, "percent": percent});
     }, onSuccess: (msgId, result) async {
       await chatOutCommon.sendIpfs(msgId, result);
+    }, onError: (msgId) async {
+      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onUpdateSink.add(message);
     });
     return message;
   }
 
   Future<MessageSchema?> startIpfsDownload(MessageSchema message) async {
     String? ipfsHash = MessageOptions.getIpfsResultHash(message.options);
-    if (ipfsHash == null || ipfsHash.isEmpty) return null;
-    // path
-    String? fileExt = MessageOptions.getFileExt(message.options);
-    String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: fileExt ?? 'png');
-    if (savePath.isEmpty) return null;
-    if (message.options?.containsKey("path") == true) {
-      message.options?["path"] = savePath;
-    } else {
-      message.options = message.options?..addAll({"path": savePath});
+    int? ipfsSize = MessageOptions.getIpfsResultSize(message.options) ?? -1;
+    if (ipfsHash == null || ipfsHash.isEmpty) {
+      logger.w("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
+      return null;
     }
+    // path
+    String? savePath = (message.content as File?)?.absolute.path;
+    if (savePath == null || savePath.isEmpty) return null;
     // state
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateIng);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     _onUpdateSink.add(message);
     // ipfs
-    ipfsHelper.downloadFile(message.msgId, ipfsHash, savePath, onProgress: (msgId, percent) {
+    ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onProgress: (msgId, percent) {
       onProgressSink.add({"msg_id": msgId, "percent": percent});
     }, onSuccess: (msgId, result) async {
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onUpdateSink.add(message);
+    }, onError: (msgId) async {
+      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
     });
