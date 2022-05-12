@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -96,6 +97,26 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     });
   }
 
+  Future _save() async {
+    if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
+      return null;
+    }
+    if ((await Permission.storage.request()) != PermissionStatus.granted) {
+      return null;
+    }
+
+    File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
+    String ext = Path.getFileExt(file, 'mp4');
+    logger.i("VideoScreen - get video file - path:${file?.path}");
+    if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+    String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+
+    Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
+
+    logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
+    Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+  }
+
   @override
   Widget build(BuildContext context) {
     double playSize = Global.screenWidth() / 5;
@@ -177,26 +198,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                         // FUTURE: HideBar
                         switch (result) {
                           case 0:
-                            if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-                              return null;
-                            }
-                            if ((await Permission.storage.request()) != PermissionStatus.granted) {
-                              return null;
-                            }
-
-                            File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                            String ext = Path.getFileExt(file, 'mp4');
-                            logger.i("VideoScreen - get video file - path:${file?.path}");
-                            if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
-
-                            File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
-                            copyFile = await file.copy(copyFile.path);
-                            logger.i("VideoScreen - save copy file - path:${copyFile.path}");
-
-                            String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-                            Uint8List videoBytes = await copyFile.readAsBytes();
-                            bool ok = await Common.saveMediaToGallery(videoBytes, videoName, Settings.appName);
-                            Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
+                            await _save();
                             break;
                         }
                       },

@@ -63,6 +63,8 @@ PODS:
   - image_cropper (0.0.4):
     - Flutter
     - TOCropViewController (~> 2.6.0)
+  - image_gallery_saver (1.5.0):
+    - Flutter
   - image_picker (0.0.1):
     - Flutter
   - libwebp (1.2.1):
@@ -145,6 +147,7 @@ DEPENDENCIES:
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
+  - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
   - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - local_auth (from `.symlinks/plugins/local_auth/ios`)
   - nkn_sdk_flutter (from `.symlinks/plugins/nkn_sdk_flutter/ios`)
@@ -201,6 +204,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_sound/ios"
   image_cropper:
     :path: ".symlinks/plugins/image_cropper/ios"
+  image_gallery_saver:
+    :path: ".symlinks/plugins/image_gallery_saver/ios"
   image_picker:
     :path: ".symlinks/plugins/image_picker/ios"
   local_auth:
@@ -257,6 +262,7 @@ SPEC CHECKSUMS:
   flutter_sound_core: d9396f10752a0df9aa3197f4c431d62d934918cc
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: f1668dd8d2cad2d357955caad15a40547856edcb
+  image_gallery_saver: 259eab68fb271cfd57d599904f7acdc7832e7ef2
   image_picker: 0d37d1cb66231c2473a0e3ccb8d062d0c2b3d297
   libwebp: 98a37e597e40bfdb4c911fc98f2c53d0b12d05fc
   local_auth: ef62030a2731330b95df7ef1331bd15f6a64b8a6
