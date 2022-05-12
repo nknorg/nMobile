@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nmobile/common/global.dart';
@@ -60,7 +61,7 @@ class ChatBottomMenu extends StatelessWidget {
     if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
-      // TODO:GG 选取预览？？？
+      // TODO:GG 选取预览 ？？？
       result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.any,
@@ -116,9 +117,9 @@ class ChatBottomMenu extends StatelessWidget {
                       shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
                       backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
-                    child: Asset.iconSvg(
-                      'news', // TODO:GG icon 文件
-                      width: iconSize,
+                    child: Icon(
+                      CupertinoIcons.doc_plaintext,
+                      size: iconSize,
                       color: application.theme.fontColor2,
                     ),
                     onPressed: () {
@@ -159,7 +160,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.pictures, ctx: context),
+                  Global.locale((s) => s.album, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,

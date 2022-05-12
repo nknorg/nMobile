@@ -53,6 +53,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "address_book": MessageLookupByLibrary.simpleMessage("Address Book"),
         "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
         "agree": MessageLookupByLibrary.simpleMessage("Agree"),
+        "album": MessageLookupByLibrary.simpleMessage("Album"),
         "amount": MessageLookupByLibrary.simpleMessage("Amount"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("App Version"),

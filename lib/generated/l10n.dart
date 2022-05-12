@@ -2020,6 +2020,16 @@ class S {
     );
   }
 
+  /// `Album`
+  String get album {
+    return Intl.message(
+      'Album',
+      name: 'album',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Camera`
   String get camera {
     return Intl.message(
