@@ -16,8 +16,8 @@ class IpfsHelper with Tag {
   ];
 
   static List<String> _readableGateway = [
-    'infura-ipfs.io',
-    'cf-ipfs.com',
+    'infura-ipfs.io:5001',
+    'cf-ipfs.com:5001',
     // 'dweb.link', // vpn
     // 'ipfs.infura.io', // vpn
     // 'ipfs.io', // vpn
@@ -27,7 +27,7 @@ class IpfsHelper with Tag {
 
   static const String _upload_address = "api/v0/add";
   static const String _download_address = "api/v0/cat";
-  static const String _peers = "api/v0/swarm/peers";
+  static const String _peers = "api/v0/swarm/peers"; // TODO:GG 有用吗？包括其他没考虑进来的
 
   Dio _dio = Dio();
 
@@ -81,6 +81,7 @@ class IpfsHelper with Tag {
     bool base64 = false,
     Function(String, double)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
   }) {
     if (base64) {
       // TODO:GG base64
@@ -96,7 +97,8 @@ class IpfsHelper with Tag {
             double percent = total > 0 ? (count / total) : -1;
             onProgress?.call(msgId, percent);
           },
-          onSuccess: (msgId, result) => onSuccess?.call(msgId, result)),
+          onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+          onError: (msgId) => onError?.call(msgId)),
     );
 
     // trigger
@@ -106,11 +108,13 @@ class IpfsHelper with Tag {
   void downloadFile(
     String id,
     String ipfsHash,
+    int ipfsLength,
     String savePath, {
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
   }) {
     if (base64) {
       // TODO:GG base64
@@ -121,12 +125,13 @@ class IpfsHelper with Tag {
 
     // queue
     _downloadQueue.add(
-      () => _downloadFile(id, ipfsHash, savePath,
+      () => _downloadFile(id, ipfsHash, ipfsLength, savePath,
           onProgress: (msgId, total, count) {
             double percent = total > 0 ? (count / total) : -1;
             onProgress?.call(msgId, percent);
           },
-          onSuccess: (msgId, result) => onSuccess?.call(msgId, result)),
+          onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+          onError: (msgId) => onError?.call(msgId)),
     );
 
     // trigger
@@ -171,6 +176,7 @@ class IpfsHelper with Tag {
     String filePath, {
     Function(String, int, int)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
   }) async {
     if (filePath.isEmpty || !File(filePath).existsSync()) return null;
 
@@ -183,7 +189,7 @@ class IpfsHelper with Tag {
         'https://$ipAddress/$_upload_address',
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         onSendProgress: (count, total) {
-          // logger.v("$TAG - uploadFile - onSendProgress - count:$count - total:$total - id:$id");
+          // logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total - id:$id");
           onProgress?.call(id, total, count);
         },
       );
@@ -193,8 +199,10 @@ class IpfsHelper with Tag {
       if (e.response != null) {
         handleError(e.response?.data);
       }
+      onError?.call(id);
     } catch (e) {
       handleError(e);
+      onError?.call(id);
     }
 
     // result
@@ -213,9 +221,11 @@ class IpfsHelper with Tag {
   Future<Map<String, dynamic>?> _downloadFile(
     String id,
     String ipfsHash,
+    int ipfsLength,
     String savePath, {
     Function(String, int, int)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
   }) async {
     if (ipfsHash.isEmpty || savePath.isEmpty) return null;
 
@@ -227,9 +237,14 @@ class IpfsHelper with Tag {
       response = await _dio.post(
         'https://$ipAddress/$_download_address',
         queryParameters: {'arg': ipfsHash},
+        options: Options(
+          // headers: {Headers.contentLengthHeader: ipfsLength},
+          responseType: ResponseType.bytes,
+        ),
         onReceiveProgress: (count, total) {
-          // logger.v("$TAG - uploadFile - onSendProgress - count:$count - total:$total - id:$id");
-          onProgress?.call(id, total, count);
+          int totalCount = (total > 0) ? total : ipfsLength;
+          // logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount - id:$id");
+          onProgress?.call(id, totalCount, count);
         },
       );
     } on DioError catch (e) {
@@ -238,8 +253,10 @@ class IpfsHelper with Tag {
       if (e.response != null) {
         handleError(e.response?.data);
       }
+      onError?.call(id);
     } catch (e) {
       handleError(e);
+      onError?.call(id);
     }
 
     // convert
@@ -252,7 +269,12 @@ class IpfsHelper with Tag {
 
     // save
     File file = File(savePath);
-    if (!file.existsSync()) await file.create(recursive: true);
+    if (!file.existsSync()) {
+      await file.create(recursive: true);
+    } else {
+      await file.delete();
+      await file.create(recursive: true);
+    }
     await file.writeAsBytes(responseData, flush: true);
 
     // result
