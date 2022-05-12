@@ -36,11 +36,7 @@ class ChatMessageItem extends StatelessWidget {
     if (message.isDelete) {
       return SizedBox.shrink();
     } else if (message.canBurning && (message.content == null)) {
-      if (message.contentType != MessageContentType.ipfs) {
-        return SizedBox.shrink();
-      } else {
-        // nothing
-      }
+      return SizedBox.shrink();
     }
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
     //   return SizedBox.shrink();
