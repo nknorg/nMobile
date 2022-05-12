@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -59,6 +61,9 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    double btnSize = Global.screenWidth() / 10;
+    double iconSize = Global.screenWidth() / 15;
+
     ImageProvider? provider;
     if (this._contentType == TYPE_FILE) {
       provider = FileImage(File(this._content ?? ""));
@@ -69,56 +74,96 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
     return Layout(
       headerColor: Colors.black,
       borderRadius: BorderRadius.zero,
-      header: Header(
-        backgroundColor: Colors.black,
-        actions: [
-          PopupMenuButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            icon: Asset.iconSvg('more', width: 24),
-            onSelected: (int result) async {
-              switch (result) {
-                case 0:
-                  if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-                    return null;
-                  }
-                  if ((await Permission.storage.request()) != PermissionStatus.granted) {
-                    return null;
-                  }
-
-                  File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                  String ext = Path.getFileExt(file, 'png');
-                  logger.i("PhotoScreen - save image file - path:${file?.path}");
-                  if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
-
-                  File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
-                  copyFile = await file.copy(copyFile.path);
-                  logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
-
-                  String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-                  Uint8List imageBytes = await copyFile.readAsBytes();
-                  bool ok = await Common.saveMediaToGallery(imageBytes, imageName, Settings.appName);
-                  Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
-                  break;
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-              PopupMenuItem<int>(
-                value: 0,
-                child: Label(
-                  Global.locale((s) => s.save_to_album, ctx: context),
-                  type: LabelType.display,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
       body: InkWell(
         onTap: () {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
         },
-        child: PhotoView(
-          imageProvider: provider,
+        child: Stack(
+          children: [
+            PhotoView(imageProvider: provider),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: Platform.isAndroid ? 45 : 30,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(width: btnSize / 4),
+                  Button(
+                    width: btnSize,
+                    height: btnSize,
+                    backgroundColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                    child: Container(
+                      width: btnSize,
+                      height: btnSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(60),
+                        borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                      ),
+                      child: Icon(
+                        CupertinoIcons.back,
+                        color: Colors.white,
+                        size: iconSize,
+                      ),
+                    ),
+                    onPressed: () {
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                    },
+                  ),
+                  Spacer(),
+                  Container(
+                    width: btnSize,
+                    height: btnSize,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(60),
+                      borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                    ),
+                    child: PopupMenuButton(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      icon: Asset.iconSvg('more', width: 24),
+                      onSelected: (int result) async {
+                        switch (result) {
+                          case 0:
+                            if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
+                              return null;
+                            }
+                            if ((await Permission.storage.request()) != PermissionStatus.granted) {
+                              return null;
+                            }
+
+                            File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
+                            String ext = Path.getFileExt(file, 'png');
+                            logger.i("PhotoScreen - save image file - path:${file?.path}");
+                            if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+
+                            File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
+                            copyFile = await file.copy(copyFile.path);
+                            logger.i("PhotoScreen - save copy file - path:${copyFile.path}");
+
+                            String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+                            Uint8List imageBytes = await copyFile.readAsBytes();
+                            bool ok = await Common.saveMediaToGallery(imageBytes, imageName, Settings.appName);
+                            Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
+                            break;
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                        PopupMenuItem<int>(
+                          value: 0,
+                          child: Label(
+                            Global.locale((s) => s.save_to_album, ctx: context),
+                            type: LabelType.display,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: btnSize / 4),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
