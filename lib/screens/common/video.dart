@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
-import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -75,9 +75,9 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
 
   _initController() {
     if (_content?.isNotEmpty == true) {
-      if (_contentType == TYPE_FILE) {
+      if (_contentType == TYPE_NET) {
         _controller = VideoPlayerController.network(_content ?? "");
-      } else if (_contentType == TYPE_NET) {
+      } else if (_contentType == TYPE_FILE) {
         File file = File(_content ?? "");
         if (file.existsSync()) {
           _controller = VideoPlayerController.file(file);
@@ -98,54 +98,13 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    double playSize = Global.screenWidth() / 5;
+    double btnSize = Global.screenWidth() / 10;
+    double iconSize = Global.screenWidth() / 15;
+
     return Layout(
       headerColor: Colors.black,
       borderRadius: BorderRadius.zero,
-      header: Header(
-        backgroundColor: Colors.black,
-        actions: [
-          PopupMenuButton(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            icon: Asset.iconSvg('more', width: 24),
-            onSelected: (int result) async {
-              // FUTURE: HideBar
-              switch (result) {
-                case 0:
-                  if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
-                    return null;
-                  }
-                  if ((await Permission.storage.request()) != PermissionStatus.granted) {
-                    return null;
-                  }
-
-                  File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-                  String ext = Path.getFileExt(file, 'mp4');
-                  logger.i("VideoScreen - get video file - path:${file?.path}");
-                  if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
-
-                  File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
-                  copyFile = await file.copy(copyFile.path);
-                  logger.i("VideoScreen - save copy file - path:${copyFile.path}");
-
-                  String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-                  Uint8List videoBytes = await copyFile.readAsBytes();
-                  bool ok = await Common.saveMediaToGallery(videoBytes, videoName, Settings.appName);
-                  Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
-                  break;
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-              PopupMenuItem<int>(
-                value: 0,
-                child: Label(
-                  Global.locale((s) => s.save_to_album, ctx: context),
-                  type: LabelType.display,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
       body: InkWell(
         onTap: () {
           // FUTURE: ControllerView
@@ -156,13 +115,13 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
             (_controller != null) ? VideoPlayer(_controller!) : SizedBox(),
             (_controller != null && _controller?.value.isPlaying == false)
                 ? Positioned(
-                    top: 0,
-                    bottom: 0,
                     left: 0,
                     right: 0,
+                    top: 0,
+                    bottom: 0,
                     child: ButtonIcon(
-                      width: 50,
-                      height: 50,
+                      width: playSize,
+                      height: playSize,
                       // icon: Asset.iconSvg('close', width: 16),
                       icon: Icon(
                         CupertinoIcons.play_circle,
@@ -173,6 +132,89 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                     ),
                   )
                 : SizedBox(),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: Platform.isAndroid ? 45 : 30,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(width: btnSize / 4),
+                  Button(
+                    width: btnSize,
+                    height: btnSize,
+                    backgroundColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                    child: Container(
+                      width: btnSize,
+                      height: btnSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(60),
+                        borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                      ),
+                      child: Icon(
+                        CupertinoIcons.back,
+                        color: Colors.white,
+                        size: iconSize,
+                      ),
+                    ),
+                    onPressed: () {
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                    },
+                  ),
+                  Spacer(),
+                  Container(
+                    width: btnSize,
+                    height: btnSize,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(60),
+                      borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                    ),
+                    child: PopupMenuButton(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      icon: Asset.iconSvg('more', width: 24),
+                      onSelected: (int result) async {
+                        // FUTURE: HideBar
+                        switch (result) {
+                          case 0:
+                            if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
+                              return null;
+                            }
+                            if ((await Permission.storage.request()) != PermissionStatus.granted) {
+                              return null;
+                            }
+
+                            File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
+                            String ext = Path.getFileExt(file, 'mp4');
+                            logger.i("VideoScreen - get video file - path:${file?.path}");
+                            if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+
+                            File copyFile = File(await Path.createRandomFile(null, DirType.download, fileExt: ext));
+                            copyFile = await file.copy(copyFile.path);
+                            logger.i("VideoScreen - save copy file - path:${copyFile.path}");
+
+                            String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+                            Uint8List videoBytes = await copyFile.readAsBytes();
+                            bool ok = await Common.saveMediaToGallery(videoBytes, videoName, Settings.appName);
+                            Toast.show(Global.locale((s) => ok ? s.success : s.failure, ctx: context));
+                            break;
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                        PopupMenuItem<int>(
+                          value: 0,
+                          child: Label(
+                            Global.locale((s) => s.save_to_album, ctx: context),
+                            type: LabelType.display,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: btnSize / 4),
+                ],
+              ),
+            ),
           ],
         ),
       ),
