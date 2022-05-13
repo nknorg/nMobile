@@ -129,6 +129,7 @@ dependencies:
 
   # video
   video_player: ^2.4.2
+  video_thumbnail: ^0.5.0
 
   # QR
   qr_code_scanner: ^0.7.0

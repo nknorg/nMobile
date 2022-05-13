@@ -15,6 +15,7 @@ import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
@@ -58,7 +59,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
   }
 
   _selectAvatarPicture() async {
-    String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: 'png');
+    String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),

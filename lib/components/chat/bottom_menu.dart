@@ -9,6 +9,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -29,7 +30,7 @@ class ChatBottomMenu extends StatelessWidget {
   _pickImages({required ImageSource source}) async {
     if (!clientCommon.isClientCreated) return;
     if (source == ImageSource.camera) {
-      String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'png');
+      String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
       Map<String, dynamic>? result = await MediaPicker.takeCommon(
         returnPath,
         compressImage: false,
@@ -42,7 +43,7 @@ class ChatBottomMenu extends StatelessWidget {
       int maxNum = 9;
       List<String> returnPaths = [];
       for (var i = 0; i < maxNum; i++) {
-        String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'png');
+        String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
         returnPaths.add(returnPath);
       }
       List<Map<String, dynamic>> results = await MediaPicker.pickCommons(
