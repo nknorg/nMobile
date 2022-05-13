@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -9,10 +10,12 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_thumbnail/video_thumbnail.dart' as VideoThumbnail;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
@@ -84,11 +87,11 @@ class MediaPicker {
       }
       if (ext.isEmpty) {
         if (entity.typeInt == AssetType.image.index) {
-          ext = "png";
+          ext = FileHelper.DEFAULT_IMAGE_EXT;
         } else if (entity.typeInt == AssetType.audio.index) {
-          ext = "aac";
+          ext = FileHelper.DEFAULT_AUDIO_EXT;
         } else if (entity.typeInt == AssetType.video.index) {
-          ext = "mp4";
+          ext = FileHelper.DEFAULT_VIDEO_EXT;
         }
       }
       // compress
@@ -96,11 +99,11 @@ class MediaPicker {
       bool isVideo = entity.type == AssetType.video;
       try {
         if (isImage && compressImage) {
-          // TODO:GG compress
+          // FUTURE: compress
         } else if (isVideo && compressVideo) {
-          // TODO:GG compress
+          // FUTURE: compress
         } else {
-          // TODO:GG original
+          // FUTURE: original
         }
       } catch (e) {
         handleError(e);
@@ -139,10 +142,7 @@ class MediaPicker {
           "height": entity.orientatedHeight,
         };
         if (isVideo) {
-          params.addAll({
-            "duration": entity.duration,
-            // "thumbnail": await entity.thumbnailData, // TODO:GG 后续再加，还是说在外面统一获取
-          });
+          params.addAll({"duration": entity.duration});
         }
         pickedMaps.add(params);
       }
@@ -213,11 +213,11 @@ class MediaPicker {
     }
     if (ext.isEmpty) {
       if (entity.typeInt == AssetType.image.index) {
-        ext = "png";
+        ext = FileHelper.DEFAULT_IMAGE_EXT;
       } else if (entity.typeInt == AssetType.audio.index) {
-        ext = "aac";
+        ext = FileHelper.DEFAULT_AUDIO_EXT;
       } else if (entity.typeInt == AssetType.video.index) {
-        ext = "mp4";
+        ext = FileHelper.DEFAULT_VIDEO_EXT;
       }
     }
 
@@ -226,11 +226,11 @@ class MediaPicker {
     bool isVideo = entity.type == AssetType.video;
     try {
       if (isImage && compressImage) {
-        // TODO:GG compress ?
+        // FUTURE: compress ?
       } else if (isVideo && compressVideo) {
-        // TODO:GG compress
+        // FUTURE: compress
       } else {
-        // TODO:GG original
+        // FUTURE: original
       }
     } catch (e) {
       handleError(e);
@@ -265,10 +265,7 @@ class MediaPicker {
         "height": entity.orientatedHeight,
       };
       if (isVideo) {
-        params.addAll({
-          "duration": entity.duration,
-          // "thumbnail": await entity.thumbnailData, // TODO:GG 后续再加，还是说在外面统一获取
-        });
+        params.addAll({"duration": entity.duration});
       }
       logger.i("MediaPicker - takeCommon - picked success - entity${entity.toString()}");
       return params;
@@ -276,13 +273,12 @@ class MediaPicker {
     return null;
   }
 
-  // TODO:GG 还需要压缩码(目前只用于头像)？
   static Future<File?> pickImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
     int? bestSize,
     int? maxSize,
-    String? returnPath,
+    String? savePath,
   }) async {
     // permission, same with AssetPicker.permissionCheck();
     bool permissionOK = await _isPermissionOK(ImageSource.gallery);
@@ -335,20 +331,20 @@ class MediaPicker {
     }
 
     // save
-    String fileExt = Path.getFileExt(pickedFile, 'png');
-    if (returnPath == null || returnPath.isEmpty) {
-      returnPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
+    String fileExt = Path.getFileExt(pickedFile, FileHelper.DEFAULT_IMAGE_EXT);
+    if (savePath == null || savePath.isEmpty) {
+      savePath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
     } else {
-      returnPath = Path.joinFileExt(returnPath, fileExt);
+      savePath = Path.joinFileExt(savePath, fileExt);
     }
-    File returnFile = File(returnPath);
+    File returnFile = File(savePath);
     if (!await returnFile.exists()) {
       await returnFile.create(recursive: true);
     } else {
       await returnFile.delete();
       await returnFile.create(recursive: true);
     }
-    returnFile = await pickedFile.copy(returnPath);
+    returnFile = await pickedFile.copy(savePath);
 
     logger.i('MediaPicker - pickImage - return - path:${returnFile.path}');
     return returnFile;
@@ -438,7 +434,7 @@ class MediaPicker {
     logger.i('MediaPicker - _compressImage - compress:START - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
 
     // filePath
-    String fileExt = Path.getFileExt(original, 'png');
+    String fileExt = Path.getFileExt(original, FileHelper.DEFAULT_IMAGE_EXT);
     String compressPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
     // format
     CompressFormat? format;
@@ -492,9 +488,29 @@ class MediaPicker {
     return compressFile;
   }
 
-  Future<File?> getVideoThumbnail() async {
-    // TODO:GG
-    return null;
+  static Future<String?> getVideoThumbnail(String filePath, String savePath, {int quality = 20, int maxWidth = 100}) async {
+    if (filePath.isEmpty || savePath.isEmpty) return null;
+    // thumbnail
+    Uint8List? imgBytes = await VideoThumbnail.VideoThumbnail.thumbnailData(
+      video: filePath,
+      imageFormat: VideoThumbnail.ImageFormat.JPEG,
+      maxWidth: maxWidth, // specify the width of the thumbnail, let the height auto-scaled to keep the source aspect ratio
+      quality: quality,
+    );
+    if (imgBytes == null || imgBytes.isEmpty) {
+      logger.w('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
+      return null;
+    }
+    // save
+    File saveFile = File(savePath);
+    if (!await saveFile.exists()) {
+      await saveFile.create(recursive: true);
+    } else {
+      await saveFile.delete();
+      await saveFile.create(recursive: true);
+    }
+    saveFile = await saveFile.writeAsBytes(imgBytes);
+    return savePath;
   }
 
   static Future<bool> _isPermissionOK(ImageSource source) async {
