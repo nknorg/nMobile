@@ -6,10 +6,10 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -103,7 +103,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     }
 
     File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-    String ext = Path.getFileExt(file, 'mp4');
+    String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
     logger.i("VideoScreen - get video file - path:${file?.path}");
     if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
     String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;

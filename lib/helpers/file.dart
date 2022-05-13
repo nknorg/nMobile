@@ -7,6 +7,10 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class FileHelper {
+  static const String DEFAULT_IMAGE_EXT = "jpeg";
+  static const String DEFAULT_AUDIO_EXT = "aac";
+  static const String DEFAULT_VIDEO_EXT = "mp4";
+
   static Future<String?> convertFileToBase64(File? file, {String? type}) async {
     if (file == null) return null;
     if (!file.existsSync()) return null;
@@ -69,7 +73,7 @@ class FileHelper {
     if (mimeType == null || mimeType.isEmpty) return null;
     var extension;
     if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
-      extension = 'jpg';
+      extension = 'jpeg';
     } else if (mimeType.indexOf('image/png') > -1) {
       extension = 'png';
     } else if (mimeType.indexOf('image/gif') > -1) {

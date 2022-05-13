@@ -488,8 +488,8 @@ class ChatInCommon with Tag {
               if (avatarData.toString().split(",").length != 1) {
                 avatarData = avatarData.toString().split(",")[1];
               }
-              String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : "png";
-              if (fileExt == null || fileExt.isEmpty) fileExt = "png";
+              String? fileExt = content['avatar'] != null ? content['avatar']['ext'] : FileHelper.DEFAULT_IMAGE_EXT;
+              if (fileExt == null || fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
               avatar = await FileHelper.convertBase64toFile(avatarData, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: received.targetId, fileExt: ext ?? fileExt));
             }
           }
@@ -636,8 +636,8 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    String fileExt = MessageOptions.getFileExt(received.options) ?? "png";
-    if (fileExt.isEmpty) fileExt = "png";
+    String fileExt = MessageOptions.getFileExt(received.options) ?? FileHelper.DEFAULT_IMAGE_EXT;
+    if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
       logger.w("$TAG - receiveImage - content is null - message:$exists");
@@ -665,8 +665,8 @@ class ChatInCommon with Tag {
       return false;
     }
     // File
-    String fileExt = MessageOptions.getFileExt(received.options) ?? "aac";
-    if (fileExt.isEmpty) fileExt = "aac";
+    String fileExt = MessageOptions.getFileExt(received.options) ?? FileHelper.DEFAULT_AUDIO_EXT;
+    if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
       logger.w("$TAG - receiveAudio - content is null - message:$exists");

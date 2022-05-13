@@ -326,7 +326,7 @@ class MessageSchema {
     if (fileType != null && fileType >= 0) {
       this.options = MessageOptions.setFileType(this.options, fileType);
     } else if (((size ?? 0) > 0) || (fileExt?.isNotEmpty == true) || (fileMimeType?.isNotEmpty == true)) {
-      if ((fileMimeType?.contains("image") == true) || (fileExt?.contains("jpg") == true) || (fileExt?.contains("png") == true)) {
+      if ((fileMimeType?.contains("image") == true) || (fileExt?.contains("jpeg") == true) || (fileExt?.contains("jpg") == true) || (fileExt?.contains("png") == true)) {
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeImage);
       } else if ((fileMimeType?.contains("audio") == true) || (fileMimeType?.contains("aac") == true) || (fileExt?.contains("aac") == true)) {
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeAudio);
@@ -922,7 +922,7 @@ class MessageData {
       // TODO:GG avatar pieces
       String base64 = base64Encode(await avatar.readAsBytes());
       if (base64.isNotEmpty == true) {
-        content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, "png")};
+        content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, FileHelper.DEFAULT_IMAGE_EXT)};
       }
     }
     data['content'] = content;
@@ -1021,7 +1021,7 @@ class MessageData {
     File? file = message.content as File?;
     if (file == null) return null;
     var mimeType = mime(file.path) ?? "";
-    if (mimeType.split('aac').length <= 0) return null;
+    if (mimeType.split(FileHelper.DEFAULT_AUDIO_EXT).length <= 0) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
     Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
