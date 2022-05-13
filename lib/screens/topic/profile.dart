@@ -177,7 +177,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
       bestSize: MessageSchema.avatarBestSize,
       maxSize: MessageSchema.avatarMaxSize,
-      returnPath: remarkAvatarPath,
+      savePath: remarkAvatarPath,
     );
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
