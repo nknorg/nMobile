@@ -29,39 +29,50 @@ class ChatBottomMenu extends StatelessWidget {
 
   _pickImages({required ImageSource source}) async {
     if (!clientCommon.isClientCreated) return;
+    List<Map<String, dynamic>> results;
     if (source == ImageSource.camera) {
-      String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+      String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
       Map<String, dynamic>? result = await MediaPicker.takeCommon(
-        returnPath,
+        savePath,
         compressImage: false,
         compressVideo: false,
         maxDuration: Duration(seconds: 10),
       );
       if (result == null || result.isEmpty) return;
-      onPicked?.call([result]);
+      results = []..add(result);
     } else {
       int maxNum = 9;
-      List<String> returnPaths = [];
+      List<String> savePaths = [];
       for (var i = 0; i < maxNum; i++) {
-        String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        returnPaths.add(returnPath);
+        String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+        savePaths.add(savePath);
       }
-      List<Map<String, dynamic>> results = await MediaPicker.pickCommons(
-        returnPaths,
+      results = await MediaPicker.pickCommons(
+        savePaths,
         compressImage: false,
         compressVideo: false,
         maxSize: MessageSchema.ipfsMaxSize,
       );
-      if (results.isEmpty) return;
-      onPicked?.call(results);
     }
+    if (results.isEmpty) return;
+    for (var i = 0; i < results.length; i++) {
+      Map<String, dynamic> map = results[i];
+      if ((map["mimeType"]?.toString())?.contains("video") == true) {
+        String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+        String? thumbnailPath = await MediaPicker.getVideoThumbnail(map["path"]?.toString() ?? "", savePath);
+        if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+          results[i]["thumbnailPath"] = thumbnailPath;
+        }
+      }
+    }
+    if (results.isEmpty) return;
+    onPicked?.call(results);
   }
 
   _pickFiles() async {
     if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
-      // TODO:GG 选取预览？？？
       result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.any,
@@ -70,7 +81,7 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e) {
       handleError(e);
     }
-    // TODO:GG 没有ext和啥？
+    // TODO:GG 没有mimeType和啥 ？
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {
@@ -78,11 +89,12 @@ class ChatBottomMenu extends StatelessWidget {
       String? path = picked.path;
       if (path == null || path.isEmpty) continue;
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
-      await File(path).copy(savePath);
+      File file = File(path);
+      await file.copy(savePath);
       results.add({
         "path": savePath,
         "size": picked.size,
-        "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : null,
+        "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : (Path.getFileExt(file, "")),
       });
     }
     logger.i("BottomMenu - _pickFiles - results:$results");
