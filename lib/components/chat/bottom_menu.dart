@@ -30,15 +30,14 @@ class ChatBottomMenu extends StatelessWidget {
     if (!clientCommon.isClientCreated) return;
     if (source == ImageSource.camera) {
       String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: 'png');
-      File? result = await MediaPicker.takeCommon(
-        // bestSize: MessageSchema.imgBestSize,
-        maxSize: MessageSchema.ipfsMaxSize,
-        returnPath: returnPath,
+      Map<String, dynamic>? result = await MediaPicker.takeCommon(
+        returnPath,
+        compressImage: false,
+        compressVideo: false,
+        maxDuration: Duration(seconds: 10),
       );
-      if (result == null) return;
-      onPicked?.call([
-        {"path": result.absolute.path}
-      ]);
+      if (result == null || result.isEmpty) return;
+      onPicked?.call([result]);
     } else {
       int maxNum = 9;
       List<String> returnPaths = [];
@@ -61,7 +60,7 @@ class ChatBottomMenu extends StatelessWidget {
     if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
-      // TODO:GG 选取预览 ？？？
+      // TODO:GG 选取预览？？？
       result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.any,
@@ -70,6 +69,7 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e) {
       handleError(e);
     }
+    // TODO:GG 没有ext和啥？
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {

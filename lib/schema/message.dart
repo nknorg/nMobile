@@ -67,6 +67,7 @@ class MessageSchema {
   static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
   static const int piecesMaxParity = (100 ~/ 5); // <= 20
   static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
+  static const int piecesMaxSize = piecesMaxTotal * piecesMaxParity; // <= 1.6M
 
   // size
   static const int msgMaxSize = 32 * 1000; // < 32K
