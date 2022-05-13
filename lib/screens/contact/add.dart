@@ -59,13 +59,13 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
   }
 
   _selectAvatarPicture() async {
-    String returnPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+    String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
       bestSize: MessageSchema.avatarBestSize,
       maxSize: MessageSchema.avatarMaxSize,
-      returnPath: returnPath,
+      savePath: savePath,
     );
     if (picked == null || !picked.existsSync()) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
