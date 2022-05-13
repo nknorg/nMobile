@@ -10,6 +10,7 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -66,7 +67,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
     }
 
     File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-    String ext = Path.getFileExt(file, 'png');
+    String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
     logger.i("PhotoScreen - save image file - path:${file?.path}");
     if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
     String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;

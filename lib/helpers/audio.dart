@@ -7,6 +7,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -186,7 +187,7 @@ class AudioHelper with Tag {
       await recordStop();
     }
     // path
-    this.recordPath = savePath ?? await Path.createRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: recordId, fileExt: 'aac');
+    this.recordPath = savePath ?? await Path.createRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: recordId, fileExt: FileHelper.DEFAULT_AUDIO_EXT);
     if (recordPath == null || recordPath!.isEmpty) {
       await recordStop();
       return null;

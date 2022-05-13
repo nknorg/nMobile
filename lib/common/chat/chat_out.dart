@@ -9,6 +9,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/send_push.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -287,7 +288,7 @@ class ChatOutCommon with Tag {
         ..addAll({
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
-          "fileExt": data["fileExt"] ?? Path.getFileExt(content, "png"),
+          "fileExt": data["fileExt"] ?? Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
         }),
     );
     // insert
@@ -344,7 +345,7 @@ class ChatOutCommon with Tag {
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "fileExt": Path.getFileExt(content, "png"),
+        "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
       },
     );
     // data
@@ -382,7 +383,7 @@ class ChatOutCommon with Tag {
         "audioDurationS": durationS,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "fileExt": Path.getFileExt(content, "aac"),
+        "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
       },
     );
     // data
