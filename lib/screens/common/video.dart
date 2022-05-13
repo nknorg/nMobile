@@ -137,16 +137,10 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    child: ButtonIcon(
-                      width: playSize,
-                      height: playSize,
-                      // icon: Asset.iconSvg('close', width: 16),
-                      icon: Icon(
-                        CupertinoIcons.play_circle,
-                        size: Global.screenWidth() / 4,
-                        color: Colors.white,
-                      ),
-                      onPressed: () => this._togglePlay(),
+                    child: Icon(
+                      CupertinoIcons.play_circle,
+                      size: playSize,
+                      color: Colors.white,
                     ),
                   )
                 : SizedBox(),
