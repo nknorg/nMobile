@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
@@ -30,6 +32,16 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
   void onRefreshArguments() {}
 
   @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid && mounted) {
+      controller!.resumeCamera();
+    } else if (Platform.isIOS && mounted) {
+      controller!.resumeCamera();
+    }
+  }
+
+  @override
   void dispose() {
     controller?.dispose();
     super.dispose();
@@ -46,9 +58,9 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
 
-    controller.scannedDataStream.listen((Barcode scanData) {
+    this.controller?.scannedDataStream.listen((Barcode scanData) {
       if (Navigator.of(this.context).canPop()) Navigator.of(this.context).pop(scanData.code);
-      controller.dispose();
+      this.controller?.dispose();
     });
   }
 

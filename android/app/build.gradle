@@ -123,7 +123,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     // sentry
-    implementation 'io.sentry:sentry-android:5.6.1'
+    implementation 'io.sentry:sentry-android:5.7.0'
     // apns
     implementation 'com.clevertap.apns:apns-http2:1.0.3'
     // google
