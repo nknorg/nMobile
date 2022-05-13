@@ -51,7 +51,7 @@ class FileHelper {
       logger.d('MessageSchema - loadMediaFile - success - path:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
     } else {
-      logger.d('MessageSchema - loadMediaFile - exists - path:$filePath');
+      logger.w('MessageSchema - loadMediaFile - exists - path:$filePath');
     }
     return file;
   }

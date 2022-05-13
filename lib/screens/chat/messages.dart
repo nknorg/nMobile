@@ -683,8 +683,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           String path = result["path"] ?? "";
                           String? mimeType = result["mimeType"];
                           if (path.isEmpty) continue;
-                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.imgMaxSize)) {
-                            // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType
+                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
+                            // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType ?
                             await chatOutCommon.sendImage(_topic ?? _contact, File(path));
                           } else {
                             await chatOutCommon.saveIpfs(_topic ?? _contact, result);
