@@ -137,7 +137,7 @@ class MediaPicker {
           "path": savePath,
           "size": size,
           "fileExt": ext.isEmpty ? null : ext,
-          "mimeType": entity.mimeType,
+          "mimeType": mimetype,
           "width": entity.orientatedWidth,
           "height": entity.orientatedHeight,
         };
@@ -260,7 +260,7 @@ class MediaPicker {
         "path": savePath,
         "size": size,
         "fileExt": ext.isEmpty ? null : ext,
-        "mimeType": entity.mimeType,
+        "mimeType": mimetype,
         "width": entity.orientatedWidth,
         "height": entity.orientatedHeight,
       };
@@ -488,7 +488,7 @@ class MediaPicker {
     return compressFile;
   }
 
-  static Future<String?> getVideoThumbnail(String filePath, String savePath, {int quality = 20, int maxWidth = 100}) async {
+  static Future<Map<String, dynamic>?> getVideoThumbnail(String filePath, String savePath, {int quality = 20, int maxWidth = 100}) async {
     if (filePath.isEmpty || savePath.isEmpty) return null;
     // thumbnail
     Uint8List? imgBytes = await VideoThumbnail.VideoThumbnail.thumbnailData(
@@ -510,7 +510,8 @@ class MediaPicker {
       await saveFile.create(recursive: true);
     }
     saveFile = await saveFile.writeAsBytes(imgBytes);
-    return savePath;
+    int size = await saveFile.length();
+    return {"path": savePath, "file": saveFile, "size": size};
   }
 
   static Future<bool> _isPermissionOK(ImageSource source) async {
