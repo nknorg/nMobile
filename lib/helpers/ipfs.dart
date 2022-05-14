@@ -41,6 +41,8 @@ class IpfsHelper with Tag {
 
   // TODO:GG 验证数据完整性？比大小？还是比hash
   IpfsHelper() {
+    _dio.options.connectTimeout = 10 * 1000;
+    _dio.options.receiveTimeout = 10 * 1000;
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -50,6 +52,9 @@ class IpfsHelper with Tag {
       error: true,
       logPrint: (log) => logger.i(log),
     ));
+    // _dio.interceptors.add(QueuedInterceptorsWrapper(
+    //     // TODO:GG 这样就行了吗？
+    //     ));
     // (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
     //   client.findProxy = (uri) {
     //     //proxy all request to localhost:8888
@@ -156,6 +161,7 @@ class IpfsHelper with Tag {
 
   // TODO:GG lock(upload + download)
   // TODO:GG 有个轮询，检查ipfs类型的msg，没发送成功的(state)
+  // TODO:GG 应该是每次上线的时候查，类似查fail的方式。其他时候有onError回调
   Future _triggerDownloadQueue() async {
     while (_downloadQueue.isNotEmpty) {
       Map<String, dynamic>? result = await _downloadQueue.first.call();
@@ -198,6 +204,8 @@ class IpfsHelper with Tag {
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
         handleError(e.response?.data);
+      } else {
+        handleError(response?.statusMessage);
       }
       onError?.call(id);
     } catch (e) {
@@ -252,6 +260,8 @@ class IpfsHelper with Tag {
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
         handleError(e.response?.data);
+      } else {
+        handleError(response?.statusMessage);
       }
       onError?.call(id);
     } catch (e) {
