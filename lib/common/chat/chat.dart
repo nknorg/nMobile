@@ -586,6 +586,22 @@ class ChatCommon with Tag {
     if (msgId == null || msgId.isEmpty) return null;
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
+    // thumbnail
+    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
+    if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+      File thumbFile = File(thumbnailPath);
+      if (thumbFile.existsSync()) {
+        Completer completer = Completer();
+        ipfsHelper.uploadFile(message.msgId, thumbnailPath, onSuccess: (msgId, result) async {
+          message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["Hash"], result["Size"], result["Name"]);
+          await MessageStorage.instance.updateOptions(message.msgId, message.options);
+          if (!completer.isCompleted) completer.complete();
+        }, onError: (msgId) {
+          if (!completer.isCompleted) completer.complete();
+        });
+        await completer.future;
+      }
+    }
     // file
     if (!(message.content is File)) {
       logger.w("$TAG - startIpfsUpload - content is no file - message:$message");
