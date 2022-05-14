@@ -59,9 +59,10 @@ class ChatBottomMenu extends StatelessWidget {
       Map<String, dynamic> map = results[i];
       if ((map["mimeType"]?.toString())?.contains("video") == true) {
         String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        String? thumbnailPath = await MediaPicker.getVideoThumbnail(map["path"]?.toString() ?? "", savePath);
-        if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
-          results[i]["thumbnailPath"] = thumbnailPath;
+        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(map["path"]?.toString() ?? "", savePath);
+        if (res != null && res.isNotEmpty) {
+          results[i]["thumbnailPath"] = res["path"];
+          results[i]["thumbnailSize"] = res["size"];
         }
       }
     }
@@ -81,7 +82,7 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e) {
       handleError(e);
     }
-    // TODO:GG 没有mimeType和啥 ？
+    // TODO:GG 没有mimeType？ 以文件的形式传输吧，UI只有下载。
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {
