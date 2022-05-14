@@ -322,17 +322,18 @@ class MessageSchema {
     if (fileMimeType != null && fileMimeType.isNotEmpty) {
       this.options = MessageOptions.setFileMimeType(this.options, fileMimeType);
     }
-    int? fileType = int.tryParse(extra?["content_type"]?.toString() ?? "");
+    int? fileType = int.tryParse(extra?["file_type"]?.toString() ?? "");
     if (fileType != null && fileType >= 0) {
       this.options = MessageOptions.setFileType(this.options, fileType);
-    } else if (((size ?? 0) > 0) || (fileExt?.isNotEmpty == true) || (fileMimeType?.isNotEmpty == true)) {
-      if ((fileMimeType?.contains("image") == true) || (fileExt?.contains("jpeg") == true) || (fileExt?.contains("jpg") == true) || (fileExt?.contains("png") == true)) {
+    } else if (((size ?? 0) > 0) || (fileMimeType?.isNotEmpty == true) || (fileExt?.isNotEmpty == true)) {
+      if ((fileMimeType?.contains("image") == true)) {
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeImage);
-      } else if ((fileMimeType?.contains("audio") == true) || (fileMimeType?.contains("aac") == true) || (fileExt?.contains("aac") == true)) {
+      } else if ((fileMimeType?.contains("audio") == true)) {
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeAudio);
-      } else if ((fileMimeType?.contains("video") == true) || (fileMimeType?.contains("mp4") == true) || (fileMimeType?.contains("MOV") == true) || (fileExt?.contains("mp4") == true) || (fileExt?.contains("MOV") == true) || (fileExt?.contains("mov") == true)) {
+      } else if ((fileMimeType?.contains("video") == true)) {
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeVideo);
       } else {
+        // file_picker is here, because no mime_type
         this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeNormal);
       }
     }

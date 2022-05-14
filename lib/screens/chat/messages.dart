@@ -682,10 +682,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           Map<String, dynamic> result = results[i];
                           String path = result["path"] ?? "";
                           String? mimeType = result["mimeType"];
+                          double durationS = double.tryParse(result["duration"]?.toString() ?? "") ?? 0;
                           if (path.isEmpty) continue;
+                          // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType?
                           if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
-                            // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType ?
                             await chatOutCommon.sendImage(_topic ?? _contact, File(path));
+                          } else if ((mimeType?.contains("audio") == true)) {
+                            await chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS);
                           } else {
                             await chatOutCommon.saveIpfs(_topic ?? _contact, result);
                           }
