@@ -638,6 +638,11 @@ class MessageOptions {
   static const int ipfsStateIng = 1;
   static const int ipfsStateYes = 2;
 
+  static const KEY_IPFS_THUMBNAIL_STATE = "ipfs_thumbnail_state";
+  static const int ipfsThumbnailStateNo = 0;
+  static const int ipfsThumbnailStateIng = 1;
+  static const int ipfsThumbnailStateYes = 2;
+
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
@@ -808,6 +813,19 @@ class MessageOptions {
     var complete = options[MessageOptions.KEY_IPFS_STATE]?.toString();
     if (complete == null || complete.isEmpty) return null;
     return int.tryParse(complete) ?? ipfsStateNo;
+  }
+
+  static Map<String, dynamic> setIpfsThumbnailState(Map<String, dynamic>? options, int state) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_THUMBNAIL_STATE] = state;
+    return options;
+  }
+
+  static int? getIpfsThumbnailState(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var complete = options[MessageOptions.KEY_IPFS_THUMBNAIL_STATE]?.toString();
+    if (complete == null || complete.isEmpty) return null;
+    return int.tryParse(complete) ?? ipfsThumbnailStateNo;
   }
 
   static Map<String, dynamic> setIpfsResult(Map<String, dynamic>? options, String? hash, String? size, String? name) {
