@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -13,6 +14,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
@@ -516,6 +518,7 @@ class ChatCommon with Tag {
     return offset + noReads.length;
   }
 
+  // TODO:GG 另写个 check Ipfs的state，(Image/video(thumbnail)/file)，类似下面的func
   Future<int> checkSendingWithFail({bool force = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
@@ -652,6 +655,36 @@ class ChatCommon with Tag {
       _onUpdateSink.add(message);
     }, onError: (msgId) async {
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onUpdateSink.add(message);
+    });
+    return message;
+  }
+
+  Future<MessageSchema?> tryDownloadIpfsThumbnail(MessageSchema message) async {
+    String? ipfsHash = MessageOptions.getIpfsResultThumbnailHash(message.options);
+    int? ipfsSize = MessageOptions.getIpfsResultSize(message.options) ?? -1;
+    if (ipfsHash == null || ipfsHash.isEmpty) {
+      logger.w("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
+      return null;
+    }
+    // path
+    String? savePath = MessageOptions.getVideoThumbnailPath(message.options);
+    if (savePath == null || savePath.isEmpty) {
+      savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+    }
+    // state
+    message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
+    await MessageStorage.instance.updateOptions(message.msgId, message.options);
+    _onUpdateSink.add(message);
+    // ipfs
+    ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onSuccess: (msgId, result) async {
+      message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onUpdateSink.add(message);
+    }, onError: (msgId) async {
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
     });

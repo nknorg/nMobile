@@ -616,11 +616,19 @@ class ChatInCommon with Tag {
     received.content = File(savePath);
     // state
     received.options = MessageOptions.setIpfsState(received.options, MessageOptions.ipfsStateNo);
+    String? ipfsThumbnailHash = MessageOptions.getIpfsResultThumbnailHash(received.options);
+    if (ipfsThumbnailHash != null && ipfsThumbnailHash.isNotEmpty) {
+      received.options = MessageOptions.setIpfsThumbnailState(received.options, MessageOptions.ipfsThumbnailStateNo);
+    }
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
     // display
     _onSavedSink.add(inserted);
+    // thumbnail
+    if (ipfsThumbnailHash != null && ipfsThumbnailHash.isNotEmpty) {
+      chatCommon.tryDownloadIpfsThumbnail(inserted); // await
+    }
     return true;
   }
 
