@@ -238,11 +238,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       int? fileType = MessageOptions.getFileType(_lastMsg?.options);
       if (fileType == MessageOptions.fileTypeImage) {
         msgType = MessageContentType.image;
-      } else if (fileType == MessageOptions.fileTypeAudio) {
-        msgType = MessageContentType.audio;
       } else if (fileType == MessageOptions.fileTypeVideo) {
         msgType = MessageContentType.video;
       } else {
+        // ipfs_file + ipfs_audio
         msgType = MessageContentType.file;
       }
     }

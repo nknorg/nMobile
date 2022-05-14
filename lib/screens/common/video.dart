@@ -121,6 +121,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     double iconSize = Global.screenWidth() / 15;
 
     return Layout(
+      bodyColor: Colors.black,
       headerColor: Colors.black,
       borderRadius: BorderRadius.zero,
       body: InkWell(

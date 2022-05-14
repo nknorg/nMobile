@@ -34,8 +34,6 @@ class ChatBottomMenu extends StatelessWidget {
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
       Map<String, dynamic>? result = await MediaPicker.takeCommon(
         savePath,
-        compressImage: false,
-        compressVideo: false,
         maxDuration: Duration(seconds: 10),
       );
       if (result == null || result.isEmpty) return;
@@ -49,8 +47,6 @@ class ChatBottomMenu extends StatelessWidget {
       }
       results = await MediaPicker.pickCommons(
         savePaths,
-        compressImage: false,
-        compressVideo: false,
         maxSize: MessageSchema.ipfsMaxSize,
       );
     }
@@ -82,7 +78,7 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e) {
       handleError(e);
     }
-    // TODO:GG 没有mimeType？ 以文件的形式传输吧，UI只有下载。
+    // TODO:GG 没有mimeType？ 以文件的形式传输吧，UI只有下载？
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {
@@ -96,6 +92,7 @@ class ChatBottomMenu extends StatelessWidget {
         "path": savePath,
         "size": picked.size,
         "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : (Path.getFileExt(file, "")),
+        "mimeType": null, // nothing!
       });
     }
     logger.i("BottomMenu - _pickFiles - results:$results");
