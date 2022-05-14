@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -14,11 +15,13 @@ import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
-import 'package:nmobile/components/tip/popup_menu.dart';
+import 'package:nmobile/components/tip/popup_menu.dart' as PopMenu;
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/common/photo.dart';
+import 'package:nmobile/screens/common/video.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -27,6 +30,7 @@ import 'package:nmobile/utils/util.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
+  final TopicSchema? topic;
   final ContactSchema? contact;
   final bool showProfile;
   final bool hideProfile;
@@ -39,6 +43,7 @@ class ChatBubble extends BaseStateFulWidget {
 
   ChatBubble({
     required this.message,
+    required this.topic,
     required this.contact,
     this.showProfile = false,
     this.hideProfile = false,
@@ -57,7 +62,7 @@ class ChatBubble extends BaseStateFulWidget {
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
   StreamSubscription? _contactUpdateStreamSubscription;
-  StreamSubscription? _onPieceOutStreamSubscription;
+  StreamSubscription? _onProgressStreamSubscription;
   StreamSubscription? _onPlayProgressSubscription;
 
   late MessageSchema _message;
@@ -73,6 +78,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   double _uploadProgress = 1;
 
   double _playProgress = 0;
+  String? thumbnailPath;
 
   @override
   void initState() {
@@ -85,8 +91,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         });
       }
     });
-    // pieces
-    _onPieceOutStreamSubscription = chatOutCommon.onPieceOutStream.listen((Map<String, dynamic> event) {
+    // progress TODO:GG receive也需要view(直接在中间画圈)
+    _onProgressStreamSubscription = chatCommon.onProgressStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
       if (msgId == null || (percent == null) || (_message.status != MessageStatus.Sending) || !(_message.content is File)) {
@@ -124,6 +130,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         _playProgress = percent;
       });
     });
+    _refreshVideoThumbnail(); // await
   }
 
   @override
@@ -167,22 +174,22 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
     _contactUpdateStreamSubscription?.cancel();
     _onPlayProgressSubscription?.cancel();
-    _onPieceOutStreamSubscription?.cancel();
+    _onProgressStreamSubscription?.cancel();
     super.dispose();
   }
 
   _onContentTextTap() {
-    PopupMenu popupMenu = PopupMenu(
+    PopMenu.PopupMenu popupMenu = PopMenu.PopupMenu(
       context: context,
       items: [
-        MenuItem(
+        PopMenu.MenuItem(
           userInfo: 0,
           title: Global.locale((s) => s.copy, ctx: context),
           textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
         ),
       ],
-      onClickMenu: (MenuItemProvider item) {
-        var index = (item as MenuItem).userInfo;
+      onClickMenu: (PopMenu.MenuItemProvider item) {
+        var index = (item as PopMenu.MenuItem).userInfo;
         switch (index) {
           case 0:
             Util.copyText(_message.content?.toString() ?? "");
@@ -191,6 +198,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       },
     );
     popupMenu.show(widgetKey: _contentKey);
+  }
+
+  Future _refreshVideoThumbnail() async {
+    String? path = MessageOptions.getVideoThumbnailPath(_message.options);
+    if (path != null && path.isNotEmpty) {
+      File file = File(path);
+      if (!file.existsSync()) path = null;
+    }
+    if (thumbnailPath != path) {
+      setState(() {
+        thumbnailPath = path;
+      });
+    }
   }
 
   @override
@@ -378,9 +398,23 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _getContent(BoxDecoration decoration, bool dark) {
     double maxWidth = Global.screenWidth() - (12 + 20 * 2 + 8) * 2;
 
+    String contentType = _message.contentType;
+    if (contentType == MessageContentType.ipfs) {
+      int? type = MessageOptions.getFileType(_message.options);
+      if (type == MessageOptions.fileTypeImage) {
+        contentType = MessageContentType.image;
+      } else if (type == MessageOptions.fileTypeAudio) {
+        contentType = MessageContentType.audio;
+      } else if (type == MessageOptions.fileTypeVideo) {
+        contentType = MessageContentType.video;
+      } else {
+        contentType = MessageContentType.file;
+      }
+    }
+
     List<Widget> _bodyList = [SizedBox.shrink()];
     var onTap;
-    switch (_message.contentType) {
+    switch (contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
         _bodyList = _getContentBodyText(dark);
@@ -389,7 +423,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-        _bodyList = _getContentBodyImage(dark);
+        _bodyList = _getContentBodyImage(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
         if (_message.content is File) {
           File file = _message.content as File;
@@ -397,13 +431,44 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
         break;
       case MessageContentType.audio:
-        _bodyList = _getContentBodyAudio(dark);
+        _bodyList = _getContentBodyAudio(dark, contentType == MessageContentType.ipfs);
         if (_message.content is File) {
-          double? durationS = MessageOptions.getAudioDuration(_message);
+          double? durationS = MessageOptions.getAudioDuration(_message.options);
           int? durationMs = durationS == null ? null : ((durationS * 1000).round());
           File file = _message.content as File;
           onTap = () => audioHelper.playStart(_message.msgId, file.path, durationMs: durationMs);
         }
+        break;
+      case MessageContentType.video:
+        _bodyList = _getContentBodyVideo(dark, contentType == MessageContentType.ipfs);
+        _bodyList.add(SizedBox(height: 4));
+        int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+        if (state == MessageOptions.ipfsStateNo) {
+          if (_message.isOutbound) {
+            onTap = () => chatCommon.startIpfsUpload(_message.msgId);
+          } else {
+            onTap = () => chatCommon.startIpfsDownload(_message);
+          }
+        } else if (state == MessageOptions.ipfsStateYes) {
+          if (_message.content is File) {
+            File file = _message.content as File;
+            onTap = () => VideoScreen.go(context, filePath: file.path);
+          }
+        } else if (state == MessageOptions.ipfsStateIng) {
+          if (_message.isOutbound) {
+            if (_message.content is File) {
+              File file = _message.content as File;
+              onTap = () => VideoScreen.go(context, filePath: file.path);
+            }
+          } else {
+            // nothing
+          }
+        }
+        break;
+      case MessageContentType.file:
+        _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
+        _bodyList.add(SizedBox(height: 4));
+        // TODO:GG onTap?
         break;
     }
 
@@ -428,7 +493,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _bottomRightWidget() {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getInAt(_message));
+    int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getInAt(_message.options));
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
     bool isSending = _message.status == MessageStatus.Sending;
 
@@ -536,8 +601,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double borderSize = iconSize / 10;
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    final burningOptions = MessageOptions.getContactBurning(_message);
-    int deleteAfterMs = (burningOptions.length >= 1 ? (burningOptions[0] ?? 1) : 1) * 1000;
+    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(_message.options);
+    int deleteAfterMs = (burnAfterSeconds ?? 1) * 1000;
 
     int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
@@ -622,7 +687,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     }
   }
 
-  List<Widget> _getContentBodyImage(bool dark) {
+  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)
+  List<Widget> _getContentBodyImage(bool dark, bool download) {
     if (!(_message.content is File)) {
       return [SizedBox.shrink()];
     }
@@ -643,7 +709,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  List<Widget> _getContentBodyAudio(bool dark) {
+  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)，但目前不会用到ipfs
+  List<Widget> _getContentBodyAudio(bool dark, bool download) {
     bool isPlaying = _playProgress > 0;
 
     Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
@@ -651,7 +718,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Color progressBgColor = _message.isOutbound ? Colors.white.withAlpha(230) : application.theme.primaryColor.withAlpha(30);
     Color progressValueColor = _message.isOutbound ? application.theme.backgroundColor4.withAlpha(127) : application.theme.primaryColor.withAlpha(200);
 
-    double? durationS = MessageOptions.getAudioDuration(_message);
+    double? durationS = MessageOptions.getAudioDuration(_message.options);
     double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
     double minWidth = Global.screenWidth() * 0.05;
@@ -692,6 +759,63 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         ],
       ),
     ];
+  }
+
+  // TODO:GG thumbnail
+  // TODO:GG 下载方，是中间的loading
+  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)
+  List<Widget> _getContentBodyVideo(bool dark, bool download) {
+    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
+    double maxHeight = Global.screenHeight() * 0.3;
+
+    // video
+    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+
+    double iconWidth = Global.screenWidth() * 0.2;
+    double iconHeight = Global.screenHeight() * 0.1;
+
+    return [
+      Container(
+        color: Colors.black,
+        child: Stack(
+          children: [
+            thumbnailPath != null
+                ? Container(
+                    constraints: BoxConstraints(
+                      maxWidth: maxWidth,
+                      maxHeight: maxHeight,
+                      minWidth: maxWidth / 5,
+                      minHeight: maxWidth / 5,
+                    ),
+                    child: Image.file(File(thumbnailPath!), cacheWidth: maxWidth.toInt()),
+                  )
+                : SizedBox(width: maxWidth / 2, height: maxHeight / 2),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: (state == MessageOptions.ipfsStateNo)
+                  ? Icon(
+                      _message.isOutbound ? CupertinoIcons.arrow_up_circle : CupertinoIcons.arrow_down_circle,
+                      color: Colors.white,
+                      size: min(iconWidth, iconHeight) / 2,
+                    )
+                  : Icon(
+                      CupertinoIcons.play_circle,
+                      color: Colors.white,
+                      size: min(iconWidth, iconHeight) / 2,
+                    ),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  // TODO:GG 待下载，下载中，下载后，其他同上
+  List<Widget> _getContentBodyFile(bool dark, bool download) {
+    return [Text("file - ${_message.options}")];
   }
 
   List<dynamic> _getStyles() {
