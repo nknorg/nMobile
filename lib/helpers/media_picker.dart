@@ -23,6 +23,7 @@ class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
     List<String> savePaths, {
     bool compressImage = false,
+    bool compressAudio = false,
     bool compressVideo = false,
     int? maxSize,
   }) async {
@@ -96,9 +97,12 @@ class MediaPicker {
       }
       // compress
       bool isImage = entity.type == AssetType.image;
+      bool isAudio = entity.type == AssetType.audio;
       bool isVideo = entity.type == AssetType.video;
       try {
         if (isImage && compressImage) {
+          // FUTURE: compress
+        } else if (isAudio && compressAudio) {
           // FUTURE: compress
         } else if (isVideo && compressVideo) {
           // FUTURE: compress
@@ -141,7 +145,7 @@ class MediaPicker {
           "width": entity.orientatedWidth,
           "height": entity.orientatedHeight,
         };
-        if (isVideo) {
+        if (isAudio || isVideo) {
           params.addAll({"duration": entity.duration});
         }
         pickedMaps.add(params);
@@ -154,8 +158,9 @@ class MediaPicker {
   static Future<Map<String, dynamic>?> takeCommon(
     String? savePath, {
     bool compressImage = false,
+    bool compressAudio = false,
     bool compressVideo = false,
-    Duration maxDuration = const Duration(seconds: 15),
+    Duration maxDuration = const Duration(seconds: 10),
   }) async {
     // permission, == AssetPicker.permissionCheck();
     bool permissionOK = await _isPermissionOK(ImageSource.camera);
@@ -223,10 +228,13 @@ class MediaPicker {
 
     // compress
     bool isImage = entity.type == AssetType.image;
+    bool isAudio = entity.type == AssetType.audio;
     bool isVideo = entity.type == AssetType.video;
     try {
       if (isImage && compressImage) {
         // FUTURE: compress ?
+      } else if (isAudio && compressAudio) {
+        // FUTURE: compress
       } else if (isVideo && compressVideo) {
         // FUTURE: compress
       } else {
@@ -264,7 +272,7 @@ class MediaPicker {
         "width": entity.orientatedWidth,
         "height": entity.orientatedHeight,
       };
-      if (isVideo) {
+      if (isAudio || isVideo) {
         params.addAll({"duration": entity.duration});
       }
       logger.i("MediaPicker - takeCommon - picked success - entity${entity.toString()}");

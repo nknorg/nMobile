@@ -92,6 +92,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
     }
 
     return Layout(
+      bodyColor: Colors.black,
       headerColor: Colors.black,
       borderRadius: BorderRadius.zero,
       body: InkWell(

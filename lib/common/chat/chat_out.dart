@@ -288,7 +288,6 @@ class ChatOutCommon with Tag {
         ..addAll({
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
-          "fileExt": data["fileExt"] ?? Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
         }),
     );
     // insert
@@ -529,6 +528,7 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
+        // TODO:GG 不对，还得看看
         msgData = await MessageData.getIpfs(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;

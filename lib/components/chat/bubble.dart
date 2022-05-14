@@ -405,11 +405,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       int? type = MessageOptions.getFileType(_message.options);
       if (type == MessageOptions.fileTypeImage) {
         contentType = MessageContentType.image;
-      } else if (type == MessageOptions.fileTypeAudio) {
-        contentType = MessageContentType.audio;
       } else if (type == MessageOptions.fileTypeVideo) {
         contentType = MessageContentType.video;
       } else {
+        // ipfs_file + ipfs_audio
         contentType = MessageContentType.file;
       }
     }
@@ -425,15 +424,32 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-        _bodyList = _getContentBodyImage(dark, contentType == MessageContentType.ipfs);
+        // image + ipfs_image
+        _bodyList = _getContentBodyImage(dark);
         _bodyList.add(SizedBox(height: 4));
-        if (_message.content is File) {
-          File file = _message.content as File;
-          onTap = () => PhotoScreen.go(context, filePath: file.path);
+        if (_message.isOutbound) {
+          if (_message.content is File) {
+            File file = _message.content as File;
+            onTap = () => PhotoScreen.go(context, filePath: file.path);
+          }
+          // TODO:GG 这里的重发走SendFail
+        } else {
+          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+          if (state == MessageOptions.ipfsStateNo) {
+            onTap = () => chatCommon.startIpfsDownload(_message);
+          } else if (state == MessageOptions.ipfsStateIng) {
+            // FUTURE: delete download and update UI
+          } else {
+            if (_message.content is File) {
+              File file = _message.content as File;
+              onTap = () => PhotoScreen.go(context, filePath: file.path);
+            }
+          }
         }
         break;
       case MessageContentType.audio:
-        _bodyList = _getContentBodyAudio(dark, contentType == MessageContentType.ipfs);
+        // just audio, no ipfs_audio
+        _bodyList = _getContentBodyAudio(dark);
         if (_message.content is File) {
           double? durationS = MessageOptions.getAudioDuration(_message.options);
           int? durationMs = durationS == null ? null : ((durationS * 1000).round());
@@ -442,9 +458,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
         break;
       case MessageContentType.video:
-        _bodyList = _getContentBodyVideo(dark, contentType == MessageContentType.ipfs);
+        // just ipfs_video, no video
+        _bodyList = _getContentBodyVideo(dark);
         _bodyList.add(SizedBox(height: 4));
-        int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
         if (_message.isOutbound) {
           if (_message.content is File) {
             File file = _message.content as File;
@@ -452,6 +468,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           }
           // TODO:GG 这里的重发走SendFail
         } else {
+          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () => chatCommon.startIpfsDownload(_message);
           } else if (state == MessageOptions.ipfsStateIng) {
@@ -467,7 +484,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.file:
         _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
-        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击nothing
+        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击nothing！
         break;
     }
 
@@ -686,14 +703,66 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     }
   }
 
-  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)
-  List<Widget> _getContentBodyImage(bool dark, bool download) {
-    if (!(_message.content is File)) {
-      return [SizedBox.shrink()];
-    }
-    File file = _message.content as File;
+  List<Widget> _getContentBodyImage(bool dark) {
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
     double maxHeight = Global.screenHeight() * 0.3;
+    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+
+    if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
+      int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+      if (state == MessageOptions.ipfsStateNo) {
+        return [
+          Container(
+            width: maxWidth / 2,
+            height: maxHeight / 2,
+            color: Colors.black,
+            child: Icon(
+              CupertinoIcons.arrow_down_circle,
+              color: Colors.white,
+              size: iconSize,
+            ),
+          ),
+        ];
+      } else if (state == MessageOptions.ipfsStateIng) {
+        return [
+          Container(
+            width: maxWidth / 2,
+            height: maxHeight / 2,
+            color: Colors.black,
+            alignment: Alignment.center,
+            child: Container(
+              width: iconSize * 0.66,
+              height: iconSize * 0.66,
+              child: CircularProgressIndicator(
+                backgroundColor: application.theme.fontColor4.withAlpha(80),
+                color: Colors.white,
+                strokeWidth: 3,
+                value: _uploadOrDownloadProgress,
+              ),
+            ),
+          )
+        ];
+      } else {
+        // file is exits
+      }
+    }
+
+    // file
+    if (!(_message.content is File)) {
+      return [
+        Container(
+          width: maxWidth / 2,
+          height: maxHeight / 2,
+          color: Colors.black,
+          child: Icon(
+            CupertinoIcons.arrow_down_circle,
+            color: Colors.white,
+            size: iconSize,
+          ),
+        ),
+      ];
+    }
+    File file = _message.content as File;
 
     return [
       Container(
@@ -708,8 +777,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)，但目前不会用到ipfs
-  List<Widget> _getContentBodyAudio(bool dark, bool download) {
+  List<Widget> _getContentBodyAudio(bool dark) {
     bool isPlaying = _playProgress > 0;
 
     Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
@@ -760,15 +828,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)
-  List<Widget> _getContentBodyVideo(bool dark, bool download) {
+  List<Widget> _getContentBodyVideo(bool dark) {
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
     double maxHeight = Global.screenHeight() * 0.3;
-
-    // video
-    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
-
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+
+    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
 
     return [
       Container(
