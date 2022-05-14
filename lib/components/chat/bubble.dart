@@ -75,7 +75,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   bool _hideTopMargin = false;
   bool _hideBotMargin = false;
 
-  double _uploadProgress = 1;
+  double _uploadOrDownloadProgress = -1;
 
   double _playProgress = 0;
   String? thumbnailPath;
@@ -91,24 +91,25 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         });
       }
     });
-    // progress TODO:GG receive也需要view(直接在中间画圈)
+    // progress
     _onProgressStreamSubscription = chatCommon.onProgressStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
-      if (msgId == null || (percent == null) || (_message.status != MessageStatus.Sending) || !(_message.content is File)) {
+      if (msgId == null || msgId != this._message.msgId) {
+        // just skip
+      } else if ((percent == null) || !(_message.content is File)) {
         // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
-        if (_uploadProgress != 1) {
+        if (_uploadOrDownloadProgress != -1) {
           setState(() {
-            _uploadProgress = 1;
+            _uploadOrDownloadProgress = -1;
           });
         }
-        return;
-      } else if (msgId != this._message.msgId) {
-        // just skip
       } else {
-        this.setState(() {
-          _uploadProgress = percent;
-        });
+        if (_uploadOrDownloadProgress != percent) {
+          this.setState(() {
+            _uploadOrDownloadProgress = percent;
+          });
+        }
       }
     });
     // player
@@ -130,7 +131,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         _playProgress = percent;
       });
     });
-    _refreshVideoThumbnail(); // await
   }
 
   @override
@@ -160,13 +160,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _contact = null;
     }
     // progress
-    _uploadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadProgress == 1 ? 0 : _uploadProgress) : 1;
+    _uploadOrDownloadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadOrDownloadProgress == -1 ? 0 : _uploadOrDownloadProgress) : -1;
     // _playProgress = 0;
     // burn
     _message = chatCommon.burningStart(_message, () {
       // logger.i("$TAG - tick - :${_message.msgId}");
       setState(() {});
     });
+    // thumbnail
+    _refreshVideoThumbnail(); // await
   }
 
   @override
@@ -443,32 +445,29 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         _bodyList = _getContentBodyVideo(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
         int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
-        if (state == MessageOptions.ipfsStateNo) {
-          if (_message.isOutbound) {
-            onTap = () => chatCommon.startIpfsUpload(_message.msgId);
-          } else {
-            onTap = () => chatCommon.startIpfsDownload(_message);
-          }
-        } else if (state == MessageOptions.ipfsStateYes) {
+        if (_message.isOutbound) {
           if (_message.content is File) {
             File file = _message.content as File;
             onTap = () => VideoScreen.go(context, filePath: file.path);
           }
-        } else if (state == MessageOptions.ipfsStateIng) {
-          if (_message.isOutbound) {
+          // TODO:GG 这里的重发走SendFail
+        } else {
+          if (state == MessageOptions.ipfsStateNo) {
+            onTap = () => chatCommon.startIpfsDownload(_message);
+          } else if (state == MessageOptions.ipfsStateIng) {
+            // FUTURE: delete download and update UI
+          } else {
             if (_message.content is File) {
               File file = _message.content as File;
               onTap = () => VideoScreen.go(context, filePath: file.path);
             }
-          } else {
-            // nothing
           }
         }
         break;
       case MessageContentType.file:
         _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
-        // TODO:GG onTap?
+        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击nothing
         break;
     }
 
@@ -535,7 +534,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
     bool isSendRead = _message.status == MessageStatus.Read;
 
-    bool showProgress = isSending && (_message.content is File) && (_uploadProgress < 1) && (_uploadProgress > 0);
+    bool showProgress = isSending && (_message.content is File) && (_uploadOrDownloadProgress <= 1) && (_uploadOrDownloadProgress > 0);
     bool showSending = isSending && !showProgress;
 
     if (showSending) {
@@ -552,7 +551,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           backgroundColor: application.theme.fontColor4.withAlpha(80),
           color: color,
           strokeWidth: 2,
-          value: _uploadProgress,
+          value: _uploadOrDownloadProgress,
         ),
       );
     } else if (isSendSuccess) {
@@ -761,8 +760,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG thumbnail
-  // TODO:GG 下载方，是中间的loading
   // TODO:GG (上传方和piece一样(是不是也要有重新上传的问题)，下载方有downIcon？)
   List<Widget> _getContentBodyVideo(bool dark, bool download) {
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
@@ -771,13 +768,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     // video
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
 
-    double iconWidth = Global.screenWidth() * 0.2;
-    double iconHeight = Global.screenHeight() * 0.1;
+    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
     return [
       Container(
         color: Colors.black,
         child: Stack(
+          alignment: Alignment.center,
           children: [
             thumbnailPath != null
                 ? Container(
@@ -791,21 +788,34 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   )
                 : SizedBox(width: maxWidth / 2, height: maxHeight / 2),
             Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: (state == MessageOptions.ipfsStateNo)
+              child: (_message.isOutbound == true)
                   ? Icon(
-                      _message.isOutbound ? CupertinoIcons.arrow_up_circle : CupertinoIcons.arrow_down_circle,
-                      color: Colors.white,
-                      size: min(iconWidth, iconHeight) / 2,
-                    )
-                  : Icon(
                       CupertinoIcons.play_circle,
                       color: Colors.white,
-                      size: min(iconWidth, iconHeight) / 2,
-                    ),
+                      size: iconSize,
+                    )
+                  : (state == MessageOptions.ipfsStateNo)
+                      ? Icon(
+                          CupertinoIcons.arrow_down_circle,
+                          color: Colors.white,
+                          size: iconSize,
+                        )
+                      : (state == MessageOptions.ipfsStateIng)
+                          ? Container(
+                              width: iconSize * 0.66,
+                              height: iconSize * 0.66,
+                              child: CircularProgressIndicator(
+                                backgroundColor: application.theme.fontColor4.withAlpha(80),
+                                color: Colors.white,
+                                strokeWidth: 3,
+                                value: _uploadOrDownloadProgress,
+                              ),
+                            )
+                          : Icon(
+                              CupertinoIcons.play_circle,
+                              color: Colors.white,
+                              size: iconSize,
+                            ),
             ),
           ],
         ),
