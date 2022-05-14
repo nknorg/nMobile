@@ -67,7 +67,7 @@ class MessageSchema {
   static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
   static const int piecesMaxParity = (100 ~/ 5); // <= 20
   static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
-  static const int piecesMaxSize = piecesMaxTotal * piecesMaxParity; // <= 1.6M
+  static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 1.6M
 
   // size
   static const int msgMaxSize = 32 * 1000; // < 32K
@@ -771,11 +771,11 @@ class MessageOptions {
     return options;
   }
 
-  static List<double?> getMediaWH(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return [];
+  static List<double> getMediaWH(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return [0, 0];
     var width = options[MessageOptions.KEY_MEDIA_WIDTH]?.toString();
     var height = options[MessageOptions.KEY_MEDIA_HEIGHT]?.toString();
-    if (width == null || width.isEmpty || height == null || height.isEmpty) return [];
+    if (width == null || width.isEmpty || height == null || height.isEmpty) return [0, 0];
     return [double.tryParse(width) ?? 0, double.tryParse(height) ?? 0];
   }
 

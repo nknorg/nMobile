@@ -432,7 +432,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             File file = _message.content as File;
             onTap = () => PhotoScreen.go(context, filePath: file.path);
           }
-          // TODO:GG 这里的重发走SendFail
+          // TODO:GG 这里的重发走SendFail!
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
@@ -466,7 +466,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             File file = _message.content as File;
             onTap = () => VideoScreen.go(context, filePath: file.path);
           }
-          // TODO:GG 这里的重发走SendFail
+          // TODO:GG 这里的重发走SendFail!
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
@@ -484,7 +484,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.file:
         _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
-        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击nothing！
+        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击本地保存
         break;
     }
 
@@ -763,16 +763,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       ];
     }
     File file = _message.content as File;
+    List<double> cacheSize = MessageOptions.getMediaWH(_message.options);
+    double? cacheWidth = cacheSize[0] > 0 ? cacheSize[0] : null;
+    double? cacheHeight = cacheSize[1] > 0 ? cacheSize[1] : null;
 
     return [
       Container(
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeight,
-          minWidth: maxWidth / 5,
-          minHeight: maxWidth / 5,
+          minWidth: maxWidth / 3,
+          minHeight: maxWidth / 3,
         ),
-        child: Image.file(file, cacheWidth: maxWidth.toInt()),
+        child: Image.file(file, cacheWidth: cacheWidth?.toInt() ?? maxWidth.toInt(), cacheHeight: cacheHeight?.toInt()),
       )
     ];
   }
@@ -834,6 +837,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+    List<double> cacheSize = MessageOptions.getMediaWH(_message.options);
+    double? cacheThumbnailWidth = cacheSize[0] > 0 ? cacheSize[0] : null;
+    double? cacheThumbnailHeight = cacheSize[1] > 0 ? cacheSize[1] : null;
 
     return [
       Container(
@@ -846,10 +852,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     constraints: BoxConstraints(
                       maxWidth: maxWidth,
                       maxHeight: maxHeight,
-                      minWidth: maxWidth / 5,
-                      minHeight: maxWidth / 5,
+                      minWidth: maxWidth / 3,
+                      minHeight: maxWidth / 3,
                     ),
-                    child: Image.file(File(thumbnailPath!), cacheWidth: maxWidth.toInt()),
+                    child: Image.file(File(thumbnailPath!), cacheWidth: cacheThumbnailWidth?.toInt() ?? maxWidth.toInt(), cacheHeight: cacheThumbnailHeight?.toInt()),
                   )
                 : SizedBox(width: maxWidth / 2, height: maxHeight / 2),
             Positioned(
