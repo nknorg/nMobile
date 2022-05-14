@@ -345,6 +345,10 @@ class MessageSchema {
     if (duration != null && duration > 0) {
       this.options = MessageOptions.setMediaDuration(this.options, duration);
     }
+    String? thumbnailPath = extra?["thumbnailPath"];
+    if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+      this.options = MessageOptions.setVideoThumbnailPath(this.options, thumbnailPath);
+    }
     // piece
     String? parentType = extra?["piece_parent_type"];
     int? bytesLength = extra?["piece_bytes_length"];
@@ -620,6 +624,7 @@ class MessageOptions {
   static const KEY_MEDIA_HEIGHT = "media_height";
   static const KEY_AUDIO_DURATION = "audioDuration";
   static const KEY_MEDIA_DURATION = "media_duration"; // TODO:GG replace 'audioDuration'
+  static const KEY_VIDEO_THUMBNAIL = "video_thumbnail";
 
   static const KEY_FILE_TYPE = "file_type";
 
@@ -636,6 +641,9 @@ class MessageOptions {
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
+  static const KEY_IPFS_RESULT_THUMBNAIL_HASH = "ipfs_result_thumbnail_hash";
+  static const KEY_IPFS_RESULT_THUMBNAIL_SIZE = "ipfs_result_thumbnail_size";
+  static const KEY_IPFS_RESULT_THUMBNAIL_NAME = "ipfs_result_thumbnail_name";
 
   static const KEY_FROM_PIECE = "from_piece";
 
@@ -778,6 +786,17 @@ class MessageOptions {
     return double.tryParse(duration) ?? 0;
   }
 
+  static Map<String, dynamic> setVideoThumbnailPath(Map<String, dynamic>? options, String? thumbnailPath) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_VIDEO_THUMBNAIL] = thumbnailPath;
+    return options;
+  }
+
+  static String? getVideoThumbnailPath(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_VIDEO_THUMBNAIL]?.toString();
+  }
+
   static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, int state) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_IPFS_STATE] = state;
@@ -814,6 +833,31 @@ class MessageOptions {
   static String? getIpfsResultName(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_IPFS_RESULT_NAME]?.toString();
+  }
+
+  static Map<String, dynamic> setIpfsResultThumbnail(Map<String, dynamic>? options, String? hash, String? size, String? name) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_HASH] = hash;
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE] = int.tryParse(size ?? "");
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_NAME] = name;
+    return options;
+  }
+
+  static String? getIpfsResultThumbnailHash(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_HASH]?.toString();
+  }
+
+  static int? getIpfsResultThumbnailSize(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    var size = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE]?.toString();
+    if (size == null || size.isEmpty) return null;
+    return int.tryParse(size) ?? 0;
+  }
+
+  static String? getIpfsResultThumbnailName(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_NAME]?.toString();
   }
 
   // SUPPORT:START
@@ -993,7 +1037,9 @@ class MessageData {
     Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt)
       ..addAll({
         'content': content,
-        'options': message.options,
+        'options': Map()
+          ..addAll(message.options ?? Map())
+          ..remove(MessageOptions.KEY_VIDEO_THUMBNAIL),
       });
     if (message.isTopic) {
       data['topic'] = message.topic;
