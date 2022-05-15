@@ -712,9 +712,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double minHeight = maxHeight / 2;
 
     List<double> realWH = MessageOptions.getMediaWH(_message.options);
-    List<double?> placeholderWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
-    double placeholderWidth = placeholderWH[0] ?? minWidth;
-    double placeholderHeight = placeholderWH[1] ?? minHeight;
+    List<double?> ratioWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
+    double placeholderWidth = ratioWH[0] ?? minWidth;
+    double placeholderHeight = ratioWH[1] ?? minHeight;
 
     if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
       int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
@@ -770,6 +770,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
     return [
       Container(
+        width: ratioWH[0],
+        height: ratioWH[1],
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeight,
@@ -779,8 +781,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         child: Image.file(
           file,
           fit: BoxFit.cover,
-          cacheWidth: (realWH[0].toInt() > 0) ? realWH[0].toInt() : null,
-          cacheHeight: (realWH[1].toInt() > 0) ? realWH[1].toInt() : null,
+          cacheWidth: ratioWH[0]?.toInt(),
+          cacheHeight: ratioWH[1]?.toInt(),
         ),
       )
     ];
@@ -846,9 +848,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double minHeight = maxHeight / 2;
 
     List<double> realWH = MessageOptions.getMediaWH(_message.options);
-    List<double?> placeholderWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
-    double placeholderWidth = placeholderWH[0] ?? minWidth;
-    double placeholderHeight = placeholderWH[1] ?? minHeight;
+    List<double?> ratioWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
+    double placeholderWidth = ratioWH[0] ?? minWidth;
+    double placeholderHeight = ratioWH[1] ?? minHeight;
 
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
     bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
@@ -860,6 +862,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           alignment: Alignment.center,
           children: [
             Container(
+              width: ratioWH[0],
+              height: ratioWH[1],
               constraints: BoxConstraints(
                 maxWidth: maxWidth,
                 maxHeight: maxHeight,
@@ -870,8 +874,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   ? Image.file(
                       File(thumbnailPath!),
                       fit: BoxFit.cover,
-                      cacheWidth: (realWH[0].toInt() > 0) ? realWH[0].toInt() : null,
-                      cacheHeight: (realWH[1].toInt() > 0) ? realWH[1].toInt() : null,
+                      cacheWidth: ratioWH[0]?.toInt(),
+                      cacheHeight: ratioWH[1]?.toInt(),
                     )
                   : SizedBox(width: placeholderWidth, height: placeholderHeight),
             ),
@@ -922,7 +926,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     return [Text("file - ${_message.options}")];
   }
 
-  // TODO:GG 来个分辨率?
   List<double?> _getPlaceholderWH(List<double> maxWH, List<double> realWH) {
     if (maxWH.length < 2 || maxWH[0] <= 0 || maxWH[1] <= 0) return [null, null];
     if (realWH.length < 2 || realWH[0] <= 0 || realWH[1] <= 0) return [null, null];
