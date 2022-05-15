@@ -850,7 +850,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG 加个视频时长
   List<Widget> _getContentBodyVideo() {
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
@@ -863,6 +862,16 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     List<double?> ratioWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
     double placeholderWidth = ratioWH[0] ?? minWidth;
     double placeholderHeight = ratioWH[1] ?? minHeight;
+
+    double? duration = MessageOptions.getMediaDuration(_message.options) ?? MessageOptions.getAudioDuration(_message.options);
+    String? durationText;
+    if ((duration != null) && (duration >= 0)) {
+      int min = duration ~/ 60;
+      int sec = (duration % 60).toInt();
+      String minText = (min >= 10) ? "$min" : "0$min";
+      String secText = (sec >= 10) ? "$sec" : "0$sec";
+      durationText = "$minText:$secText";
+    }
 
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
     bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
@@ -891,6 +900,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     )
                   : SizedBox(width: placeholderWidth, height: placeholderHeight),
             ),
+            (durationText != null && durationText.isNotEmpty)
+                ? Positioned(
+                    right: 4,
+                    bottom: 1,
+                    child: Label(
+                      durationText,
+                      type: LabelType.bodyLarge,
+                      color: Colors.white,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                : SizedBox.shrink(),
             Positioned(
               child: (_message.isOutbound == true)
                   ? Icon(

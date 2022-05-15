@@ -905,7 +905,7 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var duration = options[MessageOptions.KEY_AUDIO_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
-    return double.tryParse(duration) ?? 0;
+    return double.tryParse(duration);
   }
   // SUPPORT:END
 }
