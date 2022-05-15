@@ -140,6 +140,7 @@ class MediaPicker {
         Map<String, dynamic> params = {
           "path": savePath,
           "size": size,
+          "name": null,
           "fileExt": ext.isEmpty ? null : ext,
           "mimeType": mimetype,
           "width": entity.orientatedWidth,
@@ -267,6 +268,7 @@ class MediaPicker {
       Map<String, dynamic> params = {
         "path": savePath,
         "size": size,
+        "name": null,
         "fileExt": ext.isEmpty ? null : ext,
         "mimeType": mimetype,
         "width": entity.orientatedWidth,
