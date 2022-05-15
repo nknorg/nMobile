@@ -75,7 +75,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   bool _hideTopMargin = false;
   bool _hideBotMargin = false;
 
-  double _uploadOrDownloadProgress = -1;
+  double _upDownloadProgress = -1;
 
   double _playProgress = 0;
   String? thumbnailPath;
@@ -97,17 +97,17 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       double? percent = event["percent"];
       if (msgId == null || msgId != this._message.msgId) {
         // just skip
-      } else if ((percent == null) || !(_message.content is File)) {
-        // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
-        if (_uploadOrDownloadProgress != -1) {
+      } else if ((percent == null) || (percent < 0) || !(_message.content is File)) {
+        if (_upDownloadProgress != -1) {
           setState(() {
-            _uploadOrDownloadProgress = -1;
+            _upDownloadProgress = -1;
           });
         }
       } else {
-        if (_uploadOrDownloadProgress != percent) {
+        // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
+        if (_upDownloadProgress != percent) {
           this.setState(() {
-            _uploadOrDownloadProgress = percent;
+            _upDownloadProgress = percent;
           });
         }
       }
@@ -160,7 +160,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _contact = null;
     }
     // progress
-    _uploadOrDownloadProgress = (_message.content is File) ? (_uploadOrDownloadProgress == -1 ? 0 : _uploadOrDownloadProgress) : -1;
+    _upDownloadProgress = (_message.content is File) ? _upDownloadProgress : -1;
     // _playProgress = 0;
     // burn
     _message = chatCommon.burningStart(_message, () {
@@ -551,7 +551,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
     bool isSendRead = _message.status == MessageStatus.Read;
 
-    bool showProgress = isSending && (_message.content is File) && (_uploadOrDownloadProgress <= 1) && (_uploadOrDownloadProgress > 0);
+    bool showProgress = isSending && (_message.content is File) && (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
     bool showSending = isSending && !showProgress;
 
     if (showSending) {
@@ -568,7 +568,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           backgroundColor: application.theme.fontColor4.withAlpha(80),
           color: color,
           strokeWidth: 2,
-          value: _uploadOrDownloadProgress,
+          value: _upDownloadProgress,
         ),
       );
     } else if (isSendSuccess) {
@@ -732,6 +732,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           ),
         ];
       } else if (state == MessageOptions.ipfsStateIng) {
+        bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
         return [
           Container(
             width: placeholderWidth,
@@ -741,12 +742,18 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             child: Container(
               width: iconSize * 0.66,
               height: iconSize * 0.66,
-              child: CircularProgressIndicator(
-                backgroundColor: application.theme.fontColor4.withAlpha(80),
-                color: Colors.white,
-                strokeWidth: 3,
-                value: _uploadOrDownloadProgress,
-              ),
+              child: showProgress
+                  ? CircularProgressIndicator(
+                      backgroundColor: application.theme.fontColor4.withAlpha(80),
+                      color: Colors.white,
+                      strokeWidth: 3,
+                      value: _upDownloadProgress,
+                    )
+                  : SpinKitRing(
+                      color: Colors.white,
+                      lineWidth: 1.5,
+                      size: iconSize,
+                    ),
             ),
           )
         ];
@@ -844,6 +851,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double placeholderHeight = placeholderWH[1] ?? minHeight;
 
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+    bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
 
     return [
       Container(
@@ -884,12 +892,18 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                           ? Container(
                               width: iconSize * 0.66,
                               height: iconSize * 0.66,
-                              child: CircularProgressIndicator(
-                                backgroundColor: application.theme.fontColor4.withAlpha(80),
-                                color: Colors.white,
-                                strokeWidth: 3,
-                                value: _uploadOrDownloadProgress,
-                              ),
+                              child: showProgress
+                                  ? CircularProgressIndicator(
+                                      backgroundColor: application.theme.fontColor4.withAlpha(80),
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                      value: _upDownloadProgress,
+                                    )
+                                  : SpinKitRing(
+                                      color: Colors.white,
+                                      lineWidth: 1.5,
+                                      size: iconSize,
+                                    ),
                             )
                           : Icon(
                               CupertinoIcons.play_circle,
@@ -903,11 +917,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG 待下载，下载中，下载后，其他同上
+  // TODO:GG 待下载，下载中，下载后，其他同上?
   List<Widget> _getContentBodyFile(bool dark, bool download) {
     return [Text("file - ${_message.options}")];
   }
 
+  // TODO:GG 来个分辨率?
   List<double?> _getPlaceholderWH(List<double> maxWH, List<double> realWH) {
     if (maxWH.length < 2 || maxWH[0] <= 0 || maxWH[1] <= 0) return [null, null];
     if (realWH.length < 2 || realWH[0] <= 0 || realWH[1] <= 0) return [null, null];
