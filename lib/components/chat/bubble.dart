@@ -160,7 +160,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _contact = null;
     }
     // progress
-    _uploadOrDownloadProgress = ((_message.content is File) && (_message.status == MessageStatus.Sending)) ? (_uploadOrDownloadProgress == -1 ? 0 : _uploadOrDownloadProgress) : -1;
+    _uploadOrDownloadProgress = (_message.content is File) ? (_uploadOrDownloadProgress == -1 ? 0 : _uploadOrDownloadProgress) : -1;
     // _playProgress = 0;
     // burn
     _message = chatCommon.burningStart(_message, () {
@@ -484,7 +484,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.file:
         _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
         _bodyList.add(SizedBox(height: 4));
-        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击本地保存
+        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击本地保存!
         break;
     }
 
@@ -704,17 +704,25 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyImage(bool dark) {
+    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
     double maxHeight = Global.screenHeight() * 0.3;
-    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+    double minWidth = maxWidth / 2;
+    double minHeight = maxHeight / 2;
+
+    List<double> realWH = MessageOptions.getMediaWH(_message.options);
+    List<double?> placeholderWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
+    double placeholderWidth = placeholderWH[0] ?? minWidth;
+    double placeholderHeight = placeholderWH[1] ?? minHeight;
 
     if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
       int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
       if (state == MessageOptions.ipfsStateNo) {
         return [
           Container(
-            width: maxWidth / 2,
-            height: maxHeight / 2,
+            width: placeholderWidth,
+            height: placeholderHeight,
             color: Colors.black,
             child: Icon(
               CupertinoIcons.arrow_down_circle,
@@ -726,8 +734,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       } else if (state == MessageOptions.ipfsStateIng) {
         return [
           Container(
-            width: maxWidth / 2,
-            height: maxHeight / 2,
+            width: placeholderWidth,
+            height: placeholderHeight,
             color: Colors.black,
             alignment: Alignment.center,
             child: Container(
@@ -749,33 +757,24 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
     // file
     if (!(_message.content is File)) {
-      return [
-        Container(
-          width: maxWidth / 2,
-          height: maxHeight / 2,
-          color: Colors.black,
-          child: Icon(
-            CupertinoIcons.arrow_down_circle,
-            color: Colors.white,
-            size: iconSize,
-          ),
-        ),
-      ];
+      return [SizedBox.shrink()];
     }
     File file = _message.content as File;
-    List<double> cacheSize = MessageOptions.getMediaWH(_message.options);
-    double? cacheWidth = cacheSize[0] > 0 ? cacheSize[0] : null;
-    double? cacheHeight = cacheSize[1] > 0 ? cacheSize[1] : null;
 
     return [
       Container(
         constraints: BoxConstraints(
           maxWidth: maxWidth,
           maxHeight: maxHeight,
-          minWidth: maxWidth / 3,
-          minHeight: maxWidth / 3,
+          minWidth: minWidth,
+          minHeight: minHeight,
         ),
-        child: Image.file(file, cacheWidth: cacheWidth?.toInt() ?? maxWidth.toInt(), cacheHeight: cacheHeight?.toInt()),
+        child: Image.file(
+          file,
+          fit: BoxFit.cover,
+          cacheWidth: (realWH[0].toInt() > 0) ? realWH[0].toInt() : null,
+          cacheHeight: (realWH[1].toInt() > 0) ? realWH[1].toInt() : null,
+        ),
       )
     ];
   }
@@ -832,14 +831,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyVideo(bool dark) {
-    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
-    double maxHeight = Global.screenHeight() * 0.3;
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
+    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
+    double maxHeight = Global.screenHeight() * 0.3;
+    double minWidth = maxWidth / 2;
+    double minHeight = maxHeight / 2;
+
+    List<double> realWH = MessageOptions.getMediaWH(_message.options);
+    List<double?> placeholderWH = _getPlaceholderWH([maxWidth, maxHeight], realWH);
+    double placeholderWidth = placeholderWH[0] ?? minWidth;
+    double placeholderHeight = placeholderWH[1] ?? minHeight;
+
     int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
-    List<double> cacheSize = MessageOptions.getMediaWH(_message.options);
-    double? cacheThumbnailWidth = cacheSize[0] > 0 ? cacheSize[0] : null;
-    double? cacheThumbnailHeight = cacheSize[1] > 0 ? cacheSize[1] : null;
 
     return [
       Container(
@@ -847,17 +851,22 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            thumbnailPath != null
-                ? Container(
-                    constraints: BoxConstraints(
-                      maxWidth: maxWidth,
-                      maxHeight: maxHeight,
-                      minWidth: maxWidth / 3,
-                      minHeight: maxWidth / 3,
-                    ),
-                    child: Image.file(File(thumbnailPath!), cacheWidth: cacheThumbnailWidth?.toInt() ?? maxWidth.toInt(), cacheHeight: cacheThumbnailHeight?.toInt()),
-                  )
-                : SizedBox(width: maxWidth / 2, height: maxHeight / 2),
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: maxWidth,
+                maxHeight: maxHeight,
+                minWidth: minWidth,
+                minHeight: minHeight,
+              ),
+              child: (thumbnailPath != null)
+                  ? Image.file(
+                      File(thumbnailPath!),
+                      fit: BoxFit.cover,
+                      cacheWidth: (realWH[0].toInt() > 0) ? realWH[0].toInt() : null,
+                      cacheHeight: (realWH[1].toInt() > 0) ? realWH[1].toInt() : null,
+                    )
+                  : SizedBox(width: placeholderWidth, height: placeholderHeight),
+            ),
             Positioned(
               child: (_message.isOutbound == true)
                   ? Icon(
@@ -897,6 +906,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   // TODO:GG 待下载，下载中，下载后，其他同上
   List<Widget> _getContentBodyFile(bool dark, bool download) {
     return [Text("file - ${_message.options}")];
+  }
+
+  List<double?> _getPlaceholderWH(List<double> maxWH, List<double> realWH) {
+    if (maxWH.length < 2 || maxWH[0] <= 0 || maxWH[1] <= 0) return [null, null];
+    if (realWH.length < 2 || realWH[0] <= 0 || realWH[1] <= 0) return [null, null];
+    double widthRatio = maxWH[0] / realWH[0];
+    double heightRatio = maxWH[1] / realWH[1];
+    double minRatio = min(widthRatio, heightRatio);
+    return [realWH[0] * minRatio, realWH[1] * minRatio];
   }
 
   List<dynamic> _getStyles() {
