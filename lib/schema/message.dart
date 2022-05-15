@@ -309,10 +309,14 @@ class MessageSchema {
     if (burningUpdateAt != null && burningUpdateAt > 0) {
       this.options = MessageOptions.setContactBurningUpdateAt(this.options, burningUpdateAt);
     }
-    // media
+    // file
     int? size = int.tryParse(extra?["size"]?.toString() ?? "");
     if (size != null && size != 0) {
       this.options = MessageOptions.setFileSize(this.options, size);
+    }
+    String? fileName = extra?["name"];
+    if (fileName != null && fileName.isNotEmpty) {
+      this.options = MessageOptions.setFileName(this.options, fileName);
     }
     String? fileExt = extra?["fileExt"];
     if (fileExt != null && fileExt.isNotEmpty) {
@@ -618,6 +622,13 @@ class MessageOptions {
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
 
+  static const KEY_FILE_TYPE = "file_type";
+  static const int fileTypeNormal = 0;
+  static const int fileTypeImage = 1;
+  static const int fileTypeAudio = 2;
+  static const int fileTypeVideo = 3;
+
+  static const KEY_FILE_NAME = "file_name";
   static const KEY_FILE_SIZE = "file_size";
   static const KEY_FILE_EXT = "file_ext";
   static const KEY_FILE_MIME_TYPE = "file_mime_type";
@@ -626,13 +637,6 @@ class MessageOptions {
   static const KEY_AUDIO_DURATION = "audioDuration";
   static const KEY_MEDIA_DURATION = "media_duration"; // TODO:GG replace 'audioDuration'
   static const KEY_VIDEO_THUMBNAIL = "video_thumbnail";
-
-  static const KEY_FILE_TYPE = "file_type";
-
-  static const int fileTypeNormal = 0;
-  static const int fileTypeImage = 1;
-  static const int fileTypeAudio = 2;
-  static const int fileTypeVideo = 3;
 
   static const KEY_IPFS_STATE = "ipfs_state";
   static const int ipfsStateNo = 0;
@@ -667,7 +671,7 @@ class MessageOptions {
 
   static int? getOutAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_OUT_AT];
+    return int.parse(options[MessageOptions.KEY_OUT_AT]?.toString() ?? "");
   }
 
   static Map<String, dynamic>? setInAt(Map<String, dynamic>? options, int sendAt) {
@@ -678,7 +682,7 @@ class MessageOptions {
 
   static int? getInAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_IN_AT];
+    return int.parse(options[MessageOptions.KEY_IN_AT]?.toString() ?? "");
   }
 
   static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
@@ -701,7 +705,7 @@ class MessageOptions {
   static int? getContactBurningDeleteSec(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     var seconds = options[MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
-    return (seconds == null || seconds.isEmpty) ? null : int.tryParse(seconds);
+    return int.tryParse(seconds ?? "");
   }
 
   static Map<String, dynamic>? setContactBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
@@ -713,7 +717,7 @@ class MessageOptions {
   static int? getContactBurningUpdateAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
-    return (update == null || update.isEmpty) ? null : int.tryParse(update);
+    return int.tryParse(update ?? "");
   }
 
   static Map<String, dynamic> setFileType(Map<String, dynamic>? options, int type) {
@@ -726,7 +730,18 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var type = options[MessageOptions.KEY_FILE_TYPE]?.toString();
     if (type == null || type.isEmpty) return null;
-    return int.tryParse(type) ?? -1;
+    return int.tryParse(type);
+  }
+
+  static Map<String, dynamic> setFileName(Map<String, dynamic>? options, String? ext) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_FILE_NAME] = ext;
+    return options;
+  }
+
+  static String? getFileName(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_FILE_NAME]?.toString();
   }
 
   static Map<String, dynamic> setFileSize(Map<String, dynamic>? options, int? size) {
@@ -739,7 +754,7 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var size = options[MessageOptions.KEY_FILE_SIZE]?.toString();
     if (size == null || size.isEmpty) return null;
-    return int.tryParse(size) ?? 0;
+    return int.tryParse(size);
   }
 
   static Map<String, dynamic> setFileExt(Map<String, dynamic>? options, String? ext) {
@@ -789,7 +804,7 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var duration = options[MessageOptions.KEY_MEDIA_DURATION]?.toString();
     if (duration == null || duration.isEmpty) return null;
-    return double.tryParse(duration) ?? 0;
+    return double.tryParse(duration);
   }
 
   static Map<String, dynamic> setVideoThumbnailPath(Map<String, dynamic>? options, String? thumbnailPath) {
@@ -846,7 +861,7 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var size = options[MessageOptions.KEY_IPFS_RESULT_SIZE]?.toString();
     if (size == null || size.isEmpty) return null;
-    return int.tryParse(size) ?? 0;
+    return int.tryParse(size);
   }
 
   static String? getIpfsResultName(Map<String, dynamic>? options) {
@@ -871,7 +886,7 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var size = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE]?.toString();
     if (size == null || size.isEmpty) return null;
-    return int.tryParse(size) ?? 0;
+    return int.tryParse(size);
   }
 
   static String? getIpfsResultThumbnailName(Map<String, dynamic>? options) {

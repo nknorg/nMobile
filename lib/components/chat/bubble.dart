@@ -17,6 +17,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/components/tip/popup_menu.dart' as PopMenu;
 import 'package:nmobile/helpers/audio.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -231,9 +232,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendOut = _message.isOutbound;
     bool isTipBottom = _message.status == MessageStatus.SendSuccess || _message.status == MessageStatus.SendReceipt;
 
-    List styles = _getStyles();
-    BoxDecoration decoration = styles[0];
-    bool dark = styles[1];
+    BoxDecoration decoration = _getStyles();
 
     return Container(
       padding: EdgeInsets.only(
@@ -263,7 +262,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   crossAxisAlignment: isTipBottom ? CrossAxisAlignment.end : CrossAxisAlignment.center,
                   children: [
                     isSendOut ? _getStatusTip(isSendOut) : SizedBox.shrink(),
-                    _getContent(decoration, dark),
+                    _getContent(decoration),
                     isSendOut ? SizedBox.shrink() : _getStatusTip(isSendOut),
                   ],
                 ),
@@ -397,7 +396,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     return SizedBox.shrink();
   }
 
-  Widget _getContent(BoxDecoration decoration, bool dark) {
+  Widget _getContent(BoxDecoration decoration) {
     double maxWidth = Global.screenWidth() - (12 + 20 * 2 + 8) * 2;
 
     String contentType = _message.contentType;
@@ -418,27 +417,26 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     switch (contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        _bodyList = _getContentBodyText(dark);
+        _bodyList = _getContentBodyText();
         _bodyList.add(SizedBox(height: 1));
         onTap = () => _onContentTextTap();
         break;
       case MessageContentType.media:
       case MessageContentType.image:
         // image + ipfs_image
-        _bodyList = _getContentBodyImage(dark);
+        _bodyList = _getContentBodyImage();
         _bodyList.add(SizedBox(height: 4));
-        if (_message.isOutbound) {
+        if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
             onTap = () => PhotoScreen.go(context, filePath: file.path);
           }
-          // TODO:GG 这里的重发走SendFail!
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () => chatCommon.startIpfsDownload(_message);
           } else if (state == MessageOptions.ipfsStateIng) {
-            // FUTURE: delete download and update UI
+            // FUTURE: cancel download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
@@ -449,7 +447,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.audio:
         // just audio, no ipfs_audio
-        _bodyList = _getContentBodyAudio(dark);
+        _bodyList = _getContentBodyAudio();
         if (_message.content is File) {
           double? durationS = MessageOptions.getAudioDuration(_message.options);
           int? durationMs = durationS == null ? null : ((durationS * 1000).round());
@@ -459,20 +457,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.video:
         // just ipfs_video, no video
-        _bodyList = _getContentBodyVideo(dark);
+        _bodyList = _getContentBodyVideo();
         _bodyList.add(SizedBox(height: 4));
-        if (_message.isOutbound) {
+        if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
             onTap = () => VideoScreen.go(context, filePath: file.path);
           }
-          // TODO:GG 这里的重发走SendFail!
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () => chatCommon.startIpfsDownload(_message);
           } else if (state == MessageOptions.ipfsStateIng) {
-            // FUTURE: delete download and update UI
+            // FUTURE: cancel download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
@@ -482,9 +479,23 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
         break;
       case MessageContentType.file:
-        _bodyList = _getContentBodyFile(dark, contentType == MessageContentType.ipfs);
+        _bodyList = _getContentBodyFile();
         _bodyList.add(SizedBox(height: 4));
-        // TODO:GG onTap? 点击下载，简单粗暴。下载完后，点击本地保存!
+        if (_message.isOutbound) {
+          // nothing
+        } else {
+          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+          if (state == MessageOptions.ipfsStateNo) {
+            onTap = () => chatCommon.startIpfsDownload(_message);
+          } else if (state == MessageOptions.ipfsStateIng) {
+            // FUTURE: delete download and update UI
+          } else {
+            if (_message.content is File) {
+              File file = _message.content as File;
+              onTap = () => FileHelper.exportFile(file.absolute.path);
+            }
+          }
+        }
         break;
     }
 
@@ -676,7 +687,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     );
   }
 
-  List<Widget> _getContentBodyText(bool dark) {
+  List<Widget> _getContentBodyText() {
     List<String> contents = Format.chatText(_message.content?.toString());
     if (contents.isNotEmpty) {
       List<InlineSpan> children = [];
@@ -684,7 +695,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         if (s.contains(Format.chatRegSpecial)) {
           children.add(TextSpan(text: s, style: TextStyle(height: 1.15, color: Color(0xFFF5B800), fontStyle: FontStyle.italic, fontWeight: FontWeight.bold)));
         } else {
-          children.add(TextSpan(text: s, style: TextStyle(color: dark ? application.theme.fontLightColor : application.theme.fontColor3, height: 1.25)));
+          children.add(TextSpan(text: s, style: TextStyle(color: _message.isOutbound ? application.theme.fontLightColor : application.theme.fontColor3, height: 1.25)));
         }
       }
       return [
@@ -699,11 +710,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     } else {
       String content = _message.content?.toString() ?? "";
       if (content.isEmpty) content = " ";
-      return [Markdown(data: content, dark: dark)];
+      return [Markdown(data: content, dark: _message.isOutbound)];
     }
   }
 
-  List<Widget> _getContentBodyImage(bool dark) {
+  List<Widget> _getContentBodyImage() {
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
@@ -751,7 +762,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     )
                   : SpinKitRing(
                       color: Colors.white,
-                      lineWidth: 1.5,
+                      lineWidth: 3,
                       size: iconSize,
                     ),
             ),
@@ -788,7 +799,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  List<Widget> _getContentBodyAudio(bool dark) {
+  List<Widget> _getContentBodyAudio() {
     bool isPlaying = _playProgress > 0;
 
     Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
@@ -839,7 +850,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  List<Widget> _getContentBodyVideo(bool dark) {
+  // TODO:GG 加个视频时长
+  List<Widget> _getContentBodyVideo() {
     double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
 
     double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
@@ -905,7 +917,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                                     )
                                   : SpinKitRing(
                                       color: Colors.white,
-                                      lineWidth: 1.5,
+                                      lineWidth: 3,
                                       size: iconSize,
                                     ),
                             )
@@ -921,9 +933,100 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     ];
   }
 
-  // TODO:GG 待下载，下载中，下载后，其他同上?
-  List<Widget> _getContentBodyFile(bool dark, bool download) {
-    return [Text("file - ${_message.options}")];
+  List<Widget> _getContentBodyFile() {
+    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+
+    double labelWidth = Global.screenWidth() * 0.35;
+
+    String fileName = MessageOptions.getFileName(_message.options) ?? "---";
+    int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsResultSize(_message.options) ?? 0;
+    String fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : "--";
+
+    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+    bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
+
+    return [
+      Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: labelWidth, minWidth: labelWidth),
+                  child: Label(
+                    fileName,
+                    type: LabelType.bodyRegular,
+                    color: _message.isOutbound ? Colors.white : application.theme.fontColor1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: labelWidth, minWidth: labelWidth),
+                  child: Label(
+                    fileSize,
+                    type: LabelType.bodyRegular,
+                    color: _message.isOutbound ? Colors.white : application.theme.fontColor1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            (_message.isOutbound == true)
+                ? Icon(
+                    CupertinoIcons.doc,
+                    color: Colors.white,
+                    size: iconSize,
+                  )
+                : (state == MessageOptions.ipfsStateNo)
+                    ? Icon(
+                        CupertinoIcons.arrow_down_circle,
+                        color: application.theme.fontColor1.withAlpha(200),
+                        size: iconSize,
+                      )
+                    : (state == MessageOptions.ipfsStateIng)
+                        ? Container(
+                            width: iconSize,
+                            height: iconSize,
+                            child: UnconstrainedBox(
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: iconSize * 0.66,
+                                height: iconSize * 0.66,
+                                child: showProgress
+                                    ? CircularProgressIndicator(
+                                        backgroundColor: application.theme.primaryColor.withAlpha(40),
+                                        color: application.theme.primaryColor,
+                                        strokeWidth: 3,
+                                        value: _upDownloadProgress,
+                                      )
+                                    : SpinKitRing(
+                                        color: application.theme.primaryColor,
+                                        lineWidth: 3,
+                                        size: iconSize,
+                                      ),
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            CupertinoIcons.doc,
+                            color: application.theme.fontColor1.withAlpha(200),
+                            size: iconSize,
+                          ),
+          ],
+        ),
+      ),
+    ];
   }
 
   List<double?> _getPlaceholderWH(List<double> maxWH, List<double> realWH) {
@@ -935,9 +1038,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     return [realWH[0] * minRatio, realWH[1] * minRatio];
   }
 
-  List<dynamic> _getStyles() {
+  BoxDecoration _getStyles() {
     BoxDecoration decoration;
-    bool dark;
     if (_message.isOutbound) {
       decoration = BoxDecoration(
         color: _getBgColor(),
@@ -948,7 +1050,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           bottomRight: Radius.circular(_hideBotMargin ? 1 : (_hideTopMargin ? 12 : 2)),
         ),
       );
-      dark = true;
     } else {
       decoration = BoxDecoration(
         color: _getBgColor(),
@@ -959,9 +1060,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           bottomRight: const Radius.circular(12),
         ),
       );
-      dark = false;
     }
-    return [decoration, dark];
+    return decoration;
   }
 
   Color _getBgColor() {

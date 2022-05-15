@@ -78,12 +78,12 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e) {
       handleError(e);
     }
-    // TODO:GG 没有mimeType？ 以文件的形式传输吧，UI只有下载？
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {
       PlatformFile picked = result.files[i];
       String? path = picked.path;
+      String name = picked.name;
       if (path == null || path.isEmpty) continue;
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
       File file = File(path);
@@ -91,6 +91,7 @@ class ChatBottomMenu extends StatelessWidget {
       results.add({
         "path": savePath,
         "size": picked.size,
+        "name": name,
         "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : (Path.getFileExt(file, "")),
         "mimeType": null, // nothing!
       });
@@ -129,7 +130,7 @@ class ChatBottomMenu extends StatelessWidget {
                       backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
                     child: Icon(
-                      CupertinoIcons.doc_plaintext,
+                      CupertinoIcons.folder,
                       size: iconSize,
                       color: application.theme.fontColor2,
                     ),
