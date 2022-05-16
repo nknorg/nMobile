@@ -299,7 +299,7 @@ class ChatInCommon with Tag {
   Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
     if ((received.content == null) || !(received.content is String)) return false;
-    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.content, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.content, MessageContentType.piece);
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
@@ -350,7 +350,7 @@ class ChatInCommon with Tag {
 
     // messages
     List<String> msgIds = readIds.map((e) => e?.toString() ?? "").toList();
-    List<MessageSchema> msgList = await MessageStorage.instance.queryListByNoContentType(msgIds, MessageContentType.piece);
+    List<MessageSchema> msgList = await MessageStorage.instance.queryListByIdsNoContentType(msgIds, MessageContentType.piece);
     if (msgList.isEmpty) return true;
 
     // update
@@ -387,7 +387,7 @@ class ChatInCommon with Tag {
     if (requestType == "ask") {
       // receive ask
       List<String> msgIds = messageIds.map((e) => e?.toString() ?? "").toList();
-      List<MessageSchema> messageList = await MessageStorage.instance.queryListByNoContentType(msgIds, MessageContentType.piece);
+      List<MessageSchema> messageList = await MessageStorage.instance.queryListByIdsNoContentType(msgIds, MessageContentType.piece);
       List<String> msgStatusList = [];
       for (var i = 0; i < messageIds.length; i++) {
         String msgId = messageIds[i];
@@ -416,7 +416,7 @@ class ChatInCommon with Tag {
           logger.w("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
           continue;
         }
-        MessageSchema? message = await MessageStorage.instance.queryByNoContentType(msgId, MessageContentType.piece);
+        MessageSchema? message = await MessageStorage.instance.queryByIdNoContentType(msgId, MessageContentType.piece);
         if (message == null) {
           logger.w("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
           continue;
@@ -638,7 +638,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // duplicated
-    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
       logger.d("$TAG - receiveImage - duplicated - message:$exists");
       return false;
@@ -667,7 +667,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // duplicated
-    MessageSchema? exists = await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece);
+    MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
       logger.d("$TAG - receiveAudio - duplicated - message:$exists");
       return false;
@@ -698,14 +698,14 @@ class ChatInCommon with Tag {
     int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
     int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
-    List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByContentType(received.msgId, parentType, 1);
+    List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByIdContentType(received.msgId, parentType, 1);
     if (existsCombine.isNotEmpty) {
       logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
       // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
     // piece
-    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(received.msgId, MessageContentType.piece, total + parity);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByIdContentType(received.msgId, MessageContentType.piece, total + parity);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
       int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX];
@@ -809,9 +809,9 @@ class ChatInCommon with Tag {
 
   Future<int> _deletePieces(String msgId) async {
     int count = 0;
-    List<MessageSchema> pieces = await MessageStorage.instance.queryListByContentType(msgId, MessageContentType.piece, MessageSchema.piecesMaxTotal + MessageSchema.piecesMaxParity);
+    List<MessageSchema> pieces = await MessageStorage.instance.queryListByIdContentType(msgId, MessageContentType.piece, MessageSchema.piecesMaxTotal + MessageSchema.piecesMaxParity);
     logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
-    int result = await MessageStorage.instance.deleteByContentType(msgId, MessageContentType.piece);
+    int result = await MessageStorage.instance.deleteByIdContentType(msgId, MessageContentType.piece);
     if (result > 0) {
       for (var i = 0; i < pieces.length; i++) {
         MessageSchema piece = pieces[i];
