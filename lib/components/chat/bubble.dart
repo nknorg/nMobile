@@ -17,7 +17,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/components/tip/popup_menu.dart' as PopMenu;
 import 'package:nmobile/helpers/audio.dart';
-import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -28,6 +28,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/util.dart';
+import 'package:open_file/open_file.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
@@ -434,7 +435,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
-            onTap = () => chatCommon.startIpfsDownload(_message);
+            onTap = () {
+              setState(() {
+                _upDownloadProgress = 0;
+              });
+              chatCommon.startIpfsDownload(_message);
+            };
           } else if (state == MessageOptions.ipfsStateIng) {
             // FUTURE: cancel download and update UI
           } else {
@@ -467,7 +473,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
-            onTap = () => chatCommon.startIpfsDownload(_message);
+            onTap = () {
+              setState(() {
+                _upDownloadProgress = 0;
+              });
+              chatCommon.startIpfsDownload(_message);
+            };
           } else if (state == MessageOptions.ipfsStateIng) {
             // FUTURE: cancel download and update UI
           } else {
@@ -486,13 +497,24 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
-            onTap = () => chatCommon.startIpfsDownload(_message);
+            onTap = () {
+              setState(() {
+                _upDownloadProgress = 0;
+              });
+              chatCommon.startIpfsDownload(_message);
+            };
           } else if (state == MessageOptions.ipfsStateIng) {
             // FUTURE: delete download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
-              onTap = () => FileHelper.exportFile(file.absolute.path);
+              onTap = () {
+                try {
+                  OpenFile.open(file.path);
+                } catch (e) {
+                  handleError(e);
+                }
+              };
             }
           }
         }
@@ -728,45 +750,81 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double placeholderHeight = ratioWH[1] ?? minHeight;
 
     if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
+      int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsResultSize(_message.options) ?? 0;
+      String? fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : null;
       int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
       if (state == MessageOptions.ipfsStateNo) {
         return [
-          Container(
-            width: placeholderWidth,
-            height: placeholderHeight,
-            color: Colors.black,
-            child: Icon(
-              CupertinoIcons.arrow_down_circle,
-              color: Colors.white,
-              size: iconSize,
-            ),
+          Stack(
+            children: [
+              Container(
+                width: placeholderWidth,
+                height: placeholderHeight,
+                color: Colors.black,
+                child: Icon(
+                  CupertinoIcons.arrow_down_circle,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
+              ),
+              (fileSize != null && fileSize.isNotEmpty)
+                  ? Positioned(
+                      right: 5,
+                      bottom: 2,
+                      child: Label(
+                        fileSize,
+                        type: LabelType.bodyLarge,
+                        color: Colors.white,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )
+                  : SizedBox.shrink(),
+            ],
           ),
         ];
       } else if (state == MessageOptions.ipfsStateIng) {
         bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
         return [
-          Container(
-            width: placeholderWidth,
-            height: placeholderHeight,
-            color: Colors.black,
-            alignment: Alignment.center,
-            child: Container(
-              width: iconSize * 0.66,
-              height: iconSize * 0.66,
-              child: showProgress
-                  ? CircularProgressIndicator(
-                      backgroundColor: application.theme.fontColor4.withAlpha(80),
-                      color: Colors.white,
-                      strokeWidth: 3,
-                      value: _upDownloadProgress,
+          Stack(
+            children: [
+              Container(
+                width: placeholderWidth,
+                height: placeholderHeight,
+                color: Colors.black,
+                alignment: Alignment.center,
+                child: Container(
+                  width: iconSize * 0.66,
+                  height: iconSize * 0.66,
+                  child: showProgress
+                      ? CircularProgressIndicator(
+                          backgroundColor: application.theme.fontColor4.withAlpha(80),
+                          color: Colors.white,
+                          strokeWidth: 3,
+                          value: _upDownloadProgress,
+                        )
+                      : SpinKitRing(
+                          color: Colors.white,
+                          lineWidth: 3,
+                          size: iconSize,
+                        ),
+                ),
+              ),
+              (fileSize != null && fileSize.isNotEmpty)
+                  ? Positioned(
+                      right: 5,
+                      bottom: 2,
+                      child: Label(
+                        fileSize,
+                        type: LabelType.bodyLarge,
+                        color: Colors.white,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     )
-                  : SpinKitRing(
-                      color: Colors.white,
-                      lineWidth: 3,
-                      size: iconSize,
-                    ),
-            ),
-          )
+                  : SizedBox.shrink(),
+            ],
+          ),
         ];
       } else {
         // file is exits
@@ -902,8 +960,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             ),
             (durationText != null && durationText.isNotEmpty)
                 ? Positioned(
-                    right: 4,
-                    bottom: 1,
+                    right: 5,
+                    bottom: 2,
                     child: Label(
                       durationText,
                       type: LabelType.bodyLarge,
@@ -1027,13 +1085,13 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                                 height: iconSize * 0.66,
                                 child: showProgress
                                     ? CircularProgressIndicator(
-                                        backgroundColor: application.theme.primaryColor.withAlpha(40),
-                                        color: application.theme.primaryColor,
+                                        backgroundColor: application.theme.fontColor1.withAlpha(40),
+                                        color: application.theme.fontColor1,
                                         strokeWidth: 3,
                                         value: _upDownloadProgress,
                                       )
                                     : SpinKitRing(
-                                        color: application.theme.primaryColor,
+                                        color: application.theme.fontColor1,
                                         lineWidth: 3,
                                         size: iconSize,
                                       ),
