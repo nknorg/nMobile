@@ -52,10 +52,10 @@ class FileHelper {
     File file = File(filePath);
     if (!await file.exists()) {
       await file.create(recursive: true);
-      logger.d('MessageSchema - loadMediaFile - success - path:${file.absolute}');
+      logger.d('FileHelper - convertBase64toFile - success - path:${file.absolute}');
       await file.writeAsBytes(bytes, flush: true);
     } else {
-      logger.w('MessageSchema - loadMediaFile - exists - path:$filePath');
+      logger.w('FileHelper - convertBase64toFile - exists - path:$filePath');
     }
     return file;
   }
