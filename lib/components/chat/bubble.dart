@@ -494,6 +494,16 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         _bodyList.add(SizedBox(height: 4));
         if (_message.isOutbound) {
           // nothing
+          if (_message.content is File) {
+            File file = _message.content as File;
+            onTap = () {
+              try {
+                OpenFile.open(file.path);
+              } catch (e) {
+                handleError(e);
+              }
+            };
+          }
         } else {
           int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
           if (state == MessageOptions.ipfsStateNo) {
