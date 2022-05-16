@@ -824,10 +824,10 @@ class MessageOptions {
     return options;
   }
 
-  static int? getIpfsState(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
+  static int getIpfsState(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return ipfsStateNo;
     var complete = options[MessageOptions.KEY_IPFS_STATE]?.toString();
-    if (complete == null || complete.isEmpty) return null;
+    if (complete == null || complete.isEmpty) return ipfsStateNo;
     return int.tryParse(complete) ?? ipfsStateNo;
   }
 
@@ -837,10 +837,10 @@ class MessageOptions {
     return options;
   }
 
-  static int? getIpfsThumbnailState(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
+  static int getIpfsThumbnailState(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return ipfsThumbnailStateNo;
     var complete = options[MessageOptions.KEY_IPFS_THUMBNAIL_STATE]?.toString();
-    if (complete == null || complete.isEmpty) return null;
+    if (complete == null || complete.isEmpty) return ipfsThumbnailStateNo;
     return int.tryParse(complete) ?? ipfsThumbnailStateNo;
   }
 
