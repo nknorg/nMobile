@@ -684,10 +684,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           String? mimeType = result["mimeType"];
                           double durationS = double.tryParse(result["duration"]?.toString() ?? "") ?? 0;
                           if (path.isEmpty) continue;
-                          // TODO:GG 目前无单独的 video、file 协议，filePicker没有mimeType?
+                          // no message_type(video/file), and result no mime_type from file_picker
+                          // so big_file and video+file go with type_ipfs
                           if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
                             await chatOutCommon.sendImage(_topic ?? _contact, File(path));
-                          } else if ((mimeType?.contains("audio") == true)) {
+                          } else if ((mimeType?.contains("audio") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
                             await chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS);
                           } else {
                             await chatOutCommon.saveIpfs(_topic ?? _contact, result);

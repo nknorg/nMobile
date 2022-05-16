@@ -125,7 +125,7 @@ class MessageStorage with Tag {
     });
   }*/
 
-  Future<int> deleteByContentType(String? msgId, String? contentType) async {
+  Future<int> deleteByIdContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     return await _lock.synchronized(() async {
@@ -138,10 +138,10 @@ class MessageStorage with Tag {
           );
         });
         if (count != null && count > 0) {
-          logger.v("$TAG - deleteByContentType - success - msgId:$msgId - contentType:$contentType");
+          logger.v("$TAG - deleteByIdContentType - success - msgId:$msgId - contentType:$contentType");
           return count;
         }
-        logger.w("$TAG - deleteByContentType - empty - msgId:$msgId - contentType:$contentType");
+        logger.w("$TAG - deleteByIdContentType - empty - msgId:$msgId - contentType:$contentType");
       } catch (e) {
         handleError(e);
       }
@@ -227,10 +227,10 @@ class MessageStorage with Tag {
       });
       if (res != null && res.length > 0) {
         MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - queryList - success - msgId:$msgId - schema:$schema");
+        logger.v("$TAG - query - success - msgId:$msgId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryList - success - msgId:$msgId");
+      logger.v("$TAG - query - success - msgId:$msgId");
     } catch (e) {
       handleError(e);
     }
@@ -264,7 +264,7 @@ class MessageStorage with Tag {
     });
   }*/
 
-  Future<MessageSchema?> queryByNoContentType(String? msgId, String? contentType) async {
+  Future<MessageSchema?> queryByIdNoContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
     // return await _lock.synchronized(() async {
@@ -281,10 +281,10 @@ class MessageStorage with Tag {
       });
       if (res != null && res.length > 0) {
         MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - queryByNoContentType - success - msgId:$msgId - schema:$schema");
+        logger.v("$TAG - queryByIdNoContentType - success - msgId:$msgId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryByNoContentType - empty - msgId:$msgId");
+      logger.v("$TAG - queryByIdNoContentType - empty - msgId:$msgId");
     } catch (e) {
       handleError(e);
     }
@@ -292,7 +292,7 @@ class MessageStorage with Tag {
     // });
   }
 
-  Future<List<MessageSchema>> queryListByNoContentType(List<String>? msgIds, String? contentType) async {
+  Future<List<MessageSchema>> queryListByIdsNoContentType(List<String>? msgIds, String? contentType) async {
     if (db?.isOpen != true) return [];
     if (msgIds == null || msgIds.isEmpty || contentType == null || contentType.isEmpty) return [];
     // return await _lock.synchronized(() async {
@@ -321,10 +321,10 @@ class MessageStorage with Tag {
           MessageSchema schema = MessageSchema.fromMap(map);
           schemaList.add(schema);
         }
-        logger.v("$TAG - queryListByNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
+        logger.v("$TAG - queryListByIdsNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
         return schemaList;
       }
-      logger.v("$TAG - queryListByNoContentType - empty - msgIds:$msgIds");
+      logger.v("$TAG - queryListByIdsNoContentType - empty - msgIds:$msgIds");
     } catch (e) {
       handleError(e);
     }
@@ -332,7 +332,7 @@ class MessageStorage with Tag {
     // });
   }
 
-  /*Future<MessageSchema?> queryByContentType(String? msgId, String? contentType) async {
+  /*Future<MessageSchema?> queryByIdContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return null;
     return await _lock.synchronized(() async {
@@ -350,7 +350,7 @@ class MessageStorage with Tag {
           logger.v("$TAG - queryByContentType - success - msgId:$msgId - schema:$schema");
           return schema;
         }
-        logger.v("$TAG - queryByContentType - empty - msgId:$msgId");
+        logger.v("$TAG - queryByIdContentType - empty - msgId:$msgId");
       } catch (e) {
         handleError(e);
       }
@@ -358,7 +358,7 @@ class MessageStorage with Tag {
     });
   }*/
 
-  /*Future<List<MessageSchema>> queryList(String? msgId) async {
+  /*Future<List<MessageSchema>> queryListById(String? msgId) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty) return [];
     return await _lock.synchronized(() async {
@@ -372,7 +372,7 @@ class MessageStorage with Tag {
           );
         });
         if (res == null || res.isEmpty) {
-          logger.v("$TAG - queryList - empty - msgId:$msgId");
+          logger.v("$TAG - queryListById - empty - msgId:$msgId");
           return [];
         }
         List<MessageSchema> result = <MessageSchema>[];
@@ -382,7 +382,7 @@ class MessageStorage with Tag {
           logText += "    \n$item";
           result.add(item);
         });
-        logger.v("$TAG - queryList - success - msgId:$msgId - length:${result.length} - items:$logText");
+        logger.v("$TAG - queryListById - success - msgId:$msgId - length:${result.length} - items:$logText");
         return result;
       } catch (e) {
         handleError(e);
@@ -391,7 +391,7 @@ class MessageStorage with Tag {
     });
   }*/
 
-  Future<List<MessageSchema>> queryListByContentType(String? msgId, String? contentType, int limit) async {
+  Future<List<MessageSchema>> queryListByIdContentType(String? msgId, String? contentType, int limit) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
     // return await _lock.synchronized(() async {
@@ -407,7 +407,7 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListByContentType - empty - msgId:$msgId - contentType:$contentType");
+        logger.d("$TAG - queryListByIdContentType - empty - msgId:$msgId - contentType:$contentType");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
@@ -417,7 +417,7 @@ class MessageStorage with Tag {
         logText += "\n$item";
         result.add(item);
       });
-      logger.d("$TAG - queryListByContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+      logger.d("$TAG - queryListByIdContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
       return result;
     } catch (e) {
       handleError(e);
@@ -426,7 +426,43 @@ class MessageStorage with Tag {
     // });
   }
 
-  /*Future<int> queryCountByContentType(String? msgId, String? contentType) async {
+  // TODO:GG index
+  Future<List<MessageSchema>> queryListNotDeleteByContentType(String? contentType, int limit) async {
+    if (db?.isOpen != true) return [];
+    if (contentType == null || contentType.isEmpty) return [];
+    // return await _lock.synchronized(() async {
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'type = ? AND is_delete = ?',
+          whereArgs: [contentType],
+          offset: 0,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.d("$TAG - queryListNotDeleteByContentType - empty - contentType:$contentType");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "\n$item";
+        result.add(item);
+      });
+      logger.d("$TAG - queryListNotDeleteByContentType - success - contentType:$contentType - length:${result.length} - items:$logText");
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return [];
+    // });
+  }
+
+  /*Future<int> queryCountByIdContentType(String? msgId, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     return await _lock.synchronized(() async {
@@ -440,7 +476,7 @@ class MessageStorage with Tag {
           );
         });
         int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-        logger.v("$TAG - queryCountByContentType - msgId:$msgId - count:$count");
+        logger.v("$TAG - queryCountByIdContentType - msgId:$msgId - count:$count");
         return count ?? 0;
       } catch (e) {
         handleError(e);
