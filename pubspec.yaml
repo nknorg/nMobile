@@ -111,6 +111,7 @@ dependencies:
   path: ^1.8.0
   file_picker: ^4.5.1
   image_gallery_saver: ^1.7.1
+  open_file: ^3.2.1
 
   # image
   camera: ^0.9.4+24
