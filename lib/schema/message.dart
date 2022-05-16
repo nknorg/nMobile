@@ -347,7 +347,7 @@ class MessageSchema {
       this.options = MessageOptions.setMediaSizeWH(this.options, mediaWidth, mediaHeight);
     }
     double? duration = double.tryParse(extra?["duration"]?.toString() ?? "");
-    if (duration != null && duration > 0) {
+    if (duration != null && duration >= 0) {
       this.options = MessageOptions.setMediaDuration(this.options, duration);
     }
     String? thumbnailPath = extra?["thumbnailPath"];
@@ -369,7 +369,7 @@ class MessageSchema {
     }
     // SUPPORT:START
     double? audioDurationS = extra?["audioDurationS"];
-    if (audioDurationS != null && audioDurationS > 0) {
+    if (audioDurationS != null && audioDurationS >= 0) {
       this.options = MessageOptions.setAudioDuration(this.options, audioDurationS);
     }
     // SUPPORT:END
