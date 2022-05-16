@@ -433,7 +433,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             onTap = () => PhotoScreen.go(context, filePath: file.path);
           }
         } else {
-          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+          int state = MessageOptions.getIpfsState(_message.options);
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () {
               setState(() {
@@ -471,7 +471,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             onTap = () => VideoScreen.go(context, filePath: file.path);
           }
         } else {
-          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+          int state = MessageOptions.getIpfsState(_message.options);
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () {
               setState(() {
@@ -505,7 +505,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             };
           }
         } else {
-          int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+          int state = MessageOptions.getIpfsState(_message.options);
           if (state == MessageOptions.ipfsStateNo) {
             onTap = () {
               setState(() {
@@ -762,7 +762,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
       int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsResultSize(_message.options) ?? 0;
       String? fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : null;
-      int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+      int state = MessageOptions.getIpfsState(_message.options);
       if (state == MessageOptions.ipfsStateNo) {
         return [
           Stack(
@@ -941,7 +941,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       durationText = "$minText:$secText";
     }
 
-    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+    int state = MessageOptions.getIpfsState(_message.options);
     bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
 
     return [
@@ -1032,7 +1032,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsResultSize(_message.options) ?? 0;
     String fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : "--";
 
-    int state = MessageOptions.getIpfsState(_message.options) ?? MessageOptions.ipfsStateNo;
+    int state = MessageOptions.getIpfsState(_message.options);
     bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
 
     return [

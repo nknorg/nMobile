@@ -427,7 +427,7 @@ class MessageStorage with Tag {
   }
 
   // TODO:GG index
-  Future<List<MessageSchema>> queryListNotDeleteByContentType(String? contentType, int limit) async {
+  Future<List<MessageSchema>> queryListByContentTypeWithNotDelete(String? contentType, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (contentType == null || contentType.isEmpty) return [];
     // return await _lock.synchronized(() async {
@@ -438,12 +438,13 @@ class MessageStorage with Tag {
           columns: ['*'],
           where: 'type = ? AND is_delete = ?',
           whereArgs: [contentType],
-          offset: 0,
+          orderBy: 'send_at DESC',
+          offset: offset,
           limit: limit,
         );
       });
       if (res == null || res.isEmpty) {
-        logger.d("$TAG - queryListNotDeleteByContentType - empty - contentType:$contentType");
+        logger.d("$TAG - queryListByContentTypeWithNotDelete - empty - contentType:$contentType");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
@@ -453,7 +454,7 @@ class MessageStorage with Tag {
         logText += "\n$item";
         result.add(item);
       });
-      logger.d("$TAG - queryListNotDeleteByContentType - success - contentType:$contentType - length:${result.length} - items:$logText");
+      logger.d("$TAG - queryListByContentTypeWithNotDelete - success - contentType:$contentType - length:${result.length} - items:$logText");
       return result;
     } catch (e) {
       handleError(e);
@@ -608,9 +609,9 @@ class MessageStorage with Tag {
           columns: ['*'],
           where: 'target_id = ? AND topic = ? AND is_delete = ? AND NOT type = ?',
           whereArgs: [targetId, topic ?? "", 0, MessageContentType.piece],
+          orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
-          orderBy: 'send_at DESC',
         );
       });
       if (res == null || res.isEmpty) {
