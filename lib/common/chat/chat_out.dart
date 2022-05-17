@@ -123,7 +123,7 @@ class ChatOutCommon with Tag {
   Future sendReceipt(MessageSchema received) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
-    received = (await MessageStorage.instance.queryByNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
+    received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await _sendWithAddressSafe([received.from], data, notification: false);
   }
@@ -292,6 +292,10 @@ class ChatOutCommon with Tag {
     );
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
+    if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
+    }
     MessageSchema? inserted = await _insertMessage(message);
     if (inserted == null) return null;
     // ipfs
@@ -299,14 +303,11 @@ class ChatOutCommon with Tag {
     return inserted;
   }
 
-  Future<MessageSchema?> sendIpfs(String? msgId, Map<String, dynamic> result) async {
+  Future<MessageSchema?> sendIpfs(String? msgId) async {
     if (msgId == null || msgId.isEmpty) return null;
     // schema
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
-    message.options = MessageOptions.setIpfsResult(message.options, result["Hash"] ?? result[MessageOptions.KEY_IPFS_RESULT_HASH], result["Size"] ?? result[MessageOptions.KEY_IPFS_RESULT_SIZE], result["Name"] ?? result[MessageOptions.KEY_IPFS_RESULT_NAME]);
-    message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
-    await MessageStorage.instance.updateOptions(message.msgId, message.options);
     // data
     String? data = await MessageData.getIpfs(message);
     return _saveAndSend(message, data, insert: false);
@@ -486,9 +487,8 @@ class ChatOutCommon with Tag {
     return resendLock.synchronized(() async {
       if (message == null) return null;
       if (message.contentType == MessageContentType.ipfs) {
-        int state = MessageOptions.getIpfsState(message.options) ?? MessageOptions.ipfsStateNo;
-        if (state == MessageOptions.ipfsStateYes) {
-          return await chatOutCommon.sendIpfs(message.msgId, message.options ?? Map());
+        if (MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes) {
+          return await chatOutCommon.sendIpfs(message.msgId);
         } else {
           return await chatCommon.startIpfsUpload(message.msgId);
         }
@@ -528,7 +528,8 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
-        // TODO:GG 不对，还得看看
+        // TODO:GG 不对，还得看看! 顺便看看log里的sendFail
+        // TODO:GG 走到这里说明sendSuccess了，只差msg协议的发送了吧，顺便检查下上面
         msgData = await MessageData.getIpfs(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
@@ -618,7 +619,7 @@ class ChatOutCommon with Tag {
         message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
       } else {
         // noResend just delete
-        int count = await MessageStorage.instance.deleteByContentType(message.msgId, message.contentType);
+        int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
         if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
         return null;
       }
