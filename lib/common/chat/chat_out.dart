@@ -183,7 +183,7 @@ class ChatOutCommon with Tag {
       },
     );
     send.content = MessageData.getContactOptionsBurn(send); // same with receive and old version
-    await _saveAndSend(send, send.content);
+    await _send(send, send.content);
   }
 
   // NO topic (1 to 1)
@@ -198,7 +198,7 @@ class ChatOutCommon with Tag {
     );
     send.options = MessageOptions.setDeviceToken(send.options, deviceToken);
     send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
-    await _saveAndSend(send, send.content);
+    await _send(send, send.content);
   }
 
   // NO DB NO display (1 to 1)
@@ -250,7 +250,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String data = MessageData.getText(message);
-    return _saveAndSend(message, data);
+    return _send(message, data);
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
@@ -310,7 +310,7 @@ class ChatOutCommon with Tag {
     if (message == null) return null;
     // data
     String? data = await MessageData.getIpfs(message);
-    return _saveAndSend(message, data, insert: false);
+    return _send(message, data, insert: false);
   }
 
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
@@ -350,7 +350,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getImage(message);
-    return _saveAndSend(message, data);
+    return _send(message, data);
   }
 
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
@@ -388,7 +388,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getAudio(message);
-    return _saveAndSend(message, data);
+    return _send(message, data);
   }
 
   // NO DB NO display
@@ -429,7 +429,7 @@ class ChatOutCommon with Tag {
       topic: topic,
     );
     String data = MessageData.getTopicSubscribe(send);
-    await _saveAndSend(send, data);
+    await _send(send, data);
   }
 
   // NO DB NO single
@@ -459,7 +459,7 @@ class ChatOutCommon with Tag {
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
-    return _saveAndSend(message, data);
+    return _send(message, data);
   }
 
   // NO DB NO single
@@ -507,7 +507,7 @@ class ChatOutCommon with Tag {
           msgData = await MessageData.getAudio(message);
           break;
       }
-      return await _saveAndSend(message, msgData, insert: false);
+      return await _send(message, msgData, insert: false);
     });
   }
 
@@ -528,8 +528,6 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
-        // TODO:GG 不对，还得看看! 顺便看看log里的sendFail
-        // TODO:GG 走到这里说明sendSuccess了，只差msg协议的发送了吧，顺便检查下上面
         msgData = await MessageData.getIpfs(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
@@ -553,27 +551,10 @@ class ChatOutCommon with Tag {
         return message;
     }
     // send
-    Uint8List? pid;
-    if (msgData?.isNotEmpty == true) {
-      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
-      if (message.isTopic) {
-        final topic = await chatCommon.topicHandle(message);
-        pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification);
-      } else if (message.to.isNotEmpty) {
-        final contact = await chatCommon.contactHandle(message);
-        pid = await _sendWithContactSafe(contact, message, msgData, notification: notification);
-      }
-    }
-    // result
-    if (pid?.isNotEmpty == true) {
-      logger.i("$TAG - resendMute - resend result - pid:$pid - message:$message");
-      message.pid = pid;
-      MessageStorage.instance.updatePid(message.msgId, message.pid); // await
-    } else {
-      logger.w("$TAG - resendMute - resend fail - message:$message");
-    }
+    int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+    int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+    notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
+    message = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
     return message;
   }
 
@@ -585,43 +566,57 @@ class ChatOutCommon with Tag {
     return message;
   }
 
-  Future<MessageSchema?> _saveAndSend(MessageSchema? message, String? msgData, {bool insert = true}) async {
+  Future<MessageSchema?> _send(
+    MessageSchema? message,
+    String? msgData, {
+    bool insert = true,
+    bool sessionSync = true,
+    bool statusSync = true,
+    bool? notification,
+  }) async {
     if (message == null || msgData == null) return null;
     if (insert) message = await _insertMessage(message);
     if (message == null) return null;
     // session
-    await chatCommon.sessionHandle(message);
-    // SDK
+    if (sessionSync) await chatCommon.sessionHandle(message);
+    // sdk
     Uint8List? pid;
     if (message.isTopic) {
       TopicSchema? topic = await chatCommon.topicHandle(message);
-      pid = await _sendWithTopicSafe(topic, message, msgData, notification: message.canNotification);
-      logger.d("$TAG - _sendAndDisplay - with_topic - to:${message.topic} - pid:$pid");
+      pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification ?? message.canNotification);
+      logger.d("$TAG - _send - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
-      pid = await _sendWithContactSafe(contact, message, msgData, notification: message.canNotification);
-      logger.d("$TAG - _sendAndDisplay - with_contact - to:${message.to} - pid:$pid");
+      pid = await _sendWithContactSafe(contact, message, msgData, notification: notification ?? message.canNotification);
+      logger.d("$TAG - _send - with_contact - to:${message.to} - pid:$pid");
     }
     // pid
     if (pid?.isNotEmpty == true) {
       message.pid = pid;
       MessageStorage.instance.updatePid(message.msgId, message.pid); // await
-      // no received receipt/read
-      if (!message.canReceipt) {
-        int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-        chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
-      } else {
-        chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
-      }
     } else {
-      logger.w("$TAG - _sendAndDisplay - pid = null - message:$message");
-      if (message.canResend) {
-        message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+      logger.w("$TAG - _send - pid is null - message:$message");
+    }
+    // status
+    if (statusSync) {
+      if (pid?.isNotEmpty == true) {
+        if (!message.canReceipt) {
+          // no received receipt/read
+          int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+          chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
+        } else {
+          chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
+        }
       } else {
-        // noResend just delete
-        int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
-        if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
-        return null;
+        logger.w("$TAG - _send - pid = null - message:$message");
+        if (message.canResend) {
+          message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+        } else {
+          // noResend just delete
+          int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
+          if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
+          return null;
+        }
       }
     }
     return message;
