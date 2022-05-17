@@ -50,6 +50,7 @@ class ChatCommon with Tag {
     checkNoAckTimers.clear();
     checkLockMap.clear();
     checkSendingWithFail(force: true); // await
+    checkIpfsStateIng(fileNotify: true, thumbnailAutoDownload: true); // await
   }
 
   // TODO:GG maybe can better?
@@ -608,9 +609,11 @@ class ChatCommon with Tag {
     String? thumbnailHash = MessageOptions.getIpfsResultThumbnailHash(message.options);
     String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
     if (thumbnailHash != null && thumbnailHash.isNotEmpty) {
-      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+      if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateYes) {
+        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+      }
     } else if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       // state
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
@@ -717,18 +720,20 @@ class ChatCommon with Tag {
 
   Future<List<String>> _onIpfsUpOrDownload(String msgId, String type, bool upload, bool isProgress) async {
     String key = "IPFS_${type}_${upload ? "UPLOAD" : "DOWNLOAD"}_PROGRESS_IDS";
-    List<String> ids = (await SettingsStorage.getSettings(key)) ?? [];
+    List ids = (await SettingsStorage.getSettings(key)) ?? [];
+    List<String> idsStr = ids.map((e) => e.toString()).toList();
+    logger.i("$TAG - _onIpfsUpOrDownload - start - key:$key - ids:${idsStr.toString()}");
     if (isProgress) {
-      int index = ids.indexOf(msgId.trim());
-      if (index < 0) ids.add(msgId.trim());
+      int index = idsStr.indexOf(msgId.trim());
+      if (index < 0) idsStr.add(msgId.trim());
     } else {
-      ids.remove(msgId.trim());
+      idsStr.remove(msgId.trim());
     }
-    await SettingsStorage.setSettings(key, ids);
-    return ids;
+    await SettingsStorage.setSettings(key, idsStr);
+    logger.i("$TAG - _onIpfsUpOrDownload - end - key:$key - ids:${idsStr.toString()}");
+    return idsStr;
   }
 
-  // TODO:GG 和checkSendingFail的call时机相同
   Future checkIpfsStateIng({
     bool fileNotify = false,
     bool thumbnailNotify = false,
@@ -741,11 +746,12 @@ class ChatCommon with Tag {
     // file
     String fileUploadKey = "IPFS_FILE_UPLOAD_PROGRESS_IDS";
     String fileDownloadKey = "IPFS_FILE_DOWNLOAD_PROGRESS_IDS";
-    List<String> fileUploadIds = (await SettingsStorage.getSettings(fileUploadKey)) ?? [];
-    List<String> fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
-    List<String> fileIds = []
-      ..addAll(fileUploadIds)
-      ..addAll(fileDownloadIds);
+    List fileUploadIds = (await SettingsStorage.getSettings(fileUploadKey)) ?? [];
+    List fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
+    List<String> fileIds = [];
+    fileUploadIds.forEach((element) => fileIds.add(element.toString()));
+    fileDownloadIds.forEach((element) => fileIds.add(element.toString()));
+    logger.i("$TAG - checkIpfsStateIng - start_file - fileIds:${fileIds.toString()}");
     List<MessageSchema> fileResults = await MessageStorage.instance.queryListByIds(fileIds);
     for (var j = 0; j < fileResults.length; j++) {
       MessageSchema message = fileResults[j];
@@ -755,15 +761,18 @@ class ChatCommon with Tag {
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       if (fileNotify) _onUpdateSink.add(message);
     }
+    await SettingsStorage.setSettings(fileUploadKey, <String>[]);
+    await SettingsStorage.setSettings(fileDownloadKey, <String>[]);
 
     // video_thumbnail
     String thumbnailUploadKey = "IPFS_THUMBNAIL_UPLOAD_PROGRESS_IDS";
     String thumbnailDownloadKey = "IPFS_THUMBNAIL_DOWNLOAD_PROGRESS_IDS";
-    List<String> thumbnailUploadIds = (await SettingsStorage.getSettings(thumbnailUploadKey)) ?? [];
-    List<String> thumbnailDownloadIds = (await SettingsStorage.getSettings(thumbnailDownloadKey)) ?? [];
-    List<String> thumbnailIds = []
-      ..addAll(thumbnailUploadIds)
-      ..addAll(thumbnailDownloadIds);
+    List thumbnailUploadIds = (await SettingsStorage.getSettings(thumbnailUploadKey)) ?? [];
+    List thumbnailDownloadIds = (await SettingsStorage.getSettings(thumbnailDownloadKey)) ?? [];
+    List<String> thumbnailIds = [];
+    thumbnailUploadIds.forEach((element) => thumbnailIds.add(element.toString()));
+    thumbnailDownloadIds.forEach((element) => thumbnailIds.add(element.toString()));
+    logger.i("$TAG - checkIpfsStateIng - start_thumbnail - thumbnailIds:${thumbnailIds.toString()}");
     List<MessageSchema> thumbnailResults = await MessageStorage.instance.queryListByIds(thumbnailIds);
     for (var j = 0; j < thumbnailResults.length; j++) {
       MessageSchema message = thumbnailResults[j];
@@ -776,5 +785,7 @@ class ChatCommon with Tag {
         tryDownloadIpfsThumbnail(message); // await
       }
     }
+    await SettingsStorage.setSettings(thumbnailUploadKey, <String>[]);
+    await SettingsStorage.setSettings(thumbnailDownloadKey, <String>[]);
   }
 }
