@@ -13,6 +13,7 @@ import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
@@ -518,7 +519,6 @@ class ChatCommon with Tag {
     return offset + noReads.length;
   }
 
-  // TODO:GG 另写个 check Ipfs的state，(Image/video(thumbnail)/file)，类似下面的func
   Future<int> checkSendingWithFail({bool force = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
@@ -550,7 +550,7 @@ class ChatCommon with Tag {
         if (message.canResend) {
           await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
         } else {
-          int count = await MessageStorage.instance.deleteByContentType(message.msgId, message.contentType);
+          int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
           if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
         }
       }
@@ -589,22 +589,6 @@ class ChatCommon with Tag {
     if (msgId == null || msgId.isEmpty) return null;
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
-    // thumbnail
-    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
-    if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
-      File thumbFile = File(thumbnailPath);
-      if (thumbFile.existsSync()) {
-        Completer completer = Completer();
-        ipfsHelper.uploadFile(message.msgId, thumbnailPath, onSuccess: (msgId, result) async {
-          message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["Hash"], result["Size"], result["Name"]);
-          await MessageStorage.instance.updateOptions(message.msgId, message.options);
-          if (!completer.isCompleted) completer.complete();
-        }, onError: (msgId) {
-          if (!completer.isCompleted) completer.complete();
-        });
-        await completer.future;
-      }
-    }
     // file
     if (!(message.content is File)) {
       logger.w("$TAG - startIpfsUpload - content is no file - message:$message");
@@ -619,15 +603,49 @@ class ChatCommon with Tag {
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateIng);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     _onUpdateSink.add(message);
+    _onIpfsUpOrDownload(msgId, "FILE", true, true); // await
+    // thumbnail
+    String? thumbnailHash = MessageOptions.getIpfsResultThumbnailHash(message.options);
+    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
+    if (thumbnailHash != null && thumbnailHash.isNotEmpty) {
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+    } else if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
+      // state
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, true); // await
+      // ipfs
+      Completer completer = Completer();
+      ipfsHelper.uploadFile(message.msgId, thumbnailPath, onSuccess: (msgId, result) async {
+        message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["Hash"], result["Size"], result["Name"]);
+        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        if (!completer.isCompleted) completer.complete();
+        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+      }, onError: (msgId) async {
+        if (!completer.isCompleted) completer.complete();
+        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+      });
+      await completer.future;
+    }
     // ipfs
     ipfsHelper.uploadFile(message.msgId, file.absolute.path, onProgress: (msgId, percent) {
       onProgressSink.add({"msg_id": msgId, "percent": percent});
     }, onSuccess: (msgId, result) async {
-      await chatOutCommon.sendIpfs(msgId, result);
+      message.options = MessageOptions.setIpfsResult(message.options, result["Hash"], result["Size"], result["Name"]);
+      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
+      await chatOutCommon.sendIpfs(msgId);
     }, onError: (msgId) async {
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
+      _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
     });
     return message;
   }
@@ -646,6 +664,7 @@ class ChatCommon with Tag {
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateIng);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     _onUpdateSink.add(message);
+    _onIpfsUpOrDownload(message.msgId, "FILE", false, true); // await
     // ipfs
     ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onProgress: (msgId, percent) {
       onProgressSink.add({"msg_id": msgId, "percent": percent});
@@ -653,10 +672,12 @@ class ChatCommon with Tag {
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
+      _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
     }, onError: (msgId) async {
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
+      _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
     });
     return message;
   }
@@ -677,17 +698,83 @@ class ChatCommon with Tag {
     message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
     _onUpdateSink.add(message);
+    _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, true); // await
     // ipfs
     ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onSuccess: (msgId, result) async {
       message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
+      _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
     }, onError: (msgId) async {
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onUpdateSink.add(message);
+      _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
     });
     return message;
+  }
+
+  Future<List<String>> _onIpfsUpOrDownload(String msgId, String type, bool upload, bool isProgress) async {
+    String key = "IPFS_${type}_${upload ? "UPLOAD" : "DOWNLOAD"}_PROGRESS_IDS";
+    List<String> ids = (await SettingsStorage.getSettings(key)) ?? [];
+    if (isProgress) {
+      int index = ids.indexOf(msgId.trim());
+      if (index < 0) ids.add(msgId.trim());
+    } else {
+      ids.remove(msgId.trim());
+    }
+    await SettingsStorage.setSettings(key, ids);
+    return ids;
+  }
+
+  // TODO:GG 和checkSendingFail的call时机相同
+  Future checkIpfsStateIng({
+    bool fileNotify = false,
+    bool thumbnailNotify = false,
+    bool thumbnailAutoDownload = false,
+    int? delayMs,
+  }) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+    // if (application.inBackGround) return;
+
+    // file
+    String fileUploadKey = "IPFS_FILE_UPLOAD_PROGRESS_IDS";
+    String fileDownloadKey = "IPFS_FILE_DOWNLOAD_PROGRESS_IDS";
+    List<String> fileUploadIds = (await SettingsStorage.getSettings(fileUploadKey)) ?? [];
+    List<String> fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
+    List<String> fileIds = []
+      ..addAll(fileUploadIds)
+      ..addAll(fileDownloadIds);
+    List<MessageSchema> fileResults = await MessageStorage.instance.queryListByIds(fileIds);
+    for (var j = 0; j < fileResults.length; j++) {
+      MessageSchema message = fileResults[j];
+      if (message.contentType != MessageContentType.ipfs) continue;
+      if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateIng) continue;
+      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      if (fileNotify) _onUpdateSink.add(message);
+    }
+
+    // video_thumbnail
+    String thumbnailUploadKey = "IPFS_THUMBNAIL_UPLOAD_PROGRESS_IDS";
+    String thumbnailDownloadKey = "IPFS_THUMBNAIL_DOWNLOAD_PROGRESS_IDS";
+    List<String> thumbnailUploadIds = (await SettingsStorage.getSettings(thumbnailUploadKey)) ?? [];
+    List<String> thumbnailDownloadIds = (await SettingsStorage.getSettings(thumbnailDownloadKey)) ?? [];
+    List<String> thumbnailIds = []
+      ..addAll(thumbnailUploadIds)
+      ..addAll(thumbnailDownloadIds);
+    List<MessageSchema> thumbnailResults = await MessageStorage.instance.queryListByIds(thumbnailIds);
+    for (var j = 0; j < thumbnailResults.length; j++) {
+      MessageSchema message = thumbnailResults[j];
+      if (message.contentType != MessageContentType.ipfs) continue;
+      if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateIng) continue;
+      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
+      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      if (thumbnailNotify) _onUpdateSink.add(message);
+      if (thumbnailAutoDownload) {
+        tryDownloadIpfsThumbnail(message); // await
+      }
+    }
   }
 }
