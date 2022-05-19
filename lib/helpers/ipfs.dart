@@ -39,10 +39,9 @@ class IpfsHelper with Tag {
   // StreamSink<Map<String, dynamic>> get _onUploadSink => _onUploadController.sink;
   // Stream<Map<String, dynamic>> get onUploadStream => _onUploadController.stream;
 
-  // TODO:GG 验证数据完整性？比大小？还是比hash
   IpfsHelper() {
-    _dio.options.connectTimeout = 10 * 1000;
-    _dio.options.receiveTimeout = 10 * 1000;
+    _dio.options.connectTimeout = 10 * 60 * 1000; // 10m
+    _dio.options.receiveTimeout = 10 * 60 * 1000; // 10m
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -65,7 +64,7 @@ class IpfsHelper with Tag {
     // };
   }
 
-  // TODO:GG call
+  // TODO:GG call 还需要这样的queue吗？
   clear() {
     _uploadQueue.clear();
     _downloadQueue.clear();
@@ -75,6 +74,7 @@ class IpfsHelper with Tag {
     return _writeableGateway[0];
   }
 
+  // TODO:GG 下载节点巨慢！
   Future<String> _getGateway2Read() async {
     return _readableGateway[0];
   }
@@ -82,6 +82,7 @@ class IpfsHelper with Tag {
   void uploadFile(
     String id,
     String filePath, {
+    bool queue = true,
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -129,22 +130,24 @@ class IpfsHelper with Tag {
     }
 
     // queue
-    _downloadQueue.add(
-      () => _downloadFile(id, ipfsHash, ipfsLength, savePath,
-          onProgress: (msgId, total, count) {
-            double percent = total > 0 ? (count / total) : -1;
-            onProgress?.call(msgId, percent);
-          },
-          onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
-          onError: (msgId) => onError?.call(msgId)),
-    );
+    // _downloadQueue.add(
+    //   () =>
+    _downloadFile(id, ipfsHash, ipfsLength, savePath,
+        onProgress: (msgId, total, count) {
+          double percent = total > 0 ? (count / total) : -1;
+          onProgress?.call(msgId, percent);
+        },
+        onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+        onError: (msgId) => onError?.call(msgId));
+    // );
 
     // trigger
-    _triggerDownloadQueue();
+    // _triggerDownloadQueue();
   }
 
   // TODO:GG lock(upload + download)
   // TODO:GG 有个轮询，检查ipfs类型的msg，没发送成功的(state)
+  // TODO:GG 应该是每次上线的时候查，类似查fail的方式。其他时候有onError回调
   Future _triggerUploadQueue() async {
     while (_uploadQueue.isNotEmpty) {
       Map<String, dynamic>? result = await _uploadQueue.first.call();
@@ -159,9 +162,7 @@ class IpfsHelper with Tag {
     }
   }
 
-  // TODO:GG lock(upload + download)
-  // TODO:GG 有个轮询，检查ipfs类型的msg，没发送成功的(state)
-  // TODO:GG 应该是每次上线的时候查，类似查fail的方式。其他时候有onError回调
+  // TODO:GG 同上
   Future _triggerDownloadQueue() async {
     while (_downloadQueue.isNotEmpty) {
       Map<String, dynamic>? result = await _downloadQueue.first.call();
@@ -176,7 +177,6 @@ class IpfsHelper with Tag {
     }
   }
 
-  // TODO:GG 成功后，发送msg协议，携带缩略图data
   Future<Map<String, dynamic>?> _uploadFile(
     String id,
     String filePath, {
@@ -184,8 +184,10 @@ class IpfsHelper with Tag {
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
-    if (filePath.isEmpty || !File(filePath).existsSync()) return null;
-
+    if (filePath.isEmpty || !File(filePath).existsSync()) {
+      onError?.call("file no exist");
+      return null;
+    }
     String ipAddress = await _getGateway2Write();
 
     // http
@@ -195,7 +197,7 @@ class IpfsHelper with Tag {
         'https://$ipAddress/$_upload_address',
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         onSendProgress: (count, total) {
-          // logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total - id:$id");
+          logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total - id:$id");
           onProgress?.call(id, total, count);
         },
       );
@@ -213,14 +215,16 @@ class IpfsHelper with Tag {
       onError?.call(id);
     }
 
-    // result
+    // response
     Map<String, dynamic>? results = response?.data;
     if ((response == null) || (results == null) || (results.isEmpty)) {
       logger.w("$TAG - uploadFile - fail - code:${response?.statusCode} - msg:${response?.statusMessage}");
+      onError?.call("response is null");
       return null;
     }
     logger.i("$TAG - uploadFile - success - code:${response.statusCode} - msg:${response.statusMessage} - result:$results");
 
+    // result
     results["id"] = id;
     onSuccess?.call(id, results); // await
     return results;
@@ -235,8 +239,10 @@ class IpfsHelper with Tag {
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
-    if (ipfsHash.isEmpty || savePath.isEmpty) return null;
-
+    if (ipfsHash.isEmpty || savePath.isEmpty) {
+      onError?.call("hash is empty");
+      return null;
+    }
     String ipAddress = await _getGateway2Read();
 
     // http
@@ -251,7 +257,7 @@ class IpfsHelper with Tag {
         ),
         onReceiveProgress: (count, total) {
           int totalCount = (total > 0) ? total : ipfsLength;
-          // logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount - id:$id");
+          logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount - id:$id");
           onProgress?.call(id, totalCount, count);
         },
       );
@@ -269,23 +275,28 @@ class IpfsHelper with Tag {
       onError?.call(id);
     }
 
-    // convert
+    // response
     Uint8List? responseData = response?.data;
     if ((response == null) || (responseData == null) || (responseData.isEmpty)) {
       logger.w("$TAG - _downloadFile - fail - code:${response?.statusCode} - msg:${response?.statusMessage}");
+      onError?.call("response is null");
       return null;
     }
     logger.i("$TAG - _downloadFile - success - code:${response.statusCode} - msg:${response.statusMessage} - options:${response.requestOptions}");
 
     // save
-    File file = File(savePath);
-    if (!file.existsSync()) {
-      await file.create(recursive: true);
-    } else {
-      await file.delete();
-      await file.create(recursive: true);
+    try {
+      File file = File(savePath);
+      if (!file.existsSync()) {
+        await file.create(recursive: true);
+      } else {
+        await file.delete();
+        await file.create(recursive: true);
+      }
+      await file.writeAsBytes(responseData, flush: true);
+    } catch (e) {
+      handleError(e);
     }
-    await file.writeAsBytes(responseData, flush: true);
 
     // result
     Map<String, dynamic> results = Map();
