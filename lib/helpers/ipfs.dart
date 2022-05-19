@@ -34,11 +34,6 @@ class IpfsHelper with Tag {
   Queue<Function> _uploadQueue = Queue();
   Queue<Function> _downloadQueue = Queue();
 
-  // ignore: close_sinks
-  // StreamController<Map<String, dynamic>> _onUploadController = StreamController<Map<String, dynamic>>.broadcast();
-  // StreamSink<Map<String, dynamic>> get _onUploadSink => _onUploadController.sink;
-  // Stream<Map<String, dynamic>> get onUploadStream => _onUploadController.stream;
-
   IpfsHelper() {
     _dio.options.connectTimeout = 10 * 60 * 1000; // 10m
     _dio.options.receiveTimeout = 10 * 60 * 1000; // 10m
@@ -51,20 +46,10 @@ class IpfsHelper with Tag {
       error: true,
       logPrint: (log) => logger.i(log),
     ));
-    // _dio.interceptors.add(QueuedInterceptorsWrapper(
-    //     // TODO:GG 这样就行了吗？
-    //     ));
-    // (_dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
-    //   client.findProxy = (uri) {
-    //     //proxy all request to localhost:8888
-    //     return 'PROXY localhost:8888';
-    //   };
-    //   client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-    //   return null;
-    // };
+    clear();
   }
 
-  // TODO:GG call 还需要这样的queue吗？
+  // TODO:GG call + 还需要这样的queue吗？
   clear() {
     _uploadQueue.clear();
     _downloadQueue.clear();
@@ -74,7 +59,6 @@ class IpfsHelper with Tag {
     return _writeableGateway[0];
   }
 
-  // TODO:GG 下载节点巨慢！
   Future<String> _getGateway2Read() async {
     return _readableGateway[0];
   }
@@ -97,18 +81,19 @@ class IpfsHelper with Tag {
     }
 
     // queue
-    _uploadQueue.add(
-      () => _uploadFile(id, filePath,
-          onProgress: (msgId, total, count) {
-            double percent = total > 0 ? (count / total) : -1;
-            onProgress?.call(msgId, percent);
-          },
-          onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
-          onError: (msgId) => onError?.call(msgId)),
-    );
+    // _uploadQueue.add(
+    //   () =>
+    _uploadFile(id, filePath,
+        onProgress: (msgId, total, count) {
+          double percent = total > 0 ? (count / total) : -1;
+          onProgress?.call(msgId, percent);
+        },
+        onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+        onError: (msgId) => onError?.call(msgId));
+    // );
 
     // trigger
-    _triggerUploadQueue();
+    // _triggerUploadQueue();
   }
 
   void downloadFile(
@@ -146,8 +131,6 @@ class IpfsHelper with Tag {
   }
 
   // TODO:GG lock(upload + download)
-  // TODO:GG 有个轮询，检查ipfs类型的msg，没发送成功的(state)
-  // TODO:GG 应该是每次上线的时候查，类似查fail的方式。其他时候有onError回调
   Future _triggerUploadQueue() async {
     while (_uploadQueue.isNotEmpty) {
       Map<String, dynamic>? result = await _uploadQueue.first.call();
@@ -196,6 +179,10 @@ class IpfsHelper with Tag {
       response = await _dio.post(
         'https://$ipAddress/$_upload_address',
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
+        options: Options(
+            // headers: {Headers.contentLengthHeader: fileLength},
+            // responseType: ResponseType.json,
+            ),
         onSendProgress: (count, total) {
           logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total - id:$id");
           onProgress?.call(id, total, count);
