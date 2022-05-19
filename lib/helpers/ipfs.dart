@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -31,12 +30,9 @@ class IpfsHelper with Tag {
 
   Dio _dio = Dio();
 
-  Queue<Function> _uploadQueue = Queue();
-  Queue<Function> _downloadQueue = Queue();
-
   IpfsHelper() {
-    _dio.options.connectTimeout = 10 * 60 * 1000; // 10m
-    _dio.options.receiveTimeout = 10 * 60 * 1000; // 10m
+    _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
+    _dio.options.receiveTimeout = 0; // no limit
     _dio.interceptors.add(LogInterceptor(
       request: true,
       requestHeader: true,
@@ -46,13 +42,6 @@ class IpfsHelper with Tag {
       error: true,
       logPrint: (log) => logger.i(log),
     ));
-    clear();
-  }
-
-  // TODO:GG call + 还需要这样的queue吗？
-  clear() {
-    _uploadQueue.clear();
-    _downloadQueue.clear();
   }
 
   Future<String> _getGateway2Write() async {
@@ -66,7 +55,6 @@ class IpfsHelper with Tag {
   void uploadFile(
     String id,
     String filePath, {
-    bool queue = true,
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -80,20 +68,17 @@ class IpfsHelper with Tag {
       // TODO:GG 加密
     }
 
-    // queue
-    // _uploadQueue.add(
-    //   () =>
-    _uploadFile(id, filePath,
-        onProgress: (msgId, total, count) {
-          double percent = total > 0 ? (count / total) : -1;
-          onProgress?.call(msgId, percent);
-        },
-        onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
-        onError: (msgId) => onError?.call(msgId));
-    // );
-
-    // trigger
-    // _triggerUploadQueue();
+    // http
+    _uploadFile(
+      id,
+      filePath,
+      onProgress: (msgId, total, count) {
+        double percent = total > 0 ? (count / total) : -1;
+        onProgress?.call(msgId, percent);
+      },
+      onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+      onError: (msgId) => onError?.call(msgId),
+    );
   }
 
   void downloadFile(
@@ -114,50 +99,19 @@ class IpfsHelper with Tag {
       // TODO:GG 加密
     }
 
-    // queue
-    // _downloadQueue.add(
-    //   () =>
-    _downloadFile(id, ipfsHash, ipfsLength, savePath,
-        onProgress: (msgId, total, count) {
-          double percent = total > 0 ? (count / total) : -1;
-          onProgress?.call(msgId, percent);
-        },
-        onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
-        onError: (msgId) => onError?.call(msgId));
-    // );
-
-    // trigger
-    // _triggerDownloadQueue();
-  }
-
-  // TODO:GG lock(upload + download)
-  Future _triggerUploadQueue() async {
-    while (_uploadQueue.isNotEmpty) {
-      Map<String, dynamic>? result = await _uploadQueue.first.call();
-      String? id = result?["id"];
-      String? hash = result?["Hash"];
-      if (id != null && id.isNotEmpty && hash != null && hash.isNotEmpty) {
-        logger.i("$TAG - _triggerUploadQueue - success - result:$result");
-      } else {
-        logger.w("$TAG - _triggerUploadQueue - fail - result:$result");
-      }
-      _uploadQueue.removeFirst();
-    }
-  }
-
-  // TODO:GG 同上
-  Future _triggerDownloadQueue() async {
-    while (_downloadQueue.isNotEmpty) {
-      Map<String, dynamic>? result = await _downloadQueue.first.call();
-      String? id = result?["id"];
-      String? hash = result?["Hash"];
-      if (id != null && id.isNotEmpty && hash != null && hash.isNotEmpty) {
-        logger.i("$TAG - _triggerDownloadQueue - success - result:$result");
-      } else {
-        logger.w("$TAG - _triggerDownloadQueue - fail - result:$result");
-      }
-      _downloadQueue.removeFirst();
-    }
+    // http
+    _downloadFile(
+      id,
+      ipfsHash,
+      ipfsLength,
+      savePath,
+      onProgress: (msgId, total, count) {
+        double percent = total > 0 ? (count / total) : -1;
+        onProgress?.call(msgId, percent);
+      },
+      onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+      onError: (msgId) => onError?.call(msgId),
+    );
   }
 
   Future<Map<String, dynamic>?> _uploadFile(
