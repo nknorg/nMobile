@@ -622,7 +622,7 @@ class ChatCommon with Tag {
       // ipfs
       Completer completer = Completer();
       ipfsHelper.uploadFile(message.msgId, thumbnailPath, onSuccess: (msgId, result) async {
-        message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["Hash"], result["Size"], result["Name"]);
+        message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["ip"], result["Hash"], result["Size"], result["Name"]);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         if (!completer.isCompleted) completer.complete();
@@ -639,7 +639,7 @@ class ChatCommon with Tag {
     ipfsHelper.uploadFile(message.msgId, file.absolute.path, onProgress: (msgId, percent) {
       onProgressSink.add({"msg_id": msgId, "percent": percent});
     }, onSuccess: (msgId, result) async {
-      message.options = MessageOptions.setIpfsResult(message.options, result["Hash"], result["Size"], result["Name"]);
+      message.options = MessageOptions.setIpfsResult(message.options, result["ip"], result["Hash"], result["Size"], result["Name"]);
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
