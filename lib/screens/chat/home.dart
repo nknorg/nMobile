@@ -33,6 +33,8 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 
+import '../../components/dialog/create_private_group.dart';
+
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
 
@@ -488,7 +490,28 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                   Spacer(),
                   Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      SizedBox(
+                        height: btnSize,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              color: Colors.black26,
+                            ),
+                            child: Label(
+                              Global.locale((s) => s.new_private_group, ctx: context),
+                              height: 1.2,
+                              type: LabelType.h4,
+                              dark: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
                       SizedBox(
                         height: btnSize,
                         child: Align(
@@ -540,6 +563,22 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
+                        Button(
+                          width: btnSize,
+                          height: btnSize,
+                          fontColor: application.theme.fontLightColor,
+                          backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
+                          child: Asset.iconSvg('group', width: 22, color: application.theme.fontLightColor),
+                          onPressed: () async {
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                            BottomDialog.of(Global.appContext).showWithTitle(
+                              height: 300,
+                              title: Global.locale((s) => s.create_private_group, ctx: context),
+                              child: CreatePrivateGroup(),
+                            );
+                          },
+                        ),
+                        SizedBox(height: 10),
                         Button(
                           width: btnSize,
                           height: btnSize,

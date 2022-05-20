@@ -6,6 +6,7 @@ import 'package:nmobile/utils/util.dart';
 class SessionType {
   static const CONTACT = 1;
   static const TOPIC = 2;
+  static const PRIVATE_GROUP = 3;
 }
 
 class SessionSchema {
@@ -35,6 +36,10 @@ class SessionSchema {
 
   bool get isTopic {
     return type == SessionType.TOPIC;
+  }
+
+  bool get isPrivateGroup {
+    return type == SessionType.PRIVATE_GROUP;
   }
 
   static int getTypeByMessage(MessageSchema? msg) {
