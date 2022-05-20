@@ -43,7 +43,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     Global.appContext = context; // before at mounted
@@ -56,7 +56,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     _pageController.dispose();
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

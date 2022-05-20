@@ -137,6 +137,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "create_ethereum_wallet":
             MessageLookupByLibrary.simpleMessage("创建以太坊账户"),
         "create_nkn_wallet": MessageLookupByLibrary.simpleMessage("创建主网账户"),
+        "create_private_group":
+            MessageLookupByLibrary.simpleMessage("Create Private Group"),
         "create_wallet": MessageLookupByLibrary.simpleMessage("创建账户"),
         "d_chat": MessageLookupByLibrary.simpleMessage("滴聊"),
         "d_chat_address": MessageLookupByLibrary.simpleMessage("滴聊地址"),
@@ -307,6 +309,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "need_re_subscribe": MessageLookupByLibrary.simpleMessage("需要重新订阅"),
         "new_group": MessageLookupByLibrary.simpleMessage("新建群聊"),
         "new_message": MessageLookupByLibrary.simpleMessage("新消息"),
+        "new_private_group":
+            MessageLookupByLibrary.simpleMessage("New Private Group"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("新建私聊"),
         "news_from": MessageLookupByLibrary.simpleMessage("by"),
         "nickname": MessageLookupByLibrary.simpleMessage("昵称"),

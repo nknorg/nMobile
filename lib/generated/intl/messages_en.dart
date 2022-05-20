@@ -161,6 +161,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Create Ethereum Account"),
         "create_nkn_wallet":
             MessageLookupByLibrary.simpleMessage("Create Mainnet Account"),
+        "create_private_group":
+            MessageLookupByLibrary.simpleMessage("Create Private Group"),
         "create_wallet": MessageLookupByLibrary.simpleMessage("Create Account"),
         "d_chat": MessageLookupByLibrary.simpleMessage("D-Chat"),
         "d_chat_address": MessageLookupByLibrary.simpleMessage("D-Chat ID"),
@@ -360,6 +362,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Need to re-subscribe"),
         "new_group": MessageLookupByLibrary.simpleMessage("New Group"),
         "new_message": MessageLookupByLibrary.simpleMessage("New Message"),
+        "new_private_group":
+            MessageLookupByLibrary.simpleMessage("New Private Group"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("Direct Message"),
         "news_from": MessageLookupByLibrary.simpleMessage("by"),
         "nickname": MessageLookupByLibrary.simpleMessage("Nickname"),

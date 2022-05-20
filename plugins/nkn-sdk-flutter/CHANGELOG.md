@@ -1,3 +1,15 @@
+## 0.2.1
+
+* Modify wallet API
+
+## 0.2.0
+
+* Add crypto module
+
+## 0.1.19
+
+* Add fixNonce config
+
 ## 0.1.18
 
 * Upgrade NKN SDK, add fixNonce config

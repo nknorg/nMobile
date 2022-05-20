@@ -19,7 +19,7 @@ interface IChannelHandler {
         result.error("", error.localizedMessage, error.message)
     }
 
-    suspend fun resultError(result: MethodChannel.Result, code: String? = "", message: String? = "", details: String? = "") = withContext(Dispatchers.Main) {
+    suspend fun resultError(result: MethodChannel.Result, code: String = "", message: String? = "", details: String? = "") = withContext(Dispatchers.Main) {
         result.error(code, message, details)
     }
 

@@ -28,6 +28,7 @@ class MessageStorage with Tag {
         `sender` VARCHAR(200),
         `receiver` VARCHAR(200),
         `topic` VARCHAR(200),
+        `group_id` VARCHAR(200),
         `target_id` VARCHAR(200),
         `status` INT,
         `is_outbound` BOOLEAN DEFAULT 0,
@@ -48,6 +49,7 @@ class MessageStorage with Tag {
 
     // index
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_group_id_type` ON `$tableName` (`target_id`, `group_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_target_id_topic_type` ON `$tableName` (`target_id`, `topic`, `type`)');
     await db.execute('CREATE INDEX `index_messages_status_target_id_topic` ON `$tableName` (`status`, `target_id`, `topic`)');

@@ -53,4 +53,20 @@ class Hash {
   static List<int> doubleSha256Hex(String raw) {
     return sha256(sha256(hexDecode(raw)));
   }
+
+  static List<int> md5(dynamic raw) {
+    var byte;
+    if (raw is List<int>)
+      byte = raw;
+    else if (raw is String) byte = utf8.encode(raw);
+    return crypto.md5.convert(byte).bytes;
+  }
+
+  static List<int> md5Hex(dynamic raw) {
+    var byte;
+    if (raw is List<int>)
+      byte = raw;
+    else if (raw is String) byte = hexDecode(raw);
+    return crypto.md5.convert(byte).bytes;
+  }
 }
