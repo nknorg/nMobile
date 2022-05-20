@@ -29,7 +29,7 @@ class IpfsHelper with Tag {
 
   static const String _upload_address = "api/v0/add";
   static const String _download_address = "api/v0/cat";
-  static const String _peers = "api/v0/swarm/peers"; // TODO:GG 有用吗？包括其他没考虑进来的
+  // static const String _peers = "api/v0/swarm/peers"; // FUTURE: pin
 
   Dio _dio = Dio();
 
@@ -45,8 +45,6 @@ class IpfsHelper with Tag {
       error: true,
       logPrint: (log) => logger.i(log),
     ));
-    // TODO:GG pin
-    // TODO:GG gateway 放进msg
   }
 
   Future<String> _getGateway2Write() async {
@@ -57,10 +55,17 @@ class IpfsHelper with Tag {
     return _readableGateway[0];
   }
 
+  bool _isWriteIp(String ip) {
+    return _writeableGateway.contains(ip);
+  }
+
+  bool _isReadIp(String ip) {
+    return _readableGateway.contains(ip);
+  }
+
   void uploadFile(
     String id,
     String filePath, {
-    String? ipAddress,
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -73,6 +78,9 @@ class IpfsHelper with Tag {
     if (encrypt) {
       // TODO:GG 加密
     }
+
+    // FUTURE: use best ip_address by pin
+    String? ipAddress;
 
     // http
     _uploadFile(
@@ -93,7 +101,7 @@ class IpfsHelper with Tag {
     String ipfsHash,
     int ipfsLength,
     String savePath, {
-    String? ipAddress,
+    String? ipAddress, // FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -138,6 +146,7 @@ class IpfsHelper with Tag {
 
     // uri
     ipAddress = ipAddress ?? (await _getGateway2Write());
+    if (!_isWriteIp(ipAddress)) return null;
     String uri = 'https://$ipAddress${GATEWAY_WRITE_PORT.isNotEmpty ? ":$GATEWAY_WRITE_PORT" : ""}/$_upload_address';
 
     // http
@@ -180,6 +189,7 @@ class IpfsHelper with Tag {
 
     // result
     results["id"] = id;
+    results["ip"] = ipAddress;
     onSuccess?.call(id, results); // await
     return results;
   }
@@ -201,6 +211,7 @@ class IpfsHelper with Tag {
 
     // uri
     ipAddress = ipAddress ?? (await _getGateway2Read());
+    if (!_isReadIp(ipAddress)) return null;
     String uri = 'https://$ipAddress${GATEWAY_READ_PORT.isNotEmpty ? ":$GATEWAY_READ_PORT" : ""}/$_download_address';
 
     // http
@@ -259,6 +270,7 @@ class IpfsHelper with Tag {
     // result
     Map<String, dynamic> results = Map();
     results["id"] = id;
+    results["ip"] = ipAddress;
     results["path"] = savePath;
     results["ipfsHash"] = ipfsHash;
     onSuccess?.call(id, results); // await

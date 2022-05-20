@@ -648,9 +648,11 @@ class MessageOptions {
   static const int ipfsThumbnailStateIng = 1;
   static const int ipfsThumbnailStateYes = 2;
 
+  static const KEY_IPFS_RESULT_IP = "ipfs_result_ip";
   static const KEY_IPFS_RESULT_HASH = "ipfs_result_hash";
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
+  static const KEY_IPFS_RESULT_THUMBNAIL_IP = "ipfs_result_thumbnail_ip";
   static const KEY_IPFS_RESULT_THUMBNAIL_HASH = "ipfs_result_thumbnail_hash";
   static const KEY_IPFS_RESULT_THUMBNAIL_SIZE = "ipfs_result_thumbnail_size";
   static const KEY_IPFS_RESULT_THUMBNAIL_NAME = "ipfs_result_thumbnail_name";
@@ -844,12 +846,18 @@ class MessageOptions {
     return int.tryParse(complete) ?? ipfsThumbnailStateNo;
   }
 
-  static Map<String, dynamic> setIpfsResult(Map<String, dynamic>? options, String? hash, String? size, String? name) {
+  static Map<String, dynamic> setIpfsResult(Map<String, dynamic>? options, String? ip, String? hash, String? size, String? name) {
     if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_RESULT_IP] = ip;
     options[MessageOptions.KEY_IPFS_RESULT_HASH] = hash;
     options[MessageOptions.KEY_IPFS_RESULT_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_NAME] = name;
     return options;
+  }
+
+  static String? getIpfsResultIp(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_IP]?.toString();
   }
 
   static String? getIpfsResultHash(Map<String, dynamic>? options) {
@@ -869,12 +877,18 @@ class MessageOptions {
     return options[MessageOptions.KEY_IPFS_RESULT_NAME]?.toString();
   }
 
-  static Map<String, dynamic> setIpfsResultThumbnail(Map<String, dynamic>? options, String? hash, String? size, String? name) {
+  static Map<String, dynamic> setIpfsResultThumbnail(Map<String, dynamic>? options, String? ip, String? hash, String? size, String? name) {
     if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_IP] = ip;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_HASH] = hash;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_NAME] = name;
     return options;
+  }
+
+  static String? getIpfsResultThumbnailIp(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_IP]?.toString();
   }
 
   static String? getIpfsResultThumbnailHash(Map<String, dynamic>? options) {
