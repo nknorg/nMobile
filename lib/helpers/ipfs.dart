@@ -7,16 +7,19 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class IpfsHelper with Tag {
+  static const GATEWAY_READ_PORT = "5001";
+  static const GATEWAY_WRITE_PORT = "5001";
+
   static List<String> _writeableGateway = [
-    'infura-ipfs.io:5001',
-    // 'ipfs.infura.io:5001', // vpn
+    'infura-ipfs.io',
+    // 'ipfs.infura.io', // vpn
     // 'dweb.link:5001', // only read
     // 'cf-ipfs.com:5001', // only read
   ];
 
   static List<String> _readableGateway = [
-    'infura-ipfs.io:5001',
-    'cf-ipfs.com:5001',
+    'infura-ipfs.io',
+    'cf-ipfs.com',
     // 'dweb.link', // vpn
     // 'ipfs.infura.io', // vpn
     // 'ipfs.io', // vpn
@@ -42,6 +45,8 @@ class IpfsHelper with Tag {
       error: true,
       logPrint: (log) => logger.i(log),
     ));
+    // TODO:GG pin
+    // TODO:GG gateway 放进msg
   }
 
   Future<String> _getGateway2Write() async {
@@ -55,6 +60,7 @@ class IpfsHelper with Tag {
   void uploadFile(
     String id,
     String filePath, {
+    String? ipAddress,
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -72,6 +78,7 @@ class IpfsHelper with Tag {
     _uploadFile(
       id,
       filePath,
+      ipAddress: ipAddress,
       onProgress: (msgId, total, count) {
         double percent = total > 0 ? (count / total) : -1;
         onProgress?.call(msgId, percent);
@@ -86,6 +93,7 @@ class IpfsHelper with Tag {
     String ipfsHash,
     int ipfsLength,
     String savePath, {
+    String? ipAddress,
     bool encrypt = true,
     bool base64 = false,
     Function(String, double)? onProgress,
@@ -105,6 +113,7 @@ class IpfsHelper with Tag {
       ipfsHash,
       ipfsLength,
       savePath,
+      ipAddress: ipAddress,
       onProgress: (msgId, total, count) {
         double percent = total > 0 ? (count / total) : -1;
         onProgress?.call(msgId, percent);
@@ -117,6 +126,7 @@ class IpfsHelper with Tag {
   Future<Map<String, dynamic>?> _uploadFile(
     String id,
     String filePath, {
+    String? ipAddress,
     Function(String, int, int)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
@@ -125,13 +135,16 @@ class IpfsHelper with Tag {
       onError?.call("file no exist");
       return null;
     }
-    String ipAddress = await _getGateway2Write();
+
+    // uri
+    ipAddress = ipAddress ?? (await _getGateway2Write());
+    String uri = 'https://$ipAddress${GATEWAY_WRITE_PORT.isNotEmpty ? ":$GATEWAY_WRITE_PORT" : ""}/$_upload_address';
 
     // http
     Response? response;
     try {
       response = await _dio.post(
-        'https://$ipAddress/$_upload_address',
+        uri,
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         options: Options(
             // headers: {Headers.contentLengthHeader: fileLength},
@@ -159,11 +172,11 @@ class IpfsHelper with Tag {
     // response
     Map<String, dynamic>? results = response?.data;
     if ((response == null) || (results == null) || (results.isEmpty)) {
-      logger.w("$TAG - uploadFile - fail - code:${response?.statusCode} - msg:${response?.statusMessage}");
+      logger.w("$TAG - uploadFile - fail - state_code:${response?.statusCode} - state_msg:${response?.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }
-    logger.i("$TAG - uploadFile - success - code:${response.statusCode} - msg:${response.statusMessage} - result:$results");
+    logger.i("$TAG - uploadFile - success - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri - result:$results");
 
     // result
     results["id"] = id;
@@ -176,6 +189,7 @@ class IpfsHelper with Tag {
     String ipfsHash,
     int ipfsLength,
     String savePath, {
+    String? ipAddress,
     Function(String, int, int)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
@@ -184,13 +198,16 @@ class IpfsHelper with Tag {
       onError?.call("hash is empty");
       return null;
     }
-    String ipAddress = await _getGateway2Read();
+
+    // uri
+    ipAddress = ipAddress ?? (await _getGateway2Read());
+    String uri = 'https://$ipAddress${GATEWAY_READ_PORT.isNotEmpty ? ":$GATEWAY_READ_PORT" : ""}/$_download_address';
 
     // http
     Response? response;
     try {
       response = await _dio.post(
-        'https://$ipAddress/$_download_address',
+        uri,
         queryParameters: {'arg': ipfsHash},
         options: Options(
           // headers: {Headers.contentLengthHeader: ipfsLength},
@@ -219,11 +236,11 @@ class IpfsHelper with Tag {
     // response
     Uint8List? responseData = response?.data;
     if ((response == null) || (responseData == null) || (responseData.isEmpty)) {
-      logger.w("$TAG - _downloadFile - fail - code:${response?.statusCode} - msg:${response?.statusMessage}");
+      logger.w("$TAG - _downloadFile - fail - state_code:${response?.statusCode} - state_msg:${response?.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }
-    logger.i("$TAG - _downloadFile - success - code:${response.statusCode} - msg:${response.statusMessage} - options:${response.requestOptions}");
+    logger.i("$TAG - _downloadFile - success - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri - options:${response.requestOptions}");
 
     // save
     try {
