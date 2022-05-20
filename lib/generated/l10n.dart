@@ -2480,11 +2480,31 @@ class S {
     );
   }
 
+  /// `New Private Group`
+  String get new_private_group {
+    return Intl.message(
+      'New Private Group',
+      name: 'new_private_group',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Create/Join to group`
   String get create_channel {
     return Intl.message(
       'Create/Join to group',
       name: 'create_channel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create Private Group`
+  String get create_private_group {
+    return Intl.message(
+      'Create Private Group',
+      name: 'create_private_group',
       desc: '',
       args: [],
     );

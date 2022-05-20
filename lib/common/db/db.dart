@@ -25,9 +25,13 @@ import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
+import '../../storages/private_group.dart';
+import '../../storages/private_group_item.dart';
+import 'upgrade5to6.dart';
+
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 5;
+  static int currentDatabaseVersion = 6;
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -269,6 +273,8 @@ class DB {
         await SubscriberStorage.create(db);
         await MessageStorage.create(db);
         await SessionStorage.create(db);
+        await PrivateGroupStorage.create(db);
+        await PrivateGroupItemStorage.create(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
@@ -307,6 +313,12 @@ class DB {
           await Upgrade4to5.upgradeMessages(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade4to5.createSession(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade4to5.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+        }
+
+        if (newVersion >= 6) {
+          await Upgrade5to6.createPrivateGroup(db);
+          await Upgrade5to6.createPrivateGroupList(db);
+          await Upgrade5to6.upgradeMessages(db);
         }
 
         // dismiss tip dialog
