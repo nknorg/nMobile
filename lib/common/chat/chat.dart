@@ -635,9 +635,9 @@ class ChatCommon with Tag {
             result[IpfsHelper.KEY_RESULT_NAME],
             result[IpfsHelper.KEY_RESULT_ENCRYPT],
             result[IpfsHelper.KEY_SECRET_NONCE_LEN],
-            result[IpfsHelper.KEY_SECRET_KEY_TEXT],
-            result[IpfsHelper.KEY_SECRET_BOX_MAC_TEXT],
-            result[IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT],
+            result[IpfsHelper.KEY_SECRET_KEY_BYTES],
+            result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
+            result[IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES],
           );
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
           await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -670,9 +670,9 @@ class ChatCommon with Tag {
           result[IpfsHelper.KEY_RESULT_NAME],
           result[IpfsHelper.KEY_RESULT_ENCRYPT],
           result[IpfsHelper.KEY_SECRET_NONCE_LEN],
-          result[IpfsHelper.KEY_SECRET_KEY_TEXT],
-          result[IpfsHelper.KEY_SECRET_BOX_MAC_TEXT],
-          result[IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT],
+          result[IpfsHelper.KEY_SECRET_KEY_BYTES],
+          result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
+          result[IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES],
         );
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -715,9 +715,9 @@ class ChatCommon with Tag {
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
         IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
-        IpfsHelper.KEY_SECRET_KEY_TEXT: MessageOptions.getIpfsResultEncryptKeyText(message.options),
-        IpfsHelper.KEY_SECRET_BOX_MAC_TEXT: MessageOptions.getIpfsResultEncryptBoxMacText(message.options),
-        IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT: MessageOptions.getIpfsResultEncryptBoxNonceText(message.options),
+        IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultEncryptKeyBytes(message.options),
+        IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultEncryptBoxMacBytes(message.options),
+        IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES: MessageOptions.getIpfsResultEncryptBoxNonceBytes(message.options),
       },
       onProgress: (msgId, percent) {
         onProgressSink.add({"msg_id": msgId, "percent": percent});
@@ -764,10 +764,10 @@ class ChatCommon with Tag {
       ipAddress: MessageOptions.getIpfsResultIp(message.options),
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
-        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
-        IpfsHelper.KEY_SECRET_KEY_TEXT: MessageOptions.getIpfsResultEncryptKeyText(message.options),
-        IpfsHelper.KEY_SECRET_BOX_MAC_TEXT: MessageOptions.getIpfsResultEncryptBoxMacText(message.options),
-        IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT: MessageOptions.getIpfsResultEncryptBoxNonceText(message.options),
+        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultThumbnailEncryptNonceLen(message.options),
+        IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultThumbnailEncryptKeyBytes(message.options),
+        IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultThumbnailEncryptBoxMacBytes(message.options),
+        IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES: MessageOptions.getIpfsResultThumbnailEncryptBoxNonceBytes(message.options),
       },
       onSuccess: (msgId, result) async {
         message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
