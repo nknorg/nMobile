@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -39,9 +38,9 @@ class IpfsHelper with Tag {
   static const String KEY_RESULT_NAME = "Name";
   static const String KEY_RESULT_ENCRYPT = "encrypt";
   static const String KEY_SECRET_NONCE_LEN = "secretNonceLen";
-  static const String KEY_SECRET_KEY_TEXT = "secretKeyText";
-  static const String KEY_SECRET_BOX_MAC_TEXT = "secretBoxMacText";
-  static const String KEY_SECRET_BOX_NONCE_TEXT = "secretBoxMacNonceText";
+  static const String KEY_SECRET_KEY_BYTES = "secretKeyBytes";
+  static const String KEY_SECRET_BOX_MAC_BYTES = "secretBoxMacBytes";
+  static const String KEY_SECRET_BOX_NONCE_BYTES = "secretBoxMacNonceBytes";
 
   Dio _dio = Dio();
 
@@ -325,9 +324,9 @@ class IpfsHelper with Tag {
       return {
         "data": secretBox.cipherText,
         KEY_SECRET_NONCE_LEN: encryptNonceLen,
-        KEY_SECRET_KEY_TEXT: utf8.decode(secretKeyBytes),
-        KEY_SECRET_BOX_MAC_TEXT: utf8.decode(secretBox.nonce),
-        KEY_SECRET_BOX_NONCE_TEXT: utf8.decode(secretBox.mac.bytes),
+        KEY_SECRET_KEY_BYTES: secretKeyBytes,
+        KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
+        KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
       };
     } catch (e) {
       handleError(e);
@@ -337,21 +336,21 @@ class IpfsHelper with Tag {
 
   Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
     int secretLen = int.tryParse(params[KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
-    List<int> secretKeyBytes = utf8.encode(params[KEY_SECRET_KEY_TEXT]?.toString() ?? "");
-    List<int> secretBoxMacBytes = utf8.encode(params[KEY_SECRET_BOX_MAC_TEXT]?.toString() ?? "");
-    List<int> secretBoxMacNonce = utf8.encode(params[KEY_SECRET_BOX_NONCE_TEXT]?.toString() ?? "");
-    if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxMacNonce.isNotEmpty) {
-      try {
+    List<int> secretKeyBytes = params[KEY_SECRET_KEY_BYTES] ?? [];
+    List<int> secretBoxMacBytes = params[KEY_SECRET_BOX_MAC_BYTES] ?? [];
+    List<int> secretBoxMacNonce = params[KEY_SECRET_BOX_NONCE_BYTES] ?? [];
+    try {
+      if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxMacNonce.isNotEmpty) {
         AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
         SecretKey secretKey = SecretKey(secretKeyBytes);
         SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxMacNonce);
         List<int> result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
         return result;
-      } catch (e) {
-        handleError(e);
       }
-    } else {
       logger.w("$TAG - _decrypt - params is empty - params:$params");
+      return null;
+    } catch (e) {
+      handleError(e);
     }
     return null;
   }
