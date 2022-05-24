@@ -33,6 +33,11 @@ class IpfsHelper with Tag {
   static const String _download_address = "api/v0/cat";
   // static const String _peers = "api/v0/swarm/peers"; // FUTURE: pin
 
+  static const String KEY_RESULT_IP = "ip";
+  static const String KEY_RESULT_HASH = "Hash";
+  static const String KEY_RESULT_SIZE = "Size";
+  static const String KEY_RESULT_NAME = "Name";
+  static const String KEY_RESULT_ENCRYPT = "encrypt";
   static const String KEY_SECRET_NONCE_LEN = "secretNonceLen";
   static const String KEY_SECRET_KEY_TEXT = "secretKeyText";
   static const String KEY_SECRET_BOX_MAC_TEXT = "secretBoxMacText";
@@ -114,7 +119,7 @@ class IpfsHelper with Tag {
         onProgress?.call(msgId, percent);
       },
       onSuccess: (msgId, result) {
-        result.addAll(encResult ?? Map());
+        if (encrypt) result.addAll({KEY_RESULT_ENCRYPT: 1}..addAll(encResult ?? Map()));
         onSuccess?.call(msgId, result);
       },
       onError: (msgId) => onError?.call(msgId),
@@ -139,7 +144,7 @@ class IpfsHelper with Tag {
     }
 
     // FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
-    ipAddress = ipAddress;
+    ipAddress = null;
 
     // http
     _downloadFile(
