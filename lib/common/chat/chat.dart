@@ -5,6 +5,7 @@ import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -621,35 +622,70 @@ class ChatCommon with Tag {
       _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, true); // await
       // ipfs
       Completer completer = Completer();
-      ipfsHelper.uploadFile(message.msgId, thumbnailPath, onSuccess: (msgId, result) async {
-        message.options = MessageOptions.setIpfsResultThumbnail(message.options, result["ip"], result["Hash"], result["Size"], result["Name"]);
-        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
-        await MessageStorage.instance.updateOptions(message.msgId, message.options);
-        if (!completer.isCompleted) completer.complete();
-        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
-      }, onError: (msgId) async {
-        if (!completer.isCompleted) completer.complete();
-        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
-        await MessageStorage.instance.updateOptions(message.msgId, message.options);
-        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
-      });
+      ipfsHelper.uploadFile(
+        message.msgId,
+        thumbnailPath,
+        encrypt: true,
+        onSuccess: (msgId, result) async {
+          message.options = MessageOptions.setIpfsResultThumbnail(
+            message.options,
+            result[IpfsHelper.KEY_RESULT_IP],
+            result[IpfsHelper.KEY_RESULT_HASH],
+            result[IpfsHelper.KEY_RESULT_SIZE],
+            result[IpfsHelper.KEY_RESULT_NAME],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT],
+            result[IpfsHelper.KEY_SECRET_NONCE_LEN],
+            result[IpfsHelper.KEY_SECRET_KEY_TEXT],
+            result[IpfsHelper.KEY_SECRET_BOX_MAC_TEXT],
+            result[IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT],
+          );
+          message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+          await MessageStorage.instance.updateOptions(message.msgId, message.options);
+          if (!completer.isCompleted) completer.complete();
+          _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+        },
+        onError: (msgId) async {
+          if (!completer.isCompleted) completer.complete();
+          message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
+          await MessageStorage.instance.updateOptions(message.msgId, message.options);
+          _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+        },
+      );
       await completer.future;
     }
     // ipfs
-    ipfsHelper.uploadFile(message.msgId, file.absolute.path, onProgress: (msgId, percent) {
-      onProgressSink.add({"msg_id": msgId, "percent": percent});
-    }, onSuccess: (msgId, result) async {
-      message.options = MessageOptions.setIpfsResult(message.options, result["ip"], result["Hash"], result["Size"], result["Name"]);
-      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
-      await chatOutCommon.sendIpfs(msgId);
-    }, onError: (msgId) async {
-      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onUpdateSink.add(message);
-      _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
-    });
+    ipfsHelper.uploadFile(
+      message.msgId,
+      file.absolute.path,
+      encrypt: true,
+      onProgress: (msgId, percent) {
+        onProgressSink.add({"msg_id": msgId, "percent": percent});
+      },
+      onSuccess: (msgId, result) async {
+        message.options = MessageOptions.setIpfsResult(
+          message.options,
+          result[IpfsHelper.KEY_RESULT_IP],
+          result[IpfsHelper.KEY_RESULT_HASH],
+          result[IpfsHelper.KEY_RESULT_SIZE],
+          result[IpfsHelper.KEY_RESULT_NAME],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT],
+          result[IpfsHelper.KEY_SECRET_NONCE_LEN],
+          result[IpfsHelper.KEY_SECRET_KEY_TEXT],
+          result[IpfsHelper.KEY_SECRET_BOX_MAC_TEXT],
+          result[IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT],
+        );
+        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
+        await chatOutCommon.sendIpfs(msgId);
+      },
+      onError: (msgId) async {
+        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onUpdateSink.add(message);
+        _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
+      },
+    );
     return message;
   }
 
@@ -669,19 +705,36 @@ class ChatCommon with Tag {
     _onUpdateSink.add(message);
     _onIpfsUpOrDownload(message.msgId, "FILE", false, true); // await
     // ipfs
-    ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onProgress: (msgId, percent) {
-      onProgressSink.add({"msg_id": msgId, "percent": percent});
-    }, onSuccess: (msgId, result) async {
-      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onUpdateSink.add(message);
-      _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
-    }, onError: (msgId) async {
-      message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onUpdateSink.add(message);
-      _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
-    });
+
+    ipfsHelper.downloadFile(
+      message.msgId,
+      ipfsHash,
+      ipfsSize,
+      savePath,
+      ipAddress: MessageOptions.getIpfsResultIp(message.options),
+      decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
+      decryptParams: {
+        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
+        IpfsHelper.KEY_SECRET_KEY_TEXT: MessageOptions.getIpfsResultEncryptKeyText(message.options),
+        IpfsHelper.KEY_SECRET_BOX_MAC_TEXT: MessageOptions.getIpfsResultEncryptBoxMacText(message.options),
+        IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT: MessageOptions.getIpfsResultEncryptBoxNonceText(message.options),
+      },
+      onProgress: (msgId, percent) {
+        onProgressSink.add({"msg_id": msgId, "percent": percent});
+      },
+      onSuccess: (msgId, result) async {
+        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onUpdateSink.add(message);
+        _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
+      },
+      onError: (msgId) async {
+        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onUpdateSink.add(message);
+        _onIpfsUpOrDownload(message.msgId, "FILE", false, false); // await
+      },
+    );
     return message;
   }
 
@@ -703,18 +756,33 @@ class ChatCommon with Tag {
     _onUpdateSink.add(message);
     _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, true); // await
     // ipfs
-    ipfsHelper.downloadFile(message.msgId, ipfsHash, ipfsSize, savePath, onSuccess: (msgId, result) async {
-      message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
-      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onUpdateSink.add(message);
-      _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
-    }, onError: (msgId) async {
-      message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onUpdateSink.add(message);
-      _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
-    });
+    ipfsHelper.downloadFile(
+      message.msgId,
+      ipfsHash,
+      ipfsSize,
+      savePath,
+      ipAddress: MessageOptions.getIpfsResultIp(message.options),
+      decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
+      decryptParams: {
+        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
+        IpfsHelper.KEY_SECRET_KEY_TEXT: MessageOptions.getIpfsResultEncryptKeyText(message.options),
+        IpfsHelper.KEY_SECRET_BOX_MAC_TEXT: MessageOptions.getIpfsResultEncryptBoxMacText(message.options),
+        IpfsHelper.KEY_SECRET_BOX_NONCE_TEXT: MessageOptions.getIpfsResultEncryptBoxNonceText(message.options),
+      },
+      onSuccess: (msgId, result) async {
+        message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
+        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onUpdateSink.add(message);
+        _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
+      },
+      onError: (msgId) async {
+        message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        _onUpdateSink.add(message);
+        _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false); // await
+      },
+    );
     return message;
   }
 
