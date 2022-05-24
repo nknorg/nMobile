@@ -1,15 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class IpfsHelper with Tag {
-  static const GATEWAY_READ_PORT = "5001";
-  static const GATEWAY_WRITE_PORT = "5001";
-
   static List<String> _writeableGateway = [
     'infura-ipfs.io',
     // 'ipfs.infura.io', // vpn
@@ -27,9 +26,17 @@ class IpfsHelper with Tag {
     // 'cloudflare-ipfs.com', // disable
   ];
 
+  static const GATEWAY_READ_PORT = "5001";
+  static const GATEWAY_WRITE_PORT = "5001";
+
   static const String _upload_address = "api/v0/add";
   static const String _download_address = "api/v0/cat";
   // static const String _peers = "api/v0/swarm/peers"; // FUTURE: pin
+
+  static const String KEY_SECRET_NONCE_LEN = "secretNonceLen";
+  static const String KEY_SECRET_KEY_TEXT = "secretKeyText";
+  static const String KEY_SECRET_BOX_MAC_TEXT = "secretBoxMacText";
+  static const String KEY_SECRET_BOX_NONCE_TEXT = "secretBoxMacNonceText";
 
   Dio _dio = Dio();
 
@@ -67,16 +74,30 @@ class IpfsHelper with Tag {
     String id,
     String filePath, {
     bool encrypt = true,
-    bool base64 = false,
     Function(String, double)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
-  }) {
-    if (base64) {
-      // TODO:GG base64
+  }) async {
+    File file = File(filePath);
+    int fileLen = file.lengthSync();
+    if (filePath.isEmpty || !file.existsSync()) {
+      onError?.call("file no exist");
+      return null;
     }
+
+    // encrypt
+    List<int>? fileBytes;
+    Map<String, dynamic>? encResult;
     if (encrypt) {
-      // TODO:GG 加密
+      encResult = await _encryption(file);
+      fileBytes = encResult?["data"];
+      encResult?.remove("data");
+    } else {
+      fileBytes = file.readAsBytesSync();
+    }
+    if (fileBytes == null || fileBytes.isEmpty) {
+      onError?.call("encrypt fail");
+      return null;
     }
 
     // FUTURE: use best ip_address by pin
@@ -85,13 +106,17 @@ class IpfsHelper with Tag {
     // http
     _uploadFile(
       id,
-      filePath,
+      fileBytes,
+      fileLen,
       ipAddress: ipAddress,
       onProgress: (msgId, total, count) {
         double percent = total > 0 ? (count / total) : -1;
         onProgress?.call(msgId, percent);
       },
-      onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+      onSuccess: (msgId, result) {
+        result.addAll(encResult ?? Map());
+        onSuccess?.call(msgId, result);
+      },
       onError: (msgId) => onError?.call(msgId),
     );
   }
@@ -101,52 +126,78 @@ class IpfsHelper with Tag {
     String ipfsHash,
     int ipfsLength,
     String savePath, {
-    String? ipAddress, // FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
-    bool encrypt = true,
-    bool base64 = false,
+    String? ipAddress,
+    bool decrypt = true,
+    Map<String, dynamic>? decryptParams,
     Function(String, double)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
-  }) {
-    if (base64) {
-      // TODO:GG base64
+  }) async {
+    if (ipfsHash.isEmpty || savePath.isEmpty) {
+      onError?.call("hash is empty");
+      return null;
     }
-    if (encrypt) {
-      // TODO:GG 加密
-    }
+
+    // FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
+    ipAddress = ipAddress;
 
     // http
     _downloadFile(
       id,
       ipfsHash,
       ipfsLength,
-      savePath,
       ipAddress: ipAddress,
       onProgress: (msgId, total, count) {
         double percent = total > 0 ? (count / total) : -1;
         onProgress?.call(msgId, percent);
       },
-      onSuccess: (msgId, result) => onSuccess?.call(msgId, result),
+      onSuccess: (msgId, data, result) async {
+        // decrypt
+        List<int>? finalData;
+        if (decrypt && decryptParams != null) {
+          finalData = await _decrypt(data, decryptParams);
+        } else {
+          finalData = data;
+        }
+        // save
+        if (finalData == null || finalData.isEmpty) {
+          onError?.call("decrypt fail");
+        } else {
+          try {
+            File file = File(savePath);
+            if (!file.existsSync()) {
+              await file.create(recursive: true);
+            } else {
+              await file.delete();
+              await file.create(recursive: true);
+            }
+            await file.writeAsBytes(finalData, flush: true);
+            onSuccess?.call(msgId, result);
+          } catch (e) {
+            handleError(e);
+            onError?.call("save file fail");
+          }
+        }
+      },
       onError: (msgId) => onError?.call(msgId),
     );
   }
 
   Future<Map<String, dynamic>?> _uploadFile(
     String id,
-    String filePath, {
+    List<int> fileBytes,
+    int ipfsLength, {
     String? ipAddress,
     Function(String, int, int)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
-    if (filePath.isEmpty || !File(filePath).existsSync()) {
-      onError?.call("file no exist");
-      return null;
-    }
-
     // uri
     ipAddress = ipAddress ?? (await _getGateway2Write());
-    if (!_isWriteIp(ipAddress)) return null;
+    if (!_isWriteIp(ipAddress)) {
+      onError?.call("ip_address error");
+      return null;
+    }
     String uri = 'https://$ipAddress${GATEWAY_WRITE_PORT.isNotEmpty ? ":$GATEWAY_WRITE_PORT" : ""}/$_upload_address';
 
     // http
@@ -154,7 +205,7 @@ class IpfsHelper with Tag {
     try {
       response = await _dio.post(
         uri,
-        data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
+        data: FormData.fromMap({'path': MultipartFile.fromBytes(fileBytes)}),
         options: Options(
             // headers: {Headers.contentLengthHeader: fileLength},
             // responseType: ResponseType.json,
@@ -197,21 +248,18 @@ class IpfsHelper with Tag {
   Future<Map<String, dynamic>?> _downloadFile(
     String id,
     String ipfsHash,
-    int ipfsLength,
-    String savePath, {
+    int ipfsLength, {
     String? ipAddress,
     Function(String, int, int)? onProgress,
-    Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String, Uint8List, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
-    if (ipfsHash.isEmpty || savePath.isEmpty) {
-      onError?.call("hash is empty");
-      return null;
-    }
-
     // uri
     ipAddress = ipAddress ?? (await _getGateway2Read());
-    if (!_isReadIp(ipAddress)) return null;
+    if (!_isReadIp(ipAddress)) {
+      onError?.call("ip_address error");
+      return null;
+    }
     String uri = 'https://$ipAddress${GATEWAY_READ_PORT.isNotEmpty ? ":$GATEWAY_READ_PORT" : ""}/$_download_address';
 
     // http
@@ -253,35 +301,53 @@ class IpfsHelper with Tag {
     }
     logger.i("$TAG - _downloadFile - success - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri - options:${response.requestOptions}");
 
-    // save
-    try {
-      File file = File(savePath);
-      if (!file.existsSync()) {
-        await file.create(recursive: true);
-      } else {
-        await file.delete();
-        await file.create(recursive: true);
-      }
-      await file.writeAsBytes(responseData, flush: true);
-    } catch (e) {
-      handleError(e);
-    }
-
     // result
     Map<String, dynamic> results = Map();
     results["id"] = id;
     results["ip"] = ipAddress;
-    results["path"] = savePath;
-    results["ipfsHash"] = ipfsHash;
-    onSuccess?.call(id, results); // await
+    onSuccess?.call(id, responseData, results); // await
     return results;
   }
 
-  Future encryption() async {
-    //
+  Future<Map<String, dynamic>?> _encryption(File file) async {
+    try {
+      int encryptNonceLen = 12;
+      Uint8List fileBytes = await file.readAsBytes();
+      AesGcm aesGcm = AesGcm.with128bits(nonceLength: encryptNonceLen);
+      SecretKey secretKey = await aesGcm.newSecretKey();
+      List<int> secretKeyBytes = await secretKey.extractBytes();
+      SecretBox secretBox = await aesGcm.encrypt(fileBytes, secretKey: secretKey);
+      return {
+        "data": secretBox.cipherText,
+        KEY_SECRET_NONCE_LEN: encryptNonceLen,
+        KEY_SECRET_KEY_TEXT: utf8.decode(secretKeyBytes),
+        KEY_SECRET_BOX_MAC_TEXT: utf8.decode(secretBox.nonce),
+        KEY_SECRET_BOX_NONCE_TEXT: utf8.decode(secretBox.mac.bytes),
+      };
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
   }
 
-  Future decrypt() async {
-    //
+  Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
+    int secretLen = int.tryParse(params[KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
+    List<int> secretKeyBytes = utf8.encode(params[KEY_SECRET_KEY_TEXT]?.toString() ?? "");
+    List<int> secretBoxMacBytes = utf8.encode(params[KEY_SECRET_BOX_MAC_TEXT]?.toString() ?? "");
+    List<int> secretBoxMacNonce = utf8.encode(params[KEY_SECRET_BOX_NONCE_TEXT]?.toString() ?? "");
+    if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxMacNonce.isNotEmpty) {
+      try {
+        AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
+        SecretKey secretKey = SecretKey(secretKeyBytes);
+        SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxMacNonce);
+        List<int> result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
+        return result;
+      } catch (e) {
+        handleError(e);
+      }
+    } else {
+      logger.w("$TAG - _decrypt - params is empty - params:$params");
+    }
+    return null;
   }
 }

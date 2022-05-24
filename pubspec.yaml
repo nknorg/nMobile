@@ -61,10 +61,10 @@ dependencies:
   vibration: ^1.7.3
   flutter_local_notifications: ^8.2.0
   background_fetch: ^1.0.1
+  cryptography: ^2.0.5
   #  get: ^4.3.8
   #  provider: ^6.0.0
   #  auto_route: ^2.3.0
-  #  flutter_aes_ecb_pkcs5: ^0.1.1
 
   # log
   logger: ^1.1.0
