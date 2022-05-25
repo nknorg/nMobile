@@ -86,7 +86,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
-  Lock _fetchMsgLock = Lock();
+  Lock _fetchMsgLock = Lock(); // TODO:GG change to queue
   int _pageLimit = 30;
   List<MessageSchema> _messages = <MessageSchema>[];
 

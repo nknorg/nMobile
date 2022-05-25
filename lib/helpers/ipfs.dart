@@ -6,6 +6,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:synchronized/synchronized.dart' as Sync;
 
 class IpfsHelper with Tag {
   static List<String> _writeableGateway = [
@@ -37,12 +38,16 @@ class IpfsHelper with Tag {
   static const String KEY_RESULT_SIZE = "Size";
   static const String KEY_RESULT_NAME = "Name";
   static const String KEY_RESULT_ENCRYPT = "encrypt";
+  static const String KEY_RESULT_ENCRYPT_TYPE = "encrypt_type";
   static const String KEY_SECRET_NONCE_LEN = "secretNonceLen";
   static const String KEY_SECRET_KEY_BYTES = "secretKeyBytes";
   static const String KEY_SECRET_BOX_MAC_BYTES = "secretBoxMacBytes";
   static const String KEY_SECRET_BOX_NONCE_BYTES = "secretBoxMacNonceBytes";
 
   Dio _dio = Dio();
+
+  Sync.Lock _uploadLock = Sync.Lock();
+  Sync.Lock _downloadLock = Sync.Lock();
 
   IpfsHelper() {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
@@ -74,7 +79,55 @@ class IpfsHelper with Tag {
     return _readableGateway.contains(ip);
   }
 
-  void uploadFile(
+  Future uploadFile(
+    String id,
+    String filePath, {
+    bool encrypt = true,
+    Function(String, double)? onProgress,
+    Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
+  }) async {
+    return _uploadLock.synchronized(() async {
+      return await uploadFileWithNoLock(
+        id,
+        filePath,
+        encrypt: encrypt,
+        onProgress: onProgress,
+        onSuccess: onSuccess,
+        onError: onError,
+      );
+    });
+  }
+
+  void downloadFile(
+    String id,
+    String ipfsHash,
+    int ipfsLength,
+    String savePath, {
+    String? ipAddress,
+    bool decrypt = true,
+    Map<String, dynamic>? decryptParams,
+    Function(String, double)? onProgress,
+    Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onError,
+  }) async {
+    return _downloadLock.synchronized(() {
+      return downloadFileWithNoLock(
+        id,
+        ipfsHash,
+        ipfsLength,
+        savePath,
+        ipAddress: ipAddress,
+        decrypt: decrypt,
+        decryptParams: decryptParams,
+        onProgress: onProgress,
+        onSuccess: onSuccess,
+        onError: onError,
+      );
+    });
+  }
+
+  Future uploadFileWithNoLock(
     String id,
     String filePath, {
     bool encrypt = true,
@@ -90,18 +143,30 @@ class IpfsHelper with Tag {
     }
 
     // encrypt
-    List<int>? fileBytes;
-    Map<String, dynamic>? encResult;
+    Map<String, dynamic>? encParams;
     if (encrypt) {
-      encResult = await _encryption(file);
-      fileBytes = encResult?["data"];
-      encResult?.remove("data");
-    } else {
-      fileBytes = file.readAsBytesSync();
-    }
-    if (fileBytes == null || fileBytes.isEmpty) {
-      onError?.call("encrypt fail");
-      return null;
+      final Map<String, Map<String, dynamic>>? result = await _encryption(await file.readAsBytes());
+      encParams = result?["params"];
+      if ((result?["data"]?["cipherText"] != null) && (result?["data"]?["cipherText"].isNotEmpty)) {
+        try {
+          File encryptFile = File(filePath + ".aes");
+          if (!encryptFile.existsSync()) {
+            await encryptFile.create(recursive: true);
+          } else {
+            await encryptFile.delete();
+            await encryptFile.create(recursive: true);
+          }
+          await encryptFile.writeAsBytes(result!["data"]!["cipherText"], flush: true);
+          filePath = encryptFile.path;
+        } catch (e) {
+          handleError(e);
+          onError?.call("encrypt copy fail");
+          return null;
+        }
+      } else {
+        onError?.call("encrypt create fail");
+        return null;
+      }
     }
 
     // FUTURE: use best ip_address by pin
@@ -110,7 +175,7 @@ class IpfsHelper with Tag {
     // http
     _uploadFile(
       id,
-      fileBytes,
+      filePath,
       fileLen,
       ipAddress: ipAddress,
       onProgress: (msgId, total, count) {
@@ -118,14 +183,18 @@ class IpfsHelper with Tag {
         onProgress?.call(msgId, percent);
       },
       onSuccess: (msgId, result) {
-        if (encrypt) result.addAll({KEY_RESULT_ENCRYPT: 1}..addAll(encResult ?? Map()));
+        if (encrypt) result.addAll({KEY_RESULT_ENCRYPT: 1}..addAll(encParams ?? Map()));
         onSuccess?.call(msgId, result);
+        if (encrypt) File(filePath).delete(); // await
       },
-      onError: (msgId) => onError?.call(msgId),
+      onError: (msgId) {
+        onError?.call(msgId);
+        if (encrypt) File(filePath).delete(); // await
+      },
     );
   }
 
-  void downloadFile(
+  void downloadFileWithNoLock(
     String id,
     String ipfsHash,
     int ipfsLength,
@@ -136,7 +205,7 @@ class IpfsHelper with Tag {
     Function(String, double)? onProgress,
     Function(String, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
-  }) async {
+  }) {
     if (ipfsHash.isEmpty || savePath.isEmpty) {
       onError?.call("hash is empty");
       return null;
@@ -189,7 +258,7 @@ class IpfsHelper with Tag {
 
   Future<Map<String, dynamic>?> _uploadFile(
     String id,
-    List<int> fileBytes,
+    String filePath,
     int ipfsLength, {
     String? ipAddress,
     Function(String, int, int)? onProgress,
@@ -209,9 +278,9 @@ class IpfsHelper with Tag {
     try {
       response = await _dio.post(
         uri,
-        data: FormData.fromMap({'path': MultipartFile.fromBytes(fileBytes)}),
+        data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         options: Options(
-            // headers: {Headers.contentLengthHeader: fileLength},
+            // headers: {Headers.contentLengthHeader: ipfsLength},
             // responseType: ResponseType.json,
             ),
         onSendProgress: (count, total) {
@@ -228,15 +297,17 @@ class IpfsHelper with Tag {
         handleError(response?.statusMessage);
       }
       onError?.call(id);
+      return null;
     } catch (e) {
       handleError(e);
       onError?.call(id);
+      return null;
     }
 
     // response
-    Map<String, dynamic>? results = response?.data;
-    if ((response == null) || (results == null) || (results.isEmpty)) {
-      logger.w("$TAG - uploadFile - fail - state_code:${response?.statusCode} - state_msg:${response?.statusMessage} - uri:$uri");
+    Map<String, dynamic>? results = response.data;
+    if ((results == null) || (results.isEmpty)) {
+      logger.w("$TAG - uploadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }
@@ -291,15 +362,17 @@ class IpfsHelper with Tag {
         handleError(response?.statusMessage);
       }
       onError?.call(id);
+      return null;
     } catch (e) {
       handleError(e);
       onError?.call(id);
+      return null;
     }
 
     // response
-    Uint8List? responseData = response?.data;
-    if ((response == null) || (responseData == null) || (responseData.isEmpty)) {
-      logger.w("$TAG - _downloadFile - fail - state_code:${response?.statusCode} - state_msg:${response?.statusMessage} - uri:$uri");
+    Uint8List? responseData = response.data;
+    if ((responseData == null) || (responseData.isEmpty)) {
+      logger.w("$TAG - _downloadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }
@@ -313,20 +386,23 @@ class IpfsHelper with Tag {
     return results;
   }
 
-  Future<Map<String, dynamic>?> _encryption(File file) async {
+  Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
     try {
       int encryptNonceLen = 12;
-      Uint8List fileBytes = await file.readAsBytes();
-      AesGcm aesGcm = AesGcm.with128bits(nonceLength: encryptNonceLen);
-      SecretKey secretKey = await aesGcm.newSecretKey();
-      List<int> secretKeyBytes = await secretKey.extractBytes();
-      SecretBox secretBox = await aesGcm.encrypt(fileBytes, secretKey: secretKey);
+      AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
+      SecretKey secretKey = await aesCbc.newSecretKey();
+      SecretBox secretBox = await aesCbc.encrypt(fileBytes, secretKey: secretKey);
       return {
-        "data": secretBox.cipherText,
-        KEY_SECRET_NONCE_LEN: encryptNonceLen,
-        KEY_SECRET_KEY_BYTES: secretKeyBytes,
-        KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
-        KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
+        "data": {
+          "cipherText": secretBox.cipherText,
+        },
+        "params": {
+          KEY_RESULT_ENCRYPT_TYPE: "aes-cbc",
+          KEY_SECRET_NONCE_LEN: encryptNonceLen,
+          KEY_SECRET_KEY_BYTES: await secretKey.extractBytes(),
+          KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
+          KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
+        }
       };
     } catch (e) {
       handleError(e);
@@ -335,17 +411,34 @@ class IpfsHelper with Tag {
   }
 
   Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
-    int secretLen = int.tryParse(params[KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
+    String encryptType = params[KEY_RESULT_ENCRYPT_TYPE]?.toString() ?? "";
     List<int> secretKeyBytes = params[KEY_SECRET_KEY_BYTES] ?? [];
     List<int> secretBoxMacBytes = params[KEY_SECRET_BOX_MAC_BYTES] ?? [];
-    List<int> secretBoxMacNonce = params[KEY_SECRET_BOX_NONCE_BYTES] ?? [];
+    List<int> secretBoxNonceBytes = params[KEY_SECRET_BOX_NONCE_BYTES] ?? [];
     try {
-      if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxMacNonce.isNotEmpty) {
-        AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
-        SecretKey secretKey = SecretKey(secretKeyBytes);
-        SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxMacNonce);
-        List<int> result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
-        return result;
+      if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxNonceBytes.isNotEmpty) {
+        if (encryptType == "aes-cbc") {
+          AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
+          SecretKey secretKey = SecretKey(secretKeyBytes);
+          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+          List<int> result = await aesCbc.decrypt(secretBox, secretKey: secretKey);
+          return result;
+        } else if (encryptType == "aes-ctr") {
+          AesCtr aesCtr = AesCtr.with128bits(macAlgorithm: Hmac.sha256());
+          SecretKey secretKey = SecretKey(secretKeyBytes);
+          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+          List<int> result = await aesCtr.decrypt(secretBox, secretKey: secretKey);
+          return result;
+        } else if (encryptType == "aes-gcm") {
+          int secretLen = int.tryParse(params[KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
+          AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
+          SecretKey secretKey = SecretKey(secretKeyBytes);
+          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+          List<int> result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
+          return result;
+        } else {
+          logger.w("$TAG - _decrypt - type wrong - type:$encryptType");
+        }
       }
       logger.w("$TAG - _decrypt - params is empty - params:$params");
       return null;

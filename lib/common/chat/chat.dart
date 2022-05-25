@@ -634,6 +634,7 @@ class ChatCommon with Tag {
             result[IpfsHelper.KEY_RESULT_SIZE],
             result[IpfsHelper.KEY_RESULT_NAME],
             result[IpfsHelper.KEY_RESULT_ENCRYPT],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT_TYPE],
             result[IpfsHelper.KEY_SECRET_NONCE_LEN],
             result[IpfsHelper.KEY_SECRET_KEY_BYTES],
             result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
@@ -669,6 +670,7 @@ class ChatCommon with Tag {
           result[IpfsHelper.KEY_RESULT_SIZE],
           result[IpfsHelper.KEY_RESULT_NAME],
           result[IpfsHelper.KEY_RESULT_ENCRYPT],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT_TYPE],
           result[IpfsHelper.KEY_SECRET_NONCE_LEN],
           result[IpfsHelper.KEY_SECRET_KEY_BYTES],
           result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
@@ -714,6 +716,7 @@ class ChatCommon with Tag {
       ipAddress: MessageOptions.getIpfsResultIp(message.options),
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
+        IpfsHelper.KEY_RESULT_ENCRYPT_TYPE: MessageOptions.getIpfsResultEncryptType(message.options),
         IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
         IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultEncryptKeyBytes(message.options),
         IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultEncryptBoxMacBytes(message.options),
@@ -764,6 +767,7 @@ class ChatCommon with Tag {
       ipAddress: MessageOptions.getIpfsResultIp(message.options),
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
+        IpfsHelper.KEY_RESULT_ENCRYPT_TYPE: MessageOptions.getIpfsResultThumbnailEncryptType(message.options),
         IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultThumbnailEncryptNonceLen(message.options),
         IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultThumbnailEncryptKeyBytes(message.options),
         IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultThumbnailEncryptBoxMacBytes(message.options),
