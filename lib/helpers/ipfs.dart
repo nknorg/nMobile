@@ -47,8 +47,8 @@ class IpfsHelper with Tag {
 
   Dio _dio = Dio();
 
-  Sync.Lock _uploadLock = Sync.Lock();
-  Sync.Lock _downloadLock = Sync.Lock();
+  Sync.Lock _encryptLock = Sync.Lock();
+  Sync.Lock _decryptLock = Sync.Lock();
 
   IpfsHelper() {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
@@ -81,54 +81,6 @@ class IpfsHelper with Tag {
   }
 
   Future uploadFile(
-    String id,
-    String filePath, {
-    bool encrypt = true,
-    Function(String, double)? onProgress,
-    Function(String, Map<String, dynamic>)? onSuccess,
-    Function(String)? onError,
-  }) async {
-    return _uploadLock.synchronized(() async {
-      return await uploadFileWithNoLock(
-        id,
-        filePath,
-        encrypt: encrypt,
-        onProgress: onProgress,
-        onSuccess: onSuccess,
-        onError: onError,
-      );
-    });
-  }
-
-  void downloadFile(
-    String id,
-    String ipfsHash,
-    int ipfsLength,
-    String savePath, {
-    String? ipAddress,
-    bool decrypt = true,
-    Map<String, dynamic>? decryptParams,
-    Function(String, double)? onProgress,
-    Function(String, Map<String, dynamic>)? onSuccess,
-    Function(String)? onError,
-  }) async {
-    return _downloadLock.synchronized(() {
-      return downloadFileWithNoLock(
-        id,
-        ipfsHash,
-        ipfsLength,
-        savePath,
-        ipAddress: ipAddress,
-        decrypt: decrypt,
-        decryptParams: decryptParams,
-        onProgress: onProgress,
-        onSuccess: onSuccess,
-        onError: onError,
-      );
-    });
-  }
-
-  Future uploadFileWithNoLock(
     String id,
     String filePath, {
     bool encrypt = true,
@@ -195,7 +147,7 @@ class IpfsHelper with Tag {
     );
   }
 
-  void downloadFileWithNoLock(
+  void downloadFile(
     String id,
     String ipfsHash,
     int ipfsLength,
@@ -388,55 +340,59 @@ class IpfsHelper with Tag {
   }
 
   Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
-    try {
-      int encryptNonceLen = 12;
-      AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
-      SecretKey secretKey = await aesCbc.newSecretKey();
+    return await _encryptLock.synchronized(() async {
+      try {
+        int encryptNonceLen = 12;
+        AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
+        SecretKey secretKey = await aesCbc.newSecretKey();
 
-      ReceivePort receivePort = ReceivePort();
-      await Isolate.spawn(_ipfsEncrypt, receivePort.sendPort);
-      // The 'echo' isolate sends its SendPort as the first message
-      SendPort sendPort = await receivePort.first;
-      // send message to isolate thread
-      ReceivePort response = ReceivePort();
-      sendPort.send([response.sendPort, aesCbc, secretKey, fileBytes]);
-      // get result from UI thread port
-      SecretBox secretBox = await response.first;
+        ReceivePort receivePort = ReceivePort();
+        await Isolate.spawn(_ipfsEncrypt, receivePort.sendPort);
+        // The 'echo' isolate sends its SendPort as the first message
+        SendPort sendPort = await receivePort.first;
+        // send message to isolate thread
+        ReceivePort response = ReceivePort();
+        sendPort.send([response.sendPort, aesCbc, secretKey, fileBytes]);
+        // get result from UI thread port
+        SecretBox secretBox = await response.first;
 
-      return {
-        "data": {
-          "cipherText": secretBox.cipherText,
-        },
-        "params": {
-          KEY_RESULT_ENCRYPT_TYPE: "aes-cbc",
-          KEY_SECRET_NONCE_LEN: encryptNonceLen,
-          KEY_SECRET_KEY_BYTES: await secretKey.extractBytes(),
-          KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
-          KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
-        }
-      };
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+        return {
+          "data": {
+            "cipherText": secretBox.cipherText,
+          },
+          "params": {
+            KEY_RESULT_ENCRYPT_TYPE: "aes-cbc",
+            KEY_SECRET_NONCE_LEN: encryptNonceLen,
+            KEY_SECRET_KEY_BYTES: await secretKey.extractBytes(),
+            KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
+            KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
+          }
+        };
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    });
   }
 
   Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
-    try {
-      ReceivePort receivePort = ReceivePort();
-      await Isolate.spawn(_ipfsDecrypt, receivePort.sendPort);
-      // The 'echo' isolate sends its SendPort as the first message
-      SendPort sendPort = await receivePort.first;
-      // send message to isolate thread
-      ReceivePort response = ReceivePort();
-      sendPort.send([response.sendPort, params, data]);
-      // get result from UI thread port
-      List<int> result = await response.first;
-      return result;
-    } catch (e) {
-      handleError(e);
-    }
-    return null;
+    return await _decryptLock.synchronized(() async {
+      try {
+        ReceivePort receivePort = ReceivePort();
+        await Isolate.spawn(_ipfsDecrypt, receivePort.sendPort);
+        // The 'echo' isolate sends its SendPort as the first message
+        SendPort sendPort = await receivePort.first;
+        // send message to isolate thread
+        ReceivePort response = ReceivePort();
+        sendPort.send([response.sendPort, params, data]);
+        // get result from UI thread port
+        List<int> result = await response.first;
+        return result;
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    });
   }
 }
 
