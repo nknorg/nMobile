@@ -653,6 +653,7 @@ class MessageOptions {
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
   static const KEY_IPFS_RESULT_ENCRYPT = "ipfs_result_encrypt";
+  static const KEY_IPFS_RESULT_ENCRYPT_TYPE = "ipfs_result_encrypt_type";
   static const KEY_IPFS_RESULT_ENCRYPT_NONCE_LEN = "ipfs_result_encrypt_nonce_len";
   static const KEY_IPFS_RESULT_ENCRYPT_KEY_BYTES = "ipfs_result_encrypt_key_bytes";
   static const KEY_IPFS_RESULT_ENCRYPT_BOX_MAC_BYTES = "ipfs_result_encrypt_box_mac_bytes";
@@ -662,6 +663,7 @@ class MessageOptions {
   static const KEY_IPFS_RESULT_THUMBNAIL_SIZE = "ipfs_result_thumbnail_size";
   static const KEY_IPFS_RESULT_THUMBNAIL_NAME = "ipfs_result_thumbnail_name";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT = "ipfs_result_thumbnail_encrypt";
+  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE = "ipfs_result_thumbnail_encrypt_type";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_NONCE_LEN = "ipfs_result_thumbnail_encrypt_nonce_len";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfs_result_thumbnail_encrypt_key_bytes";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_MAC_BYTES = "ipfs_result_thumbnail_encrypt_box_mac_bytes";
@@ -863,6 +865,7 @@ class MessageOptions {
     String? size,
     String? name,
     int? encrypt,
+    String? encryptType,
     int? encryptNonceLen,
     List? encryptKey,
     List? encryptBoxMac,
@@ -874,6 +877,7 @@ class MessageOptions {
     options[MessageOptions.KEY_IPFS_RESULT_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_NAME] = name;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT] = encrypt;
+    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_TYPE] = encryptType;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_NONCE_LEN] = encryptNonceLen;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_KEY_BYTES] = encryptKey;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BOX_MAC_BYTES] = encryptBoxMac;
@@ -908,6 +912,11 @@ class MessageOptions {
     var encrypt = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT]?.toString();
     if (encrypt == null || encrypt.isEmpty) return false;
     return (int.tryParse(encrypt) ?? 0) > 0 ? true : false;
+  }
+
+  static String? getIpfsResultEncryptType(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_TYPE]?.toString();
   }
 
   static int? getIpfsResultEncryptNonceLen(Map<String, dynamic>? options) {
@@ -945,6 +954,7 @@ class MessageOptions {
     String? size,
     String? name,
     int? encrypt,
+    String? encryptType,
     int? encryptNonceLen,
     List? encryptKey,
     List? encryptBoxMac,
@@ -956,6 +966,7 @@ class MessageOptions {
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_NAME] = name;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT] = encrypt;
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE] = encryptType;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_NONCE_LEN] = encryptNonceLen;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_KEY_BYTES] = encryptKey;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_MAC_BYTES] = encryptBoxMac;
@@ -990,6 +1001,11 @@ class MessageOptions {
     var encrypt = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT]?.toString();
     if (encrypt == null || encrypt.isEmpty) return false;
     return (int.tryParse(encrypt) ?? 0) > 0 ? true : false;
+  }
+
+  static String? getIpfsResultThumbnailEncryptType(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE]?.toString();
   }
 
   static int? getIpfsResultThumbnailEncryptNonceLen(Map<String, dynamic>? options) {
