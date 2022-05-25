@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
@@ -391,7 +392,17 @@ class IpfsHelper with Tag {
       int encryptNonceLen = 12;
       AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
       SecretKey secretKey = await aesCbc.newSecretKey();
-      SecretBox secretBox = await aesCbc.encrypt(fileBytes, secretKey: secretKey);
+
+      ReceivePort receivePort = ReceivePort();
+      await Isolate.spawn(_ipfsEncrypt, receivePort.sendPort);
+      // The 'echo' isolate sends its SendPort as the first message
+      SendPort sendPort = await receivePort.first;
+      // send message to isolate thread
+      ReceivePort response = ReceivePort();
+      sendPort.send([response.sendPort, aesCbc, secretKey, fileBytes]);
+      // get result from UI thread port
+      SecretBox secretBox = await response.first;
+
       return {
         "data": {
           "cipherText": secretBox.cipherText,
@@ -411,40 +422,85 @@ class IpfsHelper with Tag {
   }
 
   Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
-    String encryptType = params[KEY_RESULT_ENCRYPT_TYPE]?.toString() ?? "";
-    List<int> secretKeyBytes = params[KEY_SECRET_KEY_BYTES] ?? [];
-    List<int> secretBoxMacBytes = params[KEY_SECRET_BOX_MAC_BYTES] ?? [];
-    List<int> secretBoxNonceBytes = params[KEY_SECRET_BOX_NONCE_BYTES] ?? [];
     try {
-      if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxNonceBytes.isNotEmpty) {
-        if (encryptType == "aes-cbc") {
-          AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
-          SecretKey secretKey = SecretKey(secretKeyBytes);
-          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
-          List<int> result = await aesCbc.decrypt(secretBox, secretKey: secretKey);
-          return result;
-        } else if (encryptType == "aes-ctr") {
-          AesCtr aesCtr = AesCtr.with128bits(macAlgorithm: Hmac.sha256());
-          SecretKey secretKey = SecretKey(secretKeyBytes);
-          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
-          List<int> result = await aesCtr.decrypt(secretBox, secretKey: secretKey);
-          return result;
-        } else if (encryptType == "aes-gcm") {
-          int secretLen = int.tryParse(params[KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
-          AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
-          SecretKey secretKey = SecretKey(secretKeyBytes);
-          SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
-          List<int> result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
-          return result;
-        } else {
-          logger.w("$TAG - _decrypt - type wrong - type:$encryptType");
-        }
-      }
-      logger.w("$TAG - _decrypt - params is empty - params:$params");
-      return null;
+      ReceivePort receivePort = ReceivePort();
+      await Isolate.spawn(_ipfsDecrypt, receivePort.sendPort);
+      // The 'echo' isolate sends its SendPort as the first message
+      SendPort sendPort = await receivePort.first;
+      // send message to isolate thread
+      ReceivePort response = ReceivePort();
+      sendPort.send([response.sendPort, params, data]);
+      // get result from UI thread port
+      List<int> result = await response.first;
+      return result;
     } catch (e) {
       handleError(e);
     }
     return null;
   }
+}
+
+_ipfsEncrypt(SendPort sendPort) async {
+  // Open the ReceivePort for incoming messages.
+  ReceivePort port = ReceivePort();
+  // Notify any other isolates what port this isolate listens to.
+  sendPort.send(port.sendPort);
+
+  // get response
+  var msg = (await port.first) as List;
+  SendPort replyTo = msg[0];
+  AesCbc aesCbc = msg[1];
+  SecretKey secretKey = msg[2];
+  List<int> fileBytes = msg[3];
+
+  SecretBox secretBox = await aesCbc.encrypt(fileBytes, secretKey: secretKey);
+
+  // get keystore
+  replyTo.send(secretBox);
+  // close
+  port.close();
+}
+
+_ipfsDecrypt(SendPort sendPort) async {
+  // Open the ReceivePort for incoming messages.
+  ReceivePort port = ReceivePort();
+  // Notify any other isolates what port this isolate listens to.
+  sendPort.send(port.sendPort);
+
+  // get response
+  var msg = (await port.first) as List;
+  SendPort replyTo = msg[0];
+  Map<String, dynamic> params = msg[1];
+  List<int> data = msg[2];
+
+  String encryptType = params[IpfsHelper.KEY_RESULT_ENCRYPT_TYPE]?.toString() ?? "";
+  List<int> secretKeyBytes = params[IpfsHelper.KEY_SECRET_KEY_BYTES] ?? [];
+  List<int> secretBoxMacBytes = params[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES] ?? [];
+  List<int> secretBoxNonceBytes = params[IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES] ?? [];
+
+  List<int>? result;
+  if (secretKeyBytes.isNotEmpty && secretBoxMacBytes.isNotEmpty && secretBoxNonceBytes.isNotEmpty) {
+    if (encryptType == "aes-cbc") {
+      AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
+      SecretKey secretKey = SecretKey(secretKeyBytes);
+      SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+      result = await aesCbc.decrypt(secretBox, secretKey: secretKey);
+    } else if (encryptType == "aes-ctr") {
+      AesCtr aesCtr = AesCtr.with128bits(macAlgorithm: Hmac.sha256());
+      SecretKey secretKey = SecretKey(secretKeyBytes);
+      SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+      result = await aesCtr.decrypt(secretBox, secretKey: secretKey);
+    } else if (encryptType == "aes-gcm") {
+      int secretLen = int.tryParse(params[IpfsHelper.KEY_SECRET_NONCE_LEN]?.toString() ?? "") ?? 12;
+      AesGcm aesGcm = AesGcm.with128bits(nonceLength: secretLen);
+      SecretKey secretKey = SecretKey(secretKeyBytes);
+      SecretBox secretBox = SecretBox(data, mac: Mac(secretBoxMacBytes), nonce: secretBoxNonceBytes);
+      result = await aesGcm.decrypt(secretBox, secretKey: secretKey);
+    }
+  }
+
+  // get keystore
+  replyTo.send(result);
+  // close
+  port.close();
 }
