@@ -670,6 +670,46 @@ class S {
     );
   }
 
+  /// `terms`
+  String get terms {
+    return Intl.message(
+      'terms',
+      name: 'terms',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `please read and agree to the Terms And Conditions Of Service / User Agreement.`
+  String get read_and_agree_terms {
+    return Intl.message(
+      'please read and agree to the Terms And Conditions Of Service / User Agreement.',
+      name: 'read_and_agree_terms',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `read and agree to the `
+  String get read_and_agree_terms_01 {
+    return Intl.message(
+      'read and agree to the ',
+      name: 'read_and_agree_terms_01',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Terms of Service`
+  String get read_and_agree_terms_02 {
+    return Intl.message(
+      'Terms of Service',
+      name: 'read_and_agree_terms_02',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Cache`
   String get cache {
     return Intl.message(

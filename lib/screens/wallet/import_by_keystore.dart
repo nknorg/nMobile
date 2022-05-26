@@ -20,6 +20,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class WalletImportByKeystoreLayout extends BaseStateFulWidget {
@@ -44,6 +45,8 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
   FocusNode _nameFocusNode = FocusNode();
   FocusNode _passwordFocusNode = FocusNode();
 
+  bool _termsChecked = false;
+
   @override
   void onRefreshArguments() {}
 
@@ -54,6 +57,10 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
   }
 
   _import() async {
+    if (!_termsChecked) {
+      Toast.show(Global.locale((s) => s.read_and_agree_terms, ctx: context));
+      return;
+    }
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
@@ -214,7 +221,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                  padding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
                   child: FormText(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
@@ -223,6 +230,39 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                     password: true,
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 5, right: 0, bottom: 6),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _termsChecked,
+                        activeColor: Colors.blue,
+                        checkColor: Colors.white,
+                        onChanged: (checked) {
+                          setState(() {
+                            _termsChecked = checked ?? false;
+                          });
+                        },
+                      ),
+                      Label(
+                        Global.locale((s) => s.read_and_agree_terms_01, ctx: context),
+                        type: LabelType.bodyRegular,
+                      ),
+                      Button(
+                        child: Label(
+                          Global.locale((s) => s.read_and_agree_terms_02, ctx: context),
+                          color: Colors.blue,
+                          type: LabelType.bodyRegular,
+                          decoration: TextDecoration.underline,
+                        ),
+                        backgroundColor: Colors.transparent,
+                        onPressed: () {
+                          Navigator.pushNamed(context, SettingsTermsScreen.routeName);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ],

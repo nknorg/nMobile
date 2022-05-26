@@ -410,6 +410,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "profile": MessageLookupByLibrary.simpleMessage("Profile"),
         "public_key": MessageLookupByLibrary.simpleMessage("Public Key"),
         "qrcode": MessageLookupByLibrary.simpleMessage("QR Code"),
+        "read_and_agree_terms": MessageLookupByLibrary.simpleMessage(
+            "please read and agree to the Terms And Conditions Of Service / User Agreement."),
+        "read_and_agree_terms_01":
+            MessageLookupByLibrary.simpleMessage("read and agree to the "),
+        "read_and_agree_terms_02":
+            MessageLookupByLibrary.simpleMessage("Terms of Service"),
         "receive": MessageLookupByLibrary.simpleMessage("Receive"),
         "recent": MessageLookupByLibrary.simpleMessage("Recently"),
         "reject": MessageLookupByLibrary.simpleMessage("Reject"),
@@ -479,6 +485,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "success": MessageLookupByLibrary.simpleMessage("Success"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
+        "terms": MessageLookupByLibrary.simpleMessage("terms"),
         "tip": MessageLookupByLibrary.simpleMessage("Tips"),
         "tip_ask_group_owner_permission": MessageLookupByLibrary.simpleMessage(
             "You are not in this group,ask the group owner for permission"),
