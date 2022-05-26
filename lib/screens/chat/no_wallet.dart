@@ -13,8 +13,10 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
+import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/screens/wallet/import.dart';
 import 'package:nmobile/utils/logger.dart';
 
@@ -35,6 +37,8 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
   FocusNode _passwordFocusNode = FocusNode();
   FocusNode _confirmPasswordFocusNode = FocusNode();
 
+  bool _termsChecked = false;
+
   @override
   void onRefreshArguments() {}
 
@@ -45,6 +49,10 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
   }
 
   _create() async {
+    if (!_termsChecked) {
+      Toast.show(Global.locale((s) => s.read_and_agree_terms, ctx: context));
+      return;
+    }
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
@@ -205,7 +213,7 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20, right: 20, bottom: 32),
+                        padding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
                         child: FormText(
                           focusNode: _confirmPasswordFocusNode,
                           hintText: Global.locale((s) => s.input_password_again, ctx: context),
@@ -213,6 +221,39 @@ class _ChatNoWalletLayoutState extends BaseStateFulWidgetState<ChatNoWalletLayou
                           validator: Validator.of(context).confirmPassword(_passwordController.text),
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                           password: true,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5, right: 0, bottom: 10),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: _termsChecked,
+                              activeColor: Colors.blue,
+                              checkColor: Colors.white,
+                              onChanged: (checked) {
+                                setState(() {
+                                  _termsChecked = checked ?? false;
+                                });
+                              },
+                            ),
+                            Label(
+                              Global.locale((s) => s.read_and_agree_terms_01, ctx: context),
+                              type: LabelType.bodyRegular,
+                            ),
+                            Button(
+                              child: Label(
+                                Global.locale((s) => s.read_and_agree_terms_02, ctx: context),
+                                color: Colors.blue,
+                                type: LabelType.bodyRegular,
+                                decoration: TextDecoration.underline,
+                              ),
+                              backgroundColor: Colors.transparent,
+                              onPressed: () {
+                                Navigator.pushNamed(context, SettingsTermsScreen.routeName);
+                              },
+                            ),
+                          ],
                         ),
                       ),
                       Padding(

@@ -22,6 +22,7 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/screens/settings/cache.dart';
 import 'package:nmobile/screens/settings/subscribe.dart';
+import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/util.dart';
@@ -484,6 +485,39 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     ),
                     onPressed: () {
                       Util.launchUrl('https://forum.nkn.org');
+                    },
+                  ),
+                ),
+                Divider(height: 0, color: application.theme.dividerColor),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(bottom: true),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          Global.locale((s) => s.terms, ctx: context),
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor1,
+                          fontWeight: FontWeight.bold,
+                          height: 1,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Label(
+                              'https://www.nkn.org',
+                              type: LabelType.bodyRegular,
+                              color: application.theme.fontColor2,
+                              height: 1,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, SettingsTermsScreen.routeName);
                     },
                   ),
                 ),
