@@ -8,6 +8,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
@@ -66,7 +67,7 @@ class ChatBottomMenu extends StatelessWidget {
     onPicked?.call(results);
   }
 
-  _pickFiles() async {
+  _pickFiles({int? maxSize}) async {
     if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
@@ -87,6 +88,13 @@ class ChatBottomMenu extends StatelessWidget {
       if (path == null || path.isEmpty) continue;
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
       File file = File(path);
+      int size = file.lengthSync();
+      if (maxSize != null && maxSize > 0) {
+        if (size >= maxSize) {
+          Toast.show(Global.locale((s) => s.file_too_big));
+          continue;
+        }
+      }
       await file.copy(savePath);
       results.add({
         "path": savePath,
@@ -135,7 +143,7 @@ class ChatBottomMenu extends StatelessWidget {
                       color: application.theme.fontColor2,
                     ),
                     onPressed: () {
-                      _pickFiles();
+                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize);
                     },
                   ),
                 ),
