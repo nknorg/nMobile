@@ -348,6 +348,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "profile": MessageLookupByLibrary.simpleMessage("个人资料"),
         "public_key": MessageLookupByLibrary.simpleMessage("公钥"),
         "qrcode": MessageLookupByLibrary.simpleMessage("二维码"),
+        "read_and_agree_terms":
+            MessageLookupByLibrary.simpleMessage("请阅读并勾选 用户协议/服务条款"),
+        "read_and_agree_terms_01":
+            MessageLookupByLibrary.simpleMessage("请阅读并勾选"),
+        "read_and_agree_terms_02": MessageLookupByLibrary.simpleMessage("服务条款"),
         "receive": MessageLookupByLibrary.simpleMessage("接收"),
         "recent": MessageLookupByLibrary.simpleMessage("最近"),
         "reject": MessageLookupByLibrary.simpleMessage("拒绝"),
@@ -411,6 +416,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "success": MessageLookupByLibrary.simpleMessage("成功"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
+        "terms": MessageLookupByLibrary.simpleMessage("条款"),
         "tip": MessageLookupByLibrary.simpleMessage("提示"),
         "tip_ask_group_owner_permission":
             MessageLookupByLibrary.simpleMessage("您已不在此群，联系群主邀请您"),
