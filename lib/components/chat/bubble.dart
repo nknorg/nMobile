@@ -67,6 +67,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onProgressStreamSubscription;
   StreamSubscription? _onPlayProgressSubscription;
 
+  bool initialized = false;
   late MessageSchema _message;
   ContactSchema? _contact;
 
@@ -137,7 +138,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   void onRefreshArguments() {
+    bool sameBubble = initialized && (_message.msgId == widget.message.msgId);
     _message = widget.message;
+    initialized = true;
     // visible
     _showProfile = widget.showProfile;
     _hideProfile = widget.hideProfile;
@@ -162,7 +165,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       _contact = null;
     }
     // progress
-    _upDownloadProgress = (_message.content is File) ? _upDownloadProgress : -1;
+    _upDownloadProgress = sameBubble ? _upDownloadProgress : -1;
     // _playProgress = 0;
     // burn
     _message = chatCommon.burningStart(_message, () {
