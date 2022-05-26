@@ -5,7 +5,6 @@ import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
-import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
 import android.os.Environment.DIRECTORY_PICTURES
@@ -25,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.nkn.mobile.app.MainActivity
 import org.nkn.mobile.app.channels.IChannelHandler
+import org.nkn.mobile.app.encrypt.Encrypt
 import org.nkn.mobile.app.push.APNSPush
 import reedsolomon.BytesArray
 import reedsolomon.Encoder
@@ -114,6 +114,12 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             }
             "getFCMToken" -> {
                 getFCMToken(call, result)
+            }
+            "encryptBytes" -> {
+                encryptBytes(call, result)
+            }
+            "decryptBytes" -> {
+                decryptBytes(call, result)
             }
             "splitPieces" -> {
                 splitPieces(call, result)
@@ -253,6 +259,50 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         return@addOnFailureListener
                     }
                 }
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun encryptBytes(call: MethodCall, result: MethodChannel.Result) {
+        val algorithm = call.argument<String>("algorithm")!!
+        val bits = call.argument<Int>("bits")!!
+        val data = call.argument<ByteArray>("data")!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val encrypted = Encrypt.encrypt(algorithm, bits, data)
+            try {
+                val resp = hashMapOf(
+                    "event" to "splitPieces",
+                    "data" to encrypted,
+                )
+                resultSuccess(result, resp)
+                return@launch
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
+    }
+
+    private fun decryptBytes(call: MethodCall, result: MethodChannel.Result) {
+        val algorithm = call.argument<String>("algorithm")!!
+        val bits = call.argument<Int>("bits")!!
+        val keyBytes = call.argument<ByteArray>("key_bytes")!!
+        val ivBytes = call.argument<ByteArray>("iv_bytes")!!
+        val data = call.argument<ByteArray>("data")!!
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val decrypted = Encrypt.decrypt(algorithm, bits, keyBytes, ivBytes, data)
+            try {
+                val resp = hashMapOf(
+                    "event" to "splitPieces",
+                    "data" to decrypted,
+                )
+                resultSuccess(result, resp)
+                return@launch
             } catch (e: Throwable) {
                 resultError(result, e)
                 return@launch
