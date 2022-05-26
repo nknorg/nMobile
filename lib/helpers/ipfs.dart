@@ -354,13 +354,13 @@ class IpfsHelper with Tag {
     return null;
   }
 
-  Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
+  Future<List<int>?> _decrypt(Uint8List data, Map<String, dynamic> params) async {
     if (data.isEmpty || params.isEmpty) return null;
     try {
       String encryptAlgorithm = params[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM]?.toString() ?? "";
       int encryptBits = params[IpfsHelper.KEY_RESULT_ENCRYPT_BITS] ?? 1;
-      List<int> secretKeyBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES] ?? [];
-      List<int> gcmIvBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES] ?? [];
+      Uint8List secretKeyBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES] ?? Uint8List.fromList([]);
+      Uint8List gcmIvBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES] ?? Uint8List.fromList([]);
       return await Common.decryptBytes(encryptAlgorithm, encryptBits, secretKeyBytes, gcmIvBytes, data);
     } catch (e) {
       handleError(e);

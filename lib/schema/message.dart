@@ -71,7 +71,7 @@ class MessageSchema {
 
   // size
   static const int msgMaxSize = 32 * 1000; // < 32K
-  static const int ipfsMaxSize = 100 * 1000 * 1000; // 100M
+  static const int ipfsMaxSize = 50 * 1000 * 1000; // 100M
   static const int avatarBestSize = 100 * 1000; // 100k
   static const int avatarMaxSize = 500 * 1000; // 500K
   // static const int imgBestSize = 400 * 1000; // 400k
@@ -922,18 +922,18 @@ class MessageOptions {
     return int.tryParse(nonceLen);
   }
 
-  static List<int>? getIpfsResultEncryptKeyBytes(Map<String, dynamic>? options) {
+  static Uint8List? getIpfsResultEncryptKeyBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     final bytes = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_KEY_BYTES];
     if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
+    return Uint8List.fromList(List<int>.from(bytes));
   }
 
-  static List<int>? getIpfsResultEncryptGcmIvBytes(Map<String, dynamic>? options) {
+  static Uint8List? getIpfsResultEncryptGcmIvBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     final bytes = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_GCM_IV_BYTES];
     if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
+    return Uint8List.fromList(List<int>.from(bytes));
   }
 
   static Map<String, dynamic> setIpfsResultThumbnail(
@@ -1002,18 +1002,18 @@ class MessageOptions {
     return int.tryParse(nonceLen);
   }
 
-  static List<int>? getIpfsResultThumbnailEncryptKeyBytes(Map<String, dynamic>? options) {
+  static Uint8List? getIpfsResultThumbnailEncryptKeyBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     final bytes = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_KEY_BYTES];
     if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
+    return Uint8List.fromList(List<int>.from(bytes));
   }
 
-  static List<int>? getIpfsResultThumbnailEncryptGcmIvBytes(Map<String, dynamic>? options) {
+  static Uint8List? getIpfsResultThumbnailEncryptGcmIvBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     final bytes = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_GCM_IV_BYTES];
     if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
+    return Uint8List.fromList(List<int>.from(bytes));
   }
 
   // SUPPORT:START
