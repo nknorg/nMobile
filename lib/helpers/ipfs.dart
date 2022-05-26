@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:synchronized/synchronized.dart' as Sync;
 
 class IpfsHelper with Tag {
   static List<String> _writeableGateway = [
@@ -39,16 +37,12 @@ class IpfsHelper with Tag {
   static const String KEY_RESULT_SIZE = "Size";
   static const String KEY_RESULT_NAME = "Name";
   static const String KEY_RESULT_ENCRYPT = "encrypt";
-  static const String KEY_RESULT_ENCRYPT_TYPE = "encrypt_type";
-  static const String KEY_SECRET_NONCE_LEN = "secretNonceLen";
-  static const String KEY_SECRET_KEY_BYTES = "secretKeyBytes";
-  static const String KEY_SECRET_BOX_MAC_BYTES = "secretBoxMacBytes";
-  static const String KEY_SECRET_BOX_NONCE_BYTES = "secretBoxMacNonceBytes";
+  static const String KEY_RESULT_ENCRYPT_ALGORITHM = "encryptAlgorithm";
+  static const String KEY_RESULT_ENCRYPT_BITS = "encryptBits";
+  static const String KEY_RESULT_ENCRYPT_KEY_BYTES = "encryptKeyBytes";
+  static const String KEY_RESULT_ENCRYPT_GCM_IV_BYTES = "encryptGcmIvBytes";
 
   Dio _dio = Dio();
-
-  Sync.Lock _encryptLock = Sync.Lock();
-  Sync.Lock _decryptLock = Sync.Lock();
 
   IpfsHelper() {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
@@ -340,63 +334,94 @@ class IpfsHelper with Tag {
   }
 
   Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
-    return await _encryptLock.synchronized(() async {
-      try {
-        int encryptNonceLen = 12;
-        AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
-        SecretKey secretKey = await aesCbc.newSecretKey();
-
-        ReceivePort receivePort = ReceivePort();
-        await Isolate.spawn(_ipfsEncrypt, receivePort.sendPort);
-        // The 'echo' isolate sends its SendPort as the first message
-        SendPort sendPort = await receivePort.first;
-        // send message to isolate thread
-        ReceivePort response = ReceivePort();
-        sendPort.send([response.sendPort, aesCbc, secretKey, fileBytes]);
-        // get result from UI thread port
-        SecretBox secretBox = await response.first;
-
-        return {
-          "data": {
-            "cipherText": secretBox.cipherText,
-          },
-          "params": {
-            KEY_RESULT_ENCRYPT_TYPE: "aes-cbc",
-            KEY_SECRET_NONCE_LEN: encryptNonceLen,
-            KEY_SECRET_KEY_BYTES: await secretKey.extractBytes(),
-            KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
-            KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
-          }
-        };
-      } catch (e) {
-        handleError(e);
-      }
-      return null;
-    });
+    if (fileBytes.isEmpty) return null;
+    try {
+      Map? encrypted = await Common.encryptBytes("AES/GCM/NoPadding", 16 * 8, fileBytes);
+      return {
+        "data": {
+          "cipherText": encrypted["cipher_text_bytes"],
+        },
+        "params": {
+          KEY_RESULT_ENCRYPT_ALGORITHM: encrypted["algorithm"],
+          KEY_RESULT_ENCRYPT_BITS: encrypted["bits"],
+          KEY_RESULT_ENCRYPT_KEY_BYTES: encrypted["key_bytes"],
+          KEY_RESULT_ENCRYPT_GCM_IV_BYTES: encrypted["iv_bytes"],
+        }
+      };
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
   }
 
   Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
-    return await _decryptLock.synchronized(() async {
-      try {
-        ReceivePort receivePort = ReceivePort();
-        await Isolate.spawn(_ipfsDecrypt, receivePort.sendPort);
-        // The 'echo' isolate sends its SendPort as the first message
-        SendPort sendPort = await receivePort.first;
-        // send message to isolate thread
-        ReceivePort response = ReceivePort();
-        sendPort.send([response.sendPort, params, data]);
-        // get result from UI thread port
-        List<int> result = await response.first;
-        return result;
-      } catch (e) {
-        handleError(e);
-      }
-      return null;
-    });
+    if (data.isEmpty || params.isEmpty) return null;
+    try {
+      String encryptAlgorithm = params[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM]?.toString() ?? "";
+      int encryptBits = params[IpfsHelper.KEY_RESULT_ENCRYPT_BITS] ?? 1;
+      List<int> secretKeyBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES] ?? [];
+      List<int> gcmIvBytes = params[IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES] ?? [];
+      return await Common.decryptBytes(encryptAlgorithm, encryptBits, secretKeyBytes, gcmIvBytes, data);
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
   }
+
+/*Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
+    try {
+      int encryptNonceLen = 12;
+      AesCbc aesCbc = AesCbc.with128bits(macAlgorithm: Hmac.sha256());
+      SecretKey secretKey = await aesCbc.newSecretKey();
+
+      ReceivePort receivePort = ReceivePort();
+      await Isolate.spawn(_ipfsEncrypt, receivePort.sendPort);
+      // The 'echo' isolate sends its SendPort as the first message
+      SendPort sendPort = await receivePort.first;
+      // send message to isolate thread
+      ReceivePort response = ReceivePort();
+      sendPort.send([response.sendPort, aesCbc, secretKey, fileBytes]);
+      // get result from UI thread port
+      SecretBox secretBox = await response.first;
+
+      return {
+        "data": {
+          "cipherText": secretBox.cipherText,
+        },
+        "params": {
+          KEY_RESULT_ENCRYPT_TYPE: "aes-cbc",
+          KEY_SECRET_NONCE_LEN: encryptNonceLen,
+          KEY_SECRET_KEY_BYTES: await secretKey.extractBytes(),
+          KEY_SECRET_BOX_MAC_BYTES: secretBox.mac.bytes,
+          KEY_SECRET_BOX_NONCE_BYTES: secretBox.nonce,
+        }
+      };
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }*/
+
+/*Future<List<int>?> _decrypt(List<int> data, Map<String, dynamic> params) async {
+    try {
+      ReceivePort receivePort = ReceivePort();
+      await Isolate.spawn(_ipfsDecrypt, receivePort.sendPort);
+      // The 'echo' isolate sends its SendPort as the first message
+      SendPort sendPort = await receivePort.first;
+      // send message to isolate thread
+      ReceivePort response = ReceivePort();
+      sendPort.send([response.sendPort, params, data]);
+      // get result from UI thread port
+      List<int> result = await response.first;
+      return result;
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }*/
 }
 
-_ipfsEncrypt(SendPort sendPort) async {
+/*_ipfsEncrypt(SendPort sendPort) async {
   // Open the ReceivePort for incoming messages.
   ReceivePort port = ReceivePort();
   // Notify any other isolates what port this isolate listens to.
@@ -415,9 +440,9 @@ _ipfsEncrypt(SendPort sendPort) async {
   replyTo.send(secretBox);
   // close
   port.close();
-}
+}*/
 
-_ipfsDecrypt(SendPort sendPort) async {
+/*_ipfsDecrypt(SendPort sendPort) async {
   // Open the ReceivePort for incoming messages.
   ReceivePort port = ReceivePort();
   // Notify any other isolates what port this isolate listens to.
@@ -459,4 +484,4 @@ _ipfsDecrypt(SendPort sendPort) async {
   replyTo.send(result);
   // close
   port.close();
-}
+}*/

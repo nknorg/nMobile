@@ -634,11 +634,10 @@ class ChatCommon with Tag {
             result[IpfsHelper.KEY_RESULT_SIZE],
             result[IpfsHelper.KEY_RESULT_NAME],
             result[IpfsHelper.KEY_RESULT_ENCRYPT],
-            result[IpfsHelper.KEY_RESULT_ENCRYPT_TYPE],
-            result[IpfsHelper.KEY_SECRET_NONCE_LEN],
-            result[IpfsHelper.KEY_SECRET_KEY_BYTES],
-            result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
-            result[IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT_BITS],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES],
+            result[IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES],
           );
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
           await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -670,11 +669,10 @@ class ChatCommon with Tag {
           result[IpfsHelper.KEY_RESULT_SIZE],
           result[IpfsHelper.KEY_RESULT_NAME],
           result[IpfsHelper.KEY_RESULT_ENCRYPT],
-          result[IpfsHelper.KEY_RESULT_ENCRYPT_TYPE],
-          result[IpfsHelper.KEY_SECRET_NONCE_LEN],
-          result[IpfsHelper.KEY_SECRET_KEY_BYTES],
-          result[IpfsHelper.KEY_SECRET_BOX_MAC_BYTES],
-          result[IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT_BITS],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES],
+          result[IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES],
         );
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -716,11 +714,10 @@ class ChatCommon with Tag {
       ipAddress: MessageOptions.getIpfsResultIp(message.options),
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
-        IpfsHelper.KEY_RESULT_ENCRYPT_TYPE: MessageOptions.getIpfsResultEncryptType(message.options),
-        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultEncryptNonceLen(message.options),
-        IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultEncryptKeyBytes(message.options),
-        IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultEncryptBoxMacBytes(message.options),
-        IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES: MessageOptions.getIpfsResultEncryptBoxNonceBytes(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM: MessageOptions.getIpfsResultEncryptAlgorithm(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_BITS: MessageOptions.getIpfsResultEncryptBits(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES: MessageOptions.getIpfsResultEncryptKeyBytes(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES: MessageOptions.getIpfsResultEncryptGcmIvBytes(message.options),
       },
       onProgress: (msgId, percent) {
         onProgressSink.add({"msg_id": msgId, "percent": percent});
@@ -767,11 +764,10 @@ class ChatCommon with Tag {
       ipAddress: MessageOptions.getIpfsResultIp(message.options),
       decrypt: MessageOptions.getIpfsResultEncrypt(message.options),
       decryptParams: {
-        IpfsHelper.KEY_RESULT_ENCRYPT_TYPE: MessageOptions.getIpfsResultThumbnailEncryptType(message.options),
-        IpfsHelper.KEY_SECRET_NONCE_LEN: MessageOptions.getIpfsResultThumbnailEncryptNonceLen(message.options),
-        IpfsHelper.KEY_SECRET_KEY_BYTES: MessageOptions.getIpfsResultThumbnailEncryptKeyBytes(message.options),
-        IpfsHelper.KEY_SECRET_BOX_MAC_BYTES: MessageOptions.getIpfsResultThumbnailEncryptBoxMacBytes(message.options),
-        IpfsHelper.KEY_SECRET_BOX_NONCE_BYTES: MessageOptions.getIpfsResultThumbnailEncryptBoxNonceBytes(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM: MessageOptions.getIpfsResultThumbnailEncryptAlgorithm(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_BITS: MessageOptions.getIpfsResultThumbnailEncryptBits(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_KEY_BYTES: MessageOptions.getIpfsResultThumbnailEncryptKeyBytes(message.options),
+        IpfsHelper.KEY_RESULT_ENCRYPT_GCM_IV_BYTES: MessageOptions.getIpfsResultThumbnailEncryptGcmIvBytes(message.options),
       },
       onSuccess: (msgId, result) async {
         message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);

@@ -653,21 +653,19 @@ class MessageOptions {
   static const KEY_IPFS_RESULT_SIZE = "ipfs_result_size";
   static const KEY_IPFS_RESULT_NAME = "ipfs_result_name";
   static const KEY_IPFS_RESULT_ENCRYPT = "ipfs_result_encrypt";
-  static const KEY_IPFS_RESULT_ENCRYPT_TYPE = "ipfs_result_encrypt_type";
-  static const KEY_IPFS_RESULT_ENCRYPT_NONCE_LEN = "ipfs_result_encrypt_nonce_len";
+  static const KEY_IPFS_RESULT_ENCRYPT_ALGORITHM = "ipfs_result_encrypt_algorithm";
+  static const KEY_IPFS_RESULT_ENCRYPT_BITS = "ipfs_result_encrypt_bits";
   static const KEY_IPFS_RESULT_ENCRYPT_KEY_BYTES = "ipfs_result_encrypt_key_bytes";
-  static const KEY_IPFS_RESULT_ENCRYPT_BOX_MAC_BYTES = "ipfs_result_encrypt_box_mac_bytes";
-  static const KEY_IPFS_RESULT_ENCRYPT_BOX_NONCE_BYTES = "ipfs_result_encrypt_box_nonce_bytes";
+  static const KEY_IPFS_RESULT_ENCRYPT_GCM_IV_BYTES = "ipfs_result_encrypt_gcm_iv_bytes";
   static const KEY_IPFS_RESULT_THUMBNAIL_IP = "ipfs_result_thumbnail_ip";
   static const KEY_IPFS_RESULT_THUMBNAIL_HASH = "ipfs_result_thumbnail_hash";
   static const KEY_IPFS_RESULT_THUMBNAIL_SIZE = "ipfs_result_thumbnail_size";
   static const KEY_IPFS_RESULT_THUMBNAIL_NAME = "ipfs_result_thumbnail_name";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT = "ipfs_result_thumbnail_encrypt";
-  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE = "ipfs_result_thumbnail_encrypt_type";
-  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_NONCE_LEN = "ipfs_result_thumbnail_encrypt_nonce_len";
+  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_ALGORITHM = "ipfs_result_thumbnail_encrypt_algorithm";
+  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BITS = "ipfs_result_thumbnail_encrypt_bits";
   static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfs_result_thumbnail_encrypt_key_bytes";
-  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_MAC_BYTES = "ipfs_result_thumbnail_encrypt_box_mac_bytes";
-  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_NONCE_BYTES = "ipfs_result_thumbnail_encrypt_box_nonce_bytes";
+  static const KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_GCM_IV_BYTES = "ipfs_result_thumbnail_encrypt_gcm_iv_bytes";
 
   static const KEY_FROM_PIECE = "from_piece";
 
@@ -865,11 +863,10 @@ class MessageOptions {
     String? size,
     String? name,
     int? encrypt,
-    String? encryptType,
-    int? encryptNonceLen,
+    String? encryptAlgorithm,
+    int? encryptBits,
     List? encryptKey,
-    List? encryptBoxMac,
-    List? encryptBoxNonce,
+    List? encryptGcmIv,
   ) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_IPFS_RESULT_IP] = ip;
@@ -877,11 +874,10 @@ class MessageOptions {
     options[MessageOptions.KEY_IPFS_RESULT_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_NAME] = name;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT] = encrypt;
-    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_TYPE] = encryptType;
-    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_NONCE_LEN] = encryptNonceLen;
+    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_ALGORITHM] = encryptAlgorithm;
+    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BITS] = encryptBits;
     options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_KEY_BYTES] = encryptKey;
-    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BOX_MAC_BYTES] = encryptBoxMac;
-    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BOX_NONCE_BYTES] = encryptBoxNonce;
+    options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_GCM_IV_BYTES] = encryptGcmIv;
     return options;
   }
 
@@ -914,14 +910,14 @@ class MessageOptions {
     return (int.tryParse(encrypt) ?? 0) > 0 ? true : false;
   }
 
-  static String? getIpfsResultEncryptType(Map<String, dynamic>? options) {
+  static String? getIpfsResultEncryptAlgorithm(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_TYPE]?.toString();
+    return options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_ALGORITHM]?.toString();
   }
 
-  static int? getIpfsResultEncryptNonceLen(Map<String, dynamic>? options) {
+  static int? getIpfsResultEncryptBits(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    var nonceLen = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_NONCE_LEN]?.toString();
+    var nonceLen = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BITS]?.toString();
     if (nonceLen == null || nonceLen.isEmpty) return null;
     return int.tryParse(nonceLen);
   }
@@ -933,16 +929,9 @@ class MessageOptions {
     return List<int>.from(bytes);
   }
 
-  static List<int>? getIpfsResultEncryptBoxMacBytes(Map<String, dynamic>? options) {
+  static List<int>? getIpfsResultEncryptGcmIvBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    final bytes = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BOX_MAC_BYTES];
-    if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
-  }
-
-  static List<int>? getIpfsResultEncryptBoxNonceBytes(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    final bytes = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_BOX_NONCE_BYTES];
+    final bytes = options[MessageOptions.KEY_IPFS_RESULT_ENCRYPT_GCM_IV_BYTES];
     if (bytes == null || !(bytes is List)) return null;
     return List<int>.from(bytes);
   }
@@ -954,11 +943,10 @@ class MessageOptions {
     String? size,
     String? name,
     int? encrypt,
-    String? encryptType,
-    int? encryptNonceLen,
+    String? encryptAlgorithm,
+    int? encryptBits,
     List? encryptKey,
-    List? encryptBoxMac,
-    List? encryptBoxNonce,
+    List? encryptGcmIv,
   ) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_IP] = ip;
@@ -966,11 +954,10 @@ class MessageOptions {
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_SIZE] = int.tryParse(size ?? "");
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_NAME] = name;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT] = encrypt;
-    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE] = encryptType;
-    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_NONCE_LEN] = encryptNonceLen;
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_ALGORITHM] = encryptAlgorithm;
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BITS] = encryptBits;
     options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_KEY_BYTES] = encryptKey;
-    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_MAC_BYTES] = encryptBoxMac;
-    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_NONCE_BYTES] = encryptBoxNonce;
+    options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_GCM_IV_BYTES] = encryptGcmIv;
     return options;
   }
 
@@ -1003,14 +990,14 @@ class MessageOptions {
     return (int.tryParse(encrypt) ?? 0) > 0 ? true : false;
   }
 
-  static String? getIpfsResultThumbnailEncryptType(Map<String, dynamic>? options) {
+  static String? getIpfsResultThumbnailEncryptAlgorithm(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_TYPE]?.toString();
+    return options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_ALGORITHM]?.toString();
   }
 
-  static int? getIpfsResultThumbnailEncryptNonceLen(Map<String, dynamic>? options) {
+  static int? getIpfsResultThumbnailEncryptBits(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    var nonceLen = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_NONCE_LEN]?.toString();
+    var nonceLen = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BITS]?.toString();
     if (nonceLen == null || nonceLen.isEmpty) return null;
     return int.tryParse(nonceLen);
   }
@@ -1022,16 +1009,9 @@ class MessageOptions {
     return List<int>.from(bytes);
   }
 
-  static List<int>? getIpfsResultThumbnailEncryptBoxMacBytes(Map<String, dynamic>? options) {
+  static List<int>? getIpfsResultThumbnailEncryptGcmIvBytes(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    final bytes = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_MAC_BYTES];
-    if (bytes == null || !(bytes is List)) return null;
-    return List<int>.from(bytes);
-  }
-
-  static List<int>? getIpfsResultThumbnailEncryptBoxNonceBytes(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    final bytes = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_BOX_NONCE_BYTES];
+    final bytes = options[MessageOptions.KEY_IPFS_RESULT_THUMBNAIL_ENCRYPT_GCM_IV_BYTES];
     if (bytes == null || !(bytes is List)) return null;
     return List<int>.from(bytes);
   }
