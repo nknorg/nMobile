@@ -71,7 +71,7 @@ class MessageSchema {
 
   // size
   static const int msgMaxSize = 32 * 1000; // < 32K
-  static const int ipfsMaxSize = 50 * 1000 * 1000; // 100M
+  static int ipfsMaxSize() => Platform.isIOS ? (100 * 1000 * 1000) : (50 * 1000 * 1000); // 100M
   static const int avatarBestSize = 100 * 1000; // 100k
   static const int avatarMaxSize = 500 * 1000; // 500K
   // static const int imgBestSize = 400 * 1000; // 400k
