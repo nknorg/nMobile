@@ -45,6 +45,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
   String? _content;
 
   VideoPlayerController? _controller;
+  bool isPlaying = false;
 
   @override
   void onRefreshArguments() {
@@ -85,6 +86,12 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     _controller?.initialize().then((_) {
       // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
       setState(() {});
+    });
+    _controller?.addListener(() {
+      if (isPlaying != _controller?.value.isPlaying) {
+        setState(() {});
+        isPlaying = _controller?.value.isPlaying ?? false;
+      }
     });
   }
 
