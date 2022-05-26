@@ -275,7 +275,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             val encrypted = Encrypt.encrypt(algorithm, bits, data)
             try {
                 val resp = hashMapOf(
-                    "event" to "splitPieces",
+                    "event" to "encryptBytes",
                     "data" to encrypted,
                 )
                 resultSuccess(result, resp)
@@ -298,7 +298,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             val decrypted = Encrypt.decrypt(algorithm, bits, keyBytes, ivBytes, data)
             try {
                 val resp = hashMapOf(
-                    "event" to "splitPieces",
+                    "event" to "decryptBytes",
                     "data" to decrypted,
                 )
                 resultSuccess(result, resp)

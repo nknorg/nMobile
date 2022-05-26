@@ -114,7 +114,7 @@ class Common {
     return false;
   }
 
-  static Future<Map> encryptBytes(String algorithm, int bits, List<int> data) async {
+  static Future<Map> encryptBytes(String algorithm, int bits, Uint8List data) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('encryptBytes', {
         'algorithm': algorithm,
@@ -128,13 +128,13 @@ class Common {
     return {};
   }
 
-  static Future<List<int>?> decryptBytes(String algorithm, int bits, List<int> keyByte, List<int> iv, List<int> data) async {
+  static Future<List<int>?> decryptBytes(String algorithm, int bits, Uint8List keyBytes, Uint8List ivBytes, Uint8List data) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('decryptBytes', {
         'algorithm': algorithm,
         'bits': bits,
-        'key_bytes': keyByte,
-        'iv_bytes': iv,
+        'key_bytes': keyBytes,
+        'iv_bytes': ivBytes,
         'data': data,
       });
       return resp['data'];
