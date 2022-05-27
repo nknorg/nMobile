@@ -139,7 +139,7 @@ dependencies:
   qr_flutter: ^4.0.0
 
   # eth
-  web3dart: ^2.3.1
+  web3dart: ^2.4.0
 
   # plugins
   nkn_sdk_flutter:
