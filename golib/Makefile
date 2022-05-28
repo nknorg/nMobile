@@ -13,7 +13,7 @@ ANDROID_ARTIFACT=$(ANDROID_BUILDDIR)/nkn.aar
 IOS_BUILDDIR=$(BUILDDIR)/ios
 IOS_ARTIFACT=$(IOS_BUILDDIR)/Nkn.xcframework
 
-BUILD_PACKAGE=github.com/nknorg/nkn-sdk-go github.com/nknorg/ncp-go github.com/nknorg/nkn/v2/transaction github.com/nknorg/nkngomobile github.com/nknorg/reedsolomon
+BUILD_PACKAGE=./crypto github.com/nknorg/nkn-sdk-go github.com/nknorg/ncp-go github.com/nknorg/nkn/v2/transaction github.com/nknorg/nkngomobile github.com/nknorg/reedsolomon
 ANDROID_BUILD_CMD="$(GOBIND) -ldflags $(ANDROID_LDFLAGS) -target=android -o $(ANDROID_ARTIFACT) $(BUILD_PACKAGE)"
 IOS_BUILD_CMD="$(GOBIND) -ldflags $(LDFLAGS) -target=ios -o $(IOS_ARTIFACT) $(BUILD_PACKAGE)"
 
@@ -29,9 +29,15 @@ mobile: android ios
 
 android:
 	$(call build,$(ANDROID_BUILDDIR),$(ANDROID_BUILD_CMD))
+	rm -rf ../android/golib/nkn.aar
+	rm -rf ../android/golib/nkn-sources.jar
+	mv $(ANDROID_BUILDDIR)/nkn.aar ../android/golib/
+	mv $(ANDROID_BUILDDIR)/nkn-sources.jar ../android/golib/
 
 ios:
 	$(call build,$(IOS_BUILDDIR),$(IOS_BUILD_CMD))
+	rm -rf ../plugins/nkn-sdk-flutter/ios/Frameworks/Nkn.xcframework/
+	mv $(IOS_BUILDDIR)/Nkn.xcframework ../plugins/nkn-sdk-flutter/ios/Frameworks/
 
 clean:
 	rm -rf $(BUILDDIR)
