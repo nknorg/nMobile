@@ -616,7 +616,7 @@ class ChatInCommon with Tag {
     received.content = File(savePath);
     // state
     received.options = MessageOptions.setIpfsState(received.options, MessageOptions.ipfsStateNo);
-    String? ipfsThumbnailHash = MessageOptions.getIpfsResultThumbnailHash(received.options);
+    String? ipfsThumbnailHash = MessageOptions.getIpfsThumbnailHash(received.options);
     if (ipfsThumbnailHash != null && ipfsThumbnailHash.isNotEmpty) {
       received.options = MessageOptions.setIpfsThumbnailState(received.options, MessageOptions.ipfsThumbnailStateNo);
     }

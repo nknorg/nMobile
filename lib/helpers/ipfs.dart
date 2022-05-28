@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class IpfsHelper with Tag {
@@ -32,15 +33,14 @@ class IpfsHelper with Tag {
   static const String _download_address = "api/v0/cat";
   // static const String _peers = "api/v0/swarm/peers"; // FUTURE: pin
 
-  static const String KEY_RESULT_IP = "ip";
-  static const String KEY_RESULT_HASH = "Hash";
-  static const String KEY_RESULT_SIZE = "Size";
-  static const String KEY_RESULT_NAME = "Name";
-  static const String KEY_RESULT_ENCRYPT = "encrypt";
-  static const String KEY_RESULT_ENCRYPT_ALGORITHM = "encryptAlgorithm";
-  static const String KEY_RESULT_ENCRYPT_BITS = "encryptBits";
-  static const String KEY_RESULT_ENCRYPT_KEY_BYTES = "encryptKeyBytes";
-  static const String KEY_RESULT_ENCRYPT_GCM_IV_BYTES = "encryptGcmIvBytes";
+  static const String KEY_IP = "ip";
+  static const String KEY_HASH = "Hash";
+  static const String KEY_SIZE = "Size";
+  static const String KEY_NAME = "Name";
+  static const String KEY_ENCRYPT = "encrypt";
+  static const String KEY_ENCRYPT_ALGORITHM = "encryptAlgorithm";
+  static const String KEY_ENCRYPT_KEY_BYTES = "encryptKeyBytes";
+  static const String KEY_ENCRYPT_NONCE_SIZE = "encryptNonceSize";
 
   Dio _dio = Dio();
 
@@ -130,7 +130,7 @@ class IpfsHelper with Tag {
         onProgress?.call(msgId, percent);
       },
       onSuccess: (msgId, result) {
-        if (encrypt) result.addAll({KEY_RESULT_ENCRYPT: 1}..addAll(encParams ?? Map()));
+        if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(encParams ?? Map()));
         onSuccess?.call(msgId, result);
         if (encrypt) File(filePath).delete(); // await
       },
@@ -175,7 +175,12 @@ class IpfsHelper with Tag {
         // decrypt
         List<int>? finalData;
         if (decrypt && decryptParams != null) {
-          finalData = await _decrypt(data, decryptParams);
+          finalData = await _decrypt(
+            data,
+            decryptParams[KEY_ENCRYPT_ALGORITHM],
+            decryptParams[KEY_ENCRYPT_KEY_BYTES],
+            decryptParams[KEY_ENCRYPT_NONCE_SIZE],
+          );
         } else {
           finalData = data;
         }
@@ -336,6 +341,42 @@ class IpfsHelper with Tag {
   Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
     if (fileBytes.isEmpty) return null;
     try {
+      int nonceSize = 12;
+      Random generator = Random.secure();
+      Uint8List key = Uint8List(16);
+      for (int i = 0; i < key.length; i++) {
+        key[i] = generator.nextInt(255);
+      }
+      Uint8List cipherText = await Crypto.gcmEncrypt(fileBytes, key, nonceSize);
+      return {
+        "data": {"cipherText": cipherText},
+        "params": {
+          KEY_ENCRYPT_ALGORITHM: "AES/GCM/NoPadding",
+          KEY_ENCRYPT_KEY_BYTES: key,
+          KEY_ENCRYPT_NONCE_SIZE: nonceSize,
+        }
+      };
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
+  Future<List<int>?> _decrypt(Uint8List data, String algorithm, Uint8List key, int nonceSize) async {
+    if (data.isEmpty || key.isEmpty || nonceSize <= 0) return null;
+    try {
+      if (algorithm.toLowerCase().contains("aes/gcm")) {
+        return await Crypto.gcmDecrypt(data, key, nonceSize);
+      }
+    } catch (e) {
+      handleError(e);
+    }
+    return null;
+  }
+
+  /*Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
+    if (fileBytes.isEmpty) return null;
+    try {
       Map? encrypted = await Common.encryptBytes("AES/GCM/NoPadding", 16 * 8, fileBytes);
       return {
         "data": {
@@ -352,9 +393,9 @@ class IpfsHelper with Tag {
       handleError(e);
     }
     return null;
-  }
+  }*/
 
-  Future<List<int>?> _decrypt(Uint8List data, Map<String, dynamic> params) async {
+  /*Future<List<int>?> _decrypt(Uint8List data, Map<String, dynamic> params) async {
     if (data.isEmpty || params.isEmpty) return null;
     try {
       String encryptAlgorithm = params[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM]?.toString() ?? "";
@@ -366,7 +407,7 @@ class IpfsHelper with Tag {
       handleError(e);
     }
     return null;
-  }
+  }*/
 
 /*Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
     try {
