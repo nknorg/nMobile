@@ -823,6 +823,7 @@ class ChatCommon with Tag {
       if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateIng) continue;
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      message.status = message.isOutbound ? MessageStatus.SendFail : message.status;
       if (fileNotify) _onUpdateSink.add(message);
     }
     await SettingsStorage.setSettings(fileUploadKey, <String>[]);
@@ -844,6 +845,7 @@ class ChatCommon with Tag {
       if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateIng) continue;
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      message.status = message.isOutbound ? MessageStatus.SendFail : message.status;
       if (thumbnailNotify) _onUpdateSink.add(message);
       if (thumbnailAutoDownload) {
         tryDownloadIpfsThumbnail(message); // await
