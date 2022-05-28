@@ -78,6 +78,10 @@ class Common : ChannelBase, FlutterStreamHandler {
             sendPushAPNS(call, result: result)
         case "updateBadgeCount":
             updateBadgeCount(call, result: result)
+        case "encryptBytes":
+            encryptBytes(call, result: result)
+        case "decryptBytes":
+            decryptBytes(call, result: result)
         case "splitPieces":
             splitPieces(call, result: result)
         case "combinePieces":
@@ -197,6 +201,54 @@ class Common : ChannelBase, FlutterStreamHandler {
             //                self.resultError(result: result, error: error)
             //                return
             //            }
+        }
+    }
+    
+    private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let algorithm = args["algorithm"] as? String ?? ""
+        let bits = args["bits"] as? Int ?? 1
+        let data = args["data"] as! FlutterStandardTypedData
+        
+        commonQueue.async {
+            var encrypted = Encrypt.encrypt(algorithm: algorithm, bits: bits, data: Data([UInt8](data.data)))
+            if(encrypted != nil){
+                if (encrypted!["key_bytes"] != nil) {
+                    encrypted!["key_bytes"] = FlutterStandardTypedData(bytes: encrypted!["key_bytes"] as! Data)
+                }
+                if (encrypted!["iv_bytes"] != nil) {
+                    encrypted!["iv_bytes"] = FlutterStandardTypedData(bytes: encrypted!["iv_bytes"] as! Data)
+                }
+                if (encrypted!["cipher_text_bytes"] != nil) {
+                    encrypted!["cipher_text_bytes"] = FlutterStandardTypedData(bytes: encrypted!["cipher_text_bytes"] as! Data)
+                }
+            }
+           
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "encryptBytes"
+            resp["data"] = encrypted
+            self.resultSuccess(result: result, resp: resp)
+            return
+        }
+    }
+    
+    private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let algorithm = args["algorithm"] as? String ?? ""
+        let bits = args["bits"] as? Int ?? 0
+        let keyBytes = args["key_bytes"] as! FlutterStandardTypedData
+        let ivBytes = args["iv_bytes"] as! FlutterStandardTypedData
+        let data = args["data"] as! FlutterStandardTypedData
+        
+        commonQueue.async {
+            let decrypted = Encrypt.decrypt(algorithm: algorithm, bits: bits, keyBytes: Data([UInt8](keyBytes.data)), ivBytes: Data([UInt8](ivBytes.data)), data: Data([UInt8](data.data)))
+            
+            var resp: [String: Any] = [String: Any]()
+            resp["event"] = "decryptBytes"
+            resp["data"] = (decrypted != nil) ? FlutterStandardTypedData(bytes: decrypted!) : nil
+            self.resultSuccess(result: result, resp: resp)
+            return
+            
         }
     }
     
