@@ -72,11 +72,8 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch {
             try {
-                val plainText = crypto.Crypto.gcmDecrypt(data, key, nonceSize.toLong())
-                val resp = hashMapOf(
-                    "data" to plainText
-                )
-                resultSuccess(result, resp)
+                val cipherText = crypto.Crypto.gcmEncrypt(data, key, nonceSize.toLong())
+                resultSuccess(result, cipherText)
                 return@launch
             } catch (e: Throwable) {
                 resultError(result, e)
@@ -92,11 +89,8 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch {
             try {
-                val cipherText = crypto.Crypto.gcmEncrypt(data, key, nonceSize.toLong())
-                val resp = hashMapOf(
-                    "data" to cipherText
-                )
-                resultSuccess(result, resp)
+                val plainTex = crypto.Crypto.gcmDecrypt(data, key, nonceSize.toLong())
+                resultSuccess(result, plainTex)
                 return@launch
             } catch (e: Throwable) {
                 resultError(result, e)

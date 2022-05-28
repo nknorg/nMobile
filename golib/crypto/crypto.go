@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"github.com/nknorg/nkn/v2/crypto/ed25519"
-	"io"
 )
 
 func GCMEncrypt(plaintext []byte, key []byte, nonceSize int) ([]byte, error) {
@@ -20,7 +19,8 @@ func GCMEncrypt(plaintext []byte, key []byte, nonceSize int) ([]byte, error) {
 	}
 
 	nonce := make([]byte, nonceSize)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+	_, err = rand.Read(nonce)
+	if err != nil {
 		return nil, err
 	}
 

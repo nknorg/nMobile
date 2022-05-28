@@ -58,11 +58,14 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let nonceSize = args["nonceSize"] as? Int ?? 0
 
         qryptoWorkItem = DispatchWorkItem {
-            let cipherText = CryptoGCMDecrypt(data?.data, key?.data, nonceSize)
+            var error: NSError?
+            let cipherText = CryptoGCMEncrypt(data?.data, key?.data, nonceSize, &error)
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
             
-            var resp:[String:Any] = [String:Any]()
-            resp["data"] = cipherText
-            self.resultSuccess(result: result, resp: resp)
+            self.resultSuccess(result: result, resp: cipherText)
         }
         qryptoQueue.async(execute: qryptoWorkItem!)
     }
@@ -74,11 +77,14 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let nonceSize = args["nonceSize"] as? Int ?? 0
 
         qryptoWorkItem = DispatchWorkItem {
-            let plainText = CryptoGCMDecrypt(data?.data, key?.data, nonceSize)
+            var error: NSError?
+            let plainText = CryptoGCMDecrypt(data?.data, key?.data, nonceSize, &error)
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
             
-            var resp:[String:Any] = [String:Any]()
-            resp["data"] = plainText
-            self.resultSuccess(result: result, resp: resp)
+            self.resultSuccess(result: result, resp: plainText)
         }
         qryptoQueue.async(execute: qryptoWorkItem!)
     }
