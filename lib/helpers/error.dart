@@ -70,5 +70,9 @@ String? getErrorShow(dynamic error) {
   if (error?.toString().contains(ksError) == true) {
     return ksError;
   }
+  String oom = "OOM";
+  if (error?.toString().contains(oom) == true) {
+    return "out of memory";
+  }
   return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
 }

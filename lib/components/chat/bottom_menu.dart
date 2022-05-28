@@ -48,7 +48,7 @@ class ChatBottomMenu extends StatelessWidget {
       }
       results = await MediaPicker.pickCommons(
         savePaths,
-        maxSize: MessageSchema.ipfsMaxSize(),
+        maxSize: MessageSchema.ipfsMaxSize,
       );
     }
     if (results.isEmpty) return;
@@ -143,7 +143,7 @@ class ChatBottomMenu extends StatelessWidget {
                       color: application.theme.fontColor2,
                     ),
                     onPressed: () {
-                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize());
+                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize);
                     },
                   ),
                 ),
