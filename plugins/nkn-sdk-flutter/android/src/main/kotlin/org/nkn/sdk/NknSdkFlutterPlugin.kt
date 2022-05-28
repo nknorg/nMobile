@@ -4,6 +4,7 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import org.nkn.sdk.impl.Client
 import org.nkn.sdk.impl.Common
+import org.nkn.sdk.impl.Crypto
 import org.nkn.sdk.impl.Wallet
 
 
@@ -14,17 +15,20 @@ class NknSdkFlutterPlugin : FlutterPlugin {
     }
 
     private val common: Common = Common()
+    private val crypto: Crypto = Crypto()
     private val wallet: Wallet = Wallet()
     private val client: Client = Client()
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         common.install(flutterPluginBinding.binaryMessenger)
+        crypto.install(flutterPluginBinding.binaryMessenger)
         wallet.install(flutterPluginBinding.binaryMessenger)
         client.install(flutterPluginBinding.binaryMessenger)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         common.uninstall()
+        crypto.uninstall()
         wallet.uninstall()
         client.uninstall()
     }
