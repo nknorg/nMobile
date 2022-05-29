@@ -32,7 +32,6 @@ target 'Runner' do
   use_modular_headers!
 
   pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '7.11.0'
-  pod 'CryptoSwift', '~> 1.5.1'
   
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end

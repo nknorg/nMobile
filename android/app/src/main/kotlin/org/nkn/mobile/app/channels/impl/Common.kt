@@ -24,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.nkn.mobile.app.MainActivity
 import org.nkn.mobile.app.channels.IChannelHandler
-import org.nkn.mobile.app.encrypt.Encrypt
 import org.nkn.mobile.app.push.APNSPush
 import reedsolomon.BytesArray
 import reedsolomon.Encoder
@@ -115,12 +114,12 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "getFCMToken" -> {
                 getFCMToken(call, result)
             }
-            "encryptBytes" -> {
-                encryptBytes(call, result)
-            }
-            "decryptBytes" -> {
-                decryptBytes(call, result)
-            }
+            //"encryptBytes" -> {
+            //    encryptBytes(call, result)
+            //}
+            //"decryptBytes" -> {
+            //    decryptBytes(call, result)
+            //}
             "splitPieces" -> {
                 splitPieces(call, result)
             }
@@ -266,7 +265,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
-    private fun encryptBytes(call: MethodCall, result: MethodChannel.Result) {
+    /*private fun encryptBytes(call: MethodCall, result: MethodChannel.Result) {
         val algorithm = call.argument<String>("algorithm")!!
         val bits = call.argument<Int>("bits")!!
         val data = call.argument<ByteArray>("data")!!
@@ -285,9 +284,9 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 return@launch
             }
         }
-    }
+    }*/
 
-    private fun decryptBytes(call: MethodCall, result: MethodChannel.Result) {
+    /*private fun decryptBytes(call: MethodCall, result: MethodChannel.Result) {
         val algorithm = call.argument<String>("algorithm")!!
         val bits = call.argument<Int>("bits")!!
         val keyBytes = call.argument<ByteArray>("key_bytes")!!
@@ -308,7 +307,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 return@launch
             }
         }
-    }
+    }*/
 
     private fun splitPieces(call: MethodCall, result: MethodChannel.Result) {
         val dataString = call.argument<String>("data")!!

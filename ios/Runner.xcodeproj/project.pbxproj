@@ -36,7 +36,6 @@
 		C683E279272E4FB200102547 /* APNSPusher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C683E278272E4FB200102547 /* APNSPusher.swift */; };
 		C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F42E03266A28CE007BA337 /* ChannelBase.swift */; };
 		C6FFD764266E09E600410547 /* CommonOc.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FFD763266E09E600410547 /* CommonOc.m */; };
-		E16249A6283F78B7002D0E0A /* encrypt.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16249A5283F78B7002D0E0A /* encrypt.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -103,7 +102,6 @@
 		C6F42E03266A28CE007BA337 /* ChannelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBase.swift; sourceTree = "<group>"; };
 		C6FFD762266E09E600410547 /* CommonOc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonOc.h; sourceTree = "<group>"; };
 		C6FFD763266E09E600410547 /* CommonOc.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CommonOc.m; sourceTree = "<group>"; };
-		E16249A5283F78B7002D0E0A /* encrypt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = encrypt.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -186,7 +184,6 @@
 		C61A6E6D266A19F000A7F1E1 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				E16249A4283F78A8002D0E0A /* Encrypt */,
 				C6824D20272E4E8E00BA7AAF /* Push2 */,
 				C61A6E6E266A1A2100A7F1E1 /* Push */,
 				C6F42E03266A28CE007BA337 /* ChannelBase.swift */,
@@ -245,14 +242,6 @@
 				C6824D24272E4EA700BA7AAF /* PKCS12Adapter.swift */,
 			);
 			path = Push2;
-			sourceTree = "<group>";
-		};
-		E16249A4283F78A8002D0E0A /* Encrypt */ = {
-			isa = PBXGroup;
-			children = (
-				E16249A5283F78B7002D0E0A /* encrypt.swift */,
-			);
-			path = Encrypt;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -423,7 +412,6 @@
 				C6824D2A272E4EA900BA7AAF /* APNsServer.swift in Sources */,
 				C6824D2D272E4EA900BA7AAF /* APNsRequest.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
-				E16249A6283F78B7002D0E0A /* encrypt.swift in Sources */,
 				C62BB8162689AA0E00DAAC43 /* NWPushFeedback.m in Sources */,
 				C62BB81A2689AA0E00DAAC43 /* NWPusher.m in Sources */,
 				C6824D29272E4EA900BA7AAF /* Connection.swift in Sources */,
