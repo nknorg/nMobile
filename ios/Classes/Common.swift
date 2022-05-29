@@ -78,10 +78,10 @@ class Common : ChannelBase, FlutterStreamHandler {
             sendPushAPNS(call, result: result)
         case "updateBadgeCount":
             updateBadgeCount(call, result: result)
-        case "encryptBytes":
-            encryptBytes(call, result: result)
-        case "decryptBytes":
-            decryptBytes(call, result: result)
+        //case "encryptBytes":
+        //    encryptBytes(call, result: result)
+        //case "decryptBytes":
+        //    decryptBytes(call, result: result)
         case "splitPieces":
             splitPieces(call, result: result)
         case "combinePieces":
@@ -204,7 +204,7 @@ class Common : ChannelBase, FlutterStreamHandler {
         }
     }
     
-    private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    /*private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let algorithm = args["algorithm"] as? String ?? ""
         let bits = args["bits"] as? Int ?? 1
@@ -230,9 +230,9 @@ class Common : ChannelBase, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: resp)
             return
         }
-    }
+    }*/
     
-    private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    /*private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let algorithm = args["algorithm"] as? String ?? ""
         let bits = args["bits"] as? Int ?? 0
@@ -250,7 +250,7 @@ class Common : ChannelBase, FlutterStreamHandler {
             return
             
         }
-    }
+    }*/
     
     private func combinePieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]

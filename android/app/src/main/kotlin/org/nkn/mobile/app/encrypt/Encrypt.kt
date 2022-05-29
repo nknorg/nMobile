@@ -9,7 +9,7 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 object Encrypt {
-    private fun randomKey(bits: Int): SecretKeySpec? {
+    /*private fun randomKey(bits: Int): SecretKeySpec? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (bits % 8 == 0)) {
             return try {
                 val secureRandom = SecureRandom()
@@ -73,5 +73,5 @@ object Encrypt {
             Log.e("Encrypt", "decrypt - error: ${e.message}")
             null
         }
-    }
+    }*/
 }
