@@ -819,13 +819,13 @@ class MessageOptions {
 
   static Map<String, dynamic> setVideoThumbnailPath(Map<String, dynamic>? options, String? thumbnailPath) {
     if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_VIDEO_THUMBNAIL] = thumbnailPath;
+    options[MessageOptions.KEY_VIDEO_THUMBNAIL] = Path.convert2Local(thumbnailPath);
     return options;
   }
 
   static String? getVideoThumbnailPath(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_VIDEO_THUMBNAIL]?.toString();
+    return Path.convert2Complete(options[MessageOptions.KEY_VIDEO_THUMBNAIL]?.toString());
   }
 
   static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, int state) {
