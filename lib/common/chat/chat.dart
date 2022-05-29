@@ -393,7 +393,7 @@ class ChatCommon with Tag {
             taskService.removeTask1(key);
             return;
           }
-          if (message.deleteAt == null || message.deleteAt! > DateTime.now().millisecondsSinceEpoch) {
+          if (message.deleteAt == null || (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
             // logger.d("$TAG - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
           } else {
             logger.i("$TAG - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
@@ -438,12 +438,24 @@ class ChatCommon with Tag {
     if (success && notify) onDeleteSink.add(message.msgId);
     // delete file
     if (clearContent && (message.content is File)) {
-      (message.content as File).exists().then((value) {
-        if (value) {
+      (message.content as File).exists().then((exist) {
+        if (exist) {
           (message.content as File).delete(); // await
-          logger.v("$TAG - receivePiece - content file delete success - path:${(message.content as File).path}");
+          logger.v("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
         } else {
           logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
+        }
+      });
+    }
+    // delete thumbnail
+    String? videoThumbnail = MessageOptions.getVideoThumbnailPath(message.options);
+    if (clearContent && (videoThumbnail != null) && videoThumbnail.isNotEmpty) {
+      File(videoThumbnail).exists().then((exist) {
+        if (exist) {
+          File(videoThumbnail).delete(); // await
+          logger.v("$TAG - messageDelete - video_thumbnail delete success - path:$videoThumbnail");
+        } else {
+          logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$videoThumbnail");
         }
       });
     }
