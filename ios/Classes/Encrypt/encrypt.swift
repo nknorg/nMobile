@@ -6,11 +6,10 @@
 //
 
 import Foundation
-import CryptoSwift
 
 public class Encrypt {
     
-    static func randomKey(bits: Int) -> Data? {
+    /*static func randomKey(bits: Int) -> Data? {
         guard (bits % 8 == 0) else {
             return nil
         }
@@ -73,5 +72,5 @@ public class Encrypt {
             print("Encrypt - decrypt fail")
         }
         return nil
-    }
+    }*/
 }
