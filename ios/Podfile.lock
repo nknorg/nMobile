@@ -1,5 +1,5 @@
 PODS:
-  - background_fetch (1.1.0):
+  - background_fetch (1.0.3):
     - Flutter
   - camera (0.0.1):
     - Flutter
@@ -67,7 +67,7 @@ PODS:
     - TOCropViewController (~> 2.6.1)
   - image_gallery_saver (1.5.0):
     - Flutter
-  - image_picker_ios (0.0.1):
+  - image_picker (0.0.1):
     - Flutter
   - libwebp (1.2.1):
     - libwebp/demux (= 1.2.1)
@@ -156,7 +156,7 @@ DEPENDENCIES:
   - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
-  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - image_picker (from `.symlinks/plugins/image_picker/ios`)
   - local_auth (from `.symlinks/plugins/local_auth/ios`)
   - nkn_sdk_flutter (from `.symlinks/plugins/nkn_sdk_flutter/ios`)
   - open_file (from `.symlinks/plugins/open_file/ios`)
@@ -218,8 +218,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_cropper/ios"
   image_gallery_saver:
     :path: ".symlinks/plugins/image_gallery_saver/ios"
-  image_picker_ios:
-    :path: ".symlinks/plugins/image_picker_ios/ios"
+  image_picker:
+    :path: ".symlinks/plugins/image_picker/ios"
   local_auth:
     :path: ".symlinks/plugins/local_auth/ios"
   nkn_sdk_flutter:
@@ -264,7 +264,7 @@ CHECKOUT OPTIONS:
     :tag: 7.11.0
 
 SPEC CHECKSUMS:
-  background_fetch: 3795af8a49054dc526477cc2f60d2ed41de60587
+  background_fetch: 8fa13640fc6e658a7c2e9a2dbc07af8650af215c
   camera: 9993f92f2c793e87b65e35f3a23c70582afb05b1
   connectivity_plus: 413a8857dd5d9f1c399a39130850d02fe0feaf7e
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
@@ -280,16 +280,16 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   image_cropper: 60c2789d1f1a78c873235d4319ca0c34a69f2d98
   image_gallery_saver: 259eab68fb271cfd57d599904f7acdc7832e7ef2
-  image_picker_ios: b786a5dcf033a8336a657191401bfdf12017dabb
+  image_picker: 0d37d1cb66231c2473a0e3ccb8d062d0c2b3d297
   libwebp: 98a37e597e40bfdb4c911fc98f2c53d0b12d05fc
-  local_auth: 1740f55d7af0a2e2a8684ce225fe79d8931e808c
+  local_auth: ef62030a2731330b95df7ef1331bd15f6a64b8a6
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   mobile-ffmpeg-audio: 1e0a053f8a6de57114e50ff48b3a85ff1c60f902
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   nkn_sdk_flutter: cb83324eb3ef17419f715707b59bee20a9adfd34
   open_file: 02eb5cb6b21264bd3a696876f5afbfb7ca4f4b7d
   package_info_plus: 6c92f08e1f853dc01228d6f553146438dafcd14e
-  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  path_provider_ios: 7d7ce634493af4477d156294792024ec3485acd5
   permission_handler: ccb20a9fad0ee9b1314a52b70b76b473c5f8dab0
   photo_manager: 4f6810b7dfc4feb03b461ac1a70dacf91fba7604
   qr_code_scanner: bb67d64904c3b9658ada8c402e8b4d406d5d796e
@@ -299,13 +299,13 @@ SPEC CHECKSUMS:
   Sentry: 0c5cd63d714187b4a39c331c1f0eb04ba7868341
   sentry_flutter: efb3df2c203cd03aad255892a8d628a458656d14
   share_plus: 056a1e8ac890df3e33cb503afffaf1e9b4fbae68
-  shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
+  shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
   SwiftyGif: 6c3eafd0ce693cad58bb63d2b2fb9bacb8552780
   TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
-  url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
+  url_launcher_ios: 02f1989d4e14e998335b02b67a7590fa34f971af
   vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc
   video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
   video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
