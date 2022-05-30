@@ -22,7 +22,7 @@ class NKNAccount {
 
 class NKNAccountContract {
   static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
-  static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  static const RPC_SERVER_URL_test = 'https://rinkeby.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
   late Web3Client _web3client;
 
