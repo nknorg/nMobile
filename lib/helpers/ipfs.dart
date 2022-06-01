@@ -90,10 +90,9 @@ class IpfsHelper with Tag {
     }
 
     // encrypt
-    Map<String, dynamic>? encParams;
+    Map<String, dynamic>? cryptParams;
     if (encrypt) {
       final Map<String, Map<String, dynamic>>? result = await _encryption(await file.readAsBytes());
-      encParams = result?["params"];
       if ((result?["data"]?["cipherText"] != null) && (result?["data"]?["cipherText"].isNotEmpty)) {
         try {
           File encryptFile = File(filePath + ".aes");
@@ -110,6 +109,9 @@ class IpfsHelper with Tag {
           onError?.call("encrypt copy fail");
           return null;
         }
+        result["data"]?["cipherText"] = null;
+        result.remove("data");
+        cryptParams = result["params"];
       } else {
         onError?.call("encrypt create fail");
         return null;
@@ -130,7 +132,7 @@ class IpfsHelper with Tag {
         onProgress?.call(msgId, percent);
       },
       onSuccess: (msgId, result) {
-        if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(encParams ?? Map()));
+        if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(cryptParams ?? Map()));
         onSuccess?.call(msgId, result);
         if (encrypt) File(filePath).delete(); // await
       },
