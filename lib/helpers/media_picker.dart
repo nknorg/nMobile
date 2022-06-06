@@ -44,6 +44,7 @@ class MediaPicker {
         pickerConfig: AssetPickerConfig(
           themeColor: application.theme.primaryColor,
           requestType: RequestType.common,
+          pickerTheme: _getTheme(),
           maxAssets: maxNum,
           gridCount: 4,
           pageSize: 32,
@@ -182,7 +183,7 @@ class MediaPicker {
           enablePullToZoomInRecord: true,
           shouldDeletePreviewFile: false,
           maximumRecordingDuration: maxDuration,
-          theme: CameraPicker.themeData(application.theme.primaryColor),
+          theme: _getTheme(),
           resolutionPreset: ResolutionPreset.max,
           imageFormatGroup: ImageFormatGroup.unknown,
         ),
@@ -550,5 +551,26 @@ class MediaPicker {
       return false;
     }
     return true;
+  }
+
+  static ThemeData _getTheme() {
+    ThemeData theme = CameraPicker.themeData(application.theme.primaryColor);
+    theme = ThemeData.dark().copyWith(
+      primaryColor: theme.primaryColor,
+      primaryColorLight: theme.primaryColorLight,
+      primaryColorDark: theme.primaryColorDark,
+      canvasColor: Colors.black87,
+      scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
+      bottomAppBarColor: theme.bottomAppBarColor,
+      cardColor: theme.cardColor,
+      highlightColor: theme.highlightColor,
+      toggleableActiveColor: theme.toggleableActiveColor,
+      textSelectionTheme: theme.textSelectionTheme,
+      indicatorColor: theme.indicatorColor,
+      appBarTheme: theme.appBarTheme,
+      buttonTheme: theme.buttonTheme,
+      colorScheme: theme.colorScheme,
+    );
+    return theme;
   }
 }
