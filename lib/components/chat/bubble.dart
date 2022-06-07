@@ -164,14 +164,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     } else {
       _contact = null;
     }
+    // burning
+    _message = chatCommon.burningTick(_message, onTick: () => setState(() {}));
     // progress
     _upDownloadProgress = sameBubble ? _upDownloadProgress : -1;
     // _playProgress = 0;
-    // burn
-    _message = chatCommon.burningStart(_message, () {
-      // logger.i("$TAG - tick - :${_message.msgId}");
-      setState(() {});
-    });
     // thumbnail
     _refreshVideoThumbnail(); // await
   }
@@ -183,6 +180,19 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _onPlayProgressSubscription?.cancel();
     _onProgressStreamSubscription?.cancel();
     super.dispose();
+  }
+
+  Future _refreshVideoThumbnail() async {
+    String? path = MessageOptions.getVideoThumbnailPath(_message.options);
+    if (path != null && path.isNotEmpty) {
+      File file = File(path);
+      if (!file.existsSync()) path = null;
+    }
+    if (thumbnailPath != path) {
+      setState(() {
+        thumbnailPath = path;
+      });
+    }
   }
 
   _onContentTextTap() {
@@ -205,19 +215,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       },
     );
     popupMenu.show(widgetKey: _contentKey);
-  }
-
-  Future _refreshVideoThumbnail() async {
-    String? path = MessageOptions.getVideoThumbnailPath(_message.options);
-    if (path != null && path.isNotEmpty) {
-      File file = File(path);
-      if (!file.existsSync()) path = null;
-    }
-    if (thumbnailPath != path) {
-      setState(() {
-        thumbnailPath = path;
-      });
-    }
   }
 
   @override

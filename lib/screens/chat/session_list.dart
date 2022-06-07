@@ -35,6 +35,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _sessionAddSubscription;
   StreamSubscription? _sessionDeleteSubscription;
   StreamSubscription? _sessionUpdateSubscription;
+  StreamSubscription? _onMessageUpdateStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
 
   ContactSchema? _current;
@@ -92,8 +93,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // message
+    _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.listen((message) {
+      _onMessageUpdate(message);
+    });
     _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((String msgId) {
-      onMessageDelete(msgId);
+      _onMessageDelete(msgId);
     });
 
     // scroll
@@ -127,6 +131,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     _sessionAddSubscription?.cancel();
     _sessionDeleteSubscription?.cancel();
     _sessionUpdateSubscription?.cancel();
+    _onMessageUpdateStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
     super.dispose();
   }
@@ -150,7 +155,22 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
   }
 
-  Future onMessageDelete(String msgId) async {
+  Future _onMessageUpdate(MessageSchema msg) async {
+    var findIndex = -1;
+    for (var i = 0; i < _sessionList.length; i++) {
+      SessionSchema session = _sessionList[i];
+      if (session.lastMessageOptions != null && session.lastMessageOptions!["msg_id"] == msg.msgId) {
+        findIndex = i;
+        break;
+      }
+    }
+    if (findIndex >= 0 && findIndex < _sessionList.length) {
+      SessionSchema session = _sessionList[findIndex];
+      await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, msg, session.unReadCount, notify: true);
+    }
+  }
+
+  Future _onMessageDelete(String msgId) async {
     var findIndex = -1;
     for (var i = 0; i < _sessionList.length; i++) {
       SessionSchema session = _sessionList[i];
@@ -160,7 +180,6 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
       }
     }
     if (findIndex >= 0 && findIndex < _sessionList.length) {
-      // find
       SessionSchema session = _sessionList[findIndex];
       MessageSchema oldLastMsg = MessageSchema.fromMap(session.lastMessageOptions!);
       List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(session.targetId, session.type == SessionType.TOPIC ? session.targetId : "", offset: 0, limit: 1);
@@ -177,7 +196,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
         if ((findIndex > (_sessionList.length - 1)) || (_sessionList[findIndex].targetId != session.targetId)) {
           logger.i("ChatSessionListLayout - onMessageDelete - sessions sync again - msgId:$msgId - session:$session");
-          return await onMessageDelete(msgId); // sync with sessions lock
+          return await _onMessageDelete(msgId); // sync with sessions lock
         }
         setState(() {
           _sessionList[findIndex] = session;

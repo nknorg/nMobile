@@ -71,7 +71,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     }
-
     // lastMsg + topicSender
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
     if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId) {
@@ -87,6 +86,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           _lastMsg = lastMsg;
         });
       }
+    }
+    // burning
+    if (_lastMsg != null) {
+      _lastMsg = chatCommon.burningTick(_lastMsg!);
     }
   }
 

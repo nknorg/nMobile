@@ -360,56 +360,53 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  MessageSchema burningHandle(MessageSchema message) {
+  MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
     if (message.isTopic) return message;
-    if (!message.canBurning) return message;
+    if (!message.canBurning || message.isDelete) return message;
+    if ((message.deleteAt != null) && ((message.deleteAt ?? 0) > 0)) return message;
+    if ((message.status == MessageStatus.Sending) || (message.status == MessageStatus.SendFail)) return message; // status_read maybe updating
     int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-    if ((burnAfterSeconds != null) && (burnAfterSeconds > 0)) {
-      // set delete time
-      logger.i("$TAG - burningHandle - updateDeleteAt - message:$message");
-      message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-      MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
-        if (success) _onUpdateSink.add(message);
-      });
-    }
+    if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
+    // set delete time
+    message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
+    logger.i("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt}");
+    MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
+      if (success && notify) _onUpdateSink.add(message);
+      // if (success && tick) burningTick(message);
+    });
     return message;
   }
 
-  // TODO:GG change to global
-  MessageSchema burningStart(MessageSchema message, Function? tick) {
-    if (message.isTopic) return message;
-    if (!message.canBurning || message.isDelete) return message;
-    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-    if ((message.deleteAt == null) && (burnAfterSeconds != null) && (burnAfterSeconds > 0) && ((message.status != MessageStatus.Sending) && (message.status != MessageStatus.SendFail))) {
-      message = chatCommon.burningHandle(message);
-    }
-    if (message.deleteAt != null) {
-      String? senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : message.to);
-      if (senderKey.isNotEmpty && (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
-        String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
-        taskService.addTask1(taskKey, (String key) {
-          if (senderKey.isNotEmpty && (key != taskKey)) {
-            // remove others client burning
-            taskService.removeTask1(key);
-            return;
-          }
-          if (message.deleteAt == null || (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
-            // logger.d("$TAG - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
-          } else {
-            logger.i("$TAG - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-            if (message.canBurning) chatCommon.messageDelete(message, notify: true); // await
-            taskService.removeTask1(key);
-          }
-          tick?.call();
-        });
-      } else {
-        logger.i("$TAG - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-        if (!message.isDelete && message.canBurning) {
-          message.isDelete = true;
-          chatCommon.messageDelete(message, notify: true); // await
+  MessageSchema burningTick(MessageSchema message, {Function? onTick}) {
+    message = burningHandle(message);
+    if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
+    if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
+      String senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : message.to);
+      if (senderKey.isEmpty) return message;
+      String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
+      taskService.addTask1(taskKey, (String key) {
+        if (key != taskKey) {
+          // remove others client burning
+          taskService.removeTask1(key);
+          return;
         }
-        // tick?.call(); // will dead loop
+        if (message.deleteAt == null || (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
+          // logger.d("$TAG - burningTick - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
+          onTick?.call();
+        } else {
+          logger.i("$TAG - burningTick - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+          // onTick?.call();
+          chatCommon.messageDelete(message, notify: true); // await
+          taskService.removeTask1(key);
+        }
+      });
+    } else {
+      logger.i("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+      if (!message.isDelete) {
+        message.isDelete = true;
+        chatCommon.messageDelete(message, notify: true); // await
       }
+      // onTick?.call(); // will dead loop
     }
     return message;
   }
@@ -435,7 +432,7 @@ class ChatCommon with Tag {
     if (message == null || message.msgId.isEmpty) return false;
     bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
     bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
-    if (success && notify) onDeleteSink.add(message.msgId);
+    if (notify) onDeleteSink.add(message.msgId); // no need success
     // delete file
     if (clearContent && (message.content is File)) {
       (message.content as File).exists().then((exist) {
