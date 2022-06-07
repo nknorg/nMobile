@@ -57,7 +57,7 @@ dependencies:
   uuid: ^3.0.4
   crypto: ^3.0.1
   mime_type: ^1.0.0
-  permission_handler: ^8.1.6
+  permission_handler: ^9.2.0
   vibration: ^1.7.3
   flutter_local_notifications: ^8.2.0
   background_fetch: ^1.0.1
