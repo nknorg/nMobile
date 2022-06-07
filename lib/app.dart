@@ -107,7 +107,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
                   controller: _pageController,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

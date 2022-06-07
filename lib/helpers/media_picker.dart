@@ -32,7 +32,7 @@ class MediaPicker {
     if (maxNum > 9) maxNum = 9;
     if (maxNum < 1) return [];
 
-    // permission, == AssetPicker.permissionCheck();
+    // permission
     bool permissionOK = await _isPermissionOK(ImageSource.gallery);
     if (!permissionOK) return [];
 
@@ -42,10 +42,11 @@ class MediaPicker {
       pickedResults = await AssetPicker.pickAssets(
         Global.appContext,
         pickerConfig: AssetPickerConfig(
-          themeColor: application.theme.primaryColor,
+          // themeColor: application.theme.primaryColor,
           requestType: RequestType.common,
           pickerTheme: _getTheme(),
           maxAssets: maxNum,
+          previewThumbnailSize: Platform.isAndroid ? ThumbnailSize.square(Global.screenWidth().toInt()) : null,
           gridCount: 4,
           pageSize: 32,
         ),
@@ -164,7 +165,7 @@ class MediaPicker {
     bool compressVideo = false,
     Duration maxDuration = const Duration(seconds: 10),
   }) async {
-    // permission, == AssetPicker.permissionCheck();
+    // permission
     bool permissionOK = await _isPermissionOK(ImageSource.camera);
     if (!permissionOK) return null;
 
@@ -291,7 +292,7 @@ class MediaPicker {
     int? maxSize,
     String? savePath,
   }) async {
-    // permission, same with AssetPicker.permissionCheck();
+    // permission
     bool permissionOK = await _isPermissionOK(ImageSource.gallery);
     if (!permissionOK) return null;
 
@@ -526,6 +527,7 @@ class MediaPicker {
   }
 
   static Future<bool> _isPermissionOK(ImageSource source) async {
+    // AssetPicker.permissionCheck();
     Permission permission;
     if (source == ImageSource.camera) {
       permission = Permission.camera;
@@ -539,6 +541,7 @@ class MediaPicker {
         }
       } else {
         permission = Permission.mediaLibrary;
+        // return true;
       }
     } else {
       return false;
