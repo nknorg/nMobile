@@ -115,8 +115,29 @@ import Sentry
 //        completionHandler()
 //    }
     
-    override func applicationDidBecomeActive(_ application: UIApplication) {
-        //UIApplication.shared.applicationIconBadgeNumber = 0
+    override func applicationWillResignActive(_ application: UIApplication) {
+        window?.addSubview(self.visualEffectView)
+        
     }
     
+    override func applicationDidEnterBackground(_ application: UIApplication) {
+        
+    }
+    
+    override func applicationWillEnterForeground(_ application: UIApplication) {
+        
+    }
+    
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        // UIApplication.shared.applicationIconBadgeNumber = 0
+        self.visualEffectView.removeFromSuperview()
+    }
+    
+    
+    lazy var visualEffectView: UIVisualEffectView = {
+           let blur = UIBlurEffect.init(style: UIBlurEffect.Style.light)
+           let view = UIVisualEffectView.init(effect: blur)
+           view.frame = UIScreen.main.bounds
+           return view
+       }()
 }
