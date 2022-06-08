@@ -231,7 +231,7 @@ class ChatCommon with Tag {
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
     if (contact == null || contact.id == null || contact.id == 0) return null;
-    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceInfo)) return null;
+    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceResponse)) return null;
     // duplicated
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.clientAddress);
     if (latest == null) {
@@ -445,7 +445,7 @@ class ChatCommon with Tag {
       });
     }
     // delete thumbnail
-    String? videoThumbnail = MessageOptions.getVideoThumbnailPath(message.options);
+    String? videoThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
     if (clearContent && (videoThumbnail != null) && videoThumbnail.isNotEmpty) {
       File(videoThumbnail).exists().then((exist) {
         if (exist) {
@@ -617,7 +617,7 @@ class ChatCommon with Tag {
     _onIpfsUpOrDownload(msgId, "FILE", true, true); // await
     // thumbnail
     String? thumbnailHash = MessageOptions.getIpfsThumbnailHash(message.options);
-    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
+    String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
     if (thumbnailHash != null && thumbnailHash.isNotEmpty) {
       if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateYes) {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
@@ -752,7 +752,7 @@ class ChatCommon with Tag {
       return null;
     }
     // path
-    String? savePath = MessageOptions.getVideoThumbnailPath(message.options);
+    String? savePath = MessageOptions.getMediaThumbnailPath(message.options);
     if (savePath == null || savePath.isEmpty) {
       savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     }
@@ -775,7 +775,7 @@ class ChatCommon with Tag {
         IpfsHelper.KEY_ENCRYPT_NONCE_SIZE: MessageOptions.getIpfsThumbnailEncryptNonceSize(message.options),
       },
       onSuccess: (msgId, result) async {
-        message.options = MessageOptions.setVideoThumbnailPath(message.options, savePath);
+        message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);
