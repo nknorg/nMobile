@@ -292,7 +292,7 @@ class ChatOutCommon with Tag {
     );
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
-    String? thumbnailPath = MessageOptions.getVideoThumbnailPath(message.options);
+    String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
     }

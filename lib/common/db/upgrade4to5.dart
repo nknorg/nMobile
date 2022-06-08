@@ -597,7 +597,7 @@ class Upgrade4to5 {
         } else if (oldType == MessageContentType.receipt) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is receipt, need skip - data:$result");
           continue;
-        } else if (oldType == MessageContentType.contact) {
+        } else if (oldType == MessageContentType.contactProfile) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is contact, need skip - data:$result");
           continue;
         } else if (oldType == MessageContentType.contactOptions) {
