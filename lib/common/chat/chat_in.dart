@@ -203,7 +203,7 @@ class ChatInCommon with Tag {
       case MessageContentType.msgStatus:
         await _receiveMsgStatus(received); // need interval
         break;
-      case MessageContentType.contact:
+      case MessageContentType.contactProfile:
         await _receiveContact(received, contact: contact);
         break;
       case MessageContentType.contactOptions:
@@ -212,7 +212,7 @@ class ChatInCommon with Tag {
       case MessageContentType.deviceRequest:
         await _receiveDeviceRequest(received, contact: contact); // need interval
         break;
-      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceResponse:
         await _receiveDeviceInfo(received, contact: contact);
         break;
       case MessageContentType.text:

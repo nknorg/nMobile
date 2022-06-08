@@ -34,24 +34,21 @@ class MessageContentType {
   static const String read = 'read'; // status
   static const String msgStatus = 'msgStatus'; // status + resend
 
-  static const String contact = 'contact'; // .
-  // static const String contactProfile = 'contact:profile'; // . TODO:GG replace 'contact'
-  static const String contactOptions = 'event:contactOptions'; // db + visible
-  // static const String contactOptions = 'contact:options'; // . TODO:GG replace 'contactOptions'
+  static const String contactProfile = 'contact'; // . TODO:GG rename to 'contact:profile'
+  static const String contactOptions = 'event:contactOptions'; // db + visible TODO:GG rename to 'contact:options'
 
   static const String deviceRequest = 'device:request'; // .
-  static const String deviceInfo = 'device:info'; // db
-  // static const String deviceResponse = 'device:response'; // db TODO:GG replace 'device:info'
+  static const String deviceResponse = 'device:info'; // db TODO:GG rename to 'device:response'
 
   static const String text = 'text'; // db + visible
-  static const String textExtension = 'textExtension'; // db + visible TODO:GG maybe remove
+  static const String textExtension = 'textExtension'; // db + visible TODO:GG maybe can remove
   static const String ipfs = 'ipfs'; // db + visible
-  static const String media = 'media'; // db + visible // TODO:GG adapter d-chat，maybe remove
-  static const String image = 'nknImage'; // db + visible // TODO:GG rename to image
+  static const String media = 'media'; // db + visible // TODO:GG adapter d-chat，maybe can remove
+  static const String image = 'nknImage'; // db + visible // TODO:GG rename to 'image'
   static const String audio = 'audio'; // db + visible
   static const String video = 'video'; // just bubble visible
   static const String file = 'file'; // just bubble visible
-  static const String piece = 'nknOnePiece'; // db(delete) // TODO:GG rename to piece
+  static const String piece = 'nknOnePiece'; // db(delete) // TODO:GG rename to 'piece'
 
   static const String topicSubscribe = 'event:subscribe'; // db + visible
   static const String topicUnsubscribe = 'event:unsubscribe'; // .
@@ -211,7 +208,7 @@ class MessageSchema {
       isOutbound: false,
       isDelete: false,
       // at
-      sendAt: data['send_timestamp'] ?? data['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
+      sendAt: data['send_timestamp'] ?? data['sendTimestamp'] ?? data['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: null, // set in ack(isTopic) / read(contact)
       deleteAt: null, // set in messages bubble
       // data
@@ -228,9 +225,9 @@ class MessageSchema {
         schema.content = data['readIds'];
         break;
       case MessageContentType.msgStatus:
-      case MessageContentType.contact:
+      case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
-      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceResponse:
       case MessageContentType.deviceRequest:
         schema.content = data;
         break;
@@ -352,7 +349,7 @@ class MessageSchema {
     }
     String? thumbnailPath = extra?["thumbnailPath"];
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
-      this.options = MessageOptions.setVideoThumbnailPath(this.options, thumbnailPath);
+      this.options = MessageOptions.setMediaThumbnailPath(this.options, thumbnailPath);
     }
     // piece
     String? parentType = extra?["piece_parent_type"];
@@ -400,10 +397,10 @@ class MessageSchema {
 
     // content = String
     switch (contentType) {
-      case MessageContentType.contact:
+      case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
-      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceResponse:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       case MessageContentType.ipfs: // maybe null
@@ -455,9 +452,9 @@ class MessageSchema {
 
     // content = File/Map/String...
     switch (schema.contentType) {
-      case MessageContentType.contact:
+      case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
-      case MessageContentType.deviceInfo:
+      case MessageContentType.deviceResponse:
       case MessageContentType.deviceRequest:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = Util.jsonFormat(e['content']);
@@ -614,64 +611,66 @@ class MessageSchema {
 }
 
 class MessageOptions {
-  static const KEY_OUT_AT = "out_at";
-  static const KEY_IN_AT = "in_at";
+  static const KEY_OUT_AT = "out_at"; // TODO:GG rename to 'outAt'
+  static const KEY_IN_AT = "in_at"; // TODO:GG rename to 'inAt'
 
   static const KEY_DEVICE_TOKEN = "deviceToken";
+  static const KEY_PROFILE_INFO_VERSION = "profileInfoVersion";
+  static const KEY_DEVICE_INFO_VERSION = "deviceInfoVersion";
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
 
-  static const KEY_FILE_TYPE = "file_type";
-  static const int fileTypeNormal = 0;
-  static const int fileTypeImage = 1;
-  static const int fileTypeAudio = 2;
-  static const int fileTypeVideo = 3;
+  static const KEY_FILE_TYPE = "fileType";
+  static const fileTypeNormal = 0;
+  static const fileTypeImage = 1;
+  static const fileTypeAudio = 2;
+  static const fileTypeVideo = 3;
 
-  static const KEY_FILE_NAME = "file_name";
-  static const KEY_FILE_SIZE = "file_size";
-  static const KEY_FILE_EXT = "file_ext";
-  static const KEY_FILE_MIME_TYPE = "file_mime_type";
-  static const KEY_MEDIA_WIDTH = "media_width";
-  static const KEY_MEDIA_HEIGHT = "media_height";
-  static const KEY_AUDIO_DURATION = "audioDuration";
-  static const KEY_MEDIA_DURATION = "media_duration"; // TODO:GG replace 'audioDuration'
-  static const KEY_VIDEO_THUMBNAIL = "video_thumbnail";
+  static const KEY_FILE_NAME = "fileName";
+  static const KEY_FILE_SIZE = "fileSize";
+  static const KEY_FILE_EXT = "fileExt";
+  static const KEY_FILE_MIME_TYPE = "fileMimeType";
+  static const KEY_MEDIA_WIDTH = "mediaWidth";
+  static const KEY_MEDIA_HEIGHT = "mediaHeight";
+  static const KEY_MEDIA_DURATION = "mediaDuration";
+  static const KEY_MEDIA_THUMBNAIL = "mediaThumbnail";
+  static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG replace by 'audioDuration'
 
-  static const KEY_IPFS_STATE = "ipfs_state";
-  static const int ipfsStateNo = 0;
-  static const int ipfsStateIng = 1;
-  static const int ipfsStateYes = 2;
+  static const KEY_IPFS_STATE = "ipfsState";
+  static const ipfsStateNo = 0;
+  static const ipfsStateIng = 1;
+  static const ipfsStateYes = 2;
 
-  static const KEY_IPFS_THUMBNAIL_STATE = "ipfs_thumbnail_state";
-  static const int ipfsThumbnailStateNo = 0;
-  static const int ipfsThumbnailStateIng = 1;
-  static const int ipfsThumbnailStateYes = 2;
+  static const KEY_IPFS_THUMBNAIL_STATE = "ipfsThumbnailState";
+  static const ipfsThumbnailStateNo = 0;
+  static const ipfsThumbnailStateIng = 1;
+  static const ipfsThumbnailStateYes = 2;
 
-  static const KEY_IPFS_IP = "ipfs_ip";
-  static const KEY_IPFS_HASH = "ipfs_hash";
-  static const KEY_IPFS_SIZE = "ipfs_size";
-  static const KEY_IPFS_NAME = "ipfs_name";
-  static const KEY_IPFS_ENCRYPT = "ipfs_encrypt";
-  static const KEY_IPFS_ENCRYPT_ALGORITHM = "ipfs_encrypt_algorithm";
-  static const KEY_IPFS_ENCRYPT_KEY_BYTES = "ipfs_encrypt_key_bytes";
-  static const KEY_IPFS_ENCRYPT_NONCE_SIZE = "ipfs_encrypt_nonce_size";
-  static const KEY_IPFS_THUMBNAIL_IP = "ipfs_thumbnail_ip";
-  static const KEY_IPFS_THUMBNAIL_HASH = "ipfs_thumbnail_hash";
-  static const KEY_IPFS_THUMBNAIL_SIZE = "ipfs_thumbnail_size";
-  static const KEY_IPFS_THUMBNAIL_NAME = "ipfs_thumbnail_name";
-  static const KEY_IPFS_THUMBNAIL_ENCRYPT = "ipfs_thumbnail_encrypt";
-  static const KEY_IPFS_THUMBNAIL_ENCRYPT_ALGORITHM = "ipfs_thumbnail_encrypt_algorithm";
-  static const KEY_IPFS_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfs_thumbnail_encrypt_key_bytes";
-  static const KEY_IPFS_THUMBNAIL_ENCRYPT_NONCE_SIZE = "ipfs_thumbnail_encrypt_nonce_size";
+  static const KEY_IPFS_IP = "ipfsIp";
+  static const KEY_IPFS_HASH = "ipfsHash";
+  static const KEY_IPFS_SIZE = "ipfsSize";
+  static const KEY_IPFS_NAME = "ipfsName";
+  static const KEY_IPFS_ENCRYPT = "ipfsEncrypt";
+  static const KEY_IPFS_ENCRYPT_ALGORITHM = "ipfsEncryptAlgorithm";
+  static const KEY_IPFS_ENCRYPT_KEY_BYTES = "ipfsEncryptKeyBytes";
+  static const KEY_IPFS_ENCRYPT_NONCE_SIZE = "ipfsEncryptNonceSize";
+  static const KEY_IPFS_THUMBNAIL_IP = "ipfsThumbnailIp";
+  static const KEY_IPFS_THUMBNAIL_HASH = "ipfsThumbnailHash";
+  static const KEY_IPFS_THUMBNAIL_SIZE = "ipfsThumbnailSize";
+  static const KEY_IPFS_THUMBNAIL_NAME = "ipfsThumbnailName";
+  static const KEY_IPFS_THUMBNAIL_ENCRYPT = "ipfsThumbnailEncrypt";
+  static const KEY_IPFS_THUMBNAIL_ENCRYPT_ALGORITHM = "ipfsThumbnailEncryptAlgorithm";
+  static const KEY_IPFS_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfsThumbnailEncryptKeyBytes";
+  static const KEY_IPFS_THUMBNAIL_ENCRYPT_NONCE_SIZE = "ipfsThumbnailEncryptNonceSize";
 
-  static const KEY_FROM_PIECE = "from_piece";
+  static const KEY_FROM_PIECE = "from_piece"; // TODO:GG rename to 'fromPiece'
 
-  static const KEY_PIECE_PARENT_TYPE = "piece_parent_type";
-  static const KEY_PIECE_BYTES_LENGTH = "piece_bytes_length";
-  static const KEY_PIECE_PARITY = "piece_parity";
-  static const KEY_PIECE_TOTAL = "piece_total";
-  static const KEY_PIECE_INDEX = "piece_index";
+  static const KEY_PIECE_PARENT_TYPE = "piece_parent_type"; // TODO:GG rename to 'pieceParentType'
+  static const KEY_PIECE_BYTES_LENGTH = "piece_bytes_length"; // TODO:GG rename to 'pieceBytesLength'
+  static const KEY_PIECE_PARITY = "piece_parity"; // TODO:GG rename to 'pieceParity'
+  static const KEY_PIECE_TOTAL = "piece_total"; // TODO:GG rename to 'pieceTotal'
+  static const KEY_PIECE_INDEX = "piece_index"; // TODO:GG rename to 'pieceIndex'
 
   static Map<String, dynamic>? setOutAt(Map<String, dynamic>? options, int sendAt) {
     if (options == null) options = Map<String, dynamic>();
@@ -817,15 +816,15 @@ class MessageOptions {
     return double.tryParse(duration);
   }
 
-  static Map<String, dynamic> setVideoThumbnailPath(Map<String, dynamic>? options, String? thumbnailPath) {
+  static Map<String, dynamic> setMediaThumbnailPath(Map<String, dynamic>? options, String? thumbnailPath) {
     if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_VIDEO_THUMBNAIL] = Path.convert2Local(thumbnailPath);
+    options[MessageOptions.KEY_MEDIA_THUMBNAIL] = Path.convert2Local(thumbnailPath);
     return options;
   }
 
-  static String? getVideoThumbnailPath(Map<String, dynamic>? options) {
+  static String? getMediaThumbnailPath(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return Path.convert2Complete(options[MessageOptions.KEY_VIDEO_THUMBNAIL]?.toString());
+    return Path.convert2Complete(options[MessageOptions.KEY_MEDIA_THUMBNAIL]?.toString());
   }
 
   static Map<String, dynamic> setIpfsState(Map<String, dynamic>? options, int state) {
@@ -1013,17 +1012,31 @@ class MessageOptions {
 }
 
 class MessageData {
-  static Map _base(String contentType, {String? id, int? timestamp, int? sendTimestamp}) {
-    return {
+  static Map<String, dynamic> _base(
+    String contentType, {
+    String? id,
+    int? timestamp,
+    int? sendTimestamp,
+    String? profileInfoVersion,
+    String? deviceInfoVersion,
+  }) {
+    var map = {
       'id': id ?? Uuid().v4(),
       'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
       'sendTimestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
-      'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
+      'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch, // TODO:GG replace by 'sendTimestamp'
       'contentType': contentType,
     };
+    if (profileInfoVersion != null && profileInfoVersion.isNotEmpty) {
+      map["profileInfoVersion"] = profileInfoVersion;
+    }
+    if (deviceInfoVersion != null && deviceInfoVersion.isNotEmpty) {
+      map["deviceInfoVersion"] = deviceInfoVersion;
+    }
+    return map;
   }
 
-  static String getPing(bool isPing) {
+  static String getPing(bool isPing, String? profileInfoVersion, String? deviceInfoVersion) {
     Map map = _base(MessageContentType.ping)
       ..addAll({
         'content': isPing ? "ping" : "pong",
@@ -1058,7 +1071,7 @@ class MessageData {
   }
 
   static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
-    Map data = _base(MessageContentType.contact)
+    Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'requestType': requestType,
         'version': profileVersion,
@@ -1068,7 +1081,7 @@ class MessageData {
   }
 
   static String getContactResponseHeader(String? profileVersion, int expiresAt) {
-    Map data = _base(MessageContentType.contact)
+    Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.header,
         'version': profileVersion,
@@ -1081,7 +1094,7 @@ class MessageData {
   }
 
   static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
-    Map data = _base(MessageContentType.contact)
+    Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.full,
         'version': profileVersion,
@@ -1092,8 +1105,8 @@ class MessageData {
       });
     Map<String, dynamic> content = Map();
     if (firstName?.isNotEmpty == true) {
-      content['first_name'] = firstName;
-      content['last_name'] = lastName;
+      content['first_name'] = firstName; // TODO:GG rename to 'firstName'
+      content['last_name'] = lastName; // TODO:GG rename to 'lastName'
       // SUPPORT:START
       content['name'] = firstName;
       // SUPPORT:END
@@ -1144,7 +1157,7 @@ class MessageData {
   }
 
   static String getDeviceInfo() {
-    Map data = _base(MessageContentType.deviceInfo)
+    Map data = _base(MessageContentType.deviceResponse)
       ..addAll({
         'deviceId': Global.deviceId,
         'appName': Settings.appName,
@@ -1175,7 +1188,7 @@ class MessageData {
         'content': content,
         'options': Map()
           ..addAll(message.options ?? Map())
-          ..remove(MessageOptions.KEY_VIDEO_THUMBNAIL),
+          ..remove(MessageOptions.KEY_MEDIA_THUMBNAIL),
       });
     if (message.isTopic) {
       data['topic'] = message.topic;

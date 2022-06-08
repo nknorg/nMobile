@@ -183,7 +183,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Future _refreshVideoThumbnail() async {
-    String? path = MessageOptions.getVideoThumbnailPath(_message.options);
+    String? path = MessageOptions.getMediaThumbnailPath(_message.options);
     if (path != null && path.isNotEmpty) {
       File file = File(path);
       if (!file.existsSync()) path = null;
