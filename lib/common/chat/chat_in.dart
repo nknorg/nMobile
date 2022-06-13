@@ -496,7 +496,7 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherProfile(exist, firstName, lastName, Path.convert2Local(avatar?.path), version, notify: true);
+          await contactCommon.setOtherProfile(exist, version, Path.convert2Local(avatar?.path), firstName, lastName, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
@@ -530,10 +530,10 @@ class ChatInCommon with Tag {
     if (optionsType == '0') {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateAt = ((content['updateBurnAfterAt'] ?? content['updateBurnAfterTime']) as int?) ?? DateTime.now().millisecondsSinceEpoch;
-      logger.d("$TAG - _receiveContactOptions - setBurn - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
+      logger.d("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
       await contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true);
     } else if (optionsType == '1') {
-      String deviceToken = (content['deviceToken']?.toString()) ?? "";
+      String? deviceToken = content['deviceToken']?.toString();
       logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
       await contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
     } else {

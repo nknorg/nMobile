@@ -115,8 +115,9 @@ class ChatOutCommon with Tag {
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddressList.isEmpty) return;
-    String? profileVersion = (await contactCommon.getMe())?.profileVersion;
-    String deviceProfile = deviceInfoCommon.getDeviceProfile();
+    bool isSelf = clientAddressList.length == 1 && clientAddressList[0] == clientCommon.address;
+    String? profileVersion = isSelf ? null : (await contactCommon.getMe())?.profileVersion;
+    String? deviceProfile = isSelf ? null : deviceInfoCommon.getDeviceProfile();
     String data = MessageData.getPing(isPing, profileVersion, deviceProfile);
     await _sendWithAddressSafe(clientAddressList, data, notification: false);
   }
@@ -150,8 +151,7 @@ class ChatOutCommon with Tag {
   Future sendContactRequest(String? clientAddress, String requestType, String? profileVersion) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
-    int updateAt = DateTime.now().millisecondsSinceEpoch;
-    String data = MessageData.getContactProfileRequest(requestType, profileVersion, updateAt);
+    String data = MessageData.getContactProfileRequest(requestType, profileVersion);
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
