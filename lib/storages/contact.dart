@@ -7,7 +7,6 @@ import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:uuid/uuid.dart';
 
 class ContactStorage with Tag {
   // static String get tableName => 'Contact';
@@ -302,7 +301,7 @@ class ContactStorage with Tag {
     });
   }
 
-  Future<bool> setProfile(int? contactId, Map<String, dynamic> profileInfo) async {
+  Future<bool> setProfile(int? contactId, String? profileVersion, Map<String, dynamic> profileInfo) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     return await _lock.synchronized(() async {
@@ -314,8 +313,7 @@ class ContactStorage with Tag {
               'avatar': profileInfo['avatar'],
               'first_name': profileInfo['first_name'],
               'last_name': profileInfo['last_name'],
-              'profile_version': profileInfo['profile_version'] ?? Uuid().v4(),
-              'profile_expires_at': profileInfo['profile_expires_at'] ?? DateTime.now().millisecondsSinceEpoch,
+              'profile_version': profileVersion,
               'update_at': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'id = ?',
@@ -323,10 +321,10 @@ class ContactStorage with Tag {
           );
         });
         if (count != null && count > 0) {
-          logger.v("$TAG - setProfile - success - contactId:$contactId - profileInfo:$profileInfo");
+          logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
           return true;
         }
-        logger.w("$TAG - setProfile - fail - contactId:$contactId - profileInfo:$profileInfo");
+        logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
       } catch (e) {
         handleError(e);
       }
@@ -334,7 +332,7 @@ class ContactStorage with Tag {
     });
   }
 
-  Future<bool> setProfileOnly(int? contactId, String? profileVersion, int? profileExpiresAt) async {
+  Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     return await _lock.synchronized(() async {
@@ -343,8 +341,7 @@ class ContactStorage with Tag {
           return txn.update(
             tableName,
             {
-              'profile_version': profileVersion ?? Uuid().v4(),
-              'profile_expires_at': profileExpiresAt ?? DateTime.now().millisecondsSinceEpoch,
+              'profile_version': profileVersion,
               'update_at': DateTime.now().millisecondsSinceEpoch,
             },
             where: 'id = ?',
@@ -352,10 +349,10 @@ class ContactStorage with Tag {
           );
         });
         if (count != null && count > 0) {
-          logger.v("$TAG - setProfileOnly - success - contactId:$contactId - profileVersion:$profileVersion - profileExpiresAt:$profileExpiresAt");
+          logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
           return true;
         }
-        logger.w("$TAG - setProfileOnly - fail - contactId:$contactId - profileVersion:$profileVersion - profileExpiresAt:$profileExpiresAt");
+        logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
       } catch (e) {
         handleError(e);
       }
