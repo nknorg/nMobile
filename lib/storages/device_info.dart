@@ -185,4 +185,30 @@ class DeviceInfoStorage with Tag {
       return false;
     });
   }
+
+  Future<bool> setUpdate(String? contactAddress, String? deviceId, {int? updateAt}) async {
+    if (db?.isOpen != true) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'contact_address = ? AND device_id = ?',
+            whereArgs: [contactAddress, deviceId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setUpdate - success - contactAddress:$contactAddress - deviceId:$deviceId");
+          return true;
+        }
+        logger.w("$TAG - setUpdate - fail - contactAddress:$contactAddress - deviceId:$deviceId");
+      } catch (e) {
+        handleError(e);
+      }
+      return false;
+    });
+  }
 }
