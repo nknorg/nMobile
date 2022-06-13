@@ -26,6 +26,13 @@ class DeviceInfoCommon with Tag {
     return exist;
   }
 
+  String getDeviceProfile() {
+    String appName = Settings.appName;
+    String appVersion = Global.build;
+    String platform = PlatformName.get();
+    return "$appName:$appVersion:$platform";
+  }
+
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
     return await DeviceInfoStorage.instance.queryLatest(contactAddress);
