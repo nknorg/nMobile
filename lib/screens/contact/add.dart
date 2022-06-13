@@ -122,7 +122,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
 
       logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
 
-      ContactSchema? schema = await ContactSchema.createByType(clientAddress, type: ContactType.friend);
+      ContactSchema? schema = await ContactSchema.create(clientAddress, ContactType.friend);
       if (schema == null) return;
       schema.firstName = defaultName;
       schema.data = {
@@ -141,10 +141,10 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
         } else {
           bool success1 = await contactCommon.setType(exist.id, ContactType.friend, notify: true);
           if (success1) exist.type = ContactType.friend;
-          bool success2 = await contactCommon.setRemarkName(exist, remarkName ?? "", "", notify: true);
-          if (success2) exist.data?['firstName'] = remarkName ?? "";
-          bool success3 = await contactCommon.setRemarkAvatar(exist, remarkAvatar ?? "", notify: true);
-          if (success3) exist.data?['avatar'] = remarkAvatar ?? "";
+          bool success2 = await contactCommon.setRemarkName(exist, remarkName, null, notify: true);
+          if (success2) exist.data?['firstName'] = remarkName;
+          bool success3 = await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
+          if (success3) exist.data?['avatar'] = remarkAvatar;
           bool success4 = await contactCommon.setNotes(exist, note, notify: true);
           if (success4) exist.data?['notes'] = note;
         }
