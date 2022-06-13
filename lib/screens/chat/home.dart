@@ -578,7 +578,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                                   if (success) contact.type = ContactType.stranger;
                                 }
                               } else {
-                                ContactSchema? _contact = await ContactSchema.createByType(address, type: ContactType.stranger);
+                                ContactSchema? _contact = await ContactSchema.create(address, ContactType.stranger);
                                 contact = await contactCommon.add(_contact, notify: true);
                               }
                               await ChatMessagesScreen.go(context, contact);
