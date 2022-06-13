@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:nmobile/utils/util.dart';
-import 'package:uuid/uuid.dart';
 
 class DeviceInfoSchema {
   int? id; // <- id
@@ -10,8 +9,6 @@ class DeviceInfoSchema {
   int? updateAt; // <-> update_at
 
   String? deviceId; //  <-> device_id
-  String? profileVersion; // <-> profile_version
-  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at
 
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
@@ -21,7 +18,6 @@ class DeviceInfoSchema {
     this.createAt,
     this.updateAt,
     this.deviceId,
-    this.profileVersion,
     this.data,
   }) {
     if (this.createAt == null) {
@@ -30,17 +26,6 @@ class DeviceInfoSchema {
     if (this.updateAt == null) {
       this.updateAt = DateTime.now().millisecondsSinceEpoch;
     }
-  }
-
-  static Future<DeviceInfoSchema?> create(String? clientAddress, {String? deviceId, Map<String, dynamic>? data}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
-    return DeviceInfoSchema(
-      contactAddress: clientAddress,
-      createAt: DateTime.now().millisecondsSinceEpoch,
-      updateAt: DateTime.now().millisecondsSinceEpoch,
-      deviceId: deviceId,
-      data: data,
-    );
   }
 
   String get appName {
@@ -96,7 +81,6 @@ class DeviceInfoSchema {
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'device_id': deviceId,
-      'profile_version': profileVersion,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
@@ -109,7 +93,6 @@ class DeviceInfoSchema {
       createAt: e['create_at'],
       updateAt: e['update_at'],
       deviceId: e['device_id'],
-      profileVersion: e['profile_version'],
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
@@ -127,6 +110,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, profileVersion: $profileVersion, data: $data}';
+    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, data: $data}';
   }
 }
