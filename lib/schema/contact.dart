@@ -7,7 +7,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const me = -1;
@@ -69,7 +68,7 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema?> create(String? clientAddress, {int? type}) async {
+  static Future<ContactSchema?> create(String? clientAddress, int? type, {String? profileVersion}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress;
     try {
@@ -85,6 +84,7 @@ class ContactSchema {
       type: type,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
+      profileVersion: profileVersion,
       nknWalletAddress: walletAddress,
     );
   }
