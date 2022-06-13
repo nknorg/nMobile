@@ -6,6 +6,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/push/device_token.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/bottom_menu.dart';
@@ -414,10 +415,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._topic != null) {
       // FUTURE: topic notificationOpen
     } else {
-      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
-      String? deviceToken = nextOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
-      if (nextOpen && (deviceToken == null || deviceToken.isEmpty)) {
+      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
+      String? deviceToken = nextOpen ? (await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion)) : null;
+      bool noMobile = (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
+      bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
+      if (nextOpen && (noMobile || tokenNull)) {
         Toast.show(Global.locale((s) => s.unavailable_device));
         return;
       }
@@ -425,9 +428,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _contact?.options?.notificationOpen = nextOpen;
       });
       // inside update
-      contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
+      contactCommon.setNotificationOpen(_contact, nextOpen, notify: true); // await
       // outside update
-      await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken ?? "");
+      await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken);
       SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId); // await
     }
   }

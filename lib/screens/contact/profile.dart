@@ -8,6 +8,7 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
@@ -286,9 +287,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     );
     if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      contactCommon.setSelfName(_contactSchema, newName.trim(), "", notify: true); // await
+      contactCommon.setSelfName(_contactSchema, newName.trim(), null, notify: true); // await
     } else {
-      contactCommon.setRemarkName(_contactSchema, newName.trim(), "", notify: true); // await
+      contactCommon.setRemarkName(_contactSchema, newName.trim(), null, notify: true); // await
     }
   }
 
@@ -312,7 +313,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _updateNotificationAndDeviceToken() async {
     DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
     String? deviceToken = _notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
-    if (_notificationOpen && (deviceToken == null || deviceToken.isEmpty)) {
+    bool noMobile = (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
+    bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
+    if (_notificationOpen && (noMobile || tokenNull)) {
       setState(() {
         _notificationOpen = false;
       });
@@ -323,7 +326,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // inside update
     contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true); // await
     // outside update
-    chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken ?? ""); // await
+    chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken); // await
     SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress); // await
   }
 
