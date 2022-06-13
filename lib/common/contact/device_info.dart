@@ -11,16 +11,16 @@ class DeviceInfoCommon with Tag {
 
   Future<DeviceInfoSchema?> set(DeviceInfoSchema? schema) async {
     if (schema == null || schema.contactAddress.isEmpty) return null;
-    DeviceInfoSchema? exist = await DeviceInfoStorage.instance.queryByDeviceId(schema.contactAddress, schema.deviceId);
+    DeviceInfoSchema? exist = await queryByDeviceId(schema.contactAddress, schema.deviceId);
     if (exist == null) {
       schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
       schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
       exist = await DeviceInfoStorage.instance.insert(schema);
     } else {
-      bool success = await DeviceInfoStorage.instance.update(exist.id, schema.data);
+      bool success = await DeviceInfoStorage.instance.setData(exist.id, schema.data);
       if (success) {
-        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
         exist.data = schema.data;
+        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
       }
     }
     return exist;
@@ -34,6 +34,16 @@ class DeviceInfoCommon with Tag {
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
     return await DeviceInfoStorage.instance.queryListLatest(contactAddressList);
+  }
+
+  Future<bool> updateLatest(String? contactAddress, String? deviceId) async {
+    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setUpdate(contactAddress, deviceId, updateAt: DateTime.now().millisecondsSinceEpoch);
+  }
+
+  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
+    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
+    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId);
   }
 
   // DeviceInfoSchema createMe() {
