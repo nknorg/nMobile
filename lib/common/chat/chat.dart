@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:nmobile/common/contact/device_info.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/ipfs.dart';
@@ -19,7 +18,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:uuid/uuid.dart';
 
 class ChatCommon with Tag {
   // ignore: close_sinks
@@ -169,11 +167,9 @@ class ChatCommon with Tag {
     // duplicated
     String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    bool addFirst = false;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
-      addFirst = true;
       int type = message.isTopic ? ContactType.none : ContactType.stranger;
       exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
     } else {
@@ -184,44 +180,35 @@ class ChatCommon with Tag {
     }
     if (exist == null) return null;
     // profile
-    if (addFirst || !message.isTopic) {
-      if (addFirst || (exist.profileUpdateAt == null) || (DateTime.now().millisecondsSinceEpoch > (exist.profileUpdateAt! + Global.profileExpireMs))) {
-        logger.i("$TAG - contactHandle - sendRequestHeader - contact:$exist");
-        chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.header, exist.profileVersion); // await
-        // skip all messages need send contact request
-        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
-        exist.profileVersion = exist.profileVersion ?? Uuid().v4();
-        exist.profileUpdateAt = DateTime.now().millisecondsSinceEpoch;
-        await contactCommon.setProfileOnly(exist, exist.profileVersion, notify: true);
-      } else {
-        double between = ((exist.profileUpdateAt! + Global.profileExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
-        logger.d("$TAG contactHandle - expiresAt - between:${between}s");
+    if (!message.isTopic && !message.isOutbound) {
+      String? profileVersion = MessageOptions.getProfileVersion(message.options);
+      if (profileVersion != null && profileVersion.isNotEmpty) {
+        if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
+          chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
+        }
       }
     }
     // burning
-    if (message.canBurning) {
-      if (!message.isTopic) {
-        int? existSeconds = exist.options?.deleteAfterSeconds;
-        int? existUpdateAt = exist.options?.updateBurnAfterAt;
-        int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-        int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
-        if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
-          // no same with self
-          if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
-            // side update latest
-            exist.options?.deleteAfterSeconds = burnAfterSeconds;
-            exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-            await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
-          } else {
-            // mine update latest
-            if ((message.sendAt ?? 0) > existUpdateAt) {
-              deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
-                if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-                  if (exist == null) return;
-                  chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
-                }
-              });
-            }
+    if (!message.isTopic && message.canBurning) {
+      int? existSeconds = exist.options?.deleteAfterSeconds;
+      int? existUpdateAt = exist.options?.updateBurnAfterAt;
+      int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
+      int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
+      if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
+        // no same with self
+        if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
+          // side updated latest
+          exist.options?.deleteAfterSeconds = burnAfterSeconds;
+          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+          await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
+        } else {
+          // mine updated latest
+          if ((message.sendAt ?? 0) > existUpdateAt) {
+            deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
+              if (exist == null) return;
+              if (!DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return;
+              chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
+            });
           }
         }
       }
@@ -242,16 +229,32 @@ class ChatCommon with Tag {
     }
     if (latest == null) return null;
     // profile
-    if (!message.isTopic) {
-      if ((latest.updateAt == null) || (DateTime.now().millisecondsSinceEpoch > (latest.updateAt! + Global.deviceInfoExpireMs))) {
-        logger.i("$TAG - deviceInfoHandle - exist - request - deviceInfo:$latest");
-        chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
-        // skip all messages need send contact request
-        latest.updateAt = DateTime.now().millisecondsSinceEpoch;
-        latest = await deviceInfoCommon.set(latest);
-      } else {
-        double between = ((latest.updateAt! + Global.deviceInfoExpireMs) - DateTime.now().millisecondsSinceEpoch) / 1000;
-        logger.d("$TAG deviceInfoHandle - expire - between:${between}s");
+    if (!message.isTopic && !message.isOutbound) {
+      String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
+      if (deviceProfile != null && deviceProfile.isNotEmpty) {
+        List<String> splits = deviceProfile.split(":");
+        String? appName = splits.length > 0 ? splits[0] : null;
+        String? appVersion = splits.length > 1 ? splits[1] : null;
+        String? platform = splits.length > 2 ? splits[2] : null;
+        String? deviceId = splits.length > 3 ? splits[3] : null;
+        if ((deviceId != null) && deviceId.isNotEmpty && (deviceId != latest.deviceId)) {
+          DeviceInfoSchema? _info = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
+          if (_info != null) {
+            deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
+          } else {
+            DeviceInfoSchema _schema = DeviceInfoSchema(
+              contactAddress: latest.contactAddress,
+              deviceId: deviceId,
+              data: {
+                'appName': appName,
+                'appVersion': appVersion,
+                'platform': platform,
+                // 'platformVersion': platformVersion,
+              },
+            );
+            deviceInfoCommon.set(_schema); // await
+          }
+        }
       }
     }
     return latest;
