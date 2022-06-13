@@ -227,8 +227,8 @@ class MessageSchema {
       case MessageContentType.msgStatus:
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
-      case MessageContentType.deviceResponse:
       case MessageContentType.deviceRequest:
+      case MessageContentType.deviceResponse:
         schema.content = data;
         break;
       case MessageContentType.ipfs:
@@ -297,6 +297,17 @@ class MessageSchema {
 
     if (this.options == null) this.options = Map();
 
+    // settings
+    String deviceToken = extra?["deviceToken"] ?? "";
+    this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
+    String? profileVersion = extra?["profileVersion"];
+    if (profileVersion != null && profileVersion.isNotEmpty) {
+      this.options = MessageOptions.setProfileVersion(this.options, profileVersion);
+    }
+    String? deviceProfile = extra?["deviceProfile"];
+    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+      this.options = MessageOptions.setDeviceProfile(this.options, deviceProfile);
+    }
     // burn
     int? deleteAfterSeconds = extra?["deleteAfterSeconds"];
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
@@ -454,8 +465,8 @@ class MessageSchema {
     switch (schema.contentType) {
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
-      case MessageContentType.deviceResponse:
       case MessageContentType.deviceRequest:
+      case MessageContentType.deviceResponse:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = Util.jsonFormat(e['content']);
         } else {
@@ -615,8 +626,8 @@ class MessageOptions {
   static const KEY_IN_AT = "in_at"; // TODO:GG rename to 'inAt'
 
   static const KEY_DEVICE_TOKEN = "deviceToken";
-  static const KEY_PROFILE_INFO_VERSION = "profileInfoVersion";
-  static const KEY_DEVICE_INFO_VERSION = "deviceInfoVersion";
+  static const KEY_PROFILE_VERSION = "profileVersion";
+  static const KEY_DEVICE_PROFILE = "deviceProfile";
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
@@ -703,6 +714,28 @@ class MessageOptions {
   static String? getDeviceToken(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_DEVICE_TOKEN]?.toString();
+  }
+
+  static Map<String, dynamic>? setProfileVersion(Map<String, dynamic>? options, String profileVersion) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_PROFILE_VERSION] = profileVersion;
+    return options;
+  }
+
+  static String? getProfileVersion(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_PROFILE_VERSION]?.toString();
+  }
+
+  static Map<String, dynamic>? setDeviceProfile(Map<String, dynamic>? options, String deviceProfile) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_DEVICE_PROFILE] = deviceProfile;
+    return options;
+  }
+
+  static String? getDeviceProfile(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_DEVICE_PROFILE]?.toString();
   }
 
   static Map<String, dynamic>? setContactBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
@@ -1017,8 +1050,8 @@ class MessageData {
     String? id,
     int? timestamp,
     int? sendTimestamp,
-    String? profileInfoVersion,
-    String? deviceInfoVersion,
+    String? profileVersion,
+    String? deviceProfile,
   }) {
     var map = {
       'id': id ?? Uuid().v4(),
@@ -1027,18 +1060,21 @@ class MessageData {
       'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch, // TODO:GG replace by 'sendTimestamp'
       'contentType': contentType,
     };
-    if (profileInfoVersion != null && profileInfoVersion.isNotEmpty) {
-      map["profileInfoVersion"] = profileInfoVersion;
+    if (profileVersion != null && profileVersion.isNotEmpty) {
+      map["profileVersion"] = profileVersion;
     }
-    if (deviceInfoVersion != null && deviceInfoVersion.isNotEmpty) {
-      map["deviceInfoVersion"] = deviceInfoVersion;
+    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+      map["deviceProfile"] = deviceProfile;
     }
     return map;
   }
 
-  static String getPing(bool isPing, String? profileInfoVersion, String? deviceInfoVersion) {
-    Map map = _base(MessageContentType.ping)
-      ..addAll({
+  static String getPing(bool isPing, String? profileVersion, String? deviceProfile) {
+    Map map = _base(
+      MessageContentType.ping,
+      profileVersion: profileVersion,
+      deviceProfile: deviceProfile,
+    )..addAll({
         'content': isPing ? "ping" : "pong",
       });
     return jsonEncode(map);
@@ -1070,7 +1106,7 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static String getContactRequest(String requestType, String? profileVersion, int expiresAt) {
+  static String getContactProfileRequest(String requestType, String? profileVersion, int expiresAt) {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'requestType': requestType,
@@ -1080,7 +1116,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactResponseHeader(String? profileVersion, int expiresAt) {
+  static String getContactProfileResponseHeader(String? profileVersion, int expiresAt) {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.header,
@@ -1093,7 +1129,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static Future<String> getContactResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
+  static Future<String> getContactProfileResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.full,
@@ -1169,8 +1205,13 @@ class MessageData {
   }
 
   static String getText(MessageSchema message) {
-    Map map = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
+    Map map = _base(
+      message.contentType,
+      id: message.msgId,
+      sendTimestamp: message.sendAt,
+      profileVersion: MessageOptions.getProfileVersion(message.options),
+      deviceProfile: MessageOptions.getDeviceProfile(message.options),
+    )..addAll({
         'content': message.content,
         'options': message.options,
       });
@@ -1183,8 +1224,13 @@ class MessageData {
   static Future<String?> getIpfs(MessageSchema message) async {
     String? content = MessageOptions.getIpfsHash(message.options);
     if (content == null || content.isEmpty) return null;
-    Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
+    Map data = _base(
+      MessageContentType.ipfs,
+      id: message.msgId,
+      sendTimestamp: message.sendAt,
+      profileVersion: MessageOptions.getProfileVersion(message.options),
+      deviceProfile: MessageOptions.getDeviceProfile(message.options),
+    )..addAll({
         'content': content,
         'options': Map()
           ..addAll(message.options ?? Map())
@@ -1201,8 +1247,13 @@ class MessageData {
     if (file == null) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
+    Map data = _base(
+      message.contentType,
+      id: message.msgId,
+      sendTimestamp: message.sendAt,
+      profileVersion: MessageOptions.getProfileVersion(message.options),
+      deviceProfile: MessageOptions.getDeviceProfile(message.options),
+    )..addAll({
         'content': content,
         'options': message.options,
       });
@@ -1219,8 +1270,13 @@ class MessageData {
     if (mimeType.split(FileHelper.DEFAULT_AUDIO_EXT).length <= 0) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
+    Map data = _base(
+      message.contentType,
+      id: message.msgId,
+      sendTimestamp: message.sendAt,
+      profileVersion: MessageOptions.getProfileVersion(message.options),
+      deviceProfile: MessageOptions.getDeviceProfile(message.options),
+    )..addAll({
         'content': content,
         'options': message.options,
       });
@@ -1231,8 +1287,13 @@ class MessageData {
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
+    Map data = _base(
+      message.contentType,
+      id: message.msgId,
+      sendTimestamp: message.sendAt,
+      profileVersion: MessageOptions.getProfileVersion(message.options),
+      deviceProfile: MessageOptions.getDeviceProfile(message.options),
+    )..addAll({
         'content': message.content,
         'options': message.options,
         'parentType': message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
