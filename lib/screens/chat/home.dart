@@ -281,7 +281,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _refreshContactMe() async {
-    ContactSchema? contact = await contactCommon.getMe();
+    ContactSchema? contact = await contactCommon.getMe(needWallet: true);
     if ((contact == null) && mounted) {
       return await Future.delayed(Duration(seconds: 1), () => _refreshContactMe());
     }
