@@ -258,14 +258,6 @@ class MessageSchema {
     // getAt
     schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
 
-    // piece
-    if (data['parentType'] != null || data['total'] != null) {
-      schema.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = data['parentType'];
-      schema.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = data['bytesLength'];
-      schema.options?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
-      schema.options?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
-      schema.options?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
-    }
     return schema;
   }
 
@@ -1050,8 +1042,6 @@ class MessageData {
     String? id,
     int? timestamp,
     int? sendTimestamp,
-    String? profileVersion,
-    String? deviceProfile,
   }) {
     var map = {
       'id': id ?? Uuid().v4(),
@@ -1060,23 +1050,22 @@ class MessageData {
       'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch, // TODO:GG replace by 'sendTimestamp'
       'contentType': contentType,
     };
-    if (profileVersion != null && profileVersion.isNotEmpty) {
-      map["profileVersion"] = profileVersion;
-    }
-    if (deviceProfile != null && deviceProfile.isNotEmpty) {
-      map["deviceProfile"] = deviceProfile;
-    }
     return map;
   }
 
   static String getPing(bool isPing, String? profileVersion, String? deviceProfile) {
-    Map map = _base(
-      MessageContentType.ping,
-      profileVersion: profileVersion,
-      deviceProfile: deviceProfile,
-    )..addAll({
+    Map map = _base(MessageContentType.ping)
+      ..addAll({
         'content': isPing ? "ping" : "pong",
       });
+    if (profileVersion != null && profileVersion.isNotEmpty) {
+      if (map['options'] == null) map['options'] = Map();
+      map['options']["profileVersion"] = profileVersion;
+    }
+    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+      if (map['options'] == null) map['options'] = Map();
+      map['options']["deviceProfile"] = deviceProfile;
+    }
     return jsonEncode(map);
   }
 
@@ -1106,12 +1095,12 @@ class MessageData {
     return jsonEncode(map);
   }
 
-  static String getContactProfileRequest(String requestType, String? profileVersion, int expiresAt) {
+  static String getContactProfileRequest(String requestType, String? profileVersion) {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'requestType': requestType,
         'version': profileVersion,
-        'expiresAt': expiresAt,
+        // 'expiresAt': expiresAt,
       });
     return jsonEncode(data);
   }
@@ -1205,13 +1194,8 @@ class MessageData {
   }
 
   static String getText(MessageSchema message) {
-    Map map = _base(
-      message.contentType,
-      id: message.msgId,
-      sendTimestamp: message.sendAt,
-      profileVersion: MessageOptions.getProfileVersion(message.options),
-      deviceProfile: MessageOptions.getDeviceProfile(message.options),
-    )..addAll({
+    Map map = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
         'content': message.content,
         'options': message.options,
       });
@@ -1224,13 +1208,8 @@ class MessageData {
   static Future<String?> getIpfs(MessageSchema message) async {
     String? content = MessageOptions.getIpfsHash(message.options);
     if (content == null || content.isEmpty) return null;
-    Map data = _base(
-      MessageContentType.ipfs,
-      id: message.msgId,
-      sendTimestamp: message.sendAt,
-      profileVersion: MessageOptions.getProfileVersion(message.options),
-      deviceProfile: MessageOptions.getDeviceProfile(message.options),
-    )..addAll({
+    Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
         'content': content,
         'options': Map()
           ..addAll(message.options ?? Map())
@@ -1247,13 +1226,8 @@ class MessageData {
     if (file == null) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = _base(
-      message.contentType,
-      id: message.msgId,
-      sendTimestamp: message.sendAt,
-      profileVersion: MessageOptions.getProfileVersion(message.options),
-      deviceProfile: MessageOptions.getDeviceProfile(message.options),
-    )..addAll({
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
         'content': content,
         'options': message.options,
       });
@@ -1270,13 +1244,8 @@ class MessageData {
     if (mimeType.split(FileHelper.DEFAULT_AUDIO_EXT).length <= 0) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
-    Map data = _base(
-      message.contentType,
-      id: message.msgId,
-      sendTimestamp: message.sendAt,
-      profileVersion: MessageOptions.getProfileVersion(message.options),
-      deviceProfile: MessageOptions.getDeviceProfile(message.options),
-    )..addAll({
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
         'content': content,
         'options': message.options,
       });
@@ -1287,20 +1256,10 @@ class MessageData {
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = _base(
-      message.contentType,
-      id: message.msgId,
-      sendTimestamp: message.sendAt,
-      profileVersion: MessageOptions.getProfileVersion(message.options),
-      deviceProfile: MessageOptions.getDeviceProfile(message.options),
-    )..addAll({
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
+      ..addAll({
         'content': message.content,
         'options': message.options,
-        'parentType': message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
-        'bytesLength': message.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
-        'total': message.options?[MessageOptions.KEY_PIECE_TOTAL],
-        'parity': message.options?[MessageOptions.KEY_PIECE_PARITY],
-        'index': message.options?[MessageOptions.KEY_PIECE_INDEX],
       });
     if (message.isTopic) {
       data['topic'] = message.topic;
