@@ -30,13 +30,15 @@ class ContactCommon with Tag {
 
   ContactCommon();
 
-  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false}) async {
+  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false}) async {
     List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await ContactStorage.instance.queryByClientAddress(clientAddress ?? clientCommon.address);
     if (contact == null && canAdd) {
       contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
     }
-    contact?.nknWalletAddress = await contact.tryNknWalletAddress();
+    if (needWallet) {
+      contact?.nknWalletAddress = await contact.tryNknWalletAddress();
+    }
     return contact;
   }
 
