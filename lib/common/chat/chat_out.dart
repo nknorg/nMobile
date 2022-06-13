@@ -115,7 +115,9 @@ class ChatOutCommon with Tag {
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddressList.isEmpty) return;
-    String data = MessageData.getPing(isPing);
+    String? profileVersion = (await contactCommon.getMe())?.profileVersion;
+    String deviceProfile = deviceInfoCommon.getDeviceProfile();
+    String data = MessageData.getPing(isPing, profileVersion, deviceProfile);
     await _sendWithAddressSafe(clientAddressList, data, notification: false);
   }
 
@@ -149,7 +151,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     int updateAt = DateTime.now().millisecondsSinceEpoch;
-    String data = MessageData.getContactRequest(requestType, profileVersion, updateAt);
+    String data = MessageData.getContactProfileRequest(requestType, profileVersion, updateAt);
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
@@ -158,12 +160,11 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     ContactSchema? _me = me ?? await contactCommon.getMe();
-    int updateAt = DateTime.now().millisecondsSinceEpoch;
     String data;
     if (requestType == RequestType.header) {
-      data = MessageData.getContactResponseHeader(_me?.profileVersion, updateAt);
+      data = MessageData.getContactProfileResponseHeader(_me?.profileVersion);
     } else {
-      data = await MessageData.getContactResponseFull(_me?.firstName, _me?.lastName, _me?.avatar, _me?.profileVersion, updateAt);
+      data = await MessageData.getContactProfileResponseFull(_me?.profileVersion, _me?.avatar, _me?.firstName, _me?.lastName);
     }
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
@@ -187,7 +188,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  Future sendContactOptionsToken(String? clientAddress, String deviceToken) async {
+  Future sendContactOptionsToken(String? clientAddress, String? deviceToken) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
@@ -195,8 +196,10 @@ class ChatOutCommon with Tag {
       from: clientCommon.address ?? "",
       contentType: MessageContentType.contactOptions,
       to: clientAddress,
+      extra: {
+        "deviceToken": deviceToken,
+      },
     );
-    send.options = MessageOptions.setDeviceToken(send.options, deviceToken);
     send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
     await _send(send, send.content);
   }
@@ -246,6 +249,8 @@ class ChatOutCommon with Tag {
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
+        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "deviceProfile": deviceInfoCommon.getDeviceProfile(),
       },
     );
     // data
@@ -288,6 +293,8 @@ class ChatOutCommon with Tag {
         ..addAll({
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
+          "profileVersion": (await contactCommon.getMe())?.profileVersion,
+          "deviceProfile": deviceInfoCommon.getDeviceProfile(),
         }),
     );
     // insert
@@ -346,6 +353,8 @@ class ChatOutCommon with Tag {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
+        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "deviceProfile": deviceInfoCommon.getDeviceProfile(),
       },
     );
     // data
@@ -384,6 +393,8 @@ class ChatOutCommon with Tag {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
+        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "deviceProfile": deviceInfoCommon.getDeviceProfile(),
       },
     );
     // data

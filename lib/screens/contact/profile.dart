@@ -236,7 +236,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       if (client != null) {
         Toast.show(Global.locale((s) => s.tip_switch_success, ctx: context)); // must global context
         // contact
-        ContactSchema? _me = await contactCommon.getMe(canAdd: true);
+        ContactSchema? _me = await contactCommon.getMe(canAdd: true, needWallet: true);
         await _refreshContactSchema(schema: _me);
         // wallet
         Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await

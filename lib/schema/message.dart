@@ -1116,43 +1116,43 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactProfileResponseHeader(String? profileVersion, int expiresAt) {
+  static String getContactProfileResponseHeader(String? profileVersion) {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.header,
         'version': profileVersion,
-        'expiresAt': expiresAt,
         // SUPPORT:START
+        // 'expiresAt': expiresAt,
         'onePieceReady': '1',
         // SUPPORT:END
       });
     return jsonEncode(data);
   }
 
-  static Future<String> getContactProfileResponseFull(String? firstName, String? lastName, File? avatar, String? profileVersion, int expiresAt) async {
+  static Future<String> getContactProfileResponseFull(String? profileVersion, File? avatar, String? firstName, String? lastName) async {
     Map data = _base(MessageContentType.contactProfile)
       ..addAll({
         'responseType': RequestType.full,
         'version': profileVersion,
-        'expiresAt': expiresAt,
         // SUPPORT:START
+        // 'expiresAt': expiresAt,
         'onePieceReady': '1',
         // SUPPORT:END
       });
     Map<String, dynamic> content = Map();
-    if (firstName?.isNotEmpty == true) {
-      content['first_name'] = firstName; // TODO:GG rename to 'firstName'
-      content['last_name'] = lastName; // TODO:GG rename to 'lastName'
-      // SUPPORT:START
-      content['name'] = firstName;
-      // SUPPORT:END
-    }
     if (avatar != null && await avatar.exists()) {
       // TODO:GG avatar pieces
       String base64 = base64Encode(await avatar.readAsBytes());
       if (base64.isNotEmpty == true) {
         content['avatar'] = {'type': 'base64', 'data': base64, 'ext': Path.getFileExt(avatar, FileHelper.DEFAULT_IMAGE_EXT)};
       }
+    }
+    if (firstName?.isNotEmpty == true) {
+      content['first_name'] = firstName; // TODO:GG rename to 'firstName'
+      content['last_name'] = lastName; // TODO:GG rename to 'lastName'
+      // SUPPORT:START
+      content['name'] = firstName;
+      // SUPPORT:END
     }
     data['content'] = content;
     return jsonEncode(data);
