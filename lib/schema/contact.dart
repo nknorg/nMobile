@@ -36,7 +36,7 @@ class ContactSchema {
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
   String? profileVersion; // <-> profile_version
-  int? profileUpdateAt; // <-> profile_expires_at(long) == update_at
+  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at
 
   bool isTop = false; // <-> is_top
   String? deviceToken; // <-> device_token
@@ -57,7 +57,6 @@ class ContactSchema {
     this.firstName,
     this.lastName,
     this.profileVersion,
-    this.profileUpdateAt,
     this.isTop = false,
     this.deviceToken,
     this.options,
@@ -70,7 +69,7 @@ class ContactSchema {
     }
   }
 
-  static Future<ContactSchema?> createByType(String? clientAddress, {int? type}) async {
+  static Future<ContactSchema?> create(String? clientAddress, {int? type}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String? walletAddress;
     try {
@@ -86,7 +85,6 @@ class ContactSchema {
       type: type,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
-      profileVersion: Uuid().v4(),
       nknWalletAddress: walletAddress,
     );
   }
@@ -221,8 +219,7 @@ class ContactSchema {
       'avatar': Path.convert2Local(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
-      'profile_version': profileVersion ?? Uuid().v4(),
-      'profile_expires_at': profileUpdateAt,
+      'profile_version': profileVersion,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
@@ -242,7 +239,6 @@ class ContactSchema {
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
       profileVersion: e['profile_version'],
-      profileUpdateAt: e['profile_expires_at'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       deviceToken: e['device_token'],
     );
@@ -272,6 +268,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createAt: $createAt, updateAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, profileUpdateAt: $profileUpdateAt, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
+    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createAt: $createAt, updateAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
   }
 }
