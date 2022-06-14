@@ -236,11 +236,13 @@ class ChatCommon with Tag {
         String? appName = splits.length > 0 ? splits[0] : null;
         String? appVersion = splits.length > 1 ? splits[1] : null;
         String? platform = splits.length > 2 ? splits[2] : null;
-        String? deviceId = splits.length > 3 ? splits[3] : null;
+        String? platformVersion = splits.length > 3 ? splits[3] : null;
+        String? deviceId = splits.length > 4 ? splits[4] : null;
         if ((deviceId != null) && deviceId.isNotEmpty && (deviceId != latest.deviceId)) {
           DeviceInfoSchema? _info = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
           if (_info != null) {
-            deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
+            bool success = await deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
+            if (success) latest = _info;
           } else {
             DeviceInfoSchema _schema = DeviceInfoSchema(
               contactAddress: latest.contactAddress,
@@ -249,10 +251,10 @@ class ChatCommon with Tag {
                 'appName': appName,
                 'appVersion': appVersion,
                 'platform': platform,
-                // 'platformVersion': platformVersion,
+                'platformVersion': platformVersion,
               },
             );
-            deviceInfoCommon.set(_schema); // await
+            latest = await deviceInfoCommon.set(_schema); // await
           }
         }
       }
@@ -279,7 +281,7 @@ class ChatCommon with Tag {
     return exists;
   }
 
-  Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic, {DeviceInfoSchema? deviceInfo}) async {
+  Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic) async {
     if (topic == null || topic.id == null || topic.id == 0) return null;
     if (!message.isTopic) return null;
     if (message.isTopicAction) return null; // action users will handle in later

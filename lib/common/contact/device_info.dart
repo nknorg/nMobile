@@ -30,8 +30,9 @@ class DeviceInfoCommon with Tag {
     String appName = Settings.appName;
     String appVersion = Global.build;
     String platform = PlatformName.get();
+    String platformVersion = Global.deviceVersion;
     String deviceId = Global.deviceId;
-    return "$appName:$appVersion:$platform:$deviceId";
+    return "$appName:$appVersion:$platform:$platformVersion:$deviceId";
   }
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {

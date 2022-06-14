@@ -162,7 +162,7 @@ class ChatInCommon with Tag {
   Future _messageHandle(MessageSchema received) async {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(received);
-    DeviceInfoSchema? deviceInfo = await chatCommon.deviceInfoHandle(received, contact);
+    await chatCommon.deviceInfoHandle(received, contact);
 
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);
@@ -177,7 +177,7 @@ class ChatInCommon with Tag {
         return;
       }
       if (!received.isTopicAction) {
-        SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic, deviceInfo: deviceInfo);
+        SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic);
         if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
           logger.w("$TAG - _messageHandle - deny message - sender no permission - sender:$sender - topic:$topic");
           return;
