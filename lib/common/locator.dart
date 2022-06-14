@@ -10,6 +10,7 @@ import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/common/push/local_notification.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
 import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
@@ -49,7 +50,7 @@ void setupLocator() {
   locator.registerSingleton(LocalNotification());
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(AudioHelper());
-  locator.registerSingleton(IpfsHelper());
+  locator.registerSingleton(IpfsHelper(Settings.debug));
   locator.registerSingleton(MemoryCache());
 
   locator.registerSingleton(DB());

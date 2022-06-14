@@ -44,18 +44,20 @@ class IpfsHelper with Tag {
 
   Dio _dio = Dio();
 
-  IpfsHelper() {
+  IpfsHelper(bool log) {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
     _dio.options.receiveTimeout = 0; // no limit
-    _dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestHeader: true,
-      requestBody: false,
-      responseHeader: true,
-      responseBody: false,
-      error: true,
-      logPrint: (log) => logger.i(log),
-    ));
+    if (log) {
+      _dio.interceptors.add(LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: false,
+        responseHeader: true,
+        responseBody: false,
+        error: true,
+        logPrint: (log) => logger.i(log),
+      ));
+    }
   }
 
   Future<String> _getGateway2Write() async {
@@ -376,7 +378,7 @@ class IpfsHelper with Tag {
     return null;
   }
 
-  /*Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
+/*Future<Map<String, Map<String, dynamic>>?> _encryption(Uint8List fileBytes) async {
     if (fileBytes.isEmpty) return null;
     try {
       Map? encrypted = await Common.encryptBytes("AES/GCM/NoPadding", 16 * 8, fileBytes);
@@ -397,7 +399,7 @@ class IpfsHelper with Tag {
     return null;
   }*/
 
-  /*Future<List<int>?> _decrypt(Uint8List data, Map<String, dynamic> params) async {
+/*Future<List<int>?> _decrypt(Uint8List data, Map<String, dynamic> params) async {
     if (data.isEmpty || params.isEmpty) return null;
     try {
       String encryptAlgorithm = params[IpfsHelper.KEY_RESULT_ENCRYPT_ALGORITHM]?.toString() ?? "";
