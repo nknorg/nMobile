@@ -294,7 +294,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         config.offset = offset
         config.limit = limit
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 client?.publishText(topic, data, config)
                 val resp = hashMapOf(
