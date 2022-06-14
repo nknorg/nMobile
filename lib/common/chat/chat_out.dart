@@ -686,7 +686,7 @@ class ChatOutCommon with Tag {
     Uint8List? pid;
     if (message.isContentFile) {
       // deviceInfo
-      DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(message, contact);
+      DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(message);
       logger.d("$TAG - _sendWithContact - file - to:${message.to} - deviceInfo:$_deviceInfo");
       if (DeviceInfoCommon.isMsgPieceEnable(_deviceInfo?.platform, _deviceInfo?.appVersion)) {
         pid = await _sendByPieces([message.to], message);

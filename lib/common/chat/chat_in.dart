@@ -162,7 +162,7 @@ class ChatInCommon with Tag {
   Future _messageHandle(MessageSchema received) async {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(received);
-    await chatCommon.deviceInfoHandle(received, contact);
+    await chatCommon.deviceInfoHandle(received);
 
     // topic
     TopicSchema? topic = await chatCommon.topicHandle(received);

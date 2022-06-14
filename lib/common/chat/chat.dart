@@ -163,19 +163,20 @@ class ChatCommon with Tag {
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
-    if (!message.canDisplay) return null;
-    // duplicated
     String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
-    if (exist == null) {
-      logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
-      int type = message.isTopic ? ContactType.none : ContactType.stranger;
-      exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
-    } else {
-      if ((exist.type == ContactType.none) && !message.isTopic) {
-        bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
-        if (success) exist.type = ContactType.stranger;
+    // duplicated
+    if (message.canDisplay) {
+      if (exist == null) {
+        logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
+        int type = message.isTopic ? ContactType.none : ContactType.stranger;
+        exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
+      } else {
+        if ((exist.type == ContactType.none) && !message.isTopic) {
+          bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
+          if (success) exist.type = ContactType.stranger;
+        }
       }
     }
     if (exist == null) return null;
@@ -216,16 +217,20 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message, ContactSchema? contact) async {
-    if (contact == null || contact.id == null || contact.id == 0) return null;
+  Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message) async {
     if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceResponse)) return null;
+    String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(clientAddress);
     // duplicated
-    DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(contact.clientAddress);
     if (latest == null) {
-      logger.i("$TAG - deviceInfoHandle - new - request - contact:$contact");
-      // skip all messages need send contact request
-      latest = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: contact.clientAddress));
-      chatOutCommon.sendDeviceRequest(contact.clientAddress); // await
+      ContactSchema? _contact = await contactCommon.queryByClientAddress(clientAddress);
+      if (_contact != null) {
+        logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress");
+        // skip all messages need send contact request
+        latest = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: clientAddress));
+        chatOutCommon.sendDeviceRequest(clientAddress); // await
+      }
     }
     if (latest == null) return null;
     // profile
