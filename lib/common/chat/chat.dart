@@ -181,7 +181,7 @@ class ChatCommon with Tag {
     }
     if (exist == null) return null;
     // profile
-    if (!message.isTopic && !message.isOutbound) {
+    if ((message.from != message.to) && !message.isTopic && !message.isOutbound) {
       String? profileVersion = MessageOptions.getProfileVersion(message.options);
       if (profileVersion != null && profileVersion.isNotEmpty) {
         if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
@@ -234,7 +234,7 @@ class ChatCommon with Tag {
     }
     if (latest == null) return null;
     // profile
-    if (!message.isTopic && !message.isOutbound) {
+    if ((message.from != message.to) && !message.isTopic && !message.isOutbound) {
       String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
       if (deviceProfile != null && deviceProfile.isNotEmpty) {
         List<String> splits = deviceProfile.split(":");
