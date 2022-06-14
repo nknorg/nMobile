@@ -6,6 +6,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.nkn.sdk.IChannelHandler
 
@@ -70,7 +71,7 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val key = call.argument<ByteArray>("key")!!
         val nonceSize = call.argument<Int>("nonceSize") ?: 0
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val cipherText = crypto.Crypto.gcmEncrypt(data, key, nonceSize.toLong())
                 resultSuccess(result, cipherText)
@@ -87,7 +88,7 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val key = call.argument<ByteArray>("key")!!
         val nonceSize = call.argument<Int>("nonceSize") ?: 0
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val plainTex = crypto.Crypto.gcmDecrypt(data, key, nonceSize.toLong())
                 resultSuccess(result, plainTex)
