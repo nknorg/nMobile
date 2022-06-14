@@ -697,9 +697,10 @@ class ChatCommon with Tag {
         await chatOutCommon.sendIpfs(msgId);
       },
       onError: (msgId) async {
-        message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
-        await MessageStorage.instance.updateOptions(message.msgId, message.options);
-        _onUpdateSink.add(message);
+        MessageSchema _msg = await updateMessageStatus(message, MessageStatus.SendFail, reQuery: true, force: true, notify: true);
+        _msg.options = MessageOptions.setIpfsState(_msg.options, MessageOptions.ipfsStateNo);
+        await MessageStorage.instance.updateOptions(_msg.msgId, _msg.options);
+        _onUpdateSink.add(_msg);
         _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
       },
     );
