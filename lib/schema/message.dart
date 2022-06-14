@@ -290,8 +290,10 @@ class MessageSchema {
     if (this.options == null) this.options = Map();
 
     // settings
-    String deviceToken = extra?["deviceToken"] ?? "";
-    this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
+    String? deviceToken = extra?["deviceToken"];
+    if (deviceToken != null && deviceToken.isNotEmpty) {
+      this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
+    }
     String? profileVersion = extra?["profileVersion"];
     if (profileVersion != null && profileVersion.isNotEmpty) {
       this.options = MessageOptions.setProfileVersion(this.options, profileVersion);
@@ -326,7 +328,7 @@ class MessageSchema {
     if (fileMimeType != null && fileMimeType.isNotEmpty) {
       this.options = MessageOptions.setFileMimeType(this.options, fileMimeType);
     }
-    int? fileType = int.tryParse(extra?["file_type"]?.toString() ?? "");
+    int? fileType = int.tryParse(extra?["fileType"]?.toString() ?? "");
     if (fileType != null && fileType >= 0) {
       this.options = MessageOptions.setFileType(this.options, fileType);
     } else if (((size ?? 0) > 0) || (fileMimeType?.isNotEmpty == true) || (fileExt?.isNotEmpty == true)) {
@@ -1037,13 +1039,13 @@ class MessageOptions {
 }
 
 class MessageData {
-  static Map<String, dynamic> _base(
+  static Map _base(
     String contentType, {
     String? id,
     int? timestamp,
     int? sendTimestamp,
   }) {
-    var map = {
+    Map map = {
       'id': id ?? Uuid().v4(),
       'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
       'sendTimestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
@@ -1054,80 +1056,80 @@ class MessageData {
   }
 
   static String getPing(bool isPing, String? profileVersion, String? deviceProfile) {
-    Map map = _base(MessageContentType.ping)
-      ..addAll({
-        'content': isPing ? "ping" : "pong",
-      });
+    Map data = _base(MessageContentType.ping);
+    data.addAll({
+      'content': isPing ? "ping" : "pong",
+    });
     if (profileVersion != null && profileVersion.isNotEmpty) {
-      if (map['options'] == null) map['options'] = Map();
-      map['options']["profileVersion"] = profileVersion;
+      if (data['options'] == null) data['options'] = Map();
+      data['options']["profileVersion"] = profileVersion;
     }
     if (deviceProfile != null && deviceProfile.isNotEmpty) {
-      if (map['options'] == null) map['options'] = Map();
-      map['options']["deviceProfile"] = deviceProfile;
+      if (data['options'] == null) data['options'] = Map();
+      data['options']["deviceProfile"] = deviceProfile;
     }
-    return jsonEncode(map);
+    return jsonEncode(data);
   }
 
   static String getReceipt(String targetId, int? readAt) {
-    Map map = _base(MessageContentType.receipt)
-      ..addAll({
-        'targetID': targetId,
-        'readAt': readAt,
-      });
-    return jsonEncode(map);
+    Map data = _base(MessageContentType.receipt);
+    data.addAll({
+      'targetID': targetId,
+      'readAt': readAt,
+    });
+    return jsonEncode(data);
   }
 
   static String getRead(List<String> msgIdList) {
-    Map map = _base(MessageContentType.read)
-      ..addAll({
-        'readIds': msgIdList,
-      });
-    return jsonEncode(map);
+    Map data = _base(MessageContentType.read);
+    data.addAll({
+      'readIds': msgIdList,
+    });
+    return jsonEncode(data);
   }
 
   static String getMsgStatus(bool ask, List<String>? msgIdList) {
-    Map map = _base(MessageContentType.msgStatus)
-      ..addAll({
-        'requestType': ask ? "ask" : "reply",
-        'messageIds': msgIdList,
-      });
-    return jsonEncode(map);
+    Map data = _base(MessageContentType.msgStatus);
+    data.addAll({
+      'requestType': ask ? "ask" : "reply",
+      'messageIds': msgIdList,
+    });
+    return jsonEncode(data);
   }
 
   static String getContactProfileRequest(String requestType, String? profileVersion) {
-    Map data = _base(MessageContentType.contactProfile)
-      ..addAll({
-        'requestType': requestType,
-        'version': profileVersion,
-        // 'expiresAt': expiresAt,
-      });
+    Map data = _base(MessageContentType.contactProfile);
+    data.addAll({
+      'requestType': requestType,
+      'version': profileVersion,
+      // 'expiresAt': expiresAt,
+    });
     return jsonEncode(data);
   }
 
   static String getContactProfileResponseHeader(String? profileVersion) {
-    Map data = _base(MessageContentType.contactProfile)
-      ..addAll({
-        'responseType': RequestType.header,
-        'version': profileVersion,
-        // SUPPORT:START
-        // 'expiresAt': expiresAt,
-        'onePieceReady': '1',
-        // SUPPORT:END
-      });
+    Map data = _base(MessageContentType.contactProfile);
+    data.addAll({
+      'responseType': RequestType.header,
+      'version': profileVersion,
+      // SUPPORT:START
+      // 'expiresAt': expiresAt,
+      'onePieceReady': '1',
+      // SUPPORT:END
+    });
     return jsonEncode(data);
   }
 
   static Future<String> getContactProfileResponseFull(String? profileVersion, File? avatar, String? firstName, String? lastName) async {
-    Map data = _base(MessageContentType.contactProfile)
-      ..addAll({
-        'responseType': RequestType.full,
-        'version': profileVersion,
-        // SUPPORT:START
-        // 'expiresAt': expiresAt,
-        'onePieceReady': '1',
-        // SUPPORT:END
-      });
+    Map data = _base(MessageContentType.contactProfile);
+    data.addAll({
+      'responseType': RequestType.full,
+      'version': profileVersion,
+      // SUPPORT:START
+      // 'expiresAt': expiresAt,
+      'onePieceReady': '1',
+      // SUPPORT:END
+    });
     Map<String, dynamic> content = Map();
     if (avatar != null && await avatar.exists()) {
       // TODO:GG avatar pieces
@@ -1150,29 +1152,29 @@ class MessageData {
   static String getContactOptionsBurn(MessageSchema message) {
     int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
     int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
-    Map data = _base(MessageContentType.contactOptions, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'optionType': '0',
-        'content': {
-          'deleteAfterSeconds': burnAfterSeconds,
-          'updateBurnAfterAt': updateBurnAfterAt,
-          // SUPPORT:START
-          'updateBurnAfterTime': updateBurnAfterAt,
-          // SUPPORT:END
-        },
-      });
+    Map data = _base(MessageContentType.contactOptions, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'optionType': '0',
+      'content': {
+        'deleteAfterSeconds': burnAfterSeconds,
+        'updateBurnAfterAt': updateBurnAfterAt,
+        // SUPPORT:START
+        'updateBurnAfterTime': updateBurnAfterAt,
+        // SUPPORT:END
+      },
+    });
     return jsonEncode(data);
   }
 
   static String getContactOptionsToken(MessageSchema message) {
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
-    Map data = _base(MessageContentType.contactOptions, id: message.msgId, timestamp: message.sendAt, sendTimestamp: message.sendAt)
-      ..addAll({
-        'optionType': '1',
-        'content': {
-          'deviceToken': deviceToken,
-        },
-      });
+    Map data = _base(MessageContentType.contactOptions, id: message.msgId, timestamp: message.sendAt, sendTimestamp: message.sendAt);
+    data.addAll({
+      'optionType': '1',
+      'content': {
+        'deviceToken': deviceToken,
+      },
+    });
     return jsonEncode(data);
   }
 
@@ -1182,39 +1184,39 @@ class MessageData {
   }
 
   static String getDeviceInfo() {
-    Map data = _base(MessageContentType.deviceResponse)
-      ..addAll({
-        'deviceId': Global.deviceId,
-        'appName': Settings.appName,
-        'appVersion': Global.build,
-        'platform': PlatformName.get(),
-        'platformVersion': Global.deviceVersion,
-      });
+    Map data = _base(MessageContentType.deviceResponse);
+    data.addAll({
+      'deviceId': Global.deviceId,
+      'appName': Settings.appName,
+      'appVersion': Global.build,
+      'platform': PlatformName.get(),
+      'platformVersion': Global.deviceVersion,
+    });
     return jsonEncode(data);
   }
 
   static String getText(MessageSchema message) {
-    Map map = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': message.content,
-        'options': message.options,
-      });
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': message.content,
+      'options': message.options,
+    });
     if (message.isTopic) {
-      map['topic'] = message.topic;
+      data['topic'] = message.topic;
     }
-    return jsonEncode(map);
+    return jsonEncode(data);
   }
 
-  static Future<String?> getIpfs(MessageSchema message) async {
+  static String? getIpfs(MessageSchema message) {
     String? content = MessageOptions.getIpfsHash(message.options);
     if (content == null || content.isEmpty) return null;
-    Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': content,
-        'options': Map()
-          ..addAll(message.options ?? Map())
-          ..remove(MessageOptions.KEY_MEDIA_THUMBNAIL),
-      });
+    Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': content,
+      'options': Map()
+        ..addAll(message.options ?? Map())
+        ..remove(MessageOptions.KEY_MEDIA_THUMBNAIL),
+    });
     if (message.isTopic) {
       data['topic'] = message.topic;
     }
@@ -1226,11 +1228,11 @@ class MessageData {
     if (file == null) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': content,
-        'options': message.options,
-      });
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': content,
+      'options': message.options,
+    });
     if (message.isTopic) {
       data['topic'] = message.topic;
     }
@@ -1244,11 +1246,11 @@ class MessageData {
     if (mimeType.split(FileHelper.DEFAULT_AUDIO_EXT).length <= 0) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': content,
-        'options': message.options,
-      });
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': content,
+      'options': message.options,
+    });
     if (message.isTopic) {
       data['topic'] = message.topic;
     }
@@ -1256,11 +1258,11 @@ class MessageData {
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': message.content,
-        'options': message.options,
-      });
+    Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': message.content,
+      'options': message.options,
+    });
     if (message.isTopic) {
       data['topic'] = message.topic;
     }
@@ -1268,35 +1270,35 @@ class MessageData {
   }
 
   static String getTopicSubscribe(MessageSchema message) {
-    Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'topic': message.topic,
-      });
+    Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'topic': message.topic,
+    });
     return jsonEncode(data);
   }
 
   static String getTopicUnSubscribe(MessageSchema message) {
-    Map data = _base(MessageContentType.topicUnsubscribe, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'topic': message.topic,
-      });
+    Map data = _base(MessageContentType.topicUnsubscribe, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'topic': message.topic,
+    });
     return jsonEncode(data);
   }
 
   static String getTopicInvitee(MessageSchema message) {
-    Map data = _base(MessageContentType.topicInvitation, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'content': message.content,
-      });
+    Map data = _base(MessageContentType.topicInvitation, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'content': message.content,
+    });
     return jsonEncode(data);
   }
 
   static String getTopicKickOut(MessageSchema message) {
-    Map data = _base(MessageContentType.topicKickOut, id: message.msgId, sendTimestamp: message.sendAt)
-      ..addAll({
-        'topic': message.topic,
-        'content': message.content,
-      });
+    Map data = _base(MessageContentType.topicKickOut, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'topic': message.topic,
+      'content': message.content,
+    });
     return jsonEncode(data);
   }
 }

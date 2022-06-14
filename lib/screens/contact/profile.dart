@@ -313,7 +313,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _updateNotificationAndDeviceToken() async {
     DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
     String? deviceToken = _notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
-    bool noMobile = (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
+    bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
     bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
     if (_notificationOpen && (noMobile || tokenNull)) {
       setState(() {

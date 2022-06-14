@@ -418,7 +418,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
       String? deviceToken = nextOpen ? (await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion)) : null;
-      bool noMobile = (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
+      bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
       bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
       if (nextOpen && (noMobile || tokenNull)) {
         Toast.show(Global.locale((s) => s.unavailable_device));

@@ -316,7 +316,7 @@ class ChatOutCommon with Tag {
     MessageSchema? message = await MessageStorage.instance.query(msgId);
     if (message == null) return null;
     // data
-    String? data = await MessageData.getIpfs(message);
+    String? data = MessageData.getIpfs(message);
     return _send(message, data, insert: false);
   }
 
@@ -352,6 +352,7 @@ class ChatOutCommon with Tag {
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
+        "fileType": MessageOptions.fileTypeImage,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
         "profileVersion": (await contactCommon.getMe())?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
@@ -392,6 +393,7 @@ class ChatOutCommon with Tag {
         "audioDurationS": durationS,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
+        "fileType": MessageOptions.fileTypeAudio,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
         "profileVersion": (await contactCommon.getMe())?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
@@ -539,7 +541,7 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
-        msgData = await MessageData.getIpfs(message);
+        msgData = MessageData.getIpfs(message);
         logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.media:

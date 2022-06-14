@@ -88,7 +88,7 @@ Future addTestData(
     firstName: Uuid().v4().substring(0, 5),
     lastName: Uuid().v4().substring(0, 5),
     profileVersion: Uuid().v4(),
-    profileUpdateAt: DateTime.now().millisecondsSinceEpoch + 2,
+    // profileUpdateAt: DateTime.now().millisecondsSinceEpoch + 2,
     isTop: (0 % 2 == 0) ? true : false,
     deviceToken: Uuid().v4(),
   );
@@ -103,7 +103,7 @@ Future addTestData(
     entity1['first_name'] = entity1['address'].substring(0, 5);
     entity1['last_name'] = entity1['address'].substring(5, 10);
     entity1['profile_version'] = Uuid().v4();
-    entity1['profile_expires_at'] = entity1['profile_expires_at'] + 1;
+    // entity1['profile_expires_at'] = entity1['profile_expires_at'] + 1;
     entity1['is_top'] = (i % 2 == 0) ? 1 : 0;
     entity1['device_token'] = Uuid().v4();
     final id = await db.insert(ContactStorage.tableName, entity1);

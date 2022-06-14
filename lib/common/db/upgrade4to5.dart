@@ -120,7 +120,7 @@ class Upgrade4to5 {
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // profileExtra
         String? newProfileVersion = Uuid().v4(); // (result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
-        int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
+        // int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
         // top + token
         int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
         String? newDeviceToken = result["device_token"];
@@ -192,7 +192,7 @@ class Upgrade4to5 {
           "first_name": newFirstName,
           "last_name": newLastName,
           "profile_version": newProfileVersion,
-          "profile_expires_at": newProfileExpireAt,
+          //"profile_expires_at": newProfileExpireAt,
           "is_top": newIsTop,
           "device_token": newDeviceToken,
           "options": newOptions,
