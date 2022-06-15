@@ -31,7 +31,7 @@ class FileHelper {
     String? base64Real = match?.group(2);
     if (base64Real != null && base64Real.isNotEmpty) {
       base64Data = base64Real;
-      String? ext = getExtension(mimeType);
+      String? ext = getExtensionByMimeType(mimeType);
       if (ext != null && ext.isNotEmpty) {
         extension = ext;
       }
@@ -66,10 +66,10 @@ class FileHelper {
     var mimeType = match?.group(1) ?? "";
     var fileBase64 = match?.group(2);
     if (fileBase64 == null || fileBase64.isEmpty) return null;
-    return getExtension(mimeType);
+    return getExtensionByMimeType(mimeType);
   }
 
-  static String? getExtension(String? mimeType) {
+  static String? getExtensionByMimeType(String? mimeType) {
     if (mimeType == null || mimeType.isEmpty) return null;
     var extension;
     if (mimeType.indexOf('image/jpg') > -1 || mimeType.indexOf('image/jpeg') > -1) {
@@ -80,11 +80,41 @@ class FileHelper {
       extension = 'gif';
     } else if (mimeType.indexOf('image/webp') > -1) {
       extension = 'webp';
-    } else if (mimeType.indexOf('image/') > -1) {
-      extension = mimeType.split('/').last;
     } else if (mimeType.indexOf('aac') > -1) {
       extension = 'aac';
+    } else {
+      extension = mimeType.split('/').last;
     }
     return extension;
+  }
+
+  static bool isVideoByExt(String? fileExt) {
+    if (fileExt == null || fileExt.isEmpty) return false;
+    List<String> videos = ["mp4", "m4v", "avi", "av", "dat", "mkv", "flv", "vob", "mov", "3gp", "mpg", "mpeg", "mpe", "rm", "rmvb", "wmv", "asf", "asx"];
+    bool isVideo = false;
+    videos.forEach((element) {
+      if (!isVideo) isVideo = fileExt.toLowerCase().contains(element.toLowerCase());
+    });
+    return isVideo;
+  }
+
+  static bool isAudioByExt(String? fileExt) {
+    if (fileExt == null || fileExt.isEmpty) return false;
+    List<String> audios = ["mp3", "wma", "aac", "wav", "mp2", "flac", "midi", "ra", "ape", "cda"];
+    bool isAudio = false;
+    audios.forEach((element) {
+      if (!isAudio) isAudio = fileExt.toLowerCase().contains(element.toLowerCase());
+    });
+    return isAudio;
+  }
+
+  static bool isImageByExt(String? fileExt) {
+    if (fileExt == null || fileExt.isEmpty) return false;
+    List<String> images = ["bmp", "jpg", "png", "tif", "gif", "pcx", "tga", "exif", "fpx", "svg", "psd", "cdr", "pcd", "dxf", "ufo", "eps", "ai", "raw", "wmf", "webp", "avif", "apng"];
+    bool isImage = false;
+    images.forEach((element) {
+      if (!isImage) isImage = fileExt.toLowerCase().contains(element.toLowerCase());
+    });
+    return isImage;
   }
 }

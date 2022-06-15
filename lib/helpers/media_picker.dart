@@ -336,7 +336,7 @@ class MediaPicker {
     }
 
     // compress
-    pickedFile = await _compressImageBySize(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
+    pickedFile = await compressImageBySize(pickedFile, maxSize: maxSize ?? 0, bestSize: bestSize ?? 0, toast: true);
     if (pickedFile == null) {
       logger.w('MediaPicker - pickImage - compress = null');
       return null;
@@ -399,7 +399,7 @@ class MediaPicker {
     return cropFile;
   }
 
-  static Future<File?> _compressImageBySize(File? original, {int maxSize = 0, int bestSize = 0, bool toast = false}) async {
+  static Future<File?> compressImageBySize(File? original, {String? savePath, int maxSize = 0, int bestSize = 0, bool toast = false}) async {
     if (original == null) return null;
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     // size
@@ -447,7 +447,7 @@ class MediaPicker {
 
     // filePath
     String fileExt = Path.getFileExt(original, FileHelper.DEFAULT_IMAGE_EXT);
-    String compressPath = await Path.getRandomFile(null, DirType.cache, fileExt: fileExt);
+    String compressPath = savePath ?? (await Path.getRandomFile(null, DirType.cache, fileExt: fileExt));
     // format
     CompressFormat? format;
     if (compressPath.toLowerCase().endsWith(".jpg") || compressPath.toLowerCase().endsWith(".jpeg")) {
@@ -460,7 +460,7 @@ class MediaPicker {
       format = CompressFormat.webp;
     }
     if (format == null) {
-      logger.w('MediaPicker - _compressImage - compress:FAIL - CompressFormatError - fileExt:$fileExt - compressPath:$compressPath');
+      logger.w('MediaPicker - _compressImage - compress:FAIL - CompressFormatError - compressPath:$compressPath');
       return original;
     }
 
