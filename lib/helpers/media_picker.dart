@@ -399,7 +399,7 @@ class MediaPicker {
     return cropFile;
   }
 
-  static Future<File?> compressImageBySize(File? original, {String? savePath, int maxSize = 0, int bestSize = 0, bool toast = false}) async {
+  static Future<File?> compressImageBySize(File? original, {String? savePath, int maxSize = 0, int bestSize = 0, bool force = false, bool toast = false}) async {
     if (original == null) return null;
     bool isGif = (mime(original.path)?.indexOf('image/gif') ?? -1) >= 0;
     // size
@@ -468,12 +468,9 @@ class MediaPicker {
     File? compressFile;
     int compressSize = 0;
     try {
-      int offsetQuality = 20;
-      int tryTimes = 0;
-      int compressQuality = 100;
-      while (compressQuality > offsetQuality) {
-        tryTimes++;
-        compressQuality = 90 - tryTimes * offsetQuality;
+      List<int> qualityItems = force ? [70, 30, 15, 5, 1] : [70, 30, 15];
+      for (var i = 0; i < qualityItems.length; i++) {
+        int compressQuality = qualityItems[i];
         compressFile = await FlutterImageCompress.compressAndGetFile(
           original.absolute.path,
           compressPath,
@@ -484,7 +481,7 @@ class MediaPicker {
           keepExif: false, // true -> ios error
         );
         compressSize = await compressFile?.length() ?? 0;
-        logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:$tryTimes - quality:$compressQuality - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:${i + 1} - quality:$compressQuality - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         if (compressSize <= bestSize) break;
       }
     } catch (e) {

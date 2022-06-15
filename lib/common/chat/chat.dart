@@ -455,14 +455,14 @@ class ChatCommon with Tag {
       });
     }
     // delete thumbnail
-    String? videoThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
-    if (clearContent && (videoThumbnail != null) && videoThumbnail.isNotEmpty) {
-      File(videoThumbnail).exists().then((exist) {
+    String? mediaThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
+    if (clearContent && (mediaThumbnail != null) && mediaThumbnail.isNotEmpty) {
+      File(mediaThumbnail).exists().then((exist) {
         if (exist) {
-          File(videoThumbnail).delete(); // await
-          logger.v("$TAG - messageDelete - video_thumbnail delete success - path:$videoThumbnail");
+          File(mediaThumbnail).delete(); // await
+          logger.v("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
         } else {
-          logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$videoThumbnail");
+          logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
         }
       });
     }
@@ -757,7 +757,7 @@ class ChatCommon with Tag {
 
   Future<MessageSchema?> tryDownloadIpfsThumbnail(MessageSchema message) async {
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
-    int? ipfsSize = MessageOptions.getIpfsSize(message.options) ?? -1;
+    int? ipfsSize = MessageOptions.getIpfsThumbnailSize(message.options) ?? -1;
     if (ipfsHash == null || ipfsHash.isEmpty) {
       logger.w("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
       return null;
