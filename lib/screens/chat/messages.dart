@@ -684,14 +684,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                         for (var i = 0; i < results.length; i++) {
                           Map<String, dynamic> result = results[i];
                           String path = result["path"] ?? "";
+                          int size = int.tryParse(result["size"]?.toString() ?? "") ?? File(path).lengthSync();
                           String? mimeType = result["mimeType"];
                           double durationS = double.tryParse(result["duration"]?.toString() ?? "") ?? 0;
                           if (path.isEmpty) continue;
                           // no message_type(video/file), and result no mime_type from file_picker
                           // so big_file and video+file go with type_ipfs
-                          if ((mimeType?.contains("image") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
+                          if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesMaxSize)) {
                             chatOutCommon.sendImage(_topic ?? _contact, File(path)); // await
-                          } else if ((mimeType?.contains("audio") == true) && (File(path).lengthSync() <= MessageSchema.piecesMaxSize)) {
+                          } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesMaxSize)) {
                             chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS); // await
                           } else {
                             chatOutCommon.saveIpfs(_topic ?? _contact, result); // await

@@ -54,12 +54,24 @@ class ChatBottomMenu extends StatelessWidget {
     if (results.isEmpty) return;
     for (var i = 0; i < results.length; i++) {
       Map<String, dynamic> map = results[i];
-      if ((map["mimeType"]?.toString())?.contains("video") == true) {
-        String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(map["path"]?.toString() ?? "", savePath);
-        if (res != null && res.isNotEmpty) {
-          results[i]["thumbnailPath"] = res["path"];
-          results[i]["thumbnailSize"] = res["size"];
+      String? original = map["path"]?.toString();
+      int? size = int.tryParse(map["size"]?.toString() ?? "");
+      String? mimeType = map["mimeType"]?.toString();
+      if ((original != null) && original.isNotEmpty && (mimeType != null) && mimeType.isNotEmpty) {
+        if (mimeType.contains("video") == true) {
+          String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+          Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(original, savePath);
+          if (res != null && res.isNotEmpty) {
+            results[i]["thumbnailPath"] = res["path"];
+            results[i]["thumbnailSize"] = res["size"];
+          }
+        } else if (mimeType.contains("image") == true && ((size ?? 0) > MessageSchema.piecesMaxSize)) {
+          String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: 150 * 1000, bestSize: 50 * 1000);
+          if (thumbnail != null) {
+            results[i]["thumbnailPath"] = thumbnail.absolute.path;
+            results[i]["thumbnailSize"] = thumbnail.lengthSync();
+          }
         }
       }
     }
@@ -86,6 +98,7 @@ class ChatBottomMenu extends StatelessWidget {
       String? path = picked.path;
       String name = picked.name;
       if (path == null || path.isEmpty) continue;
+      // copy
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
       File file = File(path);
       int size = file.lengthSync();
@@ -96,13 +109,47 @@ class ChatBottomMenu extends StatelessWidget {
         }
       }
       await file.copy(savePath);
-      results.add({
+      // info
+      String? fileExt = (picked.extension?.isNotEmpty == true) ? picked.extension : Path.getFileExt(file, "");
+      String? mimeType;
+      if (fileExt != null && fileExt.isNotEmpty) {
+        if (FileHelper.isVideoByExt(fileExt)) {
+          mimeType = "video";
+        } else if (FileHelper.isAudioByExt(fileExt)) {
+          mimeType = "audio";
+        } else if (FileHelper.isImageByExt(fileExt)) {
+          mimeType = "image";
+        }
+      }
+      Map<String, dynamic> map = {
         "path": savePath,
-        "size": picked.size,
+        "size": size,
         "name": name,
-        "fileExt": (picked.extension?.isEmpty != true) ? picked.extension : (Path.getFileExt(file, "")),
-        "mimeType": null, // nothing!
-      });
+        "fileExt": fileExt,
+        "mimeType": mimeType,
+        // "width": width,
+        // "height": width,
+        // "duration": duration,
+      };
+      // thumbnail
+      if ((mimeType != null) && mimeType.isNotEmpty) {
+        if (mimeType.contains("video") == true) {
+          String thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+          Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(savePath, thumbnailPath);
+          if (res != null && res.isNotEmpty) {
+            map["thumbnailPath"] = res["path"];
+            map["thumbnailSize"] = res["size"];
+          }
+        } else if (mimeType.contains("image") == true) {
+          String thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: 150 * 1000, bestSize: 50 * 1000);
+          if (thumbnail != null) {
+            map["thumbnailPath"] = thumbnail.absolute.path;
+            map["thumbnailSize"] = thumbnail.lengthSync();
+          }
+        }
+      }
+      results.add(map);
     }
     logger.i("BottomMenu - _pickFiles - results:$results");
     if (results.isEmpty) return;
