@@ -768,6 +768,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
         return [
           Stack(
+            alignment: Alignment.center,
             children: [
               Container(
                 width: ratioWH[0],
@@ -787,17 +788,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                         cacheHeight: ratioWH[1]?.toInt(),
                       )
                     : SizedBox(width: placeholderWidth, height: placeholderHeight),
-              ),
-              Container(
-                width: ratioWH[0],
-                height: ratioWH[1],
-                constraints: BoxConstraints(
-                  maxWidth: maxWidth,
-                  maxHeight: maxHeight,
-                  minWidth: minWidth,
-                  minHeight: minHeight,
-                ),
-                color: Colors.black.withAlpha(50),
               ),
               (fileSize != null && fileSize.isNotEmpty)
                   ? Positioned(
@@ -976,17 +966,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     cacheHeight: ratioWH[1]?.toInt(),
                   )
                 : SizedBox(width: placeholderWidth, height: placeholderHeight),
-          ),
-          Container(
-            width: ratioWH[0],
-            height: ratioWH[1],
-            constraints: BoxConstraints(
-              maxWidth: maxWidth,
-              maxHeight: maxHeight,
-              minWidth: minWidth,
-              minHeight: minHeight,
-            ),
-            color: Colors.black.withAlpha(50),
           ),
           (durationText != null && durationText.isNotEmpty)
               ? Positioned(
