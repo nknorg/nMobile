@@ -170,7 +170,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _upDownloadProgress = sameBubble ? _upDownloadProgress : -1;
     // _playProgress = 0;
     // thumbnail
-    _refreshVideoThumbnail(); // await
+    _refreshMediaThumbnail(); // await
   }
 
   @override
@@ -182,7 +182,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     super.dispose();
   }
 
-  Future _refreshVideoThumbnail() async {
+  Future _refreshMediaThumbnail() async {
     String? path = MessageOptions.getMediaThumbnailPath(_message.options);
     if (path != null && path.isNotEmpty) {
       File file = File(path);
@@ -763,62 +763,41 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsSize(_message.options) ?? 0;
       String? fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : null;
       int state = MessageOptions.getIpfsState(_message.options);
-      if (state == MessageOptions.ipfsStateNo) {
-        return [
-          Stack(
-            children: [
-              Container(
-                width: placeholderWidth,
-                height: placeholderHeight,
-                color: Colors.black,
-                child: Icon(
-                  CupertinoIcons.arrow_down_circle,
-                  color: Colors.white,
-                  size: iconSize,
-                ),
-              ),
-              (fileSize != null && fileSize.isNotEmpty)
-                  ? Positioned(
-                      right: 5,
-                      bottom: 2,
-                      child: Label(
-                        fileSize,
-                        type: LabelType.bodyLarge,
-                        color: Colors.white,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  : SizedBox.shrink(),
-            ],
-          ),
-        ];
-      } else if (state == MessageOptions.ipfsStateIng) {
+
+      if (state == MessageOptions.ipfsStateNo || state == MessageOptions.ipfsStateIng) {
         bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
         return [
           Stack(
             children: [
               Container(
-                width: placeholderWidth,
-                height: placeholderHeight,
-                color: Colors.black,
-                alignment: Alignment.center,
-                child: Container(
-                  width: iconSize * 0.66,
-                  height: iconSize * 0.66,
-                  child: showProgress
-                      ? CircularProgressIndicator(
-                          backgroundColor: application.theme.fontColor4.withAlpha(80),
-                          color: Colors.white,
-                          strokeWidth: 3,
-                          value: _upDownloadProgress,
-                        )
-                      : SpinKitRing(
-                          color: Colors.white,
-                          lineWidth: 3,
-                          size: iconSize,
-                        ),
+                width: ratioWH[0],
+                height: ratioWH[1],
+                constraints: BoxConstraints(
+                  maxWidth: maxWidth,
+                  maxHeight: maxHeight,
+                  minWidth: minWidth,
+                  minHeight: minHeight,
                 ),
+                color: Colors.black,
+                child: (thumbnailPath != null)
+                    ? Image.file(
+                        File(thumbnailPath!),
+                        fit: BoxFit.cover,
+                        cacheWidth: ratioWH[0]?.toInt(),
+                        cacheHeight: ratioWH[1]?.toInt(),
+                      )
+                    : SizedBox(width: placeholderWidth, height: placeholderHeight),
+              ),
+              Container(
+                width: ratioWH[0],
+                height: ratioWH[1],
+                constraints: BoxConstraints(
+                  maxWidth: maxWidth,
+                  maxHeight: maxHeight,
+                  minWidth: minWidth,
+                  minHeight: minHeight,
+                ),
+                color: Colors.black.withAlpha(50),
               ),
               (fileSize != null && fileSize.isNotEmpty)
                   ? Positioned(
@@ -833,6 +812,37 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                       ),
                     )
                   : SizedBox.shrink(),
+              (state == MessageOptions.ipfsStateNo)
+                  ? Container(
+                      width: placeholderWidth,
+                      height: placeholderHeight,
+                      child: Icon(
+                        CupertinoIcons.arrow_down_circle,
+                        color: Colors.white,
+                        size: iconSize,
+                      ),
+                    )
+                  : Container(
+                      width: placeholderWidth,
+                      height: placeholderHeight,
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: iconSize * 0.66,
+                        height: iconSize * 0.66,
+                        child: showProgress
+                            ? CircularProgressIndicator(
+                                backgroundColor: application.theme.fontColor4.withAlpha(80),
+                                color: Colors.white,
+                                strokeWidth: 3,
+                                value: _upDownloadProgress,
+                              )
+                            : SpinKitRing(
+                                color: Colors.white,
+                                lineWidth: 3,
+                                size: iconSize,
+                              ),
+                      ),
+                    ),
             ],
           ),
         ];
@@ -945,80 +955,89 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool showProgress = (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
 
     return [
-      Container(
-        color: Colors.black,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: ratioWH[0],
-              height: ratioWH[1],
-              constraints: BoxConstraints(
-                maxWidth: maxWidth,
-                maxHeight: maxHeight,
-                minWidth: minWidth,
-                minHeight: minHeight,
-              ),
-              child: (thumbnailPath != null)
-                  ? Image.file(
-                      File(thumbnailPath!),
-                      fit: BoxFit.cover,
-                      cacheWidth: ratioWH[0]?.toInt(),
-                      cacheHeight: ratioWH[1]?.toInt(),
-                    )
-                  : SizedBox(width: placeholderWidth, height: placeholderHeight),
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: ratioWH[0],
+            height: ratioWH[1],
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
+              maxHeight: maxHeight,
+              minWidth: minWidth,
+              minHeight: minHeight,
             ),
-            (durationText != null && durationText.isNotEmpty)
-                ? Positioned(
-                    right: 5,
-                    bottom: 2,
-                    child: Label(
-                      durationText,
-                      type: LabelType.bodyLarge,
-                      color: Colors.white,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            color: Colors.black,
+            child: (thumbnailPath != null)
+                ? Image.file(
+                    File(thumbnailPath!),
+                    fit: BoxFit.cover,
+                    cacheWidth: ratioWH[0]?.toInt(),
+                    cacheHeight: ratioWH[1]?.toInt(),
                   )
-                : SizedBox.shrink(),
-            Positioned(
-              child: (_message.isOutbound == true)
-                  ? Icon(
-                      CupertinoIcons.play_circle,
-                      color: Colors.white,
-                      size: iconSize,
-                    )
-                  : (state == MessageOptions.ipfsStateNo)
-                      ? Icon(
-                          CupertinoIcons.arrow_down_circle,
-                          color: Colors.white,
-                          size: iconSize,
-                        )
-                      : (state == MessageOptions.ipfsStateIng)
-                          ? Container(
-                              width: iconSize * 0.66,
-                              height: iconSize * 0.66,
-                              child: showProgress
-                                  ? CircularProgressIndicator(
-                                      backgroundColor: application.theme.fontColor4.withAlpha(80),
-                                      color: Colors.white,
-                                      strokeWidth: 3,
-                                      value: _upDownloadProgress,
-                                    )
-                                  : SpinKitRing(
-                                      color: Colors.white,
-                                      lineWidth: 3,
-                                      size: iconSize,
-                                    ),
-                            )
-                          : Icon(
-                              CupertinoIcons.play_circle,
-                              color: Colors.white,
-                              size: iconSize,
-                            ),
+                : SizedBox(width: placeholderWidth, height: placeholderHeight),
+          ),
+          Container(
+            width: ratioWH[0],
+            height: ratioWH[1],
+            constraints: BoxConstraints(
+              maxWidth: maxWidth,
+              maxHeight: maxHeight,
+              minWidth: minWidth,
+              minHeight: minHeight,
             ),
-          ],
-        ),
+            color: Colors.black.withAlpha(50),
+          ),
+          (durationText != null && durationText.isNotEmpty)
+              ? Positioned(
+                  right: 5,
+                  bottom: 2,
+                  child: Label(
+                    durationText,
+                    type: LabelType.bodyLarge,
+                    color: Colors.white,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              : SizedBox.shrink(),
+          Positioned(
+            child: (_message.isOutbound == true)
+                ? Icon(
+                    CupertinoIcons.play_circle,
+                    color: Colors.white,
+                    size: iconSize,
+                  )
+                : (state == MessageOptions.ipfsStateNo)
+                    ? Icon(
+                        CupertinoIcons.arrow_down_circle,
+                        color: Colors.white,
+                        size: iconSize,
+                      )
+                    : (state == MessageOptions.ipfsStateIng)
+                        ? Container(
+                            width: iconSize * 0.66,
+                            height: iconSize * 0.66,
+                            child: showProgress
+                                ? CircularProgressIndicator(
+                                    backgroundColor: application.theme.fontColor4.withAlpha(80),
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                    value: _upDownloadProgress,
+                                  )
+                                : SpinKitRing(
+                                    color: Colors.white,
+                                    lineWidth: 3,
+                                    size: iconSize,
+                                  ),
+                          )
+                        : Icon(
+                            CupertinoIcons.play_circle,
+                            color: Colors.white,
+                            size: iconSize,
+                          ),
+          ),
+        ],
       ),
     ];
   }
