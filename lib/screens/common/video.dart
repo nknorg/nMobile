@@ -19,12 +19,14 @@ import 'package:video_player/video_player.dart';
 class VideoScreen extends BaseStateFulWidget {
   static final String routeName = "/video";
   static final String argFilePath = "file_path";
+  static final String argThumbnail = "thumbnail_path";
   static final String argNetUrl = "net_url";
 
-  static Future go(BuildContext context, {String? filePath, String? netUrl}) {
+  static Future go(BuildContext context, {String? filePath, String? thumbnailPath, String? netUrl}) {
     if ((filePath == null || filePath.isEmpty) && (netUrl == null || netUrl.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argFilePath: filePath,
+      argThumbnail: thumbnailPath,
       argNetUrl: netUrl,
     });
   }
@@ -138,7 +140,14 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
         },
         child: Stack(
           children: [
-            (_controller != null) ? VideoPlayer(_controller!) : SizedBox(),
+            (_controller?.value.isInitialized == true)
+                ? Center(
+                    child: AspectRatio(
+                      aspectRatio: _controller!.value.aspectRatio,
+                      child: VideoPlayer(_controller!),
+                    ),
+                  )
+                : SizedBox(),
             (_controller != null && _controller?.value.isPlaying == false)
                 ? Positioned(
                     left: 0,
