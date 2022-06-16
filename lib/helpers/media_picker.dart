@@ -273,8 +273,8 @@ class MediaPicker {
         "name": null,
         "fileExt": ext.isEmpty ? null : ext,
         "mimeType": mimetype,
-        "width": entity.orientatedWidth,
-        "height": entity.orientatedHeight,
+        "width": (Platform.isAndroid && isImage) ? null : entity.orientatedWidth,
+        "height": (Platform.isAndroid && isImage) ? null : entity.orientatedHeight,
       };
       if (isAudio || isVideo) {
         params.addAll({"duration": entity.duration});
