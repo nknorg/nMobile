@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -230,12 +231,13 @@ class MediaPicker {
     }
 
     // compress
+    int size = file.lengthSync();
     bool isImage = entity.type == AssetType.image;
     bool isAudio = entity.type == AssetType.audio;
     bool isVideo = entity.type == AssetType.video;
     try {
       if (isImage && compressImage) {
-        // FUTURE: compress ?
+        // FUTURE: compress
       } else if (isAudio && compressAudio) {
         // FUTURE: compress
       } else if (isVideo && compressVideo) {
@@ -246,9 +248,6 @@ class MediaPicker {
     } catch (e) {
       handleError(e);
     }
-
-    // size
-    int size = file.lengthSync();
 
     // save
     if (savePath == null || savePath.isEmpty == true) {
@@ -279,9 +278,78 @@ class MediaPicker {
       if (isAudio || isVideo) {
         params.addAll({"duration": entity.duration});
       }
-      logger.i("MediaPicker - takeCommon - picked success - entity${entity.toString()}");
+      logger.i("MediaPicker - takeCommon - picked success - params:${params.toString()} - entity${entity.toString()}");
       return params;
     }
+    logger.w("MediaPicker - takeCommon - picked fail");
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> takeImage(String? savePath, {bool compress = false}) async {
+    // permission
+    bool permissionOK = await _isPermissionOK(ImageSource.camera);
+    if (!permissionOK) return null;
+
+    // pick
+    XFile? pickedResult;
+    try {
+      pickedResult = await ImagePicker().pickImage(source: ImageSource.camera); // imageQuality: compressQuality  -> ios no enable
+    } catch (e) {
+      handleError(e);
+    }
+    if (pickedResult == null || pickedResult.path.isEmpty) {
+      logger.w("MediaPicker - takeImage - pickedResult == null");
+      return null;
+    }
+
+    // type
+    File file = File(pickedResult.path);
+    String mimetype = "image";
+    String ext = Path.getFileExt(file, "");
+    if (ext.isEmpty) ext = FileHelper.DEFAULT_IMAGE_EXT;
+
+    // compress
+    int size = file.lengthSync();
+    try {
+      if (compress) {
+        // FUTURE: compress
+      } else {
+        // FUTURE: original
+      }
+    } catch (e) {
+      handleError(e);
+    }
+
+    // save
+    if (savePath == null || savePath.isEmpty == true) {
+      savePath = file.absolute.path;
+    } else {
+      savePath = Path.joinFileExt(savePath, ext);
+      File saveFile = File(savePath);
+      if (!await saveFile.exists()) {
+        await saveFile.create(recursive: true);
+      } else {
+        await saveFile.delete();
+        await saveFile.create(recursive: true);
+      }
+      saveFile = await file.copy(savePath);
+    }
+
+    // map
+    if (savePath.isNotEmpty) {
+      Map<String, dynamic> params = {
+        "path": savePath,
+        "size": size,
+        "name": null,
+        "fileExt": ext.isEmpty ? null : ext,
+        "mimeType": mimetype,
+        // "width": width,
+        // "height": height,
+      };
+      logger.i("MediaPicker - takeImage - picked success - params:${params.toString()}");
+      return params;
+    }
+    logger.w("MediaPicker - takeImage - picked fail");
     return null;
   }
 
@@ -496,6 +564,24 @@ class MediaPicker {
     logger.i('MediaPicker - _compressImage - compress:END - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
     return compressFile;
   }
+
+  /*static Future<Size?> getImageSize(File file) async {
+    var decodedImage = await decodeImageFromList(file.readAsBytesSync());
+    // return {"width": decodedImage.width, "width": decodedImage.width};
+    int? width, height;
+    Image image = new Image.file(file);
+    Completer completer = new Completer();
+    image.image.resolve(new ImageConfiguration()).addListener(ImageStreamListener((ImageInfo info, bool _) {
+      width = info.image.width;
+      height = info.image.height;
+      completer.complete();
+    }));
+    await completer.future;
+    if (width != null && height != null) {
+      return Size(width!.toDouble(), height!.toDouble());
+    }
+    return null;
+  }*/
 
   static Future<Map<String, dynamic>?> getVideoThumbnail(String filePath, String savePath, {int quality = 20, int maxWidth = 100}) async {
     if (filePath.isEmpty || savePath.isEmpty) return null;

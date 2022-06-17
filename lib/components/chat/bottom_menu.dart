@@ -33,10 +33,7 @@ class ChatBottomMenu extends StatelessWidget {
     List<Map<String, dynamic>> results;
     if (source == ImageSource.camera) {
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-      Map<String, dynamic>? result = await MediaPicker.takeCommon(
-        savePath,
-        maxDuration: Duration(seconds: 10),
-      );
+      Map<String, dynamic>? result = await MediaPicker.takeImage(savePath);
       if (result == null || result.isEmpty) return;
       results = []..add(result);
     } else {
@@ -67,7 +64,7 @@ class ChatBottomMenu extends StatelessWidget {
           }
         } else if ((mimeType.contains("image") == true) && ((size ?? 0) > MessageSchema.piecesMaxSize)) {
           String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-          File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: 200 * 1000, bestSize: 50 * 1000, force: true);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: 100 * 1000, bestSize: 50 * 1000, force: true);
           if (thumbnail != null) {
             results[i]["thumbnailPath"] = thumbnail.absolute.path;
             results[i]["thumbnailSize"] = thumbnail.lengthSync();
@@ -128,7 +125,7 @@ class ChatBottomMenu extends StatelessWidget {
         "fileExt": fileExt,
         "mimeType": mimeType,
         // "width": width,
-        // "height": width,
+        // "height": height,
         // "duration": duration,
       };
       // thumbnail
@@ -142,7 +139,7 @@ class ChatBottomMenu extends StatelessWidget {
           }
         } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesMaxSize)) {
           String thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-          File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: 200 * 1000, bestSize: 50 * 1000, force: true);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: 100 * 1000, bestSize: 50 * 1000, force: true);
           if (thumbnail != null) {
             map["thumbnailPath"] = thumbnail.absolute.path;
             map["thumbnailSize"] = thumbnail.lengthSync();
