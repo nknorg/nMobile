@@ -43,13 +43,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.3"
-  bindings_compatible:
-    dependency: transitive
-    description:
-      name: bindings_compatible
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.1"
   bloc:
     dependency: transitive
     description:
@@ -874,7 +867,7 @@ packages:
       name: photo_view
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.12.0"
+    version: "0.14.0"
   platform:
     dependency: transitive
     description:
@@ -1314,13 +1307,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "7.2.0"
-  wechat_camera_picker:
-    dependency: "direct main"
-    description:
-      name: wechat_camera_picker
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "3.2.0+1"
   win32:
     dependency: transitive
     description:
