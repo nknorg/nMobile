@@ -18,7 +18,7 @@ import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as VideoThumbnail;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
-import 'package:wechat_camera_picker/wechat_camera_picker.dart';
+// import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
 class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
@@ -159,7 +159,7 @@ class MediaPicker {
     return pickedMaps;
   }
 
-  static Future<Map<String, dynamic>?> takeCommon(
+  /*static Future<Map<String, dynamic>?> takeCommon(
     String? savePath, {
     bool compressImage = false,
     bool compressAudio = false,
@@ -283,7 +283,7 @@ class MediaPicker {
     }
     logger.w("MediaPicker - takeCommon - picked fail");
     return null;
-  }
+  }*/
 
   static Future<Map<String, dynamic>?> takeImage(String? savePath, {bool compress = false}) async {
     // permission
@@ -640,7 +640,7 @@ class MediaPicker {
   }
 
   static ThemeData _getTheme() {
-    ThemeData theme = CameraPicker.themeData(application.theme.primaryColor);
+    ThemeData theme = AssetPicker.themeData(application.theme.primaryColor);
     theme = ThemeData.dark().copyWith(
       primaryColor: theme.primaryColor,
       primaryColorLight: theme.primaryColorLight,
