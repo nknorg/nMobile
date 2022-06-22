@@ -88,7 +88,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     }
     // burning
-    if (_lastMsg != null) {
+    if ((_lastMsg?.deleteAt != null) && ((_lastMsg?.deleteAt ?? 0) > 0)) {
       _lastMsg = chatCommon.burningTick(_lastMsg!);
     }
   }
