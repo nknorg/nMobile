@@ -258,6 +258,16 @@ class MessageSchema {
     // getAt
     schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
 
+    // SUPPORT:START
+    // piece
+    if (data['parentType'] != null || data['total'] != null) {
+      schema.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = data['parentType'];
+      schema.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = data['bytesLength'];
+      schema.options?[MessageOptions.KEY_PIECE_TOTAL] = data['total'];
+      schema.options?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
+      schema.options?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
+    }
+    // SUPPORT:END
     return schema;
   }
 
@@ -1262,6 +1272,13 @@ class MessageData {
     data.addAll({
       'content': message.content,
       'options': message.options,
+      // SUPPORT:START
+      'parentType': message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
+      'bytesLength': message.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
+      'total': message.options?[MessageOptions.KEY_PIECE_TOTAL],
+      'parity': message.options?[MessageOptions.KEY_PIECE_PARITY],
+      'index': message.options?[MessageOptions.KEY_PIECE_INDEX],
+      // SUPPORT:END
     });
     if (message.isTopic) {
       data['topic'] = message.topic;

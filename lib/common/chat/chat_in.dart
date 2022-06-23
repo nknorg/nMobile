@@ -692,11 +692,11 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receivePiece(MessageSchema received) async {
-    String? parentType = received.options?[MessageOptions.KEY_PIECE_PARENT_TYPE];
-    int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
-    int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
-    int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
-    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
+    String? parentType = received.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
+    int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
+    int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
+    int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
+    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByIdContentType(received.msgId, parentType, 1);
     if (existsCombine.isNotEmpty) {
@@ -708,7 +708,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> pieces = await MessageStorage.instance.queryListByIdContentType(received.msgId, MessageContentType.piece, total + parity);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
-      int insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX];
+      int? insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX] ?? pieces[i].options?["piece"]?[MessageOptions.KEY_PIECE_INDEX];
       if (insertIndex == index) {
         piece = pieces[i];
         break;
