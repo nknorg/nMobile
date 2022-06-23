@@ -536,7 +536,7 @@ class MediaPicker {
     File? compressFile;
     int compressSize = 0;
     try {
-      List<int> qualityItems = force ? [30, 15, 3] : [70, 30, 15];
+      List<int> qualityItems = force ? [20, 5] : [70, 30, 15];
       for (var i = 0; i < qualityItems.length; i++) {
         int compressQuality = qualityItems[i];
         compressFile = await FlutterImageCompress.compressAndGetFile(
