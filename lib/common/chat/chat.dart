@@ -249,16 +249,12 @@ class ChatCommon with Tag {
             bool success = await deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
             if (success) latest = _info;
           } else {
-            DeviceInfoSchema _schema = DeviceInfoSchema(
-              contactAddress: latest.contactAddress,
-              deviceId: deviceId,
-              data: {
-                'appName': appName,
-                'appVersion': appVersion,
-                'platform': platform,
-                'platformVersion': platformVersion,
-              },
-            );
+            DeviceInfoSchema _schema = DeviceInfoSchema(contactAddress: latest.contactAddress, deviceId: deviceId, data: {
+              'appName': appName,
+              'appVersion': appVersion,
+              'platform': platform,
+              'platformVersion': platformVersion,
+            });
             latest = await deviceInfoCommon.set(_schema); // await
           }
         }
