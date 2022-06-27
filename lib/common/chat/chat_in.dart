@@ -244,6 +244,9 @@ class ChatInCommon with Tag {
       case MessageContentType.topicKickOut:
         await _receiveTopicKickOut(received);
         break;
+      default:
+        logger.w("$TAG - _messageHandle - content type error - received:$received");
+        return;
     }
 
     // session
@@ -276,7 +279,7 @@ class ChatInCommon with Tag {
       return true;
     }
     if ((received.content == null) || !(received.content! is String)) {
-      logger.w("$TAG - _receivePing - content type error - received:$received");
+      logger.w("$TAG - _receivePing - content error - received:$received");
       return false;
     }
     String content = received.content as String;
