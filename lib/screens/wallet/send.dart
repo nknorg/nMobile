@@ -365,17 +365,9 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
               logger.i("$TAG - QR_DATA:$qrData");
               if (qrData == null) return;
-              // json
-              var jsonFormat;
-              var jsonData;
-              try {
-                jsonData = Util.jsonFormat(qrData);
-                jsonFormat = true;
-              } catch (e) {
-                jsonFormat = false;
-              }
               // data
-              if (jsonFormat) {
+              Map<String, dynamic>? jsonData = Util.jsonFormat(qrData);
+              if ((jsonData != null) && jsonData.isNotEmpty) {
                 logger.i("$TAG - wallet send scan - address:${jsonData['address']} amount:${jsonData['amount']}");
                 _sendToController.text = jsonData['address'] ?? "";
                 _amountController.text = jsonData['amount']?.toString() ?? "";
