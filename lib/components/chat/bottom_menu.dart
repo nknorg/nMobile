@@ -32,6 +32,7 @@ class ChatBottomMenu extends StatelessWidget {
     if (!clientCommon.isClientCreated) return;
     List<Map<String, dynamic>> results;
     if (source == ImageSource.camera) {
+      // no video so no encode
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
       Map<String, dynamic>? result = await MediaPicker.takeImage(savePath);
       if (result == null || result.isEmpty) return;
@@ -40,7 +41,9 @@ class ChatBottomMenu extends StatelessWidget {
       int maxNum = 9;
       List<String> savePaths = [];
       for (var i = 0; i < maxNum; i++) {
-        String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+        String subPath = Uri.encodeComponent(target ?? "");
+        if (subPath != target) subPath = "common"; // FUTURE: encode
+        String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
         savePaths.add(savePath);
       }
       results = await MediaPicker.pickCommons(
@@ -96,7 +99,9 @@ class ChatBottomMenu extends StatelessWidget {
       String name = picked.name;
       if (path == null || path.isEmpty) continue;
       // copy
-      String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: picked.extension);
+      String subPath = Uri.encodeComponent(target ?? "");
+      if (subPath != target) subPath = "common"; // FUTURE: encode
+      String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: picked.extension);
       File file = File(path);
       int size = file.lengthSync();
       if (maxSize != null && maxSize > 0) {

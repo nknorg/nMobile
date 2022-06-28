@@ -612,7 +612,9 @@ class ChatInCommon with Tag {
     }
     // content
     String? fileExt = MessageOptions.getFileExt(received.options);
-    String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: fileExt);
+    String subPath = Uri.encodeComponent(received.targetId);
+    if (subPath != received.targetId) subPath = "common"; // FUTURE: encode
+    String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: fileExt);
     received.content = File(savePath);
     // state
     received.options = MessageOptions.setIpfsState(received.options, MessageOptions.ipfsStateNo);
