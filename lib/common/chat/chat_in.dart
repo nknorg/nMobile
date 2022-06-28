@@ -244,9 +244,6 @@ class ChatInCommon with Tag {
       case MessageContentType.topicKickOut:
         await _receiveTopicKickOut(received);
         break;
-      default:
-        logger.w("$TAG - _messageHandle - content type error - received:$received");
-        return;
     }
 
     // session
