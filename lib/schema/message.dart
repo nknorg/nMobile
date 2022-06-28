@@ -38,7 +38,7 @@ class MessageContentType {
   static const String contactOptions = 'event:contactOptions'; // db + visible TODO:GG rename to 'contact:options'
 
   static const String deviceRequest = 'device:request'; // .
-  static const String deviceResponse = 'device:info'; // db TODO:GG rename to 'device:response'
+  static const String deviceResponse = 'device:info'; // db
 
   static const String text = 'text'; // db + visible
   static const String textExtension = 'textExtension'; // db + visible TODO:GG maybe can remove
@@ -650,7 +650,7 @@ class MessageOptions {
   static const KEY_MEDIA_HEIGHT = "mediaHeight";
   static const KEY_MEDIA_DURATION = "mediaDuration";
   static const KEY_MEDIA_THUMBNAIL = "mediaThumbnail";
-  static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG replace by 'audioDuration'
+  static const KEY_AUDIO_DURATION = "audioDuration"; // TODO:GG replace by 'mediaDuration'
 
   static const KEY_IPFS_STATE = "ipfsState";
   static const ipfsStateNo = 0;
