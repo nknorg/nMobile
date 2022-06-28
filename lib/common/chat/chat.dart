@@ -233,8 +233,8 @@ class ChatCommon with Tag {
       }
     }
     if (latest == null) return null;
-    // profile
-    if ((message.from != message.to) && !message.isTopic && !message.isOutbound) {
+    // profile (no send client msg so can contains topic)
+    if ((message.from != message.to) && !message.isOutbound) {
       String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
       if (deviceProfile != null && deviceProfile.isNotEmpty) {
         List<String> splits = deviceProfile.split(":");
@@ -243,11 +243,24 @@ class ChatCommon with Tag {
         String? platform = splits.length > 2 ? splits[2] : null;
         String? platformVersion = splits.length > 3 ? splits[3] : null;
         String? deviceId = splits.length > 4 ? splits[4] : null;
-        if ((deviceId != null) && deviceId.isNotEmpty && (deviceId != latest.deviceId)) {
-          DeviceInfoSchema? _info = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
-          if (_info != null) {
+        if (deviceId == null || deviceId.isEmpty) {
+          // nothing
+        } else if (deviceId == latest.deviceId) {
+          bool sameProfile = (latest.appName == appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
+          if (!sameProfile) {
+            latest.data = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
+            latest = await deviceInfoCommon.set(latest);
+          }
+        } else {
+          DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
+          if (_exist != null) {
             bool success = await deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
-            if (success) latest = _info;
+            if (success) latest = _exist;
+            bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
+            if (!sameProfile) {
+              latest.data = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
+              latest = await deviceInfoCommon.set(latest);
+            }
           } else {
             DeviceInfoSchema _schema = DeviceInfoSchema(contactAddress: latest.contactAddress, deviceId: deviceId, data: {
               'appName': appName,
