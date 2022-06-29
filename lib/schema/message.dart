@@ -695,7 +695,7 @@ class MessageOptions {
 
   static int? getOutAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return int.parse(options[MessageOptions.KEY_OUT_AT]?.toString() ?? "");
+    return int.tryParse(options[MessageOptions.KEY_OUT_AT]?.toString() ?? "");
   }
 
   static Map<String, dynamic>? setInAt(Map<String, dynamic>? options, int sendAt) {
@@ -706,7 +706,7 @@ class MessageOptions {
 
   static int? getInAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
-    return int.parse(options[MessageOptions.KEY_IN_AT]?.toString() ?? "");
+    return int.tryParse(options[MessageOptions.KEY_IN_AT]?.toString() ?? "");
   }
 
   static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
