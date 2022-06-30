@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:nmobile/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class SecureStorage {
   final FlutterSecureStorage _storage = FlutterSecureStorage();

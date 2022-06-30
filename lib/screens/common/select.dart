@@ -114,16 +114,16 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
     );
   }
 
-  // searchAction(String val) {
-  //   if (val.length == 0) {
-  //     setState(() {
-  //       this.list = widget.arguments['list'];
-  //     });
-  //   } else {
-  //     List<SelectListItem> data = widget.arguments['list'];
-  //     setState(() {
-  //       this.list = data.where((item) => item.text.contains(val)).toList();
-  //     });
-  //   }
-  // }
+// searchAction(String val) {
+//   if (val.length == 0) {
+//     setState(() {
+//       this.list = widget.arguments['list'];
+//     });
+//   } else {
+//     List<SelectListItem> data = widget.arguments['list'];
+//     setState(() {
+//       this.list = data.where((item) => item.text.contains(val)).toList();
+//     });
+//   }
+// }
 }

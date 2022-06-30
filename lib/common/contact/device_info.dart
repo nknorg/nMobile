@@ -90,7 +90,7 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 
-  //  SUPPORT:START
+//  SUPPORT:START
   static bool isMsgReadEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
@@ -98,9 +98,9 @@ class DeviceInfoCommon with Tag {
     versionOk = appVersion >= 224;
     return platformOK && versionOk;
   }
-  //  SUPPORT:END
+//  SUPPORT:END
 
-  //  SUPPORT:START
+//  SUPPORT:START
   static bool isMsgPieceEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
@@ -108,9 +108,9 @@ class DeviceInfoCommon with Tag {
     versionOk = appVersion >= 224;
     return platformOK && versionOk;
   }
-  //  SUPPORT:END
+//  SUPPORT:END
 
-  //  SUPPORT:START
+//  SUPPORT:START
   static bool isMsgImageEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
@@ -118,9 +118,9 @@ class DeviceInfoCommon with Tag {
     versionOk = appVersion >= 224;
     return platformOK && versionOk;
   }
-  //  SUPPORT:END
+//  SUPPORT:END
 
-  //  SUPPORT:START
+//  SUPPORT:START
   static bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
@@ -130,11 +130,11 @@ class DeviceInfoCommon with Tag {
   }
 //  SUPPORT:END
 
-  // static bool isTopicPermissionEnable(String? platform, int? appVersion) {
-  //   if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
-  //   bool platformOK = false, versionOk = false;
-  //   platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
-  //   versionOk = appVersion >= 224;
-  //   return platformOK && versionOk;
-  // }
+// static bool isTopicPermissionEnable(String? platform, int? appVersion) {
+//   if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
+//   bool platformOK = false, versionOk = false;
+//   platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+//   versionOk = appVersion >= 224;
+//   return platformOK && versionOk;
+// }
 }

@@ -30,6 +30,7 @@ class FormText extends BaseStateFulWidget {
   VoidCallback? onEditingComplete;
   ValueChanged<String>? onFieldSubmitted;
   FormFieldSetter<String>? onSaved;
+
   // decoration
   String? hintText;
   String? helperText;

@@ -117,7 +117,7 @@ class SessionCommon with Tag {
     }
   }
 
-  /*Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
+/*Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
     if (session == null) return null;
     MessageSchema? message;
     if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
