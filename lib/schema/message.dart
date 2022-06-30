@@ -21,8 +21,10 @@ class MessageStatus {
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
+
   // receive
   static const int Received = 200;
+
   // common
   static const int Read = 310;
 }
@@ -1032,7 +1034,7 @@ class MessageOptions {
     return int.tryParse(nonceLen);
   }
 
-  // SUPPORT:START
+// SUPPORT:START
   static Map<String, dynamic>? setAudioDuration(Map<String, dynamic>? options, double? durationS) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_AUDIO_DURATION] = durationS;
@@ -1045,7 +1047,7 @@ class MessageOptions {
     if (duration == null || duration.isEmpty) return null;
     return double.tryParse(duration);
   }
-  // SUPPORT:END
+// SUPPORT:END
 }
 
 class MessageData {

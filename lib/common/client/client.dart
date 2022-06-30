@@ -22,7 +22,7 @@ class ClientConnectStatus {
   static const int disconnected = 0;
   static const int connecting = 1;
   static const int connected = 2;
-  // static const int stopping = 3;
+// static const int stopping = 3;
 }
 
 String? getPubKeyFromTopicOrChatId(String s) {

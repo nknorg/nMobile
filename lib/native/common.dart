@@ -173,7 +173,7 @@ class Common {
     return null;
   }
 
-  /*static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
+/*static Future<bool?> resetSQLitePasswordInIos(String dbPath, String dbPwd, {bool readOnly = false}) async {
     if (!Platform.isIOS) return false;
     try {
       final Map resp = await _methodChannel.invokeMethod('resetSQLitePassword', {

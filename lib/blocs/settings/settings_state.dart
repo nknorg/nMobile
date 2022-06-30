@@ -8,5 +8,6 @@ class SettingsInitial extends SettingsState {
 
 class LocaleUpdated extends SettingsState {
   final String locale;
+
   const LocaleUpdated(this.locale);
 }

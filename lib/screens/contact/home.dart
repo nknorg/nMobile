@@ -47,8 +47,8 @@ class ContactHomeScreen extends BaseStateFulWidget {
 
 class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen> {
   bool _isSelect = false;
-
   bool _pageLoaded = false;
+
   StreamSubscription? _addContactSubscription;
   // StreamSubscription? _deleteContactSubscription;
   StreamSubscription? _updateContactSubscription;

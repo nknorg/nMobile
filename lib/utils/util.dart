@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'logger.dart';

@@ -4,5 +4,6 @@ abstract class SettingsEvent {
 
 class UpdateLanguage extends SettingsEvent {
   final String lang;
+
   const UpdateLanguage(this.lang);
 }
