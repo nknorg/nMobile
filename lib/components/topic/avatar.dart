@@ -23,8 +23,8 @@ class TopicAvatar extends BaseStateFulWidget {
 }
 
 class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
-  bool _fileError = false;
   // File? _avatarFile;
+  bool _fileError = false;
 
   @override
   void onRefreshArguments() {

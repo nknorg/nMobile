@@ -660,9 +660,11 @@ class FixedTextField extends StatefulWidget {
 
 class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin implements TextSelectionGestureDetectorBuilderDelegate {
   RestorableTextEditingController? _controller;
+
   TextEditingController get _effectiveController => widget.controller ?? _controller!.value;
 
   FocusNode? _focusNode;
+
   FocusNode get _effectiveFocusNode => widget.focusNode ?? (_focusNode ??= FocusNode());
 
   MaxLengthEnforcement get _effectiveMaxLengthEnforcement => widget.maxLengthEnforcement ?? LengthLimitingTextInputFormatter.getDefaultMaxLengthEnforcement(Theme.of(context).platform);
@@ -684,6 +686,7 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
 
   @override
   bool get selectionEnabled => widget.selectionEnabled;
+
   // End of API for TextSelectionGestureDetectorBuilderDelegate.
 
   bool get _isEnabled => widget.enabled ?? widget.decoration?.enabled ?? true;
