@@ -10,21 +10,33 @@ class SecureStorage {
   static SecureStorage instance = SecureStorage();
 
   set(String key, val) async {
-    if (val is String) {
-      await _storage.write(key: key, value: val);
-    } else if (val is Map) {
-      await _storage.write(key: key, value: jsonEncode(val));
-    } else {
-      logger.e("SecureStorage - set ---> val type fail:$val");
+    try {
+      if (val is String) {
+        await _storage.write(key: key, value: val);
+      } else if (val is Map) {
+        await _storage.write(key: key, value: jsonEncode(val));
+      } else {
+        logger.w("SecureStorage - set ---> val type fail:$val");
+      }
+    } catch (e) {
+      logger.e("SecureStorage - set - key:$key - val:$val - error:$e");
     }
   }
 
   get(String key) async {
-    return await _storage.read(key: key);
+    try {
+      return await _storage.read(key: key);
+    } catch (e) {
+      logger.e("SecureStorage - get - key:$key - error:$e");
+    }
   }
 
   delete(String key) async {
-    await _storage.delete(key: key);
+    try {
+      await _storage.delete(key: key);
+    } catch (e) {
+      logger.e("SecureStorage - delete - key:$key - error:$e");
+    }
   }
 
   deleteAll() async {
