@@ -439,25 +439,30 @@ class MediaPicker {
     // crop
     File? cropFile;
     try {
-      cropFile = await ImageCropper.cropImage(
+      CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: original.absolute.path,
         cropStyle: cropStyle,
         aspectRatio: cropRatio,
         compressQuality: 100, // later handle
         maxWidth: null,
         maxHeight: null,
-        iosUiSettings: IOSUiSettings(
-          title: 'Cropper',
-          minimumAspectRatio: 1.0,
-        ),
-        androidUiSettings: AndroidUiSettings(
-          toolbarTitle: 'Cropper',
-          toolbarColor: application.theme.primaryColor,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-        ),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Cropper',
+            toolbarColor: application.theme.primaryColor,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Cropper',
+            minimumAspectRatio: 1.0,
+          ),
+        ],
       );
+      if ((croppedFile?.path != null) && (croppedFile?.path.isNotEmpty == true)) {
+        cropFile = File(croppedFile!.path);
+      }
     } catch (e) {
       handleError(e);
     }

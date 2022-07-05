@@ -20,7 +20,7 @@ interface IChannelHandler {
     }
 
     suspend fun resultError(result: MethodChannel.Result, code: String? = "", message: String? = "", details: String? = "") = withContext(Dispatchers.Main) {
-        result.error(code, message, details)
+        result.error(code ?: "", message, details)
     }
 
     suspend fun eventSinkSuccess(eventSink: EventChannel.EventSink?, resp: Any?) = withContext(Dispatchers.Main) {
