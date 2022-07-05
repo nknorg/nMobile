@@ -22,7 +22,6 @@ class ScannerScreen extends BaseStateFulWidget {
 }
 
 class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
-  var _data;
   var flashState = flash_on;
   var cameraState = front_camera;
   QRViewController? controller;
@@ -57,6 +56,11 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
+
+    // FIXED: Android black screen
+    if (Platform.isAndroid) {
+      this.controller?.resumeCamera();
+    }
 
     this.controller?.scannedDataStream.listen((Barcode scanData) {
       if (Navigator.of(this.context).canPop()) Navigator.of(this.context).pop(scanData.code);

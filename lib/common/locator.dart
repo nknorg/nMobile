@@ -9,6 +9,7 @@ import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/db/db.dart';
+import 'package:nmobile/common/private_group/prvaite_group.dart';
 import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
@@ -33,15 +34,15 @@ late MemoryCache memoryCache;
 late DB dbCommon;
 late WalletCommon walletCommon;
 late ClientCommon clientCommon;
-late ContactCommon contactCommon;
-late DeviceInfoCommon deviceInfoCommon;
-late TopicCommon topicCommon;
-late SubscriberCommon subscriberCommon;
-late SessionCommon sessionCommon;
 late ChatCommon chatCommon;
 late ChatInCommon chatInCommon;
 late ChatOutCommon chatOutCommon;
-// late PrivateGroupCommon privateGroupCommon; // TODO:GG PG
+late ContactCommon contactCommon;
+late DeviceInfoCommon deviceInfoCommon;
+late SessionCommon sessionCommon;
+late TopicCommon topicCommon;
+late SubscriberCommon subscriberCommon;
+late PrivateGroupCommon privateGroupCommon;
 
 void setupLocator() {
   // register
@@ -57,15 +58,15 @@ void setupLocator() {
   locator.registerSingleton(DB());
   locator.registerSingleton(WalletCommon());
   locator.registerSingleton(ClientCommon());
-  locator.registerSingleton(ContactCommon());
-  locator.registerSingleton(DeviceInfoCommon());
-  locator.registerSingleton(TopicCommon());
-  locator.registerSingleton(SubscriberCommon());
-  locator.registerSingleton(SessionCommon());
   locator.registerSingleton(ChatCommon());
   locator.registerSingleton(ChatInCommon());
   locator.registerSingleton(ChatOutCommon());
-  // locator.registerSingleton(PrivateGroupCommon()); // TODO:GG PG
+  locator.registerSingleton(ContactCommon());
+  locator.registerSingleton(DeviceInfoCommon());
+  locator.registerSingleton(SessionCommon());
+  locator.registerSingleton(TopicCommon());
+  locator.registerSingleton(SubscriberCommon());
+  locator.registerSingleton(PrivateGroupCommon());
 
   // instance
   application = locator.get<Application>();
@@ -73,20 +74,20 @@ void setupLocator() {
   authorization = locator.get<Authorization>();
   localNotification = locator.get<LocalNotification>();
   // backgroundFetchService = locator.get<BackgroundFetchService>();
-  ipfsHelper = locator.get<IpfsHelper>();
   audioHelper = locator.get<AudioHelper>();
+  ipfsHelper = locator.get<IpfsHelper>();
   memoryCache = locator.get<MemoryCache>();
 
   dbCommon = locator.get<DB>();
   walletCommon = locator.get<WalletCommon>();
   clientCommon = locator.get<ClientCommon>();
-  contactCommon = locator.get<ContactCommon>();
-  deviceInfoCommon = locator.get<DeviceInfoCommon>();
-  topicCommon = locator.get<TopicCommon>();
-  subscriberCommon = locator.get<SubscriberCommon>();
-  sessionCommon = locator.get<SessionCommon>();
   chatCommon = locator.get<ChatCommon>();
   chatInCommon = locator.get<ChatInCommon>();
   chatOutCommon = locator.get<ChatOutCommon>();
-  // privateGroupCommon = locator.get<PrivateGroupCommon>(); // TODO:GG PG
+  contactCommon = locator.get<ContactCommon>();
+  deviceInfoCommon = locator.get<DeviceInfoCommon>();
+  sessionCommon = locator.get<SessionCommon>();
+  topicCommon = locator.get<TopicCommon>();
+  subscriberCommon = locator.get<SubscriberCommon>();
+  privateGroupCommon = locator.get<PrivateGroupCommon>();
 }
