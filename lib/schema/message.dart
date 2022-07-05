@@ -11,8 +11,6 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/private_group.dart';
-import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
@@ -59,14 +57,15 @@ class MessageContentType {
   static const String topicInvitation = 'event:channelInvitation'; // db + visible
   static const String topicKickOut = 'event:channelKickOut'; // .
 
-  static const String privateGroupInvitation = 'event:privateGroupInvitation';
-  static const String privateGroupAccept = 'event:privateGroupAccept';
-  static const String privateGroupOptionSync = 'event:privateGroupOptionSync';
-  static const String privateGroupMemberRequest = 'event:privateGroupMemberRequest';
-  static const String privateGroupMemberSync = 'event:privateGroupMemberSync';
-  static const String privateGroupOptionRequest = 'event:privateGroupOptionRequest';
-  static const String privateGroupMemberKeyRequest = 'event:privateGroupMemberKeyRequest';
-  static const String privateGroupMemberKeyResponse = 'event:privateGroupMemberKeyResponse';
+  // TODO:GG PG
+  // static const String privateGroupInvitation = 'event:privateGroupInvitation';
+  // static const String privateGroupAccept = 'event:privateGroupAccept';
+  // static const String privateGroupOptionSync = 'event:privateGroupOptionSync';
+  // static const String privateGroupMemberRequest = 'event:privateGroupMemberRequest';
+  // static const String privateGroupMemberSync = 'event:privateGroupMemberSync';
+  // static const String privateGroupOptionRequest = 'event:privateGroupOptionRequest';
+  // static const String privateGroupMemberKeyRequest = 'event:privateGroupMemberKeyRequest';
+  // static const String privateGroupMemberKeyResponse = 'event:privateGroupMemberKeyResponse';
 }
 
 class MessageSchema {
@@ -93,7 +92,7 @@ class MessageSchema {
   String from; // (required) <-> sender / -> target_id(session_id)
   String to; // <-> receiver / -> target_id(session_id)
   String topic; // <-> topic / -> target_id(session_id)
-  String groupId;
+  // String groupId; // TODO:GG PG
 
   int status; // <-> status
   bool isOutbound; // <-> is_outbound
@@ -113,7 +112,7 @@ class MessageSchema {
     required this.from,
     this.to = "",
     this.topic = "",
-    this.groupId = "",
+    // this.groupId = "", // TODO:GG PG
     // status
     required this.status,
     required this.isOutbound,
@@ -136,9 +135,10 @@ class MessageSchema {
     return topic.isNotEmpty == true;
   }
 
-  bool get isPrivateGroup {
-    return groupId?.isNotEmpty == true;
-  }
+  // TODO:GG PG
+  // bool get isPrivateGroup {
+  //   return groupId.isNotEmpty == true;
+  // }
 
   // burning
   bool get canBurning {
@@ -197,7 +197,7 @@ class MessageSchema {
       from: from,
       to: to,
       topic: topic,
-      groupId: groupId,
+      // groupId: groupId, // TODO:GG PG
       status: status,
       isOutbound: isOutbound,
       isDelete: isDelete,
@@ -223,7 +223,7 @@ class MessageSchema {
       from: raw.src ?? "",
       to: clientCommon.address ?? "",
       topic: data['topic'] ?? "",
-      groupId: data['groupId'],
+      // groupId: data['groupId'], // TODO:GG PG
       // status
       status: MessageStatus.Received,
       isOutbound: false,
@@ -299,7 +299,7 @@ class MessageSchema {
     required this.from,
     this.to = "",
     this.topic = "",
-    this.groupId = "",
+    // this.groupId = "", // TODO:GG PG
     // status
     this.status = MessageStatus.Sending,
     this.isOutbound = true,
@@ -417,7 +417,7 @@ class MessageSchema {
       'sender': from,
       'receiver': to,
       'topic': topic,
-      'groupId': groupId,
+      // 'groupId': groupId, // TODO:GG PG
       'target_id': targetId,
       // status
       'status': status,
@@ -475,7 +475,7 @@ class MessageSchema {
       from: e['sender'] ?? "",
       to: e['receiver'] ?? "",
       topic: e['topic'] ?? "",
-      groupId: e['group_id'],
+      // groupId: e['group_id'], // TODO:GG PG
       // status
       status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
@@ -711,7 +711,7 @@ class MessageOptions {
   static const KEY_PIECE_TOTAL = "piece_total"; // TODO:GG rename to 'pieceTotal'
   static const KEY_PIECE_INDEX = "piece_index"; // TODO:GG rename to 'pieceIndex'
 
-  static const KEY_VERSION = "version";
+  // static const KEY_VERSION = "version"; // TODO:GG PG
 
   static Map<String, dynamic>? setOutAt(Map<String, dynamic>? options, int sendAt) {
     if (options == null) options = Map<String, dynamic>();
@@ -1345,7 +1345,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupInvitation(PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) {
+  // TODO:GG PG
+  /*static String getPrivateGroupInvitation(PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) {
     Map data = {
       'id': Uuid().v4(),
       'timestamp': DateTime.now().millisecondsSinceEpoch,
@@ -1443,5 +1444,5 @@ class MessageData {
       'data': list,
     };
     return jsonEncode(data);
-  }
+  }*/
 }
