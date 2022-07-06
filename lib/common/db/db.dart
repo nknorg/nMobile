@@ -86,7 +86,9 @@ class DB {
         // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
         try {
           database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
-        } catch (e) {}
+        } catch (e) {
+          // nothing
+        }
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
         if (!clean) {
           if (database == null) {
