@@ -76,10 +76,10 @@ dependencies:
   flutter_cupertino_localizations: ^1.0.1
 
   # storage
-  flutter_secure_storage: ^4.2.1
-  sqflite: ^2.0.2+1
-  sqflite_sqlcipher: ^2.1.0
-  #  hive: ^2.0.4
+  flutter_secure_storage: ^5.0.2
+  sqflite: ^2.0.3
+  sqflite_sqlcipher: ^2.1.1
+  hive: ^2.2.3
 
   # UI
   bot_toast: ^4.0.2
@@ -87,22 +87,20 @@ dependencies:
   flutter_markdown: ^0.6.10+2
   flutter_slidable: ^0.6.0
   badges: ^2.0.3
-  fl_chart: ^0.55.0
-  animations: ^2.0.3
-  flutter_screenutil: ^5.5.3+2
   flutter_native_splash: ^2.2.4
-  auto_size_text: ^3.0.0
-  flutter_swiper: ^1.1.6
+  flutter_screenutil: ^5.5.3+2
   modal_bottom_sheet: ^2.1.0
-
-  # list
-  pull_to_refresh: ^2.0.0
-  flutter_staggered_grid_view: ^0.6.1
+  auto_size_text: ^3.0.0
+  animations: ^2.0.3
+  fl_chart: ^0.55.0
 
   # icon
   flutter_svg: ^1.1.1+1
   font_awesome_flutter: ^10.1.0
-  cupertino_icons: ^1.0.5
+
+  # list
+  pull_to_refresh: ^2.0.0
+  flutter_staggered_grid_view: ^0.6.1
 
   # file
   path: ^1.8.1
@@ -116,8 +114,8 @@ dependencies:
   flutter_image_compress: ^1.1.0
   image_cropper: ^2.0.3
   wechat_assets_picker: ^7.3.2
-  octo_image: ^1.0.2
   flutter_luban: ^0.1.13
+  octo_image: ^1.0.2
 
   # audio
   flutter_sound: ^8.3.10
