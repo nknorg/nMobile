@@ -89,12 +89,14 @@ class Global {
 
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
-      Global.deviceId = (await deviceInfo.androidInfo).androidId ?? "";
-      Global.deviceVersionName = (await deviceInfo.androidInfo).version.release ?? "";
+      AndroidDeviceInfo _info = await deviceInfo.androidInfo;
+      Global.deviceId = _info.androidId ?? "";
+      Global.deviceVersionName = _info.version.release ?? "";
       Global.deviceVersion = Global.deviceVersionName.split(".")[0];
     } else if (Platform.isIOS) {
-      Global.deviceId = (await deviceInfo.iosInfo).identifierForVendor ?? "";
-      Global.deviceVersionName = (await deviceInfo.iosInfo).systemVersion ?? "";
+      IosDeviceInfo _info = await deviceInfo.iosInfo;
+      Global.deviceId = _info.identifierForVendor ?? "";
+      Global.deviceVersionName = _info.systemVersion ?? "";
       Global.deviceVersion = Global.deviceVersionName.split(".")[0];
     }
   }
