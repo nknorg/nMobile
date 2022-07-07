@@ -56,7 +56,7 @@ class LocalNotification {
     var androidNotificationDetails = AndroidNotificationDetails(
       channel_id,
       channel_name,
-      channel_desc,
+      // channel_desc,
       importance: Importance.max,
       priority: Priority.high,
       autoCancel: true,

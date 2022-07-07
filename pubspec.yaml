@@ -49,20 +49,20 @@ dependencies:
   #  webview_flutter: ^2.0.12
 
   # common
-  fixnum: ^1.0.1
-  convert: ^3.0.1
+  convert: ^3.0.2
   flutter_bloc: ^7.2.0
   equatable: ^2.0.3
-  synchronized: ^3.0.0
-  dio: ^4.0.0
+  synchronized: ^3.0.0+2
+  dio: ^4.0.6
   get_it: ^7.2.0
-  uuid: ^3.0.4
-  crypto: ^3.0.1
+  uuid: ^3.0.6
+  crypto: ^3.0.2
   mime_type: ^1.0.0
-  permission_handler: ^9.2.0
+  permission_handler: ^10.0.0
   vibration: ^1.7.3
-  flutter_local_notifications: ^8.2.0
-  background_fetch: ^1.0.1
+  flutter_local_notifications: ^9.6.1
+  background_fetch: ^1.1.0
+  fixnum: ^1.0.1
   #  get: ^4.3.8
   #  provider: ^6.0.0
   #  auto_route: ^2.3.0
@@ -97,6 +97,7 @@ dependencies:
   # icon
   flutter_svg: ^1.1.1+1
   font_awesome_flutter: ^10.1.0
+  cupertino_icons: ^1.0.5
 
   # list
   pull_to_refresh: ^2.0.0
