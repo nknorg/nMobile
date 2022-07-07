@@ -1,5 +1,5 @@
 PODS:
-  - background_fetch (1.0.3):
+  - background_fetch (1.1.0):
     - Flutter
   - camera_avfoundation (0.0.1):
     - Flutter
@@ -269,7 +269,7 @@ CHECKOUT OPTIONS:
     :tag: 7.11.0
 
 SPEC CHECKSUMS:
-  background_fetch: 8fa13640fc6e658a7c2e9a2dbc07af8650af215c
+  background_fetch: 3795af8a49054dc526477cc2f60d2ed41de60587
   camera_avfoundation: 07c77549ea54ad95d8581be86617c094a46280d9
   connectivity_plus: 413a8857dd5d9f1c399a39130850d02fe0feaf7e
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
