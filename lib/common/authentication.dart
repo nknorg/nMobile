@@ -27,9 +27,12 @@ class Authorization {
     try {
       bool success = await _localAuth.authenticate(
         localizedReason: localizedReason,
-        useErrorDialogs: true,
-        stickyAuth: true,
-        biometricOnly: true,
+        options: const AuthenticationOptions(
+          useErrorDialogs: true,
+          stickyAuth: true,
+          biometricOnly: true,
+          sensitiveTransaction: true,
+        ),
       );
       return success;
     } catch (e) {
