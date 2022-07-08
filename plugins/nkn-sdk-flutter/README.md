@@ -40,11 +40,11 @@ Load wallet from JSON string, note that the password needs to be the same as the
 
 ```dart
 Wallet wallet = await Wallet.restore(w.keystore,
-    config: WalletConfig(password: '123'));
+config: WalletConfig(password: '123'));
 print(wallet.address);
 print(wallet.seed);
 print(wallet.publicKey);
-                      
+
 ```
 
 Query asset balance for this wallet:
@@ -74,7 +74,7 @@ Listen for connection established:
 
 ```dart
 client.onConnect.listen((event) {
-    print(event.node);
+print(event.node);
 });
 ```
 
@@ -82,11 +82,11 @@ Receive data from other clients
 
 ```dart
 client.onMessage.listen((event) {
-    print(event.type);
-    print(event.encrypted);
-    print(event.messageId);
-    print(event.data);
-    print(event.src);
+print(event.type);
+print(event.encrypted);
+print(event.messageId);
+print(event.data);
+print(event.src);
 });
 ```
 

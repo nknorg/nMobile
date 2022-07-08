@@ -53,12 +53,38 @@ class OnMessage {
   });
 }
 
+/// EthResolver Config
+class EthResolverConfig {
+  final String? prefix;
+  final String? rpcServer;
+  final String? contractAddress;
+
+  EthResolverConfig({this.prefix, this.rpcServer, this.contractAddress});
+}
+
+/// DnsResolver Config
+class DnsResolverConfig {
+  final String? dnsServer;
+
+  DnsResolverConfig({this.dnsServer});
+}
+
 /// Client config
 class ClientConfig {
   /// Seed RPC server address that client uses to find its node and make RPC requests (e.g. get subscribers).
   final List<String>? seedRPCServerAddr;
 
-  ClientConfig({this.seedRPCServerAddr});
+  /// EthResolver Config
+  final List<EthResolverConfig>? ethResolverConfig;
+
+  /// DnsResolver Config
+  final List<DnsResolverConfig>? dnsResolverConfig;
+
+  ClientConfig({
+    this.seedRPCServerAddr,
+    this.ethResolverConfig,
+    this.dnsResolverConfig,
+  });
 }
 
 /// Client sends and receives data between any NKN clients regardless their
@@ -115,12 +141,32 @@ class Client {
   /// config value will be used. If config is nil, the default client config will
   /// be used.
   static Future<Client> create(Uint8List seed, {String identifier = '', int? numSubClients, ClientConfig? config}) async {
+    List<Map>? ethResolverConfigArray;
+    if (config?.ethResolverConfig != null) {
+      ethResolverConfigArray = <Map>[];
+      config?.ethResolverConfig?.forEach((item) {
+        ethResolverConfigArray?.add({'prefix': item.prefix, 'contractAddress': item.contractAddress, 'rpcServer': item.rpcServer});
+      });
+    }
+
+    List<Map>? dnsResolverConfigArray;
+    if (config?.dnsResolverConfig != null) {
+      dnsResolverConfigArray = <Map>[];
+      config?.dnsResolverConfig?.forEach((item) {
+        dnsResolverConfigArray?.add({
+          'dnsServer': item.dnsServer,
+        });
+      });
+    }
+
     try {
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
         'numSubClients': numSubClients,
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'ethResolverConfigArray': ethResolverConfigArray,
+        'dnsResolverConfigArray': dnsResolverConfigArray,
       });
       Client client = Client();
       client.address = resp['address'];
@@ -149,9 +195,6 @@ class Client {
             break;
         }
       }, onError: (err) {
-        if (err.code != client.address) {
-          return;
-        }
         client._onErrorStreamSink.add(err);
       });
       return client;

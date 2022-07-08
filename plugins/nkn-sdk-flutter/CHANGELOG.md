@@ -1,3 +1,19 @@
+## 0.3.2
+
+* Add reconnect
+
+## 0.3.1
+
+* Modify Resolver config
+
+## 0.3.1
+
+* Upgrade Resolver
+
+## 0.3.0
+
+* Add Resolver
+
 ## 0.2.1
 
 * Modify wallet API

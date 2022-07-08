@@ -367,10 +367,10 @@ class ClientCommon with Tag {
         await signOut(clearWallet: true, closeDB: true);
         return;
       }
-      await _signOut(clearWallet: false, closeDB: false);
+      await signOut(clearWallet: false, closeDB: false);
       await Future.delayed(Duration(milliseconds: 200));
       String? walletPwd = await walletCommon.getPassword(wallet.address);
-      await _signIn(wallet, fetchRemote: true, password: walletPwd);
+      await signIn(wallet, fetchRemote: true, password: walletPwd);
     }
   }
 

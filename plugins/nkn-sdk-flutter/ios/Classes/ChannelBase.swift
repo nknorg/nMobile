@@ -7,7 +7,7 @@ class ChannelBase: NSObject {
     
     func resultError(result: @escaping FlutterResult, error: NSError?, code: String? = "") {
         DispatchQueue.main.async{
-            result(FlutterError(code: code ?? "", message: error?.localizedDescription, details: ""))
+            result(FlutterError(code: code ?? "", message: error?.localizedDescription, details: error?.description))
         }
     }
     func resultError(result: @escaping FlutterResult, error: Error?, code: String? = "") {
@@ -28,7 +28,7 @@ class ChannelBase: NSObject {
     }
     func eventSinkError(eventSink: FlutterEventSink?, error: NSError?, code: String? = "") {
         DispatchQueue.main.async {
-            eventSink?(FlutterError(code: code ?? "", message: error?.localizedDescription, details: ""))
+            eventSink?(FlutterError(code: code ?? "", message: error?.localizedDescription, details: error?.description))
         }
     }
     func eventSinkError(eventSink: FlutterEventSink?, error: Error?, code: String? = "") {
