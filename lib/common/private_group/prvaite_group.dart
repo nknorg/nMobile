@@ -98,7 +98,7 @@ class PrivateGroupCommon with Tag {
 
   String genPrivateGroupVersion(String optionSignature, List<String> list) {
     list.sort((a, b) => a.compareTo(b));
-    return hexEncode(Hash.md5(optionSignature + list.join('')));
+    return hexEncode(Uint8List.fromList(Hash.md5(optionSignature + list.join(''))));
   }
 
   Future<PrivateGroupSchema?> createPrivateGroup(String name) async {

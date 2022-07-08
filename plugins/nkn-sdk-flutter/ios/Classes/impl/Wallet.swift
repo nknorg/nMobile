@@ -103,6 +103,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         config.password = password
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileStringArray(from: nil)
@@ -110,7 +111,6 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -143,6 +143,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         config.password = password
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
@@ -150,7 +151,6 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -192,16 +192,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // else {
-        //     config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
-        // }
-        // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -236,16 +233,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // else {
-        //     config.seedRPCServerAddr = NknStringArray.init(from: "https://mainnet-rpc-node-0001.nkn.org/mainnet/api/wallet")
-        // }
-        // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -295,13 +289,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -347,13 +341,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletMoneyWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -400,13 +394,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletEventWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -432,13 +426,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletEventWorkItem = DispatchWorkItem {
             var count: Int = 0
@@ -463,13 +457,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletEventWorkItem = DispatchWorkItem {
             var error: NSError?
@@ -493,13 +487,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletEventWorkItem = DispatchWorkItem {
             var height: Int32 = 0
@@ -523,13 +517,13 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seedRpc = args["seedRpc"] as? [String]
 
         let config = NknWalletConfig()
+        // config.rpcConcurrency = 4
         if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
             }
         }
-        // config.rpcConcurrency = 4
 
         walletEventWorkItem = DispatchWorkItem {
             var nonce: Int64 = 0

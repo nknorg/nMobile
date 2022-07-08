@@ -96,22 +96,52 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seed = call.argument<ByteArray>("seed")
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
         numSubClients = (call.argument<Int>("numSubClients") ?: 4).toLong()
+        val ethResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
+        val dnsResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
 
         val config = ClientConfig()
+        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
                 config.seedRPCServerAddr.append(addr)
             }
         }
-        // config.rpcConcurrency = 4
+
+        if (ethResolverConfigArray != null) {
+            for (cfg in ethResolverConfigArray) {
+                val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+                ethResolverConfig.prefix = cfg["prefix"] as String?
+                ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
+                ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
+                val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+                if (config.resolvers == null) {
+                    config.resolvers = nkngomobile.ResolverArray(ethResolver)
+                } else {
+                    config.resolvers.append(ethResolver)
+                }
+            }
+        }
+
+        if (dnsResolverConfigArray != null) {
+            for (cfg in dnsResolverConfigArray) {
+                val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+                dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
+                val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+                if (config.resolvers == null) {
+                    config.resolvers = nkngomobile.ResolverArray(dnsResolver)
+                } else {
+                    config.resolvers.append(dnsResolver)
+                }
+            }
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val account = Nkn.newAccount(seed)
                 client = MultiClient(account, identifier, numSubClients, true, config)
                 if (client == null) {
-                    resultError(result, "", "connect fail")
+                    eventSinkError(eventSink, "10", "connect fail", "in func create")
                     return@launch
                 }
 
@@ -122,47 +152,20 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 )
                 resultSuccess(result, data)
 
-                onConnect(client)
-                async(Dispatchers.IO) { onMessage(client) }
+                onConnect()
+                async(Dispatchers.IO) { onMessage() }
             } catch (e: Throwable) {
-                resultError(result, "", e.localizedMessage)
+                eventSinkError(eventSink, "10", e.localizedMessage, e.message)
             }
         }
     }
 
-    private fun reconnect(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                client?.reconnect()
-                resultSuccess(result, null)
-            } catch (e: Throwable) {
-                eventSink?.error(_id, e.localizedMessage, "")
-            }
-        }
-    }
-
-    private fun close(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                client?.close()
-                client = null
-                resultSuccess(result, null)
-            } catch (e: Throwable) {
-                eventSink?.error(_id, e.localizedMessage, "")
-            }
-        }
-    }
-
-    private suspend fun onConnect(client: MultiClient?) = withContext(Dispatchers.IO) {
+    private suspend fun onConnect() = withContext(Dispatchers.IO) {
         try {
             val node = client?.onConnect?.next() ?: return@withContext
             val rpcServers = ArrayList<String>()
             for (i in 0..numSubClients) {
-                val c = client.getClient(i)
+                val c = client?.getClient(i)
                 val rpcNode = c?.node
                 var rpcAddr = rpcNode?.rpcAddr ?: ""
                 if (rpcAddr.isNotEmpty()) {
@@ -174,24 +177,30 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             }
 
             val resp = hashMapOf(
-                "_id" to client.address(),
+                "_id" to client?.address(),
                 "event" to "onConnect",
                 "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
-                "client" to hashMapOf("address" to client.address()),
+                "client" to hashMapOf("address" to client?.address()),
                 "rpcServers" to rpcServers
             )
             Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
-            eventSinkError(eventSink, client?.address(), e.localizedMessage)
+            eventSinkError(eventSink, "10", e.localizedMessage, e.message)
         }
     }
 
-    private suspend fun onMessage(client: MultiClient?) {
+    private suspend fun onMessage() {
+        while (true) {
+            val msg = client?.onMessage?.next() ?: continue
+            onMessageHandle(msg)
+        }
+    }
+
+    private suspend fun onMessageHandle(msg: Message) {
         try {
-            val msg = client?.onMessage?.next() ?: return
             val resp = hashMapOf(
-                "_id" to client.address(),
+                "_id" to client?.address(),
                 "event" to "onMessage",
                 "data" to hashMapOf(
                     "src" to msg.src,
@@ -204,14 +213,36 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
-            eventSinkError(eventSink, client?.address(), e.localizedMessage)
-            return
+            eventSinkError(eventSink, "20", e.localizedMessage, e.message)
         }
-
-        // loop
-        onMessage(client)
     }
 
+    private fun reconnect(call: MethodCall, result: MethodChannel.Result) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (client != null) {
+                    client?.reconnect()
+                    resultSuccess(result, null)
+                } else {
+                    eventSinkError(eventSink, "10", "client is closed", "in func reconnect")
+                }
+            } catch (e: Throwable) {
+                eventSinkError(eventSink, "10", e.localizedMessage, e.message)
+            }
+        }
+    }
+
+    private fun close(call: MethodCall, result: MethodChannel.Result) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                client?.close()
+                client = null
+                resultSuccess(result, null)
+            } catch (e: Throwable) {
+                eventSinkError(eventSink, "11", e.localizedMessage, e.message)
+            }
+        }
+    }
 
     private fun sendText(call: MethodCall, result: MethodChannel.Result) {
         val dests = call.argument<ArrayList<String>>("dests")!!
@@ -220,8 +251,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val noReply = call.argument<Boolean>("noReply") ?: true
         val timeout = call.argument<Int>("maxHoldingSeconds") ?: 10000
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func sendText")
             return
         }
 
@@ -232,10 +263,6 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             } else {
                 nknDests.append(d)
             }
-        }
-        if (nknDests == null) {
-            result.error("", "dests null", "")
-            return
         }
 
         val config = MessageConfig()
@@ -286,8 +313,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 1000
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func publishText")
             return
         }
 
@@ -321,8 +348,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func subscribe")
             return
         }
 
@@ -351,8 +378,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func unsubscribe")
             return
         }
 
@@ -383,8 +410,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val txPool = call.argument<Boolean>("txPool") ?: true
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func getSubscribers")
             return
         }
 
@@ -415,8 +442,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val topic = call.argument<String>("topic")!!
         val subscriber = call.argument<String>("subscriber")!!
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func getSubscription")
             return
         }
 
@@ -440,8 +467,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val topic = call.argument<String>("topic")!!
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func getSubscribersCount")
             return
         }
 
@@ -458,8 +485,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getHeight(call: MethodCall, result: MethodChannel.Result) {
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func getHeight")
             return
         }
 
@@ -479,8 +506,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val address = call.argument<String>("address")
         val txPool = call.argument<Boolean>("txPool") ?: true
 
-        if (client == null) {
-            result.error("", "client is null", "")
+        if ((client == null) || (client?.isClosed == true)) {
+            result.error("", "client is closed", "in func getNonce")
             return
         }
 

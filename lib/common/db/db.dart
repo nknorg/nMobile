@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/contact/device_info.dart';
@@ -56,7 +57,7 @@ class DB {
   Future _openWithFix(String publicKey, String seed) async {
     String path = await getDBFilePath(publicKey);
     bool exists = await databaseExists(path);
-    String password = seed.isEmpty ? "" : hexEncode(Hash.sha256(seed));
+    String password = seed.isEmpty ? "" : hexEncode(Uint8List.fromList(Hash.sha256(seed)));
     logger.i("DB - open - exists:$exists - publicKey:$publicKey - seed:$seed - password:$password - path:$path");
 
     if (!Platform.isIOS) {
