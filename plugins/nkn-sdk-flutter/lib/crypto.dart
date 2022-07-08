@@ -7,32 +7,6 @@ import 'package:flutter/services.dart';
 class Crypto {
   static const MethodChannel _methodChannel = MethodChannel('org.nkn.sdk/crypto');
 
-  /// [gcmEncrypt]
-  static Future<Uint8List> gcmEncrypt(Uint8List data, Uint8List key, int nonceSize) async {
-    try {
-      return await _methodChannel.invokeMethod('gcmEncrypt', {
-        'data': data,
-        'key': key,
-        'nonceSize': nonceSize,
-      });
-    } catch (e) {
-      throw e;
-    }
-  }
-
-  /// [gcmDecrypt]
-  static Future<Uint8List> gcmDecrypt(Uint8List data, Uint8List key, int nonceSize) async {
-    try {
-      return await _methodChannel.invokeMethod('gcmDecrypt', {
-        'data': data,
-        'key': key,
-        'nonceSize': nonceSize,
-      });
-    } catch (e) {
-      throw e;
-    }
-  }
-
   /// [getPublicKeyFromPrivateKey]
   static Future<Uint8List> getPublicKeyFromPrivateKey(Uint8List privateKey) async {
     try {

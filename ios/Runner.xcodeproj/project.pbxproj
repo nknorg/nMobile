@@ -36,6 +36,7 @@
 		C683E279272E4FB200102547 /* APNSPusher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C683E278272E4FB200102547 /* APNSPusher.swift */; };
 		C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F42E03266A28CE007BA337 /* ChannelBase.swift */; };
 		C6FFD764266E09E600410547 /* CommonOc.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FFD763266E09E600410547 /* CommonOc.m */; };
+		E1852ED82878179100FC45FD /* Crypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1852ED72878179100FC45FD /* Crypto.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -102,6 +103,7 @@
 		C6F42E03266A28CE007BA337 /* ChannelBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBase.swift; sourceTree = "<group>"; };
 		C6FFD762266E09E600410547 /* CommonOc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonOc.h; sourceTree = "<group>"; };
 		C6FFD763266E09E600410547 /* CommonOc.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CommonOc.m; sourceTree = "<group>"; };
+		E1852ED72878179100FC45FD /* Crypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Crypto.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -184,8 +186,9 @@
 		C61A6E6D266A19F000A7F1E1 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				C6824D20272E4E8E00BA7AAF /* Push2 */,
 				C61A6E6E266A1A2100A7F1E1 /* Push */,
+				C6824D20272E4E8E00BA7AAF /* Push2 */,
+				E1852ED62877DE4400FC45FD /* Crypto */,
 				C6F42E03266A28CE007BA337 /* ChannelBase.swift */,
 				C61A6E6F266A1A7C00A7F1E1 /* Common.swift */,
 				C6FFD762266E09E600410547 /* CommonOc.h */,
@@ -242,6 +245,14 @@
 				C6824D24272E4EA700BA7AAF /* PKCS12Adapter.swift */,
 			);
 			path = Push2;
+			sourceTree = "<group>";
+		};
+		E1852ED62877DE4400FC45FD /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				E1852ED72878179100FC45FD /* Crypto.swift */,
+			);
+			path = Crypto;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -401,6 +412,7 @@
 				C6824D2E272E4EA900BA7AAF /* APNsPort.swift in Sources */,
 				C62BB8182689AA0E00DAAC43 /* NWType.m in Sources */,
 				C6824D2B272E4EA900BA7AAF /* PKCS12Adapter.swift in Sources */,
+				E1852ED82878179100FC45FD /* Crypto.swift in Sources */,
 				C62BB8152689AA0E00DAAC43 /* NWNotification.m in Sources */,
 				C6F42E04266A28CE007BA337 /* ChannelBase.swift in Sources */,
 				C6824D2C272E4EA900BA7AAF /* APNsPayload.swift in Sources */,

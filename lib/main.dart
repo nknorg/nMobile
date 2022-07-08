@@ -18,6 +18,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
+import 'package:nmobile/native/crypto.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -33,6 +34,7 @@ void main() async {
   // nkn
   await Wallet.install();
   await Client.install();
+  await Crypto.install();
   await Common.install();
 
   // locator
