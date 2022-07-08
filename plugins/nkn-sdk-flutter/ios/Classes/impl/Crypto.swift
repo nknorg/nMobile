@@ -32,10 +32,6 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method{
-        case "gcmEncrypt":
-            gcmEncrypt(call, result: result)
-        case "gcmDecrypt":
-            gcmDecrypt(call, result: result)
         case "getPublicKeyFromPrivateKey":
             getPublicKeyFromPrivateKey(call, result: result)
         case "getPrivateKeyFromSeed":
@@ -50,45 +46,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
             result(FlutterMethodNotImplemented)
         }
     }
-    
-    private func gcmEncrypt(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let data = args["data"] as? FlutterStandardTypedData
-        let key = args["key"] as? FlutterStandardTypedData
-        let nonceSize = args["nonceSize"] as? Int ?? 0
 
-        qryptoWorkItem = DispatchWorkItem {
-            var error: NSError?
-            let cipherText = CryptoGCMEncrypt(data?.data, key?.data, nonceSize, &error)
-            if (error != nil) {
-                self.resultError(result: result, error: error)
-                return
-            }
-            
-            self.resultSuccess(result: result, resp: cipherText)
-        }
-        qryptoQueue.async(execute: qryptoWorkItem!)
-    }
-    
-    private func gcmDecrypt(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let data = args["data"] as? FlutterStandardTypedData
-        let key = args["key"] as? FlutterStandardTypedData
-        let nonceSize = args["nonceSize"] as? Int ?? 0
-
-        qryptoWorkItem = DispatchWorkItem {
-            var error: NSError?
-            let plainText = CryptoGCMDecrypt(data?.data, key?.data, nonceSize, &error)
-            if (error != nil) {
-                self.resultError(result: result, error: error)
-                return
-            }
-            
-            self.resultSuccess(result: result, resp: plainText)
-        }
-        qryptoQueue.async(execute: qryptoWorkItem!)
-    }
-    
     private func getPublicKeyFromPrivateKey(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let privateKey = args["privateKey"] as? FlutterStandardTypedData
