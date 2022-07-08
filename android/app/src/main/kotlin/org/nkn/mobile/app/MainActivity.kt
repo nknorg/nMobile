@@ -8,6 +8,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
 import org.nkn.mobile.app.channels.impl.Common
 import org.nkn.mobile.app.push.APNSPush
+import org.nkn.mobile.app.crypto.Crypto
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -62,6 +63,7 @@ class MainActivity : FlutterFragmentActivity() {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
 
         Common.register(flutterEngine)
+        Crypto.register(flutterEngine)
 
         APNSPush.openClient(assets)
     }

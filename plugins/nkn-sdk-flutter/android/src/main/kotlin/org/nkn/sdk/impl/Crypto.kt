@@ -38,12 +38,6 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "gcmEncrypt" -> {
-                gcmEncrypt(call, result)
-            }
-            "gcmDecrypt" -> {
-                gcmDecrypt(call, result)
-            }
             "getPublicKeyFromPrivateKey" -> {
                 getPublicKeyFromPrivateKey(call, result)
             }
@@ -62,40 +56,6 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
             else -> {
                 result.notImplemented()
-            }
-        }
-    }
-
-    private fun gcmEncrypt(call: MethodCall, result: MethodChannel.Result) {
-        val data = call.argument<ByteArray>("data")!!
-        val key = call.argument<ByteArray>("key")!!
-        val nonceSize = call.argument<Int>("nonceSize") ?: 0
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val cipherText = crypto.Crypto.gcmEncrypt(data, key, nonceSize.toLong())
-                resultSuccess(result, cipherText)
-                return@launch
-            } catch (e: Throwable) {
-                resultError(result, e)
-                return@launch
-            }
-        }
-    }
-
-    private fun gcmDecrypt(call: MethodCall, result: MethodChannel.Result) {
-        val data = call.argument<ByteArray>("data")!!
-        val key = call.argument<ByteArray>("key")!!
-        val nonceSize = call.argument<Int>("nonceSize") ?: 0
-
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val plainTex = crypto.Crypto.gcmDecrypt(data, key, nonceSize.toLong())
-                resultSuccess(result, plainTex)
-                return@launch
-            } catch (e: Throwable) {
-                resultError(result, e)
-                return@launch
             }
         }
     }
