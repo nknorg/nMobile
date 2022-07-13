@@ -382,13 +382,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_luban:
-    dependency: "direct main"
-    description:
-      name: flutter_luban
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.1.13"
   flutter_markdown:
     dependency: "direct main"
     description:
@@ -500,7 +493,7 @@ packages:
       name: flutter_staggered_grid_view
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.6.1"
+    version: "0.6.2"
   flutter_svg:
     dependency: "direct main"
     description:

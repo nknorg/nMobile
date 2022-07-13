@@ -175,8 +175,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: MessageSchema.avatarBestSize,
       maxSize: MessageSchema.avatarMaxSize,
+      bestSize: MessageSchema.avatarBestSize,
       savePath: remarkAvatarPath,
     );
     if (picked == null) {
