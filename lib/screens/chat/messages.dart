@@ -651,14 +651,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     }
                     int size = await content.length();
                     logger.w("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-                    // if (size >= ChatOutCommon.maxBodySize) {
-                    //   Toast.show(Global.locale((s) => s.file_too_big);
-                    //   if (await content.exists()) {
-                    //     await content.delete();
-                    //   }
-                    //   await audioHelper.recordStop();
-                    //   return null;
-                    // }
+                    if (size > MessageSchema.piecesMaxSize) {
+                      Toast.show(Global.locale((s) => s.file_too_big));
+                      if (await content.exists()) {
+                        await content.delete();
+                      }
+                      await audioHelper.recordStop();
+                      return null;
+                    }
                     return await chatOutCommon.sendAudio(_topic ?? _contact, content, durationMs / 1000);
                   }
                 },
@@ -689,7 +689,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           if (path.isEmpty) continue;
                           // no message_type(video/file), and result no mime_type from file_picker
                           // so big_file and video+file go with type_ipfs
-                          if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesMaxSize)) {
+                          if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesBestMaxSize)) {
                             chatOutCommon.sendImage(_topic ?? _contact, File(path)); // await
                           } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesMaxSize)) {
                             chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS); // await

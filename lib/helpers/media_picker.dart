@@ -356,8 +356,8 @@ class MediaPicker {
   static Future<File?> pickImage({
     CropStyle? cropStyle,
     CropAspectRatio? cropRatio,
-    int? bestSize,
     int? maxSize,
+    int? bestSize,
     String? savePath,
   }) async {
     // permission
@@ -397,7 +397,7 @@ class MediaPicker {
     });
 
     // crop
-    pickedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio);
+    pickedFile = await _cropImage(pickedFile, cropStyle, cropRatio: cropRatio, quality: 20, width: 400, height: 400);
     if (pickedFile == null) {
       logger.w('MediaPicker - pickImage - croppedFile = null');
       return null;
@@ -430,7 +430,7 @@ class MediaPicker {
     return returnFile;
   }
 
-  static Future<File?> _cropImage(File? original, CropStyle? cropStyle, {CropAspectRatio? cropRatio}) async {
+  static Future<File?> _cropImage(File? original, CropStyle? cropStyle, {CropAspectRatio? cropRatio, int quality = 50, int? width, int? height}) async {
     if (original == null) return null;
     if (cropStyle == null) return original;
     // gif
@@ -443,9 +443,9 @@ class MediaPicker {
         sourcePath: original.absolute.path,
         cropStyle: cropStyle,
         aspectRatio: cropRatio,
-        compressQuality: 100, // later handle
-        maxWidth: null,
-        maxHeight: null,
+        compressQuality: quality, // later handle
+        maxWidth: width,
+        maxHeight: height,
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Cropper',
@@ -541,13 +541,19 @@ class MediaPicker {
     File? compressFile;
     int compressSize = 0;
     try {
-      List<int> qualityItems = force ? [20, 5] : [70, 30, 15];
+      List<int> qualityItems = force ? [20, 10, 5] : [70, 30, 15];
+      List<int> widthItems = force ? [320, 32, 4] : [1920, 960, 480];
+      List<int> heightItems = force ? [180, 18, 2] : [1080, 540, 270];
       for (var i = 0; i < qualityItems.length; i++) {
         int compressQuality = qualityItems[i];
+        int compressWidth = widthItems[i];
+        int compressHeight = heightItems[i];
         compressFile = await FlutterImageCompress.compressAndGetFile(
           original.absolute.path,
           compressPath,
           quality: compressQuality,
+          minWidth: compressWidth,
+          minHeight: compressHeight,
           autoCorrectionAngle: true,
           numberOfRetries: 3,
           format: format,
