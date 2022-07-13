@@ -31,6 +31,7 @@ import Sentry
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
         Common.register(controller: controller)
         Crypto.register(controller: controller)
+        EthResolver.register(controller: controller)
         
         registerNotification();
         
