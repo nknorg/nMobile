@@ -71,20 +71,20 @@ class MessageContentType {
 class MessageSchema {
   // piece
   static const int piecesPreMinLen = 4 * 1000; // >= 4K
-  static const int piecesPreMaxLen = 25 * 1000; // <= 25K < 32K
+  static const int piecesPreMaxLen = 20 * 1000; // <= 20K < 32K
   static const int piecesMinParity = (5 ~/ 5); // >= 1
   static const int piecesMinTotal = 5 - piecesMinParity; // >= 4 (* piecesPreMinLen < piecesPreMaxLen)
   static const int piecesMaxParity = (100 ~/ 5); // <= 20
   static const int piecesMaxTotal = 100 - piecesMaxParity; // <= 80
-  static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 2M
+  static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 1.6M
 
   // size
   static const int msgMaxSize = 32 * 1000; // < 32K
   static const int nknMaxSize = 4 * 1000 * 1000; // < 4,000,000
   static const int ipfsMaxSize = 100 * 1000 * 1000; // 100M
-  static const int avatarMaxSize = piecesPreMaxLen; // 25K
+  static const int avatarMaxSize = 25 * 1000; // 25K < 32K
   static const int avatarBestSize = avatarMaxSize ~/ 2; // 12K
-  static const int piecesBestMaxSize = piecesMaxSize ~/ 4; // <= 500K
+  static const int piecesBestMaxSize = piecesMaxSize ~/ 3; // <= 533K
 
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
