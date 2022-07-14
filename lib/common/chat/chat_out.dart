@@ -43,11 +43,10 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
       return null;
     }
-    // TODO:GG avatar pieces
-    // if (data.length >= msgMaxSize) {
-    //   logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
-    //   return null;
-    // }
+    if (data.length >= MessageSchema.msgMaxSize) {
+      logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
+      return null;
+    }
     if (tryTimes >= maxTryTimes) {
       logger.w("$TAG - sendData - try over - destList:$destList - data:$data");
       return null;
@@ -567,6 +566,7 @@ class ChatOutCommon with Tag {
     int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
     int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
     notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
+    notification = false; // FIXED: notification duplicated
     message = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
     return message;
   }
