@@ -36,7 +36,7 @@ Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) as
   try {
     String keystore = await walletCommon.getKeystore(walletAddress);
     List<String> seedRpcList = await Global.getRpcServers(walletAddress, measure: true);
-    // TODO:GG error catch
+    // TODO:GG error catch?
     Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
     if (nknWallet.publicKey.isEmpty) return null;
     return hexEncode(nknWallet.publicKey);
@@ -105,7 +105,7 @@ class ClientCommon with Tag {
     });
     onErrorStream.listen((dynamic event) {
       handleError(event);
-      connectCheck(reconnect: true);
+      reSignIn(false);
     });
     clientClosing = false;
     clientResigning = false;
@@ -175,7 +175,7 @@ class ClientCommon with Tag {
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
         seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
-        // TODO:GG error catch
+        // TODO:GG error catch?
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
