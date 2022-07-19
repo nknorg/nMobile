@@ -45,7 +45,7 @@ class ChatCommon with Tag {
   ChatCommon();
 
   void clear() {
-    currentChatTargetId = null;
+    //currentChatTargetId = null;
     checkNoAckTimers.clear();
     checkLockMap.clear();
     checkSendingWithFail(force: true); // await
