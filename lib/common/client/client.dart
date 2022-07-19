@@ -36,6 +36,7 @@ Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) as
   try {
     String keystore = await walletCommon.getKeystore(walletAddress);
     List<String> seedRpcList = await Global.getRpcServers(walletAddress, measure: true);
+    // TODO:GG error catch
     Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
     if (nknWallet.publicKey.isEmpty) return null;
     return hexEncode(nknWallet.publicKey);
@@ -141,6 +142,7 @@ class ClientCommon with Tag {
     String? pubKey = wallet.publicKey;
     String? seed = await walletCommon.getSeed(wallet.address);
 
+    List<String>? seedRpcList;
     try {
       // password get
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
@@ -170,10 +172,10 @@ class ClientCommon with Tag {
       }
 
       // rpc wallet
-      List<String>? seedRpcList;
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
         seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
+        // TODO:GG error catch
         Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
@@ -200,7 +202,22 @@ class ClientCommon with Tag {
         ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
         contactCommon.meUpdateSink.add(me);
       }
+    } catch (e) {
+      // password/keystore
+      if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
+        if (!fetchRemote) {
+          logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
+          return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
+        }
+        handleError(e);
+        _statusSink.add(ClientConnectStatus.disconnected);
+        return {"client": null, "pwd_error": true};
+      }
+      await Future.delayed(Duration(seconds: 1));
+      return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
+    }
 
+    try {
       // client create
       if (client == null) {
         chatCommon.clear();
@@ -243,22 +260,12 @@ class ClientCommon with Tag {
       return {"client": client, "pwd_error": false};
     } catch (e) {
       loadingVisible?.call(false, tryTimes);
-      // password/keystore
-      if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
-        if (!fetchRemote) {
-          logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
-          return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
-        }
-        handleError(e);
-        _statusSink.add(ClientConnectStatus.disconnected);
-        return {"client": null, "pwd_error": true};
-      }
       // toast
       if ((tryTimes != 0) && (tryTimes % 10 == 0)) handleError(e);
       await Future.delayed(Duration(seconds: tryTimes >= 3 ? 3 : tryTimes));
       // loop login
       await _signOut(clearWallet: false, closeDB: false);
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 500));
       return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryTimes: ++tryTimes);
     }
   }
@@ -282,7 +289,7 @@ class ClientCommon with Tag {
       await client?.close();
     } catch (e) {
       handleError(e);
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 200));
       clientClosing = false;
       return _signOut(clearWallet: clearWallet, closeDB: closeDB);
     }
@@ -311,7 +318,7 @@ class ClientCommon with Tag {
       await signOut(clearWallet: false, closeDB: false);
     }
 
-    await Future.delayed(Duration(milliseconds: 100));
+    await Future.delayed(Duration(milliseconds: 200));
     _statusSink.add(ClientConnectStatus.connecting);
 
     // client
@@ -361,7 +368,7 @@ class ClientCommon with Tag {
         return;
       }
       await _signOut(clearWallet: false, closeDB: false);
-      await Future.delayed(Duration(milliseconds: 100));
+      await Future.delayed(Duration(milliseconds: 200));
       String? walletPwd = await walletCommon.getPassword(wallet.address);
       await _signIn(wallet, fetchRemote: true, password: walletPwd);
     }
