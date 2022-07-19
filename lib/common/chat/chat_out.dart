@@ -82,7 +82,18 @@ class ChatOutCommon with Tag {
         return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
     } catch (e) {
-      if (e.toString().contains("write: broken pipe") || e.toString().contains("use of closed network connection")) {
+      String errStr = e.toString().toLowerCase();
+      if (errStr.contains(NknError.invalidDestination)) {
+        logger.w("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
+        return null;
+      } else if (errStr.contains(NknError.messageOversize)) {
+        logger.w("$TAG - _clientSendData - message over size - destList:$destList");
+        return null;
+      }
+      bool isClientError = NknError.isClientError(e);
+      bool isLastTryTime = (maxTryTimes - tryTimes) <= 2;
+      if (isClientError || isLastTryTime) {
+        if ((maxTryTimes - tryTimes) <= 1) handleError(e);
         if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
           await Future.delayed(Duration(milliseconds: 1000));
           return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
@@ -98,11 +109,7 @@ class ChatOutCommon with Tag {
             return null;
           }
         }
-      } else if (e.toString().contains("invalid destination")) {
-        logger.w("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
-        return null;
       } else {
-        handleError(e);
         logger.w("$TAG - _clientSendData - try by error - tryTimes:$tryTimes - destList:$destList - data:$data");
         await Future.delayed(Duration(milliseconds: 100));
         return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
