@@ -732,7 +732,6 @@ class ChatCommon with Tag {
     _onUpdateSink.add(message);
     _onIpfsUpOrDownload(message.msgId, "FILE", false, true); // await
     // ipfs
-
     ipfsHelper.downloadFile(
       message.msgId,
       ipfsHash,

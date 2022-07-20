@@ -19,6 +19,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/helpers/audio.dart';
+import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
@@ -34,6 +35,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/time.dart';
+import 'package:nmobile/utils/path.dart' as Path2;
 import 'package:synchronized/synchronized.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
@@ -650,16 +652,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       return null;
                     }
                     int size = await content.length();
-                    logger.w("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
-                    if (size > MessageSchema.piecesMaxSize) {
-                      Toast.show(Global.locale((s) => s.file_too_big));
-                      if (await content.exists()) {
-                        await content.delete();
-                      }
-                      await audioHelper.recordStop();
-                      return null;
+                    logger.d("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+                    if (size <= MessageSchema.piecesBestMaxSize) {
+                      return chatOutCommon.sendAudio(_topic ?? _contact, content, durationMs / 1000); // await
+                    } else {
+                      return chatOutCommon.saveIpfs(_topic ?? _contact, {
+                        "path": savePath,
+                        "size": size,
+                        "name": "",
+                        "fileExt": Path2.Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
+                        "mimeType": "audio",
+                        "duration": durationMs / 1000,
+                      }); // await
                     }
-                    return await chatOutCommon.sendAudio(_topic ?? _contact, content, durationMs / 1000);
                   }
                 },
                 onRecordLock: (bool visible, bool lock) {
@@ -691,7 +696,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           // so big_file and video+file go with type_ipfs
                           if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesBestMaxSize)) {
                             chatOutCommon.sendImage(_topic ?? _contact, File(path)); // await
-                          } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesMaxSize)) {
+                          } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesBestMaxSize)) {
                             chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS); // await
                           } else {
                             chatOutCommon.saveIpfs(_topic ?? _contact, result); // await

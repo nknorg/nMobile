@@ -84,7 +84,7 @@ class MessageSchema {
   static const int ipfsMaxSize = 100 * 1000 * 1000; // 100M
   static const int avatarMaxSize = 25 * 1000; // 25K < 32K
   static const int avatarBestSize = avatarMaxSize ~/ 2; // 12K
-  static const int piecesBestMaxSize = piecesMaxSize ~/ 3; // <= 533K
+  static const int piecesBestMaxSize = piecesMaxSize ~/ 8; // <= 200K
 
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
@@ -403,6 +403,7 @@ class MessageSchema {
     // SUPPORT:START
     double? audioDurationS = extra?["audioDurationS"];
     if (audioDurationS != null && audioDurationS >= 0) {
+      this.options = MessageOptions.setMediaDuration(this.options, audioDurationS);
       this.options = MessageOptions.setAudioDuration(this.options, audioDurationS);
     }
     // SUPPORT:END
