@@ -11,6 +11,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
@@ -287,6 +288,7 @@ class MessageSchema {
       schema.options?[MessageOptions.KEY_PIECE_PARITY] = data['parity'];
       schema.options?[MessageOptions.KEY_PIECE_INDEX] = data['index'];
     }
+    schema.options?.remove("piece");
     // SUPPORT:END
     return schema;
   }
@@ -570,7 +572,7 @@ class MessageSchema {
     };
   }
 
-  static Future<String?> piecesCombine(List<MessageSchema> pieces, int total, int parity, int bytesLength) async {
+  static Future<String?> combinePiecesData(List<MessageSchema> pieces, int total, int parity, int bytesLength) async {
     List<Uint8List> recoverList = <Uint8List>[];
     for (int i = 0; i < (total + parity); i++) {
       recoverList.add(Uint8List(0)); // fill
@@ -580,7 +582,7 @@ class MessageSchema {
       MessageSchema item = pieces[i];
       File? file = item.content as File?;
       if (file == null || !file.existsSync()) {
-        // logger.e("$TAG - receivePiece - COMBINE:ERROR - file no exists - item:$item - file:${file?.path}");
+        logger.w("Message - combinePiecesData - combine sub_file no exists - item:$item - file:${file?.path}");
         continue;
       }
       Uint8List itemBytes = file.readAsBytesSync();
@@ -591,14 +593,18 @@ class MessageSchema {
       }
     }
     if (recoverCount < total) {
-      // logger.w("$TAG - receivePiece - COMBINE:FAIL - recover_lost:${pieces.length - recoverCount}");
+      logger.w("Message - combinePiecesData - combine fail - recover_lost:${pieces.length - recoverCount}");
       return null;
     }
     return Common.combinePieces(recoverList, total, parity, bytesLength);
   }
 
   static MessageSchema? combinePiecesMsg(List<MessageSchema> sortPieces, String base64String) {
-    List<MessageSchema> finds = sortPieces.where((element) => element.pid != null).toList();
+    List<MessageSchema> finds = sortPieces.where((element) {
+      bool pid = element.pid != null;
+      bool contentType = (element.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]?.toString() ?? "").isNotEmpty;
+      return pid && contentType;
+    }).toList();
     if (finds.isEmpty) return null;
     MessageSchema piece = finds[0];
 
@@ -640,6 +646,7 @@ class MessageSchema {
     schema.options?.remove(MessageOptions.KEY_PIECE_TOTAL);
     schema.options?.remove(MessageOptions.KEY_PIECE_PARITY);
     schema.options?.remove(MessageOptions.KEY_PIECE_INDEX);
+    schema.options?.remove("piece");
     return schema;
   }
 
