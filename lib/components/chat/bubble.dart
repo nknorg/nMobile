@@ -349,7 +349,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     if (isSendFail) {
       return ButtonIcon(
         icon: Icon(
-          FontAwesomeIcons.exclamationCircle,
+          FontAwesomeIcons.circleExclamation,
           size: 20,
           color: application.theme.fallColor,
         ),
@@ -615,7 +615,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         ),
       );
     } else if (isSendSuccess) {
-      return Icon(FontAwesomeIcons.checkCircle, size: iconSize, color: color);
+      return Icon(FontAwesomeIcons.circleCheck, size: iconSize, color: color);
     } else if (isSendReceipt || isSendRead) {
       return Container(
         child: Stack(
@@ -625,7 +625,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               right: iconSize / 2 + borderSize,
               top: borderSize,
               child: Icon(
-                isSendReceipt ? FontAwesomeIcons.checkCircle : FontAwesomeIcons.solidCheckCircle,
+                isSendReceipt ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.solidCircleCheck,
                 size: iconSize,
                 color: color,
               ),
@@ -640,7 +640,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     borderRadius: BorderRadius.all(Radius.circular(iconSize)),
                   ),
                   child: Icon(
-                    isSendReceipt ? FontAwesomeIcons.checkCircle : FontAwesomeIcons.solidCheckCircle,
+                    isSendReceipt ? FontAwesomeIcons.circleCheck : FontAwesomeIcons.solidCircleCheck,
                     size: iconSize,
                     color: color,
                   ),
@@ -892,12 +892,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         children: [
           isPlaying
               ? Icon(
-                  FontAwesomeIcons.pauseCircle,
+                  FontAwesomeIcons.circlePause,
                   size: 25,
                   color: iconColor,
                 )
               : Icon(
-                  FontAwesomeIcons.playCircle,
+                  FontAwesomeIcons.circlePlay,
                   size: 25,
                   color: iconColor,
                 ),
