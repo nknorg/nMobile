@@ -694,11 +694,11 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receivePiece(MessageSchema received) async {
-    String? parentType = received.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_PARENT_TYPE];
-    int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
-    int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
-    int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
-    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? received.options?["piece"]?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
+    String? parentType = received.options?[MessageOptions.KEY_PIECE_PARENT_TYPE];
+    int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
+    int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
+    int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
+    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
     // combined duplicated
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByIdContentType(received.msgId, parentType, 1);
     if (existsCombine.isNotEmpty) {
@@ -710,7 +710,7 @@ class ChatInCommon with Tag {
     List<MessageSchema> pieces = await MessageStorage.instance.queryListByIdContentType(received.msgId, MessageContentType.piece, total + parity);
     MessageSchema? piece;
     for (var i = 0; i < pieces.length; i++) {
-      int? insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX] ?? pieces[i].options?["piece"]?[MessageOptions.KEY_PIECE_INDEX];
+      int? insertIndex = pieces[i].options?[MessageOptions.KEY_PIECE_INDEX];
       if (insertIndex == index) {
         piece = pieces[i];
         break;
@@ -734,7 +734,7 @@ class ChatInCommon with Tag {
     logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // combine
-    String? base64String = await MessageSchema.piecesCombine(pieces, total, parity, bytesLength);
+    String? base64String = await MessageSchema.combinePiecesData(pieces, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
         logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");
