@@ -71,11 +71,11 @@ class MessageContentType {
 
 class MessageSchema {
   // piece
-  static const int piecesPreMinLen = 4 * 1000; // >= 4K
+  static const int piecesPreMinLen = 10 * 1000; // >= 5K
   static const int piecesPreMaxLen = 20 * 1000; // <= 20K < 32K
-  static const int piecesMinParity = (6 ~/ 6); // >= 1
-  static const int piecesMinTotal = 6 - piecesMinParity; // >= 5 ((4*5)K < 32K)
-  static const int piecesMaxParity = (12 ~/ 6); // <= 2
+  static const int piecesMinParity = 1; // >= 1
+  static const int piecesMinTotal = 3 - piecesMinParity; // >= 2 ((2*10)K < 32K)
+  static const int piecesMaxParity = 2; // <= 2
   static const int piecesMaxTotal = 12 - piecesMaxParity; // <= 10
   static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 200K
 
