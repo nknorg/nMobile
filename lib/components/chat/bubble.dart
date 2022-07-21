@@ -175,7 +175,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   void dispose() {
-    // taskService.removeTask1("${TaskService.KEY_MSG_BURNING}:${_message.msgId}");
     _contactUpdateStreamSubscription?.cancel();
     _onPlayProgressSubscription?.cancel();
     _onProgressStreamSubscription?.cancel();
