@@ -65,7 +65,7 @@ class ChatBottomMenu extends StatelessWidget {
             results[i]["thumbnailPath"] = res["path"];
             results[i]["thumbnailSize"] = res["size"];
           }
-        } else if ((mimeType.contains("image") == true) && ((size ?? 0) > MessageSchema.piecesBestMaxSize)) {
+        } else if ((mimeType.contains("image") == true) && ((size ?? 0) > MessageSchema.piecesMaxSize)) {
           String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
           File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
           if (thumbnail != null) {
@@ -142,7 +142,7 @@ class ChatBottomMenu extends StatelessWidget {
             map["thumbnailPath"] = res["path"];
             map["thumbnailSize"] = res["size"];
           }
-        } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesBestMaxSize)) {
+        } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesMaxSize)) {
           String thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
           File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
           if (thumbnail != null) {
