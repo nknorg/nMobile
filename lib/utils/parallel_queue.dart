@@ -1,7 +1,7 @@
 import 'dart:async';
 
 class _QueuedFuture<T> {
-  final String id;
+  final String? id;
   final Future<T?> Function() func;
   final Completer completer;
   final Duration? timeout;
@@ -34,23 +34,26 @@ class _QueuedFuture<T> {
 }
 
 class ParallelQueue {
+  final List<String> _delays = [];
   final List<_QueuedFuture> _queues = [];
   final List<Completer<void>> _completeListeners = [];
 
   final String tag;
-  final Function(String)? onLog;
+  final Function(String, bool)? onLog;
 
   int parallel;
   int _lastProcessId = 0;
   Set<int> activeItems = {};
 
-  final Duration? delay;
+  final Duration? interval;
   final Duration? timeout;
 
   bool _isCancelled = false;
   bool get isCancelled => _isCancelled;
 
-  ParallelQueue(this.tag, {this.parallel = 1, this.delay, this.timeout, this.onLog});
+  ParallelQueue(this.tag, {this.parallel = 1, this.interval, this.timeout, this.onLog});
+
+  int get length => _delays.length + _queues.length;
 
   Future get onComplete {
     final completer = Completer();
@@ -63,28 +66,47 @@ class ParallelQueue {
     _queues.removeWhere((item) => item.completer.isCompleted);
   }
 
-  Future<T?>? add<T>(String id, Future<T?> Function() closure, {bool priority = false}) {
+  Future<T?> add<T>(Future<T?> Function() func, {String? id, Duration? delay, bool priority = false}) async {
     if (isCancelled) {
-      this.onLog?.call("ParallelQueue - add - isCancelled - tag:$tag");
+      this.onLog?.call("ParallelQueue - add - isCancelled - tag:$tag", true);
       return null;
     }
+    if (id != null && id.isNotEmpty && delay != null) {
+      _delays.add(id);
+      await Future.delayed(delay);
+      if (_delays.contains(id)) {
+        _delays.remove(id);
+      } else {
+        return null;
+      }
+    }
     final completer = Completer<T?>();
-    final item = _QueuedFuture<T>(id, closure, completer, timeout: timeout);
+    final item = _QueuedFuture<T>(id, func, completer, timeout: timeout);
     if (priority) {
       _queues.insert(0, item);
     } else {
       _queues.add(item);
     }
     unawaited(_process());
-    return completer.future;
+    return await completer.future;
   }
 
-  bool delete(String id) {
+  bool deleteDelays(String id) {
+    bool deleted = false;
+    _delays.removeWhere((element) {
+      deleted = (element == id) || deleted;
+      return deleted;
+    });
+    return deleted;
+  }
+
+  bool contains(String id) {
     bool find = false;
-    _queues.removeWhere((element) {
-      bool isOK = element.id == id;
-      find = isOK || find;
-      return isOK;
+    _delays.forEach((element) {
+      find = (element == id) || find;
+    });
+    _queues.forEach((element) {
+      find = (element.id == id) || find;
     });
     return find;
   }
@@ -97,7 +119,7 @@ class ParallelQueue {
 
   void _onQueueNext() {
     if (isCancelled) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - isCancelled - tag:$tag");
+      this.onLog?.call("ParallelQueue - _onQueueNext - isCancelled - tag:$tag", true);
     } else if (_queues.isNotEmpty && activeItems.length <= parallel) {
       final processId = _lastProcessId;
       activeItems.add(processId);
@@ -105,13 +127,14 @@ class ParallelQueue {
       _lastProcessId++;
       _queues.remove(item);
       item.onComplete = () async {
-        this.onLog?.call("ParallelQueue - _onQueueNext - complete - tag:$tag - id:${item.id}");
+        this.onLog?.call("ParallelQueue - _onQueueNext - complete - tag:$tag - id:${item.id}", false);
         activeItems.remove(processId);
-        if (delay != null) await Future.delayed(delay!);
+        if (interval != null) await Future.delayed(interval!);
         _onQueueNext();
       };
       unawaited(item.execute());
     } else if (activeItems.isEmpty && _queues.isEmpty) {
+      this.onLog?.call("ParallelQueue - _onQueueNext - complete all - tag:$tag", false);
       for (final completer in _completeListeners) {
         if (completer.isCompleted != true) {
           completer.complete();
