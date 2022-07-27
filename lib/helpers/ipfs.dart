@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/native/crypto.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 
 class IpfsHelper with Tag {
   static List<String> _writeableGateway = [
@@ -43,6 +44,8 @@ class IpfsHelper with Tag {
   static const String KEY_ENCRYPT_NONCE_SIZE = "encryptNonceSize";
 
   Dio _dio = Dio();
+  ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", parallel: 2, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", parallel: 2, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   IpfsHelper(bool log) {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m
@@ -124,24 +127,27 @@ class IpfsHelper with Tag {
     String? ipAddress;
 
     // http
-    _uploadFile(
-      id,
-      filePath,
-      fileLen,
-      ipAddress: ipAddress,
-      onProgress: (msgId, total, count) {
-        double percent = total > 0 ? (count / total) : -1;
-        onProgress?.call(msgId, percent);
-      },
-      onSuccess: (msgId, result) {
-        if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(cryptParams ?? Map()));
-        onSuccess?.call(msgId, result);
-        if (encrypt) File(filePath).delete(); // await
-      },
-      onError: (msgId) {
-        onError?.call(msgId);
-        if (encrypt) File(filePath).delete(); // await
-      },
+    _uploadQueue.add(
+      () => _uploadFile(
+        id,
+        filePath,
+        fileLen,
+        ipAddress: ipAddress,
+        onProgress: (msgId, total, count) {
+          double percent = total > 0 ? (count / total) : -1;
+          onProgress?.call(msgId, percent);
+        },
+        onSuccess: (msgId, result) {
+          if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(cryptParams ?? Map()));
+          onSuccess?.call(msgId, result);
+          if (encrypt) File(filePath).delete(); // await
+        },
+        onError: (msgId) {
+          onError?.call(msgId);
+          if (encrypt) File(filePath).delete(); // await
+        },
+      ),
+      id: id,
     );
   }
 
@@ -166,49 +172,52 @@ class IpfsHelper with Tag {
     ipAddress = null;
 
     // http
-    _downloadFile(
-      id,
-      ipfsHash,
-      ipfsLength,
-      ipAddress: ipAddress,
-      onProgress: (msgId, total, count) {
-        double percent = total > 0 ? (count / total) : -1;
-        onProgress?.call(msgId, percent);
-      },
-      onSuccess: (msgId, data, result) async {
-        // decrypt
-        List<int>? finalData;
-        if (decrypt && decryptParams != null) {
-          finalData = await _decrypt(
-            data,
-            decryptParams[KEY_ENCRYPT_ALGORITHM],
-            decryptParams[KEY_ENCRYPT_KEY_BYTES],
-            decryptParams[KEY_ENCRYPT_NONCE_SIZE],
-          );
-        } else {
-          finalData = data;
-        }
-        // save
-        if (finalData == null || finalData.isEmpty) {
-          onError?.call("decrypt fail");
-        } else {
-          try {
-            File file = File(savePath);
-            if (!file.existsSync()) {
-              await file.create(recursive: true);
-            } else {
-              await file.delete();
-              await file.create(recursive: true);
-            }
-            await file.writeAsBytes(finalData, flush: true);
-            onSuccess?.call(msgId, result);
-          } catch (e) {
-            handleError(e);
-            onError?.call("save file fail");
+    _downloadQueue.add(
+      () => _downloadFile(
+        id,
+        ipfsHash,
+        ipfsLength,
+        ipAddress: ipAddress,
+        onProgress: (msgId, total, count) {
+          double percent = total > 0 ? (count / total) : -1;
+          onProgress?.call(msgId, percent);
+        },
+        onSuccess: (msgId, data, result) async {
+          // decrypt
+          List<int>? finalData;
+          if (decrypt && decryptParams != null) {
+            finalData = await _decrypt(
+              data,
+              decryptParams[KEY_ENCRYPT_ALGORITHM],
+              decryptParams[KEY_ENCRYPT_KEY_BYTES],
+              decryptParams[KEY_ENCRYPT_NONCE_SIZE],
+            );
+          } else {
+            finalData = data;
           }
-        }
-      },
-      onError: (msgId) => onError?.call(msgId),
+          // save
+          if (finalData == null || finalData.isEmpty) {
+            onError?.call("decrypt fail");
+          } else {
+            try {
+              File file = File(savePath);
+              if (!file.existsSync()) {
+                await file.create(recursive: true);
+              } else {
+                await file.delete();
+                await file.create(recursive: true);
+              }
+              await file.writeAsBytes(finalData, flush: true);
+              onSuccess?.call(msgId, result);
+            } catch (e) {
+              handleError(e);
+              onError?.call("save file fail");
+            }
+          }
+        },
+        onError: (msgId) => onError?.call(msgId),
+      ),
+      id: id,
     );
   }
 
