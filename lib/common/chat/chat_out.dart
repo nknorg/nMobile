@@ -19,8 +19,8 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -29,9 +29,9 @@ class ChatOutCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
-  // lock
-  Lock sendLock = Lock(); // TODO:GG change to queue
-  Lock resendLock = Lock(); // TODO:GG change to queue
+  // queue
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   ChatOutCommon();
 
@@ -56,9 +56,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(seconds: 2));
       return sendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
     }
-    return await sendLock.synchronized(() {
-      return _clientSendData(selfAddress, destList, data);
-    });
+    return await _sendQueue.add(() => _clientSendData(selfAddress, destList, data));
   }
 
   Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 5}) async {
@@ -503,7 +501,7 @@ class ChatOutCommon with Tag {
     await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
     message.sendAt = DateTime.now().millisecondsSinceEpoch;
     // send
-    return resendLock.synchronized(() async {
+    Function func = () async {
       if (message == null) return null;
       if (message.contentType == MessageContentType.ipfs) {
         if (MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes) {
@@ -527,55 +525,51 @@ class ChatOutCommon with Tag {
           break;
       }
       return await _send(message, msgData, insert: false);
-    });
+    };
+    return await _resendQueue.add(() => func(), id: message.msgId);
   }
 
-  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) {
-    return resendLock.synchronized(() {
-      return resendMuteNoLock(message, notification: notification);
-    });
-  }
-
-  Future<MessageSchema?> resendMuteNoLock(MessageSchema? message, {bool? notification}) async {
+  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) async {
     if (message == null) return null;
-    // msgData
-    String? msgData;
-    switch (message.contentType) {
-      case MessageContentType.text:
-      case MessageContentType.textExtension:
-        msgData = MessageData.getText(message);
-        logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
-        break;
-      case MessageContentType.ipfs:
-        msgData = MessageData.getIpfs(message);
-        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
-        break;
-      case MessageContentType.media:
-      case MessageContentType.image:
-        msgData = await MessageData.getImage(message);
-        logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
-        break;
-      case MessageContentType.audio:
-        msgData = await MessageData.getAudio(message);
-        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
-        break;
-      case MessageContentType.topicInvitation:
-        msgData = MessageData.getTopicInvitee(message);
-        logger.i("$TAG - resendMute - resend invitee - targetId:${message.targetId} - msgData:$msgData");
-        break;
-      default:
-        logger.w("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
-        int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-        message = await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
-        return message;
-    }
-    // send
-    int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
-    int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-    notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
-    notification = false; // FIXED: notification duplicated
-    message = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
-    return message;
+    Function func = () async {
+      // msgData
+      String? msgData;
+      switch (message.contentType) {
+        case MessageContentType.text:
+        case MessageContentType.textExtension:
+          msgData = MessageData.getText(message);
+          logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        case MessageContentType.ipfs:
+          msgData = MessageData.getIpfs(message);
+          logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        case MessageContentType.media:
+        case MessageContentType.image:
+          msgData = await MessageData.getImage(message);
+          logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        case MessageContentType.audio:
+          msgData = await MessageData.getAudio(message);
+          logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        case MessageContentType.topicInvitation:
+          msgData = MessageData.getTopicInvitee(message);
+          logger.i("$TAG - resendMute - resend invitee - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        default:
+          logger.w("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
+          int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+          return await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
+      }
+      // send
+      int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
+      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+      notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
+      notification = false; // FIXED: notification duplicated
+      return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
+    };
+    return await _resendQueue.add(() => func(), id: message.msgId);
   }
 
   Future<MessageSchema?> _insertMessage(MessageSchema? message, {bool notify = true}) async {

@@ -34,9 +34,9 @@ import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/path.dart' as Path2;
-import 'package:synchronized/synchronized.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -88,7 +88,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
-  Lock _fetchMsgLock = Lock(); // TODO:GG change to queue
+  ParallelQueue _fetchMsgQueue = ParallelQueue("messages_fetch", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
   int _pageLimit = 30;
   List<MessageSchema> _messages = <MessageSchema>[];
 
@@ -271,7 +271,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _getDataMessages(bool refresh) async {
-    await _fetchMsgLock.synchronized(() async {
+    Function func = () async {
       int _offset = 0;
       if (refresh) {
         _messages = [];
@@ -281,7 +281,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       var messages = await chatCommon.queryMessagesByTargetIdVisible(this.targetId, _topic?.topic, offset: _offset, limit: _pageLimit);
       _messages = _messages + messages;
       setState(() {});
-    });
+    };
+    await _fetchMsgQueue.add(() => func());
   }
 
   _insertMessage(MessageSchema? added) {
