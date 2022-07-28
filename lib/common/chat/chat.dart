@@ -81,7 +81,7 @@ class ChatCommon with Tag {
     }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 10}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
 
@@ -113,7 +113,7 @@ class ChatCommon with Tag {
     checkList = checkList.where((element) {
       int msgSendAt = MessageOptions.getOutAt(element.options) ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      int filter = element.isContentFile ? (filterSec + 5) : filterSec;
+      int filter = element.isContentFile ? (filterSec + 10) : filterSec;
       if (between < (filter * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;

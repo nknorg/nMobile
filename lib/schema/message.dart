@@ -658,6 +658,7 @@ class MessageSchema {
 class MessageOptions {
   static const KEY_OUT_AT = "out_at"; // TODO:GG rename to 'outAt'
   static const KEY_IN_AT = "in_at"; // TODO:GG rename to 'inAt'
+  static const KEY_RESEND_MUTE_AT = "resendMuteAt";
 
   static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_PROFILE_VERSION = "profileVersion";
@@ -739,6 +740,17 @@ class MessageOptions {
   static int? getInAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return int.tryParse(options[MessageOptions.KEY_IN_AT]?.toString() ?? "");
+  }
+
+  static Map<String, dynamic>? setResendMuteAt(Map<String, dynamic>? options, int resendAt) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_RESEND_MUTE_AT] = resendAt;
+    return options;
+  }
+
+  static int? getResendMuteAt(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return int.tryParse(options[MessageOptions.KEY_RESEND_MUTE_AT]?.toString() ?? "");
   }
 
   static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
