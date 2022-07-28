@@ -630,7 +630,7 @@ class TopicCommon with Tag {
         if (isReject == true || isAccept != true) {
           if (tryTimes >= maxTryTimes) {
             // (Global.txPoolDelayMs / (5 * 1000))
-            logger.e("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
+            logger.w("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
             return null;
           }
           logger.w("$TAG - onSubscribe - subscriber permission is not ok (maybe in txPool) - tryTimes:$tryTimes - topic:$_topic - clientAddress:$clientAddress - permission:$permission");

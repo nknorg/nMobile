@@ -60,12 +60,12 @@ class ChatCommon with Tag {
     int? delay = _checkersParams[targetId]?["delay"];
     if (refresh || (delay == null) || (delay == 0)) {
       _checkersParams[targetId]?["delay"] = initDelay;
-      logger.d("$TAG - checkMsgStatus - delay init - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+      logger.v("$TAG - checkMsgStatus - delay init - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
     } else if (!_checkQueue.contains(targetId)) {
       _checkersParams[targetId]?["delay"] = ((delay * 2) >= maxDelay) ? maxDelay : (delay * 2);
-      logger.d("$TAG - checkMsgStatus - delay * 2 - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+      logger.v("$TAG - checkMsgStatus - delay * 2 - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
     } else {
-      logger.d("$TAG - checkMsgStatus - delay same - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+      logger.v("$TAG - checkMsgStatus - delay same - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
     }
     // queue
     if (_checkQueue.contains(targetId)) {
@@ -141,8 +141,6 @@ class ChatCommon with Tag {
       });
       chatOutCommon.sendMsgStatus(targetId, true, msgIds); // await
     }
-
-    logger.i("$TAG - _checkMsgStatus - checkCount:${checkList.length} - targetId:$targetId - isTopic:$isTopic");
     return checkList.length;
   }
 
@@ -372,7 +370,7 @@ class ChatCommon with Tag {
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-    logger.i("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt}");
+    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt}");
     MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
       if (success && notify) _onUpdateSink.add(message);
       // if (success && tick) burningTick(message);
@@ -394,10 +392,10 @@ class ChatCommon with Tag {
           return;
         }
         if (message.deleteAt == null || (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
-          // logger.d("$TAG - burningTick - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
+          // logger.v("$TAG - burningTick - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
           onTick?.call();
         } else {
-          logger.i("$TAG - burningTick - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+          logger.v("$TAG - burningTick - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
           // onTick?.call();
           chatCommon.messageDelete(message, notify: true); // await
           taskService.removeTask1(key);
@@ -441,7 +439,7 @@ class ChatCommon with Tag {
       (message.content as File).exists().then((exist) {
         if (exist) {
           (message.content as File).delete(); // await
-          logger.v("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
+          logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
         } else {
           logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
         }
@@ -453,7 +451,7 @@ class ChatCommon with Tag {
       File(mediaThumbnail).exists().then((exist) {
         if (exist) {
           File(mediaThumbnail).delete(); // await
-          logger.v("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
+          logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
         } else {
           logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
         }
@@ -560,7 +558,7 @@ class ChatCommon with Tag {
         }
       }
       if (isFail) {
-        logger.i("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
+        logger.d("$TAG - checkSending - sendFail add - targetId:${message.targetId} - message:$message");
         if (message.canResend) {
           await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
         } else {
@@ -605,12 +603,12 @@ class ChatCommon with Tag {
     if (message == null) return null;
     // file
     if (!(message.content is File)) {
-      logger.w("$TAG - startIpfsUpload - content is no file - message:$message");
+      logger.e("$TAG - startIpfsUpload - content is no file - message:$message");
       return null;
     }
     File file = message.content as File;
     if (!file.existsSync()) {
-      logger.w("$TAG - startIpfsUpload - file is no exists - message:$message");
+      logger.e("$TAG - startIpfsUpload - file is no exists - message:$message");
       return null;
     }
     // state
@@ -704,7 +702,7 @@ class ChatCommon with Tag {
     String? ipfsHash = MessageOptions.getIpfsHash(message.options);
     int? ipfsSize = MessageOptions.getIpfsSize(message.options) ?? -1;
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.w("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
+      logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
       return null;
     }
     // path
@@ -751,7 +749,7 @@ class ChatCommon with Tag {
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     int? ipfsSize = MessageOptions.getIpfsThumbnailSize(message.options) ?? -1;
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.w("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
+      logger.e("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
       return null;
     }
     // path

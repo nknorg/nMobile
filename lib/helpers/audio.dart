@@ -97,7 +97,7 @@ class AudioHelper with Tag {
       _onPlayProgressSubscription?.cancel();
     }
     _onPlayProgressSubscription = player.onProgress?.listen((PlaybackDisposition event) async {
-      // logger.d("$TAG - playStart - onProgress - recordId:${this.playerId} - duration:${event.duration} - position:${event.position}");
+      // logger.v("$TAG - playStart - onProgress - recordId:${this.playerId} - duration:${event.duration} - position:${event.position}");
       onProgress?.call(event);
       int duration = event.duration.inMinutes * 60 * 1000 + event.duration.inSeconds * 1000 + event.duration.inMilliseconds;
       int position = event.position.inMinutes * 60 * 1000 + event.position.inSeconds * 1000 + event.position.inMilliseconds;
@@ -216,7 +216,7 @@ class AudioHelper with Tag {
       _onRecordProgressSubscription?.cancel();
     }
     _onRecordProgressSubscription = record.onProgress?.listen((RecordingDisposition event) async {
-      // logger.d("$TAG - recordStart - onProgress - recordId:${this.recordId} - duration:${event.duration} - volume:${event.decibels}");
+      // logger.v("$TAG - recordStart - onProgress - recordId:${this.recordId} - duration:${event.duration} - volume:${event.decibels}");
       onProgress?.call(event);
       _onRecordProgressSink.add({
         "id": this.recordId,

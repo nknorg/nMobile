@@ -107,7 +107,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           });
         }
       } else {
-        // logger.d("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
+        // logger.v("onPieceOutStream - percent:$percent - send_msgId:$msgId - receive_msgId:${this._message.msgId}");
         if (_upDownloadProgress != percent) {
           this.setState(() {
             _upDownloadProgress = percent;

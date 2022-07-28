@@ -1,14 +1,12 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/wallet.dart';
-import 'package:nmobile/utils/logger.dart';
 
-class WalletBloc extends Bloc<WalletEvent, WalletState> with Tag {
+class WalletBloc extends Bloc<WalletEvent, WalletState> {
   WalletStorage _walletStorage = WalletStorage();
 
   WalletBloc() : super(WalletLoading());
