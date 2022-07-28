@@ -34,9 +34,11 @@ class _QueuedFuture<T> {
 }
 
 class ParallelQueue {
-  final List<String> _delays = [];
   final List<_QueuedFuture> _queues = [];
   final List<Completer<void>> _completeListeners = [];
+
+  final List<String> _delays = [];
+  final List<String> _delaysDel = [];
 
   final String tag;
   final Function(String, bool)? onLog;
@@ -74,7 +76,10 @@ class ParallelQueue {
     if (id != null && id.isNotEmpty && delay != null) {
       _delays.add(id);
       await Future.delayed(delay);
-      if (_delays.contains(id)) {
+      if (_delaysDel.contains(id)) {
+        _delaysDel.remove(id);
+        return null;
+      } else if (_delays.contains(id)) {
         _delays.remove(id);
       } else {
         return null;
@@ -97,6 +102,7 @@ class ParallelQueue {
       deleted = (element == id) || deleted;
       return deleted;
     });
+    _delaysDel.add(id);
     return deleted;
   }
 
