@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
-
-import 'logger.dart';
 
 class Util {
   static void copyText(String? content, {bool toast = true}) {
@@ -20,7 +19,7 @@ class Util {
       final Uri _uri = Uri.parse(url);
       await UrlLauncher.launchUrl(_uri);
     } catch (e) {
-      logger.w("Util - launchUrl ---> $e");
+      logger.e("Util - launchUrl ---> $e");
     }
   }
 
@@ -31,10 +30,10 @@ class Util {
       if (await File(_uri.toFilePath()).exists()) {
         await UrlLauncher.launchUrl(_uri);
       } else {
-        logger.w("Util - launchFile ---> file not exist");
+        logger.e("Util - launchFile ---> file not exist");
       }
     } catch (e) {
-      logger.w("Util - launchFile ---> $e");
+      logger.e("Util - launchFile ---> $e");
     }
   }
 
@@ -43,7 +42,7 @@ class Util {
     try {
       jsonData = jsonDecode(raw);
     } on Exception catch (e) {
-      logger.w("Util - jsonFormat ---> $e");
+      logger.e("Util - jsonFormat ---> $e");
     }
     return jsonData;
   }

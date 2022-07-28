@@ -30,7 +30,7 @@ class SessionCommon with Tag {
     if (checkDuplicated) {
       SessionSchema? exist = await query(schema.targetId, schema.type);
       if (exist != null) {
-        logger.i("$TAG - add - duplicated - schema:$exist");
+        logger.d("$TAG - add - duplicated - schema:$exist");
         return null;
       }
     }

@@ -581,7 +581,7 @@ class MessageSchema {
       MessageSchema item = pieces[i];
       File? file = item.content as File?;
       if (file == null || !file.existsSync()) {
-        logger.w("Message - combinePiecesData - combine sub_file no exists - item:$item - file:${file?.path}");
+        logger.e("Message - combinePiecesData - combine sub_file no exists - item:$item - file:${file?.path}");
         continue;
       }
       Uint8List itemBytes = file.readAsBytesSync();
@@ -592,7 +592,7 @@ class MessageSchema {
       }
     }
     if (recoverCount < total) {
-      logger.w("Message - combinePiecesData - combine fail - recover_lost:${pieces.length - recoverCount}");
+      logger.e("Message - combinePiecesData - combine fail - recover_lost:${pieces.length - recoverCount}");
       return null;
     }
     return Common.combinePieces(recoverList, total, parity, bytesLength);

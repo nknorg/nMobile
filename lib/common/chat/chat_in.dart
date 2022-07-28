@@ -46,10 +46,10 @@ class ChatInCommon with Tag {
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
     if (message == null) {
-      logger.w("$TAG - onMessageReceive - message is null - received:$message");
+      logger.e("$TAG - onMessageReceive - message is null - received:$message");
       return;
     } else if (message.targetId.isEmpty) {
-      logger.w("$TAG - onMessageReceive - targetId is empty - received:$message");
+      logger.e("$TAG - onMessageReceive - targetId is empty - received:$message");
       return;
     }
 
@@ -115,7 +115,7 @@ class ChatInCommon with Tag {
 
   Future _loopReceiveMessage(String? targetId) async {
     if (targetId == null || targetId.isEmpty) {
-      logger.w("$TAG - loopReceiveMessage - targetId is empty");
+      logger.e("$TAG - loopReceiveMessage - targetId is empty");
       return;
     }
 
@@ -125,7 +125,7 @@ class ChatInCommon with Tag {
 
     // empty
     if ((receiveMessages[targetId] == null) || receiveMessages[targetId]!.isEmpty) {
-      logger.i("$TAG - loopReceiveMessage - receives is empty - targetId:$targetId");
+      logger.d("$TAG - loopReceiveMessage - receives is empty - targetId:$targetId");
       receiveLoops[targetId] = false;
       return;
     }
@@ -141,7 +141,7 @@ class ChatInCommon with Tag {
         handleError(e);
       }
     } else {
-      logger.w("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
+      logger.i("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
     }
     lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
 
@@ -149,7 +149,7 @@ class ChatInCommon with Tag {
     if ((receiveMessages[targetId]?.length ?? 0) > 0) {
       receiveMessages[targetId]?.removeAt(0);
     } else {
-      logger.w("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
+      logger.i("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
     }
 
     // unlock
@@ -276,7 +276,7 @@ class ChatInCommon with Tag {
       return true;
     }
     if ((received.content == null) || !(received.content! is String)) {
-      logger.w("$TAG - _receivePing - content error - received:$received");
+      logger.e("$TAG - _receivePing - content error - received:$received");
       return false;
     }
     String content = received.content as String;
@@ -289,7 +289,7 @@ class ChatInCommon with Tag {
         chatCommon.checkMsgStatus(received.targetId, false, refresh: true, filterSec: 5); // await
       }
     } else {
-      logger.w("$TAG - _receivePing - content content error - received:$received");
+      logger.e("$TAG - _receivePing - content content error - received:$received");
       return false;
     }
     return true;
@@ -344,7 +344,7 @@ class ChatInCommon with Tag {
     String targetId = received.from;
     List? readIds = (received.content as List?);
     if (targetId.isEmpty || readIds == null || readIds.isEmpty) {
-      logger.w("$TAG - _receiveRead - targetId or content type error - received:$received");
+      logger.e("$TAG - _receiveRead - targetId or content type error - received:$received");
       return false;
     }
 
@@ -380,7 +380,7 @@ class ChatInCommon with Tag {
     String? requestType = data['requestType']?.toString();
     List messageIds = data['messageIds'] ?? [];
     if (messageIds.isEmpty) {
-      logger.w("$TAG - _receiveMsgStatus - messageIds empty - requestType:$requestType - messageIds:$messageIds - received:$received");
+      logger.e("$TAG - _receiveMsgStatus - messageIds empty - requestType:$requestType - messageIds:$messageIds - received:$received");
       return false;
     }
 
@@ -407,13 +407,13 @@ class ChatInCommon with Tag {
       for (var i = 0; i < messageIds.length; i++) {
         String combineId = messageIds[i];
         if (combineId.isEmpty) {
-          logger.w("$TAG - _receiveMsgStatus - combineId is empty - received:$received");
+          logger.e("$TAG - _receiveMsgStatus - combineId is empty - received:$received");
           continue;
         }
         List<String> splits = combineId.split(":");
         String msgId = splits.length > 0 ? splits[0] : "";
         if (msgId.isEmpty) {
-          logger.w("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
+          logger.e("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
           continue;
         }
         MessageSchema? message = await MessageStorage.instance.queryByIdNoContentType(msgId, MessageContentType.piece);
@@ -435,7 +435,7 @@ class ChatInCommon with Tag {
         }
       }
     } else {
-      logger.w("$TAG - _receiveMsgStatus - requestType error - requestType:$requestType - messageIds:$messageIds - received:$received");
+      logger.e("$TAG - _receiveMsgStatus - requestType error - requestType:$requestType - messageIds:$messageIds - received:$received");
       return false;
     }
     return true;
@@ -448,7 +448,7 @@ class ChatInCommon with Tag {
     // duplicated
     ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
     if (exist == null) {
-      logger.w("$TAG - receiveContact - empty - data:$data");
+      logger.e("$TAG - receiveContact - contact is empty - data:$data");
       return false;
     }
     // D-Chat NO support piece
@@ -475,7 +475,7 @@ class ChatInCommon with Tag {
           chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
         } else {
           if (content == null) {
-            logger.w("$TAG - receiveContact - content is empty - data:$data");
+            logger.e("$TAG - receiveContact - content is empty - data:$data");
             return false;
           }
           String? firstName = content['first_name'] ?? content['name'];
@@ -530,14 +530,14 @@ class ChatInCommon with Tag {
     if (optionsType == '0') {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateAt = ((content['updateBurnAfterAt'] ?? content['updateBurnAfterTime']) as int?) ?? DateTime.now().millisecondsSinceEpoch;
-      logger.d("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
+      logger.i("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
       await contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true);
     } else if (optionsType == '1') {
       String? deviceToken = content['deviceToken']?.toString();
-      logger.d("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
+      logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
       await contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
     } else {
-      logger.w("$TAG - _receiveContactOptions - setNothing - data:$data");
+      logger.e("$TAG - _receiveContactOptions - setNothing - data:$data");
       return false;
     }
     // DB
@@ -579,14 +579,14 @@ class ChatInCommon with Tag {
         'platformVersion': data["platformVersion"],
       },
     );
-    logger.d("$TAG - _receiveDeviceInfo - addOrUpdate - message:$message - data:$data");
+    logger.i("$TAG - _receiveDeviceInfo - addOrUpdate - message:$message - data:$data");
     await deviceInfoCommon.set(message);
     return true;
   }
 
   Future<bool> _receiveText(MessageSchema received) async {
     if (received.content == null) {
-      logger.w("$TAG - receiveText - content null - message:$received");
+      logger.e("$TAG - receiveText - content null - message:$received");
       return false;
     }
     // duplicated
@@ -636,7 +636,7 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveImage(MessageSchema received) async {
     if (received.content == null) {
-      logger.w("$TAG - _receiveImage - content null - message:$received");
+      logger.e("$TAG - _receiveImage - content null - message:$received");
       return false;
     }
     // duplicated
@@ -650,7 +650,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.w("$TAG - receiveImage - content is null - message:$exists");
+      logger.e("$TAG - receiveImage - content is null - message:$exists");
       return false;
     }
     // DB
@@ -665,7 +665,7 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveAudio(MessageSchema received) async {
     if (received.content == null) {
-      logger.w("$TAG - _receiveAudio - content null - message:$received");
+      logger.e("$TAG - _receiveAudio - content null - message:$received");
       return false;
     }
     // duplicated
@@ -679,7 +679,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.w("$TAG - receiveAudio - content is null - message:$exists");
+      logger.e("$TAG - receiveAudio - content is null - message:$exists");
       return false;
     }
     // DB
@@ -820,13 +820,13 @@ class ChatInCommon with Tag {
         if (piece.content is File) {
           if ((piece.content as File).existsSync()) {
             (piece.content as File).delete(); // await
-            // logger.v("$TAG - receivePiece - DELETE:PROGRESS - path:${(element.content as File).path}");
+            // logger.v("$TAG - _deletePieces - DELETE:PROGRESS - path:${(piece.content as File).path}");
             count++;
           } else {
-            logger.e("$TAG - _deletePieces - DELETE:ERROR - NoExists - path:${(piece.content as File).path}");
+            logger.w("$TAG - _deletePieces - DELETE:ERROR - NoExists - path:${(piece.content as File).path}");
           }
         } else {
-          logger.e("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
+          logger.w("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
         }
       }
       logger.i("$TAG - _deletePieces - DELETE:SUCCESS - count:${pieces.length}");

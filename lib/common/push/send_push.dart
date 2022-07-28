@@ -48,10 +48,11 @@ class SendPush {
       },
     });
     bool ok = await Common.sendPushAPNS(deviceToken, payload);
-    if (ok)
-      logger.d("SendPush - sendAPNS - success - payload:$payload");
-    else
-      logger.w("SendPush - sendAPNS - fail - payload:$payload");
+    if (ok) {
+      logger.i("SendPush - sendAPNS - success - payload:$payload");
+    } else {
+      logger.e("SendPush - sendAPNS - fail - payload:$payload");
+    }
     return ok;
   }
 
@@ -102,7 +103,7 @@ class SendPush {
       );
       // response
       if (response.statusCode == 200) {
-        logger.d("SendPush - sendFCM - success - body:$body");
+        logger.i("SendPush - sendFCM - success - body:$body");
         return true;
       } else {
         logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:$body");

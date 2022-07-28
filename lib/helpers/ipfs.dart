@@ -272,7 +272,7 @@ class IpfsHelper with Tag {
     // response
     Map<String, dynamic>? results = response.data;
     if ((results == null) || (results.isEmpty)) {
-      logger.w("$TAG - uploadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
+      logger.e("$TAG - uploadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }
@@ -337,7 +337,7 @@ class IpfsHelper with Tag {
     // response
     Uint8List? responseData = response.data;
     if ((responseData == null) || (responseData.isEmpty)) {
-      logger.w("$TAG - _downloadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
+      logger.e("$TAG - _downloadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
       onError?.call("response is null");
       return null;
     }

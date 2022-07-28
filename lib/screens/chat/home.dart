@@ -228,7 +228,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         _toggleSessionListShow(false);
         await clientCommon.signOut(clearWallet: false, closeDB: true);
       } else {
-        logger.w("$TAG - _tryLogin - signIn - other error, should be not go here");
+        logger.e("$TAG - _tryLogin - signIn - other error, should be not go here");
         await clientCommon.signOut(clearWallet: false, closeDB: false);
       }
     } else {

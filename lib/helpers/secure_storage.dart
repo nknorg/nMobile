@@ -16,7 +16,7 @@ class SecureStorage {
       } else if (val is Map) {
         await _storage.write(key: key, value: jsonEncode(val));
       } else {
-        logger.w("SecureStorage - set ---> val type fail:$val");
+        logger.e("SecureStorage - set ---> val type fail:$val");
       }
     } catch (e) {
       logger.e("SecureStorage - set - key:$key - val:$val - error:$e");
