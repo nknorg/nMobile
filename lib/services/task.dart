@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:synchronized/synchronized.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 
 class TaskService {
   static const KEY_WALLET_BALANCE = "wallet_balance";
@@ -26,7 +26,7 @@ class TaskService {
 
   Map<String, Timer> _delayMap = Map<String, Timer>();
 
-  Lock _lock = Lock();
+  ParallelQueue _queue = ParallelQueue("task_service", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   TaskService();
 
@@ -48,7 +48,7 @@ class TaskService {
     _timer1 = _timer1 ??
         Timer.periodic(Duration(seconds: 1), (timer) async {
           _tasks1.keys.forEach((String key) {
-            // logger.d("TaskService - tick_1 - key:$key");
+            // logger.v("TaskService - tick_1 - key:$key");
             if (application.inBackGround) return;
             _tasks1[key]?.call(key);
           });
@@ -58,7 +58,7 @@ class TaskService {
     _timer30 = _timer30 ??
         Timer.periodic(Duration(seconds: 30), (timer) {
           _tasks30.keys.forEach((String key) {
-            logger.d("TaskService - tick_30 - key:$key");
+            logger.v("TaskService - tick_30 - key:$key");
             if (application.inBackGround) return;
             _tasks30[key]?.call(key);
           });
@@ -68,7 +68,7 @@ class TaskService {
     _timer60 = _timer60 ??
         Timer.periodic(Duration(seconds: 60), (timer) {
           _tasks60.keys.forEach((String key) {
-            logger.d("TaskService - tick_60 - key:$key");
+            logger.v("TaskService - tick_60 - key:$key");
             if (application.inBackGround) return;
             _tasks60[key]?.call(key);
           });
@@ -78,13 +78,13 @@ class TaskService {
     _timer300 = _timer300 ??
         Timer.periodic(Duration(seconds: 300), (timer) {
           _tasks300.keys.forEach((String key) {
-            logger.d("TaskService - tick_300 - key:$key");
+            logger.v("TaskService - tick_300 - key:$key");
             if (application.inBackGround) return;
             _tasks300[key]?.call(key);
           });
         });
 
-    logger.d("TaskService - install");
+    logger.i("TaskService - install");
   }
 
   uninstall() {
@@ -107,7 +107,7 @@ class TaskService {
     });
     // _delayMap.clear();
 
-    logger.d("TaskService - uninstall");
+    logger.i("TaskService - uninstall");
   }
 
   bool isTask1Run(String key) {
@@ -115,8 +115,8 @@ class TaskService {
   }
 
   void addTask1(String key, Function(String) func, {int? delayMs}) {
-    logger.d("TaskService - addTask1 - key:$key - func:${func.toString()}");
-    _lock.synchronized(() {
+    _queue.add(() async {
+      logger.d("TaskService - addTask1 - key:$key - func:${func.toString()}");
       if (delayMs == null) {
         // nothing
       } else if (delayMs == 0) {
@@ -124,8 +124,9 @@ class TaskService {
       } else if (delayMs > 0) {
         _delayMap["1___$key"]?.cancel();
         _delayMap["1___$key"] = new Timer(Duration(milliseconds: delayMs), () {
-          logger.i("TaskService - addTask1 - call by delay - key:$key - delayMs:$delayMs");
           if (application.inBackGround) return;
+          if (!_tasks1.keys.contains(key)) return;
+          logger.i("TaskService - addTask1 - call by delay - key:$key - delayMs:$delayMs");
           func.call(key);
         });
       }
@@ -134,7 +135,7 @@ class TaskService {
   }
 
   void removeTask1(String key) {
-    _lock.synchronized(() {
+    _queue.add(() async {
       if (!_tasks1.keys.contains(key)) return;
       Map<String, Function(String)> temp = Map();
       _tasks1.forEach((k, v) {
@@ -151,8 +152,8 @@ class TaskService {
   }
 
   void addTask30(String key, Function(String) func, {int? delayMs}) {
-    logger.d("TaskService - addTask30 - key:$key - func:${func.toString()}");
-    _lock.synchronized(() {
+    _queue.add(() async {
+      logger.d("TaskService - addTask30 - key:$key - func:${func.toString()}");
       if (delayMs == null) {
         // nothing
       } else if (delayMs == 0) {
@@ -160,8 +161,9 @@ class TaskService {
       } else if (delayMs > 0) {
         _delayMap["30___$key"]?.cancel();
         _delayMap["30___$key"] = new Timer(Duration(milliseconds: delayMs), () {
-          logger.i("TaskService - addTask30 - call by delay - key:$key - delayMs:$delayMs");
           if (application.inBackGround) return;
+          if (!_tasks30.keys.contains(key)) return;
+          logger.i("TaskService - addTask30 - call by delay - key:$key - delayMs:$delayMs");
           func.call(key);
         });
       }
@@ -170,7 +172,7 @@ class TaskService {
   }
 
   void removeTask30(String key) {
-    _lock.synchronized(() {
+    _queue.add(() async {
       if (!_tasks30.keys.contains(key)) return;
       Map<String, Function(String)> temp = Map();
       _tasks30.forEach((k, v) {
@@ -187,8 +189,8 @@ class TaskService {
   }
 
   void addTask60(String key, Function(String) func, {int? delayMs}) {
-    logger.d("TaskService - addTask60 - key:$key - func:${func.toString()}");
-    _lock.synchronized(() {
+    _queue.add(() async {
+      logger.d("TaskService - addTask60 - key:$key - func:${func.toString()}");
       if (delayMs == null) {
         // nothing
       } else if (delayMs == 0) {
@@ -196,8 +198,9 @@ class TaskService {
       } else if (delayMs > 0) {
         _delayMap["60___$key"]?.cancel();
         _delayMap["60___$key"] = new Timer(Duration(milliseconds: delayMs), () {
-          logger.i("TaskService - addTask60 - call by delay - key:$key - delayMs:$delayMs");
           if (application.inBackGround) return;
+          if (!_tasks60.keys.contains(key)) return;
+          logger.i("TaskService - addTask60 - call by delay - key:$key - delayMs:$delayMs");
           func.call(key);
         });
       }
@@ -206,7 +209,7 @@ class TaskService {
   }
 
   void removeTask60(String key) {
-    _lock.synchronized(() {
+    _queue.add(() async {
       if (!_tasks60.keys.contains(key)) return;
       Map<String, Function(String)> temp = Map();
       _tasks60.forEach((k, v) {
@@ -223,8 +226,8 @@ class TaskService {
   }
 
   void addTask300(String key, Function(String) func, {int? delayMs}) {
-    logger.d("TaskService - addTask300 - key:$key - func:${func.toString()}");
-    _lock.synchronized(() {
+    _queue.add(() async {
+      logger.d("TaskService - addTask300 - key:$key - func:${func.toString()}");
       if (delayMs == null) {
         // nothing
       } else if (delayMs == 0) {
@@ -232,8 +235,9 @@ class TaskService {
       } else if (delayMs > 0) {
         _delayMap["300___$key"]?.cancel();
         _delayMap["300___$key"] = new Timer(Duration(milliseconds: delayMs), () {
-          logger.i("TaskService - addTask300 - call by delay - key:$key - delayMs:$delayMs");
           if (application.inBackGround) return;
+          if (!_tasks300.keys.contains(key)) return;
+          logger.i("TaskService - addTask300 - call by delay - key:$key - delayMs:$delayMs");
           func.call(key);
         });
       }
@@ -242,7 +246,7 @@ class TaskService {
   }
 
   void removeTask300(String key) {
-    _lock.synchronized(() {
+    _queue.add(() async {
       if (!_tasks300.keys.contains(key)) return;
       Map<String, Function(String)> temp = Map();
       _tasks300.forEach((k, v) {
