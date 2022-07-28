@@ -44,8 +44,8 @@ class IpfsHelper with Tag {
   static const String KEY_ENCRYPT_NONCE_SIZE = "encryptNonceSize";
 
   Dio _dio = Dio();
-  ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", parallel: 2, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
-  ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", parallel: 2, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", parallel: 1, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", parallel: 1, interval: Duration(seconds: 1), onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   IpfsHelper(bool log) {
     _dio.options.connectTimeout = 1 * 60 * 1000; // 1m

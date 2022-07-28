@@ -401,6 +401,7 @@ class ChatInCommon with Tag {
         }
       }
       // send reply
+      logger.i("$TAG - _receiveMsgStatus - send reply - targetId:${received.from} - msgList:$msgStatusList");
       await chatOutCommon.sendMsgStatus(received.from, false, msgStatusList);
     } else if (requestType == "reply") {
       // receive reply
@@ -418,13 +419,21 @@ class ChatInCommon with Tag {
         }
         MessageSchema? message = await MessageStorage.instance.queryByIdNoContentType(msgId, MessageContentType.piece);
         if (message == null) {
-          logger.w("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
+          logger.e("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
           continue;
         }
         int? status = int.tryParse(splits[1]);
         if ((status == null) || (status == 0)) {
           // resend msg
-          logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - received:$received");
+          int? resendAt = MessageOptions.getResendMuteAt(message.options);
+          int between = DateTime.now().millisecondsSinceEpoch - (resendAt ?? DateTime.now().millisecondsSinceEpoch);
+          if ((resendAt != null) && (between < 5 * 60 * 1000)) {
+            logger.i("$TAG - _receiveMsgStatus - resend just now - between:${between / 1000} - msgId:$msgId - received:$received");
+            continue;
+          }
+          logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - between:${between / 1000} - received:$received");
+          message.options = MessageOptions.setResendMuteAt(message.options, DateTime.now().millisecondsSinceEpoch);
+          await MessageStorage.instance.updateOptions(msgId, message.options);
           chatOutCommon.resendMute(message); // await
         } else {
           // update status
