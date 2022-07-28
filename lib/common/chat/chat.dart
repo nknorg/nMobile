@@ -15,9 +15,9 @@ import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/time.dart';
-import 'package:synchronized/synchronized.dart';
 
 class ChatCommon with Tag {
   // ignore: close_sinks
@@ -39,62 +39,46 @@ class ChatCommon with Tag {
   String? currentChatTargetId;
 
   // checker
-  Map<String, Map<String, dynamic>> checkNoAckTimers = Map();
-  Map<String, Lock> checkLockMap = Map();
+  Map<String, Map<String, dynamic>> _checkersParams = Map();
+  ParallelQueue _checkQueue = ParallelQueue("msg_check", parallel: 3, onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   ChatCommon();
 
   void clear() {
-    //currentChatTargetId = null;
-    checkNoAckTimers.clear();
-    checkLockMap.clear();
+    // currentChatTargetId = null; // can not be reset
+    _checkersParams.clear();
     checkSendingWithFail(force: true); // await
     checkIpfsStateIng(fileNotify: true, thumbnailAutoDownload: true); // await
   }
 
-  // TODO:GG maybe can better?
-  void setMsgStatusCheckTimer(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
+  void checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
     if (targetId == null || targetId.isEmpty) return;
-
-    if (checkNoAckTimers[targetId] == null) checkNoAckTimers[targetId] = Map();
-    Timer? timer = checkNoAckTimers[targetId]?["timer"];
     // delay
-    int initDelay = 3; // 3s
-    int maxDelay = 5 * 60; // 5m
-    int? delay = checkNoAckTimers[targetId]?["delay"];
-    if (refresh || (timer == null) || (delay == null) || (delay == 0)) {
-      checkNoAckTimers[targetId]?["delay"] = initDelay;
-      logger.i("$TAG - setMsgStatusCheckTimer - delay init - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-    } else if (timer.isActive != true) {
-      checkNoAckTimers[targetId]?["delay"] = ((delay * 2) >= maxDelay) ? maxDelay : (delay * 2);
-      logger.i("$TAG - setMsgStatusCheckTimer - delay * 3 - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+    if (_checkersParams[targetId] == null) _checkersParams[targetId] = Map();
+    int initDelay = 2; // 2s
+    int maxDelay = 10; // 10s
+    int? delay = _checkersParams[targetId]?["delay"];
+    if (refresh || (delay == null) || (delay == 0)) {
+      _checkersParams[targetId]?["delay"] = initDelay;
+      logger.d("$TAG - checkMsgStatus - delay init - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+    } else if (!_checkQueue.contains(targetId)) {
+      _checkersParams[targetId]?["delay"] = ((delay * 2) >= maxDelay) ? maxDelay : (delay * 2);
+      logger.d("$TAG - checkMsgStatus - delay * 2 - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
     } else {
-      logger.i("$TAG - setMsgStatusCheckTimer - delay same - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
+      logger.d("$TAG - checkMsgStatus - delay same - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
     }
-    // timer
-    if (timer?.isActive == true) {
-      logger.i("$TAG - setMsgStatusCheckTimer - cancel old - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      timer?.cancel();
-      timer = null;
+    // queue
+    if (_checkQueue.contains(targetId)) {
+      logger.d("$TAG - checkMsgStatus - cancel old - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+      _checkQueue.deleteDelays(targetId);
     }
-    // start
-    checkNoAckTimers[targetId]?["timer"] = Timer(Duration(seconds: checkNoAckTimers[targetId]?["delay"] ?? initDelay), () async {
-      logger.i("$TAG - setMsgStatusCheckTimer - start - delay${checkNoAckTimers[targetId]?["delay"]} - targetId:$targetId");
-      int count = await _checkMsgStatusWithLock(targetId, isTopic, filterSec: filterSec);
-      if (count != 0) checkNoAckTimers[targetId]?["delay"] = 0;
-      checkNoAckTimers[targetId]?["timer"]?.cancel();
-    });
-  }
-
-  Future<int> _checkMsgStatusWithLock(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
-    String key = targetId ?? "none";
-    Lock? _lock = checkLockMap[key];
-    if (_lock == null) {
-      logger.i("$TAG - _checkMsgStatusWithLock - lock create - targetId:$targetId");
-      _lock = Lock(); // TODO:GG change to queue
-      checkLockMap[key] = _lock;
-    }
-    return await _lock.synchronized(() => _checkMsgStatus(targetId, isTopic, forceResend: forceResend, filterSec: filterSec));
+    _checkQueue.add(() async {
+      logger.i("$TAG - checkMsgStatus - start - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+      final count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
+      logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
+      _checkersParams[targetId]?["delay"] = 0;
+      return count;
+    }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
   }
 
   Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 5}) async {
@@ -875,7 +859,7 @@ class ChatCommon with Tag {
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       message.status = message.isOutbound ? MessageStatus.SendFail : message.status;
       if (thumbnailNotify) _onUpdateSink.add(message);
-      if (thumbnailAutoDownload) {
+      if (thumbnailAutoDownload && !message.isOutbound) {
         tryDownloadIpfsThumbnail(message); // await
       }
     }
