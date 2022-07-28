@@ -54,7 +54,7 @@ class ContactCommon with Tag {
     if (checkDuplicated) {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
-        logger.i("$TAG - add - duplicated - schema:$exist");
+        logger.d("$TAG - add - duplicated - schema:$exist");
         return null;
       }
     }

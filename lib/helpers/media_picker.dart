@@ -56,7 +56,7 @@ class MediaPicker {
       handleError(e);
     }
     if (pickedResults == null || pickedResults.isEmpty) {
-      logger.w("MediaPicker - pickCommons - pickedResults = null");
+      logger.d("MediaPicker - pickCommons - pickedResults = null");
       return [];
     }
 
@@ -67,7 +67,7 @@ class MediaPicker {
       // exist
       File? file = (await entity.originFile) ?? (await entity.loadFile(isOrigin: true));
       if (file == null || file.path.isEmpty) {
-        logger.w("MediaPicker - pickCommons - pickedResults originFile = null");
+        logger.e("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
       // type
@@ -381,14 +381,14 @@ class MediaPicker {
       handleError(e);
     }
     if (pickedResults == null || pickedResults.isEmpty) {
-      logger.w("MediaPicker - pickImage - pickedResults = null");
+      logger.d("MediaPicker - pickImage - pickedResults = null");
       return null;
     }
 
     // convert
     File? pickedFile = (await pickedResults[0].originFile) ?? (await pickedResults[0].loadFile(isOrigin: false));
     if (pickedFile == null || pickedFile.path.isEmpty) {
-      logger.w("MediaPicker - pickImage - pickedFile = null");
+      logger.e("MediaPicker - pickImage - pickedFile = null");
       return null;
     }
     logger.i("MediaPicker - pickImage - picked - path:${pickedFile.path}");
@@ -533,7 +533,7 @@ class MediaPicker {
       format = CompressFormat.webp;
     }
     if (format == null) {
-      logger.w('MediaPicker - _compressImage - compress:FAIL - CompressFormatError - compressPath:$compressPath');
+      logger.e('MediaPicker - _compressImage - compress:FAIL - CompressFormatError - compressPath:$compressPath');
       return original;
     }
 
@@ -604,7 +604,7 @@ class MediaPicker {
       quality: quality,
     );
     if (imgBytes == null || imgBytes.isEmpty) {
-      logger.w('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
+      logger.e('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
       return null;
     }
     // save

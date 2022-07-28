@@ -40,11 +40,11 @@ class ChatOutCommon with Tag {
   Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 10}) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
-      logger.w("$TAG - sendData - destList is empty - destList:$destList - data:$data");
+      logger.e("$TAG - sendData - destList is empty - destList:$destList - data:$data");
       return null;
     }
     if (data.length >= MessageSchema.msgMaxSize) {
-      logger.w("$TAG - sendData - size over - destList:$destList - data:$data");
+      logger.e("$TAG - sendData - size over - destList:$destList - data:$data");
       return null;
     }
     if (tryTimes >= maxTryTimes) {
@@ -52,7 +52,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
+      logger.w("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 2));
       return sendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
     }
@@ -65,7 +65,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.i("$TAG - _clientSendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
+      logger.w("$TAG - _clientSendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
       await Future.delayed(Duration(seconds: 1));
       return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
     }
@@ -75,17 +75,17 @@ class ChatOutCommon with Tag {
         logger.d("$TAG - _clientSendData - send success - destList:$destList - data:$data");
         return onMessage;
       } else {
-        logger.w("$TAG - _clientSendData - onMessage msgId is empty - tryTimes:$tryTimes - destList:$destList - data:$data");
+        logger.e("$TAG - _clientSendData - onMessage msgId is empty - tryTimes:$tryTimes - destList:$destList - data:$data");
         await Future.delayed(Duration(milliseconds: 100));
         return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
     } catch (e) {
       String errStr = e.toString().toLowerCase();
       if (errStr.contains(NknError.invalidDestination)) {
-        logger.w("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
+        logger.e("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
         return null;
       } else if (errStr.contains(NknError.messageOversize)) {
-        logger.w("$TAG - _clientSendData - message over size - destList:$destList");
+        logger.e("$TAG - _clientSendData - message over size - destList:$destList");
         return null;
       }
       bool isClientError = NknError.isClientError(e);
@@ -103,12 +103,12 @@ class ChatOutCommon with Tag {
             return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
           } else {
             // maybe always no here
-            logger.w("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
+            logger.e("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
             return null;
           }
         }
       } else {
-        logger.w("$TAG - _clientSendData - try by error - tryTimes:$tryTimes - destList:$destList - data:$data");
+        logger.e("$TAG - _clientSendData - try by error - tryTimes:$tryTimes - destList:$destList - data:$data");
         await Future.delayed(Duration(milliseconds: 100));
         return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
@@ -558,7 +558,7 @@ class ChatOutCommon with Tag {
           logger.i("$TAG - resendMute - resend invitee - targetId:${message.targetId} - msgData:$msgData");
           break;
         default:
-          logger.w("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
+          logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
           return await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
       }
