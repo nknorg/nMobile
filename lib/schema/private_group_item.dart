@@ -1,5 +1,6 @@
 import 'package:nmobile/utils/map_extension.dart';
 
+// TODO:GG PG check
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
@@ -37,15 +38,21 @@ class PrivateGroupItemSchema {
       'inviter_signature': inviterSignature,
       'invitee_raw_data': inviteeRawData,
       'inviter_raw_data': inviterRawData,
-      'invite_time': inviteTime?.microsecondsSinceEpoch,
-      'invited_time': invitedTime?.microsecondsSinceEpoch,
-      'expires_at': expiresAt?.microsecondsSinceEpoch,
+      'invite_time': inviteTime?.millisecondsSinceEpoch,
+      'invited_time': invitedTime?.millisecondsSinceEpoch,
+      'expires_at': expiresAt?.millisecondsSinceEpoch,
     };
     map = map.sortByKey();
     return map;
   }
 
-  static PrivateGroupItemSchema fromRawData(Map<String, dynamic> data) {
+  static PrivateGroupItemSchema fromRawData(
+    Map<String, dynamic> data, {
+    String? inviterSignature,
+    String? inviterRawData,
+    String? inviteeSignature,
+    String? inviteeRawData,
+  }) {
     var privateGroupItemSchema = PrivateGroupItemSchema(
       groupId: data['groupId'],
       invitee: data['invitee'],
@@ -54,11 +61,15 @@ class PrivateGroupItemSchema {
       inviterSignature: data['inviterSignature'],
       inviteeRawData: data['inviteeRawData'],
       inviterRawData: data['inviterRawData'],
-      inviteTime: data['inviteTime'] != null ? DateTime.fromMicrosecondsSinceEpoch(data['inviteTime']) : null,
-      invitedTime: data['invitedTime'] != null ? DateTime.fromMicrosecondsSinceEpoch(data['invitedTime']) : null,
-      expiresAt: data['expiresAt'] != null ? DateTime.fromMicrosecondsSinceEpoch(data['expiresAt']) : null,
+      inviteTime: data['inviteTime'] != null ? DateTime.fromMillisecondsSinceEpoch(data['inviteTime']) : null,
+      invitedTime: data['invitedTime'] != null ? DateTime.fromMillisecondsSinceEpoch(data['invitedTime']) : null,
+      expiresAt: data['expiresAt'] != null ? DateTime.fromMillisecondsSinceEpoch(data['expiresAt']) : null,
     );
 
+    if (inviterSignature != null) privateGroupItemSchema.inviterSignature = inviterSignature;
+    if (inviterRawData != null) privateGroupItemSchema.inviterRawData = inviterRawData;
+    if (inviteeSignature != null) privateGroupItemSchema.inviteeSignature = inviteeSignature;
+    if (inviteeRawData != null) privateGroupItemSchema.inviteeRawData = inviteeRawData;
     return privateGroupItemSchema;
   }
 
@@ -72,9 +83,9 @@ class PrivateGroupItemSchema {
       inviterSignature: e['inviter_signature'],
       inviteeRawData: e['invitee_raw_data'],
       inviterRawData: e['inviter_raw_data'],
-      inviteTime: e['invite_time'] != null ? DateTime.fromMicrosecondsSinceEpoch(e['invite_time']) : null,
-      invitedTime: e['invited_time'] != null ? DateTime.fromMicrosecondsSinceEpoch(e['invited_time']) : null,
-      expiresAt: e['expires_at'] != null ? DateTime.fromMicrosecondsSinceEpoch(e['expires_at']) : null,
+      inviteTime: e['invite_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['invite_time']) : null,
+      invitedTime: e['invited_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['invited_time']) : null,
+      expiresAt: e['expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expires_at']) : null,
     );
 
     return privateGroupItemSchema;

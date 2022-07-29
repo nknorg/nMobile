@@ -8,6 +8,7 @@ import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
+import 'package:nmobile/common/db/upgrade5to6.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -15,6 +16,8 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/private_group.dart';
+import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/storages/subscriber.dart';
@@ -22,13 +25,13 @@ import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
-// import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
+// import 'package:sqflite/sqflite.dart' as sqflite;
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 5; // TODO:GG PG 6
+  static int currentDatabaseVersion = 6; // TODO:GG PG 测试
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -272,8 +275,8 @@ class DB {
         await SubscriberStorage.create(db);
         await MessageStorage.create(db);
         await SessionStorage.create(db);
-        // await PrivateGroupStorage.create(db); // TODO:GG PG
-        // await PrivateGroupItemStorage.create(db); // TODO:GG PG
+        await PrivateGroupStorage.create(db);
+        await PrivateGroupItemStorage.create(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
@@ -282,7 +285,7 @@ class DB {
 
         // 1 -> 2
         bool v1to2 = false;
-        if (oldVersion <= 1 && newVersion >= 2) {
+        if ((oldVersion <= 1) && (newVersion >= 2)) {
           v1to2 = true;
           await Upgrade1to2.upgradeTopicTable2V3(db);
           await Upgrade1to2.upgradeContactSchema2V3(db);
@@ -290,7 +293,7 @@ class DB {
 
         // 2 -> 3
         bool v2to3 = false;
-        if ((v1to2 || oldVersion == 2) && newVersion >= 3) {
+        if ((v1to2 || (oldVersion == 2)) && (newVersion >= 3)) {
           v2to3 = true;
           await Upgrade2to3.updateTopicTableToV3ByTopic(db);
           await Upgrade2to3.updateTopicTableToV3BySubscriber(db);
@@ -298,13 +301,15 @@ class DB {
 
         // 3 -> 4
         bool v3to4 = false;
-        if ((v2to3 || oldVersion == 3) && newVersion >= 4) {
+        if ((v2to3 || (oldVersion == 3)) && (newVersion >= 4)) {
           v3to4 = true;
           await Upgrade3to4.updateSubscriberV3ToV4(db);
         }
 
         // 4-> 5
-        if ((v3to4 || oldVersion == 4) && newVersion >= 5) {
+        bool v4to5 = false;
+        if ((v3to4 || (oldVersion == 4)) && (newVersion >= 5)) {
+          v4to5 = true;
           await Upgrade4to5.upgradeContact(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade4to5.createDeviceInfo(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
           await Upgrade4to5.upgradeTopic(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
@@ -314,12 +319,11 @@ class DB {
           await Upgrade4to5.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
-        // TODO:GG PG
-        // if (newVersion >= 6) {
-        //   await Upgrade5to6.createPrivateGroup(db);
-        //   await Upgrade5to6.createPrivateGroupList(db);
-        //   await Upgrade5to6.upgradeMessages(db);
-        // }
+        if ((v4to5 || (oldVersion == 5)) && (newVersion >= 6)) {
+          await Upgrade5to6.createPrivateGroup(db);
+          await Upgrade5to6.createPrivateGroupList(db);
+          await Upgrade5to6.upgradeMessages(db);
+        }
 
         // dismiss tip dialog
         if (upgradeTip) _upgradeTipSink.add(null);

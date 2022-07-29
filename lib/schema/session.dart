@@ -6,7 +6,8 @@ import 'package:nmobile/utils/util.dart';
 class SessionType {
   static const CONTACT = 1;
   static const TOPIC = 2;
-  // static const PRIVATE_GROUP = 3; // TODO:GG PG
+  // TODO:GG PG check
+  static const PRIVATE_GROUP = 3;
 }
 
 class SessionSchema {
@@ -38,14 +39,19 @@ class SessionSchema {
     return type == SessionType.TOPIC;
   }
 
-  // TODO:GG PG
-  // bool get isPrivateGroup {
-  //   return type == SessionType.PRIVATE_GROUP;
-  // }
+  // TODO:GG PG check
+  bool get isPrivateGroup {
+    return type == SessionType.PRIVATE_GROUP;
+  }
 
+  // TODO:GG PG check
   static int getTypeByMessage(MessageSchema? msg) {
     if (msg?.isTopic == true) {
       return SessionType.TOPIC;
+    } else if (msg?.contentType == MessageContentType.privateGroupInvitation) {
+      return SessionType.CONTACT;
+    } else if (msg?.isPrivateGroup == true) {
+      return SessionType.PRIVATE_GROUP;
     } else {
       return SessionType.CONTACT;
     }

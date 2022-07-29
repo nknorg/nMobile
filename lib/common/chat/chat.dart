@@ -9,6 +9,7 @@ import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -281,6 +282,24 @@ class ChatCommon with Tag {
     return exists;
   }
 
+  // TODO:GG PG check
+  Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
+    if (!message.isPrivateGroup) return null;
+    if (!message.canDisplay && !message.isTopicAction) return null; // topic action need topic // TODO:GG PG isTopicAction?
+
+    PrivateGroupSchema? exists = await privateGroupCommon.queryByGroupId(message.groupId);
+    if (exists == null) {
+      exists = await privateGroupCommon.addPrivateGroup(PrivateGroupSchema(groupId: message.groupId, name: message.groupId));
+      if (exists != null) {
+        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId);
+      }
+    } else if (exists.version != message.options?['version']) {
+      // TODO:GG PG 频繁？updateAt?
+      chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId);
+    }
+    return exists;
+  }
+
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic) async {
     if (topic == null || topic.id == null || topic.id == 0) return null;
     if (!message.isTopic) return null;
@@ -344,7 +363,19 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     // duplicated
     if (message.targetId.isEmpty) return null;
-    SessionSchema? exist = await sessionCommon.query(message.targetId, message.isTopic ? SessionType.TOPIC : SessionType.CONTACT);
+
+    // TODO:GG PG check
+    // type
+    int type = SessionType.CONTACT;
+    if (message.isTopic) {
+      type = SessionType.TOPIC;
+    } else if (message.contentType == MessageContentType.privateGroupInvitation) {
+      type = SessionType.CONTACT;
+    } else if (message.isPrivateGroup) {
+      type = SessionType.PRIVATE_GROUP;
+    }
+
+    SessionSchema? exist = await sessionCommon.query(message.targetId, type);
     if (exist == null) {
       SessionSchema? added = SessionSchema(targetId: message.targetId, type: SessionSchema.getTypeByMessage(message));
       added = await sessionCommon.add(added, message, notify: true);

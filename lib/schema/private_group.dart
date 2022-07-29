@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:nmobile/schema/private_group_option.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/util.dart';
 
-import '../utils/path.dart';
-import '../utils/util.dart';
-
+// TODO:GG PG check
 class PrivateGroupSchema {
   int? id;
   String groupId;
@@ -49,8 +49,8 @@ class PrivateGroupSchema {
       'version': version,
       'is_top': isTop ? 1 : 0,
       'options': options != null ? jsonEncode(options!.toMap()) : null,
-      'create_at': createAt?.microsecondsSinceEpoch,
-      'update_at': updateAt?.microsecondsSinceEpoch,
+      'create_at': createAt?.millisecondsSinceEpoch,
+      'update_at': updateAt?.millisecondsSinceEpoch,
     };
     return map;
   }
@@ -64,8 +64,8 @@ class PrivateGroupSchema {
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       count: e['count'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
-      createAt: e['create_at'] != null ? DateTime.fromMicrosecondsSinceEpoch(e['create_at']) : null,
-      updateAt: e['update_at'] != null ? DateTime.fromMicrosecondsSinceEpoch(e['update_at']) : null,
+      createAt: e['create_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['create_at']) : null,
+      updateAt: e['update_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['update_at']) : null,
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
@@ -79,7 +79,7 @@ class PrivateGroupSchema {
   String get ownerPublicKey {
     String owner;
     int index = groupId.lastIndexOf('.');
-    owner = groupId.substring(index + 1);
+    owner = groupId.substring(0, index);
 
     return owner;
   }

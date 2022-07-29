@@ -17,6 +17,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/contact/add.dart';
@@ -62,6 +63,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangers = <ContactSchema>[];
   List<TopicSchema> _allTopics = <TopicSchema>[];
+  List<PrivateGroupSchema> _allPrivateGroup = <PrivateGroupSchema>[]; // TODO:GG PG wait???
 
   List<ContactSchema> _searchFriends = <ContactSchema>[];
   List<ContactSchema> _searchStrangers = <ContactSchema>[];

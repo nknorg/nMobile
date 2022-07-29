@@ -15,6 +15,7 @@ import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/private_group/header.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/header.dart';
@@ -23,10 +24,13 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
+import 'package:nmobile/screens/private_group/profile.dart';
+import 'package:nmobile/screens/private_group/subscribers.dart';
 import 'package:nmobile/screens/topic/profile.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -44,7 +48,7 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 
   static Future go(BuildContext context, dynamic who) {
     logger.d("ChatMessagesScreen - go - $who");
-    if (who == null || !(who is ContactSchema || who is TopicSchema)) return Future.value(null);
+    if (who == null || !(who is ContactSchema || who is PrivateGroupSchema || who is TopicSchema)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWho: who,
     });
@@ -63,6 +67,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   TopicSchema? _topic;
   bool? _isJoined;
+  PrivateGroupSchema? _privateGroup; // TODO:GG PG check
   ContactSchema? _contact;
   String? targetId;
 
@@ -77,6 +82,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   StreamSubscription? _onContactUpdateStreamSubscription;
   StreamSubscription? _onTopicUpdateStreamSubscription;
+  StreamSubscription? _onPrivateGroupUpdateStreamSubscription; // TODO:GG PG check
+
   // StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onSubscriberAddStreamSubscription;
   StreamSubscription? _onSubscriberUpdateStreamSubscription;
@@ -109,6 +116,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       this._isJoined = this._topic?.joined == true;
       this._contact = null;
       this.targetId = this._topic?.topic;
+    } else if (who is PrivateGroupSchema) {
+      // TODO:GG PG check
+      this._privateGroup = widget.arguments![ChatMessagesScreen.argWho] ?? _privateGroup;
+      this._topic = null;
+      this._isJoined = null;
+      this._contact = null;
+      this.targetId = this._privateGroup?.groupId;
+      if (!privateGroupCommon.dataComplete) {
+        var owner = privateGroupCommon.getOwnerPublicKey(_privateGroup!.groupId);
+        if (privateGroupCommon.lockSyncData(_privateGroup!.groupId, owner)) {
+          chatOutCommon.sendPrivateGroupOptionRequest(owner, _privateGroup!.groupId);
+        }
+        privateGroupCommon.unLockSyncData(_privateGroup!.groupId, owner);
+      }
     } else if (who is ContactSchema) {
       this._topic = null;
       this._isJoined = null;
@@ -166,6 +187,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // _onTopicDeleteStreamSubscription = topicCommon.deleteStream.where((event) => event == _topic?.topic).listen((String topic) {
     //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
+
+    // TODO:GG PG check
+    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+      setState(() {
+        _privateGroup = event;
+      });
+    });
 
     // subscriber
     _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
@@ -255,6 +283,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     _onContactUpdateStreamSubscription?.cancel();
     _onTopicUpdateStreamSubscription?.cancel();
+    _onPrivateGroupUpdateStreamSubscription?.cancel();
     // _onTopicDeleteStreamSubscription?.cancel();
     _onSubscriberAddStreamSubscription?.cancel();
     _onSubscriberUpdateStreamSubscription?.cancel();
@@ -347,7 +376,16 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
     if (sessionUnreadClear) {
       // count not up in chatting
-      await sessionCommon.setUnReadCount(this.targetId, _topic != null ? SessionType.TOPIC : SessionType.CONTACT, 0, notify: true);
+      // TODO:GG PG check
+      await sessionCommon.setUnReadCount(
+          this.targetId,
+          _topic != null
+              ? SessionType.TOPIC
+              : _privateGroup != null
+                  ? SessionType.PRIVATE_GROUP
+                  : SessionType.CONTACT,
+          0,
+          notify: true);
     }
     if (badgeRefresh) {
       // count not up in chatting
@@ -445,6 +483,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     String? disableTip = (_topic != null && _isJoined == false) ? (_topic!.isSubscribeProgress() ? Global.locale((s) => s.subscribing, ctx: context) : (_topic!.isPrivate ? Global.locale((s) => s.tip_ask_group_owner_permission, ctx: context) : Global.locale((s) => s.need_re_subscribe, ctx: context))) : (!isClientOk ? Global.locale((s) => s.d_chat_not_login, ctx: context) : null);
 
+    // TODO:GG PG check
+    if (_privateGroup != null) {
+      if (!privateGroupCommon.dataComplete) {
+        disableTip = Global.locale((s) => s.data_synchronization, ctx: context);
+      }
+    }
+
     return Layout(
       headerColor: _theme.headBarColor2,
       header: Header(
@@ -477,35 +522,64 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           ),
                   ),
                 )
-              : ContactHeader(
-                  contact: _contact!,
-                  onTap: () {
-                    ContactProfileScreen.go(context, contactId: _contact?.id);
-                  },
-                  body: Container(
-                    padding: EdgeInsets.only(top: 3),
-                    child: deleteAfterSeconds > 0
-                        ? Row(
-                            children: [
-                              Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
-                              SizedBox(width: 4),
-                              Label(
-                                Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
-                                type: LabelType.bodySmall,
-                                color: _theme.backgroundLightColor,
+              // TODO:GG PG check
+              : _privateGroup != null
+                  ? PrivateGroupHeader(
+                      privateGroup: _privateGroup!,
+                      onTap: () {
+                        PrivateGroupProfileScreen.go(context, groupId: _privateGroup?.groupId);
+                      },
+                      body: Container(
+                        padding: EdgeInsets.only(top: 3),
+                        child: deleteAfterSeconds > 0
+                            ? Row(
+                                children: [
+                                  Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
+                                  SizedBox(width: 4),
+                                  Label(
+                                    Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
+                                    type: LabelType.bodySmall,
+                                    color: _theme.backgroundLightColor,
+                                  ),
+                                ],
+                              )
+                            : Label(
+                                "${_privateGroup?.count ?? "--"} ${Global.locale((s) => s.channel_members, ctx: context)}",
+                                type: LabelType.h4,
+                                color: _theme.fontColor2,
                               ),
-                            ],
-                          )
-                        : Label(
-                            Global.locale((s) => s.click_to_settings, ctx: context),
-                            type: LabelType.h4,
-                            color: _theme.fontColor2,
-                          ),
-                  ),
-                ),
+                      ),
+                    )
+                  : ContactHeader(
+                      contact: _contact!,
+                      onTap: () {
+                        ContactProfileScreen.go(context, contactId: _contact?.id);
+                      },
+                      body: Container(
+                        padding: EdgeInsets.only(top: 3),
+                        child: deleteAfterSeconds > 0
+                            ? Row(
+                                children: [
+                                  Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
+                                  SizedBox(width: 4),
+                                  Label(
+                                    Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
+                                    type: LabelType.bodySmall,
+                                    color: _theme.backgroundLightColor,
+                                  ),
+                                ],
+                              )
+                            : Label(
+                                Global.locale((s) => s.click_to_settings, ctx: context),
+                                type: LabelType.h4,
+                                color: _theme.fontColor2,
+                              ),
+                      ),
+                    ),
         ),
         actions: [
-          _topic != null
+          // TODO:GG PG check
+          _topic != null || _privateGroup != null
               ? SizedBox.shrink() // FUTURE: topic notificationOpen
               : Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -525,12 +599,20 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       TopicSubscribersScreen.go(context, schema: _topic);
                     },
                   )
-                : IconButton(
-                    icon: Asset.iconSvg('more', color: Colors.white, width: 24),
-                    onPressed: () {
-                      ContactProfileScreen.go(context, contactId: _contact?.id);
-                    },
-                  ),
+                // TODO:GG PG check
+                : _privateGroup != null
+                    ? IconButton(
+                        icon: Asset.iconSvg('group', color: Colors.white, width: 24),
+                        onPressed: () {
+                          PrivateGroupSubscribersScreen.go(context, schema: _privateGroup);
+                        },
+                      )
+                    : IconButton(
+                        icon: Asset.iconSvg('more', color: Colors.white, width: 24),
+                        onPressed: () {
+                          ContactProfileScreen.go(context, contactId: _contact?.id);
+                        },
+                      ),
           ),
         ],
       ),
@@ -612,7 +694,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) async {
-                  return await chatOutCommon.sendText(_topic ?? _contact, content);
+                  return await chatOutCommon.sendText(_topic ?? _privateGroup ?? _contact, content);
                 },
                 onInputFocus: (bool focus) {
                   if (focus && _showBottomMenu) {
@@ -655,9 +737,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     int size = await content.length();
                     logger.d("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
                     if (size <= MessageSchema.piecesMaxSize) {
-                      return chatOutCommon.sendAudio(_topic ?? _contact, content, durationMs / 1000); // await
+                      return chatOutCommon.sendAudio(_topic ?? _privateGroup ?? _contact, content, durationMs / 1000); // await
                     } else {
-                      return chatOutCommon.saveIpfs(_topic ?? _contact, {
+                      return chatOutCommon.saveIpfs(_topic ?? _privateGroup ?? _contact, {
                         "path": savePath,
                         "size": size,
                         "name": "",
@@ -696,11 +778,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           // no message_type(video/file), and result no mime_type from file_picker
                           // so big_file and video+file go with type_ipfs
                           if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesMaxSize)) {
-                            chatOutCommon.sendImage(_topic ?? _contact, File(path)); // await
+                            chatOutCommon.sendImage(_topic ?? _privateGroup ?? _contact, File(path)); // await
                           } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesMaxSize)) {
-                            chatOutCommon.sendAudio(_topic ?? _contact, File(path), durationS); // await
+                            chatOutCommon.sendAudio(_topic ?? _privateGroup ?? _contact, File(path), durationS); // await
                           } else {
-                            chatOutCommon.saveIpfs(_topic ?? _contact, result); // await
+                            chatOutCommon.saveIpfs(_topic ?? _privateGroup ?? _contact, result); // await
                           }
                         }
                       },
@@ -712,40 +794,4 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       ),
     );
   }
-
-// _debugSendText({int maxTimes = 100, int? delayMS}) async {
-//   for (var i = 0; i < maxTimes; i++) {
-//     String text = "${i + 1} _ ${Uuid().v4()}";
-//     chatOutCommon.sendText(text, topic: _topic, contact: _contact);
-//     if (delayMS != null) await Future.delayed(Duration(milliseconds: delayMS));
-//   }
-// }
-
-// _debugSendPing({int maxTimes = 100}) async {
-//   if (_topic != null) return;
-//   for (var i = 0; i < maxTimes; i++) {
-//     if (clientCommon.address != null) {
-//       chatOutCommon.sendPing([clientCommon.address!], true);
-//     }
-//   }
-// }
-
-// _debugSubscribersAdd({int maxCount = 2000}) async {
-//   if (_topic == null) return;
-//   for (var i = 0; i < maxCount; i++) {
-//     Wallet nkn = await Wallet.create(null, config: WalletConfig(password: "12345"));
-//     if (nkn.address.isEmpty || nkn.keystore.isEmpty || nkn.seed.isEmpty) {
-//       logger.w("$TAG - _debugSubscribersAdd - wallet create fail - nkn:${nkn.toString()}");
-//       continue;
-//     }
-//     logger.i("$TAG - _debugSubscribersAdd - wallet create success - nkn:${nkn.toString()}");
-//     Client client = await Client.create(nkn.seed);
-//     String topicHash = await client.subscribe(
-//       topic: genTopicHash(_topic!.topic),
-//       duration: Global.topicDefaultSubscribeHeight,
-//     );
-//     logger.i("$TAG - _debugSubscribersAdd - subscribe success - topicName:${_topic!.topic} - topicHash:$topicHash");
-//     await subscriberCommon.onSubscribe(_topic!.topic, client.address, 0);
-//   }
-// }
 }

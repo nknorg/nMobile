@@ -1,16 +1,14 @@
 package org.nkn.sdk.impl
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.util.Log
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.nkn.sdk.IChannelHandler
+import org.nkn.sdk.NknSdkFlutterPlugin
 
-class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
+class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     companion object {
         val CHANNEL_NAME = "org.nkn.sdk/crypto"
         val EVENT_NAME = "org.nkn.sdk/crypto/event"
@@ -51,7 +49,7 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 sign(call, result)
             }
             "verify" -> {
-                // verify(call, result)
+                verify(call, result)
             }
 
             else -> {
@@ -86,6 +84,20 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             result.success(signature)
         } catch (e: Throwable) {
             result.error("", e.localizedMessage, e.message)
+        }
+    }
+
+    private fun verify(call: MethodCall, result: MethodChannel.Result) {
+        val publicKey = call.argument<ByteArray>("publicKey")
+        val data = call.argument<ByteArray>("data")
+        val signature = call.argument<ByteArray>("signature")
+
+        try {
+            crypto.Crypto.verify(publicKey, data, signature)
+            result.success(true)
+        } catch (e: Throwable) {
+            Log.d(NknSdkFlutterPlugin.TAG, e.stackTraceToString())
+            result.success(false)
         }
     }
 }
