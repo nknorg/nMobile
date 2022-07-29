@@ -25,18 +25,11 @@ class ChatInCommon with Tag {
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
   // receive queue
-  Map<String, ParallelQueue> _receiveQueues = Map();
-
-  // check duplicated
-  MessageSchema? _lastReceiveMsg;
-  int _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
+  Map<String, Map<String, ParallelQueue>> _receiveQueues = Map();
 
   ChatInCommon();
 
-  void clear() {
-    _lastReceiveMsg = null;
-    _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
-  }
+  void clear() {}
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
     if (message == null) {
@@ -60,36 +53,18 @@ class ChatInCommon with Tag {
       }
     }
 
-    // last duplicated (no session filter)
-    if (_lastReceiveMsg?.contentType == message.contentType) {
-      bool from = _lastReceiveMsg?.from == message.from;
-      bool to = _lastReceiveMsg?.to == message.to;
-      bool topic = _lastReceiveMsg?.topic == message.topic;
-      bool targetId = _lastReceiveMsg?.targetId == message.targetId;
-      bool content = _lastReceiveMsg?.content == message.content;
-      if (from && to && topic && targetId && content) {
-        if (!message.canDisplay) {
-          int interval = DateTime.now().millisecondsSinceEpoch - _lastReceiveMsgAt;
-          if (interval < 1 * 1000) {
-            logger.i("$TAG - onMessageReceive - check duplicated - skip by just receive - interval:$interval - last:$_lastReceiveMsg - received:$message");
-            return;
-          } else {
-            logger.i("$TAG - onMessageReceive - check duplicated - continue by interval large - last:$_lastReceiveMsg - received:$message");
-          }
-        } else {
-          logger.i("$TAG - onMessageReceive - check duplicated - continue by type display - last:$_lastReceiveMsg - received:$message");
-        }
-      }
-    }
-    _lastReceiveMsg = message;
-    _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
-
     // queue
     if (_receiveQueues[message.targetId] == null) {
-      _receiveQueues[message.targetId] = ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+      _receiveQueues[message.targetId] = Map();
     }
-    _receiveQueues[message.targetId]?.add(() async {
+    if (_receiveQueues[message.targetId]?[message.contentType] == null) {
+      _receiveQueues[message.targetId]?[message.contentType] = ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) {
+        if (error) logger.w(log);
+      });
+    }
+    _receiveQueues[message.targetId]?[message.contentType]?.add(() async {
       try {
+        // TODO:GG 测试error
         return await _handleMessage(message);
       } catch (e) {
         handleError(e);
