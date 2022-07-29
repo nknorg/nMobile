@@ -26,7 +26,7 @@ class TaskService {
 
   Map<String, Timer> _delayMap = Map<String, Timer>();
 
-  ParallelQueue _queue = ParallelQueue("task_service", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _queue = ParallelQueue("service_task", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   TaskService();
 
@@ -131,7 +131,7 @@ class TaskService {
         });
       }
       _tasks1[key] = func;
-    });
+    }, id: key);
   }
 
   void removeTask1(String key) {
@@ -144,7 +144,7 @@ class TaskService {
         }
       });
       _tasks1 = temp;
-    });
+    }, id: key);
   }
 
   bool isTask30Run(String key) {
@@ -168,7 +168,7 @@ class TaskService {
         });
       }
       _tasks30[key] = func;
-    });
+    }, id: key);
   }
 
   void removeTask30(String key) {
@@ -181,7 +181,7 @@ class TaskService {
         }
       });
       _tasks30 = temp;
-    });
+    }, id: key);
   }
 
   bool isTask60Run(String key) {
@@ -205,7 +205,7 @@ class TaskService {
         });
       }
       _tasks60[key] = func;
-    });
+    }, id: key);
   }
 
   void removeTask60(String key) {
@@ -218,7 +218,7 @@ class TaskService {
         }
       });
       _tasks60 = temp;
-    });
+    }, id: key);
   }
 
   bool isTask300Run(String key) {
@@ -242,7 +242,7 @@ class TaskService {
         });
       }
       _tasks300[key] = func;
-    });
+    }, id: key);
   }
 
   void removeTask300(String key) {
@@ -255,6 +255,6 @@ class TaskService {
         }
       });
       _tasks300 = temp;
-    });
+    }, id: key);
   }
 }

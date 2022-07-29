@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:synchronized/synchronized.dart';
 
 class SubscriberStorage with Tag {
   // static String get tableName => 'Subscribers';
@@ -16,7 +16,7 @@ class SubscriberStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  Lock _lock = new Lock();
+  ParallelQueue _queue = ParallelQueue("storage_subscriber", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -47,7 +47,7 @@ class SubscriberStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
-    return await _lock.synchronized(() async {
+    return await _queue.add(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -87,58 +87,9 @@ class SubscriberStorage with Tag {
     });
   }
 
-  /*Future<bool> delete(int? subscriberId) async {
-    if (db?.isOpen != true) return false;
-    if (subscriberId == null || subscriberId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'id = ?',
-            whereArgs: [subscriberId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - delete - success - subscriberId:$subscriberId");
-          return true;
-        }
-        logger.w("$TAG - delete - fail - subscriberId:$subscriberId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }*/
-
-  /*Future<int> deleteByTopic(String? topic) async {
-  if (db?.isOpen != true) return 0;
-    if (topic == null || topic.isEmpty) return 0;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'topic = ?',
-            whereArgs: [topic],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - deleteByTopic - success - topic:$topic");
-          return count;
-        }
-        logger.w("$TAG - deleteByTopic - fail - topic:$topic");
-      } catch (e) {
-        handleError(e);
-      }
-      return 0;
-    });
-  }*/
-
   Future<SubscriberSchema?> query(int? subscriberId) async {
     if (db?.isOpen != true) return null;
     if (subscriberId == null || subscriberId == 0) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -160,13 +111,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
     if (db?.isOpen != true) return null;
     if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -188,13 +137,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (topic == null || topic.isEmpty) return [];
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -224,13 +171,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage, int limit) async {
     if (db?.isOpen != true) return [];
     if (topic == null || topic.isEmpty || permPage == null) return [];
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -259,13 +204,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<int> queryCountByTopic(String? topic, {int? status}) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    // return await _lock.synchronized(() async {
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
@@ -282,13 +225,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return 0;
-    // });
   }
 
   Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    // return await _lock.synchronized(() async {
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
@@ -305,13 +246,11 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return 0;
-    // });
   }
 
   Future<int> queryMaxPermPageByTopic(String? topic) async {
     if (db?.isOpen != true) return 0;
     if (topic == null || topic.isEmpty) return 0;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -335,89 +274,91 @@ class SubscriberStorage with Tag {
       handleError(e);
     }
     return 0;
-    // });
   }
 
   Future<bool> setStatus(int? subscriberId, int? status) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0 || status == null) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'status': status,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [subscriberId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
-          return true;
-        }
-        logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'status': status,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [subscriberId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
+              return true;
+            }
+            logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setPermPage(int? subscriberId, int? permPage) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'perm_page': permPage,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [subscriberId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
-          return true;
-        }
-        logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'perm_page': permPage,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [subscriberId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
+              return true;
+            }
+            logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
     if (subscriberId == null || subscriberId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-            },
-            where: 'id = ?',
-            whereArgs: [subscriberId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
-          return true;
-        }
-        logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+                },
+                where: 'id = ?',
+                whereArgs: [subscriberId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
+              return true;
+            }
+            logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 }

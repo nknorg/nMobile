@@ -5,8 +5,8 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:synchronized/synchronized.dart';
 
 class ContactStorage with Tag {
   // static String get tableName => 'Contact';
@@ -16,7 +16,7 @@ class ContactStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  Lock _lock = new Lock();
+  ParallelQueue _queue = ParallelQueue("storage_contact", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -54,7 +54,7 @@ class ContactStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = await schema.toMap();
-    return await _lock.synchronized(() async {
+    return await _queue.add(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -94,34 +94,9 @@ class ContactStorage with Tag {
     });
   }
 
-  /*Future<bool> delete(int? contactId) async {
-  if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - delete - success - contactId:$contactId");
-          return true;
-        }
-        logger.w("$TAG - delete - fail - contactId:$contactId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }*/
-
   Future<ContactSchema?> query(int? contactId) async {
     if (db?.isOpen != true) return null;
     if (contactId == null || contactId == 0) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -143,13 +118,11 @@ class ContactStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (db?.isOpen != true) return null;
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -171,13 +144,11 @@ class ContactStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
     if (db?.isOpen != true) return [];
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    // return _lock.synchronized(() async {
     try {
       List? res = await db?.transaction((txn) {
         Batch batch = txn.batch();
@@ -211,13 +182,11 @@ class ContactStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -247,174 +216,155 @@ class ContactStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
-
-  /*Future<int> queryCountByClientAddress(String? clientAddress) async {
-  if (db?.isOpen != true) return 0;
-    if (clientAddress == null || clientAddress.isEmpty) return 0;
-    return await _lock.synchronized(() async {
-      try {
-        List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-          return txn.query(
-            tableName,
-            columns: ['COUNT(id)'],
-            where: 'address = ?',
-            whereArgs: [clientAddress],
-          );
-        });
-        int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-        logger.v("$TAG - queryCountByClientAddress - address:$clientAddress - count:$count");
-        return count ?? 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return 0;
-    });
-  }*/
 
   Future<bool> setType(int? contactId, int? contactType) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0 || contactType == null) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'type': contactType,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
-          return true;
-        }
-        logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'type': contactType,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
+              return true;
+            }
+            logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setProfile(int? contactId, String? profileVersion, Map<String, dynamic> profileInfo) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'avatar': profileInfo['avatar'],
-              'first_name': profileInfo['first_name'],
-              'last_name': profileInfo['last_name'],
-              'profile_version': profileVersion,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
-          return true;
-        }
-        logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'avatar': profileInfo['avatar'],
+                  'first_name': profileInfo['first_name'],
+                  'last_name': profileInfo['last_name'],
+                  'profile_version': profileVersion,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
+              return true;
+            }
+            logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'profile_version': profileVersion,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
-          return true;
-        }
-        logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'profile_version': profileVersion,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
+              return true;
+            }
+            logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setTop(String? clientAddress, bool top) async {
     if (db?.isOpen != true) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'is_top': top ? 1 : 0,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'address = ?',
-            whereArgs: [clientAddress],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
-          return true;
-        }
-        logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'is_top': top ? 1 : 0,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
+              return true;
+            }
+            logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'device_token': deviceToken,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
-          return true;
-        }
-        logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
-        return false;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'device_token': deviceToken,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setDeviceToken - success - contactId:$contactId - deviceToken:$deviceToken");
+              return true;
+            }
+            logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
+            return false;
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setNotificationOpen(int? contactId, bool open, {OptionsSchema? old}) async {
@@ -422,30 +372,31 @@ class ContactStorage with Tag {
     if (contactId == null || contactId == 0) return false;
     OptionsSchema options = old ?? OptionsSchema();
     options.notificationOpen = open;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'options': jsonEncode(options.toMap()),
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
-          return true;
-        }
-        logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
-        return false;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'options': jsonEncode(options.toMap()),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
+              return true;
+            }
+            logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
+            return false;
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setBurning(int? contactId, int? burningSeconds, int? updateAt, {OptionsSchema? old}) async {
@@ -454,57 +405,59 @@ class ContactStorage with Tag {
     OptionsSchema options = old ?? OptionsSchema();
     options.deleteAfterSeconds = burningSeconds ?? 0;
     options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'options': jsonEncode(options.toMap()),
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
-          return true;
-        }
-        logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'options': jsonEncode(options.toMap()),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
+              return true;
+            }
+            logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? extraInfo) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
-          return true;
-        }
-        logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
+              return true;
+            }
+            logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setNotes(int? contactId, String? notes, {Map<String, dynamic>? oldExtraInfo}) async {
@@ -512,28 +465,29 @@ class ContactStorage with Tag {
     if (contactId == null || contactId == 0) return false;
     Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
     data['notes'] = notes;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': jsonEncode(data),
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
-          return true;
-        }
-        logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+              return true;
+            }
+            logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 }

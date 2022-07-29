@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:synchronized/synchronized.dart';
 
 class DeviceInfoStorage with Tag {
   static String get tableName => 'DeviceInfo'; // v5
@@ -14,7 +14,7 @@ class DeviceInfoStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  Lock _lock = new Lock();
+  ParallelQueue _queue = ParallelQueue("storage_deviceInfo", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -40,7 +40,7 @@ class DeviceInfoStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
-    return await _lock.synchronized(() async {
+    return await _queue.add(() async {
       try {
         int? id = await db?.transaction((txn) {
           return txn.insert(tableName, entity);
@@ -62,7 +62,6 @@ class DeviceInfoStorage with Tag {
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -85,13 +84,11 @@ class DeviceInfoStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
-    // return await _lock.synchronized(() async {
     try {
       List? res = await db?.transaction((txn) {
         Batch batch = txn.batch();
@@ -126,13 +123,11 @@ class DeviceInfoStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -155,60 +150,61 @@ class DeviceInfoStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<bool> setData(int? deviceInfoId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
     if (deviceInfoId == null || deviceInfoId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': newData != null ? jsonEncode(newData) : null,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [deviceInfoId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
-          return true;
-        }
-        logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': newData != null ? jsonEncode(newData) : null,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [deviceInfoId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
+              return true;
+            }
+            logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setUpdate(String? contactAddress, String? deviceId, {int? updateAt}) async {
     if (db?.isOpen != true) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'contact_address = ? AND device_id = ?',
-            whereArgs: [contactAddress, deviceId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setUpdate - success - contactAddress:$contactAddress - deviceId:$deviceId");
-          return true;
-        }
-        logger.w("$TAG - setUpdate - fail - contactAddress:$contactAddress - deviceId:$deviceId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setUpdate - success - contactAddress:$contactAddress - deviceId:$deviceId");
+              return true;
+            }
+            logger.w("$TAG - setUpdate - fail - contactAddress:$contactAddress - deviceId:$deviceId");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 }
