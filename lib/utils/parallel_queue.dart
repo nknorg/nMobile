@@ -34,7 +34,7 @@ class _QueuedFuture<T> {
 }
 
 class ParallelQueue {
-  final List<_QueuedFuture> _queues = [];
+  final List<_QueuedFuture> _queue = [];
   final List<Completer<void>> _completeListeners = [];
 
   final List<String> _delays = [];
@@ -55,7 +55,7 @@ class ParallelQueue {
 
   ParallelQueue(this.tag, {this.parallel = 1, this.interval, this.timeout, this.onLog});
 
-  int get length => _delays.length + _queues.length;
+  int get length => _delays.length + _queue.length;
 
   Future get onComplete {
     final completer = Completer();
@@ -65,7 +65,7 @@ class ParallelQueue {
 
   void cancel() {
     _isCancelled = true;
-    _queues.removeWhere((item) => item.completer.isCompleted);
+    _queue.removeWhere((item) => item.completer.isCompleted);
   }
 
   Future<T?> add<T>(Future<T?> Function() func, {String? id, Duration? delay, bool priority = false}) async {
@@ -88,9 +88,13 @@ class ParallelQueue {
     final completer = Completer<T?>();
     final item = _QueuedFuture<T>(id, func, completer, timeout: timeout);
     if (priority) {
-      _queues.insert(0, item);
+      if (_queue.length > 0) {
+        _queue.insert(1, item);
+      } else {
+        _queue.insert(0, item);
+      }
     } else {
-      _queues.add(item);
+      _queue.add(item);
     }
     unawaited(_process());
     return await completer.future;
@@ -111,7 +115,7 @@ class ParallelQueue {
     _delays.forEach((element) {
       find = (element == id) || find;
     });
-    _queues.forEach((element) {
+    _queue.forEach((element) {
       find = (element.id == id) || find;
     });
     return find;
@@ -128,13 +132,13 @@ class ParallelQueue {
   void _onQueueNext() {
     if (isCancelled) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next cancel - tag:$tag", true);
-    } else if (_queues.isNotEmpty && (activeItems.length < parallel)) {
+    } else if (_queue.isNotEmpty && (activeItems.length < parallel)) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next ok - tag:$tag - parallel:$parallel - actives:${activeItems.length}", false);
       final processId = _lastProcessId;
       activeItems.add(processId);
-      final item = _queues.first;
+      final item = _queue.first;
       _lastProcessId++;
-      _queues.remove(item);
+      _queue.remove(item);
       item.onComplete = () async {
         this.onLog?.call("ParallelQueue - _onQueueNext - on next complete - tag:$tag - id:${item.id}", false);
         activeItems.remove(processId);
@@ -142,7 +146,7 @@ class ParallelQueue {
         _onQueueNext();
       };
       unawaited(item.execute());
-    } else if (activeItems.isEmpty && _queues.isEmpty) {
+    } else if (activeItems.isEmpty && _queue.isEmpty) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next complete all - tag:$tag", false);
       for (final completer in _completeListeners) {
         if (completer.isCompleted != true) {
