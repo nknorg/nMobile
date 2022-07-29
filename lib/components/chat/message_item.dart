@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/chat/bubble.dart';
@@ -8,9 +11,12 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/private_group.dart';
+import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/time.dart';
+import 'package:nmobile/utils/util.dart';
 
 class ChatMessageItem extends StatelessWidget {
   final MessageSchema message;
@@ -175,6 +181,13 @@ class ChatMessageItem extends StatelessWidget {
       // case MessageContentType.topicUnsubscribe:
       case MessageContentType.topicInvitation:
         contentsWidget.add(_topicInvitedWidget(context));
+        break;
+      // TODO:GG PG check
+      case MessageContentType.privateGroupInvitation:
+        contentsWidget.add(_privateGroupInvitedWidget(context));
+        break;
+      case MessageContentType.privateGroupAccept:
+        contentsWidget.add(_privateGroupAcceptWidget(context));
         break;
       // case MessageContentType.topicKickOut:
     }
@@ -381,6 +394,148 @@ class ChatMessageItem extends StatelessWidget {
                     }
                   },
                 )
+        ],
+      ),
+    );
+  }
+
+  // TODO:GG PG check
+  Widget _privateGroupInvitedWidget(BuildContext context) {
+    String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
+    String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
+    String inviteDesc = message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
+    Map content = Map();
+    String groupName = '';
+    Map data = Map();
+    String inviterRawData = '';
+    String inviterSignature = '';
+    DateTime? expiresAt;
+    Widget expiresWidget = SizedBox.shrink();
+    if (message.content != null) {
+      content = message.content as Map;
+      groupName = content['groupName'];
+      data = content['data'];
+      inviterRawData = data['inviterData'];
+      inviterSignature = data['inviterSignature'];
+
+      var rawData = Util.jsonFormat(inviterRawData);
+      if (rawData != null) {
+        expiresAt = DateTime.fromMillisecondsSinceEpoch(rawData['expiresAt']);
+        if (expiresAt.isBefore(DateTime.now())) {
+          expiresWidget = Label(
+            Global.locale((s) => s.expired, ctx: context),
+            color: application.theme.fontColor2,
+            type: LabelType.bodyRegular,
+          );
+        } else {
+          expiresWidget = message.isOutbound
+              ? Label(
+                  Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(expiresAt),
+                  color: application.theme.fontColor2,
+                  type: LabelType.bodyRegular,
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Label(
+                      Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(expiresAt),
+                      color: application.theme.fontColor2,
+                      type: LabelType.bodyRegular,
+                    ),
+                    InkWell(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                        child: Label(
+                          Global.locale((s) => s.accept, ctx: context),
+                          type: LabelType.bodyRegular,
+                          fontWeight: FontWeight.bold,
+                          color: application.theme.primaryColor,
+                        ),
+                      ),
+                      onTap: () async {
+                        String? name = await BottomDialog.of(Global.appContext).showInput(
+                          title: Global.locale((s) => s.accept_invitation, ctx: context),
+                          desc: inviteDesc,
+                          value: groupName,
+                          actionText: Global.locale((s) => s.accept_invitation, ctx: context),
+                          enable: false,
+                        );
+
+                        if (name?.isNotEmpty == true) {
+                          Loading.show();
+                          // Uint8List ownerPublicKey = clientCommon.client!.publicKey;
+                          Uint8List ownerSeed = clientCommon.client!.seed;
+                          Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
+                          PrivateGroupItemSchema privateGroupItemSchema = privateGroupCommon.createModelFromInvitationRawData(inviterRawData, inviterSignature: inviterSignature);
+
+                          bool isVerified = await privateGroupCommon.acceptInvitation(privateGroupItemSchema, ownerPrivateKey);
+                          if (isVerified) {
+                            await chatOutCommon.sendPrivateGroupAccept(message.targetId, privateGroupItemSchema);
+                            await privateGroupCommon.initializationPrivateGroup(PrivateGroupSchema(
+                              groupId: message.groupId,
+                              name: groupName,
+                            ));
+                          }
+
+                          Loading.dismiss();
+                          if (isVerified) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
+                        }
+                      },
+                    ),
+                  ],
+                );
+        }
+      }
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        children: <Widget>[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Label(
+                inviteDesc,
+                type: LabelType.bodyRegular,
+                color: application.theme.fontColor2,
+              ),
+              SizedBox(width: 2),
+              Label(
+                groupName,
+                maxWidth: Global.screenWidth() * 0.5,
+                type: LabelType.bodyRegular,
+                fontWeight: FontWeight.bold,
+                color: application.theme.fontColor1,
+              ),
+            ],
+          ),
+          expiresWidget
+        ],
+      ),
+    );
+  }
+
+  // TODO:GG PG check
+  Widget _privateGroupAcceptWidget(BuildContext context) {
+    // String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
+    String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
+    String acceptedDesc = message.isOutbound ? Global.locale((s) => s.accepted_already, ctx: context) : Global.locale((s) => s.other_accepted_already(from));
+
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        children: <Widget>[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Label(
+                '$acceptedDesc. ${Global.locale((s) => s.waiting_for_sync_data, ctx: context)}.',
+                type: LabelType.bodyRegular,
+                color: application.theme.fontColor2,
+              ),
+            ],
+          ),
         ],
       ),
     );
