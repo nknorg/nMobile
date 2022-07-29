@@ -40,7 +40,7 @@ class ChatCommon with Tag {
 
   // checker
   Map<String, Map<String, dynamic>> _checkersParams = Map();
-  ParallelQueue _checkQueue = ParallelQueue("msg_check", parallel: 3, onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : logger.d(log));
 
   ChatCommon();
 

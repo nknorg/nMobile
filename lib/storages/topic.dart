@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:synchronized/synchronized.dart';
 
 class TopicStorage with Tag {
   // static String get tableName => 'Topic';
@@ -16,7 +16,7 @@ class TopicStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  Lock _lock = new Lock();
+  ParallelQueue _queue = ParallelQueue("storage_topic", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -53,7 +53,7 @@ class TopicStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
-    return await _lock.synchronized(() async {
+    return await _queue.add(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -93,34 +93,9 @@ class TopicStorage with Tag {
     });
   }
 
-  /*Future<bool> delete(int? topicId) async {
-    if (db?.isOpen != true) return false;
-    if (topicId == null || topicId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - delete - success - topicId:$topicId");
-          return true;
-        }
-        logger.w("$TAG - delete - fail - topicId:$topicId");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }*/
-
   Future<TopicSchema?> query(int? topicId) async {
     if (db?.isOpen != true) return null;
     if (topicId == null || topicId == 0) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -142,13 +117,11 @@ class TopicStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<TopicSchema?> queryByTopic(String? topic) async {
     if (db?.isOpen != true) return null;
     if (topic == null || topic.isEmpty) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -170,12 +143,10 @@ class TopicStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -205,12 +176,10 @@ class TopicStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -240,7 +209,6 @@ class TopicStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
@@ -257,136 +225,141 @@ class TopicStorage with Tag {
     if (createAt != null) {
       values["create_at"] = createAt;
     }
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            values,
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
-          return true;
-        }
-        logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                values,
+                where: 'id = ?',
+                whereArgs: [topicId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+              return true;
+            }
+            logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setAvatar(int? topicId, String? avatarLocalPath) async {
     if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'avatar': avatarLocalPath,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
-          return true;
-        }
-        logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'avatar': avatarLocalPath,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [topicId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
+              return true;
+            }
+            logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setCount(int? topicId, int userCount) async {
     if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'count': userCount,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setCount - success - topicId:$topicId - count:$count");
-          return true;
-        }
-        logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'count': userCount,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [topicId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setCount - success - topicId:$topicId - count:$count");
+              return true;
+            }
+            logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setTop(int? topicId, bool top) async {
     if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'is_top': top ? 1 : 0,
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setTop - success - topicId:$topicId - top:$top");
-          return true;
-        }
-        logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'is_top': top ? 1 : 0,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [topicId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setTop - success - topicId:$topicId - top:$top");
+              return true;
+            }
+            logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setData(int? topicId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
     if (topicId == null || topicId == 0) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
-            },
-            where: 'id = ?',
-            whereArgs: [topicId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setData - success - topicId:$topicId - newData:$newData");
-          return true;
-        }
-        logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+                },
+                where: 'id = ?',
+                whereArgs: [topicId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setData - success - topicId:$topicId - newData:$newData");
+              return true;
+            }
+            logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 }
