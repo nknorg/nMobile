@@ -4,8 +4,8 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:synchronized/synchronized.dart';
 
 class SessionStorage with Tag {
   static String get tableName => 'Session';
@@ -14,7 +14,7 @@ class SessionStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  Lock _lock = new Lock();
+  ParallelQueue _queue = ParallelQueue("storage_session", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -43,7 +43,7 @@ class SessionStorage with Tag {
     if (db?.isOpen != true) return null;
     if (schema == null) return null;
     Map<String, dynamic> entity = await schema.toMap();
-    return await _lock.synchronized(() async {
+    return await _queue.add(() async {
       try {
         int? id;
         if (!checkDuplicated) {
@@ -86,31 +86,31 @@ class SessionStorage with Tag {
   Future<bool> delete(String? targetId, int? type) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? result = await db?.transaction((txn) {
-          return txn.delete(
-            tableName,
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [targetId, type],
-          );
-        });
-        if (result != null && result > 0) {
-          logger.v("$TAG - delete - success - targetId:$targetId - type:$type");
-          return true;
-        }
-        logger.w("$TAG - delete - empty - targetId:$targetId - type:$type");
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? result = await db?.transaction((txn) {
+              return txn.delete(
+                tableName,
+                where: 'target_id = ? AND type = ?',
+                whereArgs: [targetId, type],
+              );
+            });
+            if (result != null && result > 0) {
+              logger.v("$TAG - delete - success - targetId:$targetId - type:$type");
+              return true;
+            }
+            logger.w("$TAG - delete - empty - targetId:$targetId - type:$type");
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<SessionSchema?> query(String? targetId, int? type) async {
     if (db?.isOpen != true) return null;
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -132,12 +132,10 @@ class SessionStorage with Tag {
       handleError(e);
     }
     return null;
-    // });
   }
 
   Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    // return await _lock.synchronized(() async {
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -165,105 +163,82 @@ class SessionStorage with Tag {
       handleError(e);
     }
     return [];
-    // });
   }
 
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
     if (db?.isOpen != true) return false;
     if (schema == null || schema.targetId.isEmpty) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
-              'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-              'un_read_count': schema.unReadCount,
-            },
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [schema.targetId, schema.type],
-          );
-        });
-        logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
-        return (count ?? 0) > 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+                  'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
+                  'un_read_count': schema.unReadCount,
+                },
+                where: 'target_id = ? AND type = ?',
+                whereArgs: [schema.targetId, schema.type],
+              );
+            });
+            logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
+            return (count ?? 0) > 0;
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
-
-  /*Future<bool> updateLastMessage(SessionSchema? schema) async {
-  if (db?.isOpen != true) return false;
-    if (schema == null || schema.targetId.isEmpty) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
-              'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
-            },
-            where: 'target_id = ?',
-            whereArgs: [schema.targetId],
-          );
-        });
-        logger.v("$TAG - updateLastMessage - count:$count - schema:$schema");
-        return (count ?? 0) > 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
-  }*/
 
   Future<bool> updateIsTop(String? targetId, int? type, bool isTop) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'is_top': isTop ? 1 : 0,
-            },
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [targetId, type],
-          );
-        });
-        logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
-        return (count ?? 0) > 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'is_top': isTop ? 1 : 0,
+                },
+                where: 'target_id = ? AND type = ?',
+                whereArgs: [targetId, type],
+              );
+            });
+            logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
+            return (count ?? 0) > 0;
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> updateUnReadCount(String? targetId, int? type, int unread) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    return await _lock.synchronized(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'un_read_count': unread,
-            },
-            where: 'target_id = ? AND type = ?',
-            whereArgs: [targetId, type],
-          );
-        });
-        logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
-        return (count ?? 0) > 0;
-      } catch (e) {
-        handleError(e);
-      }
-      return false;
-    });
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'un_read_count': unread,
+                },
+                where: 'target_id = ? AND type = ?',
+                whereArgs: [targetId, type],
+              );
+            });
+            logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
+            return (count ?? 0) > 0;
+          } catch (e) {
+            handleError(e);
+          }
+          return false;
+        }) ??
+        false;
   }
 }
