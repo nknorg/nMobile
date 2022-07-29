@@ -28,6 +28,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(other) => "您邀请 ${other} 加入群聊";
 
+  static String m4(other) => "${other}已接受邀请";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "ERC_20": MessageLookupByLibrary.simpleMessage("ERC-20"),
@@ -147,6 +149,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "当您更新您的 nMobile App 或者偶然地卸载 nMobile 时，您的账户可能会丢失，这时您将无法访问您的资产！因此，请现在花3分钟时间备份所有账户。"),
         "d_not_backed_up_title":
             MessageLookupByLibrary.simpleMessage("重要提示：请备份您的账户！"),
+        "data_synchronization": MessageLookupByLibrary.simpleMessage("数据同步中"),
         "days": MessageLookupByLibrary.simpleMessage("天"),
         "debug": MessageLookupByLibrary.simpleMessage("Debug"),
         "delete": MessageLookupByLibrary.simpleMessage("删除"),
@@ -204,6 +207,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "当前版本暂不支持ERC20 Token交易，请立刻导出此账户Keystore进行备份。"),
         "eth_wallet": MessageLookupByLibrary.simpleMessage("Eth 账户"),
         "ethereum": MessageLookupByLibrary.simpleMessage("以太坊"),
+        "expiration": MessageLookupByLibrary.simpleMessage("过期时间"),
+        "expired": MessageLookupByLibrary.simpleMessage("已过期"),
         "export": MessageLookupByLibrary.simpleMessage("导出"),
         "export_wallet": MessageLookupByLibrary.simpleMessage("导出账户"),
         "face_id": MessageLookupByLibrary.simpleMessage("Face ID"),
@@ -262,6 +267,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("不能邀请你自己!"),
         "invited_already":
             MessageLookupByLibrary.simpleMessage("你已经邀请过该成员，继续邀请?"),
+        "invitee_already_exists":
+            MessageLookupByLibrary.simpleMessage("收邀人已存在"),
         "invites_desc_me": m2,
         "invites_desc_other": m3,
         "inviting": MessageLookupByLibrary.simpleMessage("邀请中"),
@@ -335,6 +342,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "off": MessageLookupByLibrary.simpleMessage("关"),
         "ok": MessageLookupByLibrary.simpleMessage("确定"),
         "optional": MessageLookupByLibrary.simpleMessage("可选"),
+        "other_accepted_already": m4,
         "owner": MessageLookupByLibrary.simpleMessage("群主"),
         "password_wrong":
             MessageLookupByLibrary.simpleMessage("账户密码或keystore错误"),
@@ -469,6 +477,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_channel_members": MessageLookupByLibrary.simpleMessage("查看群成员"),
         "view_profile": MessageLookupByLibrary.simpleMessage("查看资料"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("查看二维码"),
+        "waiting_for_sync_data": MessageLookupByLibrary.simpleMessage("等待同步数据"),
         "wallet_address": MessageLookupByLibrary.simpleMessage("账户地址"),
         "wallet_missing":
             MessageLookupByLibrary.simpleMessage("钱包信息丢失，退出并重新导入。"),

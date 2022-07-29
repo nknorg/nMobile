@@ -2190,6 +2190,16 @@ class S {
     );
   }
 
+  /// `data synchronization`
+  String get data_synchronization {
+    return Intl.message(
+      'data synchronization',
+      name: 'data_synchronization',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Edit`
   String get edit {
     return Intl.message(
@@ -2215,6 +2225,26 @@ class S {
     return Intl.message(
       'Edit Nickname',
       name: 'edit_nickname',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expiration`
+  String get expiration {
+    return Intl.message(
+      'Expiration',
+      name: 'expiration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expired`
+  String get expired {
+    return Intl.message(
+      'Expired',
+      name: 'expired',
       desc: '',
       args: [],
     );
@@ -2265,6 +2295,16 @@ class S {
     return Intl.message(
       'Please input Notes',
       name: 'input_notes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invitee already exists`
+  String get invitee_already_exists {
+    return Intl.message(
+      'Invitee already exists',
+      name: 'invitee_already_exists',
       desc: '',
       args: [],
     );
@@ -2855,6 +2895,26 @@ class S {
     return Intl.message(
       'You have already accepted',
       name: 'accepted_already',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{other} have already accepted`
+  String other_accepted_already(Object other) {
+    return Intl.message(
+      '$other have already accepted',
+      name: 'other_accepted_already',
+      desc: '',
+      args: [other],
+    );
+  }
+
+  /// `Waiting for sync data`
+  String get waiting_for_sync_data {
+    return Intl.message(
+      'Waiting for sync data',
+      name: 'waiting_for_sync_data',
       desc: '',
       args: [],
     );

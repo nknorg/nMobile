@@ -3,6 +3,7 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/routes/chat.dart' as chat;
 import 'package:nmobile/routes/contact.dart' as contact;
 import 'package:nmobile/routes/home.dart' as home;
+import 'package:nmobile/routes/private_group.dart' as privateGroup;
 import 'package:nmobile/routes/settings.dart' as settings;
 import 'package:nmobile/routes/topic.dart' as topic;
 import 'package:nmobile/routes/wallet.dart' as wallet;
@@ -21,6 +22,7 @@ class Routes {
     wallet.init();
     contact.init();
     topic.init();
+    privateGroup.init();
     chat.init();
   }
 

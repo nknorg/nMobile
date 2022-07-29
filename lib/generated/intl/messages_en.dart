@@ -29,6 +29,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m3(other) => "You invites ${other} to join group";
 
+  static String m4(other) => "${other} have already accepted";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "Accelerate": MessageLookupByLibrary.simpleMessage("Accelerate"),
@@ -173,6 +175,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "When you update your nMobile software or accidentally uninstall nMobile, your wallet might be lost and you might NOT be able to access your assets! So please take 3 minutes time now to back up all your wallets."),
         "d_not_backed_up_title": MessageLookupByLibrary.simpleMessage(
             "Important: Please Back Up\n Your Accounts!"),
+        "data_synchronization":
+            MessageLookupByLibrary.simpleMessage("data synchronization"),
         "days": MessageLookupByLibrary.simpleMessage("days"),
         "debug": MessageLookupByLibrary.simpleMessage("Debug"),
         "delete": MessageLookupByLibrary.simpleMessage("Delete"),
@@ -238,6 +242,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "The current version does not support ERC20 Token transactions. Please export this wallet keystore for backup immediately."),
         "eth_wallet": MessageLookupByLibrary.simpleMessage("Eth Account"),
         "ethereum": MessageLookupByLibrary.simpleMessage("Ethereum"),
+        "expiration": MessageLookupByLibrary.simpleMessage("Expiration"),
+        "expired": MessageLookupByLibrary.simpleMessage("Expired"),
         "export": MessageLookupByLibrary.simpleMessage("Export"),
         "export_wallet": MessageLookupByLibrary.simpleMessage("Export Account"),
         "face_id": MessageLookupByLibrary.simpleMessage("Face ID"),
@@ -311,6 +317,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Can not invite yourself!"),
         "invited_already": MessageLookupByLibrary.simpleMessage(
             "You have already invited this member,still invite?"),
+        "invitee_already_exists":
+            MessageLookupByLibrary.simpleMessage("Invitee already exists"),
         "invites_desc_me": m2,
         "invites_desc_other": m3,
         "inviting": MessageLookupByLibrary.simpleMessage("inviting"),
@@ -395,6 +403,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "off": MessageLookupByLibrary.simpleMessage("Off"),
         "ok": MessageLookupByLibrary.simpleMessage("OK"),
         "optional": MessageLookupByLibrary.simpleMessage("optional"),
+        "other_accepted_already": m4,
         "owner": MessageLookupByLibrary.simpleMessage("Owner"),
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
@@ -544,6 +553,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_channel_members": MessageLookupByLibrary.simpleMessage("Members"),
         "view_profile": MessageLookupByLibrary.simpleMessage("View Profile"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("View QR Code"),
+        "waiting_for_sync_data":
+            MessageLookupByLibrary.simpleMessage("Waiting for sync data"),
         "wallet_address":
             MessageLookupByLibrary.simpleMessage("Account Address"),
         "wallet_missing": MessageLookupByLibrary.simpleMessage(

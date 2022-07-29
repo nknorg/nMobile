@@ -1,11 +1,11 @@
+import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/private_group.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 
-import '../common/locator.dart';
-import '../helpers/error.dart';
-import '../utils/logger.dart';
-
+// TODO:GG PG check
 class PrivateGroupStorage with Tag {
   static String get tableName => 'PrivateGroup';
 
@@ -40,7 +40,6 @@ class PrivateGroupStorage with Tag {
 
   Future<PrivateGroupSchema?> insert(PrivateGroupSchema schema) async {
     Map<String, dynamic> entity = schema.toMap();
-
     try {
       int? id = await db?.insert(tableName, entity);
 
@@ -51,7 +50,10 @@ class PrivateGroupStorage with Tag {
       }
       logger.w("$TAG - insert - empty - schema:$schema");
     } catch (e, st) {
-      handleError(e, st);
+      if (e.toString().contains('UNIQUE constraint failed: PrivateGroup.group_id')) {
+      } else {
+        handleError(e, st);
+      }
     }
     return null;
   }
@@ -78,6 +80,54 @@ class PrivateGroupStorage with Tag {
       handleError(e, st);
     }
     return null;
+  }
+
+  Future<bool> setAvatar(String groupId, String? avatarLocalPath) async {
+    if (db?.isOpen != true) return false;
+    return await _lock.synchronized(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'avatar': avatarLocalPath,
+              'update_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'group_id = ?',
+            whereArgs: [groupId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+          return true;
+        }
+        logger.w("$TAG - setAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+      } catch (e, st) {
+        handleError(e, st);
+      }
+      return false;
+    });
+  }
+
+  Future<bool> update(String groupId, PrivateGroupSchema schema) async {
+    Map<String, dynamic> model = schema.toMap();
+    model.remove('id');
+    model.remove('create_at');
+    model['update_at'] = DateTime.now().millisecondsSinceEpoch;
+
+    model.removeWhere((key, value) => value == null);
+    try {
+      int? count = await db?.update(
+        tableName,
+        model,
+        where: 'group_id = ?',
+        whereArgs: [groupId],
+      );
+      return count != null && count > 0;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return false;
   }
 
   Future<int?> delete() async {

@@ -6,10 +6,12 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
+import 'package:nmobile/components/private_group/item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/item.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -33,16 +35,19 @@ class ChatSessionItem extends BaseStateFulWidget {
 
 class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   StreamSubscription? _updateTopicSubscription;
+  StreamSubscription? _updatePrivateGroupSubscription;
   StreamSubscription? _updateContactSubscription;
   StreamSubscription? _updateDraftSubscription;
 
   TopicSchema? _topic;
+  PrivateGroupSchema? _privateGroup;
   ContactSchema? _contact;
   MessageSchema? _lastMsg;
   ContactSchema? _topicSender;
 
   bool loaded = false;
 
+  // TODO:GG PG check
   @override
   void onRefreshArguments() {
     loaded = false;
@@ -52,6 +57,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           setState(() {
             loaded = true;
             _topic = value;
+            _privateGroup = null;
+            _contact = null;
+          });
+        });
+      } else {
+        loaded = true;
+      }
+    } else if (widget.session.isPrivateGroup) {
+      if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
+        privateGroupCommon.queryByGroupId(widget.session.targetId).then((value) {
+          privateGroupCommon.checkDataComplete(value!.groupId);
+          setState(() {
+            loaded = true;
+            _privateGroup = value;
+            _topic = null;
             _contact = null;
           });
         });
@@ -64,6 +84,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           setState(() {
             loaded = true;
             _topic = null;
+            _privateGroup = null;
             _contact = value;
           });
         });
@@ -93,6 +114,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
   }
 
+  // TODO:GG PG check
   @override
   void initState() {
     super.initState();
@@ -100,6 +122,12 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
       setState(() {
         _topic = event;
+      });
+    });
+    // private group
+    _updatePrivateGroupSubscription = privateGroupCommon.updateStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+      setState(() {
+        _privateGroup = event;
       });
     });
     // contact
@@ -117,6 +145,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   void dispose() {
     _updateTopicSubscription?.cancel();
+    _updatePrivateGroupSubscription?.cancel();
     _updateContactSubscription?.cancel();
     _updateDraftSubscription?.cancel();
     super.dispose();
@@ -124,18 +153,19 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   @override
   Widget build(BuildContext context) {
-    if (_topic == null && _contact == null && loaded) {
+    if (_topic == null && _contact == null && _privateGroup == null && loaded) {
       sessionCommon.delete(widget.session.targetId, widget.session.type);
       return SizedBox.shrink();
     }
     SessionSchema session = widget.session;
 
+    // TODO:GG PG check
     return Material(
       color: Colors.transparent,
       elevation: 0,
       child: InkWell(
-        onTap: () => widget.onTap?.call(_topic ?? _contact),
-        onLongPress: () => widget.onLongPress?.call(_topic ?? _contact),
+        onTap: () => widget.onTap?.call(_topic ?? _privateGroup ?? _contact),
+        onLongPress: () => widget.onLongPress?.call(_topic ?? _privateGroup ?? _contact),
         child: Container(
           color: session.isTop ? application.theme.backgroundColor1 : Colors.transparent,
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -179,17 +209,30 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                         ),
                         onTapWave: false,
                       )
-                    : (_contact != null
-                        ? ContactItem(
-                            contact: _contact!,
+                    // TODO:GG PG check
+                    : _privateGroup != null
+                        ? PrivateGroupItem(
+                            privateGroup: _privateGroup!,
                             body: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Label(
-                                  _contact?.displayName ?? " ",
-                                  type: LabelType.h3,
-                                  fontWeight: FontWeight.bold,
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Asset.iconSvg(
+                                      'lock',
+                                      width: 18,
+                                      color: application.theme.successColor,
+                                    ),
+                                    Expanded(
+                                      child: Label(
+                                        _privateGroup?.name ?? " ",
+                                        type: LabelType.h3,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 6),
@@ -199,7 +242,27 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                             ),
                             onTapWave: false,
                           )
-                        : SizedBox(width: 24 * 2, height: 24 * 2)),
+                        : (_contact != null
+                            ? ContactItem(
+                                contact: _contact!,
+                                body: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Label(
+                                      _contact?.displayName ?? " ",
+                                      type: LabelType.h3,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: _contentWidget(session),
+                                    ),
+                                  ],
+                                ),
+                                onTapWave: false,
+                              )
+                            : SizedBox(width: 24 * 2, height: 24 * 2)),
               ),
               Container(
                 child: Row(
@@ -354,6 +417,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         overflow: TextOverflow.ellipsis,
       );
     } else if (msgType == MessageContentType.topicInvitation) {
+      contentWidget = Label(
+        prefix + Global.locale((s) => s.channel_invitation, ctx: context),
+        type: LabelType.bodyRegular,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    } else if (msgType == MessageContentType.privateGroupInvitation) {
+      // TODO:GG PG check
       contentWidget = Label(
         prefix + Global.locale((s) => s.channel_invitation, ctx: context),
         type: LabelType.bodyRegular,
