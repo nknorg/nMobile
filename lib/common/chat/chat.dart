@@ -51,7 +51,7 @@ class ChatCommon with Tag {
     checkIpfsStateIng(fileNotify: true, thumbnailAutoDownload: true); // await
   }
 
-  void checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 5}) {
+  void checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) {
     if (targetId == null || targetId.isEmpty) return;
     // delay
     if (_checkersParams[targetId] == null) _checkersParams[targetId] = Map();
@@ -86,7 +86,7 @@ class ChatCommon with Tag {
     if (targetId == null || targetId.isEmpty) return 0;
 
     int limit = 20;
-    int maxCount = 10;
+    int maxCount = 100;
     List<MessageSchema> checkList = [];
 
     // noAck

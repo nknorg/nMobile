@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
@@ -16,6 +15,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
 
 class ChatInCommon with Tag {
@@ -24,24 +24,18 @@ class ChatInCommon with Tag {
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
 
-  // TODO:GG change to really queue
   // receive queue
-  Uint8List? receivePid;
-  Map<String, bool> receiveLoops = Map();
-  Map<String, List<MessageSchema>> receiveMessages = Map();
+  Map<String, ParallelQueue> _receiveQueues = Map();
 
   // check duplicated
-  MessageSchema? lastReceiveMsg;
-  int lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
+  MessageSchema? _lastReceiveMsg;
+  int _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
 
   ChatInCommon();
 
   void clear() {
-    // receivePid == null;
-    receiveLoops.clear();
-    receiveMessages.clear();
-    lastReceiveMsg = null;
-    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    _lastReceiveMsg = null;
+    _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
   }
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
@@ -50,6 +44,9 @@ class ChatInCommon with Tag {
       return;
     } else if (message.targetId.isEmpty) {
       logger.e("$TAG - onMessageReceive - targetId is empty - received:$message");
+      return;
+    } else if (message.contentType.isEmpty) {
+      logger.e("$TAG - onMessageReceive - contentType is empty - received:$message");
       return;
     }
 
@@ -63,103 +60,44 @@ class ChatInCommon with Tag {
       }
     }
 
-    // last (no session filter)
-    if (lastReceiveMsg?.contentType == message.contentType) {
-      bool from = lastReceiveMsg?.from == message.from;
-      bool to = lastReceiveMsg?.to == message.to;
-      bool topic = lastReceiveMsg?.topic == message.topic;
-      bool targetId = lastReceiveMsg?.targetId == message.targetId;
-      bool content = lastReceiveMsg?.content == message.content;
+    // last duplicated (no session filter)
+    if (_lastReceiveMsg?.contentType == message.contentType) {
+      bool from = _lastReceiveMsg?.from == message.from;
+      bool to = _lastReceiveMsg?.to == message.to;
+      bool topic = _lastReceiveMsg?.topic == message.topic;
+      bool targetId = _lastReceiveMsg?.targetId == message.targetId;
+      bool content = _lastReceiveMsg?.content == message.content;
       if (from && to && topic && targetId && content) {
         if (!message.canDisplay) {
-          int interval = DateTime.now().millisecondsSinceEpoch - lastReceiveTimeStamp;
-          if (interval < 1000) {
-            logger.i("$TAG - onMessageReceive - check duplicated - skip by just receive - interval:$interval - last:$lastReceiveMsg - received:$message");
+          int interval = DateTime.now().millisecondsSinceEpoch - _lastReceiveMsgAt;
+          if (interval < 1 * 1000) {
+            logger.i("$TAG - onMessageReceive - check duplicated - skip by just receive - interval:$interval - last:$_lastReceiveMsg - received:$message");
             return;
           } else {
-            logger.i("$TAG - onMessageReceive - check duplicated - continue by interval large - last:$lastReceiveMsg - received:$message");
+            logger.i("$TAG - onMessageReceive - check duplicated - continue by interval large - last:$_lastReceiveMsg - received:$message");
           }
         } else {
-          logger.i("$TAG - onMessageReceive - check duplicated - continue by type display - last:$lastReceiveMsg - received:$message");
+          logger.i("$TAG - onMessageReceive - check duplicated - continue by type display - last:$_lastReceiveMsg - received:$message");
         }
       }
     }
-    lastReceiveMsg = message;
-
-    // init
-    if (receiveMessages[message.targetId] == null) {
-      receiveMessages[message.targetId] = [];
-      receiveLoops[message.targetId] = false;
-    } else if (receiveMessages[message.targetId]!.isEmpty || (receiveLoops[message.targetId] == null)) {
-      receiveLoops[message.targetId] = false;
-    }
+    _lastReceiveMsg = message;
+    _lastReceiveMsgAt = DateTime.now().millisecondsSinceEpoch;
 
     // queue
-    if (needFast) {
-      if ((receiveMessages[message.targetId]?.length ?? 0) > 0) {
-        receiveMessages[message.targetId]?.insert(1, message);
-      } else {
-        receiveMessages[message.targetId]?.insert(0, message);
-      }
-    } else {
-      receiveMessages[message.targetId]?.add(message);
+    if (_receiveQueues[message.targetId] == null) {
+      _receiveQueues[message.targetId] = ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
     }
-
-    // handle
-    try {
-      _loopReceiveMessage(message.targetId); // await
-    } catch (e) {
-      handleError(e);
-    }
-  }
-
-  Future _loopReceiveMessage(String? targetId) async {
-    if (targetId == null || targetId.isEmpty) {
-      logger.e("$TAG - loopReceiveMessage - targetId is empty");
-      return;
-    }
-
-    // lock
-    if (receiveLoops[targetId] == true) return;
-    receiveLoops[targetId] = true;
-
-    // empty
-    if ((receiveMessages[targetId] == null) || receiveMessages[targetId]!.isEmpty) {
-      logger.d("$TAG - loopReceiveMessage - receives is empty - targetId:$targetId");
-      receiveLoops[targetId] = false;
-      return;
-    }
-
-    // handle
-    if (receiveMessages[targetId]?[0].pid == receivePid) {
-      logger.i("$TAG - loopReceiveMessage - message is duplicated - targetId:$targetId");
-    } else if (receiveMessages[targetId]?[0] != null) {
-      receivePid = receiveMessages[targetId]?[0].pid;
+    _receiveQueues[message.targetId]?.add(() async {
       try {
-        await _messageHandle(receiveMessages[targetId]![0]);
+        return await _handleMessage(message);
       } catch (e) {
         handleError(e);
       }
-    } else {
-      logger.i("$TAG - loopReceiveMessage - message is empty - targetId:$targetId");
-    }
-    lastReceiveTimeStamp = DateTime.now().millisecondsSinceEpoch;
-
-    // pop
-    if ((receiveMessages[targetId]?.length ?? 0) > 0) {
-      receiveMessages[targetId]?.removeAt(0);
-    } else {
-      logger.i("$TAG - loopReceiveMessage - messages is empty - targetId:$targetId");
-    }
-
-    // unlock
-    receiveLoops[targetId] = false;
-
-    // loop
-    Future.delayed(Duration(milliseconds: 10), () => _loopReceiveMessage(targetId));
+    }, id: message.msgId, priority: needFast);
   }
 
-  Future _messageHandle(MessageSchema received) async {
+  Future _handleMessage(MessageSchema received) async {
     // contact
     ContactSchema? contact = await chatCommon.contactHandle(received);
     await chatCommon.deviceInfoHandle(received);
@@ -168,18 +106,18 @@ class ChatInCommon with Tag {
     TopicSchema? topic = await chatCommon.topicHandle(received);
     if (topic != null) {
       if (topic.joined != true) {
-        logger.w("$TAG - _messageHandle - deny message - topic unsubscribe - topic:$topic");
+        logger.w("$TAG - _handleMessage - deny message - topic unsubscribe - topic:$topic");
         return;
       }
       SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topic.topic, clientCommon.address);
       if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
-        logger.w("$TAG - _messageHandle - deny message - me no permission - me:$me - topic:$topic");
+        logger.w("$TAG - _handleMessage - deny message - me no permission - me:$me - topic:$topic");
         return;
       }
       if (!received.isTopicAction) {
         SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic);
         if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
-          logger.w("$TAG - _messageHandle - deny message - sender no permission - sender:$sender - topic:$topic");
+          logger.w("$TAG - _handleMessage - deny message - sender no permission - sender:$sender - topic:$topic");
           return;
         }
       }
@@ -286,7 +224,7 @@ class ChatInCommon with Tag {
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       if (!received.isTopic) {
-        chatCommon.checkMsgStatus(received.targetId, false, refresh: true, filterSec: 5); // await
+        chatCommon.checkMsgStatus(received.targetId, false); // await
       }
     } else {
       logger.e("$TAG - _receivePing - content content error - received:$received");
@@ -333,7 +271,7 @@ class ChatInCommon with Tag {
 
     // check msgStatus
     if (!exists.isTopic && (received.from != received.to) && (received.from != clientCommon.address)) {
-      chatCommon.checkMsgStatus(exists.targetId, false, refresh: true, filterSec: 5); // await
+      chatCommon.checkMsgStatus(exists.targetId, false); // await
     }
     return true;
   }
