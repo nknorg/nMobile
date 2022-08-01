@@ -86,7 +86,7 @@ class ChatCommon with Tag {
     if (targetId == null || targetId.isEmpty) return 0;
 
     int limit = 20;
-    int maxCount = 100;
+    int maxCount = 20;
     List<MessageSchema> checkList = [];
 
     // noAck
