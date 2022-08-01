@@ -8,7 +8,7 @@ class Badge {
   static bool? isEnable;
   static int _currentCount = 0;
 
-  static ParallelQueue _queue = ParallelQueue("badge", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
+  static ParallelQueue _queue = ParallelQueue("badge", onLog: (log, error) => error ? logger.w(log) : null);
 
   static Future<bool> checkEnable() async {
     if (isEnable != null) return isEnable!;

@@ -26,7 +26,7 @@ class TaskService {
 
   Map<String, Timer> _delayMap = Map<String, Timer>();
 
-  ParallelQueue _queue = ParallelQueue("service_task", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _queue = ParallelQueue("service_task", onLog: (log, error) => error ? logger.w(log) : null);
 
   TaskService();
 

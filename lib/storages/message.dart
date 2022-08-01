@@ -18,7 +18,7 @@ class MessageStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_message", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
+  ParallelQueue _queue = ParallelQueue("storage_message", onLog: (log, error) => error ? logger.w(log) : null);
 
   // TODO:GG PG `group_id` VARCHAR(200),
   static String createSQL = '''
