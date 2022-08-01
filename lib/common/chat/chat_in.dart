@@ -64,7 +64,6 @@ class ChatInCommon with Tag {
     }
     _receiveQueues[message.targetId]?[message.contentType]?.add(() async {
       try {
-        // TODO:GG 测试error
         return await _handleMessage(message);
       } catch (e) {
         handleError(e);
