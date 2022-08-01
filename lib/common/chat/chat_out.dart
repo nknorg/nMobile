@@ -526,7 +526,14 @@ class ChatOutCommon with Tag {
       }
       return await _send(message, msgData, insert: false);
     };
-    return await _resendQueue.add(() => func(), id: message.msgId);
+    return await _resendQueue.add(() async {
+      try {
+        return await func();
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    }, id: message.msgId);
   }
 
   Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) async {
@@ -569,7 +576,14 @@ class ChatOutCommon with Tag {
       notification = false; // FIXED: notification duplicated
       return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
     };
-    return await _resendQueue.add(() => func(), id: message.msgId);
+    return await _resendQueue.add(() async {
+      try {
+        return await func();
+      } catch (e) {
+        handleError(e);
+      }
+      return null;
+    }, id: message.msgId);
   }
 
   Future<MessageSchema?> _insertMessage(MessageSchema? message, {bool notify = true}) async {

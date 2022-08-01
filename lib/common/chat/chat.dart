@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -51,7 +52,7 @@ class ChatCommon with Tag {
     checkIpfsStateIng(fileNotify: true, thumbnailAutoDownload: true); // await
   }
 
-  void checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) {
+  Future checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) async {
     if (targetId == null || targetId.isEmpty) return;
     // delay
     if (_checkersParams[targetId] == null) _checkersParams[targetId] = Map();
@@ -72,12 +73,15 @@ class ChatCommon with Tag {
       logger.d("$TAG - checkMsgStatus - cancel old - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
       _checkQueue.deleteDelays(targetId);
     }
-    _checkQueue.add(() async {
-      logger.i("$TAG - checkMsgStatus - start - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-      final count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
-      logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
-      _checkersParams[targetId]?["delay"] = 0;
-      return count;
+    await _checkQueue.add(() async {
+      try {
+        logger.i("$TAG - checkMsgStatus - start - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
+        final count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
+        logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
+        _checkersParams[targetId]?["delay"] = 0;
+      } catch (e) {
+        handleError(e);
+      }
     }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
   }
 
