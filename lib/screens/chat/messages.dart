@@ -88,7 +88,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
-  ParallelQueue _fetchMsgQueue = ParallelQueue("messages_fetch", onLog: (log, error) => error ? logger.w(log) : logger.v(log));
+  ParallelQueue _fetchMsgQueue = ParallelQueue("messages_fetch", onLog: (log, error) => error ? logger.w(log) : null);
   int _pageLimit = 30;
   List<MessageSchema> _messages = <MessageSchema>[];
 

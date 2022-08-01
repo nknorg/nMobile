@@ -30,8 +30,8 @@ class ChatOutCommon with Tag {
   Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
   // queue
-  ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
-  ParallelQueue _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : logger.d(log));
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : null);
 
   ChatOutCommon();
 

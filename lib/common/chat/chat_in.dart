@@ -58,9 +58,7 @@ class ChatInCommon with Tag {
       _receiveQueues[message.targetId] = Map();
     }
     if (_receiveQueues[message.targetId]?[message.contentType] == null) {
-      _receiveQueues[message.targetId]?[message.contentType] = ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) {
-        if (error) logger.w(log);
-      });
+      _receiveQueues[message.targetId]?[message.contentType] = ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
     }
     _receiveQueues[message.targetId]?[message.contentType]?.add(() async {
       try {
