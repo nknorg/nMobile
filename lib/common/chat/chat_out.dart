@@ -371,7 +371,7 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
-      groupId = groupId;
+      groupId = target.groupId;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
