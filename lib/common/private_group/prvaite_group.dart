@@ -328,6 +328,7 @@ class PrivateGroupCommon with Tag {
   Future<bool> syncPrivateGroupMember(String syncGroupId, String syncVersion, List members) async {
     for (int i = 0; i < members.length; i++) {
       var m = members[i];
+      logger.d('$TAG - syncPrivateGroupMember - $m');
       int? expiresAt = m['expires_at'];
 
       String? groupId = m['group_id'];
@@ -365,6 +366,7 @@ class PrivateGroupCommon with Tag {
 
       bool inviterVerified = await Crypto.verify(hexDecode(inviter), Uint8List.fromList(Hash.sha256(inviterRawData)), hexDecode(inviterSignature));
       bool inviteeVerified = await Crypto.verify(hexDecode(invitee), Uint8List.fromList(Hash.sha256(inviteeRawData)), hexDecode(inviteeSignature));
+
       if (!inviterVerified || !inviteeVerified) {
         Toast.show('signature verification failed.');
         logger.d('$TAG - syncPrivateGroupMember - signature verification failed.');
@@ -386,7 +388,7 @@ class PrivateGroupCommon with Tag {
       await _privateGroupItemStorage.insert(PrivateGroupItemSchema(
         groupId: groupId,
         invitee: invitee,
-        inviteeRawData: inviterRawData,
+        inviteeRawData: inviteeRawData,
         inviteeSignature: inviteeSignature,
         inviter: inviter,
         inviterRawData: inviterRawData,
@@ -484,6 +486,12 @@ class PrivateGroupCommon with Tag {
 
     var privateGroup = await queryByGroupId(groupId);
     var privateGroupMembers = await _privateGroupItemStorage.query(groupId);
+    var privateGroupItem = await _privateGroupItemStorage.queryByInvitee(groupId, to);
+    if (privateGroupItem == null) {
+      logger.d('request is not in group.');
+      return false;
+    }
+
     await chatOutCommon.sendPrivateGroupMemberSync(to, privateGroup!, privateGroupMembers!);
 
     return true;

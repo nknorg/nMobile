@@ -864,6 +864,9 @@ class ChatInCommon with Tag {
 
     // unlock
     privateGroupCommon.unLockSyncData(groupId, received.from);
+    privateGroupMembers.forEach((m) {
+      chatOutCommon.sendPrivateGroupMemberSync(m.invitee!, privateGroup, [m]);
+    });
     return true;
   }
 

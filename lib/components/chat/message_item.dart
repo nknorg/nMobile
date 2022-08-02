@@ -123,7 +123,7 @@ class ChatMessageItem extends StatelessWidget {
     }
 
     // profile
-    bool showProfile = canShowProfileByCurrType && !message.isOutbound && message.isTopic;
+    bool showProfile = canShowProfileByCurrType && !message.isOutbound && (message.isTopic || message.isPrivateGroup);
     bool hideProfile = showProfile && !isGroupHead;
 
     List<Widget> contentsWidget = <Widget>[];
