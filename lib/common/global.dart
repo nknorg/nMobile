@@ -125,7 +125,7 @@ class Global {
     if (measure || appendDefault) {
       try {
         list = await Wallet.measureSeedRPCServer(list, 3 * 1000) ?? [];
-        await _setRpcServers(walletAddress, list);
+        await setRpcServers(walletAddress, list);
 
         if (walletAddress?.isNotEmpty == true) {
           List<String> saved = await _getRpcServers(walletAddress: walletAddress);
@@ -158,6 +158,11 @@ class Global {
     return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}', list);
   }
 
+  static Future setRpcServers(String? walletAddress, List<String> list) async {
+    list = _filterRepeatAndSeedsFromRpcServers(list);
+    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}', list);
+  }
+
   static Future<List<String>> _getRpcServers({String? walletAddress}) async {
     List<String> results = [];
     List? list = await SettingsStorage.getSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}');
@@ -168,11 +173,6 @@ class Global {
     }
     results = _filterRepeatAndSeedsFromRpcServers(results);
     return results;
-  }
-
-  static Future _setRpcServers(String? walletAddress, List<String> list) async {
-    list = _filterRepeatAndSeedsFromRpcServers(list);
-    return SettingsStorage.setSettings('${SettingsStorage.SEED_RPC_SERVERS_KEY}${walletAddress?.isNotEmpty == true ? ":$walletAddress" : ""}', list);
   }
 
   static List<String> _filterRepeatAndSeedsFromRpcServers(List<String> list) {
