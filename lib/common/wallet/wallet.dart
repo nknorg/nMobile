@@ -48,7 +48,7 @@ class WalletCommon with Tag {
     return _walletStorage.getPassword(walletAddress);
   }
 
-  Future<bool> isPasswordRight(String? walletAddress, String? password, {List<String>? seedRpcList}) async {
+  Future<bool> isPasswordRight(String? walletAddress, String? password) async {
     if (walletAddress == null || walletAddress.isEmpty) return false;
     if (password == null || password.isEmpty) return false;
     String? storagePassword = await getPassword(walletAddress);
@@ -57,8 +57,7 @@ class WalletCommon with Tag {
     } else {
       try {
         final keystore = await getKeystore(walletAddress);
-        seedRpcList = seedRpcList ?? (await Global.getRpcServers(walletAddress, measure: true));
-        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password));
         if (nknWallet.address.isNotEmpty) return true;
       } catch (e) {
         return false;
@@ -100,8 +99,7 @@ class WalletCommon with Tag {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Global.appContext);
     try {
-      final seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
-      double balance = await Wallet.getBalanceByAddr(wallet.address, config: WalletConfig(seedRPCServerAddr: seedRpcList));
+      double balance = await Wallet.getBalanceByAddr(wallet.address);
       logger.i("$TAG - queryNKNBalance - old:${wallet.balance} - new:$balance - wallet_address:${wallet.address}");
       if (notifyIfNeed && (wallet.balance != balance)) {
         wallet.balance = balance;
