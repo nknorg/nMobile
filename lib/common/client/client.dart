@@ -141,7 +141,6 @@ class ClientCommon with Tag {
     String? pubKey = wallet.publicKey;
     String? seed = await walletCommon.getSeed(wallet.address);
 
-    List<String>? seedRpcList;
     try {
       // password get
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
@@ -173,8 +172,7 @@ class ClientCommon with Tag {
       // rpc wallet
       if (fetchRemote) {
         String keystore = await walletCommon.getKeystore(wallet.address);
-        seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
-        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
+        Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: password));
         pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
         seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
       }
@@ -222,7 +220,7 @@ class ClientCommon with Tag {
         chatInCommon.clear();
         chatOutCommon.clear();
 
-        seedRpcList = seedRpcList ?? (await Global.getRpcServers(wallet.address, measure: true));
+        List<String> seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
         client = await Client.create(hexDecode(seed), numSubClients: 3, config: ClientConfig(seedRPCServerAddr: seedRpcList));
 
         loadingVisible?.call(false, tryTimes);
@@ -263,6 +261,7 @@ class ClientCommon with Tag {
       await Future.delayed(Duration(seconds: tryTimes >= 3 ? 3 : tryTimes));
       // loop login
       await _signOut(clearWallet: false, closeDB: false);
+      await Global.setRpcServers(wallet.address, []);
       await Future.delayed(Duration(milliseconds: 500));
       return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password, tryTimes: ++tryTimes);
     }
