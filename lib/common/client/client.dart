@@ -221,7 +221,9 @@ class ClientCommon with Tag {
         chatOutCommon.clear();
 
         List<String> seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
-        client = await Client.create(hexDecode(seed), numSubClients: 3, config: ClientConfig(seedRPCServerAddr: seedRpcList));
+        while (client == null) {
+          client = await Client.create(hexDecode(seed), numSubClients: 4, config: ClientConfig(seedRPCServerAddr: seedRpcList));
+        }
 
         loadingVisible?.call(false, tryTimes);
 
