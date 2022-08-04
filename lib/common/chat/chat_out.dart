@@ -555,11 +555,11 @@ class ChatOutCommon with Tag {
       },
     );
     String data = MessageData.getPrivateGroupOptionSync(schema, list);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _send(message, data);
   }
 
   // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupMemberSync(String to, PrivateGroupSchema schema, List<PrivateGroupItemSchema> list) async {
+  Future<Uint8List?> sendPrivateGroupMemberSync(String to, PrivateGroupSchema schema, List<PrivateGroupItemSchema> list) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
 
     var members = privateGroupCommon.getMembersData(list);
@@ -576,11 +576,11 @@ class ChatOutCommon with Tag {
       },
     );
     String data = MessageData.getPrivateGroupMemberSync(schema, list);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _sendWithAddressSafe([to], data);
   }
 
   // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupOptionRequest(String to, String groupId) async {
+  Future<Uint8List?> sendPrivateGroupOptionRequest(String to, String groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -590,11 +590,11 @@ class ChatOutCommon with Tag {
       groupId: groupId,
     );
     String data = MessageData.getPrivateGroupOptionRequest(groupId);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _sendWithAddressSafe([to], data, notification: false);
   }
 
   // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupMemberRequest(String to, String groupId, List<String> list) async {
+  Future<Uint8List?> sendPrivateGroupMemberRequest(String to, String groupId, List<String> list) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -605,11 +605,11 @@ class ChatOutCommon with Tag {
       content: {'data': list},
     );
     String data = MessageData.getPrivateGroupMemberRequest(groupId, list);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _sendWithAddressSafe([to], data);
   }
 
   // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupMemberKeyRequest(String to, String groupId) async {
+  Future<Uint8List?> sendPrivateGroupMemberKeyRequest(String to, String groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -619,11 +619,11 @@ class ChatOutCommon with Tag {
       groupId: groupId,
     );
     String data = MessageData.getPrivateGroupMemberKeyRequest(groupId);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _sendWithAddressSafe([to], data);
   }
 
   // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupMemberKeyResponse(String to, PrivateGroupSchema schema, List<String> list) async {
+  Future<Uint8List?> sendPrivateGroupMemberKeyResponse(String to, PrivateGroupSchema schema, List<String> list) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -637,7 +637,7 @@ class ChatOutCommon with Tag {
       },
     );
     String data = MessageData.getPrivateGroupMemberKeyResponse(schema, list);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
+    return _sendWithAddressSafe([to], data);
   }
 
   // NO DB NO single
