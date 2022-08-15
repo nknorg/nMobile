@@ -604,7 +604,7 @@ class MediaPicker {
       quality: quality,
     );
     if (imgBytes == null || imgBytes.isEmpty) {
-      logger.e('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
+      logger.w('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
       return null;
     }
     // save
