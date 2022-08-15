@@ -62,7 +62,7 @@ void main() async {
   catchGlobalError(() async {
     await SentryFlutter.init(
       (options) {
-        options.debug = Settings.debug;
+        options.debug = !Global.isRelease;
         options.dsn = Settings.sentryDSN;
         options.environment = Global.isRelease ? 'production' : 'debug';
         options.release = Global.versionFormat;
