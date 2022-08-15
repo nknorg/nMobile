@@ -110,6 +110,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             try {
                 val account = Nkn.newAccount(seed)
                 client = MultiClient(account, identifier, numSubClients, true, config)
+                if (client == null) {
+                    resultError(result, "", "connect fail")
+                    return@launch
+                }
 
                 val data = hashMapOf(
                     "address" to client?.address(),
@@ -197,7 +201,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     "messageId" to msg.messageID
                 )
             )
-            Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
+            //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
             eventSinkError(eventSink, client?.address(), e.localizedMessage)

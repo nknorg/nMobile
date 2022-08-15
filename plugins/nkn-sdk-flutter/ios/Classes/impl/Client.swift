@@ -110,8 +110,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
 
         clientWorkItem = DispatchWorkItem {
-            self.client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: self.numSubClients, originalClient: true, config: config)
-            if (self.client == nil) {
+            var error: NSError?
+            self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
+            if (error != nil) {
+                self.resultError(result: result, code: "", message: error!.localizedDescription)
+                return
+            } else if (self.client == nil) {
                 self.resultError(result: result, code: "", message: "connect fail")
                 return
             }
@@ -218,7 +222,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             "encrypted": msg.encrypted,
             "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
         ]
-        NSLog("onMessage - %@", String(data: msg.data!, encoding: String.Encoding.utf8)!)
+        //NSLog("onMessage - %@", String(data: msg.data!, encoding: String.Encoding.utf8)!)
         self.eventSinkSuccess(eventSink: eventSink, resp: resp)
 
         // loop
