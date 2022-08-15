@@ -10,6 +10,7 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -259,7 +260,7 @@ class ClientCommon with Tag {
     } catch (e) {
       loadingVisible?.call(false, tryTimes);
       // toast
-      if ((tryTimes != 0) && (tryTimes % 10 == 0)) handleError(e);
+      if (Settings.debug || ((tryTimes != 0) && (tryTimes % 2 == 0))) handleError(e);
       await Future.delayed(Duration(seconds: tryTimes >= 3 ? 3 : tryTimes));
       // loop login
       await _signOut(clearWallet: false, closeDB: false);

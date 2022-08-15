@@ -687,7 +687,7 @@ class ChatOutCommon with Tag {
         contactCommon.queryListByClientAddress(clientAddressList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken); // await
+            if (!_contact.isMe) _sendPush(_contact.deviceToken);
           }
         });
       }
@@ -722,7 +722,11 @@ class ChatOutCommon with Tag {
     // push
     if (pid?.isNotEmpty == true) {
       if (notification) {
-        if (contact != null && !contact.isMe) _sendPush(contact.deviceToken); // await
+        if (contact != null && !contact.isMe) {
+          String uuid = _sendPush(contact.deviceToken);
+          message.options = MessageOptions.setPushNotifyId(message.options, uuid);
+          MessageStorage.instance.updateOptions(message.msgId, message.options); // await
+        }
       }
     }
     return pid;
@@ -813,7 +817,9 @@ class ChatOutCommon with Tag {
         contactCommon.queryListByClientAddress(subscribersAddressList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken); // await
+            if (!_contact.isMe) {
+              _sendPush(_contact.deviceToken);
+            }
           }
         });
       }
@@ -881,8 +887,8 @@ class ChatOutCommon with Tag {
     return null;
   }
 
-  Future _sendPush(String? deviceToken) async {
-    if (deviceToken == null || deviceToken.isEmpty == true) return;
+  String _sendPush(String? deviceToken) {
+    if (deviceToken == null || deviceToken.isEmpty == true) return "";
 
     String title = Global.locale((s) => s.new_message);
     // if (topic != null) {
@@ -912,6 +918,8 @@ class ChatOutCommon with Tag {
     //     break;
     // }
 
-    await SendPush.send(deviceToken, title, content);
+    String uuid = Uuid().v4();
+    SendPush.send(uuid, deviceToken, title, content); // await
+    return uuid;
   }
 }

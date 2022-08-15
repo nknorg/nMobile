@@ -667,6 +667,8 @@ class MessageOptions {
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
 
+  static const KEY_PUSH_NOTIFY_ID = "pushNotifyId";
+
   static const KEY_FILE_TYPE = "fileType";
   static const fileTypeNormal = 0;
   static const fileTypeImage = 1;
@@ -808,6 +810,17 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     return int.tryParse(update ?? "");
+  }
+
+  static Map<String, dynamic>? setPushNotifyId(Map<String, dynamic>? options, String uuid) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_PUSH_NOTIFY_ID] = uuid;
+    return options;
+  }
+
+  static String? getPushNotifyId(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_PUSH_NOTIFY_ID]?.toString();
   }
 
   static Map<String, dynamic> setFileType(Map<String, dynamic>? options, int type) {
