@@ -7,17 +7,20 @@ public struct APNsRequest {
         }
         
         public let id: String
-        public let expiration: Date
+        public let type: String
+        public let expiration: Int
         public let priority: Priority
         public let topic: String?
         public let collapseId: String?
         
         public init(id: String = UUID().uuidString,
-                    expiration: Date = Date(timeIntervalSince1970: 0),
+                    type: String = "alert",
+                    expiration: Int = -1,
                     priority: Priority = .p10,
                     topic: String? = nil,
                     collapseId: String? = nil) {
             self.id = id
+            self.type = type
             self.expiration = expiration
             self.priority = .p10
             self.topic = topic
@@ -62,7 +65,8 @@ public struct APNsRequest {
 private extension URLRequest {
     mutating func setValue(for header: APNsRequest.Header) {
         self.addValue(header.id, forHTTPHeaderField: "apns-id")
-        self.addValue("\(Int(header.expiration.timeIntervalSince1970))", forHTTPHeaderField: "apns-expiration")
+        self.addValue(header.type, forHTTPHeaderField: "apns-push-type")
+        self.addValue("\(header.expiration)", forHTTPHeaderField: "apns-expiration")
         self.addValue(header.priority.rawValue, forHTTPHeaderField: "apns-priority")
         
         if let topic = header.topic {

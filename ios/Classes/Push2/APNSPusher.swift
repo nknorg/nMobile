@@ -6,10 +6,12 @@
 //
 
 import Foundation
+import Sentry
 
+let pushTopic = "com.xxx.xxx"
 let p12FileName = "fileName"
 let p12FilePasswordd = "password"
-let pushTopic = "com.xxx.xxx"
+
 
 var connection: Connection? = nil
 
@@ -27,12 +29,12 @@ public class APNSPusher {
         return _connection
     }
     
-    static func push(deviceToken: String, payload: String) {
+    static func push(uuid: String, deviceToken: String, payload: String) {
         if(connection == nil) {
             connection = connect();
         }
         
-        let header = APNsRequest.Header(priority: APNsRequest.Header.Priority.p5, topic: pushTopic)
+        let header = APNsRequest.Header(id: uuid, priority: APNsRequest.Header.Priority.p10, topic: pushTopic)
         let payload = APNsPayload(str: payload)
         let request = APNsRequest(port: APNsPort.p2197, server: APNsServer.production, deviceToken: deviceToken, header: header, payload: payload)
         
@@ -41,7 +43,8 @@ public class APNSPusher {
             case .success:
                 print("APNSPusher - pushed success")
             case .failure(let errorCode, let message):
-                print("APNSPusher - pushed Failed \(errorCode), \(message)")
+                print("APNSPusher - pushed Failed - \(errorCode), \(message)")
+                SentrySDK.capture(error: NSError(domain: message, code: errorCode))
             }
         }
     }
