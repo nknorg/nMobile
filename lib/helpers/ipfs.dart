@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -26,6 +27,10 @@ class IpfsHelper with Tag {
     // 'gateway.ipfs.io' // disable
     // 'cloudflare-ipfs.com', // disable
   ];
+
+  // infura project
+  static const String PROJECT_ID = "";
+  static const String API_KEY_SECRET = "";
 
   static const GATEWAY_READ_PORT = "5001";
   static const GATEWAY_WRITE_PORT = "5001";
@@ -245,9 +250,12 @@ class IpfsHelper with Tag {
         uri,
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         options: Options(
-            // headers: {Headers.contentLengthHeader: ipfsLength},
-            // responseType: ResponseType.json,
-            ),
+          headers: {
+            HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$PROJECT_ID:$API_KEY_SECRET'))}",
+            // Headers.contentLengthHeader: ipfsLength,
+          },
+          // responseType: ResponseType.json,
+        ),
         onSendProgress: (count, total) {
           logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total - id:$id");
           onProgress?.call(id, total, count);
@@ -309,7 +317,10 @@ class IpfsHelper with Tag {
         uri,
         queryParameters: {'arg': ipfsHash},
         options: Options(
-          // headers: {Headers.contentLengthHeader: ipfsLength},
+          headers: {
+            HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$PROJECT_ID:$API_KEY_SECRET'))}",
+            // Headers.contentLengthHeader: ipfsLength,
+          },
           responseType: ResponseType.bytes,
         ),
         onReceiveProgress: (count, total) {
