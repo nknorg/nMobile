@@ -171,12 +171,13 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun sendPushAPNS(call: MethodCall, result: MethodChannel.Result) {
+        val uuid = call.argument<String>("uuid")!!
         val deviceToken = call.argument<String>("deviceToken")!!
         val pushPayload = call.argument<String>("pushPayload")!!
 
         viewModelScope.launch(Dispatchers.IO) {
-            APNSPush.push(MainActivity.instance.assets, deviceToken, pushPayload)
             try {
+                APNSPush.push(MainActivity.instance.assets, uuid, deviceToken, pushPayload)
                 val resp = hashMapOf(
                     "event" to "sendPushAPNS",
                 )
