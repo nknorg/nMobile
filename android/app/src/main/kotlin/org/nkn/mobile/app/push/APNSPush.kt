@@ -7,17 +7,17 @@ import com.clevertap.apns.Notification
 import com.clevertap.apns.NotificationResponse
 import com.clevertap.apns.NotificationResponseListener
 import com.clevertap.apns.clients.ApnsClientBuilder
+import io.sentry.Sentry
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.concurrent.ExecutionException
-
+import java.util.*
 
 /**
  * Created by JZG on 2021/6/28.
  */
 class APNSPush {
     companion object {
-        private const val ApnsTopic = "org.nkn.nmobile"
+        private const val ApnsTopic = "com.xxx.xxx"
         private const val ApnsAssetsPath = "ApnsFilePath"
         private const val ApnsPassword = "ApnsFilePwd"
 
@@ -44,7 +44,7 @@ class APNSPush {
             // apnsClient?.cose()
         }
 
-        fun push(assetManager: AssetManager, deviceToken: String, pushPayload: String) {
+        fun push(assetManager: AssetManager, uuid: String, deviceToken: String, pushPayload: String) {
             if (apnsClient == null) {
                 openClient(assetManager)
             }
@@ -61,28 +61,29 @@ class APNSPush {
             val title = (alertMap["title"] as? String) ?: ""
             val body = (alertMap["body"] as? String) ?: ""
 
-            try {
-                val builder = Notification.Builder(deviceToken)
-                    .alertTitle(title)
-                    .alertBody(body)
-                    .sound(sound)
-                if (badge >= 0) {
-                    builder.badge(badge)
-                }
-                val n: Notification = builder.build()
-                apnsClient?.push(n, object : NotificationResponseListener {
-                    override fun onSuccess(notification: Notification?) {
-                        Log.d("SendPush", "push - success - deviceToken:$deviceToken")
-                    }
-
-                    override fun onFailure(notification: Notification?, nr: NotificationResponse) {
-                        Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
-                    }
-                })
-            } catch (e: ExecutionException) {
-                Log.e("SendPush", "push - error - ${e.message}")
-                e.printStackTrace()
+            val builder = Notification.Builder(deviceToken)
+                .alertTitle(title)
+                .alertBody(body)
+                .sound(sound)
+            if (badge >= 0) {
+                builder.badge(badge)
             }
+            builder.uuid(UUID.fromString(uuid))
+                .customField("apns-push-type", "alert")
+                .expiration(-1)
+                .priority(Notification.Priority.IMMEDIATE)
+                .topic(ApnsTopic)
+            val n: Notification = builder.build()
+            apnsClient?.push(n, object : NotificationResponseListener {
+                override fun onSuccess(notification: Notification?) {
+                    Log.d("SendPush", "push - success - deviceToken:$deviceToken")
+                }
+
+                override fun onFailure(notification: Notification?, nr: NotificationResponse) {
+                    Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
+                    Sentry.captureException(nr.cause)
+                }
+            })
         }
 
         private fun getMap(jsonString: String, jb: JSONObject?): HashMap<String, Any>? {

@@ -6,6 +6,8 @@
 	<array>
 		<string>org.nkn.nmobile.backgroundtask</string>
 	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -36,6 +38,11 @@
 	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>sms</string>
+		<string>tel</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
@@ -77,11 +84,6 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-	  <string>sms</string>
-	  <string>tel</string>
-	</array>
 	<key>UIFileSharingEnabled</key>
 	<false/>
 	<key>UILaunchStoryboardName</key>
@@ -102,8 +104,6 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
-	<true/>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 </dict>
 </plist>
