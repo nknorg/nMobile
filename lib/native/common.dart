@@ -69,9 +69,10 @@ class Common {
     return null;
   }
 
-  static Future<bool> sendPushAPNS(String deviceToken, String pushPayload) async {
+  static Future<bool> sendPushAPNS(String uuid, String deviceToken, String pushPayload) async {
     try {
       await _methodChannel.invokeMethod('sendPushAPNS', {
+        'uuid': uuid,
         'deviceToken': deviceToken,
         'pushPayload': pushPayload,
       });

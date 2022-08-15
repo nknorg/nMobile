@@ -8,10 +8,10 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class SendPush {
-  static Future<bool> send(String deviceToken, String title, String content) async {
+  static Future<bool> send(String uuid, String deviceToken, String title, String content) async {
     String apns = DeviceToken.splitAPNS(deviceToken);
     if (apns.isNotEmpty) {
-      return sendAPNS(apns, title, content);
+      return sendAPNS(uuid, apns, title, content);
     }
     String fcm = DeviceToken.splitFCM(deviceToken);
     if (fcm.isNotEmpty) {
@@ -36,7 +36,7 @@ class SendPush {
     return false;
   }
 
-  static Future<bool> sendAPNS(String deviceToken, String title, String content) async {
+  static Future<bool> sendAPNS(String uuid, String deviceToken, String title, String content) async {
     String payload = jsonEncode({
       'aps': {
         'alert': {
@@ -47,7 +47,7 @@ class SendPush {
         'sound': "default",
       },
     });
-    bool ok = await Common.sendPushAPNS(deviceToken, payload);
+    bool ok = await Common.sendPushAPNS(uuid, deviceToken, payload);
     if (ok) {
       logger.i("SendPush - sendAPNS - success - payload:$payload");
     } else {
