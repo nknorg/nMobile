@@ -1122,6 +1122,16 @@ class MessageData {
     return map;
   }
 
+  static Map<String, dynamic>? _simpleOptions(Map<String, dynamic>? options) {
+    Map<String, dynamic> map = Map()..addAll(options ?? Map());
+    map.remove(MessageOptions.KEY_RESEND_MUTE_AT);
+    map.remove(MessageOptions.KEY_PUSH_NOTIFY_ID);
+    map.remove(MessageOptions.KEY_IPFS_STATE);
+    map.remove(MessageOptions.KEY_IPFS_THUMBNAIL_STATE);
+    map.remove(MessageOptions.KEY_MEDIA_THUMBNAIL);
+    return map;
+  }
+
   static String getPing(bool isPing, String? profileVersion, String? deviceProfile) {
     Map data = _base(MessageContentType.ping);
     data.addAll({
@@ -1265,7 +1275,7 @@ class MessageData {
     Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'content': message.content,
-      'options': message.options,
+      'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -1279,9 +1289,7 @@ class MessageData {
     Map data = _base(MessageContentType.ipfs, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'content': content,
-      'options': Map()
-        ..addAll(message.options ?? Map())
-        ..remove(MessageOptions.KEY_MEDIA_THUMBNAIL),
+      'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -1297,7 +1305,7 @@ class MessageData {
     Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'content': content,
-      'options': message.options,
+      'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -1315,7 +1323,7 @@ class MessageData {
     Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'content': content,
-      'options': message.options,
+      'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
       data['topic'] = message.topic;
@@ -1327,7 +1335,7 @@ class MessageData {
     Map data = _base(message.contentType, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'content': message.content,
-      'options': message.options,
+      'options': _simpleOptions(message.options),
       // SUPPORT:START
       'parentType': message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? message.contentType,
       'bytesLength': message.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH],
