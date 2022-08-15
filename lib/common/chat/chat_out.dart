@@ -21,6 +21,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -45,6 +46,7 @@ class ChatOutCommon with Tag {
     }
     if (data.length >= MessageSchema.msgMaxSize) {
       logger.e("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+      Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       return null;
     }
     if (tryTimes >= maxTryTimes) {
@@ -85,7 +87,8 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
         return null;
       } else if (errStr.contains(NknError.messageOversize)) {
-        logger.e("$TAG - _clientSendData - message over size - destList:$destList");
+        logger.e("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+        Sentry.captureMessage("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
         return null;
       }
       bool isClientError = NknError.isClientError(e);

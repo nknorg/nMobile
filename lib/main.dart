@@ -70,9 +70,9 @@ void main() async {
       //appRunner: () => runApp(Main()),
     );
     runApp(Main());
-  }, onZoneError: (Object error, StackTrace stack) async {
+  }, onZoneError: (Object error, StackTrace stack) {
     if (Settings.debug) logger.e(error, stack);
-    await Sentry.captureException(error, stackTrace: stack);
+    Sentry.captureException(error, stackTrace: stack);
   });
 }
 
