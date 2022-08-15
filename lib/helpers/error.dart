@@ -5,6 +5,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
   if (!Global.isRelease) {
@@ -23,7 +24,7 @@ catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? 
   }));
   // flutter
   FlutterError.onError = (details, {bool forceReport = false}) {
-    if (Settings.debug) {
+    if (!Global.isRelease) {
       // just print
       FlutterError.dumpErrorToConsole(details);
     } else {
@@ -131,18 +132,21 @@ class NknError {
   }
 }
 
-String? handleError(dynamic error, {StackTrace? stackTrace, String? toast}) {
-  if (!Global.isRelease) {
+String? handleError(dynamic error, {StackTrace? stackTrace, bool show = true, String? toast}) {
+  if (Global.isRelease) {
+    Sentry.captureException(error, stackTrace: stackTrace);
+  } else if (Settings.debug) {
     logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
-  String? show = getErrorShow(error);
-  if (toast?.isNotEmpty == true) {
+  if (!show) return null;
+  String? text = getErrorShow(error);
+  if ((toast != null) && toast.isNotEmpty) {
     Toast.show(toast);
-  } else if (show != null && show.isNotEmpty) {
-    Toast.show(show);
+  } else if (text != null && text.isNotEmpty) {
+    Toast.show(text);
   }
-  return show;
+  return text;
 }
 
 String? getErrorShow(dynamic error) {
@@ -152,4 +156,5 @@ String? getErrorShow(dynamic error) {
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
   return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
+  // return error.toString();
 }

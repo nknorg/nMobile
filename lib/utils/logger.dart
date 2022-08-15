@@ -16,7 +16,14 @@ Logger logger = Platform.isAndroid
 class CustomFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
-    return Settings.debug;
+    bool isVerbose = event.level == Level.verbose;
+    bool isDebug = event.level == Level.debug;
+    bool isInfo = event.level == Level.info;
+    bool isWarning = event.level == Level.warning;
+    bool isError = event.level == Level.error;
+    bool isWtf = event.level == Level.wtf;
+    bool levelOk = isVerbose || isDebug || isInfo || isWarning || isError || isWtf;
+    return levelOk && Settings.debug;
   }
 }
 
