@@ -35,7 +35,7 @@ class PrivateGroupCommon with Tag {
   PrivateGroupItemStorage _privateGroupItemStorage = PrivateGroupItemStorage();
   SessionStorage _sessionStorage = SessionStorage();
 
-  bool dataComplete = false;
+  Map<String, bool> dataComplete = Map<String, bool>();
 
   String genPrivateGroupId(String owner) {
     return '$owner.${Uuid().v4()}';
@@ -420,11 +420,11 @@ class PrivateGroupCommon with Tag {
     if (privateGroup != null && privateGroupMembers != null) {
       var version = genPrivateGroupVersion(privateGroup.options!.signature!, privateGroupMembers.map((e) => e.invitee!).toList());
       if (version == privateGroup.version) {
-        dataComplete = true;
+        dataComplete[groupId] = true;
         return true;
       }
     }
-    dataComplete = false;
+    dataComplete[groupId] = false;
     return false;
   }
 

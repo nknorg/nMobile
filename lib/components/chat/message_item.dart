@@ -18,7 +18,8 @@ import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/util.dart';
 
-class ChatMessageItem extends StatelessWidget {
+// TODO:GG PG check
+class ChatMessageItem extends StatefulWidget {
   final MessageSchema message;
   final TopicSchema? topic;
   final ContactSchema? contact;
@@ -38,10 +39,26 @@ class ChatMessageItem extends StatelessWidget {
   });
 
   @override
+  State<ChatMessageItem> createState() => _ChatMessageItemState();
+}
+
+class _ChatMessageItemState extends State<ChatMessageItem> {
+  ContactSchema? _contact;
+
+  @override
+  void initState() {
+    widget.message.getSender(emptyAdd: true).then((ContactSchema? value) {
+      setState(() {
+        _contact = value;
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (message.isDelete) {
+    if (widget.message.isDelete) {
       return SizedBox.shrink();
-    } else if (message.canBurning && (message.content == null)) {
+    } else if (widget.message.canBurning && (widget.message.content == null)) {
       return SizedBox.shrink();
     }
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
@@ -49,28 +66,28 @@ class ChatMessageItem extends StatelessWidget {
     // }
 
     // user
-    bool isOneUserWithPrev = message.from == prevMessage?.from;
-    bool isOneUserWithNext = message.from == nextMessage?.from;
+    bool isOneUserWithPrev = widget.message.from == widget.prevMessage?.from;
+    bool isOneUserWithNext = widget.message.from == widget.nextMessage?.from;
 
     // status
-    bool isSameStatusWithPrev = message.status == prevMessage?.status;
-    bool isSameStatusWithNext = message.status == nextMessage?.status;
+    bool isSameStatusWithPrev = widget.message.status == widget.prevMessage?.status;
+    bool isSameStatusWithNext = widget.message.status == widget.nextMessage?.status;
 
     // type
-    bool canShowProfileByPrevType = prevMessage?.canBurning == true;
-    bool canShowProfileByCurrType = message.canBurning == true;
-    bool canShowProfileByNextType = nextMessage?.canBurning == true;
+    bool canShowProfileByPrevType = widget.prevMessage?.canBurning == true;
+    bool canShowProfileByCurrType = widget.message.canBurning == true;
+    bool canShowProfileByNextType = widget.nextMessage?.canBurning == true;
 
     // sendAt
-    int? prevSendAt = (prevMessage?.isOutbound == true) ? prevMessage?.sendAt : (prevMessage?.sendAt ?? MessageOptions.getInAt(prevMessage?.options));
-    int? currSendAt = (message.isOutbound == true) ? message.sendAt : (message.sendAt ?? MessageOptions.getInAt(message.options));
-    int? nextSendAt = (nextMessage?.isOutbound == true) ? nextMessage?.sendAt : (nextMessage?.sendAt ?? MessageOptions.getInAt(nextMessage?.options));
+    int? prevSendAt = (widget.prevMessage?.isOutbound == true) ? widget.prevMessage?.sendAt : (widget.prevMessage?.sendAt ?? MessageOptions.getInAt(widget.prevMessage?.options));
+    int? currSendAt = (widget.message.isOutbound == true) ? widget.message.sendAt : (widget.message.sendAt ?? MessageOptions.getInAt(widget.message.options));
+    int? nextSendAt = (widget.nextMessage?.isOutbound == true) ? widget.nextMessage?.sendAt : (widget.nextMessage?.sendAt ?? MessageOptions.getInAt(widget.nextMessage?.options));
 
     // group
     int oneGroupSeconds = 2 * 60; // 2m
 
     bool isGroupHead = false;
-    if (nextMessage == null) {
+    if (widget.nextMessage == null) {
       isGroupHead = true;
     } else if (currSendAt == null || currSendAt == 0) {
       isGroupHead = true;
@@ -91,7 +108,7 @@ class ChatMessageItem extends StatelessWidget {
     }
 
     bool isGroupTail = false;
-    if (prevMessage == null) {
+    if (widget.prevMessage == null) {
       isGroupTail = true;
     } else if (currSendAt == null || currSendAt == 0) {
       isGroupTail = true;
@@ -123,7 +140,7 @@ class ChatMessageItem extends StatelessWidget {
     }
 
     // profile
-    bool showProfile = canShowProfileByCurrType && !message.isOutbound && (message.isTopic || message.isPrivateGroup);
+    bool showProfile = canShowProfileByCurrType && !widget.message.isOutbound && (widget.message.isTopic || widget.message.isPrivateGroup);
     bool hideProfile = showProfile && !isGroupHead;
 
     List<Widget> contentsWidget = <Widget>[];
@@ -141,7 +158,7 @@ class ChatMessageItem extends StatelessWidget {
     //   );
     // }
 
-    switch (this.message.contentType) {
+    switch (this.widget.message.contentType) {
       // case MessageContentType.ping:
       // case MessageContentType.receipt:
       // case MessageContentType.read:
@@ -160,17 +177,17 @@ class ChatMessageItem extends StatelessWidget {
       case MessageContentType.ipfs:
         contentsWidget.add(
           ChatBubble(
-            message: this.message,
-            topic: this.topic,
-            contact: this.contact,
+            message: this.widget.message,
+            topic: this.widget.topic,
+            contact: this.widget.contact,
             showProfile: showProfile,
             hideProfile: hideProfile,
             showTimeAndStatus: isGroupTail,
             // timeFormatBetween: false,
             hideTopMargin: isGroupBody || (isGroupTail && !isGroupHead),
             hideBotMargin: isGroupBody || (isGroupHead && !isGroupTail),
-            onAvatarLonePress: this.onAvatarLonePress,
-            onResend: this.onResend,
+            onAvatarLonePress: this.widget.onAvatarLonePress,
+            onResend: this.widget.onResend,
           ),
         );
         break;
@@ -196,7 +213,7 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _contactOptionsWidget(BuildContext context) {
-    Map<String, dynamic> optionData = this.message.content ?? Map<String, dynamic>();
+    Map<String, dynamic> optionData = this.widget.message.content ?? Map<String, dynamic>();
     Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
     if (content.keys.length <= 0) return SizedBox.shrink();
     String? optionType = optionData['optionType']?.toString();
@@ -249,7 +266,7 @@ class ChatMessageItem extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.widget.contact?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
@@ -269,7 +286,7 @@ class ChatMessageItem extends StatelessWidget {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this.contact);
+                  ContactProfileScreen.go(context, schema: this.widget.contact);
                 },
               ),
             ],
@@ -288,7 +305,7 @@ class ChatMessageItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
-                    message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.widget.contact?.displayName ?? " "),
                     maxWidth: Global.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
@@ -308,7 +325,7 @@ class ChatMessageItem extends StatelessWidget {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this.contact);
+                  ContactProfileScreen.go(context, schema: this.widget.contact);
                 },
               ),
             ],
@@ -321,7 +338,7 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicSubscribeWidget(BuildContext context) {
-    String who = message.isOutbound ? Global.locale((s) => s.you, ctx: context) : message.from.substring(0, 6);
+    String who = widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : _contact?.displayName ?? widget.message.from.substring(0, 6);
     String content = who + Global.locale((s) => s.joined_channel, ctx: context);
 
     return Container(
@@ -336,9 +353,9 @@ class ChatMessageItem extends StatelessWidget {
   }
 
   Widget _topicInvitedWidget(BuildContext context) {
-    String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
-    String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
-    String inviteDesc = message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
+    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
+    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
+    String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -354,7 +371,7 @@ class ChatMessageItem extends StatelessWidget {
               ),
               SizedBox(width: 2),
               Label(
-                TopicSchema(topic: message.content?.toString() ?? " ").topicShort,
+                TopicSchema(topic: widget.message.content?.toString() ?? " ").topicShort,
                 maxWidth: Global.screenWidth() * 0.5,
                 type: LabelType.bodyRegular,
                 fontWeight: FontWeight.bold,
@@ -362,7 +379,7 @@ class ChatMessageItem extends StatelessWidget {
               ),
             ],
           ),
-          message.isOutbound
+          widget.message.isOutbound
               ? SizedBox.shrink()
               : InkWell(
                   child: Padding(
@@ -378,7 +395,7 @@ class ChatMessageItem extends StatelessWidget {
                     String? topic = await BottomDialog.of(Global.appContext).showInput(
                       title: Global.locale((s) => s.accept_invitation, ctx: context),
                       desc: inviteDesc,
-                      value: message.content?.toString() ?? " ",
+                      value: widget.message.content?.toString() ?? " ",
                       actionText: Global.locale((s) => s.accept_invitation, ctx: context),
                       enable: false,
                     );
@@ -386,7 +403,7 @@ class ChatMessageItem extends StatelessWidget {
                       double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
                       if (fee == null) return;
                       Loading.show();
-                      int sendAt = message.sendAt ?? MessageOptions.getInAt(message.options) ?? 0;
+                      int sendAt = widget.message.sendAt ?? MessageOptions.getInAt(widget.message.options) ?? 0;
                       bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow, fee: fee);
                       Loading.dismiss();
@@ -401,9 +418,9 @@ class ChatMessageItem extends StatelessWidget {
 
   // TODO:GG PG check
   Widget _privateGroupInvitedWidget(BuildContext context) {
-    String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
-    String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
-    String inviteDesc = message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
+    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
+    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
+    String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
     Map content = Map();
     String groupName = '';
     Map data = Map();
@@ -411,8 +428,8 @@ class ChatMessageItem extends StatelessWidget {
     String inviterSignature = '';
     DateTime? expiresAt;
     Widget expiresWidget = SizedBox.shrink();
-    if (message.content != null) {
-      content = message.content as Map;
+    if (widget.message.content != null) {
+      content = widget.message.content as Map;
       groupName = content['groupName'];
       data = content['data'];
       inviterRawData = data['inviterData'];
@@ -428,7 +445,7 @@ class ChatMessageItem extends StatelessWidget {
             type: LabelType.bodyRegular,
           );
         } else {
-          expiresWidget = message.isOutbound
+          expiresWidget = widget.message.isOutbound
               ? Label(
                   Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(expiresAt),
                   color: application.theme.fontColor2,
@@ -470,9 +487,9 @@ class ChatMessageItem extends StatelessWidget {
 
                           bool isVerified = await privateGroupCommon.acceptInvitation(privateGroupItemSchema, ownerPrivateKey);
                           if (isVerified) {
-                            await chatOutCommon.sendPrivateGroupAccept(message.targetId, privateGroupItemSchema);
+                            await chatOutCommon.sendPrivateGroupAccept(widget.message.targetId, privateGroupItemSchema);
                             await privateGroupCommon.initializationPrivateGroup(PrivateGroupSchema(
-                              groupId: message.groupId,
+                              groupId: widget.message.groupId,
                               name: groupName,
                             ));
                           }
@@ -518,9 +535,9 @@ class ChatMessageItem extends StatelessWidget {
 
   // TODO:GG PG check
   Widget _privateGroupAcceptWidget(BuildContext context) {
-    // String to = (message.to.length > 6) ? message.to.substring(0, 6) : " ";
-    String from = message.from.length > 6 ? message.from.substring(0, 6) : " ";
-    String acceptedDesc = message.isOutbound ? Global.locale((s) => s.accepted_already, ctx: context) : Global.locale((s) => s.other_accepted_already(from));
+    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
+    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
+    String acceptedDesc = widget.message.isOutbound ? Global.locale((s) => s.accepted_already, ctx: context) : Global.locale((s) => s.other_accepted_already(from));
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
