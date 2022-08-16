@@ -569,7 +569,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           height: btnSize,
                           fontColor: application.theme.fontLightColor,
                           backgroundColor: application.theme.backgroundLightColor.withAlpha(77),
-                          child: Asset.iconSvg('group', width: 22, color: application.theme.fontLightColor),
+                          child: Asset.iconSvg('lock', width: 22, color: application.theme.fontLightColor),
                           onPressed: () async {
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                             BottomDialog.of(Global.appContext).showWithTitle(
