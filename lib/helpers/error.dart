@@ -132,11 +132,11 @@ class NknError {
   }
 }
 
-String? handleError(dynamic error, {StackTrace? stackTrace, bool show = true, String? toast}) {
+String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast}) {
   if (Global.isRelease) {
     Sentry.captureException(error, stackTrace: stackTrace);
   } else if (Settings.debug) {
-    logger.e(error);
+    logger.e(error, stackTrace);
     debugPrintStack(maxFrames: 100);
   }
   if (!show) return null;
@@ -153,7 +153,11 @@ String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
   if (errStr.isEmpty) return "";
 
-  if (NknError.isNknError(error)) return errStr;
+  if (NknError.isNknError(error)) {
+    if (!errStr.contains("all rpc request failed")) {
+      return errStr;
+    }
+  }
   if (errStr.contains("oom") == true) return "out of memory";
   return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
   // return error.toString();
