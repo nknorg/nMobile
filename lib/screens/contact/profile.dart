@@ -242,8 +242,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       } else {
         AppScreen.go(this.context);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       AppScreen.go(this.context);
     }
   }

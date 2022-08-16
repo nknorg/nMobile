@@ -43,8 +43,8 @@ class FileHelper {
     Uint8List? bytes;
     try {
       bytes = base64Decode(base64Data);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return null;
     }
 

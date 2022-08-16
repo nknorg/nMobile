@@ -39,8 +39,8 @@ class Common {
     try {
       await _methodChannel.invokeMethod('backDesktop');
       return true;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }
@@ -53,8 +53,8 @@ class Common {
         'albumName': albumName,
       });
       return true;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }
@@ -63,8 +63,8 @@ class Common {
     try {
       final Map resp = await _methodChannel.invokeMethod('getAPNSToken', {});
       return resp['token'];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -77,8 +77,8 @@ class Common {
         'pushPayload': pushPayload,
       });
       return true;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }
@@ -87,8 +87,8 @@ class Common {
     try {
       final Map resp = await _methodChannel.invokeMethod('isGoogleServiceAvailable', {});
       return resp['availability'] ?? false;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }
@@ -97,8 +97,8 @@ class Common {
     try {
       final Map resp = await _methodChannel.invokeMethod('getFCMToken', {});
       return resp['token'];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -109,8 +109,8 @@ class Common {
         'badge_count': count,
       });
       return true;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }
@@ -123,8 +123,8 @@ class Common {
         'parityShards': parityShards,
       });
       return resp['data'] ?? [];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -138,8 +138,8 @@ class Common {
         'bytesLength': bytesLength,
       });
       return resp['data'];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -153,8 +153,8 @@ class Common {
         'readOnly': readOnly,
       });
       return resp['success'];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
   }*/
 }

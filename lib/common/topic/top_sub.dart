@@ -236,7 +236,7 @@ class TopSub {
       } else {
         canTryTimer = false;
       }
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
@@ -281,7 +281,7 @@ class TopSub {
         if (tryTimes >= maxTryTimes) {
           success = false;
           _nonce = null;
-          handleError(e);
+          handleError(e, st);
         }
       }
     }
@@ -332,7 +332,7 @@ class TopSub {
       } else {
         canTryTimer = false;
       }
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("nonce is not continuous")) {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
@@ -377,7 +377,7 @@ class TopSub {
         if (tryTimes >= maxTryTimes) {
           success = false;
           _nonce = null;
-          handleError(e);
+          handleError(e, st);
         }
       }
     }
@@ -440,8 +440,8 @@ class TopSub {
           config: RpcConfig(seedRPCServerAddr: seedRpcList),
         );
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if ((results == null) || results.isEmpty) {
       if (tryTimes < 2) {
@@ -500,8 +500,8 @@ class TopSub {
           offset += limit;
         }
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (results == null) {
       if (tryTimes < 2) {
@@ -532,8 +532,8 @@ class TopSub {
           config: RpcConfig(seedRPCServerAddr: seedRpcList),
         );
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (count == null) {
       if (tryTimes < 2) {

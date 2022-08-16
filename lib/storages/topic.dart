@@ -86,8 +86,8 @@ class TopicStorage with Tag {
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
         }
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -113,8 +113,8 @@ class TopicStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - empty - topicId:$topicId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -139,8 +139,8 @@ class TopicStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryByTopic - empty - topic:$topic");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -172,8 +172,8 @@ class TopicStorage with Tag {
       });
       logger.v("$TAG - queryList - items:$logText");
       return results;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -205,8 +205,8 @@ class TopicStorage with Tag {
       });
       logger.v("$TAG - queryList - items:$logText");
       return results;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -240,8 +240,8 @@ class TopicStorage with Tag {
               return true;
             }
             logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -269,8 +269,8 @@ class TopicStorage with Tag {
               return true;
             }
             logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -298,8 +298,8 @@ class TopicStorage with Tag {
               return true;
             }
             logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -327,8 +327,8 @@ class TopicStorage with Tag {
               return true;
             }
             logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -355,8 +355,8 @@ class TopicStorage with Tag {
               return true;
             }
             logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

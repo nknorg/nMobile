@@ -79,8 +79,8 @@ class ChatCommon with Tag {
         final count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
         logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
         _checkersParams[targetId]?["delay"] = 0;
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
     }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
   }

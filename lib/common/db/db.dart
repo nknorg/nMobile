@@ -224,8 +224,8 @@ class DB {
   Future<Database?> _tryOpenDB(String path, String password, {String publicKey = "", bool upgradeTip = false}) async {
     try {
       return await _openDB(path, password, publicKey: publicKey, upgradeTip: upgradeTip);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       _upgradeTipSink.add(null);
       // Toast.show("database open error");
     }
@@ -422,8 +422,8 @@ class DB {
       // await sourceDB.execute("Attach DATABASE `$targetPath` AS copy_1 KEY ''");
       // await sourceDB.execute("SELECT sqlcipher_export(`copy_1`)"); //  no sqlcipher import
       // await sourceDB.execute("DETACH DATABASE `copy_1`");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return false;
     }
     return true;
@@ -456,8 +456,8 @@ class DB {
       // await sourceDB.execute("Attach DATABASE `$targetPath` AS copy_1 KEY ''");
       // await sourceDB.execute("SELECT sqlcipher_export(`copy_1`)"); //  no sqlcipher import
       // await sourceDB.execute("DETACH DATABASE `copy_1`");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return false;
     }
     return true;
