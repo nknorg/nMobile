@@ -39,8 +39,8 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
-import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/path.dart' as Path2;
+import 'package:nmobile/utils/time.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
@@ -123,12 +123,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       this._isJoined = null;
       this._contact = null;
       this.targetId = this._privateGroup?.groupId;
-      if (!privateGroupCommon.dataComplete) {
+      if (privateGroupCommon.dataComplete[_privateGroup!.groupId] != true) {
         var owner = privateGroupCommon.getOwnerPublicKey(_privateGroup!.groupId);
-        if (privateGroupCommon.lockSyncData(_privateGroup!.groupId, owner)) {
-          chatOutCommon.sendPrivateGroupOptionRequest(owner, _privateGroup!.groupId);
-        }
-        privateGroupCommon.unLockSyncData(_privateGroup!.groupId, owner);
+        chatOutCommon.sendPrivateGroupOptionRequest(owner, _privateGroup!.groupId);
       }
     } else if (who is ContactSchema) {
       this._topic = null;
@@ -485,7 +482,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // TODO:GG PG check
     if (_privateGroup != null) {
-      if (!privateGroupCommon.dataComplete) {
+      if (privateGroupCommon.dataComplete[_privateGroup!.groupId] != true) {
         disableTip = Global.locale((s) => s.data_synchronization, ctx: context);
       }
     }

@@ -65,19 +65,20 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     } else if (widget.session.isPrivateGroup) {
-      if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
-        privateGroupCommon.queryByGroupId(widget.session.targetId).then((value) {
-          privateGroupCommon.checkDataComplete(value!.groupId);
-          setState(() {
-            loaded = true;
-            _privateGroup = value;
-            _topic = null;
-            _contact = null;
+      privateGroupCommon.checkDataComplete(widget.session.targetId).then((g) {
+        if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
+          privateGroupCommon.queryByGroupId(widget.session.targetId).then((value) {
+            setState(() {
+              loaded = true;
+              _privateGroup = value;
+              _topic = null;
+              _contact = null;
+            });
           });
-        });
-      } else {
-        loaded = true;
-      }
+        } else {
+          loaded = true;
+        }
+      });
     } else {
       if (_contact == null || (widget.session.targetId != _contact?.clientAddress)) {
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
@@ -95,7 +96,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     // lastMsg + topicSender
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
     if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId) {
-      if (widget.session.isTopic && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
+      if ((widget.session.isTopic || widget.session.isPrivateGroup) && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
         lastMsg?.getSender(emptyAdd: true).then((ContactSchema? value) {
           setState(() {
             _lastMsg = lastMsg;
@@ -313,7 +314,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
 
     String topicSenderName = _topicSender?.displayName ?? " ";
-    String prefix = session.isTopic ? ((_lastMsg?.isOutbound == true) ? "" : "$topicSenderName: ") : "";
+    // TODO:GG PG check
+    String prefix = (session.isTopic || session.isPrivateGroup) ? ((_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : "$topicSenderName: ") : "";
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {

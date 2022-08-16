@@ -711,20 +711,30 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribe - duplicated - message:$exists");
       return false;
     }
-    // subscriber
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
-    bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
-    topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
-      if (!historySubscribed && value != null) {
-        // DB
-        MessageSchema? inserted = await MessageStorage.instance.insert(received);
-        if (inserted != null) {
-          // display
-          _onSavedSink.add(inserted);
-        }
+    // TODO:GG PG check
+    if (received.isPrivateGroup) {
+      MessageSchema? inserted = await MessageStorage.instance.insert(received);
+      if (inserted != null) {
+        _onSavedSink.add(inserted);
       }
-    });
-    return !historySubscribed;
+      return true;
+    } else if (received.isTopic) {
+      // subscriber
+      SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
+      bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
+      topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
+        if (!historySubscribed && value != null) {
+          // DB
+          MessageSchema? inserted = await MessageStorage.instance.insert(received);
+          if (inserted != null) {
+            // display
+            _onSavedSink.add(inserted);
+          }
+        }
+      });
+      return !historySubscribed;
+    }
+    return false;
   }
 
   // NO single
