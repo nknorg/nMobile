@@ -135,9 +135,9 @@ class Global {
             logger.i("Global - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
           }
         }
-      } catch (e) {
+      } catch (e, st) {
         // list = defaultSeedRpcList;
-        handleError(e);
+        handleError(e, st);
       }
     }
 
@@ -205,8 +205,8 @@ class Global {
         List<String> seedRpcList = await Global.getRpcServers(null);
         newBlockHeight = await Wallet.getHeight(config: RpcConfig(seedRPCServerAddr: seedRpcList));
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if ((newBlockHeight != null) && (newBlockHeight > 0)) blockHeight = newBlockHeight;
     return blockHeight;
@@ -228,8 +228,8 @@ class Global {
         // client no check rpcSeed
         nonce = await clientCommon.client?.getNonce(txPool: txPool);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     logger.d("Global - getNonce - nonce:$nonce - txPool:$txPool - walletAddress:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
     return nonce;

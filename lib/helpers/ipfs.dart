@@ -114,8 +114,8 @@ class IpfsHelper with Tag {
           }
           await encryptFile.writeAsBytes(result!["data"]!["cipherText"], flush: true);
           filePath = encryptFile.path;
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           onError?.call("encrypt copy fail");
           return null;
         }
@@ -214,8 +214,8 @@ class IpfsHelper with Tag {
               }
               await file.writeAsBytes(finalData, flush: true);
               onSuccess?.call(msgId, result);
-            } catch (e) {
-              handleError(e);
+            } catch (e, st) {
+              handleError(e, st);
               onError?.call("save file fail");
             }
           }
@@ -261,18 +261,18 @@ class IpfsHelper with Tag {
           onProgress?.call(id, total, count);
         },
       );
-    } on DioError catch (e) {
+    } on DioError catch (e, st) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
-        handleError(e.response?.data);
+        handleError(e.response?.data, st);
       } else {
-        handleError(response?.statusMessage);
+        handleError(response?.statusMessage, st);
       }
       onError?.call(id);
       return null;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       onError?.call(id);
       return null;
     }
@@ -329,18 +329,18 @@ class IpfsHelper with Tag {
           onProgress?.call(id, totalCount, count);
         },
       );
-    } on DioError catch (e) {
+    } on DioError catch (e, st) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
-        handleError(e.response?.data);
+        handleError(e.response?.data, st);
       } else {
-        handleError(response?.statusMessage);
+        handleError(response?.statusMessage, st);
       }
       onError?.call(id);
       return null;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       onError?.call(id);
       return null;
     }
@@ -380,8 +380,8 @@ class IpfsHelper with Tag {
           KEY_ENCRYPT_NONCE_SIZE: nonceSize,
         }
       };
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -392,8 +392,8 @@ class IpfsHelper with Tag {
       if (algorithm.toLowerCase().contains("aes/gcm")) {
         return await Crypto.gcmDecrypt(data, key, nonceSize);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }

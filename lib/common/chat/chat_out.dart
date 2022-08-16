@@ -81,7 +81,7 @@ class ChatOutCommon with Tag {
         await Future.delayed(Duration(milliseconds: 100));
         return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
       }
-    } catch (e) {
+    } catch (e, st) {
       String errStr = e.toString().toLowerCase();
       if (errStr.contains(NknError.invalidDestination)) {
         logger.e("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
@@ -91,10 +91,10 @@ class ChatOutCommon with Tag {
         Sentry.captureMessage("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
         return null;
       }
+      if ((maxTryTimes - tryTimes) <= 1) handleError(e, st);
       bool isClientError = NknError.isClientError(e);
       bool isLastTryTime = (maxTryTimes - tryTimes) <= 2;
       if (isClientError || isLastTryTime) {
-        if ((maxTryTimes - tryTimes) <= 1) handleError(e);
         if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
           await Future.delayed(Duration(milliseconds: 1000));
           return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
@@ -532,8 +532,8 @@ class ChatOutCommon with Tag {
     return await _resendQueue.add(() async {
       try {
         return await func();
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     }, id: message.msgId);
@@ -582,8 +582,8 @@ class ChatOutCommon with Tag {
     return await _resendQueue.add(() async {
       try {
         return await func();
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     }, id: message.msgId);
@@ -656,8 +656,8 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithAddressSafe(List<String> clientAddressList, String? msgData, {bool notification = false}) async {
     try {
       return _sendWithAddress(clientAddressList, msgData, notification: notification);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return null;
     }
   }
@@ -665,8 +665,8 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithContactSafe(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
     try {
       return _sendWithContact(contact, message, msgData, notification: notification);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return null;
     }
   }
@@ -674,8 +674,8 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithTopicSafe(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = false}) async {
     try {
       return _sendWithTopic(topic, message, msgData, notification: notification);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return null;
     }
   }

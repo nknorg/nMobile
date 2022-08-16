@@ -182,9 +182,9 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
               nkn.keystore,
             );
           }
-        }).onError((error, stackTrace) {
+        }).onError((e, st) {
           Loading.dismiss();
-          handleError(error, stackTrace: stackTrace);
+          handleError(e, st);
         });
         break;
       case 1: // delete
@@ -208,15 +208,15 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                   if (pubKey?.isNotEmpty == true) {
                     connectAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
                   }
-                } catch (e) {
-                  handleError(e);
+                } catch (e, st) {
+                  handleError(e, st);
                 }
                 String? defaultAddress = await walletCommon.getDefaultAddress();
                 if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
                   await clientCommon.signOut(clearWallet: true, closeDB: true);
                 }
-              } catch (e) {
-                handleError(e);
+              } catch (e, st) {
+                handleError(e, st);
               } finally {
                 AppScreen.go(context);
               }

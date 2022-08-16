@@ -88,8 +88,8 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       if (pubKey?.isNotEmpty == true) {
         walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {

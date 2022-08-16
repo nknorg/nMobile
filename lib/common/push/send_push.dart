@@ -109,8 +109,8 @@ class SendPush {
         logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:$body");
         return false;
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }

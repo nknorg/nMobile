@@ -88,8 +88,8 @@ class ChatBottomMenu extends StatelessWidget {
         type: FileType.any,
         allowCompression: true,
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];

@@ -106,8 +106,8 @@ class WalletCommon with Tag {
         _walletBloc.add(UpdateWallet(wallet));
       }
       return balance;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -130,8 +130,8 @@ class WalletCommon with Tag {
         _walletBloc.add(UpdateWallet(wallet));
       }
       return [(ethAmount?.ether as double?), (nknAmount?.ether as double?)];
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [null, null];
   }

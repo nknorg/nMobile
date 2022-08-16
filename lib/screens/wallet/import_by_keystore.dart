@@ -103,9 +103,9 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
         Loading.dismiss();
         Toast.show(Global.locale((s) => s.success, ctx: context));
         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-      } catch (e) {
+      } catch (e, st) {
         Loading.dismiss();
-        handleError(e);
+        handleError(e, st);
       }
     }
   }
@@ -168,8 +168,8 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                             allowMultiple: false,
                             type: FileType.any,
                           );
-                        } catch (e) {
-                          handleError(e);
+                        } catch (e, st) {
+                          handleError(e, st);
                         }
                         logger.i("$TAG - result:$result");
                         if (result != null && result.files.isNotEmpty) {

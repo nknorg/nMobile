@@ -76,8 +76,8 @@ class ContactSchema {
       if (pubKey?.isNotEmpty == true) {
         walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return ContactSchema(
       clientAddress: clientAddress,
@@ -185,8 +185,8 @@ class ContactSchema {
       if (pubKey.isNotEmpty == true) {
         nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return nknWalletAddress;
   }
