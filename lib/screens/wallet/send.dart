@@ -211,8 +211,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
           final result = await _transferNKN(_wallet.name ?? "", keystore, password);
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, result);
         }
-      }).onError((error, stackTrace) {
-        handleError(error, stackTrace: stackTrace);
+      }).onError((e, st) {
+        handleError(e, st);
       });
     }
   }
@@ -261,8 +261,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
               gasPriceInGwei: _gasPriceInGwei,
             );
       return txHash.length > 10;
-    } catch (e) {
-      handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
+    } catch (e, st) {
+      handleError(e, st, toast: Global.locale((s) => s.failure, ctx: context));
       return false;
     } finally {
       Loading.dismiss();
@@ -323,7 +323,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
       Toast.show(Global.locale((s) => s.failure, ctx: context));
       return false;
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains('not sufficient funds')) {
         Toast.show(Global.locale((s) => s.balance_not_enough, ctx: context));
       } else if (e.toString().contains("nonce is not continuous") || e.toString().contains("nonce is too low")) {
@@ -331,7 +331,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         int? nonce = await Global.getNonce(this._wallet.address);
         return _transferNKN(name, keystore, password, nonce: nonce, replaceFee: replaceFee);
       } else {
-        handleError(e, toast: Global.locale((s) => s.failure, ctx: context));
+        handleError(e, st, toast: Global.locale((s) => s.failure, ctx: context));
       }
       return false;
     } finally {

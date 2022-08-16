@@ -35,8 +35,8 @@ class Authorization {
         ),
       );
       return success;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return false;
   }

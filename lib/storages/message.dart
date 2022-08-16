@@ -72,8 +72,8 @@ class MessageStorage with Tag {
           return schema;
         }
         logger.w("$TAG - insert - empty - schema:$schema");
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -96,8 +96,8 @@ class MessageStorage with Tag {
               return count;
             }
             logger.w("$TAG - deleteByIdContentType - empty - msgId:$msgId - contentType:$contentType");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return 0;
         }) ??
@@ -121,8 +121,8 @@ class MessageStorage with Tag {
               return count;
             }
             logger.w("$TAG - deleteByTargetIdContentType - empty - targetId:$targetId - contentType:$contentType");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return 0;
         }) ??
@@ -149,8 +149,8 @@ class MessageStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - success - msgId:$msgId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -175,8 +175,8 @@ class MessageStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryByIdNoContentType - empty - msgId:$msgId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -213,8 +213,8 @@ class MessageStorage with Tag {
         return schemaList;
       }
       logger.v("$TAG - queryListByIds - empty - msgIds:$msgIds");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -251,8 +251,8 @@ class MessageStorage with Tag {
         return schemaList;
       }
       logger.v("$TAG - queryListByIdsNoContentType - empty - msgIds:$msgIds");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -284,8 +284,8 @@ class MessageStorage with Tag {
       });
       logger.v("$TAG - queryListByIdContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
       return result;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -304,8 +304,8 @@ class MessageStorage with Tag {
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCount - count:$count");
       return count ?? 0;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return 0;
   }
@@ -337,8 +337,8 @@ class MessageStorage with Tag {
       });
       logger.v("$TAG - queryListByTargetIdWithUnRead - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -358,8 +358,8 @@ class MessageStorage with Tag {
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
       return count ?? 0;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return 0;
   }
@@ -392,8 +392,8 @@ class MessageStorage with Tag {
       });
       logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -425,8 +425,8 @@ class MessageStorage with Tag {
       });
       logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -448,8 +448,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -478,8 +478,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -501,8 +501,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -524,8 +524,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -549,8 +549,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendAt:$sendAt");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -574,8 +574,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteAt:$deleteAt");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -599,8 +599,8 @@ class MessageStorage with Tag {
             });
             logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

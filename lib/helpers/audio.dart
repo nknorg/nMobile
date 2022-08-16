@@ -82,8 +82,8 @@ class AudioHelper with Tag {
         mode: SessionMode.modeVoiceChat,
         device: AudioDevice.speaker,
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (_player == null) {
       await playStop();
@@ -124,8 +124,8 @@ class AudioHelper with Tag {
             });
             playStop();
           });
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     _onPlayProgressSink.add({
       "id": this.playerId,
@@ -150,8 +150,8 @@ class AudioHelper with Tag {
     try {
       await player.stopPlayer();
       await player.closeAudioSession();
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       isPlayReleasing = false;
     }
     this.playerId = null;
@@ -201,8 +201,8 @@ class AudioHelper with Tag {
         mode: SessionMode.modeDefault,
         device: AudioDevice.speaker,
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (_record == null) {
       await recordStop();
@@ -234,8 +234,8 @@ class AudioHelper with Tag {
     try {
       await record.setSubscriptionDuration(Duration(milliseconds: 50));
       await record.startRecorder(toFile: recordPath, codec: Sound.Codec.aacADTS);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return recordPath;
   }
@@ -248,8 +248,8 @@ class AudioHelper with Tag {
     try {
       await record.stopRecorder();
       await record.closeAudioSession();
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       isRecordReleasing = false;
     }
     this.recordId = null;

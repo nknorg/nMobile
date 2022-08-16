@@ -50,8 +50,8 @@ class PrivateGroupStorage with Tag {
         return schema;
       }
       logger.w("$TAG - insert - empty - schema:$schema");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -74,8 +74,8 @@ class PrivateGroupStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - empty - groupId:$groupId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -85,13 +85,11 @@ class PrivateGroupStorage with Tag {
 
     try {
       int? res = await db?.transaction((txn) {
-        return txn.delete(
-          tableName
-        );
+        return txn.delete(tableName);
       });
       return res;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -99,8 +97,8 @@ class PrivateGroupStorage with Tag {
   Future<void> dropTable() async {
     try {
       await db?.execute('DROP TABLE $tableName');
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
   }
 }

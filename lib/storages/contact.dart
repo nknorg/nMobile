@@ -87,8 +87,8 @@ class ContactStorage with Tag {
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
         }
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -114,8 +114,8 @@ class ContactStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - empty - contactId:$contactId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -140,8 +140,8 @@ class ContactStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryByClientAddress - empty - address:$clientAddress");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -178,8 +178,8 @@ class ContactStorage with Tag {
         return schemaList;
       }
       logger.v("$TAG - queryListByClientAddress - empty - clientAddressList:$clientAddressList");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -212,8 +212,8 @@ class ContactStorage with Tag {
       List<ContactSchema> results = await Future.wait(futures);
       logger.v("$TAG - queryList - items:$logText");
       return results;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -239,8 +239,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -271,8 +271,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -300,8 +300,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -329,8 +329,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -359,8 +359,8 @@ class ContactStorage with Tag {
             }
             logger.w("$TAG - setDeviceToken - fail - contactId:$contactId - deviceToken:$deviceToken");
             return false;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -391,8 +391,8 @@ class ContactStorage with Tag {
             }
             logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
             return false;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -423,8 +423,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -452,8 +452,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -483,8 +483,8 @@ class ContactStorage with Tag {
               return true;
             }
             logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

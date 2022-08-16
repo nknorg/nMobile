@@ -134,24 +134,24 @@ class Upgrade4to5 {
             newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'] != null ? Color(oldOptionsMap['backgroundColor']) : null;
             newOptionsSchema.avatarNameColor = oldOptionsMap['color'] != null ? Color(oldOptionsMap['color']) : null;
           }
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
         }
         newOptionsSchema.notificationOpen = (result["notification_open"]?.toString() == '1') ? true : false;
         String? newOptions;
         try {
           newOptions = jsonEncode(newOptionsSchema.toMap());
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
         }
         // data
         Map<String, dynamic> oldDataMap;
         try {
           oldDataMap = (result['data']?.toString().isNotEmpty == true) ? jsonDecode(result['data']) : Map();
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - data(old) error - data:$result");
           oldDataMap = Map();
         }
@@ -163,8 +163,8 @@ class Upgrade4to5 {
         String? newData;
         try {
           newData = jsonEncode(newDataMap);
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - data(new) error - data:$result");
         }
         // profile
@@ -334,15 +334,15 @@ class Upgrade4to5 {
             newOptionsSchema.avatarBgColor = oldOptionsMap['backgroundColor'] != null ? Color(oldOptionsMap['backgroundColor']) : null;
             newOptionsSchema.avatarNameColor = oldOptionsMap['color'] != null ? Color(oldOptionsMap['color']) : null;
           }
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
         }
         String? newOptions;
         try {
           newOptions = jsonEncode(newOptionsSchema.toMap());
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
         }
 
@@ -748,8 +748,8 @@ class Upgrade4to5 {
         Map<String, dynamic> oldOptionsMap;
         try {
           oldOptionsMap = (result['options']?.toString().isNotEmpty == true) ? jsonDecode(result['options']) : Map();
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(old) error - data:$result");
           oldOptionsMap = Map();
         }
@@ -770,8 +770,8 @@ class Upgrade4to5 {
         String? newOptions;
         try {
           newOptions = jsonEncode(newOptionsMap);
-        } catch (e) {
-          handleError(e);
+        } catch (e, st) {
+          handleError(e, st);
           logger.w("Upgrade4to5 - $oldTableName query - options(new) error - data:$result");
         }
 

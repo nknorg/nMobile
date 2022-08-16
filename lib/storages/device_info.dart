@@ -52,8 +52,8 @@ class DeviceInfoStorage with Tag {
           return schema;
         }
         logger.w("$TAG - insert - fail - schema:$schema");
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -80,8 +80,8 @@ class DeviceInfoStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -119,8 +119,8 @@ class DeviceInfoStorage with Tag {
         return schemaList;
       }
       logger.v("$TAG - queryListLatest - empty - contactAddressList:$contactAddressList");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -146,8 +146,8 @@ class DeviceInfoStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -173,8 +173,8 @@ class DeviceInfoStorage with Tag {
               return true;
             }
             logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -200,8 +200,8 @@ class DeviceInfoStorage with Tag {
               return true;
             }
             logger.w("$TAG - setUpdate - fail - contactAddress:$contactAddress - deviceId:$deviceId");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

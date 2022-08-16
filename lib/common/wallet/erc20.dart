@@ -206,14 +206,14 @@ class EthErc20Client with Tag {
     // var credentials = _web3client.credentialsFromPrivateKey("0x...");
     try {
       return await _web3client.getBalance(EthereumAddress.fromHex(address));
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return getBalanceEth(address: address);
       }
-      handleError(e);
+      handleError(e, st);
       return null;
     }
   }
@@ -226,14 +226,14 @@ class EthErc20Client with Tag {
         params: [EthereumAddress.fromHex(address)],
       );
       return EtherAmount.inWei(balance.first);
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return getBalanceNkn(address: address);
       }
-      handleError(e);
+      handleError(e, st);
       return null;
     }
   }
@@ -259,14 +259,14 @@ class EthErc20Client with Tag {
         chainId: null,
         fetchChainIdFromNetworkId: true,
       );
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return sendEthereum(credt, address: address, amountEth: amountEth, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
       }
-      handleError(e);
+      handleError(e, st);
       rethrow;
     }
   }
@@ -295,14 +295,14 @@ class EthErc20Client with Tag {
         chainId: null,
         fetchChainIdFromNetworkId: true,
       );
-    } catch (e) {
+    } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
         create();
         await Future.delayed(Duration(seconds: 1));
         return sendNknToken(credt, address: address, amountNkn: amountNkn, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
       }
-      handleError(e);
+      handleError(e, st);
       rethrow;
     }
   }

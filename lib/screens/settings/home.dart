@@ -118,8 +118,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     }
     try {
       return _languageList.firstWhere((x) => x.value == lang).text;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       return Global.locale((s) => s.language_auto);
     }
   }

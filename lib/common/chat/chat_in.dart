@@ -63,8 +63,8 @@ class ChatInCommon with Tag {
     _receiveQueues[message.targetId]?[message.contentType]?.add(() async {
       try {
         return await _handleMessage(message);
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
     }, id: message.msgId, priority: needFast);
   }

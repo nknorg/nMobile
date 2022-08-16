@@ -52,8 +52,8 @@ class MediaPicker {
           pageSize: 32,
         ),
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (pickedResults == null || pickedResults.isEmpty) {
       logger.d("MediaPicker - pickCommons - pickedResults = null");
@@ -112,8 +112,8 @@ class MediaPicker {
         } else {
           // FUTURE: original
         }
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       // size
       int size = file.lengthSync();
@@ -190,8 +190,8 @@ class MediaPicker {
           imageFormatGroup: ImageFormatGroup.unknown,
         ),
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
 
     // file
@@ -245,8 +245,8 @@ class MediaPicker {
       } else {
         // FUTURE: original
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
 
     // save
@@ -294,8 +294,8 @@ class MediaPicker {
     XFile? pickedResult;
     try {
       pickedResult = await ImagePicker().pickImage(source: ImageSource.camera); // imageQuality: compressQuality  -> ios no enable
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (pickedResult == null || pickedResult.path.isEmpty) {
       logger.w("MediaPicker - takeImage - pickedResult == null");
@@ -316,8 +316,8 @@ class MediaPicker {
       } else {
         // FUTURE: original
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
 
     // save
@@ -377,8 +377,8 @@ class MediaPicker {
           pageSize: 30,
         ),
       );
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (pickedResults == null || pickedResults.isEmpty) {
       logger.d("MediaPicker - pickImage - pickedResults = null");
@@ -463,8 +463,8 @@ class MediaPicker {
       if ((croppedFile?.path != null) && (croppedFile?.path.isNotEmpty == true)) {
         cropFile = File(croppedFile!.path);
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
 
     int size = await cropFile?.length() ?? 0;
@@ -563,8 +563,8 @@ class MediaPicker {
         logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:${i + 1} - quality:$compressQuality - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         if (compressSize <= bestSize) break;
       }
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
 
     if (compressSize > maxSize) {

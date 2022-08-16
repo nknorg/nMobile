@@ -76,8 +76,8 @@ class SessionStorage with Tag {
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
         }
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -100,8 +100,8 @@ class SessionStorage with Tag {
               return true;
             }
             logger.w("$TAG - delete - empty - targetId:$targetId - type:$type");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -128,8 +128,8 @@ class SessionStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -159,8 +159,8 @@ class SessionStorage with Tag {
       });
       logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
       return result;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -184,8 +184,8 @@ class SessionStorage with Tag {
             });
             logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -209,8 +209,8 @@ class SessionStorage with Tag {
             });
             logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -234,8 +234,8 @@ class SessionStorage with Tag {
             });
             logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
             return (count ?? 0) > 0;
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

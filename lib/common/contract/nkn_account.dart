@@ -7,8 +7,7 @@ import '../../helpers/error.dart';
 class NKNAccount {
   static const SMART_CONTRACT_ADDRESS = '0xf6Af6126D18FD3d64A771E5F449c706bb4121953';
   static const SMART_CONTRACT_NAME = 'NKNAccount';
-  static const ABI_CODE =
-      '[{ "inputs": [], "name": "del", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "publicKey", "type": "address" } ], "name": "getNKNAddr", "outputs": [ { "components": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "internalType": "struct NKNAccount.NKNAddress", "name": "", "type": "tuple" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "getNKNAddr", "outputs": [ { "components": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "internalType": "struct NKNAccount.NKNAddress", "name": "", "type": "tuple" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "name": "set", "outputs": [], "stateMutability": "nonpayable", "type": "function" }]';
+  static const ABI_CODE = '[{ "inputs": [], "name": "del", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "publicKey", "type": "address" } ], "name": "getNKNAddr", "outputs": [ { "components": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "internalType": "struct NKNAccount.NKNAddress", "name": "", "type": "tuple" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "getNKNAddr", "outputs": [ { "components": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "internalType": "struct NKNAccount.NKNAddress", "name": "", "type": "tuple" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "string", "name": "identifier", "type": "string" }, { "internalType": "bytes32", "name": "publicKey", "type": "bytes32" } ], "name": "set", "outputs": [], "stateMutability": "nonpayable", "type": "function" }]';
 
   static DeployedContract get contract => DeployedContract(
         ContractAbi.fromJson(ABI_CODE, SMART_CONTRACT_NAME),
@@ -48,8 +47,8 @@ class NKNAccountContract {
         addr = '$identifier.$pubkey';
       }
       return addr;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
   }
 

@@ -498,8 +498,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             onTap = () {
               try {
                 OpenFile.open(file.path);
-              } catch (e) {
-                handleError(e);
+              } catch (e, st) {
+                handleError(e, st);
               }
             };
           }
@@ -520,8 +520,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               onTap = () {
                 try {
                   OpenFile.open(file.path);
-                } catch (e) {
-                  handleError(e);
+                } catch (e, st) {
+                  handleError(e, st);
                 }
               };
             }

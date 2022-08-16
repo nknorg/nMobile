@@ -80,8 +80,8 @@ class SubscriberStorage with Tag {
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
         }
-      } catch (e) {
-        handleError(e);
+      } catch (e, st) {
+        handleError(e, st);
       }
       return null;
     });
@@ -107,8 +107,8 @@ class SubscriberStorage with Tag {
         return schema;
       }
       logger.v("$TAG - query - empty - subscriberId:$subscriberId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -133,8 +133,8 @@ class SubscriberStorage with Tag {
         return schema;
       }
       logger.v("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return null;
   }
@@ -167,8 +167,8 @@ class SubscriberStorage with Tag {
       });
       logger.v("$TAG - queryListByTopic - items:$logText");
       return results;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -200,8 +200,8 @@ class SubscriberStorage with Tag {
       });
       logger.v("$TAG - queryListByTopicPerm - items:$logText");
       return results;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return [];
   }
@@ -221,8 +221,8 @@ class SubscriberStorage with Tag {
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - queryCountByTopic - topic:$topic - count:$status");
       return count ?? 0;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return 0;
   }
@@ -242,8 +242,8 @@ class SubscriberStorage with Tag {
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
       logger.v("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
       return count ?? 0;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return 0;
   }
@@ -270,8 +270,8 @@ class SubscriberStorage with Tag {
       }
       logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
       return 0;
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     return 0;
   }
@@ -297,8 +297,8 @@ class SubscriberStorage with Tag {
               return true;
             }
             logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -326,8 +326,8 @@ class SubscriberStorage with Tag {
               return true;
             }
             logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??
@@ -354,8 +354,8 @@ class SubscriberStorage with Tag {
               return true;
             }
             logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
-          } catch (e) {
-            handleError(e);
+          } catch (e, st) {
+            handleError(e, st);
           }
           return false;
         }) ??

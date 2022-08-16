@@ -157,9 +157,9 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
           nkn.keystore,
         );
       }
-    }).onError((error, stackTrace) {
+    }).onError((e, st) {
       Loading.dismiss();
-      handleError(error, stackTrace: stackTrace);
+      handleError(e, st);
     });
   }
 

@@ -40,8 +40,8 @@ Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) as
     Wallet nknWallet = await Wallet.restore(keystore, config: WalletConfig(password: walletPwd, seedRPCServerAddr: seedRpcList));
     if (nknWallet.publicKey.isEmpty) return null;
     return hexEncode(nknWallet.publicKey);
-  } catch (e) {
-    handleError(e);
+  } catch (e, st) {
+    handleError(e, st);
   }
   return null;
 }
@@ -104,7 +104,7 @@ class ClientCommon with Tag {
       status = event;
     });
     onErrorStream.listen((dynamic event) {
-      handleError(event);
+      handleError(event, null);
       reSignIn(false);
     });
     clientClosing = false;
@@ -118,8 +118,8 @@ class ClientCommon with Tag {
     String? pk;
     try {
       pk = hexEncode(client!.publicKey);
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
     }
     if (pk == null || pk.isEmpty) return null;
     return pk;
@@ -199,14 +199,14 @@ class ClientCommon with Tag {
         ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
         contactCommon.meUpdateSink.add(me);
       }
-    } catch (e) {
+    } catch (e, st) {
       // password/keystore
       if ((e.toString().contains("password") == true) || (e.toString().contains("keystore") == true)) {
         if (!fetchRemote) {
           logger.w("$TAG - signIn - password/keystore error, reSignIn by check - wallet:$wallet");
           return _signIn(wallet, fetchRemote: true, loadingVisible: loadingVisible, password: password);
         }
-        handleError(e);
+        handleError(e, st);
         _statusSink.add(ClientConnectStatus.disconnected);
         return {"client": null, "pwd_error": true};
       }
@@ -257,10 +257,10 @@ class ClientCommon with Tag {
       }
       // await completer.future;
       return {"client": client, "pwd_error": false};
-    } catch (e) {
+    } catch (e, st) {
       loadingVisible?.call(false, tryTimes);
       // toast
-      if (Settings.debug || ((tryTimes != 0) && (tryTimes % 2 == 0))) handleError(e);
+      if (Settings.debug || ((tryTimes != 0) && (tryTimes % 2 == 0))) handleError(e, st);
       await Future.delayed(Duration(seconds: tryTimes >= 3 ? 3 : tryTimes));
       // loop login
       await _signOut(clearWallet: false, closeDB: false);
@@ -287,8 +287,8 @@ class ClientCommon with Tag {
     // close
     try {
       await client?.close();
-    } catch (e) {
-      handleError(e);
+    } catch (e, st) {
+      handleError(e, st);
       await Future.delayed(Duration(milliseconds: 200));
       clientClosing = false;
       return _signOut(clearWallet: clearWallet, closeDB: closeDB);
