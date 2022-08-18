@@ -186,37 +186,6 @@ class ChatBottomMenu extends StatelessWidget {
                       shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
                       backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
                     ),
-                    child: Icon(
-                      CupertinoIcons.folder,
-                      size: iconSize,
-                      color: application.theme.fontColor2,
-                    ),
-                    onPressed: () {
-                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize);
-                    },
-                  ),
-                ),
-                SizedBox(height: 8),
-                Label(
-                  Global.locale((s) => s.files, ctx: context),
-                  type: LabelType.bodySmall,
-                  fontWeight: FontWeight.w600,
-                  color: application.theme.fontColor4,
-                ),
-                SizedBox(height: 8),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(
-                  width: btnSize,
-                  height: btnSize,
-                  child: TextButton(
-                    style: ButtonStyle(
-                      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
-                      backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
-                    ),
                     child: Asset.iconSvg(
                       'image',
                       width: iconSize,
@@ -261,6 +230,37 @@ class ChatBottomMenu extends StatelessWidget {
                 SizedBox(height: 8),
                 Label(
                   Global.locale((s) => s.camera, ctx: context),
+                  type: LabelType.bodySmall,
+                  fontWeight: FontWeight.w600,
+                  color: application.theme.fontColor4,
+                ),
+                SizedBox(height: 8),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  width: btnSize,
+                  height: btnSize,
+                  child: TextButton(
+                    style: ButtonStyle(
+                      shape: MaterialStateProperty.resolveWith((states) => RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8)))),
+                      backgroundColor: MaterialStateProperty.resolveWith((states) => application.theme.backgroundColor2),
+                    ),
+                    child: Icon(
+                      CupertinoIcons.folder,
+                      size: iconSize,
+                      color: application.theme.fontColor2,
+                    ),
+                    onPressed: () {
+                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize);
+                    },
+                  ),
+                ),
+                SizedBox(height: 8),
+                Label(
+                  Global.locale((s) => s.files, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
