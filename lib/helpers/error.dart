@@ -134,7 +134,10 @@ class NknError {
 
 String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast}) {
   if (Global.isRelease) {
-    Sentry.captureException(error, stackTrace: stackTrace);
+    String errStr = error?.toString().toLowerCase() ?? "";
+    if (!errStr.contains("all rpc request failed") && !errStr.contains("address = mainnet.infura.io") && !errStr.contains("address = fcm.googleapis.com")) {
+      Sentry.captureException(error, stackTrace: stackTrace);
+    }
   } else if (Settings.debug) {
     logger.e(error, stackTrace);
     debugPrintStack(maxFrames: 100);

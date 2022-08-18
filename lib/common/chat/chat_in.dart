@@ -370,11 +370,6 @@ class ChatInCommon with Tag {
       logger.e("$TAG - receiveContact - contact is empty - data:$data");
       return false;
     }
-    // D-Chat NO support piece
-    // String? supportPiece = data['onePieceReady']?.toString();
-    // if (supportPiece?.isNotEmpty == true) {
-    //   contactCommon.setSupportPiece(received.from, value: supportPiece); // await
-    // }
     // D-Chat NO RequestType.header
     String? requestType = data['requestType']?.toString();
     String? responseType = data['responseType']?.toString();
