@@ -152,12 +152,11 @@ String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, St
 String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
   if (errStr.isEmpty) return "";
+  if (errStr.contains("all rpc request failed")) return "";
+  if (errStr.contains("address = mainnet.infura.io")) return "";
+  if (errStr.contains("address = fcm.googleapis.com")) return "";
 
-  if (NknError.isNknError(error)) {
-    if (!errStr.contains("all rpc request failed")) {
-      return errStr;
-    }
-  }
+  if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
   return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
   // return error.toString();
