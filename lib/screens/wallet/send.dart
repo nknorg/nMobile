@@ -116,6 +116,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
     if (eth) {
       final gasPrice = await _ethClient.getGasPrice;
       _gasPriceInGwei = (gasPrice.gwei * 1).round(); // * 0.8
+      if (_gasPriceInGwei < _sliderGasPriceMin) _gasPriceInGwei = _sliderGasPriceMin;
+      if (_gasPriceInGwei > _sliderGasPriceMax) _gasPriceInGwei = _sliderGasPriceMax;
       logger.i('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
     } else {
       _feeController.text = _fee.toString();
@@ -134,6 +136,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       }
       if (_gasPriceInGwei != gasPrice) {
         _gasPriceInGwei = gasPrice;
+        if (_gasPriceInGwei < _sliderGasPriceMin) _gasPriceInGwei = _sliderGasPriceMin;
+        if (_gasPriceInGwei > _sliderGasPriceMax) _gasPriceInGwei = _sliderGasPriceMax;
         _updateFee(true);
       }
     } else {
@@ -161,6 +165,8 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         }
         if (gweiFee != null) {
           _gasPriceInGwei = gweiFee;
+          if (_gasPriceInGwei < _sliderGasPriceMin) _gasPriceInGwei = _sliderGasPriceMin;
+          if (_gasPriceInGwei > _sliderGasPriceMax) _gasPriceInGwei = _sliderGasPriceMax;
         }
       });
     } else {
