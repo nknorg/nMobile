@@ -1189,10 +1189,6 @@ class MessageData {
     data.addAll({
       'responseType': RequestType.header,
       'version': profileVersion,
-      // SUPPORT:START
-      // 'expiresAt': expiresAt,
-      'onePieceReady': '1',
-      // SUPPORT:END
     });
     return jsonEncode(data);
   }
@@ -1202,10 +1198,6 @@ class MessageData {
     data.addAll({
       'responseType': RequestType.full,
       'version': profileVersion,
-      // SUPPORT:START
-      // 'expiresAt': expiresAt,
-      'onePieceReady': '1',
-      // SUPPORT:END
     });
     Map<String, dynamic> content = Map();
     if (avatar != null && await avatar.exists()) {
