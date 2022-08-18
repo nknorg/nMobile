@@ -31,6 +31,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "Accelerate": MessageLookupByLibrary.simpleMessage("Accelerate"),
         "ERC_20": MessageLookupByLibrary.simpleMessage("ERC-20"),
         "about": MessageLookupByLibrary.simpleMessage("About"),
         "accelerate": MessageLookupByLibrary.simpleMessage("accelerate"),
@@ -489,7 +490,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "success": MessageLookupByLibrary.simpleMessage("Success"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
-        "terms": MessageLookupByLibrary.simpleMessage("terms"),
+        "terms": MessageLookupByLibrary.simpleMessage("Terms"),
         "tip": MessageLookupByLibrary.simpleMessage("Tips"),
         "tip_ask_group_owner_permission": MessageLookupByLibrary.simpleMessage(
             "You are not in this group,ask the group owner for permission"),

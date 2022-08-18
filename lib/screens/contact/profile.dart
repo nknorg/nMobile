@@ -245,6 +245,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } catch (e, st) {
       handleError(e, st);
       AppScreen.go(this.context);
+    } finally {
+      Loading.dismiss();
     }
   }
 

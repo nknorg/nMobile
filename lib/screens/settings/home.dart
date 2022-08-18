@@ -555,7 +555,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.accelerate, ctx: context),
+                          Global.locale((s) => s.Accelerate, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,

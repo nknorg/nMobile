@@ -670,10 +670,10 @@ class S {
     );
   }
 
-  /// `terms`
+  /// `Terms`
   String get terms {
     return Intl.message(
-      'terms',
+      'Terms',
       name: 'terms',
       desc: '',
       args: [],
@@ -1555,6 +1555,16 @@ class S {
     return Intl.message(
       'no accelerate',
       name: 'accelerate_no',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Accelerate`
+  String get Accelerate {
+    return Intl.message(
+      'Accelerate',
+      name: 'Accelerate',
       desc: '',
       args: [],
     );

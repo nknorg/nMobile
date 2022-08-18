@@ -64,7 +64,7 @@
   "notification_sound": "Notification Sound",
   "biometrics": "Biometrics",
   "advanced": "Advanced",
-  "terms": "terms",
+  "terms": "Terms",
   "read_and_agree_terms": "please read and agree to the Terms And Conditions Of Service / User Agreement.",
   "read_and_agree_terms_01": "read and agree to the ",
   "read_and_agree_terms_02": "Terms of Service",
@@ -161,6 +161,7 @@
   "pay_nkn": "Pay NKN amount",
   "accelerate": "accelerate",
   "accelerate_no": "no accelerate",
+  "Accelerate": "Accelerate",
   "topic_resubscribe_enable": "Topic renewal",
 
   "max": "Max",
