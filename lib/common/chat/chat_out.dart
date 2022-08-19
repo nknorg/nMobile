@@ -45,9 +45,9 @@ class ChatOutCommon with Tag {
       return null;
     }
     if (data.length >= MessageSchema.msgMaxSize) {
-      logger.e("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
-      Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
-      return null;
+      logger.w("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+      // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+      // return null;
     }
     if (tryTimes >= maxTryTimes) {
       logger.w("$TAG - sendData - try over - destList:$destList - data:$data");
