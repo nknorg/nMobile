@@ -183,23 +183,38 @@ class EthErc20Client with Tag {
   // of 5 calls per sec/IP.
   //
   // https://infura.io/dashboard/ethereum/3fc946dd60524031a13ab94738cfa6ce/settings
+
   static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
   static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
+  late Client _client;
+  late Web3Client _web3client;
   // ignore: non_constant_identifier_names
   // StreamSubscription<FilterEvent>? _subscription;
-  late Web3Client _web3client;
 
   EthErc20Client() {
     create();
   }
 
-  Web3Client get client => _web3client;
-
   Future<EtherAmount> get getGasPrice => _web3client.getGasPrice();
 
   void create() {
-    _web3client = Web3Client(RPC_SERVER_URL, Client());
+    try {
+      _client = Client();
+      _web3client = Web3Client(RPC_SERVER_URL, _client);
+    } catch (e, st) {
+      handleError(e, st);
+    }
+  }
+
+  Future<void> close() async {
+    // _subscription?.cancel();
+    try {
+      _client.close();
+      await _web3client.dispose();
+    } catch (e, st) {
+      handleError(e, st);
+    }
   }
 
   Future<EtherAmount?> getBalanceEth({required String address}) async {
@@ -209,8 +224,9 @@ class EthErc20Client with Tag {
     } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
+        await Future.delayed(Duration(milliseconds: 500));
         create();
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(Duration(milliseconds: 500));
         return getBalanceEth(address: address);
       }
       handleError(e, st);
@@ -229,8 +245,9 @@ class EthErc20Client with Tag {
     } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
+        await Future.delayed(Duration(milliseconds: 500));
         create();
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(Duration(milliseconds: 500));
         return getBalanceNkn(address: address);
       }
       handleError(e, st);
@@ -262,8 +279,9 @@ class EthErc20Client with Tag {
     } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
+        await Future.delayed(Duration(milliseconds: 500));
         create();
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(Duration(milliseconds: 500));
         return sendEthereum(credt, address: address, amountEth: amountEth, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
       }
       handleError(e, st);
@@ -298,8 +316,9 @@ class EthErc20Client with Tag {
     } catch (e, st) {
       if (e.toString().contains("Connection terminated")) {
         await close();
+        await Future.delayed(Duration(milliseconds: 500));
         create();
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(Duration(milliseconds: 500));
         return sendNknToken(credt, address: address, amountNkn: amountNkn, gasLimit: gasLimit, gasPriceInGwei: gasPriceInGwei);
       }
       handleError(e, st);
@@ -325,11 +344,6 @@ class EthErc20Client with Tag {
       callback(from, to, balance);
     });
   }*/
-
-  Future<void> close() {
-    // _subscription?.cancel();
-    return _web3client.dispose();
-  }
 }
 
 extension EtherAmountNum on num {
