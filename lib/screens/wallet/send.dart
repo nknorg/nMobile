@@ -80,7 +80,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   // eth
   bool _ethTrueTokenFalse = false;
   int _gasPriceInGwei = 72;
-  final int _sliderGasPriceMin = 10;
+  final int _sliderGasPriceMin = 1;
   final int _sliderGasPriceMax = 1000;
   int _maxGas = 100000; // default: 90000
   final int _sliderMaxGasMinEth = 21000; // Actual: 21,000
@@ -114,11 +114,15 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
   _init(bool eth) async {
     if (eth) {
-      final gasPrice = await _ethClient.getGasPrice;
-      _gasPriceInGwei = (gasPrice.gwei * 1).round(); // * 0.8
-      if (_gasPriceInGwei < _sliderGasPriceMin) _gasPriceInGwei = _sliderGasPriceMin;
-      if (_gasPriceInGwei > _sliderGasPriceMax) _gasPriceInGwei = _sliderGasPriceMax;
-      logger.i('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
+      try {
+        final gasPrice = await _ethClient.getGasPrice;
+        _gasPriceInGwei = (gasPrice.gwei * 1).round(); // * 0.8
+        if (_gasPriceInGwei < _sliderGasPriceMin) _gasPriceInGwei = _sliderGasPriceMin;
+        if (_gasPriceInGwei > _sliderGasPriceMax) _gasPriceInGwei = _sliderGasPriceMax;
+        logger.i('$TAG - _init - erc20gasPrice:$_gasPriceInGwei GWei');
+      } catch (e, st) {
+        handleError(e, st);
+      }
     } else {
       _feeController.text = _fee.toString();
     }
