@@ -139,7 +139,7 @@ String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, St
       Sentry.captureException(error, stackTrace: stackTrace);
     }
   } else if (Settings.debug) {
-    logger.e(error, stackTrace);
+    logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
   if (!show) return null;

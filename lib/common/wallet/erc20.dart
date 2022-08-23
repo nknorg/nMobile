@@ -184,7 +184,8 @@ class EthErc20Client with Tag {
   //
   // https://infura.io/dashboard/ethereum/3fc946dd60524031a13ab94738cfa6ce/settings
 
-  static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  // static const RPC_SERVER_URL = 'https://mainnet.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
+  static const RPC_SERVER_URL = 'https://eth-mainnet.g.alchemy.com/v2/Sg3xW7rmWEx9crppCyZhlWWeuthgNc7j';
   static const RPC_SERVER_URL_test = 'https://ropsten.infura.io/v3/a7cc9467bd2644609b12cbc3625329c8';
 
   late Client _client;

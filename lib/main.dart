@@ -71,7 +71,7 @@ void main() async {
     );
     runApp(Main());
   }, onZoneError: (Object error, StackTrace stack) {
-    if (Settings.debug) logger.e(error, stack);
+    if (Settings.debug) logger.e(error);
     Sentry.captureException(error, stackTrace: stack);
   });
 }
