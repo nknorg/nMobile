@@ -132,11 +132,18 @@ class NknError {
   }
 }
 
-String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast}) {
+String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast, bool upload = true}) {
   if (Global.isRelease) {
     String errStr = error?.toString().toLowerCase() ?? "";
-    if (!errStr.contains(NknError.rpcRequestFail) && !errStr.contains("address = mainnet.infura.io") && !errStr.contains("address = fcm.googleapis.com")) {
-      Sentry.captureException(error, stackTrace: stackTrace);
+    bool no0 = errStr.contains("wrong password");
+    bool no1 = errStr.contains(NknError.rpcRequestFail);
+    bool no2 = errStr.contains("address = fcm.googleapis.com");
+    bool no3 = errStr.contains("address = mainnet.infura.io");
+    bool no4 = errStr.contains("address = eth-mainnet.g.alchemy.com");
+    if (!no0 && !no1 && !no2 && !no3 && !no4) {
+      if (upload) {
+        Sentry.captureException(error, stackTrace: stackTrace);
+      }
     }
   } else if (Settings.debug) {
     logger.e(error);
@@ -159,10 +166,12 @@ String? getErrorShow(dynamic error) {
   if (errStr.contains(NknError.writeBroken)) return "";
   if (errStr.contains(NknError.readBroken)) return "";
   if (errStr.contains("address = mainnet.infura.io")) return "";
+  if (errStr.contains("address = eth-mainnet.g.alchemy.com")) return "";
   if (errStr.contains("address = fcm.googleapis.com")) return "";
 
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
+  if (errStr.contains("wrong password") == true) return error?.toString();
   return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
   // return error.toString();
 }
