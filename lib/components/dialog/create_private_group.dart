@@ -8,10 +8,9 @@ import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/validation.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/theme/theme.dart';
-
-import '../../schema/private_group.dart';
 
 class CreatePrivateGroup extends BaseStateFulWidget {
   @override
