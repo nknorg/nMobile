@@ -759,7 +759,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double placeholderHeight = ratioWH[1] ?? minHeight;
 
     if (_message.isOutbound == false && _message.contentType == MessageContentType.ipfs) {
-      int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsSize(_message.options) ?? 0;
+      int _size = MessageOptions.getFileSize(_message.options) ?? 0;
       String? fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : null;
       int state = MessageOptions.getIpfsState(_message.options);
 
@@ -1026,7 +1026,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double labelWidth = Global.screenWidth() * 0.35;
 
     String fileName = MessageOptions.getFileName(_message.options) ?? "---";
-    int _size = MessageOptions.getFileSize(_message.options) ?? MessageOptions.getIpfsSize(_message.options) ?? 0;
+    int _size = MessageOptions.getFileSize(_message.options) ?? 0;
     String fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : "--";
 
     int state = MessageOptions.getIpfsState(_message.options);
