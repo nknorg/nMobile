@@ -675,8 +675,6 @@ class ChatCommon with Tag {
             message.options,
             result[IpfsHelper.KEY_IP],
             result[IpfsHelper.KEY_HASH],
-            result[IpfsHelper.KEY_SIZE],
-            result[IpfsHelper.KEY_NAME],
             result[IpfsHelper.KEY_ENCRYPT],
             result[IpfsHelper.KEY_ENCRYPT_ALGORITHM],
             result[IpfsHelper.KEY_ENCRYPT_KEY_BYTES],
@@ -710,8 +708,6 @@ class ChatCommon with Tag {
           message.options,
           result[IpfsHelper.KEY_IP],
           result[IpfsHelper.KEY_HASH],
-          result[IpfsHelper.KEY_SIZE],
-          result[IpfsHelper.KEY_NAME],
           result[IpfsHelper.KEY_ENCRYPT],
           result[IpfsHelper.KEY_ENCRYPT_ALGORITHM],
           result[IpfsHelper.KEY_ENCRYPT_KEY_BYTES],
@@ -735,7 +731,6 @@ class ChatCommon with Tag {
 
   Future<MessageSchema?> startIpfsDownload(MessageSchema message) async {
     String? ipfsHash = MessageOptions.getIpfsHash(message.options);
-    int? ipfsSize = MessageOptions.getIpfsSize(message.options) ?? -1;
     if (ipfsHash == null || ipfsHash.isEmpty) {
       logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
       return null;
@@ -743,6 +738,7 @@ class ChatCommon with Tag {
     // path
     String? savePath = (message.content as File?)?.absolute.path;
     if (savePath == null || savePath.isEmpty) return null;
+    int? ipfsSize = MessageOptions.getFileSize(message.options) ?? -1;
     // state
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateIng);
     await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -782,7 +778,6 @@ class ChatCommon with Tag {
 
   Future<MessageSchema?> tryDownloadIpfsThumbnail(MessageSchema message) async {
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
-    int? ipfsSize = MessageOptions.getIpfsThumbnailSize(message.options) ?? -1;
     if (ipfsHash == null || ipfsHash.isEmpty) {
       logger.e("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
       return null;
@@ -801,7 +796,7 @@ class ChatCommon with Tag {
     ipfsHelper.downloadFile(
       message.msgId,
       ipfsHash,
-      ipfsSize,
+      -1,
       savePath,
       ipAddress: MessageOptions.getIpfsIp(message.options),
       decrypt: MessageOptions.getIpfsEncrypt(message.options),

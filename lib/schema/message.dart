@@ -746,16 +746,12 @@ class MessageOptions {
 
   static const KEY_IPFS_IP = "ipfsIp";
   static const KEY_IPFS_HASH = "ipfsHash";
-  static const KEY_IPFS_SIZE = "ipfsSize";
-  static const KEY_IPFS_NAME = "ipfsName";
   static const KEY_IPFS_ENCRYPT = "ipfsEncrypt";
   static const KEY_IPFS_ENCRYPT_ALGORITHM = "ipfsEncryptAlgorithm";
   static const KEY_IPFS_ENCRYPT_KEY_BYTES = "ipfsEncryptKeyBytes";
   static const KEY_IPFS_ENCRYPT_NONCE_SIZE = "ipfsEncryptNonceSize";
   static const KEY_IPFS_THUMBNAIL_IP = "ipfsThumbnailIp";
   static const KEY_IPFS_THUMBNAIL_HASH = "ipfsThumbnailHash";
-  static const KEY_IPFS_THUMBNAIL_SIZE = "ipfsThumbnailSize";
-  static const KEY_IPFS_THUMBNAIL_NAME = "ipfsThumbnailName";
   static const KEY_IPFS_THUMBNAIL_ENCRYPT = "ipfsThumbnailEncrypt";
   static const KEY_IPFS_THUMBNAIL_ENCRYPT_ALGORITHM = "ipfsThumbnailEncryptAlgorithm";
   static const KEY_IPFS_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfsThumbnailEncryptKeyBytes";
@@ -1000,8 +996,6 @@ class MessageOptions {
     Map<String, dynamic>? options,
     String? ip,
     String? hash,
-    String? size,
-    String? name,
     int? encrypt,
     String? encryptAlgorithm,
     List? encryptKey,
@@ -1010,8 +1004,6 @@ class MessageOptions {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_IPFS_IP] = ip;
     options[MessageOptions.KEY_IPFS_HASH] = hash;
-    options[MessageOptions.KEY_IPFS_SIZE] = int.tryParse(size ?? "");
-    options[MessageOptions.KEY_IPFS_NAME] = name;
     options[MessageOptions.KEY_IPFS_ENCRYPT] = encrypt;
     options[MessageOptions.KEY_IPFS_ENCRYPT_ALGORITHM] = encryptAlgorithm;
     options[MessageOptions.KEY_IPFS_ENCRYPT_KEY_BYTES] = encryptKey;
@@ -1027,18 +1019,6 @@ class MessageOptions {
   static String? getIpfsHash(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_IPFS_HASH]?.toString();
-  }
-
-  static int? getIpfsSize(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    var size = options[MessageOptions.KEY_IPFS_SIZE]?.toString();
-    if (size == null || size.isEmpty) return null;
-    return int.tryParse(size);
-  }
-
-  static String? getIpfsName(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_IPFS_NAME]?.toString();
   }
 
   static bool getIpfsEncrypt(Map<String, dynamic>? options) {
@@ -1071,8 +1051,6 @@ class MessageOptions {
     Map<String, dynamic>? options,
     String? ip,
     String? hash,
-    String? size,
-    String? name,
     int? encrypt,
     String? encryptAlgorithm,
     List? encryptKey,
@@ -1081,8 +1059,6 @@ class MessageOptions {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_IPFS_THUMBNAIL_IP] = ip;
     options[MessageOptions.KEY_IPFS_THUMBNAIL_HASH] = hash;
-    options[MessageOptions.KEY_IPFS_THUMBNAIL_SIZE] = int.tryParse(size ?? "");
-    options[MessageOptions.KEY_IPFS_THUMBNAIL_NAME] = name;
     options[MessageOptions.KEY_IPFS_THUMBNAIL_ENCRYPT] = encrypt;
     options[MessageOptions.KEY_IPFS_THUMBNAIL_ENCRYPT_ALGORITHM] = encryptAlgorithm;
     options[MessageOptions.KEY_IPFS_THUMBNAIL_ENCRYPT_KEY_BYTES] = encryptKey;
@@ -1098,18 +1074,6 @@ class MessageOptions {
   static String? getIpfsThumbnailHash(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_IPFS_THUMBNAIL_HASH]?.toString();
-  }
-
-  static int? getIpfsThumbnailSize(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    var size = options[MessageOptions.KEY_IPFS_THUMBNAIL_SIZE]?.toString();
-    if (size == null || size.isEmpty) return null;
-    return int.tryParse(size);
-  }
-
-  static String? getIpfsThumbnailName(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_IPFS_THUMBNAIL_NAME]?.toString();
   }
 
   static bool getIpfsThumbnailEncrypt(Map<String, dynamic>? options) {
