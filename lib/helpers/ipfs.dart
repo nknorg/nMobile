@@ -12,28 +12,23 @@ import 'package:nmobile/utils/parallel_queue.dart';
 
 class IpfsHelper with Tag {
   static List<String> _writeableGateway = [
-    'infura-ipfs.io',
-    // 'ipfs.infura.io', // vpn
+    '64.225.88.71',
+    'infura-ipfs.io:5001',
+    // 'ipfs.infura.io:5001', // vpn
     // 'dweb.link:5001', // only read
     // 'cf-ipfs.com:5001', // only read
   ];
 
   static List<String> _readableGateway = [
-    'infura-ipfs.io',
-    'cf-ipfs.com',
-    // 'dweb.link', // vpn
-    // 'ipfs.infura.io', // vpn
-    // 'ipfs.io', // vpn
-    // 'gateway.ipfs.io' // disable
-    // 'cloudflare-ipfs.com', // disable
+    '64.225.88.71',
+    'infura-ipfs.io:5001',
+    // 'cf-ipfs.com:5001', // ??
+    // 'dweb.link:5001', // vpn
+    // 'ipfs.infura.io:5001', // vpn
+    // 'ipfs.io:5001', // vpn
+    // 'gateway.ipfs.io:5001' // disable
+    // 'cloudflare-ipfs.com:5001', // disable
   ];
-
-  // infura project
-  static const String PROJECT_ID = "";
-  static const String API_KEY_SECRET = "";
-
-  static const GATEWAY_READ_PORT = "5001";
-  static const GATEWAY_WRITE_PORT = "5001";
 
   static const String _upload_address = "api/v0/add";
   static const String _download_address = "api/v0/cat";
@@ -41,8 +36,6 @@ class IpfsHelper with Tag {
 
   static const String KEY_IP = "ip";
   static const String KEY_HASH = "Hash";
-  static const String KEY_SIZE = "Size";
-  static const String KEY_NAME = "Name";
   static const String KEY_ENCRYPT = "encrypt";
   static const String KEY_ENCRYPT_ALGORITHM = "encryptAlgorithm";
   static const String KEY_ENCRYPT_KEY_BYTES = "encryptKeyBytes";
@@ -165,16 +158,30 @@ class IpfsHelper with Tag {
     bool decrypt = true,
     Map<String, dynamic>? decryptParams,
     Function(String, double)? onProgress,
-    Function(String, Map<String, dynamic>)? onSuccess,
+    Function(String)? onSuccess,
     Function(String)? onError,
-  }) {
+  }) async {
     if (ipfsHash.isEmpty || savePath.isEmpty) {
       onError?.call("hash is empty");
       return null;
     }
 
-    // FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
-    ipAddress = null;
+    // TODO:GG FUTURE: if(receive_at - send_at < 30s) just use params ip_address, other use best ip_address
+    // TODO:GG 还要有失败切换ip的功能
+    ipAddress = ipAddress ?? (await _getGateway2Read());
+    if (!_isReadIp(ipAddress)) {
+      onError?.call("ip_address error");
+      return null;
+    }
+
+    if (ipAddress.contains("infura") && !ipAddress.contains(":")) {
+      ipAddress = ipAddress + ":5001";
+    }
+
+    var headers = {
+      HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}",
+      // Headers.contentLengthHeader: ipfsLength,
+    };
 
     // http
     _downloadQueue.add(
@@ -183,6 +190,7 @@ class IpfsHelper with Tag {
         ipfsHash,
         ipfsLength,
         ipAddress: ipAddress,
+        headerParams: headers,
         onProgress: (msgId, total, count) {
           double percent = total > 0 ? (count / total) : -1;
           onProgress?.call(msgId, percent);
@@ -213,7 +221,7 @@ class IpfsHelper with Tag {
                 await file.create(recursive: true);
               }
               await file.writeAsBytes(finalData, flush: true);
-              onSuccess?.call(msgId, result);
+              onSuccess?.call(msgId);
             } catch (e, st) {
               handleError(e, st);
               onError?.call("save file fail");
@@ -241,7 +249,7 @@ class IpfsHelper with Tag {
       onError?.call("ip_address error");
       return null;
     }
-    String uri = 'https://$ipAddress${GATEWAY_WRITE_PORT.isNotEmpty ? ":$GATEWAY_WRITE_PORT" : ""}/$_upload_address';
+    String uri = 'https://$ipAddress/$_upload_address';
 
     // http
     Response? response;
@@ -251,7 +259,7 @@ class IpfsHelper with Tag {
         data: FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)}),
         options: Options(
           headers: {
-            HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$PROJECT_ID:$API_KEY_SECRET'))}",
+            HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}",
             // Headers.contentLengthHeader: ipfsLength,
           },
           // responseType: ResponseType.json,
@@ -281,7 +289,7 @@ class IpfsHelper with Tag {
     Map<String, dynamic>? results = response.data;
     if ((results == null) || (results.isEmpty)) {
       logger.e("$TAG - uploadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
-      onError?.call("response is null");
+      onError?.call("response is empty");
       return null;
     }
     logger.i("$TAG - uploadFile - success - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri - result:$results");
@@ -298,17 +306,22 @@ class IpfsHelper with Tag {
     String ipfsHash,
     int ipfsLength, {
     String? ipAddress,
+    Map<String, dynamic>? headerParams,
     Function(String, int, int)? onProgress,
     Function(String, Uint8List, Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
     // uri
-    ipAddress = ipAddress ?? (await _getGateway2Read());
-    if (!_isReadIp(ipAddress)) {
-      onError?.call("ip_address error");
+    if ((ipAddress == null) || ipAddress.isEmpty) {
+      onError?.call("ip_address empty");
       return null;
     }
-    String uri = 'https://$ipAddress${GATEWAY_READ_PORT.isNotEmpty ? ":$GATEWAY_READ_PORT" : ""}/$_download_address';
+    String uri = 'https://$ipAddress/$_download_address';
+
+    // header
+    Map<String, dynamic> headers = {
+      // Headers.contentLengthHeader: ipfsLength,
+    }..addAll(headerParams ?? Map());
 
     // http
     Response? response;
@@ -316,13 +329,7 @@ class IpfsHelper with Tag {
       response = await _dio.post(
         uri,
         queryParameters: {'arg': ipfsHash},
-        options: Options(
-          headers: {
-            HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$PROJECT_ID:$API_KEY_SECRET'))}",
-            // Headers.contentLengthHeader: ipfsLength,
-          },
-          responseType: ResponseType.bytes,
-        ),
+        options: Options(headers: headers, responseType: ResponseType.bytes),
         onReceiveProgress: (count, total) {
           int totalCount = (total > 0) ? total : ipfsLength;
           logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount - id:$id");
@@ -349,7 +356,7 @@ class IpfsHelper with Tag {
     Uint8List? responseData = response.data;
     if ((responseData == null) || (responseData.isEmpty)) {
       logger.e("$TAG - _downloadFile - fail - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri");
-      onError?.call("response is null");
+      onError?.call("response is empty");
       return null;
     }
     logger.i("$TAG - _downloadFile - success - state_code:${response.statusCode} - state_msg:${response.statusMessage} - uri:$uri - options:${response.requestOptions}");
