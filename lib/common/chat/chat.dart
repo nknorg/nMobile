@@ -760,7 +760,7 @@ class ChatCommon with Tag {
       onProgress: (msgId, percent) {
         onProgressSink.add({"msg_id": msgId, "percent": percent});
       },
-      onSuccess: (msgId, result) async {
+      onSuccess: (msgId) async {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);
@@ -805,7 +805,7 @@ class ChatCommon with Tag {
         IpfsHelper.KEY_ENCRYPT_KEY_BYTES: MessageOptions.getIpfsThumbnailEncryptKeyBytes(message.options),
         IpfsHelper.KEY_ENCRYPT_NONCE_SIZE: MessageOptions.getIpfsThumbnailEncryptNonceSize(message.options),
       },
-      onSuccess: (msgId, result) async {
+      onSuccess: (msgId) async {
         message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
