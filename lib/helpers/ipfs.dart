@@ -17,7 +17,7 @@ class IpfsHelper with Tag {
       "ip": '64.225.88.71',
       "port": "80",
       "uri": 'ipfs/v0/add',
-      "headers": null,
+      "headers": {HttpHeaders.contentLengthHeader: -1},
       "body": "Binary",
     },
     {
@@ -147,7 +147,8 @@ class IpfsHelper with Tag {
     }
 
     // body
-    Uint8List bodyBinary = await File(filePath).readAsBytes();
+    Uint8List bodyBinary = await File(filePath).readAsBytes(); // TODO:GG 会卡？下载会不会卡？
+    Stream<List<int>> bodyStream = Stream.fromIterable(bodyBinary.map((e) => [e]));
     FormData bodyFormData = FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)});
 
     // queue
@@ -160,7 +161,10 @@ class IpfsHelper with Tag {
         Map<String, dynamic> gateway = _writeableGateway[i];
         String url = _getUrlFromGateway(gateway);
         Map<String, dynamic>? headers = gateway['headers'];
-        var body = (gateway["body"] == "FormData") ? bodyFormData : bodyBinary;
+        if (headers?.containsKey(HttpHeaders.contentLengthHeader) == true) {
+          headers?[HttpHeaders.contentLengthHeader] = bodyBinary.length;
+        }
+        var body = (gateway["body"] == "FormData") ? bodyFormData : bodyStream;
         logger.i("$TAG - uploadFile - try - times:$i - url:$url");
         // http
         _uploadFile(
@@ -298,13 +302,17 @@ class IpfsHelper with Tag {
     // http
     Response? response;
     try {
+      int lastProgress = 0;
       response = await _dio.post(
         url,
         data: body,
         options: Options(headers: headers), // responseType: ResponseType.json,
         onSendProgress: (count, total) {
-          logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total");
-          onProgress?.call(total, count);
+          if ((count - lastProgress) > 1000) {
+            lastProgress = count;
+            logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total");
+            onProgress?.call(total, count);
+          }
         },
       );
     } on DioError catch (e, st) {
@@ -359,14 +367,18 @@ class IpfsHelper with Tag {
     // http
     Response? response;
     try {
+      int lastProgress = 0;
       response = await _dio.post(
         url,
         queryParameters: {'arg': ipfsHash},
         options: Options(headers: headers, responseType: ResponseType.bytes),
         onReceiveProgress: (count, total) {
-          int totalCount = (total > 0) ? total : ipfsLength;
-          logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount");
-          onProgress?.call(totalCount, count);
+          if ((count - lastProgress) > 1000) {
+            lastProgress = count;
+            int totalCount = (total > 0) ? total : ipfsLength;
+            logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount");
+            onProgress?.call(totalCount, count);
+          }
         },
       );
     } on DioError catch (e, st) {
