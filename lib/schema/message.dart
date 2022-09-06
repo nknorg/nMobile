@@ -511,7 +511,7 @@ class MessageSchema {
       from: e['sender'] ?? "",
       to: e['receiver'] ?? "",
       topic: e['topic'] ?? "",
-      groupId: e['group_id'],
+      groupId: e['group_id'] ?? "",
       // status
       status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
