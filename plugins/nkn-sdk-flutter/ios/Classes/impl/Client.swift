@@ -14,8 +14,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     let clientSendQueue = DispatchQueue(label: "org.nkn.sdk/client/send/queue", qos: .default, attributes: .concurrent)
     private var clientSendWorkItem: DispatchWorkItem?
 
-    let clientReceiveQueue = DispatchQueue(label: "org.nkn.sdk/client/receive/queue", qos: .default, attributes: .concurrent)
-    private var clientReceiveWorkItem: DispatchWorkItem?
+    // let clientReceiveQueue = DispatchQueue(label: "org.nkn.sdk/client/receive/queue", qos: .default, attributes: .concurrent)
+    // private var clientReceiveWorkItem: DispatchWorkItem?
 
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     private var clientEventWorkItem: DispatchWorkItem?
@@ -95,7 +95,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
 
         let config: NknClientConfig = NknClientConfig()
         // config.rpcConcurrency = 4
-        if(seedRpc != nil){
+        if(seedRpc != nil) {
             config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
             for (_, v) in seedRpc!.enumerated() {
                 config.seedRPCServerAddr?.append(v)
@@ -127,10 +127,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: resp)
 
             self.onConnect()
+            self.onMessage()
         }
         clientQueue.async(execute: clientWorkItem!)
-
-        self.onMessage()
     }
 
     private func onConnect() {
@@ -164,10 +163,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             guard let msg = client?.onMessage?.next() else {
                 continue
             }
-            clientReceiveWorkItem = DispatchWorkItem {
+            // clientReceiveWorkItem = DispatchWorkItem {
                 self.onMessageHandle(msg: msg)
-            }
-            clientReceiveQueue.async(execute: clientReceiveWorkItem!)
+            // }
+            // clientReceiveQueue.async(execute: clientReceiveWorkItem!)
         }
     }
 
