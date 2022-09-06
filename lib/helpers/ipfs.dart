@@ -18,6 +18,7 @@ class IpfsHelper with Tag {
       "port": "80",
       "uri": 'ipfs/v0/add',
       "headers": null,
+      "body": "Binary",
     },
     {
       "protocol": "https",
@@ -25,6 +26,7 @@ class IpfsHelper with Tag {
       "port": "5001",
       "uri": "api/v0/add",
       "headers": {HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}"},
+      "body": "FormData",
     },
     // 'ipfs.infura.io:5001', // vpn
     // 'dweb.link:5001', // only read
@@ -144,10 +146,11 @@ class IpfsHelper with Tag {
       }
     }
 
-    // fileBytes
-    Uint8List fileBytes = await File(filePath).readAsBytes();
+    // body
+    Uint8List bodyBinary = await File(filePath).readAsBytes();
+    FormData bodyFormData = FormData.fromMap({'path': MultipartFile.fromFileSync(filePath)});
 
-    // http
+    // queue
     _uploadQueue.add(() async {
       for (var i = 0; i < _writeableGateway.length; i++) {
         bool canBreak = false;
@@ -156,10 +159,12 @@ class IpfsHelper with Tag {
         Map<String, dynamic> gateway = _writeableGateway[i];
         String url = _getUrlFromGateway(gateway);
         Map<String, dynamic>? headers = gateway['headers'];
+        var body = (gateway["body"] == "FormData") ? bodyFormData : bodyBinary;
         logger.i("$TAG - uploadFile - try - times:$i - url:$url");
+        // http
         _uploadFile(
           url,
-          fileBytes,
+          body,
           fileLen,
           headerParams: headers,
           onProgress: (total, count) {
@@ -276,7 +281,7 @@ class IpfsHelper with Tag {
 
   Future _uploadFile(
     String url,
-    Uint8List fileBytes,
+    dynamic body,
     int ipfsLength, {
     Map<String, dynamic>? headerParams,
     Function(int, int)? onProgress,
@@ -293,7 +298,7 @@ class IpfsHelper with Tag {
     try {
       response = await _dio.post(
         url,
-        data: fileBytes,
+        data: body,
         options: Options(headers: headers), // responseType: ResponseType.json,
         onSendProgress: (count, total) {
           logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total");
