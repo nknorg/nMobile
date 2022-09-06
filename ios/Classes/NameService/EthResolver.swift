@@ -1,7 +1,7 @@
 import Nkn
 
 class EthResolver : ChannelBase, FlutterStreamHandler {
-    static var instance: EthResolver = EthResolver()
+    static var instance: EthResolver = EthResolver(config: nil)
     let ethResolverQueue = DispatchQueue(label: "org.nkn.mobile/native/nameservice/ethresolver/queue", qos: .default, attributes: .concurrent)
     private var ethResolverItem: DispatchWorkItem?
 
