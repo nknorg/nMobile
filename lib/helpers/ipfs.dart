@@ -153,6 +153,7 @@ class IpfsHelper with Tag {
     // queue
     _uploadQueue.add(() async {
       for (var i = 0; i < _writeableGateway.length; i++) {
+        bool isLastTimes = i == (_writeableGateway.length - 1);
         bool canBreak = false;
         Completer completer = Completer();
         // url
@@ -181,8 +182,8 @@ class IpfsHelper with Tag {
             if (!completer.isCompleted) completer.complete();
           },
           onError: (retry) {
-            onError?.call(id);
-            if (encrypt) File(filePath).delete(); // await
+            if (isLastTimes || !retry) onError?.call(id);
+            if ((isLastTimes || !retry) && encrypt) File(filePath).delete(); // await
             canBreak = !retry;
             if (!completer.isCompleted) completer.complete();
           },
@@ -214,6 +215,7 @@ class IpfsHelper with Tag {
     _downloadQueue.add(() async {
       int index = _getIndexFromGateways(_readableGateway, ipAddress ?? "");
       for (var i = 0; i < _readableGateway.length; i++) {
+        bool isLastTimes = i == (_readableGateway.length - 1);
         bool canBreak = false;
         Completer completer = Completer();
         // url
@@ -247,7 +249,7 @@ class IpfsHelper with Tag {
             }
             // save
             if (finalData == null || finalData.isEmpty) {
-              onError?.call(id);
+              if (isLastTimes) onError?.call(id);
             } else {
               try {
                 File file = File(savePath);
@@ -261,14 +263,14 @@ class IpfsHelper with Tag {
                 onSuccess?.call(id);
               } catch (e, st) {
                 handleError(e, st);
-                onError?.call(id);
+                if (isLastTimes) onError?.call(id);
               }
             }
             canBreak = true;
             if (!completer.isCompleted) completer.complete();
           },
           onError: (retry) {
-            onError?.call(id);
+            if (isLastTimes || !retry) onError?.call(id);
             canBreak = !retry;
             if (!completer.isCompleted) completer.complete();
           },
