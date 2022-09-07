@@ -36,7 +36,14 @@ class IpfsHelper with Tag {
       "headers": {HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}"},
       // "body": "FormData",
     },
-    // 'ipfs.infura.io:5001', // vpn
+    {
+      "protocol": "https",
+      "ip": 'ipfs.infura.io',
+      "port": "5001",
+      "uri": "api/v0/add",
+      "headers": {HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}"},
+      // "body": "FormData",
+    },
     // 'dweb.link:5001', // only read
     // 'cf-ipfs.com:5001', // only read
   ];
@@ -56,9 +63,15 @@ class IpfsHelper with Tag {
       "uri": "api/v0/cat",
       "headers": {HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}"},
     },
-    // 'cf-ipfs.com:5001', // ??
+    {
+      "protocol": "https",
+      "ip": 'ipfs.infura.io',
+      "port": "5001",
+      "uri": "api/v0/cat",
+      "headers": {HttpHeaders.authorizationHeader: "Basic ${base64Encode(utf8.encode('$INFURA_PROJECT_ID:$INFURA_API_KEY_SECRET'))}"},
+    },
+    // 'cf-ipfs.com:5001', // vpn
     // 'dweb.link:5001', // vpn
-    // 'ipfs.infura.io:5001', // vpn
     // 'ipfs.io:5001', // vpn
     // 'gateway.ipfs.io:5001' // disable
     // 'cloudflare-ipfs.com:5001', // disable
