@@ -862,8 +862,7 @@ class ChatCommon with Tag {
       if (message.contentType != MessageContentType.ipfs) {
         await _onIpfsUpOrDownload(message.msgId, "FILE", message.isOutbound, true);
         continue;
-      }
-      if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateIng) {
+      } else if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateIng) {
         await _onIpfsUpOrDownload(message.msgId, "FILE", message.isOutbound, MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes);
         continue;
       }
@@ -888,16 +887,18 @@ class ChatCommon with Tag {
       if (message.contentType != MessageContentType.ipfs) {
         await _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", message.isOutbound, true);
         continue;
-      }
-      if (MessageOptions.getIpfsThumbnailState(message.options) == MessageOptions.ipfsThumbnailStateYes) {
+      } else if (MessageOptions.getIpfsThumbnailState(message.options) == MessageOptions.ipfsThumbnailStateYes) {
         await _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", message.isOutbound, true);
         continue;
       }
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       if (thumbnailNotify) _onUpdateSink.add(message);
-      if (thumbnailAutoDownload && !message.isOutbound) {
+      int between = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
+      if ((between < 3 * 60 * 60 * 1000) && thumbnailAutoDownload && !message.isOutbound) {
         tryDownloadIpfsThumbnail(message); // await
+      } else {
+        await _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", message.isOutbound, true);
       }
     }
   }
