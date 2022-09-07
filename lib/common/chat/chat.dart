@@ -657,20 +657,20 @@ class ChatCommon with Tag {
       if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateYes) {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
-        _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, true); // await
+        _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", true, true); // await
       }
     } else if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       // state
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
-      _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+      _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", true, false); // await
       // ipfs
       Completer completer = Completer();
       ipfsHelper.uploadFile(
         message.msgId,
         thumbnailPath,
         encrypt: true,
-        onSuccess: (msgId, result) async {
+        onSuccess: (result) async {
           message.options = MessageOptions.setIpfsResultThumbnail(
             message.options,
             result[IpfsHelper.KEY_IP],
@@ -683,13 +683,13 @@ class ChatCommon with Tag {
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
           await MessageStorage.instance.updateOptions(message.msgId, message.options);
           if (!completer.isCompleted) completer.complete();
-          _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, true); // await
+          _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", true, true); // await
         },
-        onError: (msgId) async {
+        onError: (err) async {
           if (!completer.isCompleted) completer.complete();
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
           await MessageStorage.instance.updateOptions(message.msgId, message.options);
-          _onIpfsUpOrDownload(msgId, "THUMBNAIL", true, false); // await
+          _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", true, false); // await
         },
       );
       await completer.future;
@@ -700,10 +700,10 @@ class ChatCommon with Tag {
       message.msgId,
       file.absolute.path,
       encrypt: true,
-      onProgress: (msgId, percent) {
-        onProgressSink.add({"msg_id": msgId, "percent": percent});
+      onProgress: (percent) {
+        onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       },
-      onSuccess: (msgId, result) async {
+      onSuccess: (result) async {
         message.options = MessageOptions.setIpfsResult(
           message.options,
           result[IpfsHelper.KEY_IP],
@@ -715,15 +715,15 @@ class ChatCommon with Tag {
         );
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
-        _onIpfsUpOrDownload(msgId, "FILE", true, true); // await
-        await chatOutCommon.sendIpfs(msgId);
+        _onIpfsUpOrDownload(message.msgId, "FILE", true, true); // await
+        await chatOutCommon.sendIpfs(message.msgId);
       },
-      onError: (msgId) async {
+      onError: (err) async {
         MessageSchema _msg = await updateMessageStatus(message, MessageStatus.SendFail, reQuery: true, force: true, notify: true);
         _msg.options = MessageOptions.setIpfsState(_msg.options, MessageOptions.ipfsStateNo);
         await MessageStorage.instance.updateOptions(_msg.msgId, _msg.options);
         _onUpdateSink.add(_msg);
-        _onIpfsUpOrDownload(msgId, "FILE", true, false); // await
+        _onIpfsUpOrDownload(_msg.msgId, "FILE", true, false); // await
       },
     );
     return message;
@@ -757,16 +757,16 @@ class ChatCommon with Tag {
         IpfsHelper.KEY_ENCRYPT_KEY_BYTES: MessageOptions.getIpfsEncryptKeyBytes(message.options),
         IpfsHelper.KEY_ENCRYPT_NONCE_SIZE: MessageOptions.getIpfsEncryptNonceSize(message.options),
       },
-      onProgress: (msgId, percent) {
-        onProgressSink.add({"msg_id": msgId, "percent": percent});
+      onProgress: (percent) {
+        onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       },
-      onSuccess: (msgId) async {
+      onSuccess: () async {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);
         _onIpfsUpOrDownload(message.msgId, "FILE", false, true); // await
       },
-      onError: (msgId) async {
+      onError: (err) async {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);
@@ -805,14 +805,14 @@ class ChatCommon with Tag {
         IpfsHelper.KEY_ENCRYPT_KEY_BYTES: MessageOptions.getIpfsThumbnailEncryptKeyBytes(message.options),
         IpfsHelper.KEY_ENCRYPT_NONCE_SIZE: MessageOptions.getIpfsThumbnailEncryptNonceSize(message.options),
       },
-      onSuccess: (msgId) async {
+      onSuccess: () async {
         message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);
         _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, true); // await
       },
-      onError: (msgId) async {
+      onError: (err) async {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
         await MessageStorage.instance.updateOptions(message.msgId, message.options);
         _onUpdateSink.add(message);

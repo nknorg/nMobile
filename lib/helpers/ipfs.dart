@@ -106,14 +106,14 @@ class IpfsHelper with Tag {
     String id,
     String filePath, {
     bool encrypt = true,
-    Function(String, double)? onProgress,
-    Function(String, Map<String, dynamic>)? onSuccess,
+    Function(double)? onProgress,
+    Function(Map<String, dynamic>)? onSuccess,
     Function(String)? onError,
   }) async {
     File file = File(filePath);
     int fileLen = file.lengthSync();
     if (filePath.isEmpty || !file.existsSync()) {
-      onError?.call(id);
+      onError?.call("file no exist");
       return null;
     }
 
@@ -134,14 +134,14 @@ class IpfsHelper with Tag {
           filePath = encryptFile.path;
         } catch (e, st) {
           handleError(e, st);
-          onError?.call(id);
+          onError?.call("encrypt copy fail");
           return null;
         }
         result["data"]?["cipherText"] = null;
         result.remove("data");
         cryptParams = result["params"];
       } else {
-        onError?.call(id);
+        onError?.call("encrypt create fail");
         return null;
       }
     }
@@ -174,19 +174,19 @@ class IpfsHelper with Tag {
           headerParams: headers,
           onProgress: (total, count) {
             double percent = total > 0 ? (count / total) : -1;
-            onProgress?.call(id, percent);
+            onProgress?.call(percent);
           },
           onSuccess: (ipfsHash) {
             Map<String, dynamic> result = Map();
             result.addAll({"id": id, KEY_IP: gateway["ip"], KEY_HASH: ipfsHash});
             if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(cryptParams ?? Map()));
-            onSuccess?.call(id, result);
+            onSuccess?.call(result);
             if (encrypt) File(filePath).delete(); // await
             canBreak = true;
             if (!completer.isCompleted) completer.complete();
           },
           onError: (retry) {
-            if (isLastTimes || !retry) onError?.call(id);
+            if (isLastTimes || !retry) onError?.call("http wrong");
             if ((isLastTimes || !retry) && encrypt) File(filePath).delete(); // await
             canBreak = !retry;
             if (!completer.isCompleted) completer.complete();
@@ -206,12 +206,12 @@ class IpfsHelper with Tag {
     String? ipAddress,
     bool decrypt = true,
     Map<String, dynamic>? decryptParams,
-    Function(String, double)? onProgress,
-    Function(String)? onSuccess,
+    Function(double)? onProgress,
+    Function()? onSuccess,
     Function(String)? onError,
   }) {
     if (ipfsHash.isEmpty || savePath.isEmpty) {
-      onError?.call(id);
+      onError?.call("hash is empty");
       return null;
     }
 
@@ -236,7 +236,7 @@ class IpfsHelper with Tag {
           headerParams: headers,
           onProgress: (total, count) {
             double percent = total > 0 ? (count / total) : -1;
-            onProgress?.call(id, percent);
+            onProgress?.call(percent);
           },
           onSuccess: (data) async {
             // decrypt
@@ -253,7 +253,7 @@ class IpfsHelper with Tag {
             }
             // save
             if (finalData == null || finalData.isEmpty) {
-              if (isLastTimes) onError?.call(id);
+              if (isLastTimes) onError?.call("decrypt fail");
             } else {
               try {
                 File file = File(savePath);
@@ -264,17 +264,17 @@ class IpfsHelper with Tag {
                   await file.create(recursive: true);
                 }
                 await file.writeAsBytes(finalData, flush: true);
-                onSuccess?.call(id);
+                onSuccess?.call();
               } catch (e, st) {
                 handleError(e, st);
-                if (isLastTimes) onError?.call(id);
+                if (isLastTimes) onError?.call("save file fail");
               }
             }
             canBreak = true;
             if (!completer.isCompleted) completer.complete();
           },
           onError: (retry) {
-            if (isLastTimes || !retry) onError?.call(id);
+            if (isLastTimes || !retry) onError?.call("http wrong");
             canBreak = !retry;
             if (!completer.isCompleted) completer.complete();
           },
