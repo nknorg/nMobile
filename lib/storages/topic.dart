@@ -79,8 +79,8 @@ class TopicStorage with Tag {
           });
         }
         if (id != null) {
-          TopicSchema? schema = TopicSchema.fromMap(entity);
-          schema?.id = id;
+          TopicSchema schema = TopicSchema.fromMap(entity);
+          schema.id = id;
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
@@ -108,7 +108,7 @@ class TopicStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        TopicSchema? schema = TopicSchema.fromMap(res.first);
+        TopicSchema schema = TopicSchema.fromMap(res.first);
         logger.v("$TAG - query - success - topicId:$topicId - schema:$schema");
         return schema;
       }
@@ -134,7 +134,7 @@ class TopicStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        TopicSchema? schema = TopicSchema.fromMap(res.first);
+        TopicSchema schema = TopicSchema.fromMap(res.first);
         logger.v("$TAG - queryByTopic - success - topic:$topic - schema:$schema");
         return schema;
       }
@@ -167,8 +167,8 @@ class TopicStorage with Tag {
       String logText = '';
       res.forEach((map) {
         logText += "\n      $map";
-        TopicSchema? topic = TopicSchema.fromMap(map);
-        if (topic != null) results.add(topic);
+        TopicSchema topic = TopicSchema.fromMap(map);
+        results.add(topic);
       });
       logger.v("$TAG - queryList - items:$logText");
       return results;
@@ -200,8 +200,8 @@ class TopicStorage with Tag {
       String logText = '';
       res.forEach((map) {
         logText += "\n      $map";
-        TopicSchema? topic = TopicSchema.fromMap(map);
-        if (topic != null) results.add(topic);
+        TopicSchema topic = TopicSchema.fromMap(map);
+        results.add(topic);
       });
       logger.v("$TAG - queryList - items:$logText");
       return results;

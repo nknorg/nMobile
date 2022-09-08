@@ -73,8 +73,8 @@ class SubscriberStorage with Tag {
           });
         }
         if (id != null) {
-          SubscriberSchema? schema = SubscriberSchema.fromMap(entity);
-          schema?.id = id;
+          SubscriberSchema schema = SubscriberSchema.fromMap(entity);
+          schema.id = id;
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
@@ -102,7 +102,7 @@ class SubscriberStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+        SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
         logger.v("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
         return schema;
       }
@@ -128,7 +128,7 @@ class SubscriberStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+        SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
         logger.v("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
         return schema;
       }
@@ -162,8 +162,8 @@ class SubscriberStorage with Tag {
       String logText = '';
       res.forEach((map) {
         logText += "\n      $map";
-        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
-        if (subscriber != null) results.add(subscriber);
+        SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
+        results.add(subscriber);
       });
       logger.v("$TAG - queryListByTopic - items:$logText");
       return results;
@@ -195,8 +195,8 @@ class SubscriberStorage with Tag {
       String logText = '';
       res.forEach((map) {
         logText += "\n      $map";
-        SubscriberSchema? subscriber = SubscriberSchema.fromMap(map);
-        if (subscriber != null) results.add(subscriber);
+        SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
+        results.add(subscriber);
       });
       logger.v("$TAG - queryListByTopicPerm - items:$logText");
       return results;
@@ -264,9 +264,9 @@ class SubscriberStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        SubscriberSchema? schema = SubscriberSchema.fromMap(res.first);
+        SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
         logger.v("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
-        return schema?.permPage ?? 0;
+        return schema.permPage ?? 0;
       }
       logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
       return 0;
