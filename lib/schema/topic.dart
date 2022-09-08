@@ -264,8 +264,7 @@ class TopicSchema {
     return map;
   }
 
-  static TopicSchema? fromMap(Map<String, dynamic>? e) {
-    if (e == null) return null;
+  static TopicSchema fromMap(Map<String, dynamic> e) {
     var topicSchema = TopicSchema(
       id: e['id'],
       topic: e['topic'] ?? "",

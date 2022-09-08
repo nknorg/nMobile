@@ -112,8 +112,7 @@ class SubscriberSchema {
     return map;
   }
 
-  static SubscriberSchema? fromMap(Map<String, dynamic>? e) {
-    if (e == null) return null;
+  static SubscriberSchema fromMap(Map<String, dynamic> e) {
     var subscribeSchema = SubscriberSchema(
       id: e['id'],
       topic: e['topic'] ?? "",
