@@ -22,7 +22,7 @@ class PrivateGroupSchema {
 
   String groupId;
   String name;
-  int? type; // TODO:GG PG
+  int? type; // TODO:GG PG ?
   String? version;
 
   bool isTop = false;
@@ -31,6 +31,11 @@ class PrivateGroupSchema {
 
   OptionsSchema? options;
   Map<String, dynamic>? data;
+
+  // TODO:GG PG ?
+  // bool joined = false;
+  // int? joinAt;
+  // int? leaveAt;
 
   PrivateGroupSchema({
     this.id,
@@ -51,7 +56,7 @@ class PrivateGroupSchema {
     }
   }
 
-  static Future<PrivateGroupSchema?> create(String? groupId, String? name) async {
+  static PrivateGroupSchema? create(String? groupId, String? name) {
     if (groupId == null || groupId.isEmpty) return null;
     if (name == null || name.isEmpty) name = groupId;
     return PrivateGroupSchema(
@@ -72,11 +77,16 @@ class PrivateGroupSchema {
     return data?['signature'] ?? "";
   }
 
+  void setSignature(String? signature) {
+    if (data == null) data = Map();
+    data?['signature'] = signature;
+  }
+
   Map<String, dynamic> getRawData() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['groupName'] = name;
-    // TODO:GG PG 需要吗？burning同步延时怎么办？
+    // TODO:GG PG 需要吗？burning同步延时怎么办?
     // if (deleteAfterSeconds != null) data['deleteAfterSeconds'] = deleteAfterSeconds;
     return data.sortByKey();
   }

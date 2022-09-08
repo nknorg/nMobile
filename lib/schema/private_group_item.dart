@@ -1,98 +1,136 @@
-import 'package:nmobile/utils/map_extension.dart';
+import 'dart:convert';
 
-// TODO:GG PG check
+import 'package:nmobile/utils/map_extension.dart';
+import 'package:nmobile/utils/util.dart';
+
+// class PrivateGroupItemPerm {
+//   static const none = 0;
+//   static const owner = 1;
+//   static const admin = 2;
+// }
+
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
+  int? permission; // TODO:GG PG ?
+  int? expiresAt;
+
   String? invitee;
   String? inviter;
-  String? inviteeSignature;
-  String? inviterSignature;
+  int? inviteeAt;
+  int? invitedAt;
   String? inviteeRawData;
   String? inviterRawData;
-  DateTime? inviteTime;
-  DateTime? invitedTime;
-  DateTime? expiresAt;
+  String? inviteeSignature;
+  String? inviterSignature;
+
+  Map<String, dynamic>? data;
 
   PrivateGroupItemSchema({
     this.id,
     required this.groupId,
+    this.permission,
+    this.expiresAt,
     this.invitee,
     this.inviter,
-    this.inviteeSignature,
-    this.inviterSignature,
+    this.inviteeAt,
+    this.invitedAt,
     this.inviteeRawData,
     this.inviterRawData,
-    this.inviteTime,
-    this.invitedTime,
-    this.expiresAt,
+    this.inviteeSignature,
+    this.inviterSignature,
+    this.data,
   });
+
+  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, String? invitee, String? inviter, int? inviteeAt, int? invitedAt, String? inviteeRawData, String? inviterRawData, String? inviteeSignature, String? inviterSignature}) {
+    if (groupId == null || groupId.isEmpty) return null;
+    return PrivateGroupItemSchema(
+      groupId: groupId,
+      invitee: invitee,
+      expiresAt: expiresAt,
+      inviteeAt: inviteeAt,
+      invitedAt: invitedAt,
+      inviteeRawData: inviteeRawData,
+      inviterRawData: inviterRawData,
+      inviteeSignature: inviteeSignature,
+      inviterSignature: inviterSignature,
+    );
+  }
+
+  static PrivateGroupItemSchema fromRawData(Map<String, dynamic> data, {String? inviteeRawData, String? inviterRawData, String? inviteeSignature, String? inviterSignature}) {
+    var schema = PrivateGroupItemSchema(
+      groupId: data['groupId'],
+      permission: data['permission'],
+      expiresAt: data['expiresAt'],
+      invitee: data['invitee'],
+      inviter: data['inviter'],
+      inviteeAt: data['inviteeAt'],
+      invitedAt: data['invitedAt'],
+      inviteeRawData: data['inviteeRawData'],
+      inviterRawData: data['inviterRawData'],
+      inviteeSignature: data['inviteeSignature'],
+      inviterSignature: data['inviterSignature'],
+    );
+    if (inviteeRawData != null) schema.inviteeRawData = inviteeRawData;
+    if (inviterRawData != null) schema.inviterRawData = inviterRawData;
+    if (inviteeSignature != null) schema.inviteeSignature = inviteeSignature;
+    if (inviterSignature != null) schema.inviterSignature = inviterSignature;
+    return schema;
+  }
+
+  int get status {
+    return 0; // TODO:GG PG ?
+  }
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
       'id': id,
       'group_id': groupId,
+      'permission': permission,
+      'expires_at': expiresAt,
       'invitee': invitee,
       'inviter': inviter,
-      'invitee_signature': inviteeSignature,
-      'inviter_signature': inviterSignature,
+      'invitee_at': inviteeAt,
+      'invited_at': invitedAt,
       'invitee_raw_data': inviteeRawData,
       'inviter_raw_data': inviterRawData,
-      'invite_time': inviteTime?.millisecondsSinceEpoch,
-      'invited_time': invitedTime?.millisecondsSinceEpoch,
-      'expires_at': expiresAt?.millisecondsSinceEpoch,
+      'invitee_signature': inviteeSignature,
+      'inviter_signature': inviterSignature,
+      'data': data != null ? jsonEncode(data) : null,
     };
-    map = map.sortByKey();
-    return map;
-  }
-
-  static PrivateGroupItemSchema fromRawData(
-    Map<String, dynamic> data, {
-    String? inviterSignature,
-    String? inviterRawData,
-    String? inviteeSignature,
-    String? inviteeRawData,
-  }) {
-    var privateGroupItemSchema = PrivateGroupItemSchema(
-      groupId: data['groupId'],
-      invitee: data['invitee'],
-      inviter: data['inviter'],
-      inviteeSignature: data['inviteeSignature'],
-      inviterSignature: data['inviterSignature'],
-      inviteeRawData: data['inviteeRawData'],
-      inviterRawData: data['inviterRawData'],
-      inviteTime: data['inviteTime'] != null ? DateTime.fromMillisecondsSinceEpoch(data['inviteTime']) : null,
-      invitedTime: data['invitedTime'] != null ? DateTime.fromMillisecondsSinceEpoch(data['invitedTime']) : null,
-      expiresAt: data['expiresAt'] != null ? DateTime.fromMillisecondsSinceEpoch(data['expiresAt']) : null,
-    );
-
-    if (inviterSignature != null) privateGroupItemSchema.inviterSignature = inviterSignature;
-    if (inviterRawData != null) privateGroupItemSchema.inviterRawData = inviterRawData;
-    if (inviteeSignature != null) privateGroupItemSchema.inviteeSignature = inviteeSignature;
-    if (inviteeRawData != null) privateGroupItemSchema.inviteeRawData = inviteeRawData;
-    return privateGroupItemSchema;
+    return map.sortByKey();
   }
 
   static PrivateGroupItemSchema fromMap(Map<String, dynamic> e) {
-    var privateGroupItemSchema = PrivateGroupItemSchema(
+    var schema = PrivateGroupItemSchema(
       id: e['id'],
-      groupId: e['group_id'],
+      groupId: e['group_id'] ?? "",
+      permission: e['permission'],
+      expiresAt: e['expires_at'],
       invitee: e['invitee'],
       inviter: e['inviter'],
-      inviteeSignature: e['invitee_signature'],
-      inviterSignature: e['inviter_signature'],
+      inviteeAt: e['invitee_at'],
+      invitedAt: e['invited_at'],
       inviteeRawData: e['invitee_raw_data'],
       inviterRawData: e['inviter_raw_data'],
-      inviteTime: e['invite_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['invite_time']) : null,
-      invitedTime: e['invited_time'] != null ? DateTime.fromMillisecondsSinceEpoch(e['invited_time']) : null,
-      expiresAt: e['expires_at'] != null ? DateTime.fromMillisecondsSinceEpoch(e['expires_at']) : null,
+      inviteeSignature: e['invitee_signature'],
+      inviterSignature: e['inviter_signature'],
     );
 
-    return privateGroupItemSchema;
+    if (e['data']?.toString().isNotEmpty == true) {
+      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      if (schema.data == null) {
+        schema.data = new Map<String, dynamic>();
+      }
+      if (data != null) {
+        schema.data?.addAll(data);
+      }
+    }
+    return schema;
   }
 
   @override
   String toString() {
-    return 'PrivateGroupItemSchema { id: $id, groupId: $groupId, invitee: $invitee, inviter: $inviter, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteTime: $inviteTime, invitedTime: $invitedTime, expiresAt: $expiresAt }';
+    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteeAt: $inviteeAt, invitedAt: $invitedAt, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
   }
 }
