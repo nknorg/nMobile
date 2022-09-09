@@ -10,29 +10,27 @@ import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 
-// class PrivateGroupType {
-//   static const private = 0;
-//   static const public = 1;
-// }
+class PrivateGroupType {
+  static const normal = 0;
+}
 
 class PrivateGroupSchema {
   int? id;
-  int? createAt;
-  int? updateAt;
-
   String groupId;
   String name;
-  int? type; // TODO:GG PG ?
+  int? type; // TODO:GG PG ??
   String? version;
-
-  bool isTop = false;
   int? count;
+
+  int? createAt;
+  int? updateAt;
+  bool isTop = false;
   File? avatar;
 
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
-  // TODO:GG PG ?
+  // TODO:GG PG ??
   // bool joined = false;
   // int? joinAt;
   // int? leaveAt;
@@ -41,12 +39,12 @@ class PrivateGroupSchema {
     this.id,
     required this.groupId,
     required this.name,
+    this.type = PrivateGroupType.normal,
+    this.version,
+    this.count,
     this.createAt,
     this.updateAt,
-    this.type,
-    this.version,
     this.isTop = false,
-    this.count,
     this.avatar,
     this.options,
     this.data,
@@ -86,7 +84,7 @@ class PrivateGroupSchema {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['groupName'] = name;
-    // TODO:GG PG 需要吗？burning同步延时怎么办?
+    // TODO:GG PG 需要吗？burning同步延时怎么办??
     // if (deleteAfterSeconds != null) data['deleteAfterSeconds'] = deleteAfterSeconds;
     return data.sortByKey();
   }
@@ -105,14 +103,14 @@ class PrivateGroupSchema {
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
       'id': id,
-      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'group_id': groupId,
       'name': name,
       'type': type,
       'version': version,
-      'is_top': isTop ? 1 : 0,
       'count': count,
+      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
+      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'is_top': isTop ? 1 : 0,
       'avatar': Path.convert2Local(avatar?.path),
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'data': data != null ? jsonEncode(data) : null,
@@ -123,14 +121,14 @@ class PrivateGroupSchema {
   static PrivateGroupSchema fromMap(Map<String, dynamic> e) {
     var schema = PrivateGroupSchema(
       id: e['id'],
-      createAt: e['create_at'],
-      updateAt: e['update_at'],
       groupId: e['group_id'] ?? "",
       name: e['name'] ?? "",
       type: e['type'],
-      version: e['version'],
-      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       count: e['count'],
+      version: e['version'],
+      createAt: e['create_at'],
+      updateAt: e['update_at'],
+      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
     );
 
@@ -156,6 +154,6 @@ class PrivateGroupSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, name: $name, type: $type, version: $version, isTop: $isTop, count: $count, avatar: ${avatar?.path}, options: $options, data: $data}';
+    return 'PrivateGroupSchema{id: $id, groupId: $groupId, name: $name, type: $type, version: $version, count: $count, createAt: $createAt, updateAt: $updateAt, isTop: $isTop, avatar: ${avatar?.path}, options: $options, data: $data}';
   }
 }
