@@ -3,16 +3,17 @@ import 'dart:convert';
 import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/util.dart';
 
-// class PrivateGroupItemPerm {
-//   static const none = 0;
-//   static const owner = 1;
-//   static const admin = 2;
-// }
+class PrivateGroupItemPerm {
+  static const none = 0;
+  static const owner = 1;
+  static const admin = 2;
+  static const normal = 3;
+}
 
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ?
+  int? permission; // TODO:GG PG ??
   int? expiresAt;
 
   String? invitee;
@@ -29,7 +30,7 @@ class PrivateGroupItemSchema {
   PrivateGroupItemSchema({
     this.id,
     required this.groupId,
-    this.permission,
+    this.permission = PrivateGroupItemPerm.none,
     this.expiresAt,
     this.invitee,
     this.inviter,
@@ -76,10 +77,6 @@ class PrivateGroupItemSchema {
     if (inviteeSignature != null) schema.inviteeSignature = inviteeSignature;
     if (inviterSignature != null) schema.inviterSignature = inviterSignature;
     return schema;
-  }
-
-  int get status {
-    return 0; // TODO:GG PG ?
   }
 
   Map<String, dynamic> toMap() {
