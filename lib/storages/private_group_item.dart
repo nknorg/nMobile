@@ -20,14 +20,14 @@ class PrivateGroupItemStorage with Tag {
         `group_id` VARCHAR(200),
         `permission` INT,
         `expires_at` BIGINT,
-        `invitee` VARCHAR(200),
         `inviter` VARCHAR(200),
-        `invitee_at` BIGINT,
+        `invitee` VARCHAR(200),
+        `invite_at` BIGINT,
         `invited_at` BIGINT,
-        `invitee_raw_data` TEXT,
         `inviter_raw_data` TEXT,
-        `invitee_signature` VARCHAR(200),
+        `invitee_raw_data` TEXT,
         `inviter_signature` VARCHAR(200)
+        `invitee_signature` VARCHAR(200),
       )''';
 
   static create(Database db) async {

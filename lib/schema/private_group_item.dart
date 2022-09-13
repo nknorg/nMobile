@@ -13,17 +13,17 @@ class PrivateGroupItemPerm {
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ??
+  int? permission; // TODO:GG PG ?
   int? expiresAt;
 
-  String? invitee;
   String? inviter;
-  int? inviteeAt;
+  String? invitee;
+  int? inviteAt;
   int? invitedAt;
-  String? inviteeRawData;
   String? inviterRawData;
-  String? inviteeSignature;
+  String? inviteeRawData;
   String? inviterSignature;
+  String? inviteeSignature;
 
   Map<String, dynamic>? data;
 
@@ -32,50 +32,52 @@ class PrivateGroupItemSchema {
     required this.groupId,
     this.permission = PrivateGroupItemPerm.none,
     this.expiresAt,
-    this.invitee,
     this.inviter,
-    this.inviteeAt,
+    this.invitee,
+    this.inviteAt,
     this.invitedAt,
-    this.inviteeRawData,
     this.inviterRawData,
-    this.inviteeSignature,
+    this.inviteeRawData,
     this.inviterSignature,
+    this.inviteeSignature,
     this.data,
   });
 
-  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, String? invitee, String? inviter, int? inviteeAt, int? invitedAt, String? inviteeRawData, String? inviterRawData, String? inviteeSignature, String? inviterSignature}) {
+  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, String? inviter, String? invitee, int? inviteAt, int? invitedAt, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
-      invitee: invitee,
       expiresAt: expiresAt,
-      inviteeAt: inviteeAt,
+      inviter: inviter,
+      invitee: invitee,
+      inviteAt: inviteAt,
       invitedAt: invitedAt,
-      inviteeRawData: inviteeRawData,
       inviterRawData: inviterRawData,
-      inviteeSignature: inviteeSignature,
+      inviteeRawData: inviteeRawData,
       inviterSignature: inviterSignature,
+      inviteeSignature: inviteeSignature,
     );
   }
 
-  static PrivateGroupItemSchema fromRawData(Map<String, dynamic> data, {String? inviteeRawData, String? inviterRawData, String? inviteeSignature, String? inviterSignature}) {
+  static PrivateGroupItemSchema? fromRawData(Map<String, dynamic> data, {String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+    if ((data['groupId'] == null) || (data['groupId']?.toString().isEmpty == true)) return null;
     var schema = PrivateGroupItemSchema(
       groupId: data['groupId'],
       permission: data['permission'],
       expiresAt: data['expiresAt'],
-      invitee: data['invitee'],
       inviter: data['inviter'],
-      inviteeAt: data['inviteeAt'],
+      invitee: data['invitee'],
+      inviteAt: data['inviteAt'],
       invitedAt: data['invitedAt'],
-      inviteeRawData: data['inviteeRawData'],
       inviterRawData: data['inviterRawData'],
-      inviteeSignature: data['inviteeSignature'],
+      inviteeRawData: data['inviteeRawData'],
       inviterSignature: data['inviterSignature'],
+      inviteeSignature: data['inviteeSignature'],
     );
-    if (inviteeRawData != null) schema.inviteeRawData = inviteeRawData;
     if (inviterRawData != null) schema.inviterRawData = inviterRawData;
-    if (inviteeSignature != null) schema.inviteeSignature = inviteeSignature;
+    if (inviteeRawData != null) schema.inviteeRawData = inviteeRawData;
     if (inviterSignature != null) schema.inviterSignature = inviterSignature;
+    if (inviteeSignature != null) schema.inviteeSignature = inviteeSignature;
     return schema;
   }
 
@@ -85,14 +87,14 @@ class PrivateGroupItemSchema {
       'group_id': groupId,
       'permission': permission,
       'expires_at': expiresAt,
-      'invitee': invitee,
       'inviter': inviter,
-      'invitee_at': inviteeAt,
+      'invitee': invitee,
+      'invite_at': inviteAt,
       'invited_at': invitedAt,
-      'invitee_raw_data': inviteeRawData,
       'inviter_raw_data': inviterRawData,
-      'invitee_signature': inviteeSignature,
+      'invitee_raw_data': inviteeRawData,
       'inviter_signature': inviterSignature,
+      'invitee_signature': inviteeSignature,
       'data': data != null ? jsonEncode(data) : null,
     };
     return map.sortByKey();
@@ -104,14 +106,14 @@ class PrivateGroupItemSchema {
       groupId: e['group_id'] ?? "",
       permission: e['permission'],
       expiresAt: e['expires_at'],
-      invitee: e['invitee'],
       inviter: e['inviter'],
-      inviteeAt: e['invitee_at'],
+      invitee: e['invitee'],
+      inviteAt: e['invite_at'],
       invitedAt: e['invited_at'],
-      inviteeRawData: e['invitee_raw_data'],
       inviterRawData: e['inviter_raw_data'],
-      inviteeSignature: e['invitee_signature'],
+      inviteeRawData: e['invitee_raw_data'],
       inviterSignature: e['inviter_signature'],
+      inviteeSignature: e['invitee_signature'],
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
@@ -128,6 +130,6 @@ class PrivateGroupItemSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteeAt: $inviteeAt, invitedAt: $invitedAt, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
+    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteAt: $inviteAt, invitedAt: $invitedAt, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
   }
 }
