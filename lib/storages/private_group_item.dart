@@ -35,7 +35,7 @@ class PrivateGroupItemStorage with Tag {
     await db.execute(createSQL);
 
     // index
-    await db.execute('CREATE INDEX `index_private_group_item_group_id_invitee_expires_at` ON `$tableName` (`group_id`, `invitee`, `expires_at`)');
+    await db.execute('CREATE UNIQUE INDEX `index_private_group_item_group_id_invitee` ON `$tableName` (`group_id`, `invitee`)');
     await db.execute('CREATE INDEX `index_private_group_item_group_id_expires_at` ON `$tableName` (`group_id`, `expires_at`)');
   }
 
@@ -74,7 +74,6 @@ class PrivateGroupItemStorage with Tag {
         whereArgs: [groupId, invitee],
         offset: 0,
         limit: 1,
-        orderBy: 'expires_at DESC',
       );
       if (res != null && res.length > 0) {
         PrivateGroupItemSchema? schema = PrivateGroupItemSchema.fromMap(res.first);

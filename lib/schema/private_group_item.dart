@@ -11,9 +11,10 @@ class PrivateGroupItemPerm {
 }
 
 class PrivateGroupItemSchema {
+  // TODO:GG 消除！
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ?
+  int? permission; // TODO:GG PG?
   int? expiresAt;
 
   String? inviter;
@@ -57,6 +58,18 @@ class PrivateGroupItemSchema {
       inviterSignature: inviterSignature,
       inviteeSignature: inviteeSignature,
     );
+  }
+
+  Map<String, dynamic> createRawData(bool isInvitee) {
+    Map<String, dynamic> map = {};
+    map['groupId'] = groupId;
+    map['permission'] = groupId;
+    map['expiresAt'] = expiresAt;
+    map['inviter'] = inviter;
+    map['invitee'] = invitee;
+    map['inviteAt'] = inviteAt;
+    if (isInvitee) map['inviteAt'] = invitedAt;
+    return map.sortByKey();
   }
 
   static PrivateGroupItemSchema? fromRawData(Map<String, dynamic> data, {String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
