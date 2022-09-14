@@ -111,7 +111,37 @@ class PrivateGroupStorage with Tag {
     return null;
   }
 
-  Future<bool> setAvatar(String? groupId, String? avatarLocalPath) async {
+  Future<bool> updateName(String? groupId, String? name) async {
+    if (db?.isOpen != true) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    if (name == null || name.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'name': name,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - updateName - success - groupId:$groupId - name:$name");
+              return true;
+            }
+            logger.w("$TAG - updateName - fail - groupId:$groupId - name:$name");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> updateAvatar(String? groupId, String? avatarLocalPath) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -128,10 +158,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+              logger.v("$TAG - updateAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
               return true;
             }
-            logger.w("$TAG - setAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+            logger.w("$TAG - updateAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
           } catch (e, st) {
             handleError(e, st);
           }

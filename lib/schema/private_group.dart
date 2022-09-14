@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:nkn_sdk_flutter/crypto.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/schema/option.dart';
-import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
@@ -15,11 +11,11 @@ class PrivateGroupType {
 }
 
 class PrivateGroupSchema {
-// TODO:GG 消除！
+// TODO:GG 消除!
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG ?
+  int? type; // TODO:GG PG?
   String? version;
   int? count;
 
@@ -31,7 +27,7 @@ class PrivateGroupSchema {
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
-  // TODO:GG PG ?
+  // TODO:GG PG?
   // bool joined = false;
   // int? joinAt;
   // int? leaveAt;
@@ -85,20 +81,9 @@ class PrivateGroupSchema {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['groupName'] = name;
-    // TODO:GG PG 需要吗？burning同步延时怎么办?
+    // TODO:GG PG 需要吗？burning同步延时怎么办 ?
     // if (deleteAfterSeconds != null) data['deleteAfterSeconds'] = deleteAfterSeconds;
     return data.sortByKey();
-  }
-
-  Future<bool> verified() async {
-    try {
-      Uint8List pubKey = hexDecode(ownerPublicKey);
-      Uint8List data = Uint8List.fromList(Hash.sha256(jsonEncode(getRawDataMap())));
-      Uint8List sign = hexDecode(signature);
-      return await Crypto.verify(pubKey, data, sign);
-    } catch (e) {
-      return false;
-    }
   }
 
   Map<String, dynamic> toMap() {
