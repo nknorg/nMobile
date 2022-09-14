@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -17,45 +16,34 @@ import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
 class PrivateGroupCommon with Tag {
-  static int EXPIRES_SECONDS = 3600 * 24 * 7; // 7 days TODO:GG move to settings
+  // ignore: close_sinks
+  StreamController<PrivateGroupSchema> _addGroupController = StreamController<PrivateGroupSchema>.broadcast();
+  StreamSink<PrivateGroupSchema> get _addGroupSink => _addGroupController.sink;
+  Stream<PrivateGroupSchema> get addGroupStream => _addGroupController.stream;
 
   // ignore: close_sinks
-  StreamController<PrivateGroupSchema> _updateController = StreamController<PrivateGroupSchema>.broadcast();
-  StreamSink<PrivateGroupSchema> get _updateSink => _updateController.sink;
-  Stream<PrivateGroupSchema> get updateStream => _updateController.stream;
+  StreamController<PrivateGroupSchema> _updateGroupController = StreamController<PrivateGroupSchema>.broadcast();
+  StreamSink<PrivateGroupSchema> get _updateGroupSink => _updateGroupController.sink;
+  Stream<PrivateGroupSchema> get updateGroupStream => _updateGroupController.stream; // TODO:GG 有的地方用错了
 
-  // Map<String, bool> _syncDataMap = Map();
+  // ignore: close_sinks
+  StreamController<PrivateGroupItemSchema> _addGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
+  StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
+  Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
+
+  static const int EXPIRES_SECONDS = 3600 * 24 * 7; // 7 days TODO:GG move to settings
+
   Map<String, bool> dataComplete = Map();
-
-  String getOwnerPublicKey(String groupId) {
-    String owner;
-    int index = groupId.lastIndexOf('.');
-    owner = groupId.substring(0, index);
-    return owner;
-  }
-
-  /*bool lockSyncData(String groupId, String target) {
-    if (_syncDataMap['$groupId$target'] != null) {
-      return false;
-    }
-    _syncDataMap['$groupId$target'] = true;
-    return true;
-  }*/
-
-  /*unLockSyncData(String groupId, String target) {
-    _syncDataMap.remove('$groupId$target');
-  }*/
 
   ///****************************************** Action *******************************************
 
   Future<bool> checkDataComplete(String? groupId) async {
     if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await PrivateGroupStorage.instance.query(groupId);
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
     var version = genPrivateGroupVersion(privateGroup?.signature ?? "", getInviteesId(members));
     if ((version == privateGroup?.version) && (privateGroup?.version != null)) {
@@ -75,13 +63,13 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     // check
-    PrivateGroupSchema? schemaGroup = await PrivateGroupStorage.instance.query(groupId);
+    PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - invitee - has no group. - groupId:$groupId');
       if (toast) Toast.show('has no group.'); // TODO:GG PG 中文?
       return false;
     }
-    var invitee = await PrivateGroupItemStorage.instance.queryByInvitee(groupId, target);
+    var invitee = await queryGroupItem(groupId, target);
     if (invitee != null) {
       logger.d('$TAG - invitee - Invitee already exists.');
       if (toast) Toast.show(Global.locale((s) => s.invitee_already_exists));
@@ -102,7 +90,7 @@ class PrivateGroupCommon with Tag {
   Future<bool> toSyncPrivateGroupOptionSync(String? target, String? groupId, {bool toast = false}) async {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryByGroupId(groupId);
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     if (privateGroup == null) return false;
     if (!await checkDataComplete(groupId)) {
       logger.w('$TAG - toSyncPrivateGroupOptionRequest - Data synchronization.');
@@ -117,7 +105,7 @@ class PrivateGroupCommon with Tag {
   Future<bool> toSyncPrivateGroupMemberKey(String? target, String? groupId, {bool toast = false}) async {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryByGroupId(groupId);
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     if (privateGroup == null) return false;
     if (!await checkDataComplete(groupId)) {
       logger.w('$TAG - toSyncPrivateGroupMemberKey - Data synchronization.');
@@ -132,7 +120,7 @@ class PrivateGroupCommon with Tag {
   Future<bool> toSyncPrivateGroupMember(String? target, String? groupId, {bool toast = false}) async {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryByGroupId(groupId);
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     if (privateGroup == null) return false;
     if (!await checkDataComplete(groupId)) {
       logger.w('$TAG - toSyncPrivateGroupMemberKey - Data synchronization.');
@@ -140,7 +128,7 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
-    PrivateGroupItemSchema? privateGroupItem = await PrivateGroupItemStorage.instance.queryByInvitee(groupId, target);
+    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
     if (privateGroupItem == null) {
       logger.w('$TAG - toSyncPrivateGroupMember - request is not in group.');
       return false;
@@ -177,11 +165,11 @@ class PrivateGroupCommon with Tag {
     if ((schemaItem.inviterSignature == null) || (schemaItem.inviterSignature?.isEmpty == true)) return null;
     // accept self
     schemaItem = await acceptInvitation(schemaItem, ownerPrivateKey, toast: toast);
-    await PrivateGroupItemStorage.instance.insert(schemaItem);
+    await addPrivateGroupItem(schemaItem);
     // update
     schemaGroup.count = 1;
     schemaGroup.version = genPrivateGroupVersion(schemaGroup.signature, [schemaGroup.ownerPublicKey]);
-    schemaGroup = await PrivateGroupStorage.instance.insert(schemaGroup);
+    schemaGroup = await addPrivateGroup(schemaGroup, notify: true);
     return schemaGroup;
   }
 
@@ -208,13 +196,13 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // exists
-    PrivateGroupSchema? schemaGroup = await PrivateGroupStorage.instance.query(schema.groupId);
+    PrivateGroupSchema? schemaGroup = await queryGroup(schema.groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - addInvitee - has no group. - groupId:${schema.groupId}');
       if (toast) Toast.show('has no group.'); // TODO:GG PG 中文?
       return null;
     }
-    PrivateGroupItemSchema? schemaGroupItem = await PrivateGroupItemStorage.instance.queryByInvitee(schema.groupId, schema.invitee);
+    PrivateGroupItemSchema? schemaGroupItem = await queryGroupItem(schema.groupId, schema.invitee);
     if (schemaGroupItem != null) {
       logger.e('$TAG - addInvitee - invitee is exist.');
       if (toast) Toast.show('invitee is exist.'); // TODO:GG PG 中文?
@@ -223,13 +211,12 @@ class PrivateGroupCommon with Tag {
     // members
     List<PrivateGroupItemSchema> members = await getMembersByGroupId(schema.groupId);
     members.add(schema);
-    schemaGroupItem = await PrivateGroupItemStorage.instance.insert(schema);
+    schemaGroupItem = await addPrivateGroupItem(schema, notify: true);
     if (schemaGroupItem == null) return null;
     // group
     schemaGroup.count = members.length;
     schemaGroup.version = genPrivateGroupVersion(schemaGroup.signature, getInviteesId(members));
-    bool success = await PrivateGroupStorage.instance.updateVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count ?? 0);
-    if (success && notify) queryAndNotify(schema.groupId);
+    await updateGroupVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
     return schemaGroup;
   }
 
@@ -249,7 +236,7 @@ class PrivateGroupCommon with Tag {
     Map members = Util.jsonFormat(membersIds) ?? Map();
     Map options = Util.jsonFormat(rawData) ?? Map();
     // check
-    PrivateGroupSchema? exists = await queryByGroupId(groupId);
+    PrivateGroupSchema? exists = await queryGroup(groupId);
     if (exists == null) {
       PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, options['groupName']);
       if (_newGroup == null) return null;
@@ -257,30 +244,24 @@ class PrivateGroupCommon with Tag {
       _newGroup.count = members.length;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: options['deleteAfterSeconds']);
       _newGroup.setSignature(signature);
-      exists = await PrivateGroupStorage.instance.insert(_newGroup);
+      exists = await addPrivateGroup(_newGroup, notify: true);
     } else {
       if (members.length < (exists.count ?? 0)) {
         logger.w('$TAG - syncPrivateGroupInfo - members_len <  exists_count - members:$members - exists:$exists');
         return null;
       }
       if (version != exists.version) {
-        await PrivateGroupStorage.instance.updateVersionCount(groupId, version, members.length);
+        await updateGroupVersionCount(groupId, version, members.length, notify: true);
       }
       bool verifiedOwner = await verifiedSign(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), exists.signature);
       if (!verifiedOwner) {
         exists.name = options['groupName'] ?? exists.name;
-        await PrivateGroupStorage.instance.updateName(groupId, exists.name);
+        await updateGroupName(groupId, exists.name, notify: true);
         exists.setSignature(signature);
-        await PrivateGroupStorage.instance.updateData(groupId, exists.data);
+        await updateGroupData(groupId, exists.data, notify: true);
       }
     }
-    if (notify) queryAndNotify(groupId);
     return exists;
-  }
-
-  String genPrivateGroupVersion(String optionSignature, List<String> memberPks) {
-    memberPks.sort((a, b) => a.compareTo(b));
-    return hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberPks.join(''))));
   }
 
   ///****************************************** Members *******************************************
@@ -337,7 +318,7 @@ class PrivateGroupCommon with Tag {
     if (syncVersion == null || syncVersion.isEmpty) return null;
     if (syncMembers == null || syncMembers.isEmpty) return null;
     // exists
-    PrivateGroupSchema? schemaGroup = await PrivateGroupStorage.instance.query(syncGroupId);
+    PrivateGroupSchema? schemaGroup = await queryGroup(syncGroupId);
     if (schemaGroup == null) {
       logger.e('$TAG - syncPrivateGroupMember - has no group. - groupId:$syncGroupId');
       if (toast) Toast.show('has no group.'); // TODO:GG PG 中文?
@@ -371,10 +352,8 @@ class PrivateGroupCommon with Tag {
         if (toast) Toast.show('signature verification failed.'); // TODO:GG PG 中文?
         continue;
       }
-      PrivateGroupItemSchema? exists = await PrivateGroupItemStorage.instance.queryByInvitee(syncGroupId, member.invitee);
-      if (exists == null) {
-        await PrivateGroupItemStorage.instance.insert(member);
-      }
+      PrivateGroupItemSchema? exists = await queryGroupItem(syncGroupId, member.invitee);
+      if (exists == null) await addPrivateGroupItem(member, notify: true);
     }
     // members
     List<PrivateGroupItemSchema> members = await getMembersByGroupId(syncGroupId);
@@ -382,28 +361,19 @@ class PrivateGroupCommon with Tag {
     var version = genPrivateGroupVersion(schemaGroup.signature, getInviteesId(members));
     if (version == syncVersion) {
       var session = await SessionStorage.instance.query(syncGroupId, SessionType.PRIVATE_GROUP);
-      if (session == null) {
-        await chatOutCommon.sendPrivateGroupSubscribe(syncGroupId);
-      }
+      if (session == null) await chatOutCommon.sendPrivateGroupSubscribe(syncGroupId);
     }
     return members;
   }
 
-  List<Map<String, dynamic>> getMembersData(List<PrivateGroupItemSchema> list) {
-    List<Map<String, dynamic>> members = List.empty(growable: true);
-    list
-      ..sort((a, b) => (a.invitee ?? "").compareTo(b.invitee ?? ""))
-      ..forEach((e) => members.add(e.toMap()..remove('id')));
-    return members;
-  }
+  ///****************************************** Common *******************************************
 
-  List<String> getInviteesId(List<PrivateGroupItemSchema> list) {
-    List<String> ids = list.map((e) => e.invitee ?? "").toList();
-    ids.removeWhere((element) => element.isEmpty);
-    return ids;
+  String getOwnerPublicKey(String groupId) {
+    String owner;
+    int index = groupId.lastIndexOf('.');
+    owner = groupId.substring(0, index);
+    return owner;
   }
-
-  ///****************************************** Other *******************************************
 
   Future<bool> verifiedSign(String? publicKey, String? rawData, String? signature) async {
     if (publicKey == null || publicKey.isEmpty) return false;
@@ -426,10 +396,93 @@ class PrivateGroupCommon with Tag {
     return hexEncode(signData);
   }
 
-  Future<bool> setAvatar(String groupId, String? avatarLocalPath, {bool notify = false}) async {
-    bool success = await PrivateGroupStorage.instance.updateAvatar(groupId, avatarLocalPath);
-    if (success && notify) queryAndNotify(groupId);
+  String genPrivateGroupVersion(String optionSignature, List<String> memberPks) {
+    memberPks.sort((a, b) => a.compareTo(b));
+    return hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberPks.join(''))));
+  }
+
+  List<Map<String, dynamic>> getMembersData(List<PrivateGroupItemSchema> list) {
+    List<Map<String, dynamic>> members = List.empty(growable: true);
+    list
+      ..sort((a, b) => (a.invitee ?? "").compareTo(b.invitee ?? ""))
+      ..forEach((e) => members.add(e.toMap()..remove('id')));
+    return members;
+  }
+
+  List<String> getInviteesId(List<PrivateGroupItemSchema> list) {
+    List<String> ids = list.map((e) => e.invitee ?? "").toList();
+    ids.removeWhere((element) => element.isEmpty);
+    return ids;
+  }
+
+  ///****************************************** Storage *******************************************
+
+  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+    if (schema == null || schema.groupId.isEmpty) return null;
+    if (checkDuplicated) {
+      PrivateGroupSchema? exist = await queryGroup(schema.groupId);
+      if (exist != null) {
+        logger.i("$TAG - addPrivateGroup - duplicated - schema:$exist");
+        return null;
+      }
+    }
+    PrivateGroupSchema? added = await PrivateGroupStorage.instance.insert(schema);
+    if (added != null && notify) _addGroupSink.add(added);
+    return added;
+  }
+
+  Future<bool> updateGroupName(String? groupId, String? name, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    bool success = await PrivateGroupStorage.instance.updateName(groupId, name);
+    if (success && notify) queryAndNotifyGroup(groupId);
     return success;
+  }
+
+  Future<bool> updateGroupAvatar(String? groupId, String? avatarLocalPath, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    bool success = await PrivateGroupStorage.instance.updateAvatar(groupId, avatarLocalPath);
+    if (success && notify) queryAndNotifyGroup(groupId);
+    return success;
+  }
+
+  Future<bool> updateGroupVersionCount(String? groupId, String? version, int userCount, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    bool success = await PrivateGroupStorage.instance.updateVersionCount(groupId, version, userCount);
+    if (success && notify) queryAndNotifyGroup(groupId);
+    return success;
+  }
+
+  Future<bool> updateGroupData(String? groupId, Map<String, dynamic>? data, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    bool success = await PrivateGroupStorage.instance.updateData(groupId, data);
+    if (success && notify) queryAndNotifyGroup(groupId);
+    return success;
+  }
+
+  Future<PrivateGroupSchema?> queryGroup(String groupId) async {
+    return await PrivateGroupStorage.instance.query(groupId);
+  }
+
+  Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+    if (schema == null || schema.groupId.isEmpty) return null;
+    if (checkDuplicated) {
+      PrivateGroupSchema? exist = await queryGroup(schema.groupId);
+      if (exist != null) {
+        logger.i("$TAG - addPrivateGroupItem - duplicated - schema:$exist");
+        return null;
+      }
+    }
+    PrivateGroupItemSchema? added = await PrivateGroupItemStorage.instance.insert(schema);
+    if (added != null && notify) _addGroupItemSink.add(added);
+    return added;
+  }
+
+  Future<PrivateGroupItemSchema?> queryGroupItem(String groupId, String? invitee) async {
+    return await PrivateGroupItemStorage.instance.queryByInvitee(groupId, invitee);
+  }
+
+  Future<List<PrivateGroupItemSchema>> queryMembers(String groupId, {int offset = 0, int limit = 20}) async {
+    return await PrivateGroupItemStorage.instance.queryList(groupId, limit: limit, offset: offset);
   }
 
   Future<List<PrivateGroupItemSchema>> getMembersByGroupId(String? groupId) async {
@@ -437,7 +490,7 @@ class PrivateGroupCommon with Tag {
     List<PrivateGroupItemSchema> members = [];
     int limit = 20;
     for (int offset = 0; true; offset += limit) {
-      List<PrivateGroupItemSchema> result = await PrivateGroupItemStorage.instance.queryList(groupId, offset: offset, limit: limit);
+      List<PrivateGroupItemSchema> result = await queryMembers(groupId, offset: offset, limit: limit);
       members.addAll(result);
       logger.d("$TAG - getMembersByGroupId - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
       if (result.length < limit) break;
@@ -445,36 +498,10 @@ class PrivateGroupCommon with Tag {
     return members;
   }
 
-  // TODO:GG 以下很多地方都没包装
-  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema schema) async {
-    return await PrivateGroupStorage.instance.insert(schema);
-  }
-
-  Future<PrivateGroupSchema?> initializationPrivateGroup(PrivateGroupSchema privateGroupSchema) async {
-    return await PrivateGroupStorage.instance.insert(privateGroupSchema);
-  }
-
-  Future<PrivateGroupSchema?> queryByGroupId(String groupId, {bool notify = true}) async {
-    var updated = await PrivateGroupStorage.instance.query(groupId);
-    if (updated != null && notify) _updateSink.add(updated);
-    return updated;
-  }
-
-  Future<List<PrivateGroupItemSchema>?> queryMembers(String groupId) async {
-    var list = await PrivateGroupItemStorage.instance.queryList(groupId);
-    return list;
-  }
-
-  Future<List<PrivateGroupItemSchema>?> queryMembersByLimit(String groupId, {int offset = 0, int limit = 20}) async {
-    var list = await PrivateGroupItemStorage.instance.queryList(groupId, limit: limit, offset: offset);
-    return list;
-  }
-
-  // TODO:GG 所有的STORAGE都检查一下，要不要
-  Future queryAndNotify(String groupId) async {
-    PrivateGroupSchema? updated = await queryByGroupId(groupId);
+  Future queryAndNotifyGroup(String groupId) async {
+    PrivateGroupSchema? updated = await PrivateGroupStorage.instance.query(groupId);
     if (updated != null) {
-      _updateSink.add(updated);
+      _updateGroupSink.add(updated);
     }
   }
 }
