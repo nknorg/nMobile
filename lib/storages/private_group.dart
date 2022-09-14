@@ -170,7 +170,7 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateOptions(String? groupId, Map<String, dynamic>? options) async {
+  Future<bool> updateData(String? groupId, Map<String, dynamic>? data) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -179,13 +179,13 @@ class PrivateGroupStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'options': options != null ? jsonEncode(options) : null,
+                  'data': data != null ? jsonEncode(data) : null,
                 },
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
             });
-            logger.v("$TAG - updateOptions - count:$count - groupId:$groupId - options:$options");
+            logger.v("$TAG - updateData - count:$count - groupId:$groupId - data:$data");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
