@@ -1,9 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
-import 'package:nkn_sdk_flutter/crypto.dart';
-import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/util.dart';
 
@@ -15,10 +11,10 @@ class PrivateGroupItemPerm {
 }
 
 class PrivateGroupItemSchema {
-  // TODO:GG 消除！
+  // TODO:GG 消除 !
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ?
+  int? permission; // TODO:GG PG?
   int? expiresAt;
 
   String? inviter;
@@ -74,36 +70,6 @@ class PrivateGroupItemSchema {
     map['inviteAt'] = inviteAt;
     if (isInvitee) map['inviteAt'] = invitedAt;
     return map.sortByKey();
-  }
-
-  // TODO:GG 所有的都要改!
-  Future<bool> verifiedInviter() async {
-    if ((inviter == null) || (inviter?.isEmpty == true)) return false;
-    if ((inviterRawData == null) || (inviterRawData?.isEmpty == true)) return false;
-    if ((inviterSignature == null) || (inviterSignature?.isEmpty == true)) return false;
-    try {
-      Uint8List publicKey = hexDecode(inviter ?? "");
-      Uint8List data = Uint8List.fromList(Hash.sha256(inviterRawData ?? ""));
-      Uint8List sign = hexDecode(inviterSignature ?? "");
-      return await Crypto.verify(publicKey, data, sign);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // TODO:GG 所有的都要改!
-  Future<bool> verifiedInvitee() async {
-    if ((invitee == null) || (invitee?.isEmpty == true)) return false;
-    if ((inviteeRawData == null) || (inviteeRawData?.isEmpty == true)) return false;
-    if ((inviteeSignature == null) || (inviteeSignature?.isEmpty == true)) return false;
-    try {
-      Uint8List pubKey = hexDecode(invitee ?? "");
-      Uint8List data = Uint8List.fromList(Hash.sha256(inviteeRawData ?? ""));
-      Uint8List sign = hexDecode(inviteeSignature ?? "");
-      return await Crypto.verify(pubKey, data, sign);
-    } catch (e) {
-      return false;
-    }
   }
 
   static PrivateGroupItemSchema? fromRawData(Map<String, dynamic> data, {String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
