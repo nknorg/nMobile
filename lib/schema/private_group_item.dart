@@ -14,7 +14,7 @@ class PrivateGroupItemSchema {
   // TODO:GG 消除 !
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG?
+  int? permission; // TODO:GG PG ?
   int? expiresAt;
 
   String? inviter;
@@ -44,11 +44,12 @@ class PrivateGroupItemSchema {
     this.data,
   });
 
-  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, String? inviter, String? invitee, int? inviteAt, int? invitedAt, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, int? permission, String? inviter, String? invitee, int? inviteAt, int? invitedAt, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
       expiresAt: expiresAt,
+      permission: permission,
       inviter: inviter,
       invitee: invitee,
       inviteAt: inviteAt,
