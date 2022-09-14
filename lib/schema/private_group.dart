@@ -11,11 +11,11 @@ class PrivateGroupType {
 }
 
 class PrivateGroupSchema {
-// TODO:GG 消除!
+// TODO:GG 消除 !
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG?
+  int? type; // TODO:GG PG ?
   String? version;
   int? count;
 
@@ -27,7 +27,7 @@ class PrivateGroupSchema {
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
-  // TODO:GG PG?
+  // TODO:GG PG ?
   // bool joined = false;
   // int? joinAt;
   // int? leaveAt;
