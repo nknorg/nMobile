@@ -21,7 +21,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
   GlobalKey _formKey = new GlobalKey<FormState>();
   bool _formValid = false;
 
-  TextEditingController _topicController = TextEditingController();
+  TextEditingController _groupController = TextEditingController();
 
   @override
   void onRefreshArguments() {}
@@ -36,14 +36,12 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
     if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
 
     Loading.show();
-    PrivateGroupSchema? privateGroupSchema = await privateGroupCommon.createPrivateGroup(groupName);
+    PrivateGroupSchema? privateGroupSchema = await privateGroupCommon.createPrivateGroup(groupName, toast: true);
     if (privateGroupSchema != null) {
-      // TODO:GG PG check
       await chatOutCommon.sendPrivateGroupSubscribe(privateGroupSchema.groupId);
       ChatMessagesScreen.go(Global.appContext, privateGroupSchema.groupId);
     }
     Loading.dismiss();
-
     return true;
   }
 
@@ -91,7 +89,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
                     children: <Widget>[
                       Expanded(
                         child: FormText(
-                          controller: _topicController,
+                          controller: _groupController,
                           hintText: Global.locale((s) => s.input_name),
                           validator: Validator.of(context).required(),
                         ),
@@ -111,7 +109,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
                   width: double.infinity,
                   text: Global.locale((s) => s.continue_text),
                   onPressed: () {
-                    if (_formValid) createPrivateGroup(_topicController.text);
+                    if (_formValid) createPrivateGroup(_groupController.text);
                   },
                 ),
               ),
