@@ -18,7 +18,6 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
-// TODO:GG PG check
 class MessageStatus {
   // send
   static const int Sending = 100;
@@ -65,9 +64,9 @@ class MessageContentType {
   static const String privateGroupAccept = 'privateGroup:accept';
   static const String privateGroupSubscribe = 'privateGroup:subscribe';
   static const String privateGroupOptionRequest = 'privateGroup:optionRequest';
-  static const String privateGroupOptionSync = 'privateGroup:optionSync';
+  static const String privateGroupOptionResponse = 'privateGroup:optionResponse';
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest';
-  static const String privateGroupMemberSync = 'privateGroup:memberSync';
+  static const String privateGroupMemberResponse = 'privateGroup:memberResponse';
 }
 
 class MessageSchema {
@@ -278,10 +277,10 @@ class MessageSchema {
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
-      case MessageContentType.privateGroupOptionSync:
       case MessageContentType.privateGroupMemberRequest:
-      case MessageContentType.privateGroupMemberSync:
+      case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupOptionRequest:
+      case MessageContentType.privateGroupMemberResponse:
       default:
         schema.content = data['content'];
         break;
@@ -486,9 +485,9 @@ class MessageSchema {
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
       case MessageContentType.privateGroupOptionRequest:
-      case MessageContentType.privateGroupOptionSync:
+      case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:
-      case MessageContentType.privateGroupMemberSync:
+      case MessageContentType.privateGroupMemberResponse:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       default:
@@ -554,9 +553,9 @@ class MessageSchema {
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
       case MessageContentType.privateGroupOptionRequest:
-      case MessageContentType.privateGroupOptionSync:
+      case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:
-      case MessageContentType.privateGroupMemberSync:
+      case MessageContentType.privateGroupMemberResponse:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = Util.jsonFormat(e['content']);
         } else {
@@ -1457,8 +1456,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupOptionSync(PrivateGroupSchema privateGroup, List<String> members) {
-    Map data = _base(MessageContentType.privateGroupOptionSync);
+  static String getPrivateGroupOptionResponse(PrivateGroupSchema privateGroup, List<String> members) {
+    Map data = _base(MessageContentType.privateGroupOptionResponse);
     data.addAll({
       'groupId': privateGroup.groupId,
       'content': {
@@ -1471,19 +1470,19 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupMemberRequest(String groupId, List<String> members) {
+  static String getPrivateGroupMemberRequest(String groupId, String? privateGroupVersion) {
     Map data = _base(MessageContentType.privateGroupMemberRequest);
     data.addAll({
       'groupId': groupId,
       'content': {
-        'members': members..sort((a, b) => a.compareTo(b)),
+        'version': privateGroupVersion,
       },
     });
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupMemberSync(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> members) {
-    Map data = _base(MessageContentType.privateGroupMemberSync);
+  static String getPrivateGroupMemberResponse(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> members) {
+    Map data = _base(MessageContentType.privateGroupMemberResponse);
     data.addAll({
       'groupId': privateGroup.groupId,
       'content': {
