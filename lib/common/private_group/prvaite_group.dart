@@ -7,7 +7,6 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/session.dart';
@@ -28,24 +27,22 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupSchema> _updateGroupController = StreamController<PrivateGroupSchema>.broadcast();
   StreamSink<PrivateGroupSchema> get _updateGroupSink => _updateGroupController.sink;
-  Stream<PrivateGroupSchema> get updateGroupStream => _updateGroupController.stream; // TODO:GG 有的地方用错了?
+  Stream<PrivateGroupSchema> get updateGroupStream => _updateGroupController.stream; // TODO:GG 有的地方用错了 ?
 
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _addGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  static const int EXPIRES_SECONDS = 3600 * 24 * 7; // 7 days TODO:GG move to settings?
+  static const int EXPIRES_SECONDS = 3600 * 24 * 7; // 7 days TODO:GG move to settings ?
 
   Map<String, bool> dataComplete = Map();
 
-  ///****************************************** Action *******************************************
-
-  // TODO:GG 如果不完整，怎么同步?
+  // TODO:GG 如果不完整，怎么同步 ?
   Future<bool> checkDataComplete(String? groupId) async {
     if (groupId == null || groupId.isEmpty) return false;
     PrivateGroupSchema? privateGroup = await queryGroup(groupId);
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
     var version = genPrivateGroupVersion(privateGroup?.signature ?? "", getInviteesId(members));
     if ((version == privateGroup?.version) && (privateGroup?.version != null)) {
       dataComplete[groupId] = true;
@@ -53,6 +50,60 @@ class PrivateGroupCommon with Tag {
     }
     dataComplete[groupId] = false;
     return false;
+  }
+
+  ///****************************************** Action *******************************************
+
+  PrivateGroupItemSchema? createInvitationModel(String? groupId, String? invitee, String? inviter, {int? expiresSec}) {
+    if (groupId == null || groupId.isEmpty) return null;
+    if (invitee == null || invitee.isEmpty) return null;
+    if (inviter == null || inviter.isEmpty) return null;
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    int expiresAt = nowAt + (expiresSec ?? EXPIRES_SECONDS) * 1000;
+    PrivateGroupItemSchema? schema = PrivateGroupItemSchema.create(groupId, expiresAt: expiresAt, invitee: invitee, inviter: inviter);
+    if (schema == null) return null;
+    schema.inviterRawData = jsonEncode(schema.createRawDataMap());
+    return schema;
+  }
+
+  Future<PrivateGroupSchema?> createPrivateGroup(String? name, {bool toast = false}) async {
+    if (name == null || name.isEmpty) return null;
+    String? ownerPublicKey = clientCommon.getPublicKey();
+    if (ownerPublicKey == null || ownerPublicKey.isEmpty) return null;
+    String groupId = '$ownerPublicKey.${Uuid().v4()}';
+    // group
+    PrivateGroupSchema? schemaGroup = PrivateGroupSchema.create(groupId, name);
+    if (schemaGroup == null) return null;
+    Uint8List? clientSeed = clientCommon.client?.seed;
+    if (clientSeed == null) return null;
+    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
+    if (signatureData == null || signatureData.isEmpty) {
+      logger.e('$TAG - createPrivateGroup - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
+      return null;
+    }
+    schemaGroup.setSignature(signatureData);
+    // item
+    if (clientCommon.address == null || (clientCommon.address?.isEmpty == true)) return null;
+    PrivateGroupItemSchema? schemaItem = createInvitationModel(groupId, clientCommon.address, clientCommon.address);
+    if (schemaItem == null) return null;
+    schemaItem.inviterSignature = await genSignature(ownerPrivateKey, schemaItem.inviterRawData);
+    if ((schemaItem.inviterSignature == null) || (schemaItem.inviterSignature?.isEmpty == true)) {
+      logger.e('$TAG - createPrivateGroup - inviter sign create fail. - pk:$ownerPrivateKey - member:$schemaItem');
+      return null;
+    }
+    // accept self
+    schemaItem = await acceptInvitation(schemaItem, ownerPrivateKey, toast: toast);
+    schemaItem = (await addPrivateGroupItem(schemaItem)) ?? (await queryGroupItem(groupId, ownerPublicKey));
+    if (schemaItem == null) {
+      logger.e('$TAG - createPrivateGroup - member create fail. - member:$schemaItem');
+      return null;
+    }
+    // update
+    schemaGroup.count = 1;
+    schemaGroup.version = genPrivateGroupVersion(schemaGroup.signature, [schemaGroup.ownerPublicKey]);
+    schemaGroup = await addPrivateGroup(schemaGroup, notify: true);
+    return schemaGroup;
   }
 
   Future<bool> invitee(String? groupId, String? target, {bool toast = false}) async {
@@ -77,119 +128,91 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     // action
-    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientCommon.client?.seed ?? Uint8List.fromList([]));
-    var inviteeModel = createInvitationModel(groupId, target, clientCommon.getPublicKey());
+    var inviteeModel = createInvitationModel(groupId, target, clientCommon.address);
     if (inviteeModel == null) return false;
+    Uint8List? clientSeed = clientCommon.client?.seed;
+    if (clientSeed == null) return false;
+    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     inviteeModel.inviterSignature = await genSignature(ownerPrivateKey, inviteeModel.inviterRawData);
     if ((inviteeModel.inviterSignature == null) || (inviteeModel.inviterSignature?.isEmpty == false)) return false;
+    // TODO:GG 防止频发的机制
     await chatOutCommon.sendPrivateGroupInvitee(target, schemaGroup, inviteeModel);
     return true;
   }
 
-  // TODO:GG 接受邀请?
-
-  Future<bool> toSyncPrivateGroupOptionSync(String? target, String? groupId, {bool toast = false}) async {
-    if (target == null || target.isEmpty) return false;
-    if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
-    if (privateGroup == null) return false;
-    if (!await checkDataComplete(groupId)) {
-      logger.w('$TAG - toSyncPrivateGroupOptionRequest - Data synchronization.');
-      if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
-      return false;
-    }
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
-    await chatOutCommon.sendPrivateGroupOptionSync(target, privateGroup, getInviteesId(members));
-    return true;
-  }
-
-  Future<bool> toSyncPrivateGroupMemberKey(String? target, String? groupId, {bool toast = false}) async {
-    if (target == null || target.isEmpty) return false;
-    if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
-    if (privateGroup == null) return false;
-    if (!await checkDataComplete(groupId)) {
-      logger.w('$TAG - toSyncPrivateGroupMemberKey - Data synchronization.');
-      if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
-      return false;
-    }
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
-    await chatOutCommon.sendPrivateGroupMemberKeyResponse(target, privateGroup, getInviteesId(members));
-    return true;
-  }
-
-  Future<bool> toSyncPrivateGroupMember(String? target, String? groupId, {bool toast = false}) async {
-    if (target == null || target.isEmpty) return false;
-    if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
-    if (privateGroup == null) return false;
-    if (!await checkDataComplete(groupId)) {
-      logger.w('$TAG - toSyncPrivateGroupMemberKey - Data synchronization.');
-      if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
-      return false;
-    }
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(groupId);
-    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
-    if (privateGroupItem == null) {
-      logger.e('$TAG - toSyncPrivateGroupMember - request is not in group.');
-      return false;
-    }
-    await chatOutCommon.sendPrivateGroupMemberSync(target, privateGroup, members);
-    return true;
-  }
-
-  ///****************************************** Group *******************************************
-
-  Future<PrivateGroupSchema?> createPrivateGroup(String? name, {bool toast = false}) async {
-    if (name == null || name.isEmpty) return null;
-    String? ownerPublicKey = clientCommon.getPublicKey();
-    if (ownerPublicKey == null || ownerPublicKey.isEmpty) return null;
-    String groupId = '$ownerPublicKey.${Uuid().v4()}';
-    // group
-    PrivateGroupSchema? schemaGroup = PrivateGroupSchema.create(groupId, name);
-    if (schemaGroup == null) return null;
-    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientCommon.client?.seed ?? Uint8List.fromList([]));
-    String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
-    if (signatureData == null || signatureData.isEmpty) {
-      logger.e('$TAG - createPrivateGroup - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
+  Future<PrivateGroupItemSchema?> acceptInvitation(PrivateGroupItemSchema? schema, Uint8List? privateKey, {bool toast = false}) async {
+    if (schema == null || schema.groupId.isEmpty || privateKey == null) return null;
+    // check
+    int? expiresAt = schema.expiresAt;
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    if ((expiresAt == null) || (expiresAt < nowAt)) {
+      logger.w('$TAG - acceptInvitation - expiresAt check fail - expiresAt:$expiresAt - nowAt:$nowAt');
+      if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
       return null;
     }
-    schemaGroup.setSignature(signatureData);
-    // item
-    PrivateGroupItemSchema? schemaItem = createInvitationModel(
-      groupId,
-      ownerPublicKey,
-      ownerPublicKey,
-      inviteAt: DateTime.now().millisecondsSinceEpoch,
-      expiresSec: EXPIRES_SECONDS,
-    );
-    if (schemaItem == null) return null;
-    schemaItem.inviterSignature = await genSignature(ownerPrivateKey, schemaItem.inviterRawData);
-    if ((schemaItem.inviterSignature == null) || (schemaItem.inviterSignature?.isEmpty == true)) {
-      logger.e('$TAG - createPrivateGroup - inviter sign create fail. - pk:$ownerPrivateKey - member:$schemaItem');
+    if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true)) {
+      logger.e('$TAG - acceptInvitation - inviter incomplete data - schema:$schema');
+      if (toast) Toast.show('inviter incomplete data.'); // TODO:GG PG 中文?
       return null;
     }
-    // accept self
-    schemaItem = await acceptInvitation(schemaItem, ownerPrivateKey, toast: toast);
-    schemaItem = (await addPrivateGroupItem(schemaItem)) ?? (await queryGroupItem(groupId, ownerPublicKey));
-    if (schemaItem == null) {
-      logger.e('$TAG - createPrivateGroup - member create fail. - member:$schemaItem');
+    bool verifiedInviter = await verifiedSign(schema.inviter, schema.inviterRawData, schema.inviterSignature);
+    if (!verifiedInviter) {
+      logger.e('$TAG - acceptInvitation - signature verification failed.');
+      if (toast) Toast.show('signature verification failed.'); // TODO:GG PG 中文?
       return null;
     }
-    // update
-    schemaGroup.count = 1;
-    schemaGroup.version = genPrivateGroupVersion(schemaGroup.signature, [schemaGroup.ownerPublicKey]);
-    schemaGroup = await addPrivateGroup(schemaGroup, notify: true);
-    return schemaGroup;
+    // set
+    schema.inviteeRawData = jsonEncode(schema.createRawDataMap());
+    schema.inviteeSignature = await genSignature(privateKey, schema.inviteeRawData);
+    if ((schema.inviteeSignature == null) || (schema.inviteeSignature?.isEmpty == true)) return null;
+    return schema;
+  }
+
+  // Map<String, dynamic>? data = received.content['data'];
+  Future<PrivateGroupSchema?> receiveAccept(String? groupId, Map<String, dynamic>? data, {bool toast = false}) async {
+    if (groupId == null || groupId.isEmpty) return null;
+    if (data == null || data.isEmpty) return null;
+    // add to private group
+    PrivateGroupItemSchema? newItem = PrivateGroupItemSchema.fromRawData(data);
+    if (newItem == null) {
+      logger.e('$TAG - receiveAccept - invitee nil.');
+      if (toast) Toast.show('invitee nil.'); // TODO:GG PG 中文?
+      return null;
+    }
+    PrivateGroupSchema? groupSchema = await addInvitee(newItem, notify: true, toast: false);
+    if (groupSchema == null) {
+      logger.e('$TAG - receiveAccept - Invitee accept fail.');
+      if (toast) Toast.show('group accept fail.'); // TODO:GG PG 中文?
+      return null;
+    }
+    // sync members
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+    if (members.length <= 0) {
+      logger.e('$TAG - receiveAccept - has no this group info');
+      if (toast) Toast.show('has no this group info.'); // TODO:GG PG 中文?
+      return null;
+    }
+    // TODO:GG PG 防止频发的机制
+    chatOutCommon.sendPrivateGroupOptionResponse(newItem.invitee, groupSchema, getInviteesId(members)); // await
+    for (int i = 0; i < members.length; i += 10) {
+      List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
+      // TODO:GG 防止频发的机制
+      chatOutCommon.sendPrivateGroupMemberResponse(newItem.invitee, groupSchema, memberSplits); // await
+    }
+    members.forEach((m) {
+      // TODO:GG 防止频发的机制
+      chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newItem]); // await
+    });
+    return groupSchema;
   }
 
   Future<PrivateGroupSchema?> addInvitee(PrivateGroupItemSchema? schema, {bool notify = false, bool toast = false}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
     // check
     int? expiresAt = schema.expiresAt;
-    int invitedAt = schema.invitedAt ?? DateTime.now().millisecondsSinceEpoch;
-    if ((expiresAt == null) || (expiresAt < invitedAt)) {
-      logger.w('$TAG - addInvitee - time check fail - expiresAt:$expiresAt - invitedAt:$invitedAt');
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    if ((expiresAt == null) || (expiresAt < nowAt)) {
+      logger.w('$TAG - addInvitee - time check fail - expiresAt:$expiresAt - nowAt:$nowAt');
       if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
       return null;
     }
@@ -219,7 +242,7 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // members
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(schema.groupId);
+    List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
     members.add(schema);
     schemaGroupItem = await addPrivateGroupItem(schema, notify: true, checkDuplicated: false);
     if (schemaGroupItem == null) {
@@ -233,11 +256,33 @@ class PrivateGroupCommon with Tag {
     return schemaGroup;
   }
 
-  Future<PrivateGroupSchema?> syncPrivateGroupInfo(String? groupId, String? version, String? membersIds, String? rawData, String? signature, {bool notify = false}) async {
+  ///****************************************** Sync *******************************************
+
+  Future<bool> pushPrivateGroupInfo(String? target, String? groupId, String? version, {bool toast = false}) async {
+    if (target == null || target.isEmpty) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
+    if (privateGroup == null) return false;
+    if (privateGroup.version == version) {
+      logger.d('$TAG - pushPrivateGroupInfo - version same - version:$version');
+      return false;
+    }
+    if (!await checkDataComplete(groupId)) {
+      logger.w('$TAG - pushPrivateGroupInfo - Data synchronization.');
+      if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
+      return false;
+    }
+    // TODO:GG 防止频发的机制
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
+    chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup, getInviteesId(members)); // await
+    return true;
+  }
+
+  Future<PrivateGroupSchema?> syncPrivateGroupInfo(String? groupId, String? rawData, String? version, String? membersIds, String? signature, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return null;
+    if (rawData == null || rawData.isEmpty) return null;
     if (version == null || version.isEmpty) return null;
     if (membersIds == null || membersIds.isEmpty) return null;
-    if (rawData == null || rawData.isEmpty) return null;
     if (signature == null || signature.isEmpty) return null;
     // verified
     String ownerPubKey = getOwnerPublicKey(groupId);
@@ -246,16 +291,16 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - syncPrivateGroupInfo - signature verification failed.');
       return null;
     }
-    Map members = Util.jsonFormat(membersIds) ?? Map();
     Map options = Util.jsonFormat(rawData) ?? Map();
+    Map members = Util.jsonFormat(membersIds) ?? Map();
     // check
     PrivateGroupSchema? exists = await queryGroup(groupId);
     if (exists == null) {
-      PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, options['groupName']);
+      PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, options['name']);
       if (_newGroup == null) return null;
+      _newGroup.type = int.tryParse(options['type'] ?? 0);
       _newGroup.version = version;
       _newGroup.count = members.length;
-      _newGroup.options = OptionsSchema(deleteAfterSeconds: options['deleteAfterSeconds']);
       _newGroup.setSignature(signature);
       exists = await addPrivateGroup(_newGroup, notify: true);
     } else {
@@ -268,7 +313,7 @@ class PrivateGroupCommon with Tag {
       }
       bool verifiedOwner = await verifiedSign(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), exists.signature);
       if (!verifiedOwner) {
-        exists.name = options['groupName'] ?? exists.name;
+        exists.name = options['name'] ?? exists.name;
         await updateGroupName(groupId, exists.name, notify: true);
         exists.setSignature(signature);
         await updateGroupData(groupId, exists.data, notify: true);
@@ -277,53 +322,29 @@ class PrivateGroupCommon with Tag {
     return exists;
   }
 
-  ///****************************************** Members *******************************************
-
-  PrivateGroupItemSchema? createInvitationModel(String? groupId, String? invitee, String? inviter, {int? inviteAt, int? expiresSec}) {
-    if (groupId == null || groupId.isEmpty) return null;
-    if (invitee == null || invitee.isEmpty) return null;
-    if (inviter == null || inviter.isEmpty) return null;
-    inviteAt = inviteAt ?? DateTime.now().millisecondsSinceEpoch;
-    int expiresAt = inviteAt + (expiresSec ?? EXPIRES_SECONDS) * 1000;
-    PrivateGroupItemSchema? schema = PrivateGroupItemSchema.create(groupId, expiresAt: expiresAt, invitee: invitee, inviter: inviter, inviteAt: inviteAt);
-    if (schema == null) return null;
-    schema.inviterRawData = jsonEncode(schema.createRawDataMap(false));
-    return schema;
-  }
-
-  PrivateGroupItemSchema? createInvitationModelFromRawData(String? inviterRawData, {String? inviterSignature}) {
-    if (inviterRawData == null || inviterRawData.isEmpty) return null;
-    Map<String, dynamic>? map = Util.jsonFormat(inviterRawData) ?? Map();
-    return PrivateGroupItemSchema.fromRawData(map, inviterRawData: inviterRawData, inviterSignature: inviterSignature);
-  }
-
-  Future<PrivateGroupItemSchema?> acceptInvitation(PrivateGroupItemSchema? schema, Uint8List? privateKey, {bool toast = false}) async {
-    if (schema == null || schema.groupId.isEmpty || privateKey == null) return null;
-    // check
-    int? expiresAt = schema.expiresAt;
-    int nowAt = DateTime.now().millisecondsSinceEpoch;
-    if ((expiresAt == null) || (expiresAt < nowAt)) {
-      logger.w('$TAG - acceptInvitation - expiresAt check fail - expiresAt:$expiresAt - nowAt:$nowAt');
-      if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
-      return null;
+  Future<bool> pushPrivateGroupMember(String? target, String? groupId, String? version, {bool toast = false}) async {
+    if (target == null || target.isEmpty) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
+    if (privateGroup == null) return false;
+    if (privateGroup.version == version) {
+      logger.d('$TAG - pushPrivateGroupMember - version same - version:$version');
+      return false;
     }
-    if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true)) {
-      logger.e('$TAG - acceptInvitation - inviter incomplete data - schema:$schema');
-      if (toast) Toast.show('inviter incomplete data.'); // TODO:GG PG 中文?
-      return null;
+    if (!await checkDataComplete(groupId)) {
+      logger.w('$TAG - pushPrivateGroupMember - Data synchronization.');
+      if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
+      return false;
     }
-    bool verifiedInviter = await verifiedSign(schema.inviter, schema.inviterRawData, schema.inviterSignature);
-    if (!verifiedInviter) {
-      logger.e('$TAG - acceptInvitation - signature verification failed.');
-      if (toast) Toast.show('signature verification failed.'); // TODO:GG PG 中文?
-      return null;
+    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
+    if (privateGroupItem == null) {
+      logger.e('$TAG - pushPrivateGroupMember - request is not in group.');
+      return false;
     }
-    // set
-    schema.invitedAt = nowAt;
-    schema.inviteeRawData = jsonEncode(schema.createRawDataMap(true));
-    schema.inviteeSignature = await genSignature(privateKey, schema.inviteeRawData);
-    if ((schema.inviteeSignature == null) || (schema.inviteeSignature?.isEmpty == true)) return null;
-    return schema;
+    // TODO:GG 防止频发的机制
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
+    chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, members); // await
+    return true;
   }
 
   Future<List<PrivateGroupItemSchema>?> syncPrivateGroupMember(String? syncGroupId, String? syncVersion, List<PrivateGroupItemSchema>? syncMembers, {bool toast = false}) async {
@@ -347,9 +368,9 @@ class PrivateGroupCommon with Tag {
         continue;
       }
       int? expiresAt = member.expiresAt;
-      int invitedAt = member.invitedAt ?? DateTime.now().millisecondsSinceEpoch;
-      if ((expiresAt == null) || (expiresAt < invitedAt)) {
-        logger.w('$TAG - syncPrivateGroupMember - time check fail - expiresAt:$expiresAt - invitedAt:$invitedAt');
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      if ((expiresAt == null) || (expiresAt < nowAt)) {
+        logger.w('$TAG - syncPrivateGroupMember - time check fail - expiresAt:$expiresAt - nowAt:$nowAt');
         if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
         continue;
       }
@@ -368,14 +389,17 @@ class PrivateGroupCommon with Tag {
       PrivateGroupItemSchema? exists = await queryGroupItem(syncGroupId, member.invitee);
       if (exists == null) {
         exists = await addPrivateGroupItem(member, notify: true, checkDuplicated: false);
+        // TODO:GG PG 是不是在这里插入数据，对方入群了?
       }
     }
+    // TODO:GG PG 下面这是什么原理？
     // members
-    List<PrivateGroupItemSchema> members = await getMembersByGroupId(syncGroupId);
+    List<PrivateGroupItemSchema> members = await getMembersAll(syncGroupId);
     // session
     var version = genPrivateGroupVersion(schemaGroup.signature, getInviteesId(members));
     if (version == syncVersion) {
       var session = await SessionStorage.instance.query(syncGroupId, SessionType.PRIVATE_GROUP);
+      // TODO:GG PG 还没想好
       if (session == null) await chatOutCommon.sendPrivateGroupSubscribe(syncGroupId);
     }
     return members;
@@ -411,22 +435,25 @@ class PrivateGroupCommon with Tag {
     return hexEncode(signData);
   }
 
-  String genPrivateGroupVersion(String optionSignature, List<String> memberPks) {
-    memberPks.sort((a, b) => a.compareTo(b));
-    return hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberPks.join(''))));
+  String genPrivateGroupVersion(String optionSignature, List<String> memberIds) {
+    memberIds.sort((a, b) => a.compareTo(b));
+    return hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberIds.join(''))));
   }
 
   List<Map<String, dynamic>> getMembersData(List<PrivateGroupItemSchema> list) {
+    list.removeWhere((element) => element.invitee?.isEmpty == true);
+    list.sort((a, b) => (a.invitee ?? "").compareTo(b.invitee ?? ""));
     List<Map<String, dynamic>> members = List.empty(growable: true);
-    list
-      ..sort((a, b) => (a.invitee ?? "").compareTo(b.invitee ?? ""))
-      ..forEach((e) => members.add(e.toMap()..remove('id')));
+    list.forEach((e) => members.add(e.toMap()
+      ..remove('id')
+      ..remove('data')));
     return members;
   }
 
   List<String> getInviteesId(List<PrivateGroupItemSchema> list) {
     List<String> ids = list.map((e) => e.invitee ?? "").toList();
     ids.removeWhere((element) => element.isEmpty);
+    ids.sort((a, b) => (a).compareTo(b));
     return ids;
   }
 
@@ -500,14 +527,14 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupItemStorage.instance.queryList(groupId, limit: limit, offset: offset);
   }
 
-  Future<List<PrivateGroupItemSchema>> getMembersByGroupId(String? groupId) async {
+  Future<List<PrivateGroupItemSchema>> getMembersAll(String? groupId) async {
     if (groupId == null || groupId.isEmpty) return [];
     List<PrivateGroupItemSchema> members = [];
     int limit = 20;
     for (int offset = 0; true; offset += limit) {
       List<PrivateGroupItemSchema> result = await queryMembers(groupId, offset: offset, limit: limit);
       members.addAll(result);
-      logger.d("$TAG - getMembersByGroupId - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
+      logger.d("$TAG - getMembersAll - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
       if (result.length < limit) break;
     }
     return members;

@@ -19,7 +19,6 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/util.dart';
 
 class ChatInCommon with Tag {
   // ignore: close_sinks
@@ -47,7 +46,7 @@ class ChatInCommon with Tag {
     }
 
     // topic msg published callback can be used receipt
-    if (message.isTopic && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
+    if ((message.isTopic || message.isPrivateGroup) && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
       if (message.contentType != MessageContentType.receipt) {
         if (message.from.isEmpty) message.from = clientCommon.address ?? message.to;
         if (message.to.isEmpty) message.to = clientCommon.address ?? message.from;
@@ -98,12 +97,11 @@ class ChatInCommon with Tag {
       }
     }
 
-    // TODO:GG PG check
-    // private group
+    // group
     PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
     if (privateGroup != null) {
-      // TODO:GG PG 没其他的过滤吗？
-      //logger.d('$TAG - _handleMessage - privateGroup: $privateGroup');
+      // TODO:GG PG check sender joined
+      // TODO:GG PG check sender permission
     }
 
     // status
@@ -165,27 +163,26 @@ class ChatInCommon with Tag {
       case MessageContentType.topicKickOut:
         await _receiveTopicKickOut(received);
         break;
-      // TODO:GG PG check
       case MessageContentType.privateGroupInvitation:
         insertOk = await _receivePrivateGroupInvitation(received);
         break;
-      case MessageContentType.privateGroupOptionSync:
-        await _receivePrivateGroupOptionSync(received);
-        break;
-      case MessageContentType.privateGroupMemberSync:
-        await _receivePrivateGroupMemberSync(received);
-        break;
       case MessageContentType.privateGroupAccept:
-        insertOk = await _receivePrivateGroupAccept(received);
+        await _receivePrivateGroupAccept(received);
         break;
-      case MessageContentType.privateGroupMemberRequest:
-        await _receivePrivateGroupMemberRequest(received);
+      case MessageContentType.privateGroupSubscribe:
+        insertOk = await _receivePrivateGroupSubscribe(received);
         break;
       case MessageContentType.privateGroupOptionRequest:
         await _receivePrivateGroupOptionRequest(received);
         break;
-      case MessageContentType.privateGroupMemberKeyRequest:
-        await _receivePrivateGroupMemberKeyRequest(received);
+      case MessageContentType.privateGroupOptionResponse:
+        await _receivePrivateGroupOptionResponse(received);
+        break;
+      case MessageContentType.privateGroupMemberRequest:
+        await _receivePrivateGroupMemberRequest(received);
+        break;
+      case MessageContentType.privateGroupMemberResponse:
+        await _receivePrivateGroupMemberResponse(received);
         break;
     }
 
@@ -198,6 +195,8 @@ class ChatInCommon with Tag {
     if (received.canReceipt) {
       if (received.isTopic) {
         // handle in send topic with self receipt
+      } else if (received.isPrivateGroup) {
+        // handle in send group with self receipt
       } else {
         chatOutCommon.sendReceipt(received); // await
       }
@@ -228,7 +227,7 @@ class ChatInCommon with Tag {
       await chatOutCommon.sendPing([received.from], false);
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      if (!received.isTopic) {
+      if (!(received.isTopic || received.isPrivateGroup)) {
         chatCommon.checkMsgStatus(received.targetId, false); // await
       }
     } else {
@@ -249,7 +248,7 @@ class ChatInCommon with Tag {
     } else if ((exists.status == MessageStatus.SendReceipt) || (exists.status == MessageStatus.Read)) {
       logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
-    } else if (exists.isTopic && !((received.from == received.to) && (received.from == clientCommon.address))) {
+    } else if ((exists.isTopic || exists.isPrivateGroup) && !((received.from == received.to) && (received.from == clientCommon.address))) {
       logger.d("$TAG - receiveReceipt - topic skip others - exists:$exists");
       return false;
     }
@@ -258,7 +257,6 @@ class ChatInCommon with Tag {
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(received.from);
     bool readSupport = DeviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
 
-    // TODO:GG PG check
     // status
     if (exists.isTopic || exists.isPrivateGroup || (received.receiveAt != null) || !readSupport) {
       await chatCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
@@ -276,7 +274,7 @@ class ChatInCommon with Tag {
     }
 
     // check msgStatus
-    if (!exists.isTopic && (received.from != received.to) && (received.from != clientCommon.address)) {
+    if (!(exists.isTopic || exists.isPrivateGroup) && (received.from != received.to) && (received.from != clientCommon.address)) {
       chatCommon.checkMsgStatus(exists.targetId, false); // await
     }
     return true;
@@ -711,30 +709,20 @@ class ChatInCommon with Tag {
       logger.d("$TAG - _receiveTopicSubscribe - duplicated - message:$exists");
       return false;
     }
-    // TODO:GG PG check
-    if (received.isPrivateGroup) {
-      MessageSchema? inserted = await MessageStorage.instance.insert(received);
-      if (inserted != null) {
-        _onSavedSink.add(inserted);
-      }
-      return true;
-    } else if (received.isTopic) {
-      // subscriber
-      SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
-      bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
-      topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
-        if (!historySubscribed && value != null) {
-          // DB
-          MessageSchema? inserted = await MessageStorage.instance.insert(received);
-          if (inserted != null) {
-            // display
-            _onSavedSink.add(inserted);
-          }
+    // subscriber
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
+    bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
+    topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
+      if (!historySubscribed && value != null) {
+        // DB
+        MessageSchema? inserted = await MessageStorage.instance.insert(received);
+        if (inserted != null) {
+          // display
+          _onSavedSink.add(inserted);
         }
-      });
-      return !historySubscribed;
-    }
-    return false;
+      }
+    });
+    return !historySubscribed;
   }
 
   // NO single
@@ -767,117 +755,112 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG PG check
+  // NO group (1 to 1)
   Future<bool> _receivePrivateGroupInvitation(MessageSchema received) async {
+    // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receivePrivateGroupInvitation - duplicated - message:$exists");
       return false;
     }
-
+    // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
+    // display
     _onSavedSink.add(inserted);
     return true;
   }
 
-  // TODO:GG PG check
-  Future<bool> _receivePrivateGroupOptionSync(MessageSchema received) {
-    String groupId = received.groupId;
-    String to = received.from;
-    var data = received.content['data'];
-    String membersRaw = data['members'];
-    String optionsRaw = data['options'];
-    String signature = received.content['signature'];
-    String version = received.content['version'];
-
-    return privateGroupCommon.syncPrivateGroupOptions(to, groupId, membersRaw, optionsRaw, signature, version);
-  }
-
-  // TODO:GG PG check
-  Future<bool> _receivePrivateGroupMemberSync(MessageSchema received) {
-    String groupId = received.groupId;
-    var data = received.content['data'];
-    String version = received.content['version'];
-
-    return privateGroupCommon.syncPrivateGroupMember(groupId, version, data);
-  }
-
-  // TODO:GG PG check
-  Future<bool> _receivePrivateGroupMemberRequest(MessageSchema received) {
-    String groupId = received.groupId;
-    String to = received.from;
-
-    return privateGroupCommon.responsePrivateGroupMemberRequest(to, groupId);
-  }
-
-  // TODO:GG PG check
-  Future<bool> _receivePrivateGroupOptionRequest(MessageSchema received) {
-    String groupId = received.groupId;
-    String to = received.from;
-
-    return privateGroupCommon.responsePrivateGroupOptionRequest(to, groupId);
-  }
-
-  // TODO:GG PG check
-  Future<bool> _receivePrivateGroupMemberKeyRequest(MessageSchema received) {
-    String groupId = received.groupId;
-    String to = received.from;
-
-    return privateGroupCommon.responsePrivateGroupMemberKeyRequest(to, groupId);
-  }
-
-  // TODO:GG PG check
+  // NO group (1 to 1)
   Future<bool> _receivePrivateGroupAccept(MessageSchema received) async {
-    // save message
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String groupId = data['groupId']?.toString() ?? "";
+    if (groupId.isEmpty) return false;
+    var group = await privateGroupCommon.receiveAccept(groupId, data, toast: false);
+    return group != null;
+  }
+
+  // TODO:GG PG ? 还在考虑中
+  // NO group (1 to 1)
+  Future<bool> _receivePrivateGroupSubscribe(MessageSchema received) async {
+    // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
-      logger.d("$TAG - _receivePrivateGroupAccept - duplicated - message:$exists");
+      logger.d("$TAG - _receivePrivateGroupSubscribe - duplicated - message:$exists");
       return false;
     }
+    // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
     if (inserted == null) return false;
+    // display
     _onSavedSink.add(inserted);
-
-    // add to private group
-    Map<String, dynamic> data = received.content['data'];
-    Map<String, dynamic>? inviteeData = Util.jsonFormat(data['inviteeData']);
-    var addModel = PrivateGroupItemSchema.fromRawData(inviteeData!, inviterSignature: data['inviterSignature'], inviterRawData: data['inviterData'], inviteeSignature: data['inviteeSignature'], inviteeRawData: data['inviteeData']);
-    bool added = await privateGroupCommon.addInvitee(addModel);
-    if (!added) {
-      // TODO:GG PG log?
-      return false;
-    }
-
-    // sync members
-    String groupId = received.groupId;
-    var privateGroup = await privateGroupCommon.queryByGroupId(groupId);
-    var privateGroupMembers = await privateGroupCommon.queryMembers(groupId);
-    if (privateGroup == null || privateGroupMembers == null) {
-      logger.d('has no this group info'); // TODO:GG PG log?
-      return false;
-    }
-
-    // lock
-    if (!privateGroupCommon.lockSyncData(groupId, received.from)) {
-      logger.d('synchronizing'); // TODO:GG PG log?
-      return false;
-    }
-
-    List<Future> futures = List.empty(growable: true);
-    futures.add(chatOutCommon.sendPrivateGroupOptionSync(received.from, privateGroup, privateGroupMembers.map((e) => e.invitee!).toList()));
-    for (int i = 0; i < privateGroupMembers.length; i += 10) {
-      var m = privateGroupMembers.skip(i).take(10).toList();
-      futures.add(chatOutCommon.sendPrivateGroupMemberSync(received.from, privateGroup, m));
-    }
-    await Future.wait(futures);
-
-    // unlock
-    privateGroupCommon.unLockSyncData(groupId, received.from);
-    privateGroupMembers.forEach((m) {
-      chatOutCommon.sendPrivateGroupMemberSync(m.invitee!, privateGroup, [m]);
-    });
     return true;
+  }
+
+  // NO group (1 to 1)
+  Future<bool> _receivePrivateGroupOptionRequest(MessageSchema received) async {
+    String target = received.from;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? groupId = data['groupId']?.toString();
+    String? version = data['version']?.toString();
+    return await privateGroupCommon.pushPrivateGroupInfo(target, groupId, version);
+  }
+
+  // NO group (1 to 1)
+  Future _receivePrivateGroupOptionResponse(MessageSchema received) async {
+    String target = received.from;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? groupId = data['groupId']?.toString();
+    String rawData = data['rawData'];
+    String version = data['version'];
+    String members = data['members'];
+    String signature = data['signature'];
+    privateGroupCommon.syncPrivateGroupInfo(groupId, rawData, version, members, signature, notify: true).then((group) {
+      // TODO:GG 防止频发的机制
+      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(target, groupId, null);
+    }); // await
+  }
+
+  // NO group (1 to 1)
+  Future<bool> _receivePrivateGroupMemberRequest(MessageSchema received) async {
+    String target = received.from;
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? groupId = data['groupId']?.toString();
+    String? version = data['version']?.toString();
+    return await privateGroupCommon.pushPrivateGroupMember(target, groupId, version);
+  }
+
+  // NO group (1 to 1)
+  Future _receivePrivateGroupMemberResponse(MessageSchema received) async {
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? groupId = data['groupId']?.toString();
+    String? version = data['version']?.toString();
+    if ((data['membersData'] == null) || !(data['membersData'] is List<Map<String, dynamic>>)) return false;
+    List<Map<String, dynamic>> membersData = data['membersData'];
+    List<PrivateGroupItemSchema> members = [];
+    if (data is List) {
+      for (int i = 0; i < data.length; i++) {
+        var member = membersData[i];
+        PrivateGroupItemSchema? item = PrivateGroupItemSchema.create(
+          member['group_id'],
+          permission: member['permission'],
+          expiresAt: member['expires_at'],
+          inviter: member['inviter'],
+          invitee: member['invitee'],
+          inviterRawData: member['inviter_raw_data'],
+          inviteeRawData: member['invitee_raw_data'],
+          inviterSignature: member['inviter_signature'],
+          inviteeSignature: member['invitee_signature'],
+        );
+        if (item != null) members.add(item);
+      }
+    }
+    privateGroupCommon.syncPrivateGroupMember(groupId, version, members, toast: false); // await
   }
 
   Future<int> _deletePieces(String msgId) async {
