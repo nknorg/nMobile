@@ -76,6 +76,7 @@ class Global {
   static int topicSubscribeCheckGapMs = 12 * 60 * 60 * 1000; // 12h
   static int contactsPingGapMs = 3 * 60 * 60 * 1000; // 3h
   static int txPoolDelayMs = 1 * 60 * 1000; // 1m
+  static int privateGroupInviteExpiresMs = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   static double topicSubscribeFeeDefault = 0.00010009; // fee
 

@@ -455,17 +455,17 @@ class ChatCommon with Tag {
     return MessageStorage.instance.unReadCount();
   }
 
-  Future<int> unReadCountByTargetId(String? targetId, String? topic) {
-    return MessageStorage.instance.unReadCountByTargetId(targetId, topic);
+  Future<int> unReadCountByTargetId(String? targetId, String? topic, String? groupId) {
+    return MessageStorage.instance.unReadCountByTargetId(targetId, topic, groupId);
   }
 
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, topic, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, topic, groupId, offset: offset, limit: limit);
   }
 
-  Future<bool> deleteByTargetId(String? targetId, String? topic) async {
-    await MessageStorage.instance.deleteByTargetIdContentType(targetId, topic, MessageContentType.piece);
-    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, topic, true, clearContent: true);
+  Future<bool> deleteByTargetId(String? targetId, String? topic, String? groupId) async {
+    await MessageStorage.instance.deleteByTargetIdContentType(targetId, topic, groupId, MessageContentType.piece);
+    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, topic, groupId, true, clearContent: true);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
@@ -529,14 +529,14 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future readMessagesBySelf(String? targetId, String? topic, String? clientAddress) async {
+  Future readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {
     if (targetId == null || targetId.isEmpty) return;
     // update messages
     int limit = 20;
 
     List<MessageSchema> unreadList = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, offset: offset, limit: limit);
+      List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, groupId, offset: offset, limit: limit);
       unreadList.addAll(result);
       if (result.length < limit) break;
     }
