@@ -182,7 +182,13 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     if (findIndex >= 0 && findIndex < _sessionList.length) {
       SessionSchema session = _sessionList[findIndex];
       MessageSchema oldLastMsg = MessageSchema.fromMap(session.lastMessageOptions!);
-      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(session.targetId, session.type == SessionType.TOPIC ? session.targetId : "", offset: 0, limit: 1);
+      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(
+        session.targetId,
+        session.type == SessionType.TOPIC ? session.targetId : "",
+        session.type == SessionType.PRIVATE_GROUP ? session.targetId : "",
+        offset: 0,
+        limit: 1,
+      );
       MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
       // update
       if (newLastMsg == null) {
