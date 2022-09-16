@@ -19,8 +19,6 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/private_group.dart';
-import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
@@ -29,9 +27,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
-  PrivateGroupStorage _privateGroupStorage = PrivateGroupStorage();
-  PrivateGroupItemStorage _privateGroupItemStorage = PrivateGroupItemStorage();
-
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
@@ -139,7 +134,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future sendReceipt(MessageSchema received) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (received.from.isEmpty || received.isTopic) return; // topic no receipt, just send message to myself
+    if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return; // topic/group no receipt, just send message to myself
     received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
     await _sendWithAddressSafe([received.from], data, notification: false);
@@ -190,8 +185,8 @@ class ChatOutCommon with Tag {
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.contactOptions,
       to: clientAddress,
+      contentType: MessageContentType.contactOptions,
       extra: {
         "deleteAfterSeconds": deleteSeconds,
         "burningUpdateAt": updateAt,
@@ -208,8 +203,8 @@ class ChatOutCommon with Tag {
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.contactOptions,
       to: clientAddress,
+      contentType: MessageContentType.contactOptions,
       extra: {
         "deviceToken": deviceToken,
       },
@@ -234,7 +229,6 @@ class ChatOutCommon with Tag {
     await _sendWithAddressSafe([clientAddress], data, notification: false);
   }
 
-  // TODO:GG PG check
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
@@ -244,52 +238,40 @@ class ChatOutCommon with Tag {
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
-
-    Map<String, dynamic> options = Map<String, dynamic>();
+    String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
-      if (target.version?.isNotEmpty == true) {
-        options['version'] = target.version;
-      }
+      privateGroupVersion = target.version;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) {
-      return null;
-    }
+    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
+      contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
       content: content,
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
         "profileVersion": (await contactCommon.getMe())?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "privateGroupVersion": privateGroupVersion,
       },
     );
-    // TODO:GG PG 加到fromSend里？
-    if (message.options != null) {
-      message.options!.addAll(options);
-    } else {
-      message.options = options;
-    }
-
     // data
     String data = MessageData.getText(message);
     return _send(message, data);
   }
 
-  // TODO:GG PG check
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     // content
@@ -304,26 +286,26 @@ class ChatOutCommon with Tag {
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
+      privateGroupVersion = target.version;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) {
-      return null;
-    }
+    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.ipfs,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
+      contentType: MessageContentType.ipfs,
       content: content,
       extra: data
         ..addAll({
@@ -331,6 +313,7 @@ class ChatOutCommon with Tag {
           "burningUpdateAt": burningUpdateAt,
           "profileVersion": (await contactCommon.getMe())?.profileVersion,
           "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+          "privateGroupVersion": privateGroupVersion,
         }),
     );
     // insert
@@ -356,7 +339,6 @@ class ChatOutCommon with Tag {
     return _send(message, data, insert: false);
   }
 
-  // TODO:GG PG check
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
@@ -366,18 +348,18 @@ class ChatOutCommon with Tag {
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
+      privateGroupVersion = target.version;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) {
-      return null;
-    }
+    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // contentType
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress);
     String contentType = DeviceInfoCommon.isMsgImageEnable(deviceInfo?.platform, deviceInfo?.appVersion) ? MessageContentType.image : MessageContentType.media;
@@ -385,18 +367,19 @@ class ChatOutCommon with Tag {
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: contentType,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
+      contentType: contentType,
       content: content,
       extra: {
-        "deleteAfterSeconds": deleteAfterSeconds,
-        "burningUpdateAt": burningUpdateAt,
         "fileType": MessageOptions.fileTypeImage,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
+        "deleteAfterSeconds": deleteAfterSeconds,
+        "burningUpdateAt": burningUpdateAt,
         "profileVersion": (await contactCommon.getMe())?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "privateGroupVersion": privateGroupVersion,
       },
     );
     // data
@@ -404,7 +387,6 @@ class ChatOutCommon with Tag {
     return _send(message, data);
   }
 
-  // TODO:GG PG check
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
@@ -414,35 +396,36 @@ class ChatOutCommon with Tag {
     String targetTopic = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
+      privateGroupVersion = target.version;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) {
-      return null;
-    }
+    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.audio,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
+      contentType: MessageContentType.audio,
       content: content,
       extra: {
+        "fileType": MessageOptions.fileTypeAudio,
+        "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
         "audioDurationS": durationS,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "fileType": MessageOptions.fileTypeAudio,
-        "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
         "profileVersion": (await contactCommon.getMe())?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "privateGroupVersion": privateGroupVersion,
       },
     );
     // data
@@ -477,167 +460,72 @@ class ChatOutCommon with Tag {
     return message;
   }
 
-  // TODO:GG PG check
-  Future sendPrivateGroupSubscribe(String groupId) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    MessageSchema send = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      contentType: MessageContentType.topicSubscribe,
-      groupId: groupId,
-    );
-    String data = MessageData.getPrivateGroupSubscribe(send);
-    await _send(send, data); // TODO:GG PG 需要用_send吗
-  }
-
-  // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupInvitee(String to, PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) async {
+  Future<MessageSchema?> sendPrivateGroupInvitee(String? target, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (privateGroup == null || groupItem == null) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
+      to: target,
       contentType: MessageContentType.privateGroupInvitation,
-      to: to,
-      groupId: privateGroup.groupId,
-      content: {
-        'groupName': privateGroup.name,
-        'version': privateGroup.version,
-        'data': {
-          'inviterData': item.inviterRawData,
-          'inviterSignature': item.inviterSignature,
-        }
-      },
     );
-    String data = MessageData.getPrivateGroupInvitation(privateGroup, item);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
-  }
-
-  // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupAccept(String to, PrivateGroupItemSchema item) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      contentType: MessageContentType.privateGroupAccept,
-      to: to,
-      groupId: item.groupId,
-      content: {
-        'groupId': item.groupId,
-        'data': {
-          'inviterData': item.inviterRawData,
-          'inviterSignature': item.inviterSignature,
-          'inviteeData': item.inviteeRawData,
-          'inviteeSignature': item.inviteeSignature,
-        }
-      },
-    );
-    String data = MessageData.getPrivateGroupAccept(item);
-    return _send(message, data); // TODO:GG PG 需要用_send吗
-  }
-
-  // TODO:GG PG check
-  Future<MessageSchema?> sendPrivateGroupOptionSync(String to, PrivateGroupSchema schema, List<String> list) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address!,
-      contentType: MessageContentType.privateGroupOptionSync,
-      to: to,
-      groupId: schema.groupId,
-      content: {
-        'groupId': schema.groupId,
-        'data': {
-          'version': schema.version,
-          'members': jsonEncode(list),
-          'options': jsonEncode(schema.options!.getData()),
-          'signature': schema.options?.signature,
-        }
-      },
-    );
-    String data = MessageData.getPrivateGroupOptionSync(schema, list);
+    String data = MessageData.getPrivateGroupInvitation(message, privateGroup, groupItem);
     return _send(message, data);
   }
 
-  // TODO:GG PG check
-  Future<Uint8List?> sendPrivateGroupMemberSync(String to, PrivateGroupSchema schema, List<PrivateGroupItemSchema> list) async {
+  Future sendPrivateGroupAccept(String? target, PrivateGroupItemSchema? groupItem) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-
-    var members = privateGroupCommon.getMembersData(list);
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address!,
-      contentType: MessageContentType.privateGroupMemberSync,
-      to: to,
-      groupId: schema.groupId,
-      content: {
-        'groupId': schema.groupId,
-        'version': schema.version,
-        'data': members,
-      },
-    );
-    String data = MessageData.getPrivateGroupMemberSync(schema, list);
-    return _sendWithAddressSafe([to], data);
+    if (target == null || target.isEmpty) return null;
+    if (groupItem == null) return null;
+    String data = MessageData.getPrivateGroupAccept(groupItem);
+    await _sendWithAddressSafe([target], data, notification: false);
   }
 
-  // TODO:GG PG check
-  Future<Uint8List?> sendPrivateGroupOptionRequest(String to, String groupId) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+  // TODO:GG PG 应该由owner发送比较好??? 还是说本地insert？
+  Future sendPrivateGroupSubscribe(String? groupId) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (groupId == null || groupId.isEmpty) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.privateGroupOptionRequest,
-      to: to,
       groupId: groupId,
+      contentType: MessageContentType.privateGroupSubscribe,
     );
-    String data = MessageData.getPrivateGroupOptionRequest(groupId);
-    return _sendWithAddressSafe([to], data, notification: false);
+    String data = MessageData.getPrivateGroupSubscribe(message);
+    await _send(message, data);
   }
 
-  // TODO:GG PG check
-  Future<Uint8List?> sendPrivateGroupMemberRequest(String to, String groupId, List<String> list) async {
+  Future sendPrivateGroupOptionRequest(String? target, String? groupId, String? groupVersion) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      contentType: MessageContentType.privateGroupMemberRequest,
-      to: to,
-      groupId: groupId,
-      content: {'data': list},
-    );
-    String data = MessageData.getPrivateGroupMemberRequest(groupId, list);
-    return _sendWithAddressSafe([to], data);
+    if (target == null || target.isEmpty) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    String data = MessageData.getPrivateGroupOptionRequest(groupId, groupVersion);
+    await _sendWithAddressSafe([target], data, notification: false);
   }
 
-  // TODO:GG PG check
-  Future<Uint8List?> sendPrivateGroupMemberKeyRequest(String to, String groupId) async {
+  Future sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group, List<String> members) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      contentType: MessageContentType.privateGroupMemberKeyRequest,
-      to: to,
-      groupId: groupId,
-    );
-    String data = MessageData.getPrivateGroupMemberKeyRequest(groupId);
-    return _sendWithAddressSafe([to], data);
+    if (target == null || target.isEmpty) return null;
+    if (group == null) return null;
+    String data = MessageData.getPrivateGroupOptionResponse(group, members);
+    await _sendWithAddressSafe([target], data, notification: false);
   }
 
-  // TODO:GG PG check
-  Future<Uint8List?> sendPrivateGroupMemberKeyResponse(String to, PrivateGroupSchema schema, List<String> list) async {
+  Future sendPrivateGroupMemberRequest(String? target, String? groupId, String? groupVersion) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      contentType: MessageContentType.privateGroupMemberKeyResponse,
-      to: to,
-      groupId: schema.groupId,
-      content: {
-        'version': schema.version,
-        'data': list,
-      },
-    );
-    String data = MessageData.getPrivateGroupMemberKeyResponse(schema, list);
-    return _sendWithAddressSafe([to], data);
+    if (target == null || target.isEmpty) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    String data = MessageData.getPrivateGroupMemberRequest(groupId, groupVersion);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  Future sendPrivateGroupMemberResponse(String? target, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (schema == null) return null;
+    String data = MessageData.getPrivateGroupMemberResponse(schema, members);
+    await _sendWithAddressSafe([target], data);
   }
 
   // NO DB NO single
@@ -647,8 +535,8 @@ class ChatOutCommon with Tag {
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.topicSubscribe,
       topic: topic,
+      contentType: MessageContentType.topicSubscribe,
     );
     String data = MessageData.getTopicSubscribe(send);
     await _send(send, data);
@@ -661,8 +549,8 @@ class ChatOutCommon with Tag {
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.topicUnsubscribe,
       topic: topic,
+      contentType: MessageContentType.topicUnsubscribe,
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicUnSubscribe(send);
@@ -676,8 +564,8 @@ class ChatOutCommon with Tag {
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.topicInvitation,
       to: clientAddress,
+      contentType: MessageContentType.topicInvitation,
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
@@ -691,8 +579,8 @@ class ChatOutCommon with Tag {
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
-      contentType: MessageContentType.topicKickOut,
       topic: topic,
+      contentType: MessageContentType.topicKickOut,
       content: targetAddress,
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
@@ -819,19 +707,9 @@ class ChatOutCommon with Tag {
       pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification ?? message.canNotification);
       logger.d("$TAG - _send - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.isPrivateGroup) {
-      // TODO:GG PG check
-      // TODO:GG PG 是不是可以优化？
-      if (message.to.isNotEmpty == true) {
-        pid = await _sendWithAddressSafe([message.to], msgData);
-      } else {
-        List<String> dests = List<String>.empty(growable: true);
-        // get private group dests
-        List<PrivateGroupItemSchema>? privateGroupList = await _privateGroupItemStorage.query(message.groupId);
-        if (privateGroupList != null) {
-          privateGroupList.forEach((e) => dests.add(e.invitee!));
-        }
-        pid = await _sendWithAddressSafe(dests, msgData);
-      }
+      PrivateGroupSchema? group = await chatCommon.privateGroupHandle(message);
+      pid = await _sendWithPrivateGroupSafe(group, message, msgData, notification: notification ?? message.canNotification);
+      logger.d("$TAG - _send - with_group - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
       pid = await _sendWithContactSafe(contact, message, msgData, notification: notification ?? message.canNotification);
@@ -896,6 +774,15 @@ class ChatOutCommon with Tag {
     }
   }
 
+  Future<Uint8List?> _sendWithPrivateGroupSafe(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
+    try {
+      return _sendWithPrivateGroup(group, message, msgData, notification: notification);
+    } catch (e, st) {
+      handleError(e, st);
+      return null;
+    }
+  }
+
   Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData, {bool notification = false}) async {
     if (clientAddressList.isEmpty || msgData == null) return null;
     logger.d("$TAG - _sendWithAddress - clientAddressList:$clientAddressList - msgData:$msgData - msgData:$msgData");
@@ -917,25 +804,12 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (message == null || msgData == null) return null;
     logger.d("$TAG - _sendWithContact - contact:$contact - message:$message - msgData:$msgData");
+    // send
     Uint8List? pid;
-    if (message.isContentFile) {
-      // deviceInfo
-      DeviceInfoSchema? _deviceInfo = await chatCommon.deviceInfoHandle(message);
-      logger.d("$TAG - _sendWithContact - file - to:${message.to} - deviceInfo:$_deviceInfo");
-      if (DeviceInfoCommon.isMsgPieceEnable(_deviceInfo?.platform, _deviceInfo?.appVersion)) {
-        pid = await _sendByPieces([message.to], message);
-        if ((pid == null) || pid.isEmpty) {
-          pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
-        }
-      } else {
-        MessageSchema copy = message.copy();
-        copy.contentType = MessageContentType.text;
-        copy.content = "The current version does not support viewing this message";
-        String msgData = MessageData.getText(copy);
-        pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
-      }
-    } else {
-      logger.d("$TAG - _sendWithContact - text - to:${message.to} - msgData:$msgData");
+    if (message.canTryPiece) {
+      pid = await _sendByPieces([message.to], message);
+    }
+    if ((pid == null) || pid.isEmpty) {
       pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
     }
     // push
@@ -946,6 +820,57 @@ class ChatOutCommon with Tag {
           message.options = MessageOptions.setPushNotifyId(message.options, uuid);
           MessageStorage.instance.updateOptions(message.msgId, message.options); // await
         }
+      }
+    }
+    return pid;
+  }
+
+  Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
+    if (group == null || message == null || msgData == null) return null;
+    // me
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, clientCommon.address);
+    if (_me == null) {
+      logger.w("$TAG - _sendWithPrivateGroup - member me is null - group:$group - message:$message");
+      return null;
+    }
+    // destList
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(message.groupId);
+    bool selfIsReceiver = false;
+    List<String> destList = [];
+    for (var i = 0; i < members.length; i++) {
+      String? clientAddress = members[i].invitee;
+      if (clientAddress == null || clientAddress.isEmpty) continue;
+      if (clientAddress == clientCommon.address) {
+        selfIsReceiver = true;
+      } else {
+        destList.add(clientAddress);
+      }
+    }
+    // send
+    Uint8List? pid;
+    if (destList.isNotEmpty) {
+      if (message.canTryPiece) {
+        pid = await _sendByPieces(destList, message);
+      }
+      if ((pid == null) || pid.isEmpty) {
+        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
+      }
+    }
+    // self
+    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
+      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
+      if (destList.isEmpty) pid = _pid;
+    }
+    // push
+    if (pid?.isNotEmpty == true) {
+      if (notification) {
+        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+          for (var i = 0; i < contactList.length; i++) {
+            ContactSchema _contact = contactList[i];
+            if (!_contact.isMe) _sendPush(_contact.deviceToken);
+          }
+        });
       }
     }
     return pid;
@@ -977,68 +902,38 @@ class ChatOutCommon with Tag {
     logger.d("$TAG - _sendWithTopic - topic:${topic.topic} - message:$message - msgData:$msgData");
     // destList
     bool selfIsReceiver = false;
-    List<String> subscribersAddressList = [];
+    List<String> destList = [];
     for (var i = 0; i < _subscribers.length; i++) {
       String clientAddress = _subscribers[i].clientAddress;
       if (clientAddress == clientCommon.address) {
         selfIsReceiver = true;
       } else {
-        subscribersAddressList.add(clientAddress);
+        destList.add(clientAddress);
       }
     }
-    // others
+    // send
     Uint8List? pid;
-    if (subscribersAddressList.isNotEmpty) {
-      if (message.isContentFile) {
-        // targets
-        List<DeviceInfoSchema> deviceInfoList = await deviceInfoCommon.queryListLatest(subscribersAddressList);
-        List<String> targetIdsByPiece = [];
-        List<String> targetIdsByTip = [];
-        for (var i = 0; i < _subscribers.length; i++) {
-          SubscriberSchema subscriber = _subscribers[i];
-          int findIndex = deviceInfoList.indexWhere((element) => element.contactAddress == subscriber.clientAddress);
-          DeviceInfoSchema? deviceInfo = findIndex >= 0 ? deviceInfoList[findIndex] : null;
-          if (DeviceInfoCommon.isMsgPieceEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-            targetIdsByPiece.add(subscriber.clientAddress);
-          } else {
-            targetIdsByTip.add(subscriber.clientAddress);
-          }
-        }
-        // send
-        if (targetIdsByPiece.isNotEmpty) {
-          pid = await _sendByPieces(targetIdsByPiece, message);
-          if ((pid == null) || pid.isEmpty) {
-            pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
-          }
-        }
-        if (targetIdsByTip.isNotEmpty) {
-          MessageSchema copy = message.copy();
-          copy.contentType = MessageContentType.text;
-          copy.content = "The current version does not support viewing this message";
-          String copyData = MessageData.getText(copy);
-          Uint8List? _pid = (await sendData(clientCommon.address, targetIdsByTip, copyData))?.messageId;
-          if (targetIdsByPiece.isEmpty) pid = _pid;
-        }
-      } else {
-        pid = (await sendData(clientCommon.address, subscribersAddressList, msgData))?.messageId;
+    if (destList.isNotEmpty) {
+      if (message.canTryPiece) {
+        pid = await _sendByPieces(destList, message);
+      }
+      if ((pid == null) || pid.isEmpty) {
+        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
       }
     }
     // self
     if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
       Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
-      if (subscribersAddressList.isEmpty) pid = _pid;
+      if (destList.isEmpty) pid = _pid;
     }
-
     // push
     if (pid?.isNotEmpty == true) {
       if (notification) {
-        contactCommon.queryListByClientAddress(subscribersAddressList).then((List<ContactSchema> contactList) async {
+        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) {
-              _sendPush(_contact.deviceToken);
-            }
+            if (!_contact.isMe) _sendPush(_contact.deviceToken);
           }
         });
       }
