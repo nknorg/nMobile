@@ -22,8 +22,6 @@ class PrivateGroupItemStorage with Tag {
         `expires_at` BIGINT,
         `inviter` VARCHAR(200),
         `invitee` VARCHAR(200),
-        `invite_at` BIGINT,
-        `invited_at` BIGINT,
         `inviter_raw_data` TEXT,
         `invitee_raw_data` TEXT,
         `inviter_signature` VARCHAR(200),
