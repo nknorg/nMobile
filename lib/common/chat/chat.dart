@@ -118,7 +118,7 @@ class ChatCommon with Tag {
     checkList = checkList.where((element) {
       int msgSendAt = MessageOptions.getOutAt(element.options) ?? 0;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      int filter = element.isContentFile ? (filterSec + 10) : filterSec;
+      int filter = element.canTryPiece ? (filterSec + 10) : filterSec;
       if (between < (filter * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;
@@ -150,17 +150,17 @@ class ChatCommon with Tag {
   }
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
-    String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
+    String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     // duplicated
     if (message.canDisplay) {
       if (exist == null) {
         logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
-        int type = message.isTopic ? ContactType.none : ContactType.stranger;
+        int type = (message.isTopic || message.isPrivateGroup) ? ContactType.none : ContactType.stranger;
         exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
       } else {
-        if ((exist.type == ContactType.none) && !message.isTopic) {
+        if ((exist.type == ContactType.none) && !((message.isTopic || message.isPrivateGroup))) {
           bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
           if (success) exist.type = ContactType.stranger;
         }
@@ -168,7 +168,7 @@ class ChatCommon with Tag {
     }
     if (exist == null) return null;
     // profile
-    if ((message.from != message.to) && !message.isTopic && !message.isOutbound) {
+    if ((message.from != message.to) && !message.isTopic && !message.isPrivateGroup && !message.isOutbound) {
       String? profileVersion = MessageOptions.getProfileVersion(message.options);
       if (profileVersion != null && profileVersion.isNotEmpty) {
         if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
@@ -177,7 +177,7 @@ class ChatCommon with Tag {
       }
     }
     // burning
-    if (!message.isTopic && message.canBurning) {
+    if (!(message.isTopic || message.isPrivateGroup) && message.canBurning) {
       int? existSeconds = exist.options?.deleteAfterSeconds;
       int? existUpdateAt = exist.options?.updateBurnAfterAt;
       int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
@@ -206,7 +206,7 @@ class ChatCommon with Tag {
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message) async {
     if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceResponse)) return null;
-    String? clientAddress = message.isOutbound ? (message.isTopic ? null : message.to) : message.from;
+    String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(clientAddress);
     // duplicated
@@ -282,20 +282,27 @@ class ChatCommon with Tag {
     return exists;
   }
 
-  // TODO:GG PG check
   Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
     if (!message.isPrivateGroup) return null;
-    if (!message.canDisplay && !message.isTopicAction) return null; // topic action need topic // TODO:GG PG isTopicAction?
-
-    PrivateGroupSchema? exists = await privateGroupCommon.queryByGroupId(message.groupId);
+    if (!message.canDisplay && !message.isGroupAction) return null; // topic action need topic
+    // duplicated
+    PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (exists == null) {
-      exists = await privateGroupCommon.addPrivateGroup(PrivateGroupSchema(groupId: message.groupId, name: message.groupId));
-      if (exists != null) {
-        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId);
+      PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
+      exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
+    }
+    // sync
+    if ((exists != null) && (exists.ownerPublicKey != clientCommon.address) && (message.from == exists.ownerPublicKey)) {
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      if (nowAt - exists.optionsRequestAt > PrivateGroupSchema.optionsRequestGapMs) {
+        String existsVersion = exists.version ?? "";
+        String? messageVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
+        if (existsVersion.isEmpty || (messageVersion.isNotEmpty && (messageVersion != existsVersion))) {
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, existsVersion); // await
+        }
+        exists.setOptionsRequestAt(nowAt);
+        await privateGroupCommon.updateGroupData(exists.groupId, exists.data);
       }
-    } else if (exists.version != message.options?['version']) {
-      // TODO:GG PG 频繁？updateAt?
-      chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId);
     }
     return exists;
   }
@@ -364,13 +371,10 @@ class ChatCommon with Tag {
     // duplicated
     if (message.targetId.isEmpty) return null;
 
-    // TODO:GG PG check
     // type
     int type = SessionType.CONTACT;
     if (message.isTopic) {
       type = SessionType.TOPIC;
-    } else if (message.contentType == MessageContentType.privateGroupInvitation) {
-      type = SessionType.CONTACT;
     } else if (message.isPrivateGroup) {
       type = SessionType.PRIVATE_GROUP;
     }
@@ -397,7 +401,7 @@ class ChatCommon with Tag {
   }
 
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
-    if (message.isTopic) return message;
+    if (message.isTopic || message.isPrivateGroup) return message;
     if (!message.canBurning || message.isDelete) return message;
     if ((message.deleteAt != null) && ((message.deleteAt ?? 0) > 0)) return message;
     if ((message.status == MessageStatus.Sending) || (message.status == MessageStatus.SendFail)) return message; // status_read maybe updating
@@ -417,7 +421,7 @@ class ChatCommon with Tag {
     message = burningHandle(message);
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
-      String senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : message.to);
+      String senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : (message.isPrivateGroup ? message.groupId : message.to));
       if (senderKey.isEmpty) return message;
       String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
       taskService.addTask1(taskKey, (String key) {
@@ -582,12 +586,12 @@ class ChatCommon with Tag {
         int topicWaitSec = singleWaitSec * 2; // 6m
         int topicMediaWaitSec = topicWaitSec * 2; // 12m
         int msgSendAt = message.sendAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (!message.isTopic && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (singleWaitSec * 1000))) {
+        if (!(message.isTopic || message.isPrivateGroup) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (singleWaitSec * 1000))) {
           logger.d("$TAG - checkSending - sendAt justNow by single - targetId:${message.targetId} - message:$message");
-        } else if (message.isTopic && !(message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicWaitSec * 1000))) {
-          logger.d("$TAG - checkSending - sendAt justNow by topic - targetId:${message.targetId} - message:$message");
-        } else if (message.isTopic && (message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicMediaWaitSec * 1000))) {
-          logger.d("$TAG - checkSending - sendAt justNow by topic media - targetId:${message.targetId} - message:$message");
+        } else if ((message.isTopic || message.isPrivateGroup) && !(message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicWaitSec * 1000))) {
+          logger.d("$TAG - checkSending - sendAt justNow by topic/group - targetId:${message.targetId} - message:$message");
+        } else if ((message.isTopic || message.isPrivateGroup) && (message.content is File) && ((DateTime.now().millisecondsSinceEpoch - msgSendAt) < (topicMediaWaitSec * 1000))) {
+          logger.d("$TAG - checkSending - sendAt justNow by topic/group media - targetId:${message.targetId} - message:$message");
         } else {
           isFail = true;
         }

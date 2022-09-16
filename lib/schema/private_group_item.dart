@@ -14,13 +14,11 @@ class PrivateGroupItemSchema {
   // TODO:GG 消除!
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG?
+  int? permission; // TODO:GG PG ?
   int? expiresAt;
 
-  String? inviter; // TODO:GG 需要检查是否有permission
+  String? inviter; // TODO:GG 需要检查是否有permission ?
   String? invitee;
-  int? inviteAt;
-  int? invitedAt;
   String? inviterRawData;
   String? inviteeRawData;
   String? inviterSignature;
@@ -35,8 +33,6 @@ class PrivateGroupItemSchema {
     this.expiresAt,
     this.inviter,
     this.invitee,
-    this.inviteAt,
-    this.invitedAt,
     this.inviterRawData,
     this.inviteeRawData,
     this.inviterSignature,
@@ -44,7 +40,7 @@ class PrivateGroupItemSchema {
     this.data,
   });
 
-  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, int? permission, String? inviter, String? invitee, int? inviteAt, int? invitedAt, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, int? permission, String? inviter, String? invitee, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
@@ -52,8 +48,6 @@ class PrivateGroupItemSchema {
       permission: permission,
       inviter: inviter,
       invitee: invitee,
-      inviteAt: inviteAt,
-      invitedAt: invitedAt,
       inviterRawData: inviterRawData,
       inviteeRawData: inviteeRawData,
       inviterSignature: inviterSignature,
@@ -61,15 +55,13 @@ class PrivateGroupItemSchema {
     );
   }
 
-  Map<String, dynamic> createRawDataMap(bool isInvitee) {
+  Map<String, dynamic> createRawDataMap() {
     Map<String, dynamic> map = {};
     map['groupId'] = groupId;
     map['permission'] = groupId;
     map['expiresAt'] = expiresAt;
     map['inviter'] = inviter;
     map['invitee'] = invitee;
-    map['inviteAt'] = inviteAt;
-    if (isInvitee) map['inviteAt'] = invitedAt;
     return map.sortByKey();
   }
 
@@ -81,8 +73,6 @@ class PrivateGroupItemSchema {
       expiresAt: data['expiresAt'],
       inviter: data['inviter'],
       invitee: data['invitee'],
-      inviteAt: data['inviteAt'],
-      invitedAt: data['invitedAt'],
       inviterRawData: data['inviterRawData'],
       inviteeRawData: data['inviteeRawData'],
       inviterSignature: data['inviterSignature'],
@@ -103,8 +93,6 @@ class PrivateGroupItemSchema {
       'expires_at': expiresAt,
       'inviter': inviter,
       'invitee': invitee,
-      'invite_at': inviteAt,
-      'invited_at': invitedAt,
       'inviter_raw_data': inviterRawData,
       'invitee_raw_data': inviteeRawData,
       'inviter_signature': inviterSignature,
@@ -122,8 +110,6 @@ class PrivateGroupItemSchema {
       expiresAt: e['expires_at'],
       inviter: e['inviter'],
       invitee: e['invitee'],
-      inviteAt: e['invite_at'],
-      invitedAt: e['invited_at'],
       inviterRawData: e['inviter_raw_data'],
       inviteeRawData: e['invitee_raw_data'],
       inviterSignature: e['inviter_signature'],
@@ -144,6 +130,6 @@ class PrivateGroupItemSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteAt: $inviteAt, invitedAt: $invitedAt, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
+    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
   }
 }

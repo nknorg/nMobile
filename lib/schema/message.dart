@@ -1401,42 +1401,34 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupInvitation(MessageSchema message, PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) {
+  static String getPrivateGroupInvitation(MessageSchema message) {
     Map data = _base(MessageContentType.privateGroupInvitation, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
-      'groupId': privateGroup.groupId,
-      'content': {
-        'name': privateGroup.name,
-        'version': privateGroup.version,
-        'item': {
-          'permission': item.permission,
-          'expiresAt': item.expiresAt,
-          'inviterRawData': item.inviterRawData,
-          'inviterSignature': item.inviterSignature,
-        },
-      }
+      'content': message.content,
     });
     return jsonEncode(data);
   }
 
   static String getPrivateGroupAccept(PrivateGroupItemSchema item) {
     Map data = _base(MessageContentType.privateGroupAccept);
+    item.toMap();
     data.addAll({
-      'groupId': item.groupId,
       'content': {
-        'item': {
-          'permission': item.permission,
-          'expiresAt': item.expiresAt,
-          'inviterRawData': item.inviterRawData,
-          'inviteeRawData': item.inviteeRawData,
-          'inviterSignature': item.inviterSignature,
-          'inviteeSignature': item.inviteeSignature,
-        },
+        'groupId': item.groupId,
+        'permission': item.permission,
+        'expiresAt': item.expiresAt,
+        'inviter': item.inviter,
+        'invitee': item.invitee,
+        'inviterRawData': item.inviterRawData,
+        'inviteeRawData': item.inviteeRawData,
+        'inviterSignature': item.inviterSignature,
+        'inviteeSignature': item.inviteeSignature,
       }
     });
     return jsonEncode(data);
   }
 
+  // TODO:GG PG 还没想好
   static String getPrivateGroupSubscribe(MessageSchema message) {
     Map data = _base(MessageContentType.privateGroupSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
@@ -1448,8 +1440,8 @@ class MessageData {
   static String getPrivateGroupOptionRequest(String groupId, String? privateGroupVersion) {
     Map data = _base(MessageContentType.privateGroupOptionRequest);
     data.addAll({
-      'groupId': groupId,
       'content': {
+        'groupId': groupId,
         'version': privateGroupVersion,
       }
     });
@@ -1459,12 +1451,12 @@ class MessageData {
   static String getPrivateGroupOptionResponse(PrivateGroupSchema privateGroup, List<String> members) {
     Map data = _base(MessageContentType.privateGroupOptionResponse);
     data.addAll({
-      'groupId': privateGroup.groupId,
       'content': {
+        'groupId': privateGroup.groupId,
         'rawData': jsonEncode(privateGroup.getRawDataMap()),
+        'version': privateGroup.version,
         'members': jsonEncode(members..sort((a, b) => a.compareTo(b))),
         'signature': privateGroup.signature,
-        'version': privateGroup.version,
       },
     });
     return jsonEncode(data);
@@ -1473,8 +1465,8 @@ class MessageData {
   static String getPrivateGroupMemberRequest(String groupId, String? privateGroupVersion) {
     Map data = _base(MessageContentType.privateGroupMemberRequest);
     data.addAll({
-      'groupId': groupId,
       'content': {
+        'groupId': groupId,
         'version': privateGroupVersion,
       },
     });
@@ -1484,8 +1476,8 @@ class MessageData {
   static String getPrivateGroupMemberResponse(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> members) {
     Map data = _base(MessageContentType.privateGroupMemberResponse);
     data.addAll({
-      'groupId': privateGroup.groupId,
       'content': {
+        'groupId': privateGroup.groupId,
         'version': privateGroup.version,
         'membersData': privateGroupCommon.getMembersData(members),
       },

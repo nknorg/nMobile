@@ -17,7 +17,7 @@ class PrivateGroupSchema {
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG?
+  int? type; // TODO:GG PG ?
   String? version;
   int? count;
 
@@ -29,7 +29,7 @@ class PrivateGroupSchema {
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
-  // TODO:GG PG?
+  // TODO:GG PG ?
   // bool joined = false;
   // int? joinAt;
   // int? leaveAt;
@@ -91,9 +91,8 @@ class PrivateGroupSchema {
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
-    data['groupName'] = name;
-    // TODO:GG PG 需要吗？burning同步延时怎么办?
-    // if (deleteAfterSeconds != null) data['deleteAfterSeconds'] = deleteAfterSeconds;
+    data['name'] = name;
+    data['type'] = type;
     return data.sortByKey();
   }
 

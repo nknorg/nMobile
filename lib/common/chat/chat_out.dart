@@ -460,74 +460,6 @@ class ChatOutCommon with Tag {
     return message;
   }
 
-  Future<MessageSchema?> sendPrivateGroupInvitee(String? target, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (privateGroup == null || groupItem == null) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      to: target,
-      contentType: MessageContentType.privateGroupInvitation,
-    );
-    String data = MessageData.getPrivateGroupInvitation(message, privateGroup, groupItem);
-    return _send(message, data);
-  }
-
-  Future sendPrivateGroupAccept(String? target, PrivateGroupItemSchema? groupItem) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (groupItem == null) return null;
-    String data = MessageData.getPrivateGroupAccept(groupItem);
-    await _sendWithAddressSafe([target], data, notification: false);
-  }
-
-  // TODO:GG PG 应该由owner发送比较好??? 还是说本地insert？
-  Future sendPrivateGroupSubscribe(String? groupId) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (groupId == null || groupId.isEmpty) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      groupId: groupId,
-      contentType: MessageContentType.privateGroupSubscribe,
-    );
-    String data = MessageData.getPrivateGroupSubscribe(message);
-    await _send(message, data);
-  }
-
-  Future sendPrivateGroupOptionRequest(String? target, String? groupId, String? groupVersion) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (groupId == null || groupId.isEmpty) return null;
-    String data = MessageData.getPrivateGroupOptionRequest(groupId, groupVersion);
-    await _sendWithAddressSafe([target], data, notification: false);
-  }
-
-  Future sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group, List<String> members) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (group == null) return null;
-    String data = MessageData.getPrivateGroupOptionResponse(group, members);
-    await _sendWithAddressSafe([target], data, notification: false);
-  }
-
-  Future sendPrivateGroupMemberRequest(String? target, String? groupId, String? groupVersion) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (groupId == null || groupId.isEmpty) return null;
-    String data = MessageData.getPrivateGroupMemberRequest(groupId, groupVersion);
-    await _sendWithAddressSafe([target], data, notification: false);
-  }
-
-  Future sendPrivateGroupMemberResponse(String? target, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    if (target == null || target.isEmpty) return null;
-    if (schema == null) return null;
-    String data = MessageData.getPrivateGroupMemberResponse(schema, members);
-    await _sendWithAddressSafe([target], data);
-  }
-
   // NO DB NO single
   Future sendTopicSubscribe(String? topic) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
@@ -586,6 +518,93 @@ class ChatOutCommon with Tag {
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicKickOut(send);
     await _sendWithTopicSafe(_schema, send, data, notification: false);
+  }
+
+  // NO group (1 to 1)
+  Future<MessageSchema?> sendPrivateGroupInvitee(String? target, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (privateGroup == null || groupItem == null) return null;
+    MessageSchema message = MessageSchema.fromSend(
+      msgId: Uuid().v4(),
+      from: clientCommon.address ?? "",
+      to: target,
+      contentType: MessageContentType.privateGroupInvitation,
+      content: {
+        'groupId': privateGroup.groupId,
+        'name': privateGroup.name,
+        'version': privateGroup.version,
+        'item': {
+          'groupId': privateGroup.groupId,
+          'permission': groupItem.permission,
+          'expiresAt': groupItem.expiresAt,
+          'inviterRawData': groupItem.inviterRawData,
+          'inviterSignature': groupItem.inviterSignature,
+        },
+      },
+    );
+    String data = MessageData.getPrivateGroupInvitation(message);
+    return _send(message, data);
+  }
+
+  // NO group (1 to 1)
+  Future sendPrivateGroupAccept(String? target, PrivateGroupItemSchema? groupItem) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (groupItem == null) return null;
+    String data = MessageData.getPrivateGroupAccept(groupItem);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  // TODO:GG PG 应该由owner发送比较好??? 还是说本地insert ?
+  // NO group (1 to 1)
+  Future sendPrivateGroupSubscribe(String? groupId) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (groupId == null || groupId.isEmpty) return null;
+    MessageSchema message = MessageSchema.fromSend(
+      msgId: Uuid().v4(),
+      from: clientCommon.address ?? "",
+      groupId: groupId,
+      contentType: MessageContentType.privateGroupSubscribe,
+    );
+    String data = MessageData.getPrivateGroupSubscribe(message);
+    await _send(message, data);
+  }
+
+  // NO group (1 to 1)
+  Future sendPrivateGroupOptionRequest(String? target, String? groupId, String? groupVersion) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    String data = MessageData.getPrivateGroupOptionRequest(groupId, groupVersion);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  // NO group (1 to 1)
+  Future sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group, List<String> members) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (group == null) return null;
+    String data = MessageData.getPrivateGroupOptionResponse(group, members);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  // NO group (1 to 1)
+  Future sendPrivateGroupMemberRequest(String? target, String? groupId, String? groupVersion) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    String data = MessageData.getPrivateGroupMemberRequest(groupId, groupVersion);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  // NO group (1 to 1)
+  Future sendPrivateGroupMemberResponse(String? target, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (schema == null) return null;
+    String data = MessageData.getPrivateGroupMemberResponse(schema, members);
+    await _sendWithAddressSafe([target], data);
   }
 
   Future<MessageSchema?> resend(MessageSchema? message) async {
@@ -655,7 +674,11 @@ class ChatOutCommon with Tag {
           break;
         case MessageContentType.topicInvitation:
           msgData = MessageData.getTopicInvitee(message);
-          logger.i("$TAG - resendMute - resend invitee - targetId:${message.targetId} - msgData:$msgData");
+          logger.i("$TAG - resendMute - resend topic invitee - targetId:${message.targetId} - msgData:$msgData");
+          break;
+        case MessageContentType.privateGroupInvitation:
+          msgData = MessageData.getPrivateGroupInvitation(message);
+          logger.i("$TAG - resendMute - resend group invitee - targetId:${message.targetId} - msgData:$msgData");
           break;
         default:
           logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
