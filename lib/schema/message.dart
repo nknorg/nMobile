@@ -61,14 +61,13 @@ class MessageContentType {
   static const String topicInvitation = 'event:channelInvitation'; // db + visible
   static const String topicKickOut = 'event:channelKickOut'; // .
 
-  static const String privateGroupInvitation = 'event:privateGroupInvitation';
-  static const String privateGroupAccept = 'event:privateGroupAccept';
-  static const String privateGroupOptionSync = 'event:privateGroupOptionSync';
-  static const String privateGroupMemberRequest = 'event:privateGroupMemberRequest';
-  static const String privateGroupMemberSync = 'event:privateGroupMemberSync';
-  static const String privateGroupOptionRequest = 'event:privateGroupOptionRequest';
-  static const String privateGroupMemberKeyRequest = 'event:privateGroupMemberKeyRequest';
-  static const String privateGroupMemberKeyResponse = 'event:privateGroupMemberKeyResponse';
+  static const String privateGroupInvitation = 'privateGroup:invitation';
+  static const String privateGroupAccept = 'privateGroup:accept';
+  static const String privateGroupSubscribe = 'privateGroup:subscribe';
+  static const String privateGroupOptionRequest = 'privateGroup:optionRequest';
+  static const String privateGroupOptionSync = 'privateGroup:optionSync';
+  static const String privateGroupMemberRequest = 'privateGroup:memberRequest';
+  static const String privateGroupMemberSync = 'privateGroup:memberSync';
 }
 
 class MessageSchema {
@@ -93,7 +92,7 @@ class MessageSchema {
   String from; // (required) <-> sender / -> target_id(session_id)
   String to; // <-> receiver / -> target_id(session_id)
   String topic; // <-> topic / -> target_id(session_id)
-  String groupId; // TODO:GG PG ???
+  String groupId; // <-> group_id / -> target_id(session_id)
 
   int status; // <-> status
   bool isOutbound; // <-> is_outbound
@@ -129,9 +128,6 @@ class MessageSchema {
   });
 
   String get targetId {
-    if (contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept) {
-      return isOutbound ? to : from;
-    }
     return isTopic
         ? topic
         : isPrivateGroup
@@ -176,7 +172,7 @@ class MessageSchema {
 
   // ++ session
   bool get canDisplay {
-    bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
+    bool isEvent = contentType == MessageContentType.contactOptions || contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.privateGroupSubscribe; // || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicKickOut
     return canNotification || isEvent;
   }
 
@@ -184,7 +180,11 @@ class MessageSchema {
     return contentType == MessageContentType.topicSubscribe || contentType == MessageContentType.topicUnsubscribe || contentType == MessageContentType.topicInvitation || contentType == MessageContentType.topicKickOut;
   }
 
-  bool get isContentFile {
+  bool get isGroupAction {
+    return contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept || contentType == MessageContentType.privateGroupSubscribe;
+  }
+
+  bool get canTryPiece {
     bool isImage = contentType == MessageContentType.media || contentType == MessageContentType.image;
     bool isAudio = contentType == MessageContentType.audio;
     return isImage || isAudio;
@@ -277,19 +277,11 @@ class MessageSchema {
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
+      case MessageContentType.privateGroupSubscribe:
       case MessageContentType.privateGroupOptionSync:
       case MessageContentType.privateGroupMemberRequest:
       case MessageContentType.privateGroupMemberSync:
       case MessageContentType.privateGroupOptionRequest:
-      case MessageContentType.privateGroupMemberKeyRequest:
-      case MessageContentType.privateGroupMemberKeyResponse:
-        schema.content = Map<String, dynamic>();
-        if (data['groupId'] != null) schema.content['groupId'] = data['groupId'];
-        if (data['groupName'] != null) schema.content['groupName'] = data['groupName'];
-        if (data['version'] != null) schema.content['version'] = data['version'];
-        schema.content['data'] = data['data'];
-        if (data['signature'] != null) schema.content['signature'] = data['signature'];
-        break;
       default:
         schema.content = data['content'];
         break;
@@ -358,6 +350,10 @@ class MessageSchema {
     String? deviceProfile = extra?["deviceProfile"];
     if (deviceProfile != null && deviceProfile.isNotEmpty) {
       this.options = MessageOptions.setDeviceProfile(this.options, deviceProfile);
+    }
+    String? privateGroupVersion = extra?["privateGroupVersion"];
+    if (privateGroupVersion != null && privateGroupVersion.isNotEmpty) {
+      this.options = MessageOptions.setPrivateGroupVersion(this.options, privateGroupVersion);
     }
     // burn
     int? deleteAfterSeconds = extra?["deleteAfterSeconds"];
@@ -488,12 +484,11 @@ class MessageSchema {
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
+      case MessageContentType.privateGroupSubscribe:
+      case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionSync:
       case MessageContentType.privateGroupMemberRequest:
       case MessageContentType.privateGroupMemberSync:
-      case MessageContentType.privateGroupOptionRequest:
-      case MessageContentType.privateGroupMemberKeyRequest:
-      case MessageContentType.privateGroupMemberKeyResponse:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       default:
@@ -557,12 +552,11 @@ class MessageSchema {
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
+      case MessageContentType.privateGroupSubscribe:
+      case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionSync:
       case MessageContentType.privateGroupMemberRequest:
       case MessageContentType.privateGroupMemberSync:
-      case MessageContentType.privateGroupOptionRequest:
-      case MessageContentType.privateGroupMemberKeyRequest:
-      case MessageContentType.privateGroupMemberKeyResponse:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = Util.jsonFormat(e['content']);
         } else {
@@ -712,6 +706,7 @@ class MessageOptions {
   static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_PROFILE_VERSION = "profileVersion";
   static const KEY_DEVICE_PROFILE = "deviceProfile";
+  static const KEY_PRIVATE_GROUP_VERSION = "privateGroupVersion";
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
@@ -764,8 +759,6 @@ class MessageOptions {
   static const KEY_PIECE_PARITY = "piece_parity"; // TODO:GG rename to 'pieceParity'
   static const KEY_PIECE_TOTAL = "piece_total"; // TODO:GG rename to 'pieceTotal'
   static const KEY_PIECE_INDEX = "piece_index"; // TODO:GG rename to 'pieceIndex'
-
-  static const KEY_VERSION = "version"; // TODO:GG PG 直接version???
 
   static Map<String, dynamic>? setOutAt(Map<String, dynamic>? options, int sendAt) {
     if (options == null) options = Map<String, dynamic>();
@@ -831,6 +824,17 @@ class MessageOptions {
   static String? getDeviceProfile(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_DEVICE_PROFILE]?.toString();
+  }
+
+  static Map<String, dynamic>? setPrivateGroupVersion(Map<String, dynamic>? options, String peivateGroupVersion) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_PRIVATE_GROUP_VERSION] = peivateGroupVersion;
+    return options;
+  }
+
+  static String? getPrivateGroupVersion(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_PRIVATE_GROUP_VERSION]?.toString();
   }
 
   static Map<String, dynamic>? setContactBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
@@ -1365,14 +1369,6 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupSubscribe(MessageSchema message) {
-    Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
-    data.addAll({
-      'groupId': message.groupId,
-    });
-    return jsonEncode(data);
-  }
-
   static String getTopicSubscribe(MessageSchema message) {
     Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
@@ -1406,108 +1402,95 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupInvitation(PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupInvitation,
+  static String getPrivateGroupInvitation(MessageSchema message, PrivateGroupSchema privateGroup, PrivateGroupItemSchema item) {
+    Map data = _base(MessageContentType.privateGroupInvitation, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
       'groupId': privateGroup.groupId,
-      'groupName': privateGroup.name,
-      'version': privateGroup.version,
-      'data': {
-        'inviterData': item.inviterRawData,
-        'inviterSignature': item.inviterSignature,
+      'content': {
+        'name': privateGroup.name,
+        'version': privateGroup.version,
+        'item': {
+          'permission': item.permission,
+          'expiresAt': item.expiresAt,
+          'inviterRawData': item.inviterRawData,
+          'inviterSignature': item.inviterSignature,
+        },
       }
-    };
+    });
     return jsonEncode(data);
   }
 
   static String getPrivateGroupAccept(PrivateGroupItemSchema item) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupAccept,
+    Map data = _base(MessageContentType.privateGroupAccept);
+    data.addAll({
       'groupId': item.groupId,
-      'data': {
-        'inviterData': item.inviterRawData,
-        'inviterSignature': item.inviterSignature,
-        'inviteeData': item.inviteeRawData,
-        'inviteeSignature': item.inviteeSignature,
+      'content': {
+        'item': {
+          'permission': item.permission,
+          'expiresAt': item.expiresAt,
+          'inviterRawData': item.inviterRawData,
+          'inviteeRawData': item.inviteeRawData,
+          'inviterSignature': item.inviterSignature,
+          'inviteeSignature': item.inviteeSignature,
+        },
       }
-    };
+    });
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupOptionSync(PrivateGroupSchema privateGroup, List<String> list) {
-    list.sort((a, b) => a.compareTo(b));
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupOptionSync,
+  static String getPrivateGroupSubscribe(MessageSchema message) {
+    Map data = _base(MessageContentType.privateGroupSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
+    data.addAll({
+      'groupId': message.groupId,
+    });
+    return jsonEncode(data);
+  }
+
+  static String getPrivateGroupOptionRequest(String groupId, String? privateGroupVersion) {
+    Map data = _base(MessageContentType.privateGroupOptionRequest);
+    data.addAll({
+      'groupId': groupId,
+      'content': {
+        'version': privateGroupVersion,
+      }
+    });
+    return jsonEncode(data);
+  }
+
+  static String getPrivateGroupOptionSync(PrivateGroupSchema privateGroup, List<String> members) {
+    Map data = _base(MessageContentType.privateGroupOptionSync);
+    data.addAll({
       'groupId': privateGroup.groupId,
-      'version': privateGroup.version,
-      'data': {
-        'members': jsonEncode(list),
-        'options': jsonEncode(privateGroup.options!.getData()),
+      'content': {
+        'rawData': jsonEncode(privateGroup.getRawDataMap()),
+        'members': jsonEncode(members..sort((a, b) => a.compareTo(b))),
+        'signature': privateGroup.signature,
+        'version': privateGroup.version,
       },
-      'signature': privateGroup.options!.signature,
-    };
+    });
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupMemberRequest(String groupId, List<String> list) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupMemberRequest,
+  static String getPrivateGroupMemberRequest(String groupId, List<String> members) {
+    Map data = _base(MessageContentType.privateGroupMemberRequest);
+    data.addAll({
       'groupId': groupId,
-      'data': list,
-    };
+      'content': {
+        'members': members..sort((a, b) => a.compareTo(b)),
+      },
+    });
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupMemberSync(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> list) {
-    var members = privateGroupCommon.getMembersData(list);
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupMemberSync,
+  static String getPrivateGroupMemberSync(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> members) {
+    Map data = _base(MessageContentType.privateGroupMemberSync);
+    data.addAll({
       'groupId': privateGroup.groupId,
-      'version': privateGroup.version,
-      'data': members,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getPrivateGroupOptionRequest(String groupId) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupOptionRequest,
-      'groupId': groupId,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getPrivateGroupMemberKeyRequest(String groupId) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupMemberKeyRequest,
-      'groupId': groupId,
-    };
-    return jsonEncode(data);
-  }
-
-  static String getPrivateGroupMemberKeyResponse(PrivateGroupSchema privateGroup, List<String> list) {
-    Map data = {
-      'id': Uuid().v4(),
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'contentType': MessageContentType.privateGroupMemberKeyResponse,
-      'groupId': privateGroup.groupId,
-      'version': privateGroup.version,
-      'data': list,
-    };
+      'content': {
+        'version': privateGroup.version,
+        'membersData': privateGroupCommon.getMembersData(members),
+      },
+    });
     return jsonEncode(data);
   }
 }
