@@ -11,11 +11,13 @@ class PrivateGroupType {
 }
 
 class PrivateGroupSchema {
-// TODO:GG 消除 !
+  static const optionsRequestGapMs = 2 * 60 * 1000; // 2m
+
+  // TODO:GG 消除!
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG ?
+  int? type; // TODO:GG PG?
   String? version;
   int? count;
 
@@ -27,7 +29,7 @@ class PrivateGroupSchema {
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
-  // TODO:GG PG ?
+  // TODO:GG PG?
   // bool joined = false;
   // int? joinAt;
   // int? leaveAt;
@@ -77,11 +79,20 @@ class PrivateGroupSchema {
     data?['signature'] = signature;
   }
 
+  int get optionsRequestAt {
+    return int.tryParse(data?['optionsRequestAt'] ?? "0") ?? 0;
+  }
+
+  void setOptionsRequestAt(int? timeAt) {
+    if (data == null) data = Map();
+    data?['optionsRequestAt'] = timeAt;
+  }
+
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['groupName'] = name;
-    // TODO:GG PG 需要吗？burning同步延时怎么办 ?
+    // TODO:GG PG 需要吗？burning同步延时怎么办?
     // if (deleteAfterSeconds != null) data['deleteAfterSeconds'] = deleteAfterSeconds;
     return data.sortByKey();
   }
