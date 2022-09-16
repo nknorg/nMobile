@@ -44,12 +44,9 @@ class SessionSchema {
     return type == SessionType.PRIVATE_GROUP;
   }
 
-  // TODO:GG PG check
   static int getTypeByMessage(MessageSchema? msg) {
     if (msg?.isTopic == true) {
       return SessionType.TOPIC;
-    } else if (msg?.contentType == MessageContentType.privateGroupInvitation) {
-      return SessionType.CONTACT;
     } else if (msg?.isPrivateGroup == true) {
       return SessionType.PRIVATE_GROUP;
     } else {

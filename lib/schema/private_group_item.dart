@@ -11,13 +11,13 @@ class PrivateGroupItemPerm {
 }
 
 class PrivateGroupItemSchema {
-  // TODO:GG 消除 !
+  // TODO:GG 消除!
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ?
+  int? permission; // TODO:GG PG?
   int? expiresAt;
 
-  String? inviter;
+  String? inviter; // TODO:GG 需要检查是否有permission
   String? invitee;
   int? inviteAt;
   int? invitedAt;
@@ -73,8 +73,8 @@ class PrivateGroupItemSchema {
     return map.sortByKey();
   }
 
-  static PrivateGroupItemSchema? fromRawData(Map<String, dynamic> data, {String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
-    if (data.isEmpty || (data['groupId'] == null) || (data['groupId']?.toString().isEmpty == true)) return null;
+  static PrivateGroupItemSchema? fromRawData(Map<String, dynamic>? data, {String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+    if (data == null || data.isEmpty || (data['groupId'] == null) || (data['groupId']?.toString().isEmpty == true)) return null;
     var schema = PrivateGroupItemSchema(
       groupId: data['groupId'],
       permission: data['permission'],
