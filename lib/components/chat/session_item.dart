@@ -43,11 +43,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   PrivateGroupSchema? _privateGroup;
   ContactSchema? _contact;
   MessageSchema? _lastMsg;
-  ContactSchema? _topicSender;
+  ContactSchema? _groupSender;
 
   bool loaded = false;
 
-  // TODO:GG PG check
   @override
   void onRefreshArguments() {
     loaded = false;
@@ -67,7 +66,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     } else if (widget.session.isPrivateGroup) {
       privateGroupCommon.checkDataComplete(widget.session.targetId).then((g) {
         if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
-          privateGroupCommon.queryByGroupId(widget.session.targetId).then((value) {
+          privateGroupCommon.queryGroup(widget.session.targetId).then((value) {
             setState(() {
               loaded = true;
               _privateGroup = value;
@@ -96,11 +95,11 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     // lastMsg + topicSender
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
     if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId) {
-      if ((widget.session.isTopic || widget.session.isPrivateGroup) && (_topicSender?.clientAddress == null || _topicSender?.clientAddress != lastMsg?.from)) {
+      if ((widget.session.isTopic || widget.session.isPrivateGroup) && (_groupSender?.clientAddress == null || _groupSender?.clientAddress != lastMsg?.from)) {
         lastMsg?.getSender(emptyAdd: true).then((ContactSchema? value) {
           setState(() {
             _lastMsg = lastMsg;
-            _topicSender = value;
+            _groupSender = value;
           });
         });
       } else {
@@ -115,7 +114,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
   }
 
-  // TODO:GG PG check
   @override
   void initState() {
     super.initState();
@@ -126,7 +124,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       });
     });
     // private group
-    _updatePrivateGroupSubscription = privateGroupCommon.updateStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
       setState(() {
         _privateGroup = event;
       });
@@ -154,13 +152,12 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   @override
   Widget build(BuildContext context) {
-    if (_topic == null && _contact == null && _privateGroup == null && loaded) {
+    if ((_contact == null) && (_topic == null) && (_privateGroup == null) && loaded) {
       sessionCommon.delete(widget.session.targetId, widget.session.type);
       return SizedBox.shrink();
     }
     SessionSchema session = widget.session;
 
-    // TODO:GG PG check
     return Material(
       color: Colors.transparent,
       elevation: 0,
@@ -210,7 +207,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                         ),
                         onTapWave: false,
                       )
-                    // TODO:GG PG check
                     : _privateGroup != null
                         ? PrivateGroupItem(
                             privateGroup: _privateGroup!,
@@ -313,9 +309,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     }
 
-    String topicSenderName = _topicSender?.displayName ?? " ";
-    // TODO:GG PG check
-    String prefix = (session.isTopic || session.isPrivateGroup) ? ((_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : "$topicSenderName: ") : "";
+    String groupSenderName = _groupSender?.displayName ?? " ";
+    String prefix = (session.isTopic || session.isPrivateGroup) ? ((_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : "$groupSenderName: ") : "";
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
@@ -350,7 +345,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (_lastMsg?.isTopic == true ? topicSenderName : (_contact?.displayName ?? " "));
+      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (_lastMsg?.isTopic == true ? groupSenderName : (_contact?.displayName ?? " "));
 
       if (isBurn) {
         String burnDecs = ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading, ctx: context) : Global.locale((s) => s.close_burn_after_reading, ctx: context)} ';
@@ -411,22 +406,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           ],
         ),
       );
-    } else if (msgType == MessageContentType.topicSubscribe) {
+    } else if ((msgType == MessageContentType.topicSubscribe) || (msgType == MessageContentType.privateGroupSubscribe)) {
       contentWidget = Label(
         prefix + Global.locale((s) => s.joined_channel, ctx: context),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
-    } else if (msgType == MessageContentType.topicInvitation) {
-      contentWidget = Label(
-        prefix + Global.locale((s) => s.channel_invitation, ctx: context),
-        type: LabelType.bodyRegular,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-    } else if (msgType == MessageContentType.privateGroupInvitation) {
-      // TODO:GG PG check
+    } else if ((msgType == MessageContentType.topicInvitation) || (msgType == MessageContentType.privateGroupInvitation)) {
       contentWidget = Label(
         prefix + Global.locale((s) => s.channel_invitation, ctx: context),
         type: LabelType.bodyRegular,

@@ -36,7 +36,13 @@ class SessionCommon with Tag {
     }
     // lastMessage
     if (lastMsg == null) {
-      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(schema.targetId, schema.type == SessionType.TOPIC ? schema.targetId : "", offset: 0, limit: 1);
+      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(
+        schema.targetId,
+        schema.type == SessionType.TOPIC ? schema.targetId : "",
+        schema.type == SessionType.PRIVATE_GROUP ? schema.targetId : "",
+        offset: 0,
+        limit: 1,
+      );
       lastMsg = history.isNotEmpty ? history[0] : null;
     }
     if (schema.lastMessageAt == null || schema.lastMessageOptions == null) {
@@ -48,7 +54,11 @@ class SessionCommon with Tag {
       if (lastMsg != null) {
         schema.unReadCount = (lastMsg.isOutbound || !lastMsg.canNotification) ? 0 : 1;
       } else {
-        schema.unReadCount = await chatCommon.unReadCountByTargetId(schema.targetId, schema.type == SessionType.TOPIC ? schema.targetId : "");
+        schema.unReadCount = await chatCommon.unReadCountByTargetId(
+          schema.targetId,
+          schema.type == SessionType.TOPIC ? schema.targetId : "",
+          schema.type == SessionType.PRIVATE_GROUP ? schema.targetId : "",
+        );
       }
     }
     // insert
@@ -61,7 +71,11 @@ class SessionCommon with Tag {
     if (targetId == null || targetId.isEmpty || type == null) return false;
     bool success = await SessionStorage.instance.delete(targetId, type);
     if (success && notify) _deleteSink.add([targetId, type]);
-    chatCommon.deleteByTargetId(targetId, type == SessionType.TOPIC ? targetId : ""); // await
+    chatCommon.deleteByTargetId(
+      targetId,
+      type == SessionType.TOPIC ? targetId : "",
+      type == SessionType.PRIVATE_GROUP ? targetId : "",
+    ); // await
     return success;
   }
 
@@ -79,7 +93,12 @@ class SessionCommon with Tag {
     SessionSchema session = SessionSchema(targetId: targetId, type: SessionSchema.getTypeByMessage(lastMessage));
     session.lastMessageAt = sendAt ?? lastMessage?.sendAt ?? MessageOptions.getInAt(lastMessage?.options);
     session.lastMessageOptions = lastMessage?.toMap();
-    session.unReadCount = unread ?? await chatCommon.unReadCountByTargetId(targetId, type == SessionType.TOPIC ? session.targetId : "");
+    session.unReadCount = unread ??
+        await chatCommon.unReadCountByTargetId(
+          targetId,
+          type == SessionType.TOPIC ? session.targetId : "",
+          session.type == SessionType.PRIVATE_GROUP ? session.targetId : "",
+        );
     bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId, type);
     return success;

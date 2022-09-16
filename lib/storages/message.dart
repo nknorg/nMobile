@@ -20,7 +20,6 @@ class MessageStorage with Tag {
 
   ParallelQueue _queue = ParallelQueue("storage_message", onLog: (log, error) => error ? logger.w(log) : null);
 
-  // TODO:GG PG check
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -29,8 +28,8 @@ class MessageStorage with Tag {
         `sender` VARCHAR(200),
         `receiver` VARCHAR(200),
         `topic` VARCHAR(200),
-        `target_id` VARCHAR(200),
         `group_id` VARCHAR(200),
+        `target_id` VARCHAR(200),
         `status` INT,
         `is_outbound` BOOLEAN DEFAULT 0,
         `is_delete` BOOLEAN DEFAULT 0,
@@ -50,13 +49,13 @@ class MessageStorage with Tag {
 
     // index
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
-    // TODO:GG PG check
+    // TODO:GG PG 只能加索引，不能改
     await db.execute('CREATE INDEX `index_messages_target_id_group_id_type` ON `$tableName` (`target_id`, `group_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
-    await db.execute('CREATE INDEX `index_messages_target_id_topic_type` ON `$tableName` (`target_id`, `topic`, `type`)');
-    await db.execute('CREATE INDEX `index_messages_status_target_id_topic` ON `$tableName` (`status`, `target_id`, `topic`)');
-    await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic` ON `$tableName` (`status`, `is_delete`, `target_id`, `topic`)');
-    await db.execute('CREATE INDEX `index_messages_target_id_topic_is_delete_type_send_at` ON `$tableName` (`target_id`, `topic`, `is_delete`, `type`, `send_at`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_topic_group_type` ON `$tableName` (`target_id`, `topic`, `group_id`, `type`)');
+    await db.execute('CREATE INDEX `index_messages_status_target_id_topic_group` ON `$tableName` (`status`, `target_id`, `topic`, `group_id`)');
+    await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic_group` ON `$tableName` (`status`, `is_delete`, `target_id`, `topic`, `group_id`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_topic_group_is_delete_type_send_at` ON `$tableName` (`target_id`, `topic`, `group_id`, `is_delete`, `type`, `send_at`)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -106,7 +105,7 @@ class MessageStorage with Tag {
         0;
   }
 
-  Future<int> deleteByTargetIdContentType(String? targetId, String? topic, String? contentType) async {
+  Future<int> deleteByTargetIdContentType(String? targetId, String? topic, String? groupId, String? contentType) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty || contentType == null || contentType.isEmpty) return 0;
     return await _queue.add(() async {
@@ -114,8 +113,8 @@ class MessageStorage with Tag {
             int? count = await db?.transaction((txn) {
               return txn.delete(
                 tableName,
-                where: 'target_id = ? AND topic = ? AND type = ?',
-                whereArgs: [targetId, topic ?? "", contentType],
+                where: 'target_id = ? AND topic = ? AND group_id = ? AND type = ?',
+                whereArgs: [targetId, topic ?? "", groupId ?? "", contentType],
               );
             });
             if (count != null && count > 0) {
@@ -312,7 +311,7 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     try {
@@ -320,8 +319,8 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
-          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
+          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ? AND group_id = ?',
+          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? "", groupId ?? ""],
           offset: offset,
           limit: limit,
         );
@@ -345,7 +344,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<int> unReadCountByTargetId(String? targetId, String? topic) async {
+  Future<int> unReadCountByTargetId(String? targetId, String? topic, String? groupId) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     try {
@@ -353,8 +352,8 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['COUNT(id)'],
-          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ?',
-          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? ""],
+          where: 'status = ? AND is_delete = ? AND target_id = ? AND topic = ? AND group_id = ?',
+          whereArgs: [MessageStatus.Received, 0, targetId, topic ?? "", groupId ?? ""],
         );
       });
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
@@ -366,7 +365,7 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, String? topic, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetIdWithNotDeleteAndPiece(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     try {
@@ -374,8 +373,8 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'target_id = ? AND topic = ? AND is_delete = ? AND NOT type = ?',
-          whereArgs: [targetId, topic ?? "", 0, MessageContentType.piece],
+          where: 'target_id = ? AND topic = ? AND group_id = ? AND is_delete = ? AND NOT type = ?',
+          whereArgs: [targetId, topic ?? "", groupId ?? "", 0, MessageContentType.piece],
           orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
@@ -400,7 +399,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, String? groupId, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
     try {
@@ -408,8 +407,8 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ? AND topic = ?' : 'status = ?',
-          whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId, topic ?? ""] : [status],
+          where: (targetId?.isNotEmpty == true) ? 'status = ? AND target_id = ? AND topic = ? AND group_id = ?' : 'status = ?',
+          whereArgs: (targetId?.isNotEmpty == true) ? [status, targetId, topic ?? "", groupId ?? ""] : [status],
           offset: offset,
           limit: limit,
         );
@@ -511,7 +510,7 @@ class MessageStorage with Tag {
         false;
   }
 
-  Future<bool> updateIsDeleteByTargetId(String? targetId, String? topic, bool isDelete, {bool clearContent = false}) async {
+  Future<bool> updateIsDeleteByTargetId(String? targetId, String? topic, String? groupId, bool isDelete, {bool clearContent = false}) async {
     if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty) return false;
     return await _queue.add(() async {
@@ -520,8 +519,8 @@ class MessageStorage with Tag {
               return txn.update(
                 tableName,
                 clearContent ? {'is_delete': isDelete ? 1 : 0, 'content': null} : {'is_delete': isDelete ? 1 : 0},
-                where: 'target_id = ? AND topic = ?',
-                whereArgs: [targetId, topic ?? ""],
+                where: 'target_id = ? AND topic = ? AND group_id = ?',
+                whereArgs: [targetId, topic ?? "", groupId ?? ""],
               );
             });
             logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");

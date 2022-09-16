@@ -34,8 +34,6 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  static const int EXPIRES_SECONDS = 3600 * 24 * 7; // 7 days TODO:GG move to settings ?
-
   Map<String, bool> dataComplete = Map();
 
   // TODO:GG 如果不完整，怎么同步 ?
@@ -54,12 +52,12 @@ class PrivateGroupCommon with Tag {
 
   ///****************************************** Action *******************************************
 
-  PrivateGroupItemSchema? createInvitationModel(String? groupId, String? invitee, String? inviter, {int? expiresSec}) {
+  PrivateGroupItemSchema? createInvitationModel(String? groupId, String? invitee, String? inviter, {int? expiresMs}) {
     if (groupId == null || groupId.isEmpty) return null;
     if (invitee == null || invitee.isEmpty) return null;
     if (inviter == null || inviter.isEmpty) return null;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    int expiresAt = nowAt + (expiresSec ?? EXPIRES_SECONDS) * 1000;
+    int expiresAt = nowAt + (expiresMs ?? Global.privateGroupInviteExpiresMs);
     PrivateGroupItemSchema? schema = PrivateGroupItemSchema.create(groupId, expiresAt: expiresAt, invitee: invitee, inviter: inviter);
     if (schema == null) return null;
     schema.inviterRawData = jsonEncode(schema.createRawDataMap());
