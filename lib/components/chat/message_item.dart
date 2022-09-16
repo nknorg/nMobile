@@ -16,12 +16,11 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/time.dart';
-import 'package:nmobile/utils/util.dart';
 
-// TODO:GG PG check
 class ChatMessageItem extends StatefulWidget {
   final MessageSchema message;
-  final TopicSchema? topic;
+  // final TopicSchema? topic;
+  // final PrivateGroupSchema? privateGroup;
   final ContactSchema? contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
@@ -30,7 +29,8 @@ class ChatMessageItem extends StatefulWidget {
 
   ChatMessageItem({
     required this.message,
-    required this.topic,
+    // required this.topic,
+    // required this.privateGroup,
     required this.contact,
     this.prevMessage,
     this.nextMessage,
@@ -178,7 +178,6 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
         contentsWidget.add(
           ChatBubble(
             message: this.widget.message,
-            topic: this.widget.topic,
             contact: this.widget.contact,
             showProfile: showProfile,
             hideProfile: hideProfile,
@@ -197,16 +196,17 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
         break;
       // case MessageContentType.topicUnsubscribe:
       case MessageContentType.topicInvitation:
-        contentsWidget.add(_topicInvitedWidget(context));
-        break;
-      // TODO:GG PG check
+      // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
         contentsWidget.add(_privateGroupInvitedWidget(context));
         break;
       case MessageContentType.privateGroupAccept:
         contentsWidget.add(_privateGroupAcceptWidget(context));
         break;
-      // case MessageContentType.topicKickOut:
+      // TODO:GG PG 还没想好
+      case MessageContentType.privateGroupSubscribe:
+        contentsWidget.add(_topicInvitedWidget(context));
+        break;
     }
 
     return Column(children: contentsWidget);
@@ -416,28 +416,23 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG check
+  // TODO:GG PG 代码整理
   Widget _privateGroupInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
     String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
     Map content = Map();
+    String groupId = '';
     String groupName = '';
-    Map data = Map();
-    String inviterRawData = '';
-    String inviterSignature = '';
-    DateTime? expiresAt;
     Widget expiresWidget = SizedBox.shrink();
     if (widget.message.content != null) {
       content = widget.message.content as Map;
-      groupName = content['groupName'];
-      data = content['data'];
-      inviterRawData = data['inviterData'];
-      inviterSignature = data['inviterSignature'];
-
-      var rawData = Util.jsonFormat(inviterRawData);
-      if (rawData != null) {
-        expiresAt = DateTime.fromMillisecondsSinceEpoch(rawData['expiresAt']);
+      groupId = content['groupId']?.toString() ?? "";
+      groupName = content['name']?.toString() ?? "";
+      Map<String, dynamic>? data = content['item'];
+      if (data != null) {
+        DateTime? expiresAt = DateTime.fromMillisecondsSinceEpoch(data['expiresAt'] ?? 0);
+        String inviter = data['inviter']?.toString() ?? "";
         if (expiresAt.isBefore(DateTime.now())) {
           expiresWidget = Label(
             Global.locale((s) => s.expired, ctx: context),
@@ -477,25 +472,20 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
                           actionText: Global.locale((s) => s.accept_invitation, ctx: context),
                           enable: false,
                         );
-
-                        if (name?.isNotEmpty == true) {
+                        Uint8List? ownerSeed = clientCommon.client?.seed;
+                        if ((name?.isNotEmpty == true) && (ownerSeed != null)) {
                           Loading.show();
-                          // Uint8List ownerPublicKey = clientCommon.client!.publicKey;
-                          Uint8List ownerSeed = clientCommon.client!.seed;
                           Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
-                          PrivateGroupItemSchema privateGroupItemSchema = privateGroupCommon.createModelFromInvitationRawData(inviterRawData, inviterSignature: inviterSignature);
-
-                          bool isVerified = await privateGroupCommon.acceptInvitation(privateGroupItemSchema, ownerPrivateKey);
-                          if (isVerified) {
-                            await chatOutCommon.sendPrivateGroupAccept(widget.message.targetId, privateGroupItemSchema);
-                            await privateGroupCommon.initializationPrivateGroup(PrivateGroupSchema(
-                              groupId: widget.message.groupId,
-                              name: groupName,
-                            ));
+                          PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(data);
+                          groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
+                          if (groupItemSchema != null) {
+                            // TODO:GG PG 防止频发的机制
+                            await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
+                            PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName);
+                            if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
                           }
-
                           Loading.dismiss();
-                          if (isVerified) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
+                          if (groupItemSchema != null) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
                         }
                       },
                     ),
@@ -533,7 +523,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG check
+  // TODO:GG PG 代码整理
   Widget _privateGroupAcceptWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";

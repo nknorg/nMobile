@@ -97,7 +97,7 @@ class SessionCommon with Tag {
         await chatCommon.unReadCountByTargetId(
           targetId,
           type == SessionType.TOPIC ? session.targetId : "",
-          session.type == SessionType.PRIVATE_GROUP ? session.targetId : "",
+          type == SessionType.PRIVATE_GROUP ? session.targetId : "",
         );
     bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(session);
     if (success && notify) queryAndNotify(session.targetId, type);

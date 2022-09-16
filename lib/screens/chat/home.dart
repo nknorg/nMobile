@@ -470,7 +470,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     );
   }
 
-  // TODO:GG PG check
+  // TODO:GG PG 代码整理
   _showFloatActionMenu() {
     double btnSize = 48;
 

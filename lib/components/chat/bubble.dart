@@ -20,7 +20,6 @@ import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/screens/common/video.dart';
 import 'package:nmobile/screens/contact/profile.dart';
@@ -32,7 +31,8 @@ import 'package:open_file/open_file.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
-  final TopicSchema? topic;
+  // final TopicSchema? topic;
+  // final PrivateGroupSchema? privateGroup;
   final ContactSchema? contact;
   final bool showProfile;
   final bool hideProfile;
@@ -45,7 +45,8 @@ class ChatBubble extends BaseStateFulWidget {
 
   ChatBubble({
     required this.message,
-    required this.topic,
+    // required this.topic,
+    // required this.privateGroup,
     required this.contact,
     this.showProfile = false,
     this.hideProfile = false,
