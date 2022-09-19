@@ -68,7 +68,7 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
       savePath: savePath,
     );
     if (picked == null || !picked.existsSync()) {
-      Toast.show(Global.locale((s) => s.failure));
+      // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
     }
 

@@ -262,7 +262,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       savePath: remarkAvatarPath,
     );
     if (picked == null) {
-      Toast.show(Global.locale((s) => s.failure));
+      // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;
     } else {
       remarkAvatarPath = picked.path;
