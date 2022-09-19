@@ -5,7 +5,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/utils/asset.dart';
 
-// TODO:GG PG check
 class PrivateGroupHeader extends StatelessWidget {
   final PrivateGroupSchema privateGroup;
   final Widget body;
