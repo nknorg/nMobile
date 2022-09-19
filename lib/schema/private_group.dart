@@ -13,7 +13,6 @@ class PrivateGroupType {
 class PrivateGroupSchema {
   static const optionsRequestGapMs = 2 * 60 * 1000; // 2m
 
-  // TODO:GG 消除!
   int? id;
   String groupId;
   String name;

@@ -249,9 +249,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicJoined(); // await
     _refreshTopicSubscribers(); // await
 
-    // TODO:GG PG 防止频发的机制
+    // TODO:GG PG 防止频发的机制?
     // privateGroup
-    if (privateGroupCommon.dataComplete[_privateGroup!.groupId] != true) {
+    if ((_privateGroup != null) && (privateGroupCommon.dataComplete[_privateGroup?.groupId] != true)) {
       chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, _privateGroup?.version);
     }
 
@@ -492,7 +492,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       }
     } else if (_privateGroup != null) {
       // TODO:GG PG 那这个有update通知吗？
-      if (privateGroupCommon.dataComplete[_privateGroup!.groupId] != true) {
+      if ((_privateGroup != null) && (privateGroupCommon.dataComplete[_privateGroup?.groupId] != true)) {
         disableTip = Global.locale((s) => s.data_synchronization, ctx: context);
       }
     }

@@ -601,7 +601,7 @@ class ChatInCommon with Tag {
     }
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
+    bool isPieceCombine = received.options?[MessageOptions.KEY_FROM_PIECE] ?? false;
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -630,7 +630,7 @@ class ChatInCommon with Tag {
     }
     // DB
     MessageSchema? inserted = await MessageStorage.instance.insert(received);
-    bool isPieceCombine = received.options != null ? (received.options![MessageOptions.KEY_FROM_PIECE] ?? false) : false;
+    bool isPieceCombine = received.options?[MessageOptions.KEY_FROM_PIECE] ?? false;
     if (isPieceCombine) _deletePieces(received.msgId); // await
     if (inserted == null) return false;
     // display
@@ -819,7 +819,7 @@ class ChatInCommon with Tag {
     String members = data['members'];
     String signature = data['signature'];
     privateGroupCommon.syncPrivateGroupInfo(groupId, rawData, version, members, signature, notify: true).then((group) {
-      // TODO:GG 防止频发的机制
+      // TODO:GG PG 防止频发的机制
       if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(target, groupId, null);
     }); // await
   }
