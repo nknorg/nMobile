@@ -5,7 +5,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/utils/asset.dart';
 
-// TODO:GG PG check
 class PrivateGroupItem extends StatelessWidget {
   final PrivateGroupSchema privateGroup;
   final Widget? body;
@@ -79,13 +78,11 @@ class PrivateGroupItem extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          this.privateGroup.isTop
-                              ? Asset.iconSvg(
-                                  'lock',
-                                  width: 18,
-                                  color: application.theme.primaryColor,
-                                )
-                              : SizedBox.shrink(),
+                          Asset.iconSvg(
+                            'lock',
+                            width: 18,
+                            color: application.theme.primaryColor,
+                          ),
                           Expanded(
                             child: Label(
                               this.bodyTitle ?? "",

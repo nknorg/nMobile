@@ -13,7 +13,7 @@ class PrivateGroupItemPerm {
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG ?
+  int? permission; // TODO:GG PG owner可以更改?
   int? expiresAt;
 
   String? inviter; // TODO:GG 需要检查是否有permission ?
@@ -28,7 +28,7 @@ class PrivateGroupItemSchema {
   PrivateGroupItemSchema({
     this.id,
     required this.groupId,
-    this.permission = PrivateGroupItemPerm.none,
+    this.permission = PrivateGroupItemPerm.normal,
     this.expiresAt,
     this.inviter,
     this.invitee,
@@ -44,7 +44,7 @@ class PrivateGroupItemSchema {
     return PrivateGroupItemSchema(
       groupId: groupId,
       expiresAt: expiresAt,
-      permission: permission,
+      permission: permission ?? PrivateGroupItemPerm.normal,
       inviter: inviter,
       invitee: invitee,
       inviterRawData: inviterRawData,
@@ -68,7 +68,7 @@ class PrivateGroupItemSchema {
     if (data == null || data.isEmpty || (data['groupId'] == null) || (data['groupId']?.toString().isEmpty == true)) return null;
     var schema = PrivateGroupItemSchema(
       groupId: data['groupId'],
-      permission: data['permission'],
+      permission: data['permission'] ?? PrivateGroupItemPerm.normal,
       expiresAt: data['expiresAt'],
       inviter: data['inviter'],
       invitee: data['invitee'],
@@ -88,7 +88,7 @@ class PrivateGroupItemSchema {
     Map<String, dynamic> map = {
       'id': id,
       'group_id': groupId,
-      'permission': permission,
+      'permission': permission ?? PrivateGroupItemPerm.normal,
       'expires_at': expiresAt,
       'inviter': inviter,
       'invitee': invitee,
@@ -105,7 +105,7 @@ class PrivateGroupItemSchema {
     var schema = PrivateGroupItemSchema(
       id: e['id'],
       groupId: e['group_id'] ?? "",
-      permission: e['permission'],
+      permission: e['permission'] ?? PrivateGroupItemPerm.normal,
       expiresAt: e['expires_at'],
       inviter: e['inviter'],
       invitee: e['invitee'],

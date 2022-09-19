@@ -7,7 +7,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/utils/asset.dart';
 
-// TODO:GG PG check
 class PrivateGroupAvatar extends BaseStateFulWidget {
   final PrivateGroupSchema privateGroup;
   final double radius;
@@ -46,7 +45,7 @@ class _PrivateGroupAvatarState extends BaseStateFulWidgetState<PrivateGroupAvata
   Widget build(BuildContext context) {
     double radius = this.widget.radius;
     String name = widget.privateGroup.name;
-    String? path = widget.privateGroup.avatar?.path;
+    String? path = widget.privateGroup.displayAvatarPath;
 
     if (!_fileError && (path?.isNotEmpty == true)) {
       // _avatarFile != null
