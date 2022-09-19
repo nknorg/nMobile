@@ -27,7 +27,7 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupSchema> _updateGroupController = StreamController<PrivateGroupSchema>.broadcast();
   StreamSink<PrivateGroupSchema> get _updateGroupSink => _updateGroupController.sink;
-  Stream<PrivateGroupSchema> get updateGroupStream => _updateGroupController.stream; // TODO:GG 有的地方用错了 ?
+  Stream<PrivateGroupSchema> get updateGroupStream => _updateGroupController.stream; // TODO:GG PG 有的地方用错了 ?
 
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _addGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
@@ -36,7 +36,7 @@ class PrivateGroupCommon with Tag {
 
   Map<String, bool> dataComplete = Map();
 
-  // TODO:GG 如果不完整，怎么同步 ?
+  // TODO:GG PG 如果不完整，怎么同步 ?
   Future<bool> checkDataComplete(String? groupId) async {
     if (groupId == null || groupId.isEmpty) return false;
     PrivateGroupSchema? privateGroup = await queryGroup(groupId);
@@ -133,7 +133,7 @@ class PrivateGroupCommon with Tag {
     Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     inviteeModel.inviterSignature = await genSignature(ownerPrivateKey, inviteeModel.inviterRawData);
     if ((inviteeModel.inviterSignature == null) || (inviteeModel.inviterSignature?.isEmpty == false)) return false;
-    // TODO:GG 防止频发的机制
+    // TODO:GG PG 防止频发的机制
     await chatOutCommon.sendPrivateGroupInvitee(target, schemaGroup, inviteeModel);
     return true;
   }
@@ -194,11 +194,11 @@ class PrivateGroupCommon with Tag {
     chatOutCommon.sendPrivateGroupOptionResponse(newItem.invitee, groupSchema, getInviteesId(members)); // await
     for (int i = 0; i < members.length; i += 10) {
       List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
-      // TODO:GG 防止频发的机制
+      // TODO:GG PG 防止频发的机制
       chatOutCommon.sendPrivateGroupMemberResponse(newItem.invitee, groupSchema, memberSplits); // await
     }
     members.forEach((m) {
-      // TODO:GG 防止频发的机制
+      // TODO:GG PG 防止频发的机制
       chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newItem]); // await
     });
     return groupSchema;
@@ -270,7 +270,7 @@ class PrivateGroupCommon with Tag {
       if (toast) Toast.show(Global.locale((s) => s.data_synchronization));
       return false;
     }
-    // TODO:GG 防止频发的机制
+    // TODO:GG PG 防止频发的机制
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
     chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup, getInviteesId(members)); // await
     return true;
@@ -339,7 +339,7 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - pushPrivateGroupMember - request is not in group.');
       return false;
     }
-    // TODO:GG 防止频发的机制
+    // TODO:GG PG 防止频发的机制
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
     chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, members); // await
     return true;
@@ -499,7 +499,7 @@ class PrivateGroupCommon with Tag {
     return success;
   }
 
-  Future<PrivateGroupSchema?> queryGroup(String groupId) async {
+  Future<PrivateGroupSchema?> queryGroup(String? groupId) async {
     return await PrivateGroupStorage.instance.query(groupId);
   }
 
@@ -517,11 +517,11 @@ class PrivateGroupCommon with Tag {
     return added;
   }
 
-  Future<PrivateGroupItemSchema?> queryGroupItem(String groupId, String? invitee) async {
+  Future<PrivateGroupItemSchema?> queryGroupItem(String? groupId, String? invitee) async {
     return await PrivateGroupItemStorage.instance.queryByInvitee(groupId, invitee);
   }
 
-  Future<List<PrivateGroupItemSchema>> queryMembers(String groupId, {int offset = 0, int limit = 20}) async {
+  Future<List<PrivateGroupItemSchema>> queryMembers(String? groupId, {int offset = 0, int limit = 20}) async {
     return await PrivateGroupItemStorage.instance.queryList(groupId, limit: limit, offset: offset);
   }
 
