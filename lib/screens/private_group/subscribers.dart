@@ -16,6 +16,7 @@ import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
 
 class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
   static const String routeName = '/privateGroup/members';
@@ -23,6 +24,8 @@ class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
   static final String argPrivateGroupId = "privateGroupId";
 
   static Future go(BuildContext context, {PrivateGroupSchema? schema, String? groupId}) {
+    logger.d("PrivateGroupSubscribersScreen - go - - groupId:$groupId - schema:$schema");
+    if ((schema == null) && (groupId == null)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argPrivateGroupSchema: schema,
       argPrivateGroupId: groupId,
@@ -78,8 +81,6 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
         });
       }
     });
-
-    _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
   }
 
   @override
@@ -100,6 +101,8 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
+    _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
+
     setState(() {});
 
     _getDataSubscribers(true);
