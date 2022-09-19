@@ -31,7 +31,7 @@ import 'package:synchronized/synchronized.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 6; // TODO:GG PG 测试
+  static int currentDatabaseVersion = 5; // TODO:GG PG 先测试5，最后测试升级6
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -306,7 +306,7 @@ class DB {
           await Upgrade3to4.updateSubscriberV3ToV4(db);
         }
 
-        // 4-> 5
+        // 4 -> 5
         bool v4to5 = false;
         if ((v3to4 || (oldVersion == 4)) && (newVersion >= 5)) {
           v4to5 = true;
@@ -319,6 +319,7 @@ class DB {
           await Upgrade4to5.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
+        // 5 -> 6
         if ((v4to5 || (oldVersion == 5)) && (newVersion >= 6)) {
           await Upgrade5to6.createPrivateGroup(db);
           await Upgrade5to6.createPrivateGroupList(db);
@@ -417,6 +418,8 @@ class DB {
       await sourceDB.execute("INSERT INTO `plaintext`.`${DeviceInfoStorage.tableName}` SELECT * FROM `${DeviceInfoStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${TopicStorage.tableName}` SELECT * FROM `${TopicStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SubscriberStorage.tableName}` SELECT * FROM `${SubscriberStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${PrivateGroupStorage.tableName}` SELECT * FROM `${PrivateGroupStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${PrivateGroupItemStorage.tableName}` SELECT * FROM `${PrivateGroupItemStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessageStorage.tableName}` SELECT * FROM `${MessageStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
       await sourceDB.execute("DETACH `plaintext`");
@@ -451,6 +454,8 @@ class DB {
       await targetDB.execute("INSERT INTO `${DeviceInfoStorage.tableName}` SELECT * FROM `plaintext`.`${DeviceInfoStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${TopicStorage.tableName}` SELECT * FROM `plaintext`.`${TopicStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${SubscriberStorage.tableName}` SELECT * FROM `plaintext`.`${SubscriberStorage.tableName}`");
+      await targetDB.execute("INSERT INTO `${PrivateGroupStorage.tableName}` SELECT * FROM `plaintext`.`${PrivateGroupStorage.tableName}`");
+      await targetDB.execute("INSERT INTO `${PrivateGroupItemStorage.tableName}` SELECT * FROM `plaintext`.`${PrivateGroupItemStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${MessageStorage.tableName}` SELECT * FROM `plaintext`.`${MessageStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${SessionStorage.tableName}` SELECT * FROM `plaintext`.`${SessionStorage.tableName}`");
       await targetDB.execute("DETACH `plaintext`");
