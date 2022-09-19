@@ -68,7 +68,7 @@ class PrivateGroupCommon with Tag {
     if (name == null || name.isEmpty) return null;
     String? ownerPublicKey = clientCommon.getPublicKey();
     if (ownerPublicKey == null || ownerPublicKey.isEmpty) return null;
-    String groupId = '$ownerPublicKey.${Uuid().v4()}';
+    String groupId = '$ownerPublicKey.${Uuid().v4().replaceAll("-", "")}';
     // group
     PrivateGroupSchema? schemaGroup = PrivateGroupSchema.create(groupId, name);
     if (schemaGroup == null) return null;
@@ -250,7 +250,7 @@ class PrivateGroupCommon with Tag {
     // group
     schemaGroup.count = members.length;
     schemaGroup.version = genPrivateGroupVersion(schemaGroup.signature, getInviteesId(members));
-    await updateGroupVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
+    await updateGroupVersionCount(schemaGroupItem.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
     return schemaGroup;
   }
 

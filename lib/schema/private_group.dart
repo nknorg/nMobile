@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/path.dart';
@@ -16,7 +17,7 @@ class PrivateGroupSchema {
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG ?
+  int? type; // TODO:GG PG 不能更改! 只是邀请机制用到?
   String? version;
   int? count;
 
@@ -69,6 +70,38 @@ class PrivateGroupSchema {
     return groupId.substring(0, index);
   }
 
+  bool isOwner(String? clientAddress) {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    String? accountPubKey = getPubKeyFromTopicOrChatId(clientAddress);
+    return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPublicKey;
+  }
+
+  String? get displayAvatarPath {
+    String? avatarLocalPath = avatar?.path;
+    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+      return null;
+    }
+    String? completePath = Path.convert2Complete(avatarLocalPath);
+    if (completePath == null || completePath.isEmpty) {
+      return null;
+    }
+    return completePath;
+  }
+
+  Future<File?> get displayAvatarFile async {
+    String? completePath = displayAvatarPath;
+    if (completePath == null || completePath.isEmpty) {
+      return Future.value(null);
+    }
+
+    File avatarFile = File(completePath);
+    bool exits = await avatarFile.exists();
+    if (!exits) {
+      return Future.value(null);
+    }
+    return avatarFile;
+  }
+
   String get signature {
     return data?['signature'] ?? "";
   }
@@ -91,7 +124,7 @@ class PrivateGroupSchema {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['name'] = name;
-    data['type'] = type;
+    data['type'] = type ?? PrivateGroupType.normal;
     return data.sortByKey();
   }
 
@@ -100,7 +133,7 @@ class PrivateGroupSchema {
       'id': id,
       'group_id': groupId,
       'name': name,
-      'type': type,
+      'type': type ?? PrivateGroupType.normal,
       'version': version,
       'count': count,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
@@ -118,7 +151,7 @@ class PrivateGroupSchema {
       id: e['id'],
       groupId: e['group_id'] ?? "",
       name: e['name'] ?? "",
-      type: e['type'],
+      type: e['type'] ?? PrivateGroupType.normal,
       count: e['count'],
       version: e['version'],
       createAt: e['create_at'],

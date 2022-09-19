@@ -7,15 +7,12 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/item.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
-import 'package:nmobile/utils/asset.dart';
 
-// TODO:GG PG check
 class SubscriberItem extends BaseStateFulWidget {
   final PrivateGroupSchema? privateGroup;
   final PrivateGroupItemSchema privateGroupItem;
@@ -147,7 +144,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                           : _getNameLabels(this.widget.privateGroup, this.widget.privateGroupItem, this.contact),
                       SizedBox(height: 6),
                       Label(
-                        this.widget.bodyDesc ?? this.widget.privateGroupItem.invitee!,
+                        this.widget.bodyDesc ?? this.widget.privateGroupItem.invitee ?? "",
                         maxLines: 1,
                         type: LabelType.bodyRegular,
                         overflow: TextOverflow.ellipsis,
@@ -155,6 +152,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     ],
                   ),
           ),
+          this.widget.tail != null ? this.widget.tail! : _getTailAction(this.widget.privateGroup, this.widget.privateGroupItem, this.contact),
         ],
       ),
     );
@@ -163,6 +161,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   Widget _getNameLabels(PrivateGroupSchema? privateGroup, PrivateGroupItemSchema privateGroupItem, ContactSchema? contact) {
     String displayName = contact?.displayName ?? " ";
     String clientAddress = privateGroupItem.invitee!;
+    int? permission = privateGroupItem.permission;
 
     // _mark
     List<String> marks = [];
@@ -171,7 +170,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     }
     if (privateGroup?.ownerPublicKey == clientAddress) {
       marks.add(Global.locale((s) => s.owner));
-    } else if (privateGroup?.ownerPublicKey == clientCommon.getPublicKey()) {}
+    }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
 
     Color textColor = application.theme.fontColor1;
@@ -203,7 +202,9 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (privateGroup == null) return SizedBox.shrink();
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return SizedBox.shrink();
     if (privateGroupItem.invitee == clientCommon.address) return SizedBox.shrink();
-    if (!(privateGroup.ownerPublicKey == clientCommon.getPublicKey())) return SizedBox.shrink();
+    if (!privateGroup.isOwner(clientCommon.getPublicKey())) return SizedBox.shrink();
+
+    return SizedBox.shrink();
 
     return SizedBox(
       width: 20 + 16 + 6,
@@ -211,63 +212,43 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
       child: InkWell(
         child: Padding(
           padding: EdgeInsets.only(left: 6, right: 16),
-          child: Asset.image(
-            'chat/invisit-blue.png',
-            width: 20,
-            height: double.infinity,
-            color: application.theme.successColor,
+          child: Icon(
+            Icons.block,
+            size: 20,
+            color: application.theme.fallColor,
           ),
         ),
         onTap: () async {
-          if (true) {
-            // subscriber.canBeKick
-            ModalDialog.of(Global.appContext).confirm(
-              title: Global.locale((s) => s.reject_user_tip),
-              contentWidget: contact != null
-                  ? ContactItem(
-                      contact: contact,
-                      bodyTitle: contact.displayName,
-                      bodyDesc: contact.clientAddress,
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    )
-                  : SizedBox.shrink(),
-              agree: Button(
-                width: double.infinity,
-                text: Global.locale((s) => s.ok),
-                backgroundColor: application.theme.strongColor,
-                onPressed: () async {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
-                  if (fee == null) return;
-                },
-              ),
-              reject: Button(
-                width: double.infinity,
-                text: Global.locale((s) => s.cancel),
-                fontColor: application.theme.fontColor2,
-                backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                },
-              ),
-            );
-          } else {
-            double? fee = 0.0;
-            // todo
-            // if (topic.isPrivate == true) {
-            //   fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
-            //   if (fee == null) return;
-            // }
-            // await topicCommon.invitee(
-            //   topic.topic,
-            //   topic.isPrivate,
-            //   topic.isOwner(clientCommon.address),
-            //   subscriber.clientAddress,
-            //   fee: fee,
-            //   toast: true,
-            //   sendMsg: true,
-            // );
-          }
+          // subscriber.canBeKick
+          ModalDialog.of(Global.appContext).confirm(
+            title: Global.locale((s) => s.reject_user_tip),
+            contentWidget: contact != null
+                ? ContactItem(
+                    contact: contact,
+                    bodyTitle: contact.displayName,
+                    bodyDesc: contact.clientAddress,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  )
+                : SizedBox.shrink(),
+            agree: Button(
+              width: double.infinity,
+              text: Global.locale((s) => s.ok),
+              backgroundColor: application.theme.strongColor,
+              onPressed: () async {
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                // FUTURE PG kick_out
+              },
+            ),
+            reject: Button(
+              width: double.infinity,
+              text: Global.locale((s) => s.cancel),
+              fontColor: application.theme.fontColor2,
+              backgroundColor: application.theme.backgroundLightColor,
+              onPressed: () {
+                if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+              },
+            ),
+          );
         },
       ),
     );

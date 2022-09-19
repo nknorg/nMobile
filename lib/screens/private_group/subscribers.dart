@@ -17,7 +17,6 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 
-// TODO:GG PG check
 class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
   static const String routeName = '/privateGroup/members';
   static final String argPrivateGroupSchema = "privateGroupSchema";
@@ -40,6 +39,7 @@ class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
 
 class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<PrivateGroupSubscribersScreen> {
   StreamSubscription? _updatePrivateGroupSubscription;
+  StreamSubscription? _addPrivateGroupItemStreamSubscription;
 
   PrivateGroupSchema? _privateGroup;
   bool _isOwner = false;
@@ -55,14 +55,18 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
   @override
   initState() {
     super.initState();
-
-    _updatePrivateGroupSubscription = privateGroupCommon.updateStream.where((event) => event.id == _privateGroup?.id).listen((PrivateGroupSchema event) {
+    // listen
+    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupSchema event) {
       setState(() {
         _privateGroup = event;
-        _isOwner = _privateGroup?.ownerPublicKey == clientCommon.getPublicKey();
+        _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
       });
     });
-    _isOwner = _privateGroup?.ownerPublicKey == clientCommon.getPublicKey();
+    _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupItemSchema schema) {
+      _members.add(schema);
+      setState(() {});
+    });
+
     // scroll
     _scrollController.addListener(() {
       if (_moreLoading) return;
@@ -74,11 +78,14 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
         });
       }
     });
+
+    _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
   }
 
   @override
   void dispose() {
     _updatePrivateGroupSubscription?.cancel();
+    _addPrivateGroupItemStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -90,7 +97,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     } else if (privateGroupSchema != null && privateGroupSchema.id != 0) {
       this._privateGroup = privateGroupSchema;
     } else if (groupId != null) {
-      this._privateGroup = await privateGroupCommon.queryByGroupId(groupId);
+      this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
     setState(() {});
@@ -105,13 +112,26 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     } else {
       _offset = _members.length;
     }
-    var members = await privateGroupCommon.queryMembersByLimit(_privateGroup!.groupId, offset: _offset, limit: 20);
-    _members = refresh ? members! : _members + members!;
+
+    String? selfPubKey = clientCommon.getPublicKey();
+    PrivateGroupItemSchema? owner = await privateGroupCommon.queryGroupItem(_privateGroup?.groupId, _privateGroup?.ownerPublicKey);
+    PrivateGroupItemSchema? self = await privateGroupCommon.queryGroupItem(_privateGroup?.groupId, selfPubKey);
+
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.queryMembers(_privateGroup?.groupId, offset: _offset, limit: 20);
+    members.removeWhere((element) => (element.invitee == owner?.invitee) || (element.invitee == self?.invitee));
+
+    if (refresh) {
+      if (owner != null) members.add(owner);
+      if (!_isOwner && self != null) members.add(self);
+    }
+    members.sort((a, b) => b.invitee == _privateGroup?.ownerPublicKey ? 1 : (b.invitee == selfPubKey ? 1 : 0));
+    _members = refresh ? members : _members + members;
 
     setState(() {});
   }
 
   _invitee() async {
+    if (_privateGroup == null) return;
     String? address = await BottomDialog.of(Global.appContext).showInput(
       title: Global.locale((s) => s.invite_members),
       inputTip: Global.locale((s) => s.send_to),
@@ -120,7 +140,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      privateGroupCommon.invitee(address!, _privateGroup!);
+      await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
     }
   }
 
@@ -152,31 +172,33 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
           Container(
             padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             child: Center(
-              child: PrivateGroupHeader(
-                privateGroup: _privateGroup!,
-                avatarRadius: 36,
-                dark: false,
-                body: Builder(
-                  builder: (BuildContext context) {
-                    if (_privateGroup?.ownerPublicKey == clientCommon.getPublicKey()) {
-                      return Container(
-                        padding: EdgeInsets.only(left: 3),
-                        child: Label(
-                          '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
-                          type: LabelType.bodyRegular,
-                          color: application.theme.successColor,
-                        ),
-                      );
-                    } else {
-                      return Label(
-                        '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
-                        type: LabelType.bodyRegular,
-                        color: application.theme.successColor,
-                      );
-                    }
-                  },
-                ),
-              ),
+              child: _privateGroup != null
+                  ? PrivateGroupHeader(
+                      privateGroup: _privateGroup!,
+                      avatarRadius: 36,
+                      dark: false,
+                      body: Builder(
+                        builder: (BuildContext context) {
+                          if (_privateGroup?.isOwner(clientCommon.getPublicKey()) == true) {
+                            return Container(
+                              padding: EdgeInsets.only(left: 3),
+                              child: Label(
+                                '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
+                                type: LabelType.bodyRegular,
+                                color: application.theme.successColor,
+                              ),
+                            );
+                          } else {
+                            return Label(
+                              '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
+                              type: LabelType.bodyRegular,
+                              color: application.theme.successColor,
+                            );
+                          }
+                        },
+                      ),
+                    )
+                  : SizedBox.shrink(),
             ),
           ),
           Expanded(
