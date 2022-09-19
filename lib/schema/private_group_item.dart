@@ -11,7 +11,6 @@ class PrivateGroupItemPerm {
 }
 
 class PrivateGroupItemSchema {
-  // TODO:GG 消除!
   int? id;
   String groupId;
   int? permission; // TODO:GG PG ?
