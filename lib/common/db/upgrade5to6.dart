@@ -7,7 +7,6 @@ import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
-// TODO:GG PG check
 class Upgrade5to6 {
   static Future createPrivateGroup(Database db, {StreamSink<String?>? upgradeTipSink}) async {
     upgradeTipSink?.add("... (1/3)");
@@ -36,7 +35,10 @@ class Upgrade5to6 {
     // alter table
     if ((await DB.checkTableExists(db, MessageStorage.tableName))) {
       await db.execute('ALTER TABLE ${MessageStorage.tableName} ADD COLUMN group_id VARCHAR(200) DEFAULT ""');
-      await db.execute('CREATE INDEX `index_messages_target_id_group_id_type` ON `${MessageStorage.tableName}` (`target_id`, `group_id`, `type`)');
+      await db.execute('CREATE INDEX `index_messages_target_id_topic_group_type` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `type`)');
+      await db.execute('CREATE INDEX `index_messages_status_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `target_id`, `topic`, `group_id`)');
+      await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `is_delete`, `target_id`, `topic`, `group_id`)');
+      await db.execute('CREATE INDEX `index_messages_target_id_topic_group_is_delete_type_send_at` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `is_delete`, `type`, `send_at`)');
     }
   }
 }
