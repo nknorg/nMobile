@@ -23,10 +23,11 @@ class PrivateGroupStorage with Tag {
         `name` VARCHAR(200),
         `type` INT,
         `version` TEXT,
-        `count` INT,
+        `joined` BOOLEAN DEFAULT 0,
         `create_at` BIGINT,
         `update_at` BIGINT,
         `is_top` BOOLEAN DEFAULT 0,
+        `count` INT,
         `avatar` TEXT,
         `options` TEXT,
         `data` TEXT
@@ -111,10 +112,11 @@ class PrivateGroupStorage with Tag {
     return null;
   }
 
-  Future<bool> updateName(String? groupId, String? name) async {
+  Future<bool> updateNameType(String? groupId, String? name, int? type) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     if (name == null || name.isEmpty) return false;
+    if (type == null) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -122,6 +124,7 @@ class PrivateGroupStorage with Tag {
                 tableName,
                 {
                   'name': name,
+                  'type': type,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ?',
@@ -129,10 +132,41 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateName - success - groupId:$groupId - name:$name");
+              logger.v("$TAG - updateNameType - success - groupId:$groupId - name:$name - type:$type");
               return true;
             }
-            logger.w("$TAG - updateName - fail - groupId:$groupId - name:$name");
+            logger.w("$TAG - updateNameType - fail - groupId:$groupId - name:$name - type:$type");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> updateVersionJoinedCount(String? groupId, String? version, bool joined, int membersCount) async {
+    if (db?.isOpen != true) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'version': version,
+                  'joined': joined ? 1 : 0,
+                  'count': membersCount,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - updateVersionCount - success - groupId:$groupId - joined:$joined - count:$count");
+              return true;
+            }
+            logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - joined:$joined - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -162,36 +196,6 @@ class PrivateGroupStorage with Tag {
               return true;
             }
             logger.w("$TAG - updateAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
-  }
-
-  Future<bool> updateVersionCount(String? groupId, String? version, int userCount) async {
-    if (db?.isOpen != true) return false;
-    if (groupId == null || groupId.isEmpty) return false;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'version': version,
-                  'count': userCount,
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'group_id = ?',
-                whereArgs: [groupId],
-              );
-            });
-            if (count != null && count > 0) {
-              logger.v("$TAG - updateVersionCount - success - groupId:$groupId - count:$count");
-              return true;
-            }
-            logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }

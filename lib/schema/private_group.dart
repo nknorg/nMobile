@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/path.dart';
@@ -12,27 +11,24 @@ class PrivateGroupType {
 }
 
 class PrivateGroupSchema {
-  static const optionsRequestGapMs = 2 * 60 * 1000; // 2m
+  static const requestOptionsGapMs = 1 * 60 * 1000; // 1m
+  static const requestMembersGapMs = 1 * 60 * 1000; // 1m
 
   int? id;
   String groupId;
   String name;
-  int? type; // TODO:GG PG 不能更改! 只是邀请机制用到?
+  int? type;
   String? version;
-  int? count;
+  bool joined = false;
 
   int? createAt;
   int? updateAt;
   bool isTop = false;
+  int? count;
   File? avatar;
 
   OptionsSchema? options;
   Map<String, dynamic>? data;
-
-  // TODO:GG PG ?
-  // bool joined = false;
-  // int? joinAt;
-  // int? leaveAt;
 
   PrivateGroupSchema({
     this.id,
@@ -40,10 +36,11 @@ class PrivateGroupSchema {
     required this.name,
     this.type = PrivateGroupType.normal,
     this.version,
-    this.count,
+    this.joined = false,
     this.createAt,
     this.updateAt,
     this.isTop = false,
+    this.count,
     this.avatar,
     this.options,
     this.data,
@@ -53,12 +50,15 @@ class PrivateGroupSchema {
     }
   }
 
-  static PrivateGroupSchema? create(String? groupId, String? name) {
+  static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined, String? version}) {
     if (groupId == null || groupId.isEmpty) return null;
     if (name == null || name.isEmpty) name = groupId;
     return PrivateGroupSchema(
       groupId: groupId,
       name: name,
+      type: type ?? PrivateGroupType.normal,
+      joined: joined ?? false,
+      version: version,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
     );
@@ -68,12 +68,6 @@ class PrivateGroupSchema {
     int index = groupId.lastIndexOf('.');
     if (index < 0) return '';
     return groupId.substring(0, index);
-  }
-
-  bool isOwner(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    String? accountPubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPublicKey;
   }
 
   String? get displayAvatarPath {
@@ -120,6 +114,45 @@ class PrivateGroupSchema {
     data?['optionsRequestAt'] = timeAt;
   }
 
+  String get optionsRequestedVersion {
+    return data?['optionsRequestedVersion'] ?? "";
+  }
+
+  void setOptionsRequestedVersion(String? version) {
+    if (data == null) data = Map();
+    data?['optionsRequestedVersion'] = version;
+  }
+
+  // TODO:GG PG
+  int get optionsUpdateAt {
+    return int.tryParse(data?['optionsUpdateAt'] ?? "0") ?? 0;
+  }
+
+  void setOptionsUpdateAt(int? timeAt) {
+    if (data == null) data = Map();
+    data?['optionsUpdateAt'] = timeAt;
+  }
+
+  // TODO:GG PG
+  int get membersRequestAt {
+    return int.tryParse(data?['membersRequestAt'] ?? "0") ?? 0;
+  }
+
+  void setMembersRequestAt(int? timeAt) {
+    if (data == null) data = Map();
+    data?['membersRequestAt'] = timeAt;
+  }
+
+  // TODO:GG PG
+  int get membersUpdateAt {
+    return int.tryParse(data?['membersUpdateAt'] ?? "0") ?? 0;
+  }
+
+  void setMembersUpdateAt(int? timeAt) {
+    if (data == null) data = Map();
+    data?['membersUpdateAt'] = timeAt;
+  }
+
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
@@ -135,10 +168,11 @@ class PrivateGroupSchema {
       'name': name,
       'type': type ?? PrivateGroupType.normal,
       'version': version,
-      'count': count,
+      'joined': joined ? 1 : 0,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'is_top': isTop ? 1 : 0,
+      'count': count,
       'avatar': Path.convert2Local(avatar?.path),
       'options': options != null ? jsonEncode(options!.toMap()) : null,
       'data': data != null ? jsonEncode(data) : null,
@@ -152,11 +186,12 @@ class PrivateGroupSchema {
       groupId: e['group_id'] ?? "",
       name: e['name'] ?? "",
       type: e['type'] ?? PrivateGroupType.normal,
-      count: e['count'],
       version: e['version'],
+      joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       createAt: e['create_at'],
       updateAt: e['update_at'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
+      count: e['count'],
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
     );
 
