@@ -118,4 +118,34 @@ class PrivateGroupItemStorage with Tag {
     }
     return [];
   }
+
+  Future<bool> updatePermission(String? groupId, String? invitee, int? permission) async {
+    if (db?.isOpen != true) return false;
+    if (groupId == null || groupId.isEmpty || invitee == null || invitee.isEmpty) return false;
+    if (permission == null) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'permission': permission,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'group_id = ? AND invitee = ?',
+                whereArgs: [groupId, invitee],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - updatePermission - success - groupId:$groupId - invitee:$invitee - type:$permission");
+              return true;
+            }
+            logger.w("$TAG - updatePermission - fail - groupId:$groupId - invitee:$invitee - type:$permission");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
 }
