@@ -144,7 +144,36 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateVersionJoinedCount(String? groupId, String? version, bool joined, int membersCount) async {
+  Future<bool> updateJoined(String? groupId, bool joined) async {
+    if (db?.isOpen != true) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'joined': joined ? 1 : 0,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - updateJoined - success - groupId:$groupId - joined:$joined");
+              return true;
+            }
+            logger.w("$TAG - updateJoined - fail - groupId:$groupId - joined:$joined");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> updateVersionCount(String? groupId, String? version, int membersCount) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -154,7 +183,6 @@ class PrivateGroupStorage with Tag {
                 tableName,
                 {
                   'version': version,
-                  'joined': joined ? 1 : 0,
                   'count': membersCount,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
@@ -163,10 +191,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateVersionCount - success - groupId:$groupId - joined:$joined - count:$count");
+              logger.v("$TAG - updateVersionCount - success - groupId:$groupId - count:$count");
               return true;
             }
-            logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - joined:$joined - count:$count");
+            logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }

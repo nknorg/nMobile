@@ -293,31 +293,33 @@ class ChatCommon with Tag {
     }
     if (exists == null) return null;
     // sync
-    if ((clientCommon.address != null) && !exists.isOwner(clientCommon.address) && (message.from != message.to) && !message.isOutbound) {
-      String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
-      bool? versionOk = await privateGroupCommon.verifiedGroupVersion(exists, remoteVersion, signVersion: false);
-      if (versionOk == false) {
-        bool needRequest = false;
-        if (exists.optionsRequestedVersion != remoteVersion) {
-          logger.i('$TAG - privateGroupHandle - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
-          needRequest = true;
-        } else {
-          int nowAt = DateTime.now().millisecondsSinceEpoch;
-          logger.d('$TAG - privateGroupHandle - version same - version:$remoteVersion');
-          if (nowAt - exists.optionsRequestAt > PrivateGroupSchema.optionsRequestGapMs) {
-            logger.i('$TAG - pushPrivateGroupOptions - time too large - past:${nowAt - exists.optionsRequestAt}');
+    if ((clientCommon.address != null) && (message.from != message.to) && !message.isOutbound) {
+      if (!privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+        String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
+        bool? versionOk = await privateGroupCommon.verifiedGroupVersion(exists, remoteVersion, signVersion: false);
+        if (versionOk == false) {
+          bool needRequest = false;
+          if (exists.optionsRequestedVersion != remoteVersion) {
+            logger.i('$TAG - privateGroupHandle - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
             needRequest = true;
           } else {
-            logger.d('$TAG - pushPrivateGroupOptions - time too little - past:${nowAt - exists.optionsRequestAt}');
-            needRequest = false;
+            int nowAt = DateTime.now().millisecondsSinceEpoch;
+            logger.d('$TAG - privateGroupHandle - version same - version:$remoteVersion');
+            if (nowAt - exists.optionsRequestAt > PrivateGroupSchema.requestOptionsGapMs) {
+              logger.i('$TAG - pushPrivateGroupOptions - time too large - past:${nowAt - exists.optionsRequestAt}');
+              needRequest = true;
+            } else {
+              logger.d('$TAG - pushPrivateGroupOptions - time too little - past:${nowAt - exists.optionsRequestAt}');
+              needRequest = false;
+            }
           }
-        }
-        if (needRequest) {
-          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, exists.version).then((value) async {
-            exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
-            exists?.setOptionsRequestedVersion(remoteVersion);
-            await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data);
-          }); // await
+          if (needRequest) {
+            chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, exists.version).then((value) async {
+              exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
+              exists?.setOptionsRequestedVersion(remoteVersion);
+              await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data);
+            }); // await
+          }
         }
       }
     }
