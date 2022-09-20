@@ -416,83 +416,77 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG 代码整理
   Widget _privateGroupInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
     String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
-    Map content = Map();
-    String groupId = '';
-    String groupName = '';
-    Widget expiresWidget = SizedBox.shrink();
-    if (widget.message.content != null) {
-      content = widget.message.content as Map;
-      groupId = content['groupId']?.toString() ?? "";
-      groupName = content['name']?.toString() ?? "";
-      Map<String, dynamic>? data = content['item'];
-      if (data != null) {
-        DateTime? expiresAt = DateTime.fromMillisecondsSinceEpoch(data['expiresAt'] ?? 0);
-        String inviter = data['inviter']?.toString() ?? "";
-        if (expiresAt.isBefore(DateTime.now())) {
-          expiresWidget = Label(
-            Global.locale((s) => s.expired, ctx: context),
-            color: application.theme.fontColor2,
-            type: LabelType.bodyRegular,
-          );
-        } else {
-          expiresWidget = widget.message.isOutbound
-              ? Label(
-                  Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(expiresAt),
+
+    Map content = (widget.message.content != null) ? (widget.message.content as Map) : Map();
+    String groupId = content['groupId']?.toString() ?? "";
+    String groupName = content['name']?.toString() ?? "";
+    int type = int.tryParse(content['type']?.toString() ?? "0") ?? PrivateGroupType.normal;
+    Map<String, dynamic> itemData = content['item'] ?? Map();
+    int expiresAt = int.tryParse(itemData['expiresAt']?.toString() ?? "0") ?? 0;
+    String inviter = itemData['inviter']?.toString() ?? "";
+    if (content.isEmpty || itemData.isEmpty) return SizedBox.shrink();
+
+    Widget expiresWidget;
+    if (expiresAt < DateTime.now().millisecondsSinceEpoch) {
+      expiresWidget = Label(
+        Global.locale((s) => s.expired, ctx: context),
+        color: application.theme.fontColor2,
+        type: LabelType.bodyRegular,
+      );
+    } else {
+      expiresWidget = widget.message.isOutbound
+          ? Label(
+              Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
+              color: application.theme.fontColor2,
+              type: LabelType.bodyRegular,
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Label(
+                  Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
                   color: application.theme.fontColor2,
                   type: LabelType.bodyRegular,
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Label(
-                      Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(expiresAt),
-                      color: application.theme.fontColor2,
+                ),
+                InkWell(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
+                    child: Label(
+                      Global.locale((s) => s.accept, ctx: context),
                       type: LabelType.bodyRegular,
+                      fontWeight: FontWeight.bold,
+                      color: application.theme.primaryColor,
                     ),
-                    InkWell(
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
-                        child: Label(
-                          Global.locale((s) => s.accept, ctx: context),
-                          type: LabelType.bodyRegular,
-                          fontWeight: FontWeight.bold,
-                          color: application.theme.primaryColor,
-                        ),
-                      ),
-                      onTap: () async {
-                        String? name = await BottomDialog.of(Global.appContext).showInput(
-                          title: Global.locale((s) => s.accept_invitation, ctx: context),
-                          desc: inviteDesc,
-                          value: groupName,
-                          actionText: Global.locale((s) => s.accept_invitation, ctx: context),
-                          enable: false,
-                        );
-                        Uint8List? ownerSeed = clientCommon.client?.seed;
-                        if ((name?.isNotEmpty == true) && (ownerSeed != null)) {
-                          Loading.show();
-                          Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
-                          PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(data);
-                          groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
-                          if (groupItemSchema != null) {
-                            // TODO:GG PG 防止频发的机制
-                            await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
-                            PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName);
-                            if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
-                          }
-                          Loading.dismiss();
-                          if (groupItemSchema != null) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
-                        }
-                      },
-                    ),
-                  ],
-                );
-        }
-      }
+                  ),
+                  onTap: () async {
+                    await BottomDialog.of(Global.appContext).showInput(
+                      title: Global.locale((s) => s.accept_invitation, ctx: context),
+                      desc: inviteDesc,
+                      value: groupName,
+                      actionText: Global.locale((s) => s.accept_invitation, ctx: context),
+                      enable: false,
+                    );
+                    Uint8List? ownerSeed = clientCommon.client?.seed;
+                    if (ownerSeed == null) return;
+                    Loading.show();
+                    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
+                    PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
+                    groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
+                    if (groupItemSchema != null) {
+                      await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
+                      PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type, joined: true);
+                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
+                    }
+                    Loading.dismiss();
+                    if (groupItemSchema != null) Toast.show("wait adminer to sync"); // TODO:GG PG 中文?
+                  },
+                ),
+              ],
+            );
     }
 
     return Container(

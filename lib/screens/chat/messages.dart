@@ -68,8 +68,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   String? targetId;
   ContactSchema? _contact;
   TopicSchema? _topic;
-  bool? _isJoined;
   PrivateGroupSchema? _privateGroup;
+  bool? _isJoined;
 
   bool isClientOk = clientCommon.isClientCreated;
 
@@ -112,6 +112,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   void onRefreshArguments() {
     dynamic who = widget.arguments![ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
+      this._privateGroup = null;
       this._topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
       this._isJoined = this._topic?.joined == true;
       this._contact = null;
@@ -119,10 +120,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else if (who is PrivateGroupSchema) {
       this._privateGroup = widget.arguments![ChatMessagesScreen.argWho] ?? _privateGroup;
       this._topic = null;
-      this._isJoined = null;
+      this._isJoined = this._privateGroup?.joined == true;
       this._contact = null;
       this.targetId = this._privateGroup?.groupId;
     } else if (who is ContactSchema) {
+      this._privateGroup = null;
       this._topic = null;
       this._isJoined = null;
       this._contact = widget.arguments![ChatMessagesScreen.argWho] ?? _contact;
@@ -180,12 +182,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     // });
 
-    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
-      setState(() {
-        _privateGroup = event;
-      });
-    });
-
     // subscriber
     _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
       if (schema.clientAddress == clientCommon.address) {
@@ -199,6 +195,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       } else {
         _refreshTopicSubscribers();
       }
+    });
+
+    // privateGroup
+    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+      setState(() {
+        _privateGroup = event;
+      });
     });
 
     // messages
@@ -249,11 +252,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicJoined(); // await
     _refreshTopicSubscribers(); // await
 
-    // TODO:GG PG 防止频发的机制?
     // privateGroup
-    if ((_privateGroup != null) && (privateGroupCommon.dataComplete[_privateGroup?.groupId] != true)) {
-      chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, _privateGroup?.version);
-    }
+    _checkPrivateGroupVersion();
 
     // read
     _readMessages(true, true); // await
@@ -370,6 +370,22 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         await topicCommon.setCount(_topic?.id, count2, notify: true);
       }
     }
+  }
+
+  _checkPrivateGroupVersion() async {
+    if (_privateGroup == null) return;
+    if ((_privateGroup?.version != null) && (_privateGroup?.version?.isNotEmpty == true)) return;
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    if (nowAt - _privateGroup!.optionsRequestAt < PrivateGroupSchema.requestOptionsGapMs) {
+      logger.d('$TAG - _checkPrivateGroupInfos - time too little - past:${nowAt - (_privateGroup?.optionsRequestAt ?? 0)}');
+      return;
+    }
+    logger.i('$TAG - _checkPrivateGroupInfos - time too large - past:${nowAt - (_privateGroup?.optionsRequestAt ?? 0)}');
+    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, _privateGroup?.version).then((value) async {
+      _privateGroup?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
+      _privateGroup?.setOptionsRequestedVersion(_privateGroup?.version);
+      await privateGroupCommon.updateGroupData(_privateGroup?.groupId, _privateGroup?.data);
+    });
   }
 
   _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
@@ -491,9 +507,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         disableTip = Global.locale((s) => s.need_re_subscribe, ctx: context);
       }
     } else if (_privateGroup != null) {
-      // TODO:GG PG 那这个有update通知吗？
-      if ((_privateGroup != null) && (privateGroupCommon.dataComplete[_privateGroup?.groupId] != true)) {
+      if ((_privateGroup?.version == null) || (_privateGroup?.version?.isEmpty == true)) {
         disableTip = Global.locale((s) => s.data_synchronization, ctx: context);
+      } else if (!(_isJoined == true)) {
+        disableTip = Global.locale((s) => s.need_re_subscribe, ctx: context);
       }
     }
     if (!isClientOk) {

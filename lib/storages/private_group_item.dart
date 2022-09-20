@@ -36,6 +36,7 @@ class PrivateGroupItemStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX `index_private_group_item_group_id_invitee` ON `$tableName` (`group_id`, `invitee`)');
     await db.execute('CREATE INDEX `index_private_group_item_group_id_expires_at` ON `$tableName` (`group_id`, `expires_at`)');
+    await db.execute('CREATE INDEX `index_private_group_item_group_id_permission_expires_at` ON `$tableName` (`group_id`, `permission`, `expires_at`)');
   }
 
   Future<PrivateGroupItemSchema?> insert(PrivateGroupItemSchema? schema) async {
@@ -85,7 +86,7 @@ class PrivateGroupItemStorage with Tag {
     return null;
   }
 
-  Future<List<PrivateGroupItemSchema>> queryList(String? groupId, {int offset = 0, int limit = 20}) async {
+  Future<List<PrivateGroupItemSchema>> queryList(String? groupId, {int? perm, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (groupId == null || groupId.isEmpty) return [];
     try {
@@ -93,8 +94,8 @@ class PrivateGroupItemStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'group_id = ?',
-          whereArgs: [groupId],
+          where: perm != null ? 'group_id = ? AND permission = ?' : 'group_id = ?',
+          whereArgs: perm != null ? [groupId, perm] : [groupId],
           offset: offset,
           limit: limit,
           orderBy: 'expires_at DESC',

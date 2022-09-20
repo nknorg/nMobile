@@ -168,7 +168,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (clientAddress == clientCommon.address) {
       marks.add(Global.locale((s) => s.you));
     }
-    if (privateGroup?.isOwner(clientAddress) == true) {
+    if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress) == true) {
       marks.add(Global.locale((s) => s.owner));
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
@@ -202,8 +202,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (privateGroup == null) return SizedBox.shrink();
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return SizedBox.shrink();
     if (privateGroupItem.invitee == clientCommon.address) return SizedBox.shrink();
-    if (!privateGroup.isOwner(clientCommon.getPublicKey())) return SizedBox.shrink();
-
+    if (!privateGroupCommon.isOwner(privateGroup.ownerPublicKey, clientCommon.getPublicKey())) return SizedBox.shrink();
     return SizedBox.shrink();
 
     return SizedBox(

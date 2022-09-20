@@ -533,11 +533,14 @@ class ChatOutCommon with Tag {
       content: {
         'groupId': privateGroup.groupId,
         'name': privateGroup.name,
+        'type': privateGroup.type,
         'version': privateGroup.version,
         'item': {
           'groupId': privateGroup.groupId,
           'permission': groupItem.permission,
           'expiresAt': groupItem.expiresAt,
+          'invitee': groupItem.invitee,
+          'inviter': groupItem.inviter,
           'inviterRawData': groupItem.inviterRawData,
           'inviterSignature': groupItem.inviterSignature,
         },
@@ -848,57 +851,6 @@ class ChatOutCommon with Tag {
     return pid;
   }
 
-  Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
-    if (group == null || message == null || msgData == null) return null;
-    // me
-    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, clientCommon.address);
-    if (_me == null) {
-      logger.w("$TAG - _sendWithPrivateGroup - member me is null - group:$group - message:$message");
-      return null;
-    }
-    // destList
-    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(message.groupId);
-    bool selfIsReceiver = false;
-    List<String> destList = [];
-    for (var i = 0; i < members.length; i++) {
-      String? clientAddress = members[i].invitee;
-      if (clientAddress == null || clientAddress.isEmpty) continue;
-      if (clientAddress == clientCommon.address) {
-        selfIsReceiver = true;
-      } else {
-        destList.add(clientAddress);
-      }
-    }
-    // send
-    Uint8List? pid;
-    if (destList.isNotEmpty) {
-      if (message.canTryPiece) {
-        pid = await _sendByPieces(destList, message);
-      }
-      if ((pid == null) || pid.isEmpty) {
-        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
-      }
-    }
-    // self
-    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
-      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
-      if (destList.isEmpty) pid = _pid;
-    }
-    // push
-    if (pid?.isNotEmpty == true) {
-      if (notification) {
-        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
-          for (var i = 0; i < contactList.length; i++) {
-            ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken);
-          }
-        });
-      }
-    }
-    return pid;
-  }
-
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (topic == null || message == null || msgData == null) return null;
     // me
@@ -965,6 +917,57 @@ class ChatOutCommon with Tag {
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
     //   await topicCommon.delete(topic.id, notify: true);
     // }
+    return pid;
+  }
+
+  Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
+    if (group == null || message == null || msgData == null) return null;
+    // me
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, clientCommon.address);
+    if (_me == null) {
+      logger.w("$TAG - _sendWithPrivateGroup - member me is null - group:$group - message:$message");
+      return null;
+    }
+    // destList
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(message.groupId);
+    bool selfIsReceiver = false;
+    List<String> destList = [];
+    for (var i = 0; i < members.length; i++) {
+      String? clientAddress = members[i].invitee;
+      if (clientAddress == null || clientAddress.isEmpty) continue;
+      if (clientAddress == clientCommon.address) {
+        selfIsReceiver = true;
+      } else {
+        destList.add(clientAddress);
+      }
+    }
+    // send
+    Uint8List? pid;
+    if (destList.isNotEmpty) {
+      if (message.canTryPiece) {
+        pid = await _sendByPieces(destList, message);
+      }
+      if ((pid == null) || pid.isEmpty) {
+        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
+      }
+    }
+    // self
+    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
+      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
+      if (destList.isEmpty) pid = _pid;
+    }
+    // push
+    if (pid?.isNotEmpty == true) {
+      if (notification) {
+        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+          for (var i = 0; i < contactList.length; i++) {
+            ContactSchema _contact = contactList[i];
+            if (!_contact.isMe) _sendPush(_contact.deviceToken);
+          }
+        });
+      }
+    }
     return pid;
   }
 
