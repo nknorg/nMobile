@@ -800,17 +800,15 @@ class ChatInCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupOptionRequest(MessageSchema received) async {
-    String target = received.from;
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     String? groupId = data['groupId']?.toString();
     String? version = data['version']?.toString();
-    return await privateGroupCommon.pushPrivateGroupInfo(target, groupId, version);
+    return await privateGroupCommon.pushPrivateGroupOptions(received.from, groupId, version);
   }
 
   // NO group (1 to 1)
   Future _receivePrivateGroupOptionResponse(MessageSchema received) async {
-    String target = received.from;
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     String? groupId = data['groupId']?.toString();
@@ -818,20 +816,19 @@ class ChatInCommon with Tag {
     String version = data['version'];
     String members = data['members'];
     String signature = data['signature'];
-    privateGroupCommon.syncPrivateGroupInfo(groupId, rawData, version, members, signature, notify: true).then((group) {
+    privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature, notify: true).then((group) {
       // TODO:GG PG 防止频发的机制
-      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(target, groupId, null);
+      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, null);
     }); // await
   }
 
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupMemberRequest(MessageSchema received) async {
-    String target = received.from;
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     String? groupId = data['groupId']?.toString();
     String? version = data['version']?.toString();
-    return await privateGroupCommon.pushPrivateGroupMember(target, groupId, version);
+    return await privateGroupCommon.pushPrivateGroupMembers(received.from, groupId, version);
   }
 
   // NO group (1 to 1)
@@ -860,7 +857,7 @@ class ChatInCommon with Tag {
         if (item != null) members.add(item);
       }
     }
-    privateGroupCommon.syncPrivateGroupMember(groupId, version, members, toast: false); // await
+    privateGroupCommon.updatePrivateGroupMembers(groupId, version, members, toast: false); // await
   }
 
   Future<int> _deletePieces(String msgId) async {

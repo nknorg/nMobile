@@ -168,7 +168,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (clientAddress == clientCommon.address) {
       marks.add(Global.locale((s) => s.you));
     }
-    if (privateGroup?.ownerPublicKey == clientAddress) {
+    if (privateGroup?.isOwner(clientAddress) == true) {
       marks.add(Global.locale((s) => s.owner));
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
