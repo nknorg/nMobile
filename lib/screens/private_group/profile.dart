@@ -64,7 +64,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((PrivateGroupSchema event) {
       setState(() {
         _privateGroup = event;
-        _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
+        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
       });
     });
   }
@@ -86,7 +86,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
-    _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
+    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
 
     setState(() {});
   }

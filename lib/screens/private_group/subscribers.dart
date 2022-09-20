@@ -62,7 +62,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupSchema event) {
       setState(() {
         _privateGroup = event;
-        _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
+        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
       });
     });
     _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupItemSchema schema) {
@@ -101,7 +101,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
-    _isOwner = _privateGroup?.isOwner(clientCommon.getPublicKey()) == true;
+    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
 
     setState(() {});
 
@@ -182,7 +182,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
                       dark: false,
                       body: Builder(
                         builder: (BuildContext context) {
-                          if (_privateGroup?.isOwner(clientCommon.getPublicKey()) == true) {
+                          if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true) {
                             return Container(
                               padding: EdgeInsets.only(left: 3),
                               child: Label(
