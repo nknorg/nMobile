@@ -39,12 +39,12 @@ class PrivateGroupItemSchema {
     this.data,
   });
 
-  static PrivateGroupItemSchema? create(String? groupId, {int? expiresAt, int? permission, String? inviter, String? invitee, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+  static PrivateGroupItemSchema? create(String? groupId, {int? permission, int? expiresAt, String? inviter, String? invitee, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
-      expiresAt: expiresAt,
       permission: permission ?? PrivateGroupItemPerm.normal,
+      expiresAt: expiresAt,
       inviter: inviter,
       invitee: invitee,
       inviterRawData: inviterRawData,
