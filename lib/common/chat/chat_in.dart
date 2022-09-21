@@ -776,9 +776,44 @@ class ChatInCommon with Tag {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
     String groupId = data['groupId']?.toString() ?? "";
-    if (groupId.isEmpty) return false;
-    var group = await privateGroupCommon.receiveAccept(groupId, data, toast: false);
-    return group != null;
+    String invitee = data['invitee']?.toString() ?? "";
+    if (groupId.isEmpty || invitee.isEmpty) return false;
+    // item
+    PrivateGroupItemSchema? itemExists = await privateGroupCommon.queryGroupItem(groupId, invitee);
+    if ((itemExists != null) && (itemExists.permission != PrivateGroupItemPerm.none)) {
+      logger.w('$TAG - _receivePrivateGroupAccept - already in group - exists:$itemExists');
+      return false;
+    }
+    PrivateGroupItemSchema? newGroupItem = PrivateGroupItemSchema.fromRawData(data);
+    if (newGroupItem == null) {
+      logger.e('$TAG - _receivePrivateGroupAccept - invitee nil.');
+      return false;
+    }
+    // insert
+    PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true, toast: false);
+    if (groupSchema == null) {
+      logger.e('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
+      return false;
+    }
+    // sync members
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+    if (members.length <= 0) {
+      logger.e('$TAG - _receivePrivateGroupAccept - has no this group info');
+      return false;
+    }
+    // sync invitee
+    chatOutCommon.sendPrivateGroupOptionResponse(newGroupItem.invitee, groupSchema, privateGroupCommon.getInviteesKey(members)); // await
+    for (int i = 0; i < members.length; i += 10) {
+      List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
+      chatOutCommon.sendPrivateGroupMemberResponse(newGroupItem.invitee, groupSchema, memberSplits); // await
+    }
+    // sync members
+    members.forEach((m) {
+      if (m.invitee != clientCommon.address) {
+        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newGroupItem]); // await
+      }
+    });
+    return true;
   }
 
   // TODO:GG PG ? 还在考虑中

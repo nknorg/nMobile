@@ -305,11 +305,11 @@ class ChatCommon with Tag {
           } else {
             int nowAt = DateTime.now().millisecondsSinceEpoch;
             logger.d('$TAG - privateGroupHandle - version same - version:$remoteVersion');
-            if (nowAt - exists.optionsRequestAt > PrivateGroupSchema.requestOptionsGapMs) {
-              logger.i('$TAG - pushPrivateGroupOptions - time too large - past:${nowAt - exists.optionsRequestAt}');
+            if (nowAt - exists.optionsRequestAt > (2 * 60 * 1000)) {
+              logger.i('$TAG - pushPrivateGroupOptions - time > 2m - past:${nowAt - exists.optionsRequestAt}');
               needRequest = true;
             } else {
-              logger.d('$TAG - pushPrivateGroupOptions - time too little - past:${nowAt - exists.optionsRequestAt}');
+              logger.d('$TAG - pushPrivateGroupOptions - time < 2m - past:${nowAt - exists.optionsRequestAt}');
               needRequest = false;
             }
           }
