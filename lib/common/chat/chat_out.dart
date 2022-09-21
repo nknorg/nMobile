@@ -606,7 +606,8 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (schema == null) return null;
-    String data = MessageData.getPrivateGroupMemberResponse(schema, members);
+    List<Map<String, dynamic>> membersData = privateGroupCommon.getMembersData(members);
+    String data = MessageData.getPrivateGroupMemberResponse(schema, membersData);
     await _sendWithAddressSafe([target], data);
   }
 
@@ -924,8 +925,8 @@ class ChatOutCommon with Tag {
     if (group == null || message == null || msgData == null) return null;
     // me
     PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, clientCommon.address);
-    if (_me == null) {
-      logger.w("$TAG - _sendWithPrivateGroup - member me is null - group:$group - message:$message");
+    if ((_me == null) || (_me.permission == PrivateGroupItemPerm.none)) {
+      logger.w("$TAG - _sendWithPrivateGroup - member me is null - me:$_me - group:$group - message:$message");
       return null;
     }
     // destList

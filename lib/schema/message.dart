@@ -1473,13 +1473,13 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupMemberResponse(PrivateGroupSchema privateGroup, List<PrivateGroupItemSchema> members) {
+  static String getPrivateGroupMemberResponse(PrivateGroupSchema privateGroup, List<Map<String, dynamic>> membersData) {
     Map data = _base(MessageContentType.privateGroupMemberResponse);
     data.addAll({
       'content': {
         'groupId': privateGroup.groupId,
         'version': privateGroup.version,
-        'membersData': privateGroupCommon.getMembersData(members),
+        'membersData': membersData,
       },
     });
     return jsonEncode(data);
