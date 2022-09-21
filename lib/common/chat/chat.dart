@@ -289,7 +289,7 @@ class ChatCommon with Tag {
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (exists == null) {
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
-      exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
+      exists = await privateGroupCommon.addPrivateGroup(schema, false, notify: true, checkDuplicated: false);
     }
     if (exists == null) return null;
     // sync

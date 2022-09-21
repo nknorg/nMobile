@@ -12,6 +12,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/utils/hash.dart';
@@ -35,11 +36,11 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  // TODO:GG PG 再来个item的update的
+  // TODO:GG PG 再来个item的update的?
 
   Map<String, bool> dataComplete = Map();
 
-  // TODO:GG PG 如果不完整，怎么同步 ?
+  // TODO:GG PG 如果不完整，怎么同步 ??
   Future<bool> checkDataComplete(String? groupId) async {
     if (groupId == null || groupId.isEmpty) return false;
     PrivateGroupSchema? privateGroup = await queryGroup(groupId);
@@ -115,7 +116,7 @@ class PrivateGroupCommon with Tag {
     schemaGroup.version = genPrivateGroupVersion(1, schemaGroup.signature, getInviteesKey([schemaItem]));
     schemaGroup.joined = true;
     schemaGroup.count = 1;
-    schemaGroup = await addPrivateGroup(schemaGroup, notify: true, checkDuplicated: false);
+    schemaGroup = await addPrivateGroup(schemaGroup, false, notify: true, checkDuplicated: false);
     return schemaGroup;
   }
 
@@ -309,7 +310,7 @@ class PrivateGroupCommon with Tag {
       _newGroup.count = membersCount;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']));
       _newGroup.setSignature(signature);
-      exists = await addPrivateGroup(_newGroup, notify: true);
+      exists = await addPrivateGroup(_newGroup, true, notify: true);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
       List<String> splitsNative = exists.version?.split(".") ?? [];
@@ -319,14 +320,20 @@ class PrivateGroupCommon with Tag {
       if (nativeVersionCommits < remoteVersionCommits) {
         bool verifiedGroup = await verifiedSignature(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), exists.signature);
         if (!verifiedGroup) {
-          exists.type = infos['type'] ?? exists.type;
-          exists.name = infos['name'] ?? exists.name;
-          await updateGroupNameType(groupId, exists.name, exists.type, notify: true);
-          exists.setSignature(signature);
-          await updateGroupData(groupId, exists.data, notify: true);
-          // TODO:GG PG options update
+          if (infos['type'] != exists.type || infos['name'] != exists.name) {
+            exists.type = infos['type'] ?? exists.type;
+            exists.name = infos['name'] ?? exists.name;
+            await updateGroupNameType(groupId, exists.name, exists.type, notify: true);
+          }
+          if (signature != exists.signature) {
+            exists.setSignature(signature);
+            await updateGroupData(groupId, exists.data, notify: true);
+          }
+          // TODO:GG PG options update?
         }
         if (version != exists.version || membersCount != exists.count) {
+          exists.version = version;
+          exists.count = membersCount;
           await updateGroupVersionCount(groupId, version, membersCount, notify: true);
         }
         logger.i('$TAG - updatePrivateGroupOptions - group modify - group:$exists');
@@ -363,11 +370,11 @@ class PrivateGroupCommon with Tag {
     return true;
   }
 
-  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? remoteMembers) async {
+  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? newMembers) async {
     if (sender == null || sender.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     if (remoteVersion == null || remoteVersion.isEmpty) return null;
-    if (remoteMembers == null || remoteMembers.isEmpty) return null;
+    if (newMembers == null || newMembers.isEmpty) return null;
     // exists
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
@@ -375,17 +382,17 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // version
-    List<String> splits = remoteVersion.split(".");
-    int commits = splits.length >= 2 ? (int.tryParse(splits[0]) ?? -1) : -1;
-    String signVersion = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(remoteMembers));
-    if ((schemaGroup.version != remoteVersion) || (signVersion != remoteVersion)) {
-      logger.e('$TAG - updatePrivateGroupMembers - version wrong. - groupId:$groupId');
-      return null;
-    }
+    // List<String> splits = remoteVersion.split(".");
+    // int commits = splits.length >= 2 ? (int.tryParse(splits[0]) ?? -1) : -1;
+    // String signVersion = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(newMembers));
+    // if ((schemaGroup.version != remoteVersion) || (signVersion != remoteVersion)) {
+    //   logger.e('$TAG - updatePrivateGroupMembers - version wrong. - groupId:$groupId');
+    //   return null;
+    // }
     // members
     bool inGroup = false;
-    for (int i = 0; i < remoteMembers.length; i++) {
-      PrivateGroupItemSchema member = remoteMembers[i];
+    for (int i = 0; i < newMembers.length; i++) {
+      PrivateGroupItemSchema member = newMembers[i];
       if (member.groupId != groupId) {
         logger.e('$TAG - updatePrivateGroupMembers - groupId incomplete data. - i$i - member:$member');
         continue;
@@ -410,7 +417,7 @@ class PrivateGroupCommon with Tag {
       }
     }
     // joined
-    if (schemaGroup.joined != inGroup) {
+    if (!schemaGroup.joined && inGroup) {
       schemaGroup.joined = inGroup;
       await updateGroupJoined(groupId, schemaGroup.joined, notify: true);
     }
@@ -503,7 +510,7 @@ class PrivateGroupCommon with Tag {
 
   ///****************************************** Storage *******************************************
 
-  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema? schema, bool sessionNotify, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
     if (checkDuplicated) {
       PrivateGroupSchema? exist = await queryGroup(schema.groupId);
@@ -514,6 +521,11 @@ class PrivateGroupCommon with Tag {
     }
     PrivateGroupSchema? added = await PrivateGroupStorage.instance.insert(schema);
     if (added != null && notify) _addGroupSink.add(added);
+    // session
+    if (sessionNotify) {
+      SessionSchema? added = SessionSchema(targetId: schema.groupId, type: SessionType.PRIVATE_GROUP);
+      await sessionCommon.add(added, null, notify: true);
+    }
     return added;
   }
 
@@ -556,7 +568,7 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupStorage.instance.query(groupId);
   }
 
-  Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, bool msgNotify, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, bool sessionNotify, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
     if (checkDuplicated) {
       PrivateGroupItemSchema? exist = await queryGroupItem(schema.groupId, schema.invitee);
@@ -567,7 +579,8 @@ class PrivateGroupCommon with Tag {
     }
     PrivateGroupItemSchema? added = await PrivateGroupItemStorage.instance.insert(schema);
     if (added != null && notify) _addGroupItemSink.add(added);
-    if (msgNotify) {
+    // session
+    if (sessionNotify) {
       MessageSchema? message = MessageSchema.fromSend(
         msgId: Uuid().v4(),
         from: clientCommon.address ?? "",
@@ -578,7 +591,7 @@ class PrivateGroupCommon with Tag {
       );
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       message = await chatOutCommon.insertMessage(message, notify: true);
-      if (message != null) chatCommon.sessionHandle(message);
+      if (message != null) await chatCommon.sessionHandle(message);
     }
     return added;
   }
