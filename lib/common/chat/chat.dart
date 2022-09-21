@@ -298,25 +298,25 @@ class ChatCommon with Tag {
         String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
         bool? versionOk = await privateGroupCommon.verifiedGroupVersion(exists, remoteVersion, signVersion: false);
         if (versionOk == false) {
-          bool needRequest = false;
+          int nowAt = DateTime.now().millisecondsSinceEpoch;
+          bool needRequestOptions = false;
           if (exists.optionsRequestedVersion != remoteVersion) {
-            logger.i('$TAG - privateGroupHandle - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
-            needRequest = true;
+            logger.i('$TAG - privateGroupHandle - options_request - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
+            needRequestOptions = true;
           } else {
-            int nowAt = DateTime.now().millisecondsSinceEpoch;
-            logger.d('$TAG - privateGroupHandle - version same - version:$remoteVersion');
-            if (nowAt - exists.optionsRequestAt > (2 * 60 * 1000)) {
-              logger.i('$TAG - pushPrivateGroupOptions - time > 2m - past:${nowAt - exists.optionsRequestAt}');
-              needRequest = true;
+            int timePast = nowAt - exists.optionsRequestAt;
+            if (timePast > (5 * 60 * 1000)) {
+              logger.i('$TAG - pushPrivateGroupOptions - options_request - time > 2m - past:$timePast');
+              needRequestOptions = true;
             } else {
-              logger.d('$TAG - pushPrivateGroupOptions - time < 2m - past:${nowAt - exists.optionsRequestAt}');
-              needRequest = false;
+              logger.d('$TAG - pushPrivateGroupOptions - options_request - time < 2m - past:$timePast');
+              needRequestOptions = false;
             }
           }
-          if (needRequest) {
-            chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, exists.version).then((value) async {
-              exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
-              exists?.setOptionsRequestedVersion(remoteVersion);
+          if (needRequestOptions) {
+            chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId).then((version) async {
+              exists?.setOptionsRequestAt(nowAt);
+              exists?.setOptionsRequestedVersion(version);
               await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data);
             }); // await
           }

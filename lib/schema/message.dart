@@ -222,7 +222,7 @@ class MessageSchema {
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null || raw.data == null || raw.src == null) return null;
-    Map<String, dynamic>? data = Util.jsonFormat(raw.data);
+    Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
 
     MessageSchema schema = MessageSchema(
@@ -516,7 +516,7 @@ class MessageSchema {
       deleteAt: e['delete_at'] != null ? e['delete_at'] : null,
       // data
       contentType: e['type'] ?? "",
-      options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormat(e['options']) : null,
+      options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['options']) : null,
     );
 
     // content = File/Map/String...
@@ -526,7 +526,7 @@ class MessageSchema {
       case MessageContentType.deviceRequest:
       case MessageContentType.deviceResponse:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
-          schema.content = Util.jsonFormat(e['content']);
+          schema.content = Util.jsonFormatMap(e['content']);
         } else {
           schema.content = e['content'];
         }
@@ -557,7 +557,7 @@ class MessageSchema {
       case MessageContentType.privateGroupMemberRequest:
       case MessageContentType.privateGroupMemberResponse:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
-          schema.content = Util.jsonFormat(e['content']);
+          schema.content = Util.jsonFormatMap(e['content']);
         } else {
           schema.content = e['content'];
         }
@@ -1424,15 +1424,6 @@ class MessageData {
         'inviterSignature': item.inviterSignature,
         'inviteeSignature': item.inviteeSignature,
       }
-    });
-    return jsonEncode(data);
-  }
-
-  // TODO:GG PG 还没想好
-  static String getPrivateGroupSubscribe(MessageSchema message) {
-    Map data = _base(MessageContentType.privateGroupSubscribe, id: message.msgId, sendTimestamp: message.sendAt);
-    data.addAll({
-      'groupId': message.groupId,
     });
     return jsonEncode(data);
   }
