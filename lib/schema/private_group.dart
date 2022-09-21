@@ -103,7 +103,7 @@ class PrivateGroupSchema {
   }
 
   int get optionsRequestAt {
-    return int.tryParse(data?['optionsRequestAt'] ?? "0") ?? 0;
+    return int.tryParse(data?['optionsRequestAt']?.toString() ?? "0") ?? 0;
   }
 
   void setOptionsRequestAt(int? timeAt) {
@@ -112,7 +112,7 @@ class PrivateGroupSchema {
   }
 
   String get optionsRequestedVersion {
-    return data?['optionsRequestedVersion'] ?? "";
+    return data?['optionsRequestedVersion']?.toString() ?? "";
   }
 
   void setOptionsRequestedVersion(String? version) {

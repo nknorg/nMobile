@@ -806,7 +806,7 @@ class ChatInCommon with Tag {
     }
     // sync members
     members.forEach((m) {
-      if (m.invitee != clientCommon.address) {
+      if ((m.invitee != clientCommon.address) && (m.invitee != newGroupItem.invitee)) {
         chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newGroupItem]); // await
       }
     });
