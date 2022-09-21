@@ -36,23 +36,7 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  // TODO:GG PG 再来个item的update的?
-
-  Map<String, bool> dataComplete = Map();
-
-  // TODO:GG PG 如果不完整，怎么同步 ??
-  Future<bool> checkDataComplete(String? groupId) async {
-    if (groupId == null || groupId.isEmpty) return false;
-    PrivateGroupSchema? privateGroup = await queryGroup(groupId);
-    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    var version = genPrivateGroupVersion(-1, privateGroup?.signature ?? "", getInviteesKey(members));
-    if ((version == privateGroup?.version) && (privateGroup?.version != null)) {
-      dataComplete[groupId] = true;
-      return true;
-    }
-    dataComplete[groupId] = false;
-    return false;
-  }
+  // TODO:GG PG 再来个item的update的 ?
 
   ///****************************************** Action *******************************************
 
@@ -329,7 +313,7 @@ class PrivateGroupCommon with Tag {
             exists.setSignature(signature);
             await updateGroupData(groupId, exists.data, notify: true);
           }
-          // TODO:GG PG options update?
+          // TODO:GG PG options update ?
         }
         if (version != exists.version || membersCount != exists.count) {
           exists.version = version;
