@@ -308,7 +308,7 @@ class SubscriberCommon with Tag {
         String permIndex = prefix.split("__")[prefix.split("__").length - 1];
         int permPage = int.tryParse(permIndex) ?? 0;
         // meta (same with client_subscription[meta])
-        Map<String, dynamic>? meta = Util.jsonFormat(value);
+        Map<String, dynamic>? meta = Util.jsonFormatMap(value);
         // accept
         List<dynamic> acceptList = meta?['accept'] ?? [];
         for (int i = 0; i < acceptList.length; i++) {

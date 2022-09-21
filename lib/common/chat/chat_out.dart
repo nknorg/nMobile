@@ -322,7 +322,7 @@ class ChatOutCommon with Tag {
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
     }
-    MessageSchema? inserted = await _insertMessage(message);
+    MessageSchema? inserted = await insertMessage(message);
     if (inserted == null) return null;
     // ipfs
     chatCommon.startIpfsUpload(inserted.msgId); // await
@@ -559,28 +559,20 @@ class ChatOutCommon with Tag {
     await _sendWithAddressSafe([target], data, notification: false);
   }
 
-  // TODO:GG PG 应该由owner发送比较好??? 还是说本地insert ?
   // NO group (1 to 1)
-  Future sendPrivateGroupSubscribe(String? groupId) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (groupId == null || groupId.isEmpty) return null;
-    MessageSchema message = MessageSchema.fromSend(
-      msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
-      groupId: groupId,
-      contentType: MessageContentType.privateGroupSubscribe,
-    );
-    String data = MessageData.getPrivateGroupSubscribe(message);
-    await _send(message, data);
-  }
-
-  // NO group (1 to 1)
-  Future sendPrivateGroupOptionRequest(String? target, String? groupId, String? groupVersion) async {
+  Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
-    String data = MessageData.getPrivateGroupOptionRequest(groupId, groupVersion);
+    PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
+    if (group == null) return null;
+    List<String> splits = group.version?.split(".") ?? [];
+    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
+    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
+    String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
     await _sendWithAddressSafe([target], data, notification: false);
+    return getVersion;
   }
 
   // NO group (1 to 1)
@@ -593,11 +585,17 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future sendPrivateGroupMemberRequest(String? target, String? groupId, String? groupVersion) async {
+  Future sendPrivateGroupMemberRequest(String? target, String? groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
-    String data = MessageData.getPrivateGroupMemberRequest(groupId, groupVersion);
+    PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
+    if (group == null) return null;
+    List<String> splits = group.version?.split(".") ?? [];
+    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
+    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
+    String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
     await _sendWithAddressSafe([target], data, notification: false);
   }
 
@@ -706,7 +704,7 @@ class ChatOutCommon with Tag {
     }, id: message.msgId);
   }
 
-  Future<MessageSchema?> _insertMessage(MessageSchema? message, {bool notify = true}) async {
+  Future<MessageSchema?> insertMessage(MessageSchema? message, {bool notify = true}) async {
     if (message == null) return null;
     message = await MessageStorage.instance.insert(message); // DB
     if (message == null) return null;
@@ -723,7 +721,7 @@ class ChatOutCommon with Tag {
     bool? notification,
   }) async {
     if (message == null || msgData == null) return null;
-    if (insert) message = await _insertMessage(message);
+    if (insert) message = await insertMessage(message);
     if (message == null) return null;
     // session
     if (sessionSync) await chatCommon.sessionHandle(message);

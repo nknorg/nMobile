@@ -124,7 +124,7 @@ class SubscriberSchema {
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
 
       if (subscribeSchema.data == null) {
         subscribeSchema.data = new Map<String, dynamic>();

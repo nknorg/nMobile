@@ -37,8 +37,18 @@ class Util {
     }
   }
 
-  static Map<String, dynamic>? jsonFormat(raw) {
+  static Map<String, dynamic>? jsonFormatMap(raw) {
     Map<String, dynamic>? jsonData;
+    try {
+      jsonData = jsonDecode(raw);
+    } on Exception catch (e) {
+      logger.e("Util - jsonFormat ---> $e");
+    }
+    return jsonData;
+  }
+
+  static List? jsonFormatList(raw) {
+    List? jsonData;
     try {
       jsonData = jsonDecode(raw);
     } on Exception catch (e) {

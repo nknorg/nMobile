@@ -11,9 +11,6 @@ class PrivateGroupType {
 }
 
 class PrivateGroupSchema {
-  static const requestOptionsGapMs = 1 * 60 * 1000; // 1m
-  static const requestMembersGapMs = 1 * 60 * 1000; // 1m
-
   int? id;
   String groupId;
   String name;
@@ -123,41 +120,12 @@ class PrivateGroupSchema {
     data?['optionsRequestedVersion'] = version;
   }
 
-  // TODO:GG PG
-  int get optionsUpdateAt {
-    return int.tryParse(data?['optionsUpdateAt'] ?? "0") ?? 0;
-  }
-
-  void setOptionsUpdateAt(int? timeAt) {
-    if (data == null) data = Map();
-    data?['optionsUpdateAt'] = timeAt;
-  }
-
-  // TODO:GG PG
-  int get membersRequestAt {
-    return int.tryParse(data?['membersRequestAt'] ?? "0") ?? 0;
-  }
-
-  void setMembersRequestAt(int? timeAt) {
-    if (data == null) data = Map();
-    data?['membersRequestAt'] = timeAt;
-  }
-
-  // TODO:GG PG
-  int get membersUpdateAt {
-    return int.tryParse(data?['membersUpdateAt'] ?? "0") ?? 0;
-  }
-
-  void setMembersUpdateAt(int? timeAt) {
-    if (data == null) data = Map();
-    data?['membersUpdateAt'] = timeAt;
-  }
-
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
     data['name'] = name;
     data['type'] = type ?? PrivateGroupType.normal;
+    data['deleteAfterSeconds'] = options?.deleteAfterSeconds;
     return data.sortByKey();
   }
 
@@ -196,7 +164,7 @@ class PrivateGroupSchema {
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = Util.jsonFormat(e['options']);
+      Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       schema.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (schema.options == null) {
@@ -204,7 +172,7 @@ class PrivateGroupSchema {
     }
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
       if (schema.data == null) {
         schema.data = new Map<String, dynamic>();
       }

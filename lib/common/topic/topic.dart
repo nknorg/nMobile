@@ -823,7 +823,7 @@ class TopicCommon with Tag {
     int expireSec = int.tryParse(expiresAt) ?? 0;
     Map<String, dynamic> meta = Map();
     if (result['meta']?.toString().isNotEmpty == true) {
-      meta = Util.jsonFormat(result['meta']) ?? Map();
+      meta = Util.jsonFormatMap(result['meta']) ?? Map();
     }
     return [expireSec, meta];
   }
@@ -834,7 +834,7 @@ class TopicCommon with Tag {
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
     Map<String, dynamic> result = await TopSub.getSubscription(topic, indexWithPubKey);
     if (result['meta']?.toString().isNotEmpty == true) {
-      Map<String, dynamic> meta = Util.jsonFormat(result['meta']) ?? Map();
+      Map<String, dynamic> meta = Util.jsonFormatMap(result['meta']) ?? Map();
       logger.d("$TAG - _getMetaByNodePage - meta:$meta");
       return meta;
     }

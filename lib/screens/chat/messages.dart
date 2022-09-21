@@ -375,29 +375,33 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _checkPrivateGroupVersion() async {
     if (_privateGroup == null || clientCommon.address == null) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
-    String? version = _privateGroup?.version;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    int timePast = nowAt - (_privateGroup?.optionsRequestAt ?? 0);
+    bool needOptionsMembers = false;
+    int timeOptionsPast = nowAt - (_privateGroup?.optionsRequestAt ?? 0);
     if (_privateGroup?.version?.isNotEmpty == true) {
-      if (timePast < 1 * 24 * 60 * 60 * 1000) {
-        logger.d('$TAG - _checkPrivateGroupVersion - version exist - time < 1d - past:$timePast');
-        return;
+      if (timeOptionsPast < 1 * 24 * 60 * 60 * 1000) {
+        logger.d('$TAG - _checkPrivateGroupVersion - options - version exist - time < 1d - past:$timeOptionsPast');
+        needOptionsMembers = false;
       } else {
-        logger.i('$TAG - _checkPrivateGroupVersion - version exist - time > 1d - past:$timePast');
+        logger.i('$TAG - _checkPrivateGroupVersion - options - version exist - time > 1d - past:$timeOptionsPast');
+        needOptionsMembers = true;
       }
     } else {
-      if (timePast < 3 * 60 * 1000) {
-        logger.d('$TAG - _checkPrivateGroupVersion - version null - time < 3m - past:$timePast');
-        return;
+      if (timeOptionsPast < 5 * 60 * 1000) {
+        logger.d('$TAG - _checkPrivateGroupVersion - options - version null - time < 3m - past:$timeOptionsPast');
+        needOptionsMembers = false;
       } else {
-        logger.i('$TAG - _checkPrivateGroupVersion - version null - time > 3m - past:$timePast');
+        logger.i('$TAG - _checkPrivateGroupVersion - options - version null - time > 3m - past:$timeOptionsPast');
+        needOptionsMembers = true;
       }
     }
-    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, version).then((value) async {
-      _privateGroup?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
-      _privateGroup?.setOptionsRequestedVersion(version);
-      await privateGroupCommon.updateGroupData(_privateGroup?.groupId, _privateGroup?.data);
-    });
+    if (needOptionsMembers) {
+      await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId).then((version) async {
+        _privateGroup?.setOptionsRequestAt(nowAt);
+        _privateGroup?.setOptionsRequestedVersion(version);
+        await privateGroupCommon.updateGroupData(_privateGroup?.groupId, _privateGroup?.data);
+      });
+    }
   }
 
   _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {

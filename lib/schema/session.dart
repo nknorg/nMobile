@@ -71,7 +71,7 @@ class SessionSchema {
       targetId: e['target_id'] ?? "",
       type: e['type'] ?? 0,
       lastMessageAt: e['last_message_at'],
-      lastMessageOptions: e['last_message_options'] != null ? Util.jsonFormat(e['last_message_options']) : null,
+      lastMessageOptions: e['last_message_options'] != null ? Util.jsonFormatMap(e['last_message_options']) : null,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
       unReadCount: e['un_read_count'] ?? 0,
     );

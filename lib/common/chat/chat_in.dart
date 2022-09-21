@@ -851,9 +851,8 @@ class ChatInCommon with Tag {
     String version = data['version'];
     String members = data['members'];
     String signature = data['signature'];
-    privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature, notify: true).then((group) {
-      // TODO:GG PG 防止频发的机制
-      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, null);
+    privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature).then((group) async {
+      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId);
     }); // await
   }
 
@@ -892,7 +891,7 @@ class ChatInCommon with Tag {
         if (item != null) members.add(item);
       }
     }
-    privateGroupCommon.updatePrivateGroupMembers(groupId, version, members, toast: false); // await
+    privateGroupCommon.updatePrivateGroupMembers(received.from, groupId, version, members); // await
   }
 
   Future<int> _deletePieces(String msgId) async {

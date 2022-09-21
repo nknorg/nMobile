@@ -244,7 +244,7 @@ class ContactSchema {
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = Util.jsonFormat(e['options']);
+      Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (contact.options == null) {
@@ -252,7 +252,7 @@ class ContactSchema {
     }
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
 
       if (contact.data == null) {
         contact.data = new Map<String, dynamic>();
