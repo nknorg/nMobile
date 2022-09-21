@@ -13,10 +13,10 @@ class PrivateGroupItemPerm {
 class PrivateGroupItemSchema {
   int? id;
   String groupId;
-  int? permission; // TODO:GG PG owner可以更改?
+  int? permission;
   int? expiresAt;
 
-  String? inviter; // TODO:GG 需要检查是否有permission ?
+  String? inviter;
   String? invitee;
   String? inviterRawData;
   String? inviteeRawData;
@@ -39,7 +39,17 @@ class PrivateGroupItemSchema {
     this.data,
   });
 
-  static PrivateGroupItemSchema? create(String? groupId, {int? permission, int? expiresAt, String? inviter, String? invitee, String? inviterRawData, String? inviteeRawData, String? inviterSignature, String? inviteeSignature}) {
+  static PrivateGroupItemSchema? create(
+    String? groupId, {
+    int? permission,
+    int? expiresAt,
+    String? inviter,
+    String? invitee,
+    String? inviterRawData,
+    String? inviteeRawData,
+    String? inviterSignature,
+    String? inviteeSignature,
+  }) {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
@@ -57,7 +67,7 @@ class PrivateGroupItemSchema {
   Map<String, dynamic> createRawDataMap() {
     Map<String, dynamic> map = {};
     map['groupId'] = groupId;
-    map['permission'] = groupId;
+    map['permission'] = permission;
     map['expiresAt'] = expiresAt;
     map['inviter'] = inviter;
     map['invitee'] = invitee;
@@ -116,7 +126,7 @@ class PrivateGroupItemSchema {
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
       if (schema.data == null) {
         schema.data = new Map<String, dynamic>();
       }

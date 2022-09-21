@@ -277,11 +277,11 @@ class TopicSchema {
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       count: e['count'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
-      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormat(e['data']) : null,
+      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );
 
     if (e['options']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? options = Util.jsonFormat(e['options']);
+      Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       topicSchema.options = OptionsSchema.fromMap(options ?? Map());
     }
     if (topicSchema.options == null) {
@@ -289,7 +289,7 @@ class TopicSchema {
     }
 
     if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormat(e['data']);
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
 
       if (topicSchema.data == null) {
         topicSchema.data = new Map<String, dynamic>();

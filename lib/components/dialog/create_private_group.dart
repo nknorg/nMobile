@@ -37,10 +37,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
 
     Loading.show();
     PrivateGroupSchema? privateGroupSchema = await privateGroupCommon.createPrivateGroup(groupName, toast: true);
-    if (privateGroupSchema != null) {
-      await chatOutCommon.sendPrivateGroupSubscribe(privateGroupSchema.groupId);
-      ChatMessagesScreen.go(Global.appContext, privateGroupSchema.groupId);
-    }
+    if (privateGroupSchema != null) ChatMessagesScreen.go(Global.appContext, privateGroupSchema.groupId);
     Loading.dismiss();
     return true;
   }
