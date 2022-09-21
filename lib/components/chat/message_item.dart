@@ -203,7 +203,6 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
       case MessageContentType.privateGroupAccept:
         contentsWidget.add(_privateGroupAcceptWidget(context));
         break;
-      // TODO:GG PG 还没想好
       case MessageContentType.privateGroupSubscribe:
         contentsWidget.add(_topicInvitedWidget(context));
         break;
@@ -352,6 +351,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
+  // TODO:GG PG UI调整
   Widget _topicInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
@@ -478,7 +478,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
                     groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
                     if (groupItemSchema != null) {
                       await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
-                      PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type, joined: true);
+                      PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
                       if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
                     }
                     Loading.dismiss();

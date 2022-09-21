@@ -169,9 +169,6 @@ class ChatInCommon with Tag {
       case MessageContentType.privateGroupAccept:
         await _receivePrivateGroupAccept(received);
         break;
-      case MessageContentType.privateGroupSubscribe:
-        insertOk = await _receivePrivateGroupSubscribe(received);
-        break;
       case MessageContentType.privateGroupOptionRequest:
         await _receivePrivateGroupOptionRequest(received);
         break;
@@ -816,23 +813,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG PG ? 还在考虑中
-  // NO group (1 to 1)
-  Future<bool> _receivePrivateGroupSubscribe(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
-    if (exists != null) {
-      logger.d("$TAG - _receivePrivateGroupSubscribe - duplicated - message:$exists");
-      return false;
-    }
-    // DB
-    MessageSchema? inserted = await MessageStorage.instance.insert(received);
-    if (inserted == null) return false;
-    // display
-    _onSavedSink.add(inserted);
-    return true;
-  }
-
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupOptionRequest(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -871,25 +851,23 @@ class ChatInCommon with Tag {
     Map<String, dynamic> data = received.content; // == data
     String? groupId = data['groupId']?.toString();
     String? version = data['version']?.toString();
-    if ((data['membersData'] == null) || !(data['membersData'] is List<Map<String, dynamic>>)) return false;
-    List<Map<String, dynamic>> membersData = data['membersData'];
+    if ((data['membersData'] == null) || !(data['membersData'] is List)) return false;
+    List membersData = data['membersData'];
     List<PrivateGroupItemSchema> members = [];
-    if (data is List) {
-      for (int i = 0; i < data.length; i++) {
-        var member = membersData[i];
-        PrivateGroupItemSchema? item = PrivateGroupItemSchema.create(
-          member['group_id'],
-          permission: member['permission'],
-          expiresAt: member['expires_at'],
-          inviter: member['inviter'],
-          invitee: member['invitee'],
-          inviterRawData: member['inviter_raw_data'],
-          inviteeRawData: member['invitee_raw_data'],
-          inviterSignature: member['inviter_signature'],
-          inviteeSignature: member['invitee_signature'],
-        );
-        if (item != null) members.add(item);
-      }
+    for (int i = 0; i < membersData.length; i++) {
+      var member = membersData[i];
+      PrivateGroupItemSchema? item = PrivateGroupItemSchema.create(
+        member['group_id'],
+        permission: member['permission'],
+        expiresAt: member['expires_at'],
+        inviter: member['inviter'],
+        invitee: member['invitee'],
+        inviterRawData: member['inviter_raw_data'],
+        inviteeRawData: member['invitee_raw_data'],
+        inviterSignature: member['inviter_signature'],
+        inviteeSignature: member['invitee_signature'],
+      );
+      if (item != null) members.add(item);
     }
     privateGroupCommon.updatePrivateGroupMembers(received.from, groupId, version, members); // await
   }

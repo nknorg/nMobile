@@ -567,7 +567,7 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     List<String> splits = group.version?.split(".") ?? [];
-    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    int commits = splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0;
     List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
     String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
@@ -592,7 +592,7 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     List<String> splits = group.version?.split(".") ?? [];
-    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    int commits = splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0;
     List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
