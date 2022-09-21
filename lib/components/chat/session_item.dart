@@ -64,20 +64,18 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     } else if (widget.session.isPrivateGroup) {
-      privateGroupCommon.checkDataComplete(widget.session.targetId).then((g) {
-        if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
-          privateGroupCommon.queryGroup(widget.session.targetId).then((value) {
-            setState(() {
-              loaded = true;
-              _privateGroup = value;
-              _topic = null;
-              _contact = null;
-            });
+      if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
+        privateGroupCommon.queryGroup(widget.session.targetId).then((value) {
+          setState(() {
+            loaded = true;
+            _privateGroup = value;
+            _topic = null;
+            _contact = null;
           });
-        } else {
-          loaded = true;
-        }
-      });
+        });
+      } else {
+        loaded = true;
+      }
     } else {
       if (_contact == null || (widget.session.targetId != _contact?.clientAddress)) {
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {

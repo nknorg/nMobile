@@ -351,7 +351,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG UI调整
+  // TODO:GG PG UI调整?
   Widget _topicInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
@@ -479,10 +479,10 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
                     if (groupItemSchema != null) {
                       await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
                       PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
-                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
+                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true);
                     }
                     Loading.dismiss();
-                    if (groupItemSchema != null) Toast.show("wait adminer to sync"); // TODO:GG PG 中文?
+                    if (groupItemSchema != null) Toast.show("wait adminer to sync"); // TODO:GG PG 中文 ?
                   },
                 ),
               ],
@@ -517,7 +517,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG 代码整理
+  // TODO:GG PG format
   Widget _privateGroupAcceptWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
