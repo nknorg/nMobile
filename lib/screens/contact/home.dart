@@ -12,6 +12,7 @@ import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/private_group/item.dart';
 import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -58,16 +59,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   // StreamSubscription? _deleteTopicSubscription;
   StreamSubscription? _updateTopicSubscription;
 
+  StreamSubscription? _addGroupSubscription;
+  StreamSubscription? _updateGroupSubscription;
+
   TextEditingController _searchController = TextEditingController();
 
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangers = <ContactSchema>[];
   List<TopicSchema> _allTopics = <TopicSchema>[];
-  List<PrivateGroupSchema> _allPrivateGroup = <PrivateGroupSchema>[]; // TODO:GG PG wait ???
+  List<PrivateGroupSchema> _allGroups = <PrivateGroupSchema>[];
 
   List<ContactSchema> _searchFriends = <ContactSchema>[];
   List<ContactSchema> _searchStrangers = <ContactSchema>[];
   List<TopicSchema> _searchTopics = <TopicSchema>[];
+  List<PrivateGroupSchema> _searchGroups = <PrivateGroupSchema>[];
 
   @override
   void onRefreshArguments() {
@@ -149,6 +154,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       _searchAction(_searchController.text);
     });
 
+    // group listen
+    _addGroupSubscription = privateGroupCommon.addGroupStream.listen((PrivateGroupSchema schema) {
+      _allGroups.insert(0, schema);
+      _searchAction(_searchController.text);
+    });
+    _updateGroupSubscription = privateGroupCommon.updateGroupStream.listen((PrivateGroupSchema event) {
+      _allGroups = _allGroups.map((e) => e.id == event.id ? event : e).toList();
+      if (!event.joined) {
+        _allGroups = _allGroups.where((element) => element.groupId != event.groupId).toList();
+      }
+      _searchAction(_searchController.text);
+    });
+
     // init
     _initData();
   }
@@ -161,11 +179,14 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     _addTopicSubscription?.cancel();
     // _deleteTopicSubscription?.cancel();
     _updateTopicSubscription?.cancel();
+    _addGroupSubscription?.cancel();
+    _updateGroupSubscription?.cancel();
     super.dispose();
   }
 
   _initData() async {
     int limit = 20;
+    // contact
     List<ContactSchema> friends = [];
     for (int offset = 0; true; offset += limit) {
       List<ContactSchema> result = await contactCommon.queryList(contactType: ContactType.friend, offset: offset, limit: limit);
@@ -173,6 +194,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       if (result.length < limit) break;
     }
     List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
+    // topic
     List<TopicSchema> topics = [];
     for (int offset = 0; true; offset += limit) {
       List<TopicSchema> result = await topicCommon.queryListJoined(offset: offset, limit: limit);
@@ -180,6 +202,14 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       if (result.length < limit) break;
     }
     topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
+    // group
+    List<PrivateGroupSchema> groups = [];
+    for (int offset = 0; true; offset += limit) {
+      List<PrivateGroupSchema> result = await privateGroupCommon.queryGroupListJoined(offset: offset, limit: limit);
+      groups.addAll(result);
+      if (result.length < limit) break;
+    }
+    groups = (this._isSelect == true) ? [] : groups; // can not move this line to setState
 
     setState(() {
       _pageLoaded = true;
@@ -187,10 +217,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       _allFriends = friends;
       _allStrangers = strangers;
       _allTopics = topics;
+      _allGroups = groups;
       // search
       _searchFriends = _allFriends;
       _searchStrangers = _allStrangers;
       _searchTopics = _allTopics;
+      _searchGroups = _allGroups;
     });
 
     _searchAction(_searchController.text);
@@ -202,12 +234,14 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         _searchFriends = _allFriends;
         _searchStrangers = _allStrangers;
         _searchTopics = _allTopics;
+        _searchGroups = _allGroups;
       });
     } else {
       setState(() {
         _searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
         _searchFriends = _allFriends.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
         _searchTopics = _allTopics.where((TopicSchema e) => e.topic.contains(val)).toList();
+        _searchGroups = _allGroups.where((PrivateGroupSchema e) => e.name.contains(val)).toList();
       });
     }
   }
@@ -225,13 +259,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     ChatMessagesScreen.go(context, item);
   }
 
+  _onTapGroupItem(PrivateGroupSchema item) async {
+    //GroupProfileScreen.go(context, schema: item);
+    ChatMessagesScreen.go(context, item);
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalFriendDataCount = _allFriends.length;
     int totalTopicDataCount = _allTopics.length;
+    int totalGroupDataCount = _allGroups.length;
     int totalStrangerDataCount = _allStrangers.length;
 
-    int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalStrangerDataCount;
+    int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalGroupDataCount + totalStrangerDataCount;
     if (totalDataCount <= 0 && _pageLoaded) {
       return ContactHomeEmptyLayout();
     }
@@ -240,16 +280,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     int searchFriendViewCount = (searchFriendDataCount > 0 ? 1 : 0) + searchFriendDataCount;
     int searchTopicDataCount = _searchTopics.length;
     int searchTopicViewCount = (searchTopicDataCount > 0 ? 1 : 0) + searchTopicDataCount;
+    int searchGroupDataCount = _allGroups.length;
+    int searchGroupViewCount = (searchGroupDataCount > 0 ? 1 : 0) + searchGroupDataCount;
     int searchStrangerDataCount = _searchStrangers.length;
     int searchStrangerViewCount = (searchStrangerDataCount > 0 ? 1 : 0) + searchStrangerDataCount;
 
-    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + searchStrangerViewCount;
+    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + searchGroupViewCount + searchStrangerViewCount;
 
     int friendStartIndex = 0;
     int friendEndIndex = searchFriendViewCount - 1;
     int topicStartIndex = friendEndIndex + 1;
     int topicEndIndex = topicStartIndex + searchTopicViewCount - 1;
-    int strangerStartIndex = topicEndIndex + 1;
+    int groupStartIndex = topicEndIndex + 1;
+    int groupEndIndex = groupStartIndex + searchGroupViewCount - 1;
+    int strangerStartIndex = groupEndIndex + 1;
     int strangerEndIndex = strangerStartIndex + searchStrangerViewCount - 1;
 
     return Layout(
@@ -321,7 +365,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 itemBuilder: (context, index) {
                   int friendItemIndex = index - 1;
                   int topicItemIndex = index - searchFriendViewCount - 1;
-                  int strangerItemIndex = index - searchTopicViewCount - searchFriendViewCount - 1;
+                  int groupItemIndex = index - searchTopicViewCount - searchFriendViewCount - 1;
+                  int strangerItemIndex = index - searchGroupViewCount - searchTopicViewCount - searchFriendViewCount - 1;
 
                   if (searchFriendViewCount > 0 && index >= friendStartIndex && index <= friendEndIndex) {
                     if (index == friendStartIndex) {
@@ -345,6 +390,17 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       );
                     }
                     return _getTopicItemView(_searchTopics[topicItemIndex]);
+                  } else if (searchGroupViewCount > 0 && index >= groupStartIndex && index <= groupEndIndex) {
+                    if (index == groupStartIndex) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
+                        child: Label(
+                          '($searchGroupDataCount) ${Global.locale((s) => s.group_chat, ctx: context)}',
+                          type: LabelType.h3,
+                        ),
+                      );
+                    }
+                    return _getGroupItemView(_searchGroups[groupItemIndex]);
                   } else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
                     if (index == strangerStartIndex) {
                       return Padding(
@@ -532,6 +588,77 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           },
         ),
       ],
+    );
+  }
+
+  Widget _getGroupItemView(PrivateGroupSchema item) {
+    return Slidable(
+      key: ObjectKey(item),
+      direction: Axis.horizontal,
+      actionPane: SlidableDrawerActionPane(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PrivateGroupItem(
+            privateGroup: item,
+            onTap: () {
+              _onTapGroupItem(item);
+            },
+            bgColor: Colors.transparent,
+            bodyTitle: item.name,
+            bodyDesc: item.groupId,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          Divider(
+            height: 1,
+            indent: 74,
+            endIndent: 16,
+          ),
+        ],
+      ),
+      /*secondaryActions: [
+        IconSlideAction(
+          caption: Global.locale((s) => s.delete, ctx: context),
+          color: Colors.red,
+          icon: Icons.delete,
+          onTap: () => {
+            ModalDialog.of(Global.appContext).confirm(
+              title: Global.locale((s) => s.confirm_unsubscribe_group, ctx: context),
+              contentWidget: TopicItem(
+                topic: item,
+                bodyTitle: item.topicShort,
+                bodyDesc: item.topic,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              agree: Button(
+                width: double.infinity,
+                text: Global.locale((s) => s.delete, ctx: context),
+                backgroundColor: application.theme.strongColor,
+                onPressed: () async {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+                  if (fee == null) return;
+                  Loading.show();
+                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee);
+                  Loading.dismiss();
+                  if (deleted != null) {
+                    Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
+                  }
+                },
+              ),
+              reject: Button(
+                width: double.infinity,
+                text: Global.locale((s) => s.cancel, ctx: context),
+                fontColor: application.theme.fontColor2,
+                backgroundColor: application.theme.backgroundLightColor,
+                onPressed: () {
+                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                },
+              ),
+            )
+          },
+        ),
+      ],*/
     );
   }
 }

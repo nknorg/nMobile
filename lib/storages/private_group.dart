@@ -40,6 +40,12 @@ class PrivateGroupStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_private_group_group_id` ON `$tableName` (`group_id`)');
     await db.execute('CREATE INDEX `index_private_group_name` ON `$tableName` (`name`)');
+    await db.execute('CREATE INDEX `index_private_group_create_at` ON `$tableName` (`create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_update_at` ON `$tableName` (`update_at`)');
+    await db.execute('CREATE INDEX `index_private_group_type_create_at` ON `$tableName` (`type`, `create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_type_update_at` ON `$tableName` (`type`, `update_at`)');
+    await db.execute('CREATE INDEX `index_private_group_joined_type_create_at` ON `$tableName` (`joined`, `type`, `create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_joined_type_update_at` ON `$tableName` (`joined`, `type`, `update_at`)');
   }
 
   Future<PrivateGroupSchema?> insert(PrivateGroupSchema? schema, {bool checkDuplicated = true}) async {
@@ -110,6 +116,39 @@ class PrivateGroupStorage with Tag {
       handleError(e, st);
     }
     return null;
+  }
+
+  Future<List<PrivateGroupSchema>> queryListJoined({int? type, String? orderBy, int offset = 0, int limit = 20}) async {
+    if (db?.isOpen != true) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: (type != null) ? 'joined = ? AND type = ?' : 'joined = ?',
+          whereArgs: (type != null) ? [1, type] : [1],
+          offset: offset,
+          limit: limit,
+          orderBy: orderBy ?? 'create_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryList - empty - type:$type");
+        return [];
+      }
+      List<PrivateGroupSchema> results = <PrivateGroupSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n      $map";
+        PrivateGroupSchema group = PrivateGroupSchema.fromMap(map);
+        results.add(group);
+      });
+      logger.v("$TAG - queryList - items:$logText");
+      return results;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
   }
 
   Future<bool> updateNameType(String? groupId, String? name, int? type) async {
