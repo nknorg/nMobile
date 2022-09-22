@@ -832,7 +832,28 @@ class ChatInCommon with Tag {
     String signature = data['signature'];
     PrivateGroupSchema? group = await privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature); // await
     if (group != null) {
-      chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId); // await
+      bool needRequestMembers = false;
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      if (group.membersRequestedVersion != version) {
+        logger.i('$TAG - _receivePrivateGroupOptionResponse - version diff - version1:${group.membersRequestedVersion} - version2:$version');
+        needRequestMembers = true;
+      } else {
+        int timePast = nowAt - group.membersRequestAt;
+        if (timePast > (5 * 60 * 1000)) {
+          logger.i('$TAG - _receivePrivateGroupOptionResponse - members_request - time > 5m - past:$timePast');
+          needRequestMembers = true;
+        } else {
+          logger.d('$TAG - _receivePrivateGroupOptionResponse - members_request - time < 5m - past:$timePast');
+          needRequestMembers = false;
+        }
+      }
+      if (needRequestMembers) {
+        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId).then((version) async {
+          group.setMembersRequestAt(nowAt);
+          group.setMembersRequestedVersion(version);
+          await privateGroupCommon.updateGroupData(group.groupId, group.data);
+        });
+      }
     }
   }
 

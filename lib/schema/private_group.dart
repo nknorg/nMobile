@@ -120,6 +120,24 @@ class PrivateGroupSchema {
     data?['optionsRequestedVersion'] = version;
   }
 
+  int get membersRequestAt {
+    return int.tryParse(data?['membersRequestAt']?.toString() ?? "0") ?? 0;
+  }
+
+  void setMembersRequestAt(int? timeAt) {
+    if (data == null) data = Map();
+    data?['membersRequestAt'] = timeAt;
+  }
+
+  String get membersRequestedVersion {
+    return data?['membersRequestedVersion']?.toString() ?? "";
+  }
+
+  void setMembersRequestedVersion(String? version) {
+    if (data == null) data = Map();
+    data?['membersRequestedVersion'] = version;
+  }
+
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;

@@ -547,7 +547,7 @@ class ChatOutCommon with Tag {
       },
     );
     String data = MessageData.getPrivateGroupInvitation(message);
-    return _send(message, data);
+    return await _send(message, data);
   }
 
   // NO group (1 to 1)
@@ -585,7 +585,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future sendPrivateGroupMemberRequest(String? target, String? groupId) async {
+  Future<String?> sendPrivateGroupMemberRequest(String? target, String? groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
@@ -597,6 +597,7 @@ class ChatOutCommon with Tag {
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
     await _sendWithAddressSafe([target], data, notification: false);
+    return getVersion;
   }
 
   // NO group (1 to 1)
