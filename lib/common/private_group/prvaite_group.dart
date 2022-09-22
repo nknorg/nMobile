@@ -39,7 +39,7 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _updateGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
   StreamSink<PrivateGroupItemSchema> get _updateGroupItemSink => _updateGroupItemController.sink;
-  Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream; // TODO:GG PG use?
+  Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream; // FUTURE:GG PG used
 
   ///****************************************** Action *******************************************
 
@@ -245,7 +245,7 @@ class PrivateGroupCommon with Tag {
     // item
     PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
     if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
-      logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
+      logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
       return false;
     }
     // version
@@ -420,11 +420,13 @@ class PrivateGroupCommon with Tag {
     }
     // joined
     if (!schemaGroup.joined && (selfJoined == 1)) {
+      schemaGroup.joined = true;
       bool success = await updateGroupJoined(groupId, true, notify: true);
-      if (success) schemaGroup.joined = true;
+      if (!success) schemaGroup.joined = false;
     } else if (schemaGroup.joined && selfJoined == -1) {
+      schemaGroup.joined = false;
       bool success = await updateGroupJoined(groupId, false, notify: true);
-      if (success) schemaGroup.joined = false;
+      if (!success) schemaGroup.joined = true;
     }
     return schemaGroup;
   }

@@ -223,6 +223,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                                     Expanded(
                                       child: Label(
                                         _privateGroup?.name ?? " ",
+                                        type: LabelType.h3,
                                         color: (_privateGroup?.joined == true) ? null : application.theme.fontColor3,
                                         fontWeight: FontWeight.bold,
                                       ),
