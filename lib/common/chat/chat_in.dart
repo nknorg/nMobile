@@ -100,8 +100,7 @@ class ChatInCommon with Tag {
     // group
     PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
     if (privateGroup != null) {
-      // TODO:GG PG check sender joined
-      // TODO:GG PG check sender permission
+      // FUTURE:GG PG join + permission
     }
 
     // status
@@ -556,7 +555,7 @@ class ChatInCommon with Tag {
     // content
     String? fileExt = MessageOptions.getFileExt(received.options);
     String subPath = Uri.encodeComponent(received.targetId);
-    if (subPath != received.targetId) subPath = "common"; // FUTURE: encode
+    if (subPath != received.targetId) subPath = "common"; // FUTURE:GG encode
     String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: fileExt);
     received.content = File(savePath);
     // state
@@ -786,13 +785,13 @@ class ChatInCommon with Tag {
       logger.e('$TAG - _receivePrivateGroupAccept - invitee nil.');
       return false;
     }
-    // insert
+    // insert (sync self)
     PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true, toast: false);
     if (groupSchema == null) {
       logger.e('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
       return false;
     }
-    // sync members
+    // members
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     if (members.length <= 0) {
       logger.e('$TAG - _receivePrivateGroupAccept - has no this group info');
@@ -831,9 +830,10 @@ class ChatInCommon with Tag {
     String version = data['version'];
     String members = data['members'];
     String signature = data['signature'];
-    privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature).then((group) async {
-      if (group != null) chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId);
-    }); // await
+    PrivateGroupSchema? group = await privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature); // await
+    if (group != null) {
+      chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId); // await
+    }
   }
 
   // NO group (1 to 1)
@@ -869,7 +869,7 @@ class ChatInCommon with Tag {
       );
       if (item != null) members.add(item);
     }
-    privateGroupCommon.updatePrivateGroupMembers(received.from, groupId, version, members); // await
+    await privateGroupCommon.updatePrivateGroupMembers(received.from, groupId, version, members);
   }
 
   Future<int> _deletePieces(String msgId) async {
