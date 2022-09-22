@@ -929,7 +929,7 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
     Radius? cursorRadius = widget.cursorRadius;
     VoidCallback? handleDidGainAccessibilityFocus;
 
-    // FIXED:START
+    // FIXED:GG START
 
     // switch (theme.platform) {
     //   case TargetPlatform.iOS:
@@ -992,7 +992,7 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
     cursorColor ??= selectionTheme.cursorColor ?? theme.colorScheme.primary;
     selectionColor = selectionTheme.selectionColor ?? theme.colorScheme.primary.withOpacity(0.40);
 
-    // FIXED:END
+    // FIXED:GG END
 
     Widget child = RepaintBoundary(
       child: UnmanagedRestorationScope(

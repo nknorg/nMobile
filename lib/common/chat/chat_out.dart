@@ -692,7 +692,7 @@ class ChatOutCommon with Tag {
       int msgSendAt = (message.sendAt ?? DateTime.now().millisecondsSinceEpoch);
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       notification = (notification != null) ? notification : (between > (60 * 60 * 1000)); // 1h
-      notification = false; // FIXED: notification duplicated
+      notification = false; // FIXED:GG notification duplicated
       return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
     };
     return await _resendQueue.add(() async {

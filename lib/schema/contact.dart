@@ -25,7 +25,7 @@ class RequestType {
 
 class ContactSchema {
   int? id; // <- id
-  // TODO:GG check pubKey
+  // FIXED:GG check pubKey
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
   int? type; // (required) <-> type
   int? createAt; // <-> create_at
@@ -101,7 +101,7 @@ class ContactSchema {
     return defaultName;
   }
 
-  // TODO:GG check pubKey
+  // FIXED:GG check pubKey
   String get pubKey {
     return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
   }
