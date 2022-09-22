@@ -7,18 +7,19 @@ require (
 	github.com/nknorg/eth-resolver-go v0.0.0-20220705093053-e6450052dee6
 	github.com/nknorg/ncp-go v1.0.3 // indirect
 	github.com/nknorg/nkn-sdk-go v1.4.2-0.20220913025957-d204cd062fd4
-	github.com/nknorg/nkn/v2 v2.1.9 // indirect
+	github.com/nknorg/nkn/v2 v2.1.9
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9
-	github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4 // indirect
+	github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4
 )
+
+require golang.org/x/mobile v0.0.0-20220325161704-447654d348e3
 
 require (
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/ethereum/go-ethereum v1.10.15 // indirect
-	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
@@ -29,7 +30,6 @@ require (
 	github.com/itchyny/base58-go v0.0.5 // indirect
 	github.com/jbenet/go-is-domain v1.0.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.11 // indirect
-	github.com/klauspost/reedsolomon v1.9.12 // indirect
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
@@ -50,7 +50,6 @@ require (
 	github.com/wealdtech/go-multicodec v1.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/mobile v0.0.0-20220325161704-447654d348e3 // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect

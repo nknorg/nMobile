@@ -380,7 +380,6 @@ github.com/klauspost/cpuid/v2 v2.0.11/go.mod h1:g2LTdtYhdyuGPqyWyv7qRAmj1WBqxuOb
 github.com/klauspost/crc32 v0.0.0-20161016154125-cb6bfca970f6/go.mod h1:+ZoRqAPRLkC4NPOvfYeR5KNOrY6TD+/sAC3HXPZgDYg=
 github.com/klauspost/pgzip v1.0.2-0.20170402124221-0bf5dcad4ada/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/klauspost/reedsolomon v0.0.0-20190407153631-a373324398e4/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=
-github.com/klauspost/reedsolomon v1.9.12/go.mod h1:nLvuzNvy1ZDNQW30IuMc2ZWCbiqrJgdLoUS2X8HAUVg=
 github.com/kolo/xmlrpc v0.0.0-20200310150728-e0350524596b/go.mod h1:o03bZfuBwAXHetKXuInt4S7omeXUu62/A845kiycsSQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
@@ -473,8 +472,8 @@ github.com/nknorg/eth-resolver-go v0.0.0-20220705093053-e6450052dee6/go.mod h1:e
 github.com/nknorg/go-nat v1.0.1/go.mod h1:dblX1Ac2j08rTUGs5CKCAfjHGN5eDFhbeqt2rccSP3Y=
 github.com/nknorg/ncp-go v1.0.3 h1:VMsOB8hZ7Tz/Y8oESzPvThxjXmLz8Ob7jKLloS8baUQ=
 github.com/nknorg/ncp-go v1.0.3/go.mod h1:ALtnk9lKKSwoOXatbfLLQvQWGkRnJomrmbTZjvg810E=
-github.com/nknorg/nkn-sdk-go v1.4.2-0.20220622093511-79506bf196c7 h1:7ny0oyZB78eWqgut0qQY/OmFcISAwR+29DOe6xRCU2Y=
-github.com/nknorg/nkn-sdk-go v1.4.2-0.20220622093511-79506bf196c7/go.mod h1:bBeSzhOPwBnPvCzpbZmNnxz/acUTFVDDqs74NmJgPW8=
+github.com/nknorg/nkn-sdk-go v1.4.2-0.20220913025957-d204cd062fd4 h1:V3BgMYhL/s8tFBxkzS4LQiu+xVCuWjukQ2l9F2N+faA=
+github.com/nknorg/nkn-sdk-go v1.4.2-0.20220913025957-d204cd062fd4/go.mod h1:bBeSzhOPwBnPvCzpbZmNnxz/acUTFVDDqs74NmJgPW8=
 github.com/nknorg/nkn/v2 v2.1.9 h1:Qw2wlp6z1cONJ/23i5RG3O4rK5Z1LwtKMqTz9l5H/uU=
 github.com/nknorg/nkn/v2 v2.1.9/go.mod h1:XIa8hgV4y6LjkHwm7CJcDg6TJAZVhWro+Yc5PQuAsXw=
 github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9 h1:Gr37j7Ttvcn8g7TdC5fs6Y6IJKdmfqCvj03UbsrS77o=
