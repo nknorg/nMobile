@@ -160,6 +160,7 @@ class Client {
     }
 
     try {
+      Client client = Client();
       final Map resp = await _methodChannel.invokeMethod('create', {
         'identifier': identifier,
         'seed': seed,
@@ -168,7 +169,6 @@ class Client {
         'ethResolverConfigArray': ethResolverConfigArray,
         'dnsResolverConfigArray': dnsResolverConfigArray,
       });
-      Client client = Client();
       client.address = resp['address'];
       client.publicKey = resp['publicKey'];
       client.seed = resp['seed'];

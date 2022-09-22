@@ -7,8 +7,12 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nkn.*
+import nkngolib.Nkngolib
 import nkngomobile.Nkngomobile.newStringArrayFromString
 import nkngomobile.StringArray
 import org.nkn.sdk.IChannelHandler
@@ -111,7 +115,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val account = Nkn.newAccount(seed)
-                client = MultiClient(account, identifier, numSubClients, true, config)
+                client = try {
+                    MultiClient(account, identifier, numSubClients, true, config)
+                } catch (e: Throwable) {
+                    null
+                }
+                if (client == null) {
+                    Nkngolib.addClientConfigWithDialContext(config)
+                    client = MultiClient(account, identifier, numSubClients, true, config)
+                }
                 if (client == null) {
                     eventSinkError(eventSink, "10", "connect fail", "in func create")
                     return@launch
