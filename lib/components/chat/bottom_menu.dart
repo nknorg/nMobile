@@ -42,7 +42,7 @@ class ChatBottomMenu extends StatelessWidget {
       List<String> savePaths = [];
       for (var i = 0; i < maxNum; i++) {
         String subPath = Uri.encodeComponent(target ?? "");
-        if (subPath != target) subPath = "common"; // FUTURE: encode
+        if (subPath != target) subPath = "common"; // FUTURE:GG encode
         String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
         savePaths.add(savePath);
       }
@@ -100,7 +100,7 @@ class ChatBottomMenu extends StatelessWidget {
       if (path == null || path.isEmpty) continue;
       // copy
       String subPath = Uri.encodeComponent(target ?? "");
-      if (subPath != target) subPath = "common"; // FUTURE: encode
+      if (subPath != target) subPath = "common"; // FUTURE:GG encode
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: picked.extension);
       File file = File(path);
       int size = file.lengthSync();

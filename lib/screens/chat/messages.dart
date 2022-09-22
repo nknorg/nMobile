@@ -483,9 +483,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _toggleNotificationOpen() async {
     if (this._topic != null) {
-      // FUTURE: topic notificationOpen
+      // FUTURE:GG topic notificationOpen
     } else if (this._privateGroup != null) {
-      // FUTURE: group notificationOpen
+      // FUTURE:GG group notificationOpen
     } else {
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
@@ -621,7 +621,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         ),
         actions: [
           _topic != null || _privateGroup != null
-              ? SizedBox.shrink() // FUTURE: topic notificationOpen
+              ? SizedBox.shrink() // FUTURE:GG topic notificationOpen
               : Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: IconButton(

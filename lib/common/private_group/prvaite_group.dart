@@ -36,7 +36,7 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  // TODO:GG PG 再来个item的update的 ?
+  // FUTURE:GG PG item update
 
   ///****************************************** Action *******************************************
 
@@ -122,7 +122,7 @@ class PrivateGroupCommon with Tag {
     }
     if (isAdmin(schemaGroup, inviter)) {
       if (!isOwner(schemaGroup.ownerPublicKey, clientCommon.address)) {
-        // FUTURE: admin invitee (send msg to invitee and let owner to receive+sync)
+        // FUTURE:GG PG admin invitee (send msg to invitee and let owner to receive+sync)
         return false;
       }
     }
@@ -313,7 +313,7 @@ class PrivateGroupCommon with Tag {
             exists.setSignature(signature);
             await updateGroupData(groupId, exists.data, notify: true);
           }
-          // TODO:GG PG options update ?
+          // TODO:GG PG options update?
         }
         if (version != exists.version || membersCount != exists.count) {
           exists.version = version;
@@ -350,7 +350,10 @@ class PrivateGroupCommon with Tag {
     }
     // send
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, members); // await
+    for (int i = 0; i < members.length; i += 10) {
+      List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
+      chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, memberSplits); // await
+    }
     return true;
   }
 
@@ -609,7 +612,7 @@ class PrivateGroupCommon with Tag {
     return members;
   }
 
-  // FUTURE: adminer
+  // FUTURE:GG PG adminer
   Future<bool> updateGroupItemPermission(String? groupId, String? invitee, int? permission, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return false;
     bool success = await PrivateGroupItemStorage.instance.updatePermission(groupId, invitee, permission);

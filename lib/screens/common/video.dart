@@ -135,7 +135,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
       borderRadius: BorderRadius.zero,
       body: InkWell(
         onTap: () {
-          // FUTURE: ControllerView
+          // FUTURE:GG ControllerView
           this._togglePlay();
         },
         child: Stack(
@@ -203,7 +203,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       icon: Asset.iconSvg('more', width: 24),
                       onSelected: (int result) async {
-                        // FUTURE: HideBar
+                        // FUTURE:GG HideBar
                         switch (result) {
                           case 0:
                             await _save();

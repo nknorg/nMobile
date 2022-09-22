@@ -63,7 +63,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   List<ContactSchema> _allFriends = <ContactSchema>[];
   List<ContactSchema> _allStrangers = <ContactSchema>[];
   List<TopicSchema> _allTopics = <TopicSchema>[];
-  List<PrivateGroupSchema> _allPrivateGroup = <PrivateGroupSchema>[]; // TODO:GG PG wait???
+  List<PrivateGroupSchema> _allPrivateGroup = <PrivateGroupSchema>[]; // TODO:GG PG wait ???
 
   List<ContactSchema> _searchFriends = <ContactSchema>[];
   List<ContactSchema> _searchStrangers = <ContactSchema>[];

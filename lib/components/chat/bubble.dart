@@ -442,7 +442,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               chatCommon.startIpfsDownload(_message);
             };
           } else if (state == MessageOptions.ipfsStateIng) {
-            // FUTURE: cancel download and update UI
+            // FUTURE:GG cancel download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
@@ -480,7 +480,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               chatCommon.startIpfsDownload(_message);
             };
           } else if (state == MessageOptions.ipfsStateIng) {
-            // FUTURE: cancel download and update UI
+            // FUTURE:GG cancel download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
@@ -514,7 +514,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               chatCommon.startIpfsDownload(_message);
             };
           } else if (state == MessageOptions.ipfsStateIng) {
-            // FUTURE: delete download and update UI
+            // FUTURE:GG delete download and update UI
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
