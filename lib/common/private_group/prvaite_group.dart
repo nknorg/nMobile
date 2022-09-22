@@ -34,7 +34,7 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _addGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
-  Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream; // TODO:GG PG 没用？
+  Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
   // FUTURE:GG PG item update
 
@@ -313,7 +313,11 @@ class PrivateGroupCommon with Tag {
             exists.setSignature(signature);
             await updateGroupData(groupId, exists.data, notify: true);
           }
-          // TODO:GG PG options update ?
+          if (int.tryParse(infos['deleteAfterSeconds']) != exists.options?.deleteAfterSeconds) {
+            if (exists.options == null) exists.options = OptionsSchema();
+            exists.options?.deleteAfterSeconds = int.tryParse(infos['deleteAfterSeconds']);
+            await updateGroupOptions(groupId, exists.options);
+          }
         }
         if (version != exists.version || membersCount != exists.count) {
           exists.version = version;
@@ -394,6 +398,7 @@ class PrivateGroupCommon with Tag {
         logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
         continue;
       }
+      // TODO:GG PG perm检查+更新 ?
       if (!inGroup && (member.invitee == clientCommon.address)) {
         inGroup = true;
       }
@@ -540,6 +545,13 @@ class PrivateGroupCommon with Tag {
   Future<bool> updateGroupAvatar(String? groupId, String? avatarLocalPath, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return false;
     bool success = await PrivateGroupStorage.instance.updateAvatar(groupId, avatarLocalPath);
+    if (success && notify) queryAndNotifyGroup(groupId);
+    return success;
+  }
+
+  Future<bool> updateGroupOptions(String? groupId, OptionsSchema? options, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    bool success = await PrivateGroupStorage.instance.updateOptions(groupId, options?.toMap());
     if (success && notify) queryAndNotifyGroup(groupId);
     return success;
   }

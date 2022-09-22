@@ -22,7 +22,7 @@ class SubscriberSchema {
 
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
-  // TODO:GG check pubKey
+  // FIXED:GG check pubKey
   String clientAddress; // (required) <-> chat_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
@@ -42,7 +42,7 @@ class SubscriberSchema {
     this.data,
   });
 
-  // TODO:GG check pubKey
+  // FIXED:GG check pubKey
   String get pubKey {
     return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
   }
@@ -66,7 +66,7 @@ class SubscriberSchema {
     return newData;
   }
 
-  // TODO:GG no clear in end
+  // FIXED:GG no clear in end
   int? isPermissionProgress() {
     int? status = data?['permission_progress'];
     return status;

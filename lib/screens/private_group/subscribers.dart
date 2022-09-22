@@ -65,7 +65,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
         _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
       });
     });
-    _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupItemSchema schema) {
+    _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema schema) {
       _members.add(schema);
       setState(() {});
     });

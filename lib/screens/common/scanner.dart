@@ -57,7 +57,7 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
 
-    // FIXED: Android black screen
+    // FIXED:GG Android black screen
     if (Platform.isAndroid) {
       this.controller?.resumeCamera();
     }

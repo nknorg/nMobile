@@ -211,7 +211,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (isLoginProgress) return;
     isLoginProgress = true;
 
-    // fixed ios_152_db
+    // fixed:GG ios_152_db
     if (first) await dbCommon.fixIOS_152();
 
     // client
@@ -470,7 +470,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     );
   }
 
-  // TODO:GG PG format
   _showFloatActionMenu() {
     double btnSize = 48;
 

@@ -197,7 +197,7 @@ class TopicSchema {
     return newData;
   }
 
-  // TODO:GG no clear in end
+  // FIXED:GG no clear in end
   bool isSubscribeProgress() {
     bool? isProgress = data?['subscribe_progress'];
     if (isProgress == null) return false;

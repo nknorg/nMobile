@@ -296,8 +296,7 @@ class ChatCommon with Tag {
     if ((clientCommon.address != null) && (message.from != message.to) && !message.isOutbound) {
       if (!privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
         String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
-        bool? versionOk = await privateGroupCommon.verifiedGroupVersion(exists, remoteVersion, signVersion: false);
-        if (versionOk == false) {
+        if (remoteVersion != exists.version) {
           int nowAt = DateTime.now().millisecondsSinceEpoch;
           bool needRequestOptions = false;
           if (exists.optionsRequestedVersion != remoteVersion) {

@@ -232,6 +232,31 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
+  Future<bool> updateOptions(String? groupId, Map<String, dynamic>? options) async {
+    if (db?.isOpen != true) return false;
+    if (groupId == null || groupId.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'options': options != null ? jsonEncode(options) : null,
+                },
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+            });
+            logger.v("$TAG - updateOptions - count:$count - groupId:$groupId - options:$options");
+            return (count ?? 0) > 0;
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
   Future<bool> updateData(String? groupId, Map<String, dynamic>? data) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
