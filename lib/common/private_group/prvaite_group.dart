@@ -582,6 +582,10 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupStorage.instance.query(groupId);
   }
 
+  Future<List<PrivateGroupSchema>> queryGroupListJoined({int? type, String? orderBy, int offset = 0, int limit = 20}) {
+    return PrivateGroupStorage.instance.queryListJoined(type: type, orderBy: orderBy, offset: offset, limit: limit);
+  }
+
   Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, bool sessionNotify, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
     if (checkDuplicated) {
