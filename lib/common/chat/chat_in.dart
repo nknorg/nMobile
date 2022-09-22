@@ -80,18 +80,18 @@ class ChatInCommon with Tag {
     TopicSchema? topic = await chatCommon.topicHandle(received);
     if (topic != null) {
       if (topic.joined != true) {
-        logger.w("$TAG - _handleMessage - deny message - topic unsubscribe - topic:$topic");
+        logger.w("$TAG - _handleMessage - topic - deny message - unsubscribe - topic:$topic");
         return;
       }
       SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topic.topic, clientCommon.address);
       if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
-        logger.w("$TAG - _handleMessage - deny message - me no permission - me:$me - topic:$topic");
+        logger.w("$TAG - _handleMessage - topic - deny message - me no permission - me:$me - topic:$topic");
         return;
       }
       if (!received.isTopicAction) {
         SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic);
         if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
-          logger.w("$TAG - _handleMessage - deny message - sender no permission - sender:$sender - topic:$topic");
+          logger.w("$TAG - _handleMessage - topic - deny message - sender no permission - sender:$sender - topic:$topic");
           return;
         }
       }
@@ -100,7 +100,20 @@ class ChatInCommon with Tag {
     // group
     PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
     if (privateGroup != null) {
-      // FUTURE:GG PG join + permission
+      if (received.isGroupAction) {
+        // nothing
+      } else {
+        PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
+        if ((_me == null) || (_me.permission == PrivateGroupItemPerm.none)) {
+          logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
+          return;
+        }
+        PrivateGroupItemSchema? sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.from);
+        if ((sender == null) || (sender.permission == PrivateGroupItemPerm.none)) {
+          logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$sender - group:$privateGroup");
+          return;
+        }
+      }
     }
 
     // status
