@@ -34,7 +34,7 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _addGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
-  Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
+  Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream; // TODO:GG PG 没用？
 
   // FUTURE:GG PG item update
 
@@ -115,7 +115,7 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     PrivateGroupItemSchema? inviter = await queryGroupItem(groupId, clientCommon.address);
-    if (inviter == null) {
+    if ((inviter == null) || (inviter.permission == PrivateGroupItemPerm.none)) {
       logger.e('$TAG - invitee - has no inviter. - groupId:$groupId');
       if (toast) Toast.show('has no inviter.'); // TODO:GG PG 中文?
       return false;
@@ -216,12 +216,12 @@ class PrivateGroupCommon with Tag {
     }
     // members
     List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
-    members.add(schema);
     schema = await addPrivateGroupItem(schema, true, notify: true, checkDuplicated: false);
     if (schema == null) {
       logger.e('$TAG - insertInvitee - member create fail. - member:$schema');
       return null;
     }
+    members.add(schema);
     // group
     List<String> splits = schemaGroup.version?.split(".") ?? [];
     int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
@@ -313,7 +313,7 @@ class PrivateGroupCommon with Tag {
             exists.setSignature(signature);
             await updateGroupData(groupId, exists.data, notify: true);
           }
-          // TODO:GG PG options update?
+          // TODO:GG PG options update ?
         }
         if (version != exists.version || membersCount != exists.count) {
           exists.version = version;

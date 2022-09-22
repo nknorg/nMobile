@@ -483,7 +483,7 @@ class MessageSchema {
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
-      case MessageContentType.privateGroupSubscribe:
+      // case MessageContentType.privateGroupSubscribe:
       case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:
@@ -551,7 +551,7 @@ class MessageSchema {
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
-      case MessageContentType.privateGroupSubscribe:
+      // case MessageContentType.privateGroupSubscribe:
       case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:

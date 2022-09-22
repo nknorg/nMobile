@@ -301,15 +301,15 @@ class ChatCommon with Tag {
           int nowAt = DateTime.now().millisecondsSinceEpoch;
           bool needRequestOptions = false;
           if (exists.optionsRequestedVersion != remoteVersion) {
-            logger.i('$TAG - privateGroupHandle - options_request - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
+            logger.i('$TAG - privateGroupHandle - version diff - version1:${exists.optionsRequestedVersion} - version2:$remoteVersion');
             needRequestOptions = true;
           } else {
             int timePast = nowAt - exists.optionsRequestAt;
             if (timePast > (5 * 60 * 1000)) {
-              logger.i('$TAG - pushPrivateGroupOptions - options_request - time > 2m - past:$timePast');
+              logger.i('$TAG - pushPrivateGroupOptions - time > 5m - past:$timePast');
               needRequestOptions = true;
             } else {
-              logger.d('$TAG - pushPrivateGroupOptions - options_request - time < 2m - past:$timePast');
+              logger.d('$TAG - pushPrivateGroupOptions - time < 5m - past:$timePast');
               needRequestOptions = false;
             }
           }
