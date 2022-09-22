@@ -36,7 +36,10 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _addGroupItemSink => _addGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get addGroupItemStream => _addGroupItemController.stream;
 
-  // FUTURE:GG PG item update
+  // ignore: close_sinks
+  StreamController<PrivateGroupItemSchema> _updateGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
+  StreamSink<PrivateGroupItemSchema> get _updateGroupItemSink => _updateGroupItemController.sink;
+  Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream; // TODO:GG PG use?
 
   ///****************************************** Action *******************************************
 
@@ -292,9 +295,9 @@ class PrivateGroupCommon with Tag {
       if (_newGroup == null) return null;
       _newGroup.version = version;
       _newGroup.count = membersCount;
-      _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']));
+      _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
       _newGroup.setSignature(signature);
-      exists = await addPrivateGroup(_newGroup, true, notify: true);
+      exists = await addPrivateGroup(_newGroup, true, notify: true, checkDuplicated: false);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
       List<String> splitsNative = exists.version?.split(".") ?? [];
@@ -313,9 +316,9 @@ class PrivateGroupCommon with Tag {
             exists.setSignature(signature);
             await updateGroupData(groupId, exists.data, notify: true);
           }
-          if (int.tryParse(infos['deleteAfterSeconds']) != exists.options?.deleteAfterSeconds) {
+          if (int.tryParse(infos['deleteAfterSeconds']?.toString() ?? "") != exists.options?.deleteAfterSeconds) {
             if (exists.options == null) exists.options = OptionsSchema();
-            exists.options?.deleteAfterSeconds = int.tryParse(infos['deleteAfterSeconds']);
+            exists.options?.deleteAfterSeconds = int.tryParse(infos['deleteAfterSeconds']?.toString() ?? "");
             await updateGroupOptions(groupId, exists.options);
           }
         }
@@ -381,7 +384,7 @@ class PrivateGroupCommon with Tag {
     //   return null;
     // }
     // members
-    bool inGroup = false;
+    int selfJoined = 0;
     for (int i = 0; i < newMembers.length; i++) {
       PrivateGroupItemSchema member = newMembers[i];
       if (member.groupId != groupId) {
@@ -398,20 +401,30 @@ class PrivateGroupCommon with Tag {
         logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
         continue;
       }
-      // TODO:GG PG perm检查+更新 ?
-      if (!inGroup && (member.invitee == clientCommon.address)) {
-        inGroup = true;
-      }
       PrivateGroupItemSchema? exists = await queryGroupItem(groupId, member.invitee);
+      String? selfAddress = clientCommon.address ?? (await contactCommon.getMe())?.clientAddress;
       if (exists == null) {
         exists = await addPrivateGroupItem(member, true, notify: true, checkDuplicated: false);
         logger.i('$TAG - updatePrivateGroupMembers - add item - i$i - member:$exists');
+      } else if (isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
+        // nothing
+      } else if (exists.permission != member.permission) {
+        bool success = await updateGroupItemPermission(groupId, member.invitee, member.permission, notify: true);
+        if (success) exists.permission = member.permission;
+      }
+      if (isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
+        // nothing
+      } else if ((member.invitee?.isNotEmpty == true) && (member.invitee == selfAddress)) {
+        selfJoined = (member.permission == PrivateGroupItemPerm.none) ? -1 : 1;
       }
     }
     // joined
-    if (!schemaGroup.joined && inGroup) {
-      schemaGroup.joined = inGroup;
-      await updateGroupJoined(groupId, schemaGroup.joined, notify: true);
+    if (!schemaGroup.joined && (selfJoined == 1)) {
+      bool success = await updateGroupJoined(groupId, true, notify: true);
+      if (success) schemaGroup.joined = true;
+    } else if (schemaGroup.joined && selfJoined == -1) {
+      bool success = await updateGroupJoined(groupId, false, notify: true);
+      if (success) schemaGroup.joined = false;
     }
     return schemaGroup;
   }
@@ -624,18 +637,24 @@ class PrivateGroupCommon with Tag {
     return members;
   }
 
-  // FUTURE:GG PG adminer
   Future<bool> updateGroupItemPermission(String? groupId, String? invitee, int? permission, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return false;
     bool success = await PrivateGroupItemStorage.instance.updatePermission(groupId, invitee, permission);
-    // if (success && notify) queryAndNotifyGroup(groupId);
+    if (success && notify) queryAndNotifyGroupItem(groupId, invitee);
     return success;
   }
 
-  Future queryAndNotifyGroup(String groupId) async {
+  Future queryAndNotifyGroup(String? groupId) async {
     PrivateGroupSchema? updated = await PrivateGroupStorage.instance.query(groupId);
     if (updated != null) {
       _updateGroupSink.add(updated);
+    }
+  }
+
+  Future queryAndNotifyGroupItem(String? groupId, String? invitee) async {
+    PrivateGroupItemSchema? updated = await PrivateGroupItemStorage.instance.queryByInvitee(groupId, invitee);
+    if (updated != null) {
+      _updateGroupItemSink.add(updated);
     }
   }
 }

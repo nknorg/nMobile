@@ -284,7 +284,7 @@ class ChatCommon with Tag {
 
   Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
     if (!message.isPrivateGroup) return null;
-    if (!message.canDisplay && !message.isGroupAction) return null; // topic action need topic
+    if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
     // duplicated
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (exists == null) {

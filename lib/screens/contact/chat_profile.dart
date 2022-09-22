@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -10,7 +11,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class ContactChatProfileScreen extends StatefulWidget {
+class ContactChatProfileScreen extends BaseStateFulWidget {
   static final String routeName = "/contact/chat_profile";
   static final String argContactSchema = "contact_schema";
 
@@ -29,12 +30,16 @@ class ContactChatProfileScreen extends StatefulWidget {
   ContactChatProfileScreenState createState() => new ContactChatProfileScreenState();
 }
 
-class ContactChatProfileScreenState extends State<ContactChatProfileScreen> {
+class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatProfileScreen> {
   late ContactSchema _contactSchema;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void onRefreshArguments() {
     _contactSchema = widget.arguments![ContactChatProfileScreen.argContactSchema];
   }
 
