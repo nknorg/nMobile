@@ -201,6 +201,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
       setState(() {
         _privateGroup = event;
+        _isJoined = event.joined;
       });
     });
 
