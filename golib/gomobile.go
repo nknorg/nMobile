@@ -1,4 +1,4 @@
-package nkn
+package nkngolib
 
 import (
 	dnsresolver "github.com/nknorg/dns-resolver-go"
