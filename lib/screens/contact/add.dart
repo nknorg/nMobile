@@ -6,6 +6,7 @@ import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
@@ -27,7 +28,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class ContactAddScreen extends StatefulWidget {
+class ContactAddScreen extends BaseStateFulWidget {
   static final String routeName = "contact/add";
 
   static Future go(BuildContext context) {
@@ -38,7 +39,7 @@ class ContactAddScreen extends StatefulWidget {
   ContactAddScreenState createState() => new ContactAddScreenState();
 }
 
-class ContactAddScreenState extends State<ContactAddScreen> with Tag {
+class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> with Tag {
   GlobalKey _formKey = new GlobalKey<FormState>();
 
   bool _formValid = false;
@@ -57,6 +58,9 @@ class ContactAddScreenState extends State<ContactAddScreen> with Tag {
   void initState() {
     super.initState();
   }
+
+  @override
+  void onRefreshArguments() {}
 
   _selectAvatarPicture() async {
     String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: FileHelper.DEFAULT_IMAGE_EXT);

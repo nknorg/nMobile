@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -17,7 +18,7 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/time.dart';
 
-class ChatMessageItem extends StatefulWidget {
+class ChatMessageItem extends BaseStateFulWidget {
   final MessageSchema message;
   // final TopicSchema? topic;
   // final PrivateGroupSchema? privateGroup;
@@ -39,19 +40,26 @@ class ChatMessageItem extends StatefulWidget {
   });
 
   @override
-  State<ChatMessageItem> createState() => _ChatMessageItemState();
+  _ChatMessageItemState createState() => _ChatMessageItemState();
 }
 
-class _ChatMessageItemState extends State<ChatMessageItem> {
+class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   ContactSchema? _contact;
 
   @override
   void initState() {
-    widget.message.getSender(emptyAdd: true).then((ContactSchema? value) {
-      setState(() {
-        _contact = value;
+    super.initState();
+  }
+
+  @override
+  void onRefreshArguments() {
+    if (_contact?.clientAddress != widget.message.targetId) {
+      widget.message.getSender(emptyAdd: true).then((ContactSchema? value) {
+        setState(() {
+          _contact = value;
+        });
       });
-    });
+    }
   }
 
   @override
@@ -477,7 +485,7 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
                     if (groupItemSchema != null) {
                       await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
                       PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
-                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true);
+                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
                     }
                     Loading.dismiss();
                     if (groupItemSchema != null) Toast.show("wait adminer to sync"); // TODO:GG PG 中文 ?

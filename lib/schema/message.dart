@@ -180,7 +180,9 @@ class MessageSchema {
   }
 
   bool get isGroupAction {
-    return contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept || contentType == MessageContentType.privateGroupSubscribe;
+    bool isAction = contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept || contentType == MessageContentType.privateGroupSubscribe;
+    bool isSync = contentType == MessageContentType.privateGroupOptionRequest || contentType == MessageContentType.privateGroupOptionResponse || contentType == MessageContentType.privateGroupMemberRequest || contentType == MessageContentType.privateGroupMemberResponse;
+    return isAction || isSync;
   }
 
   bool get canTryPiece {

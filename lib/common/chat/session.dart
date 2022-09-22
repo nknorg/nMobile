@@ -46,7 +46,7 @@ class SessionCommon with Tag {
       lastMsg = history.isNotEmpty ? history[0] : null;
     }
     if (schema.lastMessageAt == null || schema.lastMessageOptions == null) {
-      schema.lastMessageAt = lastMsg?.sendAt ?? MessageOptions.getInAt(lastMsg?.options);
+      schema.lastMessageAt = lastMsg?.sendAt ?? MessageOptions.getInAt(lastMsg?.options) ?? DateTime.now().millisecondsSinceEpoch;
       schema.lastMessageOptions = lastMsg?.toMap();
     }
     // unReadCount
