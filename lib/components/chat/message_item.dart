@@ -196,18 +196,17 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
         break;
       // case MessageContentType.topicUnsubscribe:
       case MessageContentType.topicInvitation:
+        contentsWidget.add(_topicInvitedWidget(context));
+        break;
       // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
         contentsWidget.add(_privateGroupInvitedWidget(context));
         break;
-      case MessageContentType.privateGroupAccept:
-        contentsWidget.add(_privateGroupAcceptWidget(context));
-        break;
+      // case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
-        contentsWidget.add(_topicInvitedWidget(context));
+        contentsWidget.add(_privateGroupSubscribeWidget(context));
         break;
     }
-
     return Column(children: contentsWidget);
   }
 
@@ -351,7 +350,6 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG UI调整 ?
   Widget _topicInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
@@ -517,27 +515,19 @@ class _ChatMessageItemState extends State<ChatMessageItem> {
     );
   }
 
-  // TODO:GG PG format?
-  Widget _privateGroupAcceptWidget(BuildContext context) {
-    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
-    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
-    String acceptedDesc = widget.message.isOutbound ? Global.locale((s) => s.accepted_already, ctx: context) : Global.locale((s) => s.other_accepted_already(from));
-
+  Widget _privateGroupSubscribeWidget(BuildContext context) {
+    String invitee = widget.message.content?.toString() ?? "";
+    if (invitee.isEmpty) return SizedBox.shrink();
+    String inviteeDisplay = (invitee.length > 6) ? invitee.substring(0, 6) : invitee;
+    String who = ((clientCommon.address == invitee) ? Global.locale((s) => s.you, ctx: context) : "$inviteeDisplay: ");
+    String content = who + Global.locale((s) => s.joined_channel, ctx: context);
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        children: <Widget>[
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Label(
-                '$acceptedDesc. ${Global.locale((s) => s.waiting_for_sync_data, ctx: context)}.',
-                type: LabelType.bodyRegular,
-                color: application.theme.fontColor2,
-              ),
-            ],
-          ),
-        ],
+      padding: EdgeInsets.symmetric(vertical: 6),
+      alignment: Alignment.center,
+      child: Label(
+        content,
+        type: LabelType.bodyRegular,
+        color: application.theme.fontColor2,
       ),
     );
   }

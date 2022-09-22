@@ -380,18 +380,18 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     int timeOptionsPast = nowAt - (_privateGroup?.optionsRequestAt ?? 0);
     if (_privateGroup?.version?.isNotEmpty == true) {
       if (timeOptionsPast < 1 * 24 * 60 * 60 * 1000) {
-        logger.d('$TAG - _checkPrivateGroupVersion - options - version exist - time < 1d - past:$timeOptionsPast');
+        logger.d('$TAG - _checkPrivateGroupVersion - version exist - time < 1d - past:$timeOptionsPast');
         needOptionsMembers = false;
       } else {
-        logger.i('$TAG - _checkPrivateGroupVersion - options - version exist - time > 1d - past:$timeOptionsPast');
+        logger.i('$TAG - _checkPrivateGroupVersion - version exist - time > 1d - past:$timeOptionsPast');
         needOptionsMembers = true;
       }
     } else {
       if (timeOptionsPast < 5 * 60 * 1000) {
-        logger.d('$TAG - _checkPrivateGroupVersion - options - version null - time < 3m - past:$timeOptionsPast');
+        logger.d('$TAG - _checkPrivateGroupVersion - version null - time < 5m - past:$timeOptionsPast');
         needOptionsMembers = false;
       } else {
-        logger.i('$TAG - _checkPrivateGroupVersion - options - version null - time > 3m - past:$timeOptionsPast');
+        logger.i('$TAG - _checkPrivateGroupVersion - version null - time > 5m - past:$timeOptionsPast');
         needOptionsMembers = true;
       }
     }
