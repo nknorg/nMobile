@@ -104,13 +104,13 @@ class MediaPicker {
       bool isVideo = entity.type == AssetType.video;
       try {
         if (isImage && compressImage) {
-          // FUTURE: compress
+          // FUTURE:GG compress
         } else if (isAudio && compressAudio) {
-          // FUTURE: compress
+          // FUTURE:GG compress
         } else if (isVideo && compressVideo) {
-          // FUTURE: compress
+          // FUTURE:GG compress
         } else {
-          // FUTURE: original
+          // FUTURE:GG original
         }
       } catch (e, st) {
         handleError(e, st);
@@ -237,11 +237,11 @@ class MediaPicker {
     bool isVideo = entity.type == AssetType.video;
     try {
       if (isImage && compressImage) {
-        // FUTURE: compress
+        // FUTURE:GG compress
       } else if (isAudio && compressAudio) {
-        // FUTURE: compress
+        // FUTURE:GG compress
       } else if (isVideo && compressVideo) {
-        // FUTURE: compress
+        // FUTURE:GG compress
       } else {
         // FUTURE: original
       }
@@ -312,9 +312,9 @@ class MediaPicker {
     int size = file.lengthSync();
     try {
       if (compress) {
-        // FUTURE: compress
+        // FUTURE:GG compress
       } else {
-        // FUTURE: original
+        // FUTURE:GG original
       }
     } catch (e, st) {
       handleError(e, st);

@@ -6,23 +6,23 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
-  bool receiveOpen; // FUTURE: unread + notification
-  bool notificationOpen; // FUTURE: topic
+  bool receiveOpen; // FUTURE:GG options unread + notification
+  bool notificationOpen; // FUTURE:GG options  topic
 
-  int? deleteAfterSeconds; // FUTURE: topic
-  int? updateBurnAfterAt; // FUTURE: topic
+  int? deleteAfterSeconds; // FUTURE:GG options  topic
+  int? updateBurnAfterAt; // FUTURE:GG options  topic
 
-  String? soundResource; // FUTURE: chat
-  int? muteExpireAt; // FUTURE: chat
+  String? soundResource; // FUTURE:GG options  chat
+  int? muteExpireAt; // FUTURE:GG options  chat
 
   Color? avatarBgColor;
   Color? avatarNameColor;
 
-  File? chatBgFile; // FUTURE: ui
-  Color? chatBgColor; // FUTURE: ui
+  File? chatBgFile; // FUTURE:GG options  ui
+  Color? chatBgColor; // FUTURE:GG options  ui
 
-  Color? chatBubbleBgColor; // FUTURE: ui
-  Color? chatBubbleTextColor; // FUTURE: ui
+  Color? chatBubbleBgColor; // FUTURE:GG options  ui
+  Color? chatBubbleTextColor; // FUTURE:GG options  ui
 
   OptionsSchema({
     this.receiveOpen = false,
