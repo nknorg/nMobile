@@ -112,6 +112,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         clientWorkItem = DispatchWorkItem {
             var error: NSError?
             self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
+            if ((error != nil) || (self.client == nil)) {
+                NkngolibAddClientConfigWithDialContext(config)
+            }
+            self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
             if (error != nil) {
                 self.eventSinkError(eventSink: self.eventSink, error: error, code: "10")
                 return
