@@ -853,6 +853,8 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (topic == null || message == null || msgData == null) return null;
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
     bool checkStatus = message.contentType == MessageContentType.topicUnsubscribe;
@@ -880,7 +882,7 @@ class ChatOutCommon with Tag {
     List<String> destList = [];
     for (var i = 0; i < _subscribers.length; i++) {
       String clientAddress = _subscribers[i].clientAddress;
-      if (clientAddress == clientCommon.address) {
+      if (clientAddress == selfAddress) {
         selfIsReceiver = true;
       } else {
         destList.add(clientAddress);
@@ -893,13 +895,13 @@ class ChatOutCommon with Tag {
         pid = await _sendByPieces(destList, message);
       }
       if ((pid == null) || pid.isEmpty) {
-        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
+        pid = (await sendData(selfAddress, destList, msgData))?.messageId;
       }
     }
     // self
-    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
+    if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
+      Uint8List? _pid = (await sendData(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
     // push
@@ -922,8 +924,10 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (group == null || message == null || msgData == null) return null;
+    String? selfAddress = clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return null;
     // me
-    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, clientCommon.address);
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, selfAddress);
     if ((_me == null) || (_me.permission == PrivateGroupItemPerm.none)) {
       logger.w("$TAG - _sendWithPrivateGroup - member me is null - me:$_me - group:$group - message:$message");
       return null;
@@ -935,9 +939,9 @@ class ChatOutCommon with Tag {
     for (var i = 0; i < members.length; i++) {
       String? clientAddress = members[i].invitee;
       if (clientAddress == null || clientAddress.isEmpty) continue;
-      if (clientAddress == clientCommon.address) {
+      if (clientAddress == selfAddress) {
         selfIsReceiver = true;
-      } else {
+      } else if (members[i].permission != PrivateGroupItemPerm.none) {
         destList.add(clientAddress);
       }
     }
@@ -948,13 +952,13 @@ class ChatOutCommon with Tag {
         pid = await _sendByPieces(destList, message);
       }
       if ((pid == null) || pid.isEmpty) {
-        pid = (await sendData(clientCommon.address, destList, msgData))?.messageId;
+        pid = (await sendData(selfAddress, destList, msgData))?.messageId;
       }
     }
     // self
-    if (selfIsReceiver && (clientCommon.address?.isNotEmpty == true)) {
+    if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      Uint8List? _pid = (await sendData(clientCommon.address, [clientCommon.address ?? ""], data))?.messageId;
+      Uint8List? _pid = (await sendData(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
     // push
