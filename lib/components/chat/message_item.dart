@@ -488,7 +488,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
                     }
                     Loading.dismiss();
-                    if (groupItemSchema != null) Toast.show("wait adminer to sync"); // TODO:GG PG 中文 ?
+                    if (groupItemSchema != null) Toast.show(Global.locale((s) => s.waiting_for_data_to_sync, ctx: context));
                   },
                 ),
               ],

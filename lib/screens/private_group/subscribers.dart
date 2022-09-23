@@ -10,6 +10,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/private_group/header.dart';
 import 'package:nmobile/components/private_group/subscriber_item.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/private_group.dart';
@@ -143,7 +144,8 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       contactSelect: true,
     );
     if (address?.isNotEmpty == true) {
-      await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
+      bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
+      if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
     }
   }
 

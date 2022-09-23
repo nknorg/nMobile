@@ -527,7 +527,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if ((_privateGroup?.version == null) || (_privateGroup?.version?.isEmpty == true)) {
         disableTip = Global.locale((s) => s.data_synchronization, ctx: context);
       } else if (!(_isJoined == true)) {
-        disableTip = Global.locale((s) => s.need_re_subscribe, ctx: context);
+        disableTip = Global.locale((s) => s.contact_invite_group_tip, ctx: context);
       }
     }
     if (!isClientOk) {

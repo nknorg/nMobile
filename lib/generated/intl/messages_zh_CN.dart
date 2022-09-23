@@ -228,6 +228,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "group_chat": MessageLookupByLibrary.simpleMessage("群"),
         "group_member_already":
             MessageLookupByLibrary.simpleMessage("该成员已经加入本群"),
+        "group_no_exist": MessageLookupByLibrary.simpleMessage("群聊不存在"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
         "has_left_the_group": MessageLookupByLibrary.simpleMessage("已退群"),
         "help": MessageLookupByLibrary.simpleMessage("帮助"),
@@ -258,7 +259,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "input_pubKey": MessageLookupByLibrary.simpleMessage("请输入公钥"),
         "input_seed": MessageLookupByLibrary.simpleMessage("请输入seed"),
         "input_wallet_address": MessageLookupByLibrary.simpleMessage("请输入账户地址"),
+        "invitation_has_expired": MessageLookupByLibrary.simpleMessage("邀请已过期"),
+        "invitation_information_error":
+            MessageLookupByLibrary.simpleMessage("邀请信息出错"),
         "invitation_sent": MessageLookupByLibrary.simpleMessage("已发出邀请"),
+        "invitation_signature_error":
+            MessageLookupByLibrary.simpleMessage("邀请签名出错"),
         "invite_and_send_success":
             MessageLookupByLibrary.simpleMessage("邀请发送成功"),
         "invite_members": MessageLookupByLibrary.simpleMessage("邀请加入"),
@@ -475,6 +481,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_channel_members": MessageLookupByLibrary.simpleMessage("查看群成员"),
         "view_profile": MessageLookupByLibrary.simpleMessage("查看资料"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("查看二维码"),
+        "waiting_for_data_to_sync":
+            MessageLookupByLibrary.simpleMessage("等待数据同步"),
         "waiting_for_sync_data": MessageLookupByLibrary.simpleMessage("等待同步数据"),
         "wallet_address": MessageLookupByLibrary.simpleMessage("账户地址"),
         "wallet_missing":
