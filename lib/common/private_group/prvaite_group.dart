@@ -616,12 +616,13 @@ class PrivateGroupCommon with Tag {
     if (sessionNotify) {
       MessageSchema? message = MessageSchema.fromSend(
         msgId: Uuid().v4(),
-        from: clientCommon.address ?? "",
+        from: schema.invitee ?? "",
         groupId: schema.groupId,
         contentType: MessageContentType.privateGroupSubscribe,
         content: schema.invitee,
-        status: MessageStatus.Read,
       );
+      message.isOutbound = message.from == clientCommon.address;
+      message.status = MessageStatus.Read;
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       message = await chatOutCommon.insertMessage(message, notify: true);
