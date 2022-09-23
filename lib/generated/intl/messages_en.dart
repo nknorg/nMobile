@@ -266,6 +266,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "group_chat": MessageLookupByLibrary.simpleMessage("Group"),
         "group_member_already": MessageLookupByLibrary.simpleMessage(
             "The member is in group already"),
+        "group_no_exist":
+            MessageLookupByLibrary.simpleMessage("private group no exist"),
         "gwei": MessageLookupByLibrary.simpleMessage("GWEI"),
         "has_left_the_group":
             MessageLookupByLibrary.simpleMessage("Left group"),
@@ -307,8 +309,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "input_seed": MessageLookupByLibrary.simpleMessage("Please input seed"),
         "input_wallet_address": MessageLookupByLibrary.simpleMessage(
             "Please input Account Address"),
+        "invitation_has_expired":
+            MessageLookupByLibrary.simpleMessage("invitation has expired"),
+        "invitation_information_error": MessageLookupByLibrary.simpleMessage(
+            "invitation information error"),
         "invitation_sent":
             MessageLookupByLibrary.simpleMessage("Invitation sent"),
+        "invitation_signature_error":
+            MessageLookupByLibrary.simpleMessage("invitation signature error"),
         "invite_and_send_success":
             MessageLookupByLibrary.simpleMessage("invite and send success"),
         "invite_members":
@@ -553,6 +561,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "view_channel_members": MessageLookupByLibrary.simpleMessage("Members"),
         "view_profile": MessageLookupByLibrary.simpleMessage("View Profile"),
         "view_qrcode": MessageLookupByLibrary.simpleMessage("View QR Code"),
+        "waiting_for_data_to_sync":
+            MessageLookupByLibrary.simpleMessage("waiting for data to sync"),
         "waiting_for_sync_data":
             MessageLookupByLibrary.simpleMessage("Waiting for sync data"),
         "wallet_address":

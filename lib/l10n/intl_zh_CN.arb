@@ -390,6 +390,11 @@
   "add_user_duplicated": "已添加该用户",
   "confirm_unsubscribe_group": "确定要退出群聊吗？",
   "balance_not_enough": "余额不足",
+  "group_no_exist": "群聊不存在",
+  "invitation_has_expired": "邀请已过期",
+  "invitation_information_error": "邀请信息出错",
+  "invitation_signature_error": "邀请签名出错",
+  "waiting_for_data_to_sync": "等待数据同步",
   "no_permission_join_group": "还未获得入群权限，请稍后再试。",
   "upgrade_db_tips": "数据库升级中,请勿退出app或离开此页面。"
 }

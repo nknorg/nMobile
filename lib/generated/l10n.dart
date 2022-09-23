@@ -3780,6 +3780,56 @@ class S {
     );
   }
 
+  /// `private group no exist`
+  String get group_no_exist {
+    return Intl.message(
+      'private group no exist',
+      name: 'group_no_exist',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `invitation has expired`
+  String get invitation_has_expired {
+    return Intl.message(
+      'invitation has expired',
+      name: 'invitation_has_expired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `invitation information error`
+  String get invitation_information_error {
+    return Intl.message(
+      'invitation information error',
+      name: 'invitation_information_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `invitation signature error`
+  String get invitation_signature_error {
+    return Intl.message(
+      'invitation signature error',
+      name: 'invitation_signature_error',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `waiting for data to sync`
+  String get waiting_for_data_to_sync {
+    return Intl.message(
+      'waiting for data to sync',
+      name: 'waiting_for_data_to_sync',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Have not been granted permission to join the group, please try again later.`
   String get no_permission_join_group {
     return Intl.message(

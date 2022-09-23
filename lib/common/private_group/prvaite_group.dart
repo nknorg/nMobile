@@ -111,16 +111,21 @@ class PrivateGroupCommon with Tag {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
     // check
+    if (target == clientCommon.address) {
+      logger.e('$TAG - invitee - invitee self. - groupId:$groupId');
+      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
+      return false;
+    }
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - invitee - has no group. - groupId:$groupId');
-      if (toast) Toast.show('has no group.'); // TODO:GG PG 中文?
+      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
       return false;
     }
     PrivateGroupItemSchema? inviter = await queryGroupItem(groupId, clientCommon.address);
     if ((inviter == null) || (inviter.permission == PrivateGroupItemPerm.none)) {
-      logger.e('$TAG - invitee - has no inviter. - groupId:$groupId');
-      if (toast) Toast.show('has no inviter.'); // TODO:GG PG 中文?
+      logger.e('$TAG - invitee - me no inviter. - groupId:$groupId');
+      if (toast) Toast.show(Global.locale((s) => s.contact_invite_group_tip));
       return false;
     }
     if (isAdmin(schemaGroup, inviter)) {
@@ -153,7 +158,7 @@ class PrivateGroupCommon with Tag {
     PrivateGroupItemSchema? itemExists = await queryGroupItem(schema.groupId, schema.invitee);
     if ((itemExists != null) && (itemExists.permission != PrivateGroupItemPerm.none)) {
       logger.w('$TAG - acceptInvitation - already in group - exists:$itemExists');
-      if (toast) Toast.show('already in group.'); // TODO:GG PG 中文?
+      if (toast) Toast.show(Global.locale((s) => s.accepted_already));
       return null;
     }
     // check
@@ -161,18 +166,18 @@ class PrivateGroupCommon with Tag {
     int nowAt = DateTime.now().millisecondsSinceEpoch;
     if ((expiresAt == null) || (expiresAt < nowAt)) {
       logger.w('$TAG - acceptInvitation - expiresAt check fail - expiresAt:$expiresAt - nowAt:$nowAt');
-      if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
+      if (toast) Toast.show(Global.locale((s) => s.invitation_has_expired));
       return null;
     }
     if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true)) {
       logger.e('$TAG - acceptInvitation - inviter incomplete data - schema:$schema');
-      if (toast) Toast.show('inviter incomplete data.'); // TODO:GG PG 中文?
+      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
       return null;
     }
     bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
     if (!verifiedInviter) {
       logger.e('$TAG - acceptInvitation - signature verification failed.');
-      if (toast) Toast.show('signature verification failed.'); // TODO:GG PG 中文?
+      if (toast) Toast.show(Global.locale((s) => s.invitation_signature_error));
       return null;
     }
     // set
@@ -182,39 +187,34 @@ class PrivateGroupCommon with Tag {
     return schema;
   }
 
-  Future<PrivateGroupSchema?> insertInvitee(PrivateGroupItemSchema? schema, {bool notify = false, bool toast = false}) async {
+  Future<PrivateGroupSchema?> insertInvitee(PrivateGroupItemSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
     // check
     int? expiresAt = schema.expiresAt;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
     if ((expiresAt == null) || (expiresAt < nowAt)) {
       logger.w('$TAG - insertInvitee - time check fail - expiresAt:$expiresAt - nowAt:$nowAt');
-      if (toast) Toast.show('expiresAt is null. or now time is after then expires time.'); // TODO:GG PG 中文?
       return null;
     }
     if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviteeRawData == null) || (schema.inviteeRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true) || (schema.inviteeSignature == null) || (schema.inviteeSignature?.isEmpty == true)) {
       logger.e('$TAG - insertInvitee - inviter incomplete data - schema:$schema');
-      if (toast) Toast.show('inviter incomplete data.'); // TODO:GG PG 中文?
       return null;
     }
     bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
     bool verifiedInvitee = await verifiedSignature(schema.invitee, schema.inviteeRawData, schema.inviteeSignature);
     if (!verifiedInviter || !verifiedInvitee) {
       logger.e('$TAG - insertInvitee - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
-      if (toast) Toast.show('signature verification failed.'); // TODO:GG PG 中文?
       return null;
     }
     // exists
     PrivateGroupSchema? schemaGroup = await queryGroup(schema.groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - insertInvitee - has no group. - groupId:${schema.groupId}');
-      if (toast) Toast.show('has no group.'); // TODO:GG PG 中文?
       return null;
     }
     PrivateGroupItemSchema? itemExist = await queryGroupItem(schema.groupId, schema.invitee);
     if ((itemExist != null) && (itemExist.permission != PrivateGroupItemPerm.none)) {
       logger.w('$TAG - insertInvitee - invitee is exist.');
-      if (toast) Toast.show('invitee is exist.'); // TODO:GG PG 中文?
       return null;
     }
     // members
@@ -541,7 +541,11 @@ class PrivateGroupCommon with Tag {
     if (added != null && notify) _addGroupSink.add(added);
     // session
     if (sessionNotify) {
-      SessionSchema? added = SessionSchema(targetId: schema.groupId, type: SessionType.PRIVATE_GROUP);
+      SessionSchema? added = SessionSchema(
+        targetId: schema.groupId,
+        type: SessionType.PRIVATE_GROUP,
+        lastMessageAt: DateTime.now().millisecondsSinceEpoch,
+      );
       await sessionCommon.add(added, null, notify: true);
     }
     return added;
@@ -618,6 +622,7 @@ class PrivateGroupCommon with Tag {
         content: schema.invitee,
         status: MessageStatus.Read,
       );
+      message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       message = await chatOutCommon.insertMessage(message, notify: true);
       if (message != null) await chatCommon.sessionHandle(message);

@@ -799,7 +799,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // insert (sync self)
-    PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true, toast: false);
+    PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true);
     if (groupSchema == null) {
       logger.e('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
       return false;
