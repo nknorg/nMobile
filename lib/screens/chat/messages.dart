@@ -408,15 +408,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
     if (sessionUnreadClear) {
       // count not up in chatting
-      await sessionCommon.setUnReadCount(
-          this.targetId,
-          _topic != null
-              ? SessionType.TOPIC
-              : _privateGroup != null
-                  ? SessionType.PRIVATE_GROUP
-                  : SessionType.CONTACT,
-          0,
-          notify: true);
+      int type = _topic != null
+          ? SessionType.TOPIC
+          : _privateGroup != null
+              ? SessionType.PRIVATE_GROUP
+              : SessionType.CONTACT;
+      await sessionCommon.setUnReadCount(this.targetId, type, 0, notify: true);
     }
     if (badgeRefresh) {
       // count not up in chatting

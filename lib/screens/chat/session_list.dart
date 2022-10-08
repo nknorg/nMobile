@@ -17,7 +17,6 @@ import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
@@ -166,7 +165,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     }
     if (findIndex >= 0 && findIndex < _sessionList.length) {
       SessionSchema session = _sessionList[findIndex];
-      await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, msg, session.unReadCount, notify: true);
+      await sessionCommon.set(session.targetId, session.type, newLastMsg: msg, notify: true);
     }
   }
 
@@ -181,34 +180,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     }
     if (findIndex >= 0 && findIndex < _sessionList.length) {
       SessionSchema session = _sessionList[findIndex];
-      MessageSchema oldLastMsg = MessageSchema.fromMap(session.lastMessageOptions!);
-      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(
-        session.targetId,
-        session.type == SessionType.TOPIC ? session.targetId : "",
-        session.type == SessionType.PRIVATE_GROUP ? session.targetId : "",
-        offset: 0,
-        limit: 1,
-      );
-      MessageSchema? newLastMsg = history.isNotEmpty ? history[0] : null;
-      // update
-      if (newLastMsg == null) {
-        final sendAt = oldLastMsg.sendAt ?? MessageOptions.getInAt(oldLastMsg.options);
-        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, null, session.unReadCount, sendAt: sendAt, notify: true);
-      } else {
-        newLastMsg.sendAt = oldLastMsg.sendAt; // for sort
-        session.lastMessageAt = newLastMsg.sendAt ?? MessageOptions.getInAt(newLastMsg.options);
-        session.lastMessageOptions = newLastMsg.toMap();
-        int unreadCount = oldLastMsg.canNotification ? (session.unReadCount - 1) : session.unReadCount;
-        session.unReadCount = unreadCount >= 0 ? unreadCount : 0;
-        if ((findIndex > (_sessionList.length - 1)) || (_sessionList[findIndex].targetId != session.targetId)) {
-          logger.i("ChatSessionListLayout - onMessageDelete - sessions sync again - msgId:$msgId - session:$session");
-          return await _onMessageDelete(msgId); // sync with sessions lock
-        }
-        setState(() {
-          _sessionList[findIndex] = session;
-        });
-        await sessionCommon.setLastMessageAndUnReadCount(session.targetId, session.type, newLastMsg, session.unReadCount, notify: false);
-      }
+      await sessionCommon.set(session.targetId, session.type, newLastMsgAt: session.lastMessageAt, notify: true);
     }
   }
 

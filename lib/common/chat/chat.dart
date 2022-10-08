@@ -388,7 +388,6 @@ class ChatCommon with Tag {
     if (!message.canDisplay) return null;
     // duplicated
     if (message.targetId.isEmpty) return null;
-
     // type
     int type = SessionType.CONTACT;
     if (message.isTopic) {
@@ -396,26 +395,9 @@ class ChatCommon with Tag {
     } else if (message.isPrivateGroup) {
       type = SessionType.PRIVATE_GROUP;
     }
-
-    SessionSchema? exist = await sessionCommon.query(message.targetId, type);
-    if (exist == null) {
-      SessionSchema? added = SessionSchema(targetId: message.targetId, type: SessionSchema.getTypeByMessage(message));
-      added = await sessionCommon.add(added, message, notify: true);
-      logger.i("$TAG - sessionHandle - new - targetId:${message.targetId} - added:$added");
-      return added;
-    }
-    // update
-    var unreadCount = message.isOutbound ? exist.unReadCount : (message.canNotification ? (exist.unReadCount + 1) : exist.unReadCount);
-    exist.unReadCount = (chatCommon.currentChatTargetId == exist.targetId) ? 0 : unreadCount;
-    int newLastMessageAt = message.sendAt ?? MessageOptions.getInAt(message.options) ?? DateTime.now().millisecondsSinceEpoch;
-    if ((exist.lastMessageAt == null) || (exist.lastMessageAt! <= newLastMessageAt)) {
-      exist.lastMessageAt = newLastMessageAt;
-      exist.lastMessageOptions = message.toMap();
-      await sessionCommon.setLastMessageAndUnReadCount(exist.targetId, exist.type, message, exist.unReadCount, notify: true); // must await
-    } else {
-      await sessionCommon.setUnReadCount(exist.targetId, exist.type, exist.unReadCount, notify: true); // must await
-    }
-    return exist;
+    // set
+    // int unreadChange = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
+    return await sessionCommon.set(message.targetId, type, newLastMsg: message, notify: true);
   }
 
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
