@@ -174,7 +174,7 @@ class SessionStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'last_message_at': schema.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch,
+                  'last_message_at': schema.lastMessageAt,
                   'last_message_options': schema.lastMessageOptions != null ? jsonEncode(schema.lastMessageOptions) : null,
                   'un_read_count': schema.unReadCount,
                 },
