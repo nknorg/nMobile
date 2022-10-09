@@ -3600,6 +3600,16 @@ class S {
     );
   }
 
+  /// `Can not kick yourself!`
+  String get kick_yourself_error {
+    return Intl.message(
+      'Can not kick yourself!',
+      name: 'kick_yourself_error',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Private group member can not invite others currently,ask group owner to invite others`
   String get member_no_auth_invite {
     return Intl.message(
@@ -3635,6 +3645,16 @@ class S {
     return Intl.message(
       'You are not in this group,ask the group owner for permission',
       name: 'tip_ask_group_owner_permission',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This member is no longer in the group`
+  String get member_already_no_permission {
+    return Intl.message(
+      'This member is no longer in the group',
+      name: 'member_already_no_permission',
       desc: '',
       args: [],
     );
@@ -3835,6 +3855,16 @@ class S {
     return Intl.message(
       'Have not been granted permission to join the group, please try again later.',
       name: 'no_permission_join_group',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not authorized to perform this operation`
+  String get no_permission_action {
+    return Intl.message(
+      'Not authorized to perform this operation',
+      name: 'no_permission_action',
       desc: '',
       args: [],
     );

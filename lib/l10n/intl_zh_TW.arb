@@ -372,10 +372,12 @@
   "invited_already": "你已經邀請過該成員，繼續邀請?",
   "group_member_already": "該成員已經加入本群",
   "invite_yourself_error": "不能邀請你自己!",
+  "kick_yourself_error": "不能踢自己!",
   "member_no_auth_invite": "私有群聊群成員暫不能支持邀請他人，聯系群主邀請他人",
   "tip_open_send_device_token": "是否開啟來自對方的消息通知提醒?",
   "tip_switch_success": "切換成功!",
   "tip_ask_group_owner_permission": "您已不在此群，聯繫群主邀請您",
+  "member_already_no_permission": "此成員已不在群",
   "left_group_tip": "已離開群組，請稍後再試。",
   "removed_group_tip": "你已被移出該群，請聯繫群主邀請您",
   "contact_invite_group_tip": "請聯繫群主邀請您",
@@ -396,5 +398,6 @@
   "invitation_signature_error": "邀請簽名出錯",
   "waiting_for_data_to_sync": "等待數據同步",
   "no_permission_join_group": "還未獲得入群權限，請稍後再試。",
+  "no_permission_action": "無權進行此操作",
   "upgrade_db_tips": "數據庫升級中,請勿退出app或離開此頁面。"
 }
