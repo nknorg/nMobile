@@ -44,6 +44,7 @@ class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
 class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<PrivateGroupSubscribersScreen> {
   StreamSubscription? _updatePrivateGroupSubscription;
   StreamSubscription? _addPrivateGroupItemStreamSubscription;
+  StreamSubscription? _updatePrivateGroupItemStreamSubscription;
 
   PrivateGroupSchema? _privateGroup;
   bool _isOwner = false;
@@ -60,14 +61,23 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
   initState() {
     super.initState();
     // listen
-    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => _privateGroup?.id == event.id).listen((PrivateGroupSchema event) {
+    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupSchema event) {
       setState(() {
         _privateGroup = event;
-        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
+        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
       });
     });
     _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema schema) {
       _members.add(schema);
+      setState(() {});
+    });
+    _updatePrivateGroupItemStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema event) {
+      int index = _members.indexWhere((element) => element.id == event.id);
+      if ((index >= 0) && (index < _members.length)) {
+        _members[index] = event;
+      } else {
+        _members.add(event);
+      }
       setState(() {});
     });
 
@@ -88,6 +98,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
   void dispose() {
     _updatePrivateGroupSubscription?.cancel();
     _addPrivateGroupItemStreamSubscription?.cancel();
+    _updatePrivateGroupItemStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -102,7 +113,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
-    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
+    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
 
     setState(() {});
 

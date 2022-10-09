@@ -39,7 +39,7 @@ class PrivateGroupCommon with Tag {
   // ignore: close_sinks
   StreamController<PrivateGroupItemSchema> _updateGroupItemController = StreamController<PrivateGroupItemSchema>.broadcast();
   StreamSink<PrivateGroupItemSchema> get _updateGroupItemSink => _updateGroupItemController.sink;
-  Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream; // FUTURE:GG PG used
+  Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream;
 
   ///****************************************** Action *******************************************
 
@@ -249,7 +249,6 @@ class PrivateGroupCommon with Tag {
     return success ? schemaGroup : null;
   }
 
-  // TODO:GG PG caller
   Future<bool> kickOut(String? groupId, String? target, {bool toast = false}) async {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
@@ -308,7 +307,6 @@ class PrivateGroupCommon with Tag {
     }
     // members
     List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
-    members.add(blacker);
     List<String> memberKeys = getInviteesKey(members);
     // group
     List<String> splits = schemaGroup.version?.split(".") ?? [];
@@ -320,7 +318,9 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - kickOut - kickOut group sql fail.');
       return false;
     }
+    if (toast) Toast.show(Global.locale((s) => s.rejected));
     // sync members
+    members.add(blacker);
     members.forEach((m) {
       if (m.invitee != selfAddress) {
         chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [blacker]).then((value) {
