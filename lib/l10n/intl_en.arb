@@ -373,10 +373,12 @@
   "invited_already": "You have already invited this member,still invite?",
   "group_member_already": "The member is in group already",
   "invite_yourself_error": "Can not invite yourself!",
+  "kick_yourself_error": "Can not kick yourself!",
   "member_no_auth_invite": "Private group member can not invite others currently,ask group owner to invite others",
   "tip_open_send_device_token": "Whether to open the notification reminder from the other party?",
   "tip_switch_success": "Switch Success!",
   "tip_ask_group_owner_permission": "You are not in this group,ask the group owner for permission",
+  "member_already_no_permission": "This member is no longer in the group",
   "left_group_tip": "Left the group, please try again later.",
   "removed_group_tip": "You have been removed from the group, please contact the owner to invite you",
   "contact_invite_group_tip": "Please contact the owner to invite you",
@@ -397,5 +399,6 @@
   "invitation_signature_error": "invitation signature error",
   "waiting_for_data_to_sync": "waiting for data to sync",
   "no_permission_join_group": "Have not been granted permission to join the group, please try again later.",
+  "no_permission_action": "Not authorized to perform this operation",
   "upgrade_db_tips": "During the database upgrade, please do not exit the app or leave this page."
 }

@@ -334,6 +334,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("not invited"),
         "joined_channel": MessageLookupByLibrary.simpleMessage("Joined group"),
         "keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
+        "kick_yourself_error":
+            MessageLookupByLibrary.simpleMessage("Can not kick yourself!"),
         "language": MessageLookupByLibrary.simpleMessage("Language"),
         "language_auto": MessageLookupByLibrary.simpleMessage("Auto"),
         "last_name": MessageLookupByLibrary.simpleMessage("Last Name"),
@@ -359,6 +361,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "mainnet": MessageLookupByLibrary.simpleMessage("MAINNET"),
         "max": MessageLookupByLibrary.simpleMessage("Max"),
         "me": MessageLookupByLibrary.simpleMessage("Me"),
+        "member_already_no_permission": MessageLookupByLibrary.simpleMessage(
+            "This member is no longer in the group"),
         "member_no_auth_invite": MessageLookupByLibrary.simpleMessage(
             "Private group member can not invite others currently,ask group owner to invite others"),
         "members": MessageLookupByLibrary.simpleMessage("members"),
@@ -387,6 +391,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "nkn": MessageLookupByLibrary.simpleMessage("NKN"),
         "nkn_mainnet": MessageLookupByLibrary.simpleMessage("NKN Mainnet"),
         "no": MessageLookupByLibrary.simpleMessage("No"),
+        "no_permission_action": MessageLookupByLibrary.simpleMessage(
+            "Not authorized to perform this operation"),
         "no_permission_join_group": MessageLookupByLibrary.simpleMessage(
             "Have not been granted permission to join the group, please try again later."),
         "no_wallet_create":
