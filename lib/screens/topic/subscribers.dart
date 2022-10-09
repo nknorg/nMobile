@@ -98,7 +98,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     // });
     _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema event) {
       int index = _subscriberList.indexWhere((element) => element.id == event.id);
-      if (index >= 0) {
+      if ((index >= 0) && (index < _subscriberList.length)) {
         _subscriberList[index] = event;
       } else {
         _subscriberList.add(event);

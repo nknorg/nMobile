@@ -83,6 +83,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _onContactUpdateStreamSubscription;
   StreamSubscription? _onTopicUpdateStreamSubscription;
   StreamSubscription? _onPrivateGroupUpdateStreamSubscription;
+  StreamSubscription? _onPrivateGroupItemUpdateStreamSubscription;
 
   // StreamSubscription? _onTopicDeleteStreamSubscription;
   StreamSubscription? _onSubscriberAddStreamSubscription;
@@ -198,11 +199,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // privateGroup
-    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
       setState(() {
         _privateGroup = event;
         _isJoined = event.joined;
       });
+    });
+    _onPrivateGroupItemUpdateStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
+      // nothing
     });
 
     // messages
@@ -284,6 +288,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onContactUpdateStreamSubscription?.cancel();
     _onTopicUpdateStreamSubscription?.cancel();
     _onPrivateGroupUpdateStreamSubscription?.cancel();
+    _onPrivateGroupItemUpdateStreamSubscription?.cancel();
     // _onTopicDeleteStreamSubscription?.cancel();
     _onSubscriberAddStreamSubscription?.cancel();
     _onSubscriberUpdateStreamSubscription?.cancel();

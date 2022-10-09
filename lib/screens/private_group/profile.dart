@@ -17,6 +17,7 @@ import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
+import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/private_group/subscribers.dart';
 import 'package:nmobile/utils/asset.dart';
@@ -48,6 +49,7 @@ class PrivateGroupProfileScreen extends BaseStateFulWidget {
 
 class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGroupProfileScreen> {
   StreamSubscription? _updatePrivateGroupSubscription;
+  StreamSubscription? _updatePrivateGroupItemSubscription;
 
   PrivateGroupSchema? _privateGroup;
 
@@ -62,17 +64,21 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
   initState() {
     super.initState();
     // listen
-    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((PrivateGroupSchema event) {
+    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((PrivateGroupSchema event) {
       setState(() {
         _privateGroup = event;
-        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
+        _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
       });
+    });
+    _updatePrivateGroupItemSubscription = privateGroupCommon.updateGroupItemStream.where((event) => event.groupId == _privateGroup?.groupId).listen((PrivateGroupItemSchema event) {
+      // nothing
     });
   }
 
   @override
   void dispose() {
     _updatePrivateGroupSubscription?.cancel();
+    _updatePrivateGroupItemSubscription?.cancel();
     super.dispose();
   }
 
@@ -87,7 +93,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
     }
     if (this._privateGroup == null) return;
-    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey()) == true;
+    _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
 
     setState(() {});
   }

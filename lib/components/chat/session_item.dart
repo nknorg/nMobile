@@ -122,7 +122,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       });
     });
     // private group
-    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.id == _privateGroup?.id).listen((event) {
+    _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
       setState(() {
         _privateGroup = event;
       });
