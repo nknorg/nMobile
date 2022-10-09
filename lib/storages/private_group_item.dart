@@ -120,7 +120,16 @@ class PrivateGroupItemStorage with Tag {
     return [];
   }
 
-  Future<bool> updatePermission(String? groupId, String? invitee, int? permission) async {
+  Future<bool> updatePermission(
+    String? groupId,
+    String? invitee,
+    int? permission,
+    int? expiresAt,
+    String? inviterRawData,
+    String? inviteeRawData,
+    String? inviterSignature,
+    String? inviteeSignature,
+  ) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty || invitee == null || invitee.isEmpty) return false;
     if (permission == null) return false;
@@ -131,6 +140,11 @@ class PrivateGroupItemStorage with Tag {
                 tableName,
                 {
                   'permission': permission,
+                  'expires_at': expiresAt,
+                  'inviter_raw_data': inviterRawData,
+                  'invitee_raw_data': inviteeRawData,
+                  'inviter_signature': inviterSignature,
+                  'invitee_signature': inviteeSignature,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ? AND invitee = ?',

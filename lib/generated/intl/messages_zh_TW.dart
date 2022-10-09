@@ -280,6 +280,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "join_but_not_invite": MessageLookupByLibrary.simpleMessage("未邀請"),
         "joined_channel": MessageLookupByLibrary.simpleMessage("加入群聊"),
         "keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
+        "kick_yourself_error": MessageLookupByLibrary.simpleMessage("不能踢自己!"),
         "language": MessageLookupByLibrary.simpleMessage("語言"),
         "language_auto": MessageLookupByLibrary.simpleMessage("跟隨系統"),
         "last_name": MessageLookupByLibrary.simpleMessage("姓"),
@@ -302,6 +303,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "mainnet": MessageLookupByLibrary.simpleMessage("主網"),
         "max": MessageLookupByLibrary.simpleMessage("全部"),
         "me": MessageLookupByLibrary.simpleMessage("我"),
+        "member_already_no_permission":
+            MessageLookupByLibrary.simpleMessage("此成員已不在群"),
         "member_no_auth_invite":
             MessageLookupByLibrary.simpleMessage("私有群聊群成員暫不能支持邀請他人，聯系群主邀請他人"),
         "members": MessageLookupByLibrary.simpleMessage("成員"),
@@ -328,6 +331,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "nkn": MessageLookupByLibrary.simpleMessage("NKN"),
         "nkn_mainnet": MessageLookupByLibrary.simpleMessage("NKN 主網"),
         "no": MessageLookupByLibrary.simpleMessage("不"),
+        "no_permission_action": MessageLookupByLibrary.simpleMessage("無權進行此操作"),
         "no_permission_join_group":
             MessageLookupByLibrary.simpleMessage("還未獲得入群權限，請稍後再試。"),
         "no_wallet_create": MessageLookupByLibrary.simpleMessage("創建新帳戶"),

@@ -811,15 +811,18 @@ class ChatInCommon with Tag {
       return false;
     }
     // sync invitee
-    chatOutCommon.sendPrivateGroupOptionResponse(newGroupItem.invitee, groupSchema, privateGroupCommon.getInviteesKey(members)); // await
-    for (int i = 0; i < members.length; i += 10) {
-      List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
-      chatOutCommon.sendPrivateGroupMemberResponse(newGroupItem.invitee, groupSchema, memberSplits); // await
-    }
+    List<String> memberKeys = privateGroupCommon.getInviteesKey(members);
+    chatOutCommon.sendPrivateGroupOptionResponse(newGroupItem.invitee, groupSchema, memberKeys); // await
+    // for (int i = 0; i < members.length; i += 10) {
+    //   List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
+    //   chatOutCommon.sendPrivateGroupMemberResponse(newGroupItem.invitee, groupSchema, memberSplits); // await
+    // }
     // sync members
     members.forEach((m) {
       if ((m.invitee != clientCommon.address) && (m.invitee != newGroupItem.invitee)) {
-        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newGroupItem]); // await
+        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newGroupItem]).then((value) {
+          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, groupSchema, memberKeys); // await
+        }); // await
       }
     });
     return true;
