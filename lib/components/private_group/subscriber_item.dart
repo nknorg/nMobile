@@ -161,15 +161,17 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   Widget _getNameLabels(PrivateGroupSchema? privateGroup, PrivateGroupItemSchema privateGroupItem, ContactSchema? contact) {
     String displayName = contact?.displayName ?? " ";
     String clientAddress = privateGroupItem.invitee!;
-    int? permission = privateGroupItem.permission;
+    // int? permission = privateGroupItem.permission;
 
     // _mark
     List<String> marks = [];
     if (clientAddress == clientCommon.address) {
       marks.add(Global.locale((s) => s.you));
     }
-    if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress) == true) {
+    if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress)) {
       marks.add(Global.locale((s) => s.owner));
+    } else if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress)) {
+      // FUTURE:GG PG admin
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
 
@@ -203,7 +205,6 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return SizedBox.shrink();
     if (privateGroupItem.invitee == clientCommon.address) return SizedBox.shrink();
     if (!privateGroupCommon.isOwner(privateGroup.ownerPublicKey, clientCommon.getPublicKey())) return SizedBox.shrink();
-    return SizedBox.shrink();
 
     return SizedBox(
       width: 20 + 16 + 6,
@@ -235,7 +236,11 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               backgroundColor: application.theme.strongColor,
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                // FUTURE PG kick_out
+                await privateGroupCommon.kickOut(
+                  this.widget.privateGroup?.groupId,
+                  this.widget.privateGroupItem.invitee,
+                  toast: true,
+                );
               },
             ),
             reject: Button(
