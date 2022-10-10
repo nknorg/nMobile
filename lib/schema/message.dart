@@ -1441,14 +1441,14 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupOptionResponse(PrivateGroupSchema privateGroup, List<String> members) {
+  static String getPrivateGroupOptionResponse(PrivateGroupSchema privateGroup) {
     Map data = _base(MessageContentType.privateGroupOptionResponse);
     data.addAll({
       'content': {
         'groupId': privateGroup.groupId,
         'rawData': jsonEncode(privateGroup.getRawDataMap()),
         'version': privateGroup.version,
-        'members': jsonEncode(members..sort((a, b) => a.compareTo(b))),
+        'count': privateGroup.count,
         'signature': privateGroup.signature,
       },
     });
