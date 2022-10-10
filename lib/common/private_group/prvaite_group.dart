@@ -239,7 +239,6 @@ class PrivateGroupCommon with Tag {
     }
     // members
     List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
-    members.add(schema);
     // group
     List<String> splits = schemaGroup.version?.split(".") ?? [];
     int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
@@ -294,7 +293,7 @@ class PrivateGroupCommon with Tag {
     if (clientSeed == null) return false;
     Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     blacker.permission = PrivateGroupItemPerm.none;
-    blacker.expiresAt = 0;
+    blacker.expiresAt = DateTime.now().millisecondsSinceEpoch;
     blacker.inviterRawData = jsonEncode(blacker.createRawDataMap());
     blacker.inviteeRawData = "";
     blacker.inviterSignature = await genSignature(ownerPrivateKey, blacker.inviterRawData);
@@ -324,7 +323,7 @@ class PrivateGroupCommon with Tag {
     members.forEach((m) {
       if (m.invitee != selfAddress) {
         chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [blacker]).then((value) {
-          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup, memberKeys); // await
+          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
         });
       }
     });
@@ -341,7 +340,8 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // item
     PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
-    if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
+    if (privateGroupItem == null) {
+      // if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
       logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
       return false;
     }
@@ -354,17 +354,17 @@ class PrivateGroupCommon with Tag {
       }
     }
     // send
-    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup, getInviteesKey(members)); // await
+    chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup); // await
     return true;
   }
 
-  Future<PrivateGroupSchema?> updatePrivateGroupOptions(String? groupId, String? rawData, String? version, String? members, String? signature) async {
+  Future<PrivateGroupSchema?> updatePrivateGroupOptions(String? groupId, String? rawData, String? version, int? count, String? signature) async {
     if (groupId == null || groupId.isEmpty) return null;
     if (rawData == null || rawData.isEmpty) return null;
     if (version == null || version.isEmpty) return null;
-    if (members == null || members.isEmpty) return null;
+    if (count == null) return null;
     if (signature == null || signature.isEmpty) return null;
+    Map infos = Util.jsonFormatMap(rawData) ?? Map();
     // verified
     String ownerPubKey = getOwnerPublicKey(groupId);
     bool verifiedGroup = await verifiedSignature(ownerPubKey, rawData, signature);
@@ -372,26 +372,13 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - updatePrivateGroupOptions - signature verification failed.');
       return null;
     }
-    // data
-    Map infos = Util.jsonFormatMap(rawData) ?? Map();
-    List membersKeys = Util.jsonFormatList(members) ?? [];
-    int membersCount = 0;
-    membersKeys.forEach((element) {
-      List<String> splits = element?.toString().split("_") ?? [];
-      if (splits.length >= 2) {
-        int permission = int.tryParse(splits[0]) ?? PrivateGroupItemPerm.none;
-        if (permission != PrivateGroupItemPerm.none) {
-          membersCount++;
-        }
-      }
-    });
     // check
     PrivateGroupSchema? exists = await queryGroup(groupId);
     if (exists == null) {
       PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, infos['name'], type: infos['type']);
       if (_newGroup == null) return null;
       _newGroup.version = version;
-      _newGroup.count = membersCount;
+      _newGroup.count = count;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
       _newGroup.setSignature(signature);
       exists = await addPrivateGroup(_newGroup, true, notify: true, checkDuplicated: false);
@@ -422,10 +409,10 @@ class PrivateGroupCommon with Tag {
             await updateGroupData(groupId, exists.data, notify: true);
           }
         }
-        if ((version != exists.version) || (membersCount != exists.count)) {
+        if ((version != exists.version) || (count != exists.count)) {
           exists.version = version;
-          exists.count = membersCount;
-          await updateGroupVersionCount(groupId, version, membersCount, notify: true);
+          exists.count = count;
+          await updateGroupVersionCount(groupId, version, count, notify: true);
         }
         logger.i('$TAG - updatePrivateGroupOptions - group modify - group:$exists');
       } else {
@@ -443,7 +430,8 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // item
     PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
-    if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
+    if (privateGroupItem == null) {
+      // if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
       logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
       return false;
     }
@@ -456,7 +444,7 @@ class PrivateGroupCommon with Tag {
       }
     }
     // send
-    List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
+    List<PrivateGroupItemSchema> members = await getMembersAll(groupId, showBlack: true);
     for (int i = 0; i < members.length; i += 10) {
       List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
       chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, memberSplits); // await
@@ -464,11 +452,11 @@ class PrivateGroupCommon with Tag {
     return true;
   }
 
-  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? selfAddress, String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? newMembers) async {
+  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? selfAddress, String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? modifyMembers) async {
     if (sender == null || sender.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     if (remoteVersion == null || remoteVersion.isEmpty) return null;
-    if (newMembers == null || newMembers.isEmpty) return null;
+    if (modifyMembers == null || modifyMembers.isEmpty) return null;
     // exists
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
@@ -502,21 +490,33 @@ class PrivateGroupCommon with Tag {
     }
     // members
     int selfJoined = 0;
-    for (int i = 0; i < newMembers.length; i++) {
-      PrivateGroupItemSchema member = newMembers[i];
+    for (int i = 0; i < modifyMembers.length; i++) {
+      PrivateGroupItemSchema member = modifyMembers[i];
       if (member.groupId != groupId) {
         logger.e('$TAG - updatePrivateGroupMembers - groupId incomplete data. - i$i - member:$member');
         continue;
       }
-      if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true) || (member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviteeRawData == null) || (member.inviteeRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true) || (member.inviteeSignature == null) || (member.inviteeSignature?.isEmpty == true)) {
-        logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete data - i$i - member:$member');
-        continue;
-      }
-      bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
-      bool verifiedInvitee = await verifiedSignature(member.invitee, member.inviteeRawData, member.inviteeSignature);
-      if (!verifiedInviter || !verifiedInvitee) {
-        logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
-        continue;
+      if (member.permission != PrivateGroupItemPerm.none) {
+        if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true) || (member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviteeRawData == null) || (member.inviteeRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true) || (member.inviteeSignature == null) || (member.inviteeSignature?.isEmpty == true)) {
+          logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete data - i$i - member:$member');
+          continue;
+        }
+        bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
+        bool verifiedInvitee = await verifiedSignature(member.invitee, member.inviteeRawData, member.inviteeSignature);
+        if (!verifiedInviter || !verifiedInvitee) {
+          logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
+          continue;
+        }
+      } else {
+        if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true) || (member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true)) {
+          logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete data - i$i - member:$member');
+          continue;
+        }
+        bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
+        if (!verifiedInviter) {
+          logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter');
+          continue;
+        }
       }
       PrivateGroupItemSchema? exists = await queryGroupItem(groupId, member.invitee);
       if (exists == null) {
@@ -733,23 +733,35 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupItemStorage.instance.queryList(groupId, perm: perm, limit: limit, offset: offset);
   }
 
-  Future<List<PrivateGroupItemSchema>> getMembersAll(String? groupId) async {
+  Future<List<PrivateGroupItemSchema>> getMembersAll(String? groupId, {bool showBlack = false}) async {
     if (groupId == null || groupId.isEmpty) return [];
     List<PrivateGroupItemSchema> members = [];
     int limit = 20;
+    // owner
     List<PrivateGroupItemSchema> result = await queryMembers(groupId, perm: PrivateGroupItemPerm.owner, offset: 0, limit: 1);
     members.addAll(result);
+    // admin
     for (int offset = 0; true; offset += limit) {
       List<PrivateGroupItemSchema> result = await queryMembers(groupId, perm: PrivateGroupItemPerm.admin, offset: offset, limit: limit);
       members.addAll(result);
       logger.d("$TAG - getMembersAll - admin - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
       if (result.length < limit) break;
     }
+    // normal
     for (int offset = 0; true; offset += limit) {
       List<PrivateGroupItemSchema> result = await queryMembers(groupId, perm: PrivateGroupItemPerm.normal, offset: offset, limit: limit);
       members.addAll(result);
       logger.d("$TAG - getMembersAll - normal - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
       if (result.length < limit) break;
+    }
+    // black
+    if (showBlack) {
+      for (int offset = 0; true; offset += limit) {
+        List<PrivateGroupItemSchema> result = await queryMembers(groupId, perm: PrivateGroupItemPerm.none, offset: offset, limit: limit);
+        members.addAll(result);
+        logger.d("$TAG - getMembersAll - none - groupId:$groupId - offset:$offset - current_len:${result.length} - total_len:${members.length}");
+        if (result.length < limit) break;
+      }
     }
     return members;
   }

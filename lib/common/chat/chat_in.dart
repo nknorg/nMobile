@@ -811,8 +811,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // sync invitee
-    List<String> memberKeys = privateGroupCommon.getInviteesKey(members);
-    chatOutCommon.sendPrivateGroupOptionResponse(newGroupItem.invitee, groupSchema, memberKeys); // await
+    chatOutCommon.sendPrivateGroupOptionResponse(newGroupItem.invitee, groupSchema); // await
     // for (int i = 0; i < members.length; i += 10) {
     //   List<PrivateGroupItemSchema> memberSplits = members.skip(i).take(10).toList();
     //   chatOutCommon.sendPrivateGroupMemberResponse(newGroupItem.invitee, groupSchema, memberSplits); // await
@@ -821,7 +820,7 @@ class ChatInCommon with Tag {
     members.forEach((m) {
       if ((m.invitee != clientCommon.address) && (m.invitee != newGroupItem.invitee)) {
         chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, groupSchema, [newGroupItem]).then((value) {
-          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, groupSchema, memberKeys); // await
+          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, groupSchema); // await
         }); // await
       }
     });
@@ -844,9 +843,9 @@ class ChatInCommon with Tag {
     String? groupId = data['groupId']?.toString();
     String rawData = data['rawData'];
     String version = data['version'];
-    String members = data['members'];
+    int? count = int.tryParse(data['count']?.toString() ?? "");
     String signature = data['signature'];
-    PrivateGroupSchema? group = await privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, members, signature); // await
+    PrivateGroupSchema? group = await privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, count, signature); // await
     if (group != null) {
       bool needRequestMembers = false;
       int nowAt = DateTime.now().millisecondsSinceEpoch;
