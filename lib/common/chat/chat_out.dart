@@ -576,11 +576,11 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group, List<String> members) async {
+  Future sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (group == null) return null;
-    String data = MessageData.getPrivateGroupOptionResponse(group, members);
+    String data = MessageData.getPrivateGroupOptionResponse(group);
     await _sendWithAddressSafe([target], data, notification: false);
   }
 

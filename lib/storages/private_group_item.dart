@@ -145,7 +145,6 @@ class PrivateGroupItemStorage with Tag {
                   'invitee_raw_data': inviteeRawData,
                   'inviter_signature': inviterSignature,
                   'invitee_signature': inviteeSignature,
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ? AND invitee = ?',
                 whereArgs: [groupId, invitee],
