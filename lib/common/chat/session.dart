@@ -24,7 +24,7 @@ class SessionCommon with Tag {
   StreamSink<SessionSchema> get _updateSink => _updateController.sink;
   Stream<SessionSchema> get updateStream => _updateController.stream;
 
-  ParallelQueue _queue = ParallelQueue("session", onLog: (log, error) => error ? logger.w(log) : null);
+  Map<String, ParallelQueue> _queues = Map();
 
   SessionCommon();
 
@@ -96,7 +96,10 @@ class SessionCommon with Tag {
       return exist;
     };
     // queue
-    return await _queue.add(() async {
+    if (_queues[targetId] == null) {
+      _queues[targetId] = ParallelQueue("session_$targetId", onLog: (log, error) => error ? logger.w(log) : null);
+    }
+    return await _queues[targetId]?.add(() async {
       try {
         return await func();
       } catch (e, st) {
