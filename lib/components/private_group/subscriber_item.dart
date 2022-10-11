@@ -152,7 +152,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     ],
                   ),
           ),
-          this.widget.tail != null ? this.widget.tail! : _getTailAction(this.widget.privateGroup, this.widget.privateGroupItem, this.contact),
+          this.widget.tail ?? _getTailAction(this.widget.privateGroup, this.widget.privateGroupItem, this.contact),
         ],
       ),
     );

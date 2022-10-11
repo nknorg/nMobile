@@ -226,7 +226,7 @@ class ChatInCommon with Tag {
       clientCommon.connectSuccess();
       return true;
     }
-    if ((received.content == null) || !(received.content! is String)) {
+    if ((received.content == null) || !(received.content is String)) {
       logger.e("$TAG - _receivePing - content error - received:$received");
       return false;
     }

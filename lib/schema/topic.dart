@@ -160,10 +160,10 @@ class TopicSchema {
   }
 
   Future<bool> shouldResubscribe({int? globalHeight}) async {
-    if ((expireBlockHeight == null) || (expireBlockHeight! <= 0)) return true;
+    if ((expireBlockHeight == null) || ((expireBlockHeight ?? 0) <= 0)) return true;
     globalHeight = globalHeight ?? (await Global.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
-      return (expireBlockHeight! - globalHeight) < Global.topicWarnBlockExpireHeight;
+      return ((expireBlockHeight ?? 0) - globalHeight) < Global.topicWarnBlockExpireHeight;
     } else {
       return true;
     }

@@ -430,7 +430,7 @@ class ChatCommon with Tag {
           taskService.removeTask1(key);
           return;
         }
-        if (message.deleteAt == null || (message.deleteAt! > DateTime.now().millisecondsSinceEpoch)) {
+        if (message.deleteAt == null || ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch)) {
           // logger.v("$TAG - burningTick - tick - key:$key - msgId:${message.msgId} - deleteTime:${message.deleteAt?.toString()} - now:${DateTime.now()}");
           onTick?.call();
         } else {

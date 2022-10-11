@@ -366,7 +366,7 @@ class TopicCommon with Tag {
     // check expire
     bool noSubscribed;
     int expireHeight = await getSubscribeExpireAtByNode(exists.topic, clientCommon.address);
-    if (!exists.joined || exists.subscribeAt == null || exists.subscribeAt! <= 0 || exists.expireBlockHeight == null || exists.expireBlockHeight! <= 0) {
+    if (!exists.joined || exists.subscribeAt == null || (exists.subscribeAt ?? 0) <= 0 || exists.expireBlockHeight == null || (exists.expireBlockHeight ?? 0) <= 0) {
       if (expireHeight > 0) {
         // DB no joined + node is joined
         noSubscribed = false;

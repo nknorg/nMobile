@@ -224,8 +224,8 @@ class AudioHelper with Tag {
         "volume": (event.decibels ?? 0) / 120,
       });
       // maxDuration
-      if (this.recordMaxDurationS != null && this.recordMaxDurationS! > 0) {
-        if (event.duration.inMilliseconds >= this.recordMaxDurationS! * 1000) {
+      if ((this.recordMaxDurationS != null) && ((this.recordMaxDurationS ?? 0) > 0)) {
+        if (event.duration.inMilliseconds >= ((this.recordMaxDurationS ?? 0) * 1000)) {
           await recordStop();
         }
       }

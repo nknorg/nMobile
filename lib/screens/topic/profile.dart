@@ -421,14 +421,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                     child: Row(
                       children: <Widget>[
                         Icon(
-                          _isJoined! ? Icons.exit_to_app : Icons.person_add,
-                          color: _isJoined! ? Colors.red : application.theme.primaryColor,
+                          (_isJoined ?? false) ? Icons.exit_to_app : Icons.person_add,
+                          color: (_isJoined ?? false) ? Colors.red : application.theme.primaryColor,
                         ),
                         SizedBox(width: 10),
                         Label(
-                          _isJoined! ? Global.locale((s) => s.unsubscribe, ctx: context) : Global.locale((s) => s.subscribe, ctx: context),
+                          (_isJoined ?? false) ? Global.locale((s) => s.unsubscribe, ctx: context) : Global.locale((s) => s.subscribe, ctx: context),
                           type: LabelType.bodyRegular,
-                          color: _isJoined! ? Colors.red : application.theme.primaryColor,
+                          color: (_isJoined ?? false) ? Colors.red : application.theme.primaryColor,
                         ),
                         Spacer(),
                       ],
