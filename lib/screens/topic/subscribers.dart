@@ -235,7 +235,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
   @override
   Widget build(BuildContext context) {
-    String invitedCount = (_invitedSendCount != null && _invitedReceiptCount != null) ? (_invitedSendCount! + _invitedReceiptCount!).toString() : "--";
+    String invitedCount = (_invitedSendCount != null && _invitedReceiptCount != null) ? ((_invitedSendCount ?? 0) + _invitedReceiptCount!).toString() : "--";
     String joinedCount = _subscriberCount?.toString() ?? "--";
     String inviteContent = '$invitedCount' + Global.locale((s) => s.members, ctx: context) + ':' + Global.locale((s) => s.invitation_sent, ctx: context);
     String joinedContent = '$joinedCount' + Global.locale((s) => s.members, ctx: context) + ':' + Global.locale((s) => s.joined_channel, ctx: context);

@@ -154,7 +154,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                     ],
                   ),
           ),
-          this.widget.tail != null ? this.widget.tail! : _getTailAction(this.widget.topic, this.widget.subscriber, this.contact),
+          this.widget.tail ?? _getTailAction(this.widget.topic, this.widget.subscriber, this.contact),
         ],
       ),
     );

@@ -104,7 +104,7 @@ class TopicItem extends StatelessWidget {
                     ],
                   ),
           ),
-          this.tail != null ? this.tail! : SizedBox(),
+          this.tail ?? SizedBox(),
         ],
       ),
     );
