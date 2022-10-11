@@ -160,7 +160,7 @@ class PrivateGroupSchema {
       'is_top': isTop ? 1 : 0,
       'count': count,
       'avatar': Path.convert2Local(avatar?.path),
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
       'data': data != null ? jsonEncode(data) : null,
     };
     return map;

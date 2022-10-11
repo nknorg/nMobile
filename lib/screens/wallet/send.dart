@@ -239,7 +239,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       String amount = _amount?.toString() ?? '0';
       // String fee = _fee.toString();
-      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
+      if (_sendTo == null || (_sendTo?.isEmpty == true) || amount == '0') {
         Toast.show(Global.locale((s) => s.enter_amount, ctx: context));
         return false;
       }
@@ -290,7 +290,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
 
       String amount = _amount?.toString() ?? '0';
       String fee = _fee.toStringAsFixed(8);
-      if (_sendTo == null || _sendTo!.isEmpty || amount == '0') {
+      if (_sendTo == null || (_sendTo?.isEmpty == true) || amount == '0') {
         Toast.show(Global.locale((s) => s.enter_amount, ctx: context));
         return false;
       }

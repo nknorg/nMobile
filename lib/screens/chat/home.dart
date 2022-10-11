@@ -327,7 +327,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                   ? ContactHeader(
                       contact: _contactMe!,
                       onTap: () {
-                        ContactProfileScreen.go(context, contactId: _contactMe!.id);
+                        ContactProfileScreen.go(context, contactId: _contactMe?.id);
                       },
                       body: _headerBody(),
                     )

@@ -196,8 +196,9 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             text: Global.locale((s) => s.delete_wallet),
             backgroundColor: application.theme.strongColor,
             onPressed: () async {
-              if (_wallet == null || _wallet!.address.isEmpty) return;
-              _walletBloc?.add(DeleteWallet(this._wallet!.address));
+              String? wAddress = _wallet?.address;
+              if (wAddress == null || wAddress.isEmpty) return;
+              _walletBloc?.add(DeleteWallet(wAddress));
               // client close
               try {
                 String? clientAddress = clientCommon.address;

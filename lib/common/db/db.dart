@@ -31,7 +31,7 @@ import 'package:synchronized/synchronized.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 5; // TODO:GG PG 先测试5，最后测试升级6?
+  static int currentDatabaseVersion = 5; // TODO:GG PG 先测试5，最后测试升级6？
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -350,7 +350,7 @@ class DB {
   }
 
   bool isOpen() {
-    return database != null && database!.isOpen;
+    return database?.isOpen == true;
   }
 
   Future<String> getDBDirPath() async {

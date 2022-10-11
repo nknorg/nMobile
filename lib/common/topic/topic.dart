@@ -661,7 +661,7 @@ class TopicCommon with Tag {
 
   // caller = everyone
   Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress, {int maxTryTimes = 1}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address?.isEmpty
     // topic exist
     TopicSchema? _topic = await topicCommon.queryByTopic(topic);
     if (_topic == null) {
@@ -729,7 +729,7 @@ class TopicCommon with Tag {
 
   // caller = everyone
   Future<SubscriberSchema?> onKickOut(String? topic, String? senderAddress, String? clientAddress, {int maxTryTimes = 1}) async {
-    if (topic == null || topic.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address!.isEmpty
+    if (topic == null || topic.isEmpty || senderAddress == null || senderAddress.isEmpty || clientAddress == null || clientAddress.isEmpty) return null; // || clientCommon.address == null || clientCommon.address?.isEmpty
     // topic exist
     TopicSchema? _exist = await topicCommon.queryByTopic(topic);
     if (_exist == null) {

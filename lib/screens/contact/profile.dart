@@ -159,7 +159,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else if (contactClientAddress?.isNotEmpty == true) {
       this._contactSchema = await contactCommon.queryByClientAddress(contactClientAddress);
     }
-    if (this._contactSchema == null || this._contactSchema!.clientAddress.isEmpty) return;
+    if (this._contactSchema == null || (this._contactSchema?.clientAddress.isEmpty == true)) return;
 
     // exist
     contactCommon.queryByClientAddress(this._contactSchema?.clientAddress).then((ContactSchema? exist) async {
@@ -187,7 +187,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // notification
     if (_contactSchema?.isMe == false) {
       if (_contactSchema?.options?.notificationOpen != null) {
-        _notificationOpen = _contactSchema!.options!.notificationOpen;
+        _notificationOpen = _contactSchema?.options?.notificationOpen ?? false;
       } else {
         _notificationOpen = false;
       }
@@ -333,7 +333,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _addFriend() {
     if (_contactSchema == null) return;
-    contactCommon.setType(_contactSchema!.id, ContactType.friend, notify: true);
+    contactCommon.setType(_contactSchema?.id, ContactType.friend, notify: true);
     Toast.show(Global.locale((s) => s.success, ctx: context));
   }
 
@@ -365,11 +365,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   String _getClientAddressShow() {
-    if (_contactSchema?.clientAddress != null) {
-      if (_contactSchema!.clientAddress.length > 10) {
-        return _contactSchema!.clientAddress.substring(0, 10) + '...';
+    String? address = _contactSchema?.clientAddress;
+    if (address != null) {
+      if (address.length > 10) {
+        return address.substring(0, 10) + '...';
       }
-      return _contactSchema!.clientAddress;
+      return address;
     }
     return '';
   }

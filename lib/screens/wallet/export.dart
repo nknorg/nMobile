@@ -132,7 +132,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
               ),
             ),
           ),
-          _seed == null || _seed!.isEmpty
+          _seed == null || (_seed?.isEmpty == true)
               ? SizedBox.shrink()
               : SafeArea(
                   child: Padding(
