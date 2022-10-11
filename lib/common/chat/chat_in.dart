@@ -788,11 +788,6 @@ class ChatInCommon with Tag {
     String invitee = data['invitee']?.toString() ?? "";
     if (groupId.isEmpty || invitee.isEmpty) return false;
     // item
-    PrivateGroupItemSchema? itemExists = await privateGroupCommon.queryGroupItem(groupId, invitee);
-    if ((itemExists != null) && (itemExists.permission != PrivateGroupItemPerm.none)) {
-      logger.w('$TAG - _receivePrivateGroupAccept - already in group - exists:$itemExists');
-      return false;
-    }
     PrivateGroupItemSchema? newGroupItem = PrivateGroupItemSchema.fromRawData(data);
     if (newGroupItem == null) {
       logger.e('$TAG - _receivePrivateGroupAccept - invitee nil.');
