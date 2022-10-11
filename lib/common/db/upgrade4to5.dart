@@ -92,7 +92,7 @@ class Upgrade4to5 {
           final splits = oldAddress.split(".__permission__.");
           oldAddress = splits.length > 0 ? splits[splits.length - 1] : "";
         }
-        String? newAddress = ((oldAddress?.isNotEmpty == true) && (oldAddress!.length <= 200)) ? oldAddress : null;
+        String? newAddress = ((oldAddress?.isNotEmpty == true) && ((oldAddress?.length ?? 0) <= 200)) ? oldAddress : null;
         if (newAddress == null || newAddress.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - address error - data:$result");
           continue;
@@ -290,7 +290,7 @@ class Upgrade4to5 {
         if (oldTopic == null || oldTopic.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - topic is null - data:$result");
         }
-        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && ((oldTopic?.length ?? 0) <= 200)) ? oldTopic : null;
         if (newTopic == null || newTopic.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
           continue;
@@ -447,7 +447,7 @@ class Upgrade4to5 {
         if (oldTopic == null || oldTopic.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - topic is null - data:$result");
         }
-        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && ((oldTopic?.length ?? 0) <= 200)) ? oldTopic : null;
         if (newTopic == null || newTopic.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - chat_id error - data:$result");
           continue;
@@ -460,7 +460,7 @@ class Upgrade4to5 {
           final splits = oldChatId.split(".__permission__.");
           oldChatId = splits.length > 0 ? splits[splits.length - 1] : "";
         }
-        String? newChatId = ((oldChatId?.isNotEmpty == true) && (oldChatId!.length <= 200)) ? oldChatId : null;
+        String? newChatId = ((oldChatId?.isNotEmpty == true) && ((oldChatId?.length ?? 0) <= 200)) ? oldChatId : null;
         if (newChatId == null || newChatId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - chat_id error - data:$result");
           continue;
@@ -634,7 +634,7 @@ class Upgrade4to5 {
         if (oldPid == null || oldPid.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - pid is null - data:$result");
         }
-        String? newPid = (oldPid?.isNotEmpty == true) ? ((oldPid!.length <= 300) ? oldPid : Uuid().v4()) : null;
+        String? newPid = (oldPid?.isNotEmpty == true) ? (((oldPid?.length ?? 0) <= 300) ? oldPid : Uuid().v4()) : null;
         if (newPid == null || newPid.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - pid error - data:$result");
         }
@@ -643,7 +643,7 @@ class Upgrade4to5 {
         if (oldMsgId == null || oldMsgId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - msgId is null - data:$result");
         }
-        String? newMsgId = (oldMsgId?.isNotEmpty == true) ? ((oldMsgId!.length <= 300) ? oldMsgId : Uuid().v4()) : null;
+        String? newMsgId = (oldMsgId?.isNotEmpty == true) ? (((oldMsgId?.length ?? 0) <= 300) ? oldMsgId : Uuid().v4()) : null;
         if (newMsgId == null || newMsgId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - msgId error - data:$result");
           continue; // old burning no delete
@@ -666,7 +666,7 @@ class Upgrade4to5 {
           final splits = oldSender.split(".__permission__.");
           oldSender = splits.length > 0 ? splits[splits.length - 1] : "";
         }
-        String? newSender = ((oldSender?.isNotEmpty == true) && (oldSender!.length <= 200)) ? oldSender : null;
+        String? newSender = ((oldSender?.isNotEmpty == true) && ((oldSender?.length ?? 0) <= 200)) ? oldSender : null;
         if (newSender == null || newSender.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - sender error - data:$result");
         }
@@ -678,13 +678,13 @@ class Upgrade4to5 {
           final splits = oldReceiver.split(".__permission__.");
           oldReceiver = splits.length > 0 ? splits[splits.length - 1] : "";
         }
-        String? newReceiver = ((oldReceiver?.isNotEmpty == true) && (oldReceiver!.length <= 200)) ? oldReceiver : null;
+        String? newReceiver = ((oldReceiver?.isNotEmpty == true) && ((oldReceiver?.length ?? 0) <= 200)) ? oldReceiver : null;
         if ((oldReceiver?.isNotEmpty == true) && (newReceiver == null || newReceiver.isEmpty)) {
           logger.w("Upgrade4to5 - $oldTableName convert - receiver error - data:$result");
         }
         // topic
         String? oldTopic = result["topic"];
-        String? newTopic = ((oldTopic?.isNotEmpty == true) && (oldTopic!.length <= 200)) ? oldTopic : null;
+        String? newTopic = ((oldTopic?.isNotEmpty == true) && ((oldTopic?.length ?? 0) <= 200)) ? oldTopic : null;
         if ((oldTopic?.isNotEmpty == true) && (newTopic == null || newTopic.isEmpty)) {
           logger.w("Upgrade4to5 - $oldTableName convert - topic error - data:$result");
         }
@@ -693,7 +693,7 @@ class Upgrade4to5 {
         if (oldTargetId == null || oldTargetId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName query - targetId is null - data:$result");
         }
-        String? newTargetId = ((oldTargetId?.isNotEmpty == true) && (oldTargetId!.length <= 200)) ? oldTargetId : null;
+        String? newTargetId = ((oldTargetId?.isNotEmpty == true) && ((oldTargetId?.length ?? 0) <= 200)) ? oldTargetId : null;
         if (newTargetId == null || newTargetId.isEmpty) {
           logger.w("Upgrade4to5 - $oldTableName convert - targetId error - data:$result");
           if (newTopic?.isNotEmpty == true) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -114,15 +115,15 @@ class ClientCommon with Tag {
   }
 
   String? getPublicKey() {
-    if (client?.publicKey == null || client!.publicKey.isEmpty) return null;
-    String? pk;
+    Uint8List? pkOriginal = client?.publicKey;
+    if ((pkOriginal == null) || pkOriginal.isEmpty) return null;
     try {
-      pk = hexEncode(client!.publicKey);
+      String pk = hexEncode(pkOriginal);
+      return pk.isEmpty ? null : pk;
     } catch (e, st) {
       handleError(e, st);
     }
-    if (pk == null || pk.isEmpty) return null;
-    return pk;
+    return null;
   }
 
   /// ******************************************************   Client   ****************************************************** ///

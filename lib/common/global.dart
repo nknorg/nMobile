@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -232,7 +233,8 @@ class Global {
     } catch (e, st) {
       handleError(e, st);
     }
-    logger.d("Global - getNonce - nonce:$nonce - txPool:$txPool - walletAddress:$walletAddress - clientPublicKey:${clientCommon.client?.publicKey != null ? hexEncode(clientCommon.client!.publicKey) : ""}");
+    Uint8List? pk = clientCommon.client?.publicKey;
+    logger.d("Global - getNonce - nonce:$nonce - txPool:$txPool - walletAddress:$walletAddress - clientPublicKey:${(pk != null) ? hexEncode(pk) : ""}");
     return nonce;
   }
 }

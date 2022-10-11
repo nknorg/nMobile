@@ -440,7 +440,7 @@ class ChatOutCommon with Tag {
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendData(clientCommon.address, clientAddressList, data);
-    if ((onResult?.messageId == null) || onResult!.messageId.isEmpty) return null;
+    if ((onResult == null) || onResult.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
     if (percent > 0 && percent <= 1) {

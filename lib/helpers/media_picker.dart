@@ -460,8 +460,8 @@ class MediaPicker {
           ),
         ],
       );
-      if ((croppedFile?.path != null) && (croppedFile?.path.isNotEmpty == true)) {
-        cropFile = File(croppedFile!.path);
+      if ((croppedFile != null) && croppedFile.path.isNotEmpty) {
+        cropFile = File(croppedFile.path);
       }
     } catch (e, st) {
       handleError(e, st);
@@ -589,7 +589,7 @@ class MediaPicker {
     }));
     await completer.future;
     if (width != null && height != null) {
-      return Size(width!.toDouble(), height!.toDouble());
+      return Size(width?.toDouble(), height?.toDouble());
     }
     return null;
   }*/
