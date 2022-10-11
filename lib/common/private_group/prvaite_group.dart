@@ -223,8 +223,8 @@ class PrivateGroupCommon with Tag {
     }
     PrivateGroupItemSchema? itemExist = await queryGroupItem(schema.groupId, schema.invitee);
     if ((itemExist != null) && (itemExist.permission != PrivateGroupItemPerm.none)) {
-      logger.w('$TAG - insertInvitee - invitee is exist.');
-      return null;
+      logger.i('$TAG - insertInvitee - invitee is exist.');
+      return schemaGroup;
     }
     // member
     if (itemExist == null) {
@@ -338,13 +338,6 @@ class PrivateGroupCommon with Tag {
     // group
     PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     if (privateGroup == null) return false;
-    // item
-    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
-    if (privateGroupItem == null) {
-      // if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
-      logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
-      return false;
-    }
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
       bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, signVersion: true);
@@ -352,6 +345,14 @@ class PrivateGroupCommon with Tag {
         logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
         return false;
       }
+    }
+    // item
+    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
+    if (privateGroupItem == null) {
+      logger.e('$TAG - pushPrivateGroupOptions - request is not in group.');
+      return false;
+    } else if (privateGroupItem.permission == PrivateGroupItemPerm.none) {
+      return await pushPrivateGroupMembers(target, groupId, remoteVersion, force: true);
     }
     // send
     chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup); // await
@@ -428,13 +429,6 @@ class PrivateGroupCommon with Tag {
     // group
     PrivateGroupSchema? privateGroup = await queryGroup(groupId);
     if (privateGroup == null) return false;
-    // item
-    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
-    if (privateGroupItem == null) {
-      // if ((privateGroupItem == null) || (privateGroupItem.permission == PrivateGroupItemPerm.none)) {
-      logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
-      return false;
-    }
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
       bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, signVersion: true);
@@ -442,6 +436,15 @@ class PrivateGroupCommon with Tag {
         logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
         return false;
       }
+    }
+    // item
+    PrivateGroupItemSchema? privateGroupItem = await queryGroupItem(groupId, target);
+    if (privateGroupItem == null) {
+      logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
+      return false;
+    } else if (privateGroupItem.permission == PrivateGroupItemPerm.none) {
+      chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, [privateGroupItem]); // await
+      return true;
     }
     // send
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId, showBlack: true);
