@@ -222,10 +222,10 @@ class Global {
     int? nonce;
     // rpc
     try {
-      if (walletAddress?.isNotEmpty == true) {
+      if ((walletAddress != null) && walletAddress.isNotEmpty) {
         // walletAddress no check
         List<String> seedRpcList = await Global.getRpcServers(walletAddress);
-        nonce = await Wallet.getNonceByAddress(walletAddress!, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
+        nonce = await Wallet.getNonceByAddress(walletAddress, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
       } else if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         // client no check rpcSeed
         nonce = await clientCommon.client?.getNonce(txPool: txPool);
