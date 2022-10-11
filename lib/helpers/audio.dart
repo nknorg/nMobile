@@ -188,7 +188,7 @@ class AudioHelper with Tag {
     }
     // path
     this.recordPath = savePath ?? await Path.createRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: recordId, fileExt: FileHelper.DEFAULT_AUDIO_EXT);
-    if (recordPath == null || recordPath!.isEmpty) {
+    if (recordPath == null || (recordPath?.isEmpty == true)) {
       await recordStop();
       return null;
     }

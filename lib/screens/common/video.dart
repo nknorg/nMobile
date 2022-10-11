@@ -114,7 +114,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
     String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
     logger.i("VideoScreen - get video file - path:${file?.path}");
-    if (file == null || !await file.exists() || _content == null || _content!.isEmpty) return;
+    if (file == null || !await file.exists() || _content == null || (_content?.isEmpty == true)) return;
     String videoName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
 
     Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);

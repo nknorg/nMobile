@@ -34,9 +34,9 @@ class ScannerScreenState extends BaseStateFulWidgetState<ScannerScreen> {
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid && mounted) {
-      controller!.resumeCamera();
+      controller?.resumeCamera();
     } else if (Platform.isIOS && mounted) {
-      controller!.resumeCamera();
+      controller?.resumeCamera();
     }
   }
 

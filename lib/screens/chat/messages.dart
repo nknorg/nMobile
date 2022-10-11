@@ -349,8 +349,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _refreshTopicSubscribers({bool fetch = false}) async {
-    if (_topic == null) return;
-    int count = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
+    String? topic = _topic?.topic;
+    if (_topic == null || topic == null || topic.isEmpty) return;
+    int count = await subscriberCommon.getSubscribersCount(topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {
       await topicCommon.setCount(_topic?.id, count, notify: true);
     }
@@ -359,19 +360,19 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
     bool topicCountSmall = (_topic?.count ?? 0) <= TopicSchema.minRefreshCount;
     if (fetch || topicCountEmpty || topicCountSmall) {
-      int lastRefreshAt = topicsCheck[_topic!.topic] ?? 0;
+      int lastRefreshAt = topicsCheck[topic] ?? 0;
       if (topicCountEmpty) {
         logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountEmpty");
       } else if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < (1 * 60 * 60 * 1000)) {
         logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
         return;
       }
-      topicsCheck[_topic!.topic] = DateTime.now().millisecondsSinceEpoch;
+      topicsCheck[topic] = DateTime.now().millisecondsSinceEpoch;
       await Future.delayed(Duration(milliseconds: 500));
       logger.i("$TAG - _refreshTopicSubscribers - start");
-      await subscriberCommon.refreshSubscribers(_topic?.topic, ownerPubKey: _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
+      await subscriberCommon.refreshSubscribers(topic, ownerPubKey: _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
       // refresh again
-      int count2 = await subscriberCommon.getSubscribersCount(_topic?.topic, _topic?.isPrivate == true);
+      int count2 = await subscriberCommon.getSubscribersCount(topic, _topic?.isPrivate == true);
       if (count != count2) {
         await topicCommon.setCount(_topic?.id, count2, notify: true);
       }
@@ -518,9 +519,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     String? disableTip;
     if (_topic != null && _isJoined == false) {
-      if (_topic!.isSubscribeProgress()) {
+      if (_topic?.isSubscribeProgress() == true) {
         disableTip = Global.locale((s) => s.subscribing, ctx: context);
-      } else if (_topic!.isPrivate) {
+      } else if (_topic?.isPrivate == true) {
         disableTip = Global.locale((s) => s.tip_ask_group_owner_permission, ctx: context);
       } else {
         disableTip = Global.locale((s) => s.need_re_subscribe, ctx: context);

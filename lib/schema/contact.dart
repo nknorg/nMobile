@@ -222,7 +222,7 @@ class ContactSchema {
       'profile_version': profileVersion,
       'is_top': isTop ? 1 : 0,
       'device_token': deviceToken,
-      'options': options != null ? jsonEncode(options!.toMap()) : null,
+      'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;

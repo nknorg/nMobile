@@ -174,7 +174,7 @@ class SessionCommon with Tag {
 /*Future<MessageSchema?> findLastMessage(SessionSchema? session, {bool checkOptions = false}) async {
     if (session == null) return null;
     MessageSchema? message;
-    if (checkOptions && session.lastMessageOptions != null && session.lastMessageOptions!.isNotEmpty) {
+    if (checkOptions && session.lastMessageOptions != null && (session.lastMessageOptions?.isNotEmpty == true)) {
       message = MessageSchema.fromMap(session.lastMessageOptions!);
     } else {
       List<MessageSchema> history = await _messageStorage.queryListByTargetIdWithNotDeleteAndPiece(session.targetId, offset: 0, limit: 1);
