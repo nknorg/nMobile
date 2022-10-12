@@ -243,7 +243,7 @@ class MediaPicker {
       } else if (isVideo && compressVideo) {
         // FUTURE:GG compress
       } else {
-        // FUTURE: original
+        // FUTURE:GG original
       }
     } catch (e, st) {
       handleError(e, st);
