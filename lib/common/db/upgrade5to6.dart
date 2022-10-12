@@ -18,7 +18,7 @@ class Upgrade5to6 {
     }
   }
 
-  static Future createPrivateGroupList(Database db, {StreamSink<String?>? upgradeTipSink}) async {
+  static Future createPrivateGroupItem(Database db, {StreamSink<String?>? upgradeTipSink}) async {
     upgradeTipSink?.add("... (2/3)");
 
     // create table
