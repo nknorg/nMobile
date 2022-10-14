@@ -24,7 +24,6 @@
 		C62BB81A2689AA0E00DAAC43 /* NWPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB80F2689AA0E00DAAC43 /* NWPusher.m */; };
 		C62BB81B2689AA0E00DAAC43 /* NWHub.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB8132689AA0E00DAAC43 /* NWHub.m */; };
 		C62BB81C2689AA0E00DAAC43 /* NWSecTools.m in Sources */ = {isa = PBXBuildFile; fileRef = C62BB8142689AA0E00DAAC43 /* NWSecTools.m */; };
-		C62BB8262689B1CA00DAAC43 /* nkn_p.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */; };
 		C62BB8272689B1CA00DAAC43 /* NKNPush.cer in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8242689B1CA00DAAC43 /* NKNPush.cer */; };
 		C62BB8282689B1CA00DAAC43 /* nkn.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C62BB8252689B1CA00DAAC43 /* nkn.p12 */; };
 		C6824CED272CFB6D00BA7AAF /* nkn_test.p12 in Resources */ = {isa = PBXBuildFile; fileRef = C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */; };
@@ -329,7 +328,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C62BB8262689B1CA00DAAC43 /* nkn_p.p12 in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				C6824CED272CFB6D00BA7AAF /* nkn_test.p12 in Resources */,
@@ -408,7 +406,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
