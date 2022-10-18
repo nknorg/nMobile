@@ -8,6 +8,8 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
 import org.nkn.mobile.app.channels.impl.Common
+import org.nkn.mobile.app.channels.impl.nameService.DnsResolver
+import org.nkn.mobile.app.channels.impl.nameService.EthResolver
 import org.nkn.mobile.app.crypto.Crypto
 import org.nkn.mobile.app.push.APNSPush
 
@@ -70,6 +72,8 @@ class MainActivity : FlutterFragmentActivity() {
 
         Common.register(flutterEngine)
         Crypto.register(flutterEngine)
+        EthResolver.register(flutterEngine)
+        DnsResolver.register(flutterEngine)
 
         APNSPush.openClient(assets)
     }
