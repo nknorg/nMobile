@@ -32,6 +32,8 @@ import receive_sharing_intent
         let controller : FlutterViewController = window?.rootViewController as! FlutterViewController;
         Common.register(controller: controller)
         Crypto.register(controller: controller)
+        EthResolver.register(controller: controller)
+        DnsResolver.register(controller: controller)
         // EthResolver.register(controller: controller)
         
         registerNotification();
