@@ -49,7 +49,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     Global.appContext = context; // before at mounted
     application.mounted(); // await
 
-    this._currentIndex = widget.arguments != null ? (widget.arguments![AppScreen.argIndex] ?? 0) : 0;
+    this._currentIndex = widget.arguments != null ? (widget.arguments?[AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
   }
 

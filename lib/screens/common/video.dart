@@ -135,7 +135,6 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
       borderRadius: BorderRadius.zero,
       body: InkWell(
         onTap: () {
-          // FUTURE:GG ControllerView
           this._togglePlay();
         },
         child: Stack(
@@ -147,7 +146,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                       child: VideoPlayer(_controller!),
                     ),
                   )
-                : SizedBox(),
+                : SizedBox.shrink(),
             (_controller != null && _controller?.value.isPlaying == false)
                 ? Positioned(
                     left: 0,
@@ -160,7 +159,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                       color: Colors.white,
                     ),
                   )
-                : SizedBox(),
+                : SizedBox.shrink(),
             Positioned(
               left: 0,
               right: 0,
