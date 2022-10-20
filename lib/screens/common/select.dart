@@ -35,9 +35,9 @@ class _SelectScreenState extends BaseStateFulWidgetState<SelectScreen> {
 
   @override
   void onRefreshArguments() {
-    this.title = widget.arguments!['title'] ?? "";
-    this.list = widget.arguments!['list'] ?? [];
-    this.selectedValue = widget.arguments!['selectedValue']?.toString();
+    this.title = widget.arguments?['title'] ?? "";
+    this.list = widget.arguments?['list'] ?? [];
+    this.selectedValue = widget.arguments?['selectedValue']?.toString();
   }
 
   @override

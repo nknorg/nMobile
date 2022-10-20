@@ -115,9 +115,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _refreshTopicSchema({TopicSchema? schema}) async {
-    TopicSchema? topicSchema = widget.arguments![TopicProfileScreen.argTopicSchema];
-    int? topicId = widget.arguments![TopicProfileScreen.argTopicId];
-    String? topic = widget.arguments![TopicProfileScreen.argTopicTopic];
+    TopicSchema? topicSchema = widget.arguments?[TopicProfileScreen.argTopicSchema];
+    int? topicId = widget.arguments?[TopicProfileScreen.argTopicId];
+    String? topic = widget.arguments?[TopicProfileScreen.argTopicTopic];
     if (schema != null) {
       this._topicSchema = schema;
     } else if (topicSchema != null && topicSchema.id != 0) {
