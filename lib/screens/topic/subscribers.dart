@@ -130,9 +130,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   }
 
   _refreshTopicSchema({TopicSchema? schema}) async {
-    TopicSchema? topicSchema = widget.arguments![TopicSubscribersScreen.argTopicSchema];
-    int? topicId = widget.arguments![TopicSubscribersScreen.argTopicId];
-    String? topic = widget.arguments![TopicSubscribersScreen.argTopicTopic];
+    TopicSchema? topicSchema = widget.arguments?[TopicSubscribersScreen.argTopicSchema];
+    int? topicId = widget.arguments?[TopicSubscribersScreen.argTopicId];
+    String? topic = widget.arguments?[TopicSubscribersScreen.argTopicTopic];
     if (schema != null) {
       this._topicSchema = schema;
     } else if (topicSchema != null && topicSchema.id != 0) {

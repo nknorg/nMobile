@@ -111,15 +111,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void onRefreshArguments() {
-    dynamic who = widget.arguments![ChatMessagesScreen.argWho];
+    dynamic who = widget.arguments?[ChatMessagesScreen.argWho];
     if (who is TopicSchema) {
       this._privateGroup = null;
-      this._topic = widget.arguments![ChatMessagesScreen.argWho] ?? _topic;
+      this._topic = widget.arguments?[ChatMessagesScreen.argWho] ?? _topic;
       this._isJoined = this._topic?.joined == true;
       this._contact = null;
       this.targetId = this._topic?.topic;
     } else if (who is PrivateGroupSchema) {
-      this._privateGroup = widget.arguments![ChatMessagesScreen.argWho] ?? _privateGroup;
+      this._privateGroup = widget.arguments?[ChatMessagesScreen.argWho] ?? _privateGroup;
       this._topic = null;
       this._isJoined = this._privateGroup?.joined == true;
       this._contact = null;
@@ -128,7 +128,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       this._privateGroup = null;
       this._topic = null;
       this._isJoined = null;
-      this._contact = widget.arguments![ChatMessagesScreen.argWho] ?? _contact;
+      this._contact = widget.arguments?[ChatMessagesScreen.argWho] ?? _contact;
       this.targetId = this._contact?.clientAddress;
     }
   }

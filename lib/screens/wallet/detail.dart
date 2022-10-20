@@ -64,7 +64,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
 
   @override
   void onRefreshArguments() {
-    this._wallet = widget.arguments![WalletDetailScreen.argWallet];
+    this._wallet = widget.arguments?[WalletDetailScreen.argWallet];
   }
 
   @override

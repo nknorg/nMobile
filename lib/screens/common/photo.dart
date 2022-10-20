@@ -47,8 +47,8 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
 
   @override
   void onRefreshArguments() {
-    String? filePath = widget.arguments![PhotoScreen.argFilePath];
-    String? netUrl = widget.arguments![PhotoScreen.argNetUrl];
+    String? filePath = widget.arguments?[PhotoScreen.argFilePath];
+    String? netUrl = widget.arguments?[PhotoScreen.argNetUrl];
     if (filePath != null && filePath.isNotEmpty) {
       _contentType = TYPE_FILE;
       _content = filePath;

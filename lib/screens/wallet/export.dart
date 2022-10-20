@@ -64,12 +64,12 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
 
   @override
   void onRefreshArguments() {
-    _name = widget.arguments![WalletExportScreen.argName];
-    _walletType = widget.arguments![WalletExportScreen.argWalletType];
-    _address = widget.arguments![WalletExportScreen.argAddress];
-    _publicKey = widget.arguments![WalletExportScreen.argPublicKey];
-    _seed = widget.arguments![WalletExportScreen.argSeed];
-    _keystore = widget.arguments![WalletExportScreen.argKeystore];
+    _name = widget.arguments?[WalletExportScreen.argName];
+    _walletType = widget.arguments?[WalletExportScreen.argWalletType];
+    _address = widget.arguments?[WalletExportScreen.argAddress];
+    _publicKey = widget.arguments?[WalletExportScreen.argPublicKey];
+    _seed = widget.arguments?[WalletExportScreen.argSeed];
+    _keystore = widget.arguments?[WalletExportScreen.argKeystore];
   }
 
   @override

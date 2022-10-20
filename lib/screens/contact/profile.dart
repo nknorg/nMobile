@@ -147,9 +147,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _refreshContactSchema({ContactSchema? schema}) async {
-    ContactSchema? contactSchema = widget.arguments![ContactProfileScreen.argContactSchema];
-    int? contactId = widget.arguments![ContactProfileScreen.argContactId];
-    String? contactClientAddress = widget.arguments![ContactProfileScreen.argContactClientAddress];
+    ContactSchema? contactSchema = widget.arguments?[ContactProfileScreen.argContactSchema];
+    int? contactId = widget.arguments?[ContactProfileScreen.argContactId];
+    String? contactClientAddress = widget.arguments?[ContactProfileScreen.argContactClientAddress];
     if (schema != null) {
       this._contactSchema = schema;
     } else if (contactSchema != null && contactSchema.id != 0) {

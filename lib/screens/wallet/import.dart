@@ -42,7 +42,7 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
   @override
   void onRefreshArguments() {
-    this._walletType = widget.arguments![WalletImportScreen.argWalletType] ?? WalletType.nkn;
+    this._walletType = widget.arguments?[WalletImportScreen.argWalletType] ?? WalletType.nkn;
   }
 
   @override

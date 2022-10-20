@@ -51,8 +51,8 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
 
   @override
   void onRefreshArguments() {
-    String? filePath = widget.arguments![VideoScreen.argFilePath];
-    String? netUrl = widget.arguments![VideoScreen.argNetUrl];
+    String? filePath = widget.arguments?[VideoScreen.argFilePath];
+    String? netUrl = widget.arguments?[VideoScreen.argNetUrl];
     bool isChanged = false;
     if (filePath != null && filePath.isNotEmpty) {
       isChanged = _content != filePath;

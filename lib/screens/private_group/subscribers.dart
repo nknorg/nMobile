@@ -109,8 +109,8 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
   }
 
   _refreshPrivateGroupSchema({PrivateGroupSchema? schema}) async {
-    PrivateGroupSchema? privateGroupSchema = widget.arguments![PrivateGroupSubscribersScreen.argPrivateGroupSchema];
-    String? groupId = widget.arguments![PrivateGroupSubscribersScreen.argPrivateGroupId];
+    PrivateGroupSchema? privateGroupSchema = widget.arguments?[PrivateGroupSubscribersScreen.argPrivateGroupSchema];
+    String? groupId = widget.arguments?[PrivateGroupSubscribersScreen.argPrivateGroupId];
     if (schema != null) {
       this._privateGroup = schema;
     } else if (privateGroupSchema != null && privateGroupSchema.id != 0) {
