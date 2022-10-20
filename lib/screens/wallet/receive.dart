@@ -49,7 +49,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
 
   @override
   void onRefreshArguments() {
-    this._wallet = widget.arguments![WalletReceiveScreen.argWallet];
+    this._wallet = widget.arguments?[WalletReceiveScreen.argWallet];
   }
 
   @override

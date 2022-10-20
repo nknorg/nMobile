@@ -40,7 +40,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
 
   @override
   void onRefreshArguments() {
-    _contactSchema = widget.arguments![ContactChatProfileScreen.argContactSchema];
+    _contactSchema = widget.arguments?[ContactChatProfileScreen.argContactSchema];
   }
 
   @override

@@ -76,7 +76,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   @override
   void onRefreshArguments() {
-    this._isSelect = widget.arguments![ContactHomeScreen.argIsSelect] ?? false;
+    this._isSelect = widget.arguments?[ContactHomeScreen.argIsSelect] ?? false;
   }
 
   @override
