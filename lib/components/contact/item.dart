@@ -88,7 +88,7 @@ class ContactItem extends StatelessWidget {
                     ],
                   ),
           ),
-          this.tail ?? SizedBox(),
+          this.tail ?? SizedBox.shrink(),
         ],
       ),
     );
