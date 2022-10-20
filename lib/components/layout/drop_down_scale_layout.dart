@@ -4,14 +4,16 @@ import 'package:nmobile/components/base/stateful.dart';
 class DropDownScaleLayout extends BaseStateFulWidget {
   final Widget content;
   final double triggerOffsetY;
-  final Function() onDragStart;
-  final Function(bool) onDragEnd;
+  final Function()? onDragStart;
+  final Function(double)? onDragUpdate;
+  final Function(bool)? onDragEnd;
 
   DropDownScaleLayout({
     required this.content,
-    required this.triggerOffsetY,
-    required this.onDragStart,
-    required this.onDragEnd,
+    this.triggerOffsetY = 100,
+    this.onDragStart,
+    this.onDragUpdate,
+    this.onDragEnd,
   });
 
   @override
@@ -19,6 +21,8 @@ class DropDownScaleLayout extends BaseStateFulWidget {
 }
 
 class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLayout> {
+  bool isDrag = false;
+
   Offset? _startPoint;
   Offset? _preFocalPoint;
   Offset _curDeltaOffset = Offset(0.0, 0.0);
@@ -44,13 +48,13 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
   }
 
   void _handleOnScaleStart(ScaleStartDetails details) {
+    isDrag = false;
+
     _startPoint = details.focalPoint;
     _preFocalPoint = _startPoint;
     _curDeltaOffset = Offset(0.0, 0.0);
     _totDeltaOffset = Offset(0.0, 0.0);
     _totDeltaScale = 1.0;
-
-    this.widget.onDragStart();
   }
 
   void _handleOnScaleUpdate(ScaleUpdateDetails details) {
@@ -64,12 +68,15 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
     // current offset
     _curDeltaOffset = details.focalPoint - preFocalPoint;
     if ((_totDeltaScale == 1) && ((_curDeltaOffset.dx.abs() >= 2) || ((_curDeltaOffset.dy >= -5) && (_curDeltaOffset.dy <= 5)))) return;
-    if ((_curDeltaOffset.dy >= -5) && (_curDeltaOffset.dy <= 5)) return;
+    if ((_curDeltaOffset.dy >= -2) && (_curDeltaOffset.dy <= 2)) return;
+    // drag start
+    if (!isDrag) this.widget.onDragStart?.call();
+    isDrag = true;
     // total scale
-    if (_curDeltaOffset.dy < -5) {
-      _totDeltaScale += 0.01;
+    if (_curDeltaOffset.dy < -2) {
+      _totDeltaScale += 0.005;
     } else {
-      _totDeltaScale -= 0.01;
+      _totDeltaScale -= 0.005;
     }
     if (_totDeltaScale < 0.3) _totDeltaScale = 0.3;
     if (_totDeltaScale > 1) _totDeltaScale = 1;
@@ -77,13 +84,15 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
     _totDeltaOffset += _curDeltaOffset;
     // refresh view
     setState(() {});
+    double percent = _totDeltaOffset.dy / this.widget.triggerOffsetY;
+    if (percent >= 0) this.widget.onDragUpdate?.call(percent);
     // save pre focus focus
     _preFocalPoint = details.focalPoint;
   }
 
   void _handleOnScaleEnd(ScaleEndDetails details) {
     if (_totDeltaOffset.dy >= this.widget.triggerOffsetY) {
-      this.widget.onDragEnd(true);
+      this.widget.onDragEnd?.call(true);
       return;
     }
     _startPoint = null;
@@ -92,7 +101,8 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
     _totDeltaOffset = Offset(0.0, 0.0);
     _totDeltaScale = 1.0;
     setState(() {});
-    this.widget.onDragEnd(false);
+    if (isDrag) this.widget.onDragEnd?.call(false);
+    isDrag = false;
   }
 
   _transform() {
