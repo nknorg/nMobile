@@ -102,7 +102,7 @@ class PrivateGroupItem extends StatelessWidget {
                     ],
                   ),
           ),
-          this.tail ?? SizedBox(),
+          this.tail ?? SizedBox.shrink(),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -16,31 +17,21 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 
 class MediaScreen extends BaseStateFulWidget {
   static final String routeName = "/media";
-  static final String argContent = "content";
-  static final String argContentType = "content_type";
+  static final String argMedias = "medias";
 
-  static const CONTENT_TYPE_FILE_PATH = 0;
-
-  static Future go(BuildContext context, {dynamic content, int type = CONTENT_TYPE_FILE_PATH}) {
-    if (content == null) return Future.value(null);
+  static Future go(BuildContext context, {List<Map<String, dynamic>>? medias}) {
+    if (medias == null || medias.isEmpty) return Future.value(null);
     return Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
         transitionDuration: Duration(milliseconds: 200),
         pageBuilder: (context, animation, secondaryAnimation) {
-          return FadeTransition(
-            opacity: animation,
-            child: MediaScreen(
-              arguments: {
-                argContent: content,
-                argContentType: type,
-              },
-            ),
-          );
+          return FadeTransition(opacity: animation, child: MediaScreen(arguments: {argMedias: medias}));
         },
       ),
     );
@@ -57,16 +48,69 @@ class MediaScreen extends BaseStateFulWidget {
 class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with SingleTickerProviderStateMixin {
   final double dragQuitOffsetY = Global.screenHeight() / 6;
 
-  dynamic _content;
-  int _type = MediaScreen.CONTENT_TYPE_FILE_PATH;
+  List<Map<String, dynamic>> _medias = [];
+  int _showIndex = 0;
+
+  VideoPlayerController? _videoController;
+  bool _isVideoPlaying = false;
+  int _videoInitIndex = -1;
 
   bool hideComponents = false;
   double bgOpacity = 1;
 
   @override
   void onRefreshArguments() {
-    _content = widget.arguments![MediaScreen.argContent];
-    _type = widget.arguments![MediaScreen.argContentType];
+    _medias = widget.arguments?[MediaScreen.argMedias] ?? _medias;
+    // TODO:GG test
+    _medias += _medias;
+    _medias += _medias;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _videoController?.dispose();
+  }
+
+  void _initController(int index, String contentType, String? content) {
+    if (index == _videoInitIndex) return;
+    if (content == null || content.isEmpty) return;
+    VideoPlayerController? controller;
+    if (contentType == "path") {
+      File file = File(content);
+      if (file.existsSync()) {
+        controller = VideoPlayerController.file(file);
+      }
+    }
+    controller?.initialize().then((_) {
+      // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+      setState(() {});
+    });
+    controller?.addListener(() {
+      if (_isVideoPlaying != controller?.value.isPlaying) {
+        setState(() {});
+        _isVideoPlaying = controller?.value.isPlaying ?? false;
+      }
+    });
+    _videoController = controller;
+    _videoInitIndex = index;
+  }
+
+  bool? _toggleVideoPlay({bool? play}) {
+    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[_showIndex];
+    if (media.isEmpty) return null;
+    String mediaType = media["mediaType"] ?? "";
+    String content = media["content"] ?? "";
+    if ((mediaType != "video") || content.isEmpty) return null;
+    if ((_videoController == null) || (_videoController?.value.isInitialized != true)) return null;
+    // play
+    bool? needPlay = play;
+    if (needPlay == null) needPlay = !(_videoController?.value.isPlaying == true);
+    setState(() {
+      (needPlay == true) ? _videoController?.play() : _videoController?.pause();
+    });
+    return needPlay;
   }
 
   Future _save() async {
@@ -76,6 +120,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     if ((await Permission.storage.request()) != PermissionStatus.granted) {
       return null;
     }
+    // TODO:GG save
 
     // File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
     // String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
@@ -91,23 +136,15 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   Future _share() async {
-    //
+    // TODO:GG share
   }
 
   @override
   Widget build(BuildContext context) {
     int alpha = (255 * bgOpacity) ~/ 1;
-
-    double btnSize = Global.screenWidth() / 10;
     double iconSize = Global.screenWidth() / 15;
-
-    Widget content;
-    if (_type == MediaScreen.CONTENT_TYPE_FILE_PATH) {
-      content = Center(child: Image.file(File(_content), fit: BoxFit.contain));
-    } else {
-      content = SizedBox.shrink();
-    }
-
+    double btnSize = Global.screenWidth() / 10;
+    double playSize = Global.screenWidth() / 5;
     return Layout(
       bodyColor: Colors.black.withAlpha(alpha),
       headerColor: Colors.transparent,
@@ -115,8 +152,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       body: DropDownScaleLayout(
         triggerOffsetY: dragQuitOffsetY,
         onTap: () {
+          bool nextHide = _toggleVideoPlay() ?? !hideComponents;
           setState(() {
-            hideComponents = !hideComponents;
+            hideComponents = nextHide;
           });
         },
         onDragStart: () {
@@ -143,7 +181,84 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         },
         content: Stack(
           children: [
-            content,
+            Swiper(
+              loop: false,
+              autoplay: false,
+              index: _showIndex,
+              itemCount: _medias.length,
+              onIndexChanged: (index) {
+                setState(() {
+                  _showIndex = index;
+                  _isVideoPlaying = false;
+                });
+              },
+              itemBuilder: (BuildContext context, int index) {
+                if ((index < 0) || (index >= _medias.length)) return SizedBox.shrink();
+                Map<String, dynamic>? media = _medias[index];
+                if (media.isEmpty) return SizedBox.shrink();
+                String mediaType = media["mediaType"] ?? "";
+                String contentType = media["contentType"] ?? "";
+                String content = media["content"] ?? "";
+                String thumbnail = media["thumbnail"] ?? "";
+                // widget
+                Widget child;
+                if (mediaType == "image") {
+                  if ((contentType == "path") && content.isNotEmpty) {
+                    child = Center(
+                      child: Image.file(File(content), fit: BoxFit.contain),
+                    );
+                  } else {
+                    child = SizedBox.shrink();
+                  }
+                } else if (mediaType == "video") {
+                  if ((contentType == "path") && content.isNotEmpty) {
+                    _initController(index, contentType, content);
+                    child = Stack(children: [
+                      (_videoController?.value.isInitialized == true)
+                          ? Center(
+                              child: AspectRatio(
+                                aspectRatio: _videoController!.value.aspectRatio,
+                                child: VideoPlayer(_videoController!),
+                              ),
+                            )
+                          : thumbnail.isNotEmpty
+                              ? Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    constraints: BoxConstraints(),
+                                    child: Image.file(
+                                      File(thumbnail),
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                )
+                              : SizedBox.shrink(),
+                      ((_videoController != null) && (_videoController?.value.isPlaying != true))
+                          ? Positioned(
+                              left: 0,
+                              right: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: Icon(
+                                CupertinoIcons.play_circle,
+                                size: playSize,
+                                color: Colors.white,
+                              ),
+                            )
+                          : SizedBox.shrink(),
+                    ]);
+                  } else {
+                    child = SizedBox.shrink();
+                  }
+                } else {
+                  child = SizedBox.shrink();
+                }
+                return child;
+              },
+            ),
             // top
             hideComponents
                 ? SizedBox.shrink()
@@ -209,9 +324,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               size: iconSize,
                             ),
                           ),
-                          onPressed: () {
-                            // TODO:GG share
-                          },
+                          onPressed: () => _share(),
                         ),
                         Spacer(),
                         Button(
@@ -232,9 +345,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               size: iconSize,
                             ),
                           ),
-                          onPressed: () {
-                            // TODO:GG save
-                          },
+                          onPressed: () => _save(),
                         ),
                         SizedBox(width: btnSize / 4),
                       ],
