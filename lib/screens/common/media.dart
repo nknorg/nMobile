@@ -30,12 +30,16 @@ class MediaScreen extends BaseStateFulWidget {
       context,
       PageRouteBuilder(
         opaque: false,
+        transitionDuration: Duration(milliseconds: 200),
         pageBuilder: (context, animation, secondaryAnimation) {
-          return MediaScreen(
-            arguments: {
-              argContent: content,
-              argContentType: type,
-            },
+          return FadeTransition(
+            opacity: animation,
+            child: MediaScreen(
+              arguments: {
+                argContent: content,
+                argContentType: type,
+              },
+            ),
           );
         },
       ),
@@ -55,6 +59,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   dynamic _content;
   int _type = MediaScreen.CONTENT_TYPE_FILE_PATH;
+
+  bool hideComponents = false;
+  double bgOpacity = 1;
 
   @override
   void onRefreshArguments() {
@@ -83,17 +90,16 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     // Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
   }
 
+  Future _share() async {
+    //
+  }
+
   @override
   Widget build(BuildContext context) {
+    int alpha = (255 * bgOpacity) ~/ 1;
+
     double btnSize = Global.screenWidth() / 10;
     double iconSize = Global.screenWidth() / 15;
-
-    // ImageProvider? provider;
-    // if (this._contentType == TYPE_FILE) {
-    //   provider = FileImage(File(this._content ?? ""));
-    // } else if (this._contentType == TYPE_NET) {
-    //   provider = NetworkImage(this._content ?? "");
-    // }
 
     Widget content;
     if (_type == MediaScreen.CONTENT_TYPE_FILE_PATH) {
@@ -102,95 +108,139 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       content = SizedBox.shrink();
     }
 
-    return DropDownScaleLayout(
-      onDragStart: () {
-        // TODO:GG
-        Toast.show("-----------");
-      },
-      onDragUpdate: (percent) {
-        logger.i("---->${1 - percent}");
-      },
-      onDragEnd: (dragOK) {
-        // TODO:GG
-        Toast.show("quiet $dragOK");
-      },
-      triggerOffsetY: dragQuitOffsetY,
-      content: Layout(
-        bodyColor: Colors.transparent,
-        headerColor: Colors.transparent,
-        borderRadius: BorderRadius.zero,
-        body: InkWell(
-          onTap: () {
+    return Layout(
+      bodyColor: Colors.black.withAlpha(alpha),
+      headerColor: Colors.transparent,
+      borderRadius: BorderRadius.zero,
+      body: DropDownScaleLayout(
+        triggerOffsetY: dragQuitOffsetY,
+        onTap: () {
+          setState(() {
+            hideComponents = !hideComponents;
+          });
+        },
+        onDragStart: () {
+          setState(() {
+            hideComponents = true;
+          });
+        },
+        onDragUpdate: (percent) {
+          if ((1 - percent) >= 0) {
+            setState(() {
+              bgOpacity = 1 - percent;
+            });
+          }
+        },
+        onDragEnd: (quiet) {
+          if (quiet) {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-          },
-          child: Stack(
-            children: [
-              content,
-              Positioned(
-                left: 0,
-                right: 0,
-                top: Platform.isAndroid ? 45 : 30,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(width: btnSize / 4),
-                    Button(
-                      width: btnSize,
-                      height: btnSize,
-                      backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                      child: Container(
-                        width: btnSize,
-                        height: btnSize,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(60),
-                          borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
-                        ),
-                        child: Icon(
-                          CupertinoIcons.back,
-                          color: Colors.white,
-                          size: iconSize,
-                        ),
-                      ),
-                      onPressed: () {
-                        if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
-                      },
-                    ),
-                    Spacer(),
-                    Container(
-                      width: btnSize,
-                      height: btnSize,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(60),
-                        borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
-                      ),
-                      child: PopupMenuButton(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        icon: Asset.iconSvg('more', width: 24),
-                        onSelected: (int result) async {
-                          switch (result) {
-                            case 0:
-                              await _save();
-                              break;
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-                          PopupMenuItem<int>(
-                            value: 0,
-                            child: Label(
-                              Global.locale((s) => s.save_to_album, ctx: context),
-                              type: LabelType.display,
+          } else {
+            setState(() {
+              hideComponents = false;
+              bgOpacity = 1;
+            });
+          }
+        },
+        content: Stack(
+          children: [
+            content,
+            // top
+            hideComponents
+                ? SizedBox.shrink()
+                : Positioned(
+                    left: 0,
+                    right: 0,
+                    top: Platform.isAndroid ? 40 : 35,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(width: btnSize / 4),
+                        Button(
+                          width: btnSize,
+                          height: btnSize,
+                          backgroundColor: Colors.transparent,
+                          padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          child: Container(
+                            width: btnSize,
+                            height: btnSize,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(60),
+                              borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                            ),
+                            child: Icon(
+                              CupertinoIcons.back,
+                              color: Colors.white,
+                              size: iconSize,
                             ),
                           ),
-                        ],
-                      ),
+                          onPressed: () {
+                            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                          },
+                        ),
+                        Spacer(),
+                      ],
                     ),
-                    SizedBox(width: btnSize / 4),
-                  ],
-                ),
-              ),
-            ],
-          ),
+                  ),
+            // bottom
+            hideComponents
+                ? SizedBox.shrink()
+                : Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 15,
+                    child: Row(
+                      children: [
+                        SizedBox(width: btnSize / 4),
+                        Button(
+                          width: btnSize,
+                          height: btnSize,
+                          backgroundColor: Colors.transparent,
+                          padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          child: Container(
+                            width: btnSize,
+                            height: btnSize,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(60),
+                              borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                            ),
+                            child: Icon(
+                              Icons.share,
+                              color: Colors.white,
+                              size: iconSize,
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO:GG share
+                          },
+                        ),
+                        Spacer(),
+                        Button(
+                          width: btnSize,
+                          height: btnSize,
+                          backgroundColor: Colors.transparent,
+                          padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          child: Container(
+                            width: btnSize,
+                            height: btnSize,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(60),
+                              borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                            ),
+                            child: Icon(
+                              CupertinoIcons.arrow_down_to_line,
+                              color: Colors.white,
+                              size: iconSize,
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO:GG save
+                          },
+                        ),
+                        SizedBox(width: btnSize / 4),
+                      ],
+                    ),
+                  ),
+          ],
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:nmobile/components/base/stateful.dart';
 class DropDownScaleLayout extends BaseStateFulWidget {
   final Widget content;
   final double triggerOffsetY;
+  final Function()? onTap;
   final Function()? onDragStart;
   final Function(double)? onDragUpdate;
   final Function(bool)? onDragEnd;
@@ -11,6 +12,7 @@ class DropDownScaleLayout extends BaseStateFulWidget {
   DropDownScaleLayout({
     required this.content,
     this.triggerOffsetY = 100,
+    this.onTap,
     this.onDragStart,
     this.onDragUpdate,
     this.onDragEnd,
@@ -38,6 +40,7 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
       home: Container(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
+          onTap: () => widget.onTap?.call(),
           onScaleStart: _handleOnScaleStart,
           onScaleUpdate: _handleOnScaleUpdate,
           onScaleEnd: _handleOnScaleEnd,
@@ -84,7 +87,7 @@ class _DropDownScaleLayoutState extends BaseStateFulWidgetState<DropDownScaleLay
     _totDeltaOffset += _curDeltaOffset;
     // refresh view
     setState(() {});
-    double percent = _totDeltaOffset.dy / this.widget.triggerOffsetY;
+    double percent = _totDeltaOffset.dy / (this.widget.triggerOffsetY * 3);
     if (percent >= 0) this.widget.onDragUpdate?.call(percent);
     // save pre focus focus
     _preFocalPoint = details.focalPoint;
