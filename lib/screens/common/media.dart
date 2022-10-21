@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -17,6 +18,7 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaScreen extends BaseStateFulWidget {
@@ -54,6 +56,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   VideoPlayerController? _videoController;
   bool _isVideoPlaying = false;
   int _videoInitIndex = -1;
+  Lock _videoLock = new Lock();
 
   bool hideComponents = false;
   double bgOpacity = 1;
@@ -67,33 +70,51 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   @override
+  void initState() {
+    super.initState();
+    _initVideoController(_showIndex); // await
+  }
+
+  @override
   void dispose() {
     super.dispose();
     _videoController?.dispose();
   }
 
-  void _initController(int index, String contentType, String? content) {
+  // TODO:GG addMedias
+
+  void _initVideoController(int index) async {
     if (index == _videoInitIndex) return;
-    if (content == null || content.isEmpty) return;
-    VideoPlayerController? controller;
-    if (contentType == "path") {
-      File file = File(content);
-      if (file.existsSync()) {
-        controller = VideoPlayerController.file(file);
+    // data
+    Map<String, dynamic>? media = _medias[index];
+    if (media.isEmpty) return;
+    String mediaType = media["mediaType"] ?? "";
+    if (mediaType != "video") return;
+    String contentType = media["contentType"] ?? "";
+    String content = media["content"] ?? "";
+    if (content.isEmpty) return;
+    // queue
+    await _videoLock.synchronized(() async {
+      await _videoController?.dispose();
+      _videoController = null;
+      if (contentType == "path") {
+        File file = File(content);
+        if (file.existsSync()) {
+          _videoController = VideoPlayerController.file(file);
+        }
       }
-    }
-    controller?.initialize().then((_) {
-      // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-      setState(() {});
-    });
-    controller?.addListener(() {
-      if (_isVideoPlaying != controller?.value.isPlaying) {
+      _videoController?.initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {});
-        _isVideoPlaying = controller?.value.isPlaying ?? false;
-      }
+      });
+      _videoController?.addListener(() {
+        if (_isVideoPlaying != _videoController?.value.isPlaying) {
+          setState(() {});
+          _isVideoPlaying = _videoController?.value.isPlaying ?? false;
+        }
+      });
+      _videoInitIndex = index;
     });
-    _videoController = controller;
-    _videoInitIndex = index;
   }
 
   bool? _toggleVideoPlay({bool? play}) {
@@ -187,12 +208,17 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
               index: _showIndex,
               itemCount: _medias.length,
               onIndexChanged: (index) {
+                // logger.i("-----> 111 index:$index");
+                if ((index < 0) || (index >= _medias.length)) return;
                 setState(() {
                   _showIndex = index;
                   _isVideoPlaying = false;
+                  hideComponents = false;
                 });
+                _initVideoController(index); // await
               },
               itemBuilder: (BuildContext context, int index) {
+                // logger.i("-----> 222 index:$index");
                 if ((index < 0) || (index >= _medias.length)) return SizedBox.shrink();
                 Map<String, dynamic>? media = _medias[index];
                 if (media.isEmpty) return SizedBox.shrink();
@@ -205,50 +231,71 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                 if (mediaType == "image") {
                   if ((contentType == "path") && content.isNotEmpty) {
                     child = Center(
-                      child: Image.file(File(content), fit: BoxFit.contain),
+                      child: Image.file(
+                        File(content),
+                        fit: BoxFit.contain,
+                        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                          // logger.i("-----> 333 index:$index - frame$frame - loaded:$wasSynchronouslyLoaded");
+                          return ((frame != null) || wasSynchronouslyLoaded)
+                              ? child
+                              : SpinKitRing(
+                                  color: Colors.white,
+                                  lineWidth: btnSize / 10,
+                                  size: btnSize,
+                                );
+                        },
+                      ),
                     );
                   } else {
                     child = SizedBox.shrink();
                   }
                 } else if (mediaType == "video") {
                   if ((contentType == "path") && content.isNotEmpty) {
-                    _initController(index, contentType, content);
+                    bool isReady = (index == _showIndex) && (_videoController?.value.isInitialized == true);
+                    bool isPlaying = (index == _showIndex) && (_videoController?.value.isPlaying == true);
                     child = Stack(children: [
-                      (_videoController?.value.isInitialized == true)
+                      thumbnail.isNotEmpty
+                          ? Positioned(
+                              left: 0,
+                              right: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: Container(
+                                constraints: BoxConstraints(),
+                                child: Image.file(
+                                  File(thumbnail),
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            )
+                          : SizedBox.shrink(),
+                      isReady
                           ? Center(
                               child: AspectRatio(
                                 aspectRatio: _videoController!.value.aspectRatio,
                                 child: VideoPlayer(_videoController!),
                               ),
                             )
-                          : thumbnail.isNotEmpty
-                              ? Positioned(
+                          : SizedBox.shrink(),
+                      isReady
+                          ? (isPlaying
+                              ? SizedBox.shrink()
+                              : Positioned(
                                   left: 0,
                                   right: 0,
                                   top: 0,
                                   bottom: 0,
-                                  child: Container(
-                                    constraints: BoxConstraints(),
-                                    child: Image.file(
-                                      File(thumbnail),
-                                      fit: BoxFit.contain,
-                                    ),
+                                  child: Icon(
+                                    CupertinoIcons.play_circle,
+                                    size: playSize,
+                                    color: Colors.white,
                                   ),
-                                )
-                              : SizedBox.shrink(),
-                      ((_videoController != null) && (_videoController?.value.isPlaying != true))
-                          ? Positioned(
-                              left: 0,
-                              right: 0,
-                              top: 0,
-                              bottom: 0,
-                              child: Icon(
-                                CupertinoIcons.play_circle,
-                                size: playSize,
-                                color: Colors.white,
-                              ),
-                            )
-                          : SizedBox.shrink(),
+                                ))
+                          : SpinKitRing(
+                              color: Colors.white,
+                              lineWidth: playSize / 12,
+                              size: playSize / 1.2,
+                            ),
                     ]);
                   } else {
                     child = SizedBox.shrink();
