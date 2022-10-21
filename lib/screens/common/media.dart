@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -23,17 +24,26 @@ import 'package:video_player/video_player.dart';
 
 class MediaScreen extends BaseStateFulWidget {
   static final String routeName = "/media";
+  static final String argTarget = "target";
   static final String argMedias = "medias";
 
-  static Future go(BuildContext context, {List<Map<String, dynamic>>? medias}) {
-    if (medias == null || medias.isEmpty) return Future.value(null);
+  static Future go(BuildContext context, String? target, {List<Map<String, dynamic>>? medias}) {
+    if (target == null || target.isEmpty || medias == null || medias.isEmpty) return Future.value(null);
     return Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
         transitionDuration: Duration(milliseconds: 200),
         pageBuilder: (context, animation, secondaryAnimation) {
-          return FadeTransition(opacity: animation, child: MediaScreen(arguments: {argMedias: medias}));
+          return FadeTransition(
+            opacity: animation,
+            child: MediaScreen(
+              arguments: {
+                argTarget: target,
+                argMedias: medias,
+              },
+            ),
+          );
         },
       ),
     );
@@ -45,11 +55,62 @@ class MediaScreen extends BaseStateFulWidget {
 
   @override
   _MediaScreenState createState() => _MediaScreenState();
+
+  // ignore: close_sinks
+  static StreamController<List<Map<String, dynamic>>> _onFetchController = StreamController<List<Map<String, dynamic>>>.broadcast();
+  static StreamSink<List<Map<String, dynamic>>> get onFetchSink => _onFetchController.sink;
+  static Stream<List<Map<String, dynamic>>> get onFetchStream => _onFetchController.stream;
+
+  // TODO:GG callback messages记录点击的msg_id
+  static List<Map<String, dynamic>>? createFetchRequest(String? target) {
+    if (target == null || target.isEmpty) return null;
+    return [
+      {
+        "type": "request",
+        "target": target,
+      }
+    ];
+  }
+
+  // TODO:GG call_back_with success and fail
+  static createFetchResponse(String? target, List<Map<String, dynamic>> medias) {
+    return [
+      {
+        "type": "response",
+        "target": target,
+        "medias": medias,
+      }
+    ];
+  }
+
+  static Map<String, dynamic>? createMediasItemByImagePath(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return null;
+    return {
+      "mediaType": "image",
+      "contentType": "path",
+      "content": imagePath,
+    };
+  }
+
+  static Map<String, dynamic>? createMediasItemByVideoPath(String? contentPath, String? thumbnailPath) {
+    if (contentPath == null || contentPath.isEmpty) return null;
+    return {
+      "mediaType": "video",
+      "contentType": "path",
+      "content": contentPath,
+      "thumbnail": thumbnailPath,
+    };
+  }
 }
 
 class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with SingleTickerProviderStateMixin {
   final double dragQuitOffsetY = Global.screenHeight() / 6;
 
+  StreamSubscription? _onFetchMediasSubscription;
+  final int fetchLimit = 3;
+  bool fetchLoading = false;
+
+  String? _target;
   List<Map<String, dynamic>> _medias = [];
   int _showIndex = 0;
 
@@ -63,15 +124,30 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   @override
   void onRefreshArguments() {
+    _target = widget.arguments?[MediaScreen.argTarget]?.toString();
     _medias = widget.arguments?[MediaScreen.argMedias] ?? _medias;
-    // TODO:GG test
-    _medias += _medias;
-    _medias += _medias;
   }
 
   @override
   void initState() {
     super.initState();
+    // fetch
+    _onFetchMediasSubscription = MediaScreen.onFetchStream.listen((response) {
+      if (response.isEmpty || response[0].isEmpty) return;
+      String type = response[0]["type"]?.toString() ?? "";
+      if (type != "response") return;
+      String target = response[0]["target"]?.toString() ?? "";
+      if (target != _target) return;
+      var medias = response[0]["medias"] ?? [];
+      if (medias.isEmpty) return;
+      if (!fetchLoading) return;
+      setState(() {
+        _medias += medias;
+      });
+      fetchLoading = true;
+    });
+    _tryFetchMedias();
+    // video first
     _initVideoController(_showIndex); // await
   }
 
@@ -79,9 +155,16 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   void dispose() {
     super.dispose();
     _videoController?.dispose();
+    _onFetchMediasSubscription?.cancel();
   }
 
-  // TODO:GG addMedias
+  void _tryFetchMedias() {
+    if ((_showIndex + 1) < (_medias.length - fetchLimit)) return;
+    if (fetchLoading) return;
+    fetchLoading = true;
+    List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target);
+    if (request != null) MediaScreen.onFetchSink.add(request);
+  }
 
   void _initVideoController(int index) async {
     Map<String, dynamic>? media = _medias[index];
@@ -216,6 +299,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   bgOpacity = 1;
                 });
                 _initVideoController(index); // await
+                _tryFetchMedias();
               },
               itemBuilder: (BuildContext context, int index) {
                 // logger.i("-----> 222 index:$index");
