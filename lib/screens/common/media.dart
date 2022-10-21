@@ -84,8 +84,6 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   // TODO:GG addMedias
 
   void _initVideoController(int index) async {
-    if (index == _videoInitIndex) return;
-    // data
     Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return;
     String mediaType = media["mediaType"] ?? "";
@@ -93,8 +91,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     String contentType = media["contentType"] ?? "";
     String content = media["content"] ?? "";
     if (content.isEmpty) return;
-    // queue
     await _videoLock.synchronized(() async {
+      if (_videoInitIndex == index) return;
       await _videoController?.dispose();
       _videoController = null;
       if (contentType == "path") {
@@ -109,8 +107,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       });
       _videoController?.addListener(() {
         if (_isVideoPlaying != _videoController?.value.isPlaying) {
-          setState(() {});
-          _isVideoPlaying = _videoController?.value.isPlaying ?? false;
+          setState(() {
+            _isVideoPlaying = _videoController?.value.isPlaying ?? false;
+          });
         }
       });
       _videoInitIndex = index;
@@ -214,6 +213,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   _showIndex = index;
                   _isVideoPlaying = false;
                   hideComponents = false;
+                  bgOpacity = 1;
                 });
                 _initVideoController(index); // await
               },
