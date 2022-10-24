@@ -201,6 +201,11 @@ class ChatCommon with Tag {
         }
       }
     }
+    // deviceToken
+    if (exist.options?.notificationOpen == true) {
+      // TODO:GG 根据contactOptions来判断要不要push和update token
+      // TODO:GG 或者不要在这里check，在messages页面里sync
+    }
     return exist;
   }
 
@@ -461,6 +466,10 @@ class ChatCommon with Tag {
 
   Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) {
     return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, topic, groupId, offset: offset, limit: limit);
+  }
+
+  Future<List<MessageSchema>> queryMessagesByTargetIdWithTypeNotDel(String? targetId, String? topic, String? groupId, List<String>? types, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetIdWithTypeNotDelete(targetId, topic, groupId, types, offset: offset, limit: limit);
   }
 
   Future<bool> deleteByTargetId(String? targetId, String? topic, String? groupId) async {

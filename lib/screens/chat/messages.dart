@@ -28,6 +28,7 @@ import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/screens/common/media.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/screens/private_group/profile.dart';
 import 'package:nmobile/screens/private_group/subscribers.dart';
@@ -93,6 +94,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _onMessageSendStreamSubscription;
   StreamSubscription? _onMessageDeleteStreamSubscription;
   StreamSubscription? _onMessageUpdateStreamSubscription;
+
+  StreamSubscription? _onFetchMediasSubscription;
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
@@ -238,6 +241,25 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       });
     });
 
+    // media_screen
+    _onFetchMediasSubscription = MediaScreen.onFetchStream.listen((response) async {
+      if (response.isEmpty || response[0].isEmpty) return;
+      String type = response[0]["type"]?.toString() ?? "";
+      if (type != "request") return;
+      String target = response[0]["target"]?.toString() ?? "";
+      if (target != targetId) return;
+      String msgId = response[0]["msgId"]?.toString() ?? "";
+      // messages
+      int limit = 10;
+      List<MessageSchema> messages = await _getMediasMessages(limit, msgId, null);
+      if (messages.isEmpty) return; // no return
+      // medias
+      List<Map<String, dynamic>> medias = _getMediasData(messages);
+      // response
+      List<Map<String, dynamic>>? request = MediaScreen.createFetchResponse(target, messages.last.msgId, medias);
+      if (request != null) MediaScreen.onFetchSink.add(request);
+    });
+
     // loadMore
     _scrollController.addListener(() {
       double offsetFromBottom = _scrollController.position.maxScrollExtent - _scrollController.position.pixels;
@@ -298,6 +320,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onMessageSendStreamSubscription?.cancel();
     _onMessageDeleteStreamSubscription?.cancel();
     _onMessageUpdateStreamSubscription?.cancel();
+
+    _onFetchMediasSubscription?.cancel();
 
     chatCommon.currentChatTargetId = null;
 
@@ -509,6 +533,66 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken);
       SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId); // await
     }
+  }
+
+  Future<List<MessageSchema>> _getMediasMessages(int limit, String msgId, List<MessageSchema>? messages) async {
+    messages = messages ?? [];
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await chatCommon.queryMessagesByTargetIdWithTypeNotDel(
+        targetId,
+        _topic?.topic,
+        _privateGroup?.groupId,
+        [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
+        offset: offset,
+        limit: limit,
+      );
+      if (messages.isEmpty) {
+        int index = result.indexWhere((element) => element.msgId == msgId);
+        if (index >= 0) {
+          messages.addAll(result.skip(index).toList());
+        }
+      } else {
+        messages.addAll(result);
+      }
+      if (result.length < limit) break;
+      if (messages.length >= limit) break;
+    }
+    if (messages.isNotEmpty) messages.removeAt(0);
+    return messages;
+  }
+
+  List<Map<String, dynamic>> _getMediasData(List<MessageSchema> messages) {
+    List<Map<String, dynamic>> medias = [];
+    for (var i = 0; i < messages.length; i++) {
+      MessageSchema element = messages[i];
+      String? path;
+      if (element.content is File) {
+        if ((element.content as File).existsSync()) {
+          path = element.content.path;
+        }
+      } else if (element.content is String) {
+        path = element.content;
+      }
+      if (path == null || path.isEmpty) continue;
+      String contentType = element.contentType;
+      if (contentType == MessageContentType.ipfs) {
+        int? type = MessageOptions.getFileType(element.options);
+        if (type == MessageOptions.fileTypeImage) {
+          contentType = MessageContentType.image;
+        } else if (type == MessageOptions.fileTypeVideo) {
+          contentType = MessageContentType.video;
+        }
+      }
+      Map<String, dynamic>? media;
+      if (contentType == MessageContentType.image || contentType == MessageContentType.media) {
+        media = MediaScreen.createMediasItemByImagePath(path);
+      } else if (contentType == MessageContentType.video) {
+        String? thumbnail = MessageOptions.getMediaThumbnailPath(element.options);
+        media = MediaScreen.createMediasItemByVideoPath(path, thumbnail);
+      }
+      if (media != null) medias.add(media);
+    }
+    return medias;
   }
 
   @override
