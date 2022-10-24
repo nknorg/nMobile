@@ -1,23 +1,15 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/drop_down_scale_layout.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/file.dart';
-import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:video_player/video_player.dart';
@@ -25,9 +17,10 @@ import 'package:video_player/video_player.dart';
 class MediaScreen extends BaseStateFulWidget {
   static final String routeName = "/media";
   static final String argTarget = "target";
+  static final String argMsgId = "msgId";
   static final String argMedias = "medias";
 
-  static Future go(BuildContext context, String? target, {List<Map<String, dynamic>>? medias}) {
+  static Future go(BuildContext context, String? target, String? msgId, {List<Map<String, dynamic>>? medias}) {
     if (target == null || target.isEmpty || medias == null || medias.isEmpty) return Future.value(null);
     return Navigator.push(
       context,
@@ -40,6 +33,7 @@ class MediaScreen extends BaseStateFulWidget {
             child: MediaScreen(
               arguments: {
                 argTarget: target,
+                argMsgId: msgId,
                 argMedias: medias,
               },
             ),
@@ -61,26 +55,18 @@ class MediaScreen extends BaseStateFulWidget {
   static StreamSink<List<Map<String, dynamic>>> get onFetchSink => _onFetchController.sink;
   static Stream<List<Map<String, dynamic>>> get onFetchStream => _onFetchController.stream;
 
-  // TODO:GG callback messages记录点击的msg_id
-  static List<Map<String, dynamic>>? createFetchRequest(String? target) {
+  static List<Map<String, dynamic>>? createFetchRequest(String? target, String? msgId) {
     if (target == null || target.isEmpty) return null;
     return [
-      {
-        "type": "request",
-        "target": target,
-      }
+      {"type": "request", "target": target, "msgId": msgId}
     ];
   }
 
-  // TODO:GG call_back_with success and fail
-  static createFetchResponse(String? target, List<Map<String, dynamic>> medias) {
-    return [
-      {
-        "type": "response",
-        "target": target,
-        "medias": medias,
-      }
-    ];
+  static createFetchResponse(String? target, String? msgId, List<Map<String, dynamic>> medias) {
+    List<Map<String, dynamic>> data = [];
+    data.add({"type": "response", "target": target, "msgId": msgId});
+    data.addAll(medias);
+    return data;
   }
 
   static Map<String, dynamic>? createMediasItemByImagePath(String? imagePath) {
@@ -111,6 +97,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   bool fetchLoading = false;
 
   String? _target;
+  String? _msgId;
+
   List<Map<String, dynamic>> _medias = [];
   int _showIndex = 0;
 
@@ -125,6 +113,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   @override
   void onRefreshArguments() {
     _target = widget.arguments?[MediaScreen.argTarget]?.toString();
+    _msgId = widget.arguments?[MediaScreen.argMsgId]?.toString();
     _medias = widget.arguments?[MediaScreen.argMedias] ?? _medias;
   }
 
@@ -138,13 +127,15 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       if (type != "response") return;
       String target = response[0]["target"]?.toString() ?? "";
       if (target != _target) return;
-      var medias = response[0]["medias"] ?? [];
+      String msgId = response[0]["msgId"]?.toString() ?? "";
+      var medias = response..removeAt(0);
       if (medias.isEmpty) return;
       if (!fetchLoading) return;
       setState(() {
+        _msgId = msgId;
         _medias += medias;
       });
-      fetchLoading = true;
+      fetchLoading = false;
     });
     _tryFetchMedias();
     // video first
@@ -162,11 +153,12 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     if ((_showIndex + 1) < (_medias.length - fetchLimit)) return;
     if (fetchLoading) return;
     fetchLoading = true;
-    List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target);
+    List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target, _msgId);
     if (request != null) MediaScreen.onFetchSink.add(request);
   }
 
   void _initVideoController(int index) async {
+    _videoController?.pause();
     Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return;
     String mediaType = media["mediaType"] ?? "";

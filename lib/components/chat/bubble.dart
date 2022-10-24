@@ -20,8 +20,7 @@ import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/screens/common/photo.dart';
-import 'package:nmobile/screens/common/video.dart';
+import 'package:nmobile/screens/common/media.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -430,7 +429,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
-            onTap = () => PhotoScreen.go(context, filePath: file.path);
+            Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(file.path);
+            if (item != null) onTap = () => MediaScreen.go(context, _message.targetId, _message.msgId, medias: [item]);
           }
         } else {
           int state = MessageOptions.getIpfsState(_message.options);
@@ -446,7 +446,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
-              onTap = () => PhotoScreen.go(context, filePath: file.path);
+              Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(file.path);
+              if (item != null) onTap = () => MediaScreen.go(context, _message.targetId, _message.msgId, medias: [item]);
             }
           }
         }
@@ -468,7 +469,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
-            onTap = () => VideoScreen.go(context, filePath: file.path);
+            Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(file.path, thumbnailPath);
+            if (item != null) onTap = () => MediaScreen.go(context, _message.targetId, _message.msgId, medias: [item]);
           }
         } else {
           int state = MessageOptions.getIpfsState(_message.options);
@@ -484,7 +486,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
-              onTap = () => VideoScreen.go(context, filePath: file.path);
+              Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(file.path, thumbnailPath);
+              if (item != null) onTap = () => MediaScreen.go(context, _message.targetId, _message.msgId, medias: [item]);
             }
           }
         }

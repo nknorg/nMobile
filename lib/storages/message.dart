@@ -397,6 +397,51 @@ class MessageStorage with Tag {
     return [];
   }
 
+  Future<List<MessageSchema>> queryListByTargetIdWithTypeNotDelete(String? targetId, String? topic, String? groupId, List<String>? types, {int offset = 0, int limit = 20}) async {
+    if (db?.isOpen != true) return [];
+    if (targetId == null || targetId.isEmpty) return [];
+    if (types == null || types.isEmpty) return [];
+
+    String whereTypes = "type = ?";
+    if (types.length <= 1) {
+      whereTypes = " AND " + whereTypes;
+    } else {
+      for (var i = 1; i < types.length; i++) {
+        whereTypes = whereTypes + " OR type = ?";
+      }
+      whereTypes = "AND ( " + whereTypes + " )";
+    }
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND topic = ? AND group_id = ? AND is_delete = ? $whereTypes',
+          whereArgs: [targetId, topic ?? "", groupId ?? "", 0]..addAll(types),
+          orderBy: 'send_at DESC',
+          offset: offset,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        logText += "    \n$item";
+        result.add(item);
+      });
+      logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
+  }
+
   Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, String? groupId, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
