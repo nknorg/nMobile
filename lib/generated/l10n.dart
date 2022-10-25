@@ -1550,21 +1550,21 @@ class S {
     );
   }
 
-  /// `no accelerate`
-  String get accelerate_no {
-    return Intl.message(
-      'no accelerate',
-      name: 'accelerate_no',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Accelerate`
   String get Accelerate {
     return Intl.message(
       'Accelerate',
       name: 'Accelerate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `no accelerate`
+  String get accelerate_no {
+    return Intl.message(
+      'no accelerate',
+      name: 'accelerate_no',
       desc: '',
       args: [],
     );

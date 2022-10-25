@@ -32,6 +32,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "Accelerate": MessageLookupByLibrary.simpleMessage("加速"),
         "ERC_20": MessageLookupByLibrary.simpleMessage("ERC-20"),
         "about": MessageLookupByLibrary.simpleMessage("關於"),
         "accelerate": MessageLookupByLibrary.simpleMessage("加速"),
