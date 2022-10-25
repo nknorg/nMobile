@@ -119,7 +119,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
 
     Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
 
-    logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
+    logger.i("VideoScreen - save copy file - path:${result?["filePath"]}");
     Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
   }
 
