@@ -74,13 +74,13 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     _updatePrivateGroupItemStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema event) {
       int index = _members.indexWhere((element) => element.id == event.id);
       if ((index >= 0) && (index < _members.length)) {
-        if (event.permission == PrivateGroupItemPerm.none) {
+        if ((event.permission ?? 0) <= PrivateGroupItemPerm.none) {
           _members.removeAt(index);
         } else {
           _members[index] = event;
         }
       } else {
-        if (event.permission != PrivateGroupItemPerm.none) {
+        if ((event.permission ?? 0) > PrivateGroupItemPerm.none) {
           _members.add(event);
         }
       }
@@ -139,11 +139,11 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     PrivateGroupItemSchema? self = await privateGroupCommon.queryGroupItem(_privateGroup?.groupId, selfPubKey);
 
     List<PrivateGroupItemSchema> members = await privateGroupCommon.queryMembers(_privateGroup?.groupId, offset: _offset, limit: 20);
-    members.removeWhere((element) => (element.permission == PrivateGroupItemPerm.none) || (element.invitee == owner?.invitee) || (element.invitee == self?.invitee));
+    members.removeWhere((element) => ((element.permission ?? 0) <= PrivateGroupItemPerm.none) || (element.invitee == owner?.invitee) || (element.invitee == self?.invitee));
 
     if (refresh) {
       if (owner != null) members.add(owner);
-      if (!_isOwner && (self != null) && (self.permission != PrivateGroupItemPerm.none)) members.add(self);
+      if (!_isOwner && (self != null) && ((self.permission ?? 0) > PrivateGroupItemPerm.none)) members.add(self);
     }
     members.sort((a, b) => b.invitee == _privateGroup?.ownerPublicKey ? 1 : (b.invitee == selfPubKey ? 1 : 0));
     _members = refresh ? members : _members + members;
