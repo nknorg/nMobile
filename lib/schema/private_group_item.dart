@@ -4,10 +4,11 @@ import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/util.dart';
 
 class PrivateGroupItemPerm {
+  static const black = -10;
   static const none = 0;
-  static const owner = 1;
-  static const admin = 2;
-  static const normal = 3;
+  static const normal = 10;
+  static const admin = 20;
+  static const owner = 30;
 }
 
 class PrivateGroupItemSchema {
@@ -28,7 +29,7 @@ class PrivateGroupItemSchema {
   PrivateGroupItemSchema({
     this.id,
     required this.groupId,
-    this.permission = PrivateGroupItemPerm.normal,
+    this.permission = PrivateGroupItemPerm.none,
     this.expiresAt,
     this.inviter,
     this.invitee,
@@ -53,7 +54,7 @@ class PrivateGroupItemSchema {
     if (groupId == null || groupId.isEmpty) return null;
     return PrivateGroupItemSchema(
       groupId: groupId,
-      permission: permission ?? PrivateGroupItemPerm.normal,
+      permission: permission ?? PrivateGroupItemPerm.none,
       expiresAt: expiresAt,
       inviter: inviter,
       invitee: invitee,
@@ -78,7 +79,7 @@ class PrivateGroupItemSchema {
     if (data == null || data.isEmpty || (data['groupId'] == null) || (data['groupId']?.toString().isEmpty == true)) return null;
     var schema = PrivateGroupItemSchema(
       groupId: data['groupId'],
-      permission: data['permission'] ?? PrivateGroupItemPerm.normal,
+      permission: data['permission'] ?? PrivateGroupItemPerm.none,
       expiresAt: data['expiresAt'],
       inviter: data['inviter'],
       invitee: data['invitee'],
@@ -98,7 +99,7 @@ class PrivateGroupItemSchema {
     Map<String, dynamic> map = {
       'id': id,
       'group_id': groupId,
-      'permission': permission ?? PrivateGroupItemPerm.normal,
+      'permission': permission ?? PrivateGroupItemPerm.none,
       'expires_at': expiresAt,
       'inviter': inviter,
       'invitee': invitee,
@@ -115,7 +116,7 @@ class PrivateGroupItemSchema {
     var schema = PrivateGroupItemSchema(
       id: e['id'],
       groupId: e['group_id'] ?? "",
-      permission: e['permission'] ?? PrivateGroupItemPerm.normal,
+      permission: e['permission'] ?? PrivateGroupItemPerm.none,
       expiresAt: e['expires_at'],
       inviter: e['inviter'],
       invitee: e['invitee'],

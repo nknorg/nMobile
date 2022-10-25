@@ -104,13 +104,13 @@ class ChatInCommon with Tag {
         // nothing
       } else {
         PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
-        if ((_me == null) || (_me.permission == PrivateGroupItemPerm.none)) {
+        if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
           logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
           return;
         }
-        PrivateGroupItemSchema? sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.from);
-        if ((sender == null) || (sender.permission == PrivateGroupItemPerm.none)) {
-          logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$sender - group:$privateGroup");
+        PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.from);
+        if ((_sender == null) || ((_sender.permission ?? 0) <= PrivateGroupItemPerm.none)) {
+          logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
           return;
         }
       }
@@ -488,7 +488,7 @@ class ChatInCommon with Tag {
       logger.i("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
       await contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true);
     } else if (optionsType == '1') {
-      String? deviceToken = content['deviceToken']?.toString();
+      String deviceToken = content['deviceToken']?.toString() ?? "";
       logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
       await contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
     } else {
@@ -796,7 +796,7 @@ class ChatInCommon with Tag {
     // insert (sync self)
     PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true);
     if (groupSchema == null) {
-      logger.e('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
+      logger.w('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
       return false;
     }
     // members

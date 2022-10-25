@@ -928,7 +928,7 @@ class ChatOutCommon with Tag {
     if (selfAddress == null || selfAddress.isEmpty) return null;
     // me
     PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, selfAddress);
-    if ((_me == null) || (_me.permission == PrivateGroupItemPerm.none)) {
+    if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.w("$TAG - _sendWithPrivateGroup - member me is null - me:$_me - group:$group - message:$message");
       return null;
     }
@@ -941,7 +941,7 @@ class ChatOutCommon with Tag {
       if (clientAddress == null || clientAddress.isEmpty) continue;
       if (clientAddress == selfAddress) {
         selfIsReceiver = true;
-      } else if (members[i].permission != PrivateGroupItemPerm.none) {
+      } else if ((members[i].permission ?? 0) > PrivateGroupItemPerm.none) {
         destList.add(clientAddress);
       }
     }
