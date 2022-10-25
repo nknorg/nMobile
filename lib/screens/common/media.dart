@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/drop_down_scale_layout.dart';
 import 'package:nmobile/components/layout/layout.dart';
+import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:video_player/video_player.dart';
 
@@ -20,8 +27,8 @@ class MediaScreen extends BaseStateFulWidget {
   static final String argMsgId = "msgId";
   static final String argMedias = "medias";
 
-  static Future go(BuildContext context, String? target, String? msgId, {List<Map<String, dynamic>>? medias}) {
-    if (target == null || target.isEmpty || medias == null || medias.isEmpty) return Future.value(null);
+  static Future go(BuildContext context, List<Map<String, dynamic>>? medias, {String? target, String? msgId}) {
+    if (medias == null || medias.isEmpty) return Future.value(null);
     return Navigator.push(
       context,
       PageRouteBuilder(
@@ -209,29 +216,73 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   }
 
   Future _save() async {
+    // permission
     if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
       return null;
     }
     if ((await Permission.storage.request()) != PermissionStatus.granted) {
       return null;
     }
-    // TODO:GG save
-
-    // File? file = (_contentType == TYPE_FILE) ? File(_content ?? "") : null;
-    // String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
-    // logger.i("MediaScreen - save image file - path:${file?.path}");
-    // if (file == null || !await file.exists() || _content == null || (_content?.isEmpty == true)) return;
-    // String imageName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
-    //
-    // Uint8List bytes = await file.readAsBytes();
-    // Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
-    //
-    // logger.i("MediaScreen - save copy file - path:${result?["filePath"]}");
-    // Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+    // data
+    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[_showIndex];
+    if (media.isEmpty) return null;
+    String mediaType = media["mediaType"] ?? "";
+    String contentType = media["contentType"] ?? "";
+    String content = media["content"] ?? "";
+    // save
+    if (mediaType == "image") {
+      if ((contentType == "path") && content.isNotEmpty) {
+        File file = File(content);
+        if (!file.existsSync()) return;
+        logger.i("MediaScreen - save image file - path:${file.path}");
+        Uint8List bytes = await file.readAsBytes();
+        String ext = Path.getFileExt(file, FileHelper.DEFAULT_IMAGE_EXT);
+        String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+        Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
+        logger.i("MediaScreen - save copy image - path:${result?["filePath"]}");
+        Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+      }
+    } else if (mediaType == "video") {
+      if ((contentType == "path") && content.isNotEmpty) {
+        File file = File(content);
+        if (!file.existsSync()) return;
+        logger.i("MediaScreen - save video file - path:${file.path}");
+        String ext = Path.getFileExt(file, FileHelper.DEFAULT_VIDEO_EXT);
+        String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
+        Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
+        logger.i("MediaScreen - save copy video - path:${result?["filePath"]}");
+        Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+      }
+    }
   }
 
   Future _share() async {
-    // TODO:GG share
+    // data
+    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[_showIndex];
+    if (media.isEmpty) return null;
+    String mediaType = media["mediaType"] ?? "";
+    String contentType = media["contentType"] ?? "";
+    String content = media["content"] ?? "";
+    // share
+    if (mediaType == "image") {
+      if ((contentType == "path") && content.isNotEmpty) {
+        File file = File(content);
+        if (!file.existsSync()) return;
+        logger.i("MediaScreen - share image file - path:${file.path}");
+        String mimeType = Platform.isAndroid ? "image/*" : "image/jpeg";
+        Share.shareFiles([file.path], mimeTypes: [mimeType]);
+      }
+    } else if (mediaType == "video") {
+      if ((contentType == "path") && content.isNotEmpty) {
+        File file = File(content);
+        if (!file.existsSync()) return;
+        logger.i("MediaScreen - share video file - path:${file.path}");
+        String mimeType = Platform.isAndroid ? "video/*" : "video/mp4";
+        Share.shareFiles([file.path], mimeTypes: [mimeType]);
+      }
+    }
   }
 
   @override
