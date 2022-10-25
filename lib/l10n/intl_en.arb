@@ -160,8 +160,8 @@
   "transfer_speed_up_enable": "Whether to enable acceleration",
   "pay_nkn": "Pay NKN amount",
   "accelerate": "accelerate",
-  "accelerate_no": "no accelerate",
   "Accelerate": "Accelerate",
+  "accelerate_no": "no accelerate",
   "topic_resubscribe_enable": "Topic renewal",
 
   "max": "Max",
