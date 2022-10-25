@@ -6,7 +6,7 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/topic/avatar.dart';
 import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/screens/common/photo.dart';
+import 'package:nmobile/screens/common/media.dart';
 import 'package:nmobile/utils/asset.dart';
 
 class TopicAvatarEditable extends BaseStateFulWidget {
@@ -48,7 +48,8 @@ class _TopicAvatarEditableState extends BaseStateFulWidgetState<TopicAvatarEdita
   }
 
   _photoShow(BuildContext context) {
-    PhotoScreen.go(context, filePath: _avatarFile?.path);
+    Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_avatarFile?.path);
+    if (item != null) MediaScreen.go(context, [item]);
   }
 
   @override
