@@ -31,7 +31,9 @@ mixin Tag {
   String get TAG => _tagInner(32, 5);
 
   String _tagInner(int length, int lenHashCode) {
-    final String name = this.runtimeType.toString() + '@' + hashCode.toString().substring(0, lenHashCode);
+    String hashCodeStr = hashCode.toString();
+    int endIndex = (hashCodeStr.length > lenHashCode) ? lenHashCode : hashCodeStr.length;
+    final String name = this.runtimeType.toString() + '@' + hashCodeStr.substring(0, endIndex);
     return name;
   }
 }
