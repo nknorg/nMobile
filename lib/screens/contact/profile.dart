@@ -311,21 +311,21 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue, timeNow); // await
   }
 
-  _updateNotificationAndDeviceToken() async {
+  _updateNotificationAndDeviceToken(bool notificationOpen) async {
     DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
-    String? deviceToken = _notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
+    String? deviceToken = notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
     bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
     bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
-    if (_notificationOpen && (noMobile || tokenNull)) {
+    if (notificationOpen && (noMobile || tokenNull)) {
       setState(() {
         _notificationOpen = false;
       });
       Toast.show(Global.locale((s) => s.unavailable_device, ctx: context));
       return;
     }
-    _contactSchema?.options?.notificationOpen = _notificationOpen;
+    _contactSchema?.options?.notificationOpen = notificationOpen;
     // inside update
-    contactCommon.setNotificationOpen(_contactSchema, _notificationOpen, notify: true); // await
+    contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true); // await
     // outside update
     chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken); // await
     SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress); // await
@@ -771,8 +771,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   onChanged: (value) {
                     setState(() {
                       _notificationOpen = value;
-                      _updateNotificationAndDeviceToken();
                     });
+                    _updateNotificationAndDeviceToken(value);
                   },
                 ),
               ],
