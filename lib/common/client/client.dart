@@ -166,7 +166,7 @@ class ClientCommon with Tag {
           await dbCommon.open(pubKey, seed!);
           // wallet + contact
           BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
-          ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
+          ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true, fetchDeviceToken: true);
           contactCommon.meUpdateSink.add(me);
         }
       }
@@ -197,7 +197,7 @@ class ClientCommon with Tag {
         await dbCommon.open(pubKey, seed);
         // wallet + contact
         BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
-        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
+        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true, fetchDeviceToken: true);
         contactCommon.meUpdateSink.add(me);
       }
     } catch (e, st) {
