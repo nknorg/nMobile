@@ -24,6 +24,7 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/wallet/export.dart';
 import 'package:nmobile/screens/wallet/receive.dart';
@@ -206,7 +207,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 String? connectAddress;
                 try {
                   String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-                  if (pubKey?.isNotEmpty == true) {
+                  if (Validate.isNknPublicKey(pubKey)) {
                     connectAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
                   }
                 } catch (e, st) {
