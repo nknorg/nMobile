@@ -210,6 +210,13 @@ class ContactCommon with Tag {
     return success;
   }
 
+  Future<bool> setMappedAddress(ContactSchema? schema, List<String> mapped, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await ContactStorage.instance.setMappedAddress(schema.id, mapped, oldExtraInfo: schema.data);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
   Future queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await ContactStorage.instance.query(contactId);

@@ -490,4 +490,35 @@ class ContactStorage with Tag {
         }) ??
         false;
   }
+
+  Future<bool> setMappedAddress(int? contactId, List<String> mapped, {Map<String, dynamic>? oldExtraInfo}) async {
+    if (db?.isOpen != true) return false;
+    if (contactId == null || contactId == 0) return false;
+    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
+    data['mappedAddress'] = mapped;
+    return await _queue.add(() async {
+      try {
+        int? count = await db?.transaction((txn) {
+          return txn.update(
+            tableName,
+            {
+              'data': jsonEncode(data),
+              'update_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'id = ?',
+            whereArgs: [contactId],
+          );
+        });
+        if (count != null && count > 0) {
+          logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$mapped - old:$oldExtraInfo");
+          return true;
+        }
+        logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$mapped - old:$oldExtraInfo");
+      } catch (e, st) {
+        handleError(e, st);
+      }
+      return false;
+    }) ??
+        false;
+  }
 }

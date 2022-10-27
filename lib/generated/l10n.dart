@@ -1870,6 +1870,16 @@ class S {
     );
   }
 
+  /// `Are you sure you want to delete this address?`
+  String get delete_mapping_address_confirm_title {
+    return Intl.message(
+      'Are you sure you want to delete this address?',
+      name: 'delete_mapping_address_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Select Asset to Send`
   String get select_asset_to_send {
     return Intl.message(
@@ -3885,6 +3895,26 @@ class S {
     return Intl.message(
       'Share',
       name: 'share',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mapped address does not match`
+  String get mapped_address_does_not_match {
+    return Intl.message(
+      'Mapped address does not match',
+      name: 'mapped_address_does_not_match',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Mapped address`
+  String get mapped_address {
+    return Intl.message(
+      'Mapped address',
+      name: 'mapped_address',
       desc: '',
       args: [],
     );
