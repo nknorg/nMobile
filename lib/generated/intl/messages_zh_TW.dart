@@ -164,6 +164,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("您確定要刪除該設備嗎？"),
         "delete_friend_confirm_title":
             MessageLookupByLibrary.simpleMessage("您確定要刪除該好友嗎？"),
+        "delete_mapping_address_confirm_title":
+            MessageLookupByLibrary.simpleMessage("您確定要刪除該地址嗎？"),
         "delete_message_confirm_title":
             MessageLookupByLibrary.simpleMessage("您確定要刪除此消息嗎?"),
         "delete_session": MessageLookupByLibrary.simpleMessage("删除會話"),
@@ -302,6 +304,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "location": MessageLookupByLibrary.simpleMessage("位置"),
         "main_wallet": MessageLookupByLibrary.simpleMessage("主賬戶"),
         "mainnet": MessageLookupByLibrary.simpleMessage("主網"),
+        "mapped_address": MessageLookupByLibrary.simpleMessage("關聯地址"),
+        "mapped_address_does_not_match":
+            MessageLookupByLibrary.simpleMessage("映射地址不匹配"),
         "max": MessageLookupByLibrary.simpleMessage("全部"),
         "me": MessageLookupByLibrary.simpleMessage("我"),
         "member_already_no_permission":

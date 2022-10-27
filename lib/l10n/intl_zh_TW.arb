@@ -195,6 +195,7 @@
   "delete_db_confirm_title": "您確定要清空資料庫嗎？",
   "delete_device_confirm_title": "您確定要刪除該設備嗎？",
   "delete_session_confirm_title": "你確定要刪除此會話嗎？",
+  "delete_mapping_address_confirm_title": "您確定要刪除該地址嗎？",
 
   "select_asset_to_send": "選擇要發送資金的賬戶",
   "select_asset_to_receive": "選擇要接收資金的賬戶",
@@ -401,5 +402,7 @@
   "no_permission_join_group": "還未獲得入群權限，請稍後再試。",
   "no_permission_action": "無權進行此操作",
   "upgrade_db_tips": "數據庫升級中,請勿退出app或離開此頁面。",
-  "share": "分享"
+  "share": "分享",
+  "mapped_address_does_not_match": "映射地址不匹配",
+  "mapped_address": "關聯地址"
 }

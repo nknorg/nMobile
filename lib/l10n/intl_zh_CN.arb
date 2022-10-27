@@ -194,7 +194,8 @@
   "delete_cache_confirm_title": "您确定要删除缓存吗?",
   "delete_db_confirm_title": "您确定要清空数据库吗？",
   "delete_device_confirm_title": "您确定要删除该设备吗？",
-  "delete_session_confirm_title": "你确定要删除此会话吗？",
+  "delete_session_confirm_title": "您确定要删除此会话吗？",
+  "delete_mapping_address_confirm_title": "您确定要删除该地址吗？",
 
   "select_asset_to_send": "选择要发送资金的账户",
   "select_asset_to_receive": "选择要接收资金的账户",
@@ -401,5 +402,7 @@
   "no_permission_join_group": "还未获得入群权限，请稍后再试。",
   "no_permission_action": "无权进行此操作",
   "upgrade_db_tips": "数据库升级中,请勿退出app或离开此页面。",
-  "share": "分享"
+  "share": "分享",
+  "mapped_address_does_not_match": "映射地址不匹配",
+  "mapped_address": "关联地址"
 }

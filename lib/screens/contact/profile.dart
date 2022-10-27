@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
@@ -33,6 +34,11 @@ import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 
+import '../../common/name_service/resolver.dart';
+import '../../components/button/button_icon.dart';
+import '../../utils/util.dart';
+import '../common/scanner.dart';
+
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
@@ -57,7 +63,7 @@ class ContactProfileScreen extends BaseStateFulWidget {
   _ContactProfileScreenState createState() => _ContactProfileScreenState();
 }
 
-class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileScreen> {
+class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileScreen> with Tag {
   static List<Duration> burnValueArray = [
     Duration(seconds: 5),
     Duration(seconds: 10),
@@ -408,6 +414,67 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
+    List<String> mappeds = (_contactSchema!.data?['mappedAddress'] ?? []).cast<String>();
+    List<Widget> mappedWidget = [];
+    for (int i = 0; i < mappeds.length; i++) {
+      mappedWidget.add(Slidable(
+        key: ObjectKey(mappeds[i]),
+        direction: Axis.horizontal,
+        actionPane: SlidableDrawerActionPane(),
+        child: TextButton(
+          style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
+          onPressed: () {
+            Util.copyText(mappeds[i]);
+          },
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: SizedBox(
+                  height: 24,
+                  child: Label(
+                    mappeds[i],
+                    overflow: TextOverflow.ellipsis,
+                    type: LabelType.bodyRegular,
+                    color: application.theme.fontColor2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        secondaryActions: [
+          IconSlideAction(
+            caption: Global.locale((s) => s.delete, ctx: context),
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () => {
+              ModalDialog.of(Global.appContext).confirm(
+                title: Global.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
+                agree: Button(
+                  width: double.infinity,
+                  text: Global.locale((s) => s.delete, ctx: context),
+                  backgroundColor: application.theme.strongColor,
+                  onPressed: () async {
+                    List<String> modified = mappeds..remove(mappeds[i]);
+                    await contactCommon.setMappedAddress(_contactSchema,  modified.toSet().toList(), notify: true);
+                    Navigator.pop(this.context);
+                  },
+                ),
+                reject: Button(
+                  width: double.infinity,
+                  text: Global.locale((s) => s.cancel, ctx: context),
+                  fontColor: application.theme.fontColor2,
+                  backgroundColor: application.theme.backgroundLightColor,
+                  onPressed: () {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  },
+                ),
+              )
+            },
+          ),
+        ],
+      ));
+    }
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -518,7 +585,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       ),
                     ),
 
-                    /// wallet
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                       onPressed: () {
@@ -547,6 +613,49 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                         ],
                       ),
                     ),
+
+                    SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Label(
+                          Global.locale((s) => s.mapped_address, ctx: context),
+                          type: LabelType.h3,
+                        ),
+                        ButtonIcon(
+                          icon: Asset.iconSvg('scan', width: 24, color: application.theme.primaryColor),
+                          width: 48,
+                          onPressed: () async {
+                            var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+                            logger.i("$TAG - QR_DATA:$qrData");
+                            if (qrData == null) return;
+                            String address = qrData.toString();
+
+                            var resolver = Resolver();
+                            var res = await resolver.resolve(address);
+                            if (res != _contactSchema?.clientAddress) {
+                              Toast.show(Global.locale((s) => s.mapped_address_does_not_match, ctx: context));
+                              return;
+                            }
+                            List<String> added = mappeds..add(address);
+                            await contactCommon.setMappedAddress(_contactSchema,  added.toSet().toList(), notify: true);
+                          },
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 24),
+
+                    PhysicalModel(
+                      elevation: 0,
+                      clipBehavior:  Clip.antiAlias,
+                      color:application.theme.backgroundColor,
+                      borderRadius:  BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                      child: Column(
+                        children: mappedWidget,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -558,6 +667,67 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
+    List<String> mappeds = (_contactSchema!.data?['mappedAddress'] ?? []).cast<String>();
+    List<Widget> mappedWidget = [];
+    for (int i = 0; i < mappeds.length; i++) {
+      mappedWidget.add(Slidable(
+        key: ObjectKey(mappeds[i]),
+        direction: Axis.horizontal,
+        actionPane: SlidableDrawerActionPane(),
+        child: TextButton(
+          style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
+          onPressed: () {
+            Util.copyText(mappeds[i]);
+          },
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: SizedBox(
+                  height: 24,
+                  child: Label(
+                    mappeds[i],
+                    overflow: TextOverflow.ellipsis,
+                    type: LabelType.bodyRegular,
+                    color: application.theme.fontColor2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        secondaryActions: [
+          IconSlideAction(
+            caption: Global.locale((s) => s.delete, ctx: context),
+            color: Colors.red,
+            icon: Icons.delete,
+            onTap: () => {
+              ModalDialog.of(Global.appContext).confirm(
+                title: Global.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
+                agree: Button(
+                  width: double.infinity,
+                  text: Global.locale((s) => s.delete, ctx: context),
+                  backgroundColor: application.theme.strongColor,
+                  onPressed: () async {
+                    List<String> modified = mappeds..remove(mappeds[i]);
+                    await contactCommon.setMappedAddress(_contactSchema,  modified.toSet().toList(), notify: true);
+                    Navigator.pop(this.context);
+                  },
+                ),
+                reject: Button(
+                  width: double.infinity,
+                  text: Global.locale((s) => s.cancel, ctx: context),
+                  fontColor: application.theme.fontColor2,
+                  backgroundColor: application.theme.backgroundLightColor,
+                  onPressed: () {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  },
+                ),
+              )
+            },
+          ),
+        ],
+      ));
+    }
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
       child: Column(
@@ -577,6 +747,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           SizedBox(height: 36),
 
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               /// name
               TextButton(
@@ -644,6 +815,25 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       color: application.theme.fontColor2,
                     ),
                   ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 6),
+                child: Label(
+                  Global.locale((s) => s.mapped_address, ctx: context),
+                  type: LabelType.bodySmall,
+                  fontWeight: FontWeight.w600,
+                  softWrap: true,
+                ),
+              ),
+              PhysicalModel(
+                elevation: 0,
+                clipBehavior:  Clip.antiAlias,
+                color:application.theme.backgroundColor,
+                borderRadius:  BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                child: Column(
+                  children: mappedWidget,
                 ),
               ),
             ],
