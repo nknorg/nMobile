@@ -9,6 +9,7 @@ import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
@@ -656,17 +657,27 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               contactSelect: true,
                             );
                             if (Validate.isNknChatIdentifierOk(address)) {
-                              ContactSchema? contact = await contactCommon.queryByClientAddress(address);
+                              var resolver = Resolver();
+                              var nknAddr = await resolver.resolve(address!);
+                              if (nknAddr == null || !Validate.isNknChatIdentifierOk(nknAddr)) {
+                                Toast.show(Global.locale((s) => s.error_client_address_format, ctx: context));
+                                return;
+                              }
+                              ContactSchema? contact = await contactCommon.queryByClientAddress(nknAddr);
                               if (contact != null) {
                                 if (contact.type == ContactType.none) {
                                   bool success = await contactCommon.setType(contact.id, ContactType.stranger, notify: true);
                                   if (success) contact.type = ContactType.stranger;
                                 }
                               } else {
-                                ContactSchema? _contact = await ContactSchema.create(address, ContactType.stranger);
+                                ContactSchema? _contact = await ContactSchema.create(nknAddr, ContactType.stranger);
                                 contact = await contactCommon.add(_contact, notify: true);
                               }
-                              await ChatMessagesScreen.go(context, contact);
+                              if (contact == null) return;
+                              List<String> mappeds = (contact.data?['mappedAddress'] ?? []).cast<String>();
+                              List<String> added = mappeds..add(address);
+                              await contactCommon.setMappedAddress(contact, added.toSet().toList(), notify: true);
+                              ChatMessagesScreen.go(context, contact);
                             }
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context); // floatActionBtn
                           },

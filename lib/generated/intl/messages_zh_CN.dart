@@ -164,11 +164,13 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("您确定要删除该设备吗？"),
         "delete_friend_confirm_title":
             MessageLookupByLibrary.simpleMessage("您确定要删除该好友吗？"),
+        "delete_mapping_address_confirm_title":
+            MessageLookupByLibrary.simpleMessage("您确定要删除该地址吗？"),
         "delete_message_confirm_title":
             MessageLookupByLibrary.simpleMessage("您确定要删除此消息吗?"),
         "delete_session": MessageLookupByLibrary.simpleMessage("删除会话"),
         "delete_session_confirm_title":
-            MessageLookupByLibrary.simpleMessage("你确定要删除此会话吗？"),
+            MessageLookupByLibrary.simpleMessage("您确定要删除此会话吗？"),
         "delete_wallet": MessageLookupByLibrary.simpleMessage("删除账户"),
         "delete_wallet_confirm_text": MessageLookupByLibrary.simpleMessage(
             "这将从您的设备中删除账户。请确保您的账户已备份，否则您的资金将丢失且无法找回。"),
@@ -302,6 +304,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "location": MessageLookupByLibrary.simpleMessage("位置"),
         "main_wallet": MessageLookupByLibrary.simpleMessage("主账户"),
         "mainnet": MessageLookupByLibrary.simpleMessage("主网"),
+        "mapped_address": MessageLookupByLibrary.simpleMessage("关联地址"),
+        "mapped_address_does_not_match":
+            MessageLookupByLibrary.simpleMessage("映射地址不匹配"),
         "max": MessageLookupByLibrary.simpleMessage("全部"),
         "me": MessageLookupByLibrary.simpleMessage("我"),
         "member_already_no_permission":

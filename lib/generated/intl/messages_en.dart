@@ -192,6 +192,9 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to delete this device?"),
         "delete_friend_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this friend?"),
+        "delete_mapping_address_confirm_title":
+            MessageLookupByLibrary.simpleMessage(
+                "Are you sure you want to delete this address?"),
         "delete_message_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this message?"),
         "delete_session":
@@ -359,6 +362,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "location": MessageLookupByLibrary.simpleMessage("Location"),
         "main_wallet": MessageLookupByLibrary.simpleMessage("Main Account"),
         "mainnet": MessageLookupByLibrary.simpleMessage("MAINNET"),
+        "mapped_address":
+            MessageLookupByLibrary.simpleMessage("Mapped address"),
+        "mapped_address_does_not_match": MessageLookupByLibrary.simpleMessage(
+            "Mapped address does not match"),
         "max": MessageLookupByLibrary.simpleMessage("Max"),
         "me": MessageLookupByLibrary.simpleMessage("Me"),
         "member_already_no_permission": MessageLookupByLibrary.simpleMessage(
