@@ -124,10 +124,16 @@ class ChatOutCommon with Tag {
   Future sendPing(List<String> clientAddressList, bool isPing) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddressList.isEmpty) return;
-    bool isSelf = clientAddressList.length == 1 && clientAddressList[0] == clientCommon.address;
-    String? profileVersion = isSelf ? null : (await contactCommon.getMe())?.profileVersion;
+    bool isSelf = (clientAddressList.length == 1) && (clientAddressList[0] == clientCommon.address);
+    ContactSchema? _me = await contactCommon.getMe();
+    String? profileVersion = isSelf ? null : _me?.profileVersion;
     String? deviceProfile = isSelf ? null : deviceInfoCommon.getDeviceProfile();
-    String data = MessageData.getPing(isPing, profileVersion, deviceProfile);
+    String? deviceToken;
+    if (!isSelf && (clientAddressList.length == 1)) {
+      ContactSchema? _other = await contactCommon.queryByClientAddress(clientAddressList[0]);
+      deviceToken = (_other?.options?.notificationOpen == true) ? _me?.deviceToken : null;
+    }
+    String data = MessageData.getPing(isPing, profileVersion, deviceProfile, deviceToken);
     await _sendWithAddressSafe(clientAddressList, data, notification: false);
   }
 
@@ -232,17 +238,20 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
+    ContactSchema? _me = await contactCommon.getMe();
     // target
     String targetAddress = "";
     String targetTopic = "";
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    bool notificationOpen = false;
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
+      notificationOpen = target.options?.notificationOpen ?? false;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
@@ -262,8 +271,9 @@ class ChatOutCommon with Tag {
       extra: {
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "deviceToken": notificationOpen ? _me?.deviceToken : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );
@@ -274,6 +284,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    ContactSchema? _me = await contactCommon.getMe();
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -286,11 +297,13 @@ class ChatOutCommon with Tag {
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    bool notificationOpen = false;
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
+      notificationOpen = target.options?.notificationOpen ?? false;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
@@ -311,8 +324,9 @@ class ChatOutCommon with Tag {
         ..addAll({
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
-          "profileVersion": (await contactCommon.getMe())?.profileVersion,
+          "profileVersion": _me?.profileVersion,
           "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+          "deviceToken": notificationOpen ? _me?.deviceToken : null,
           "privateGroupVersion": privateGroupVersion,
         }),
     );
@@ -342,17 +356,20 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+    ContactSchema? _me = await contactCommon.getMe();
     // target
     String targetAddress = "";
     String targetTopic = "";
     String groupId = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    bool notificationOpen = false;
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
+      notificationOpen = target.options?.notificationOpen ?? false;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
@@ -377,8 +394,9 @@ class ChatOutCommon with Tag {
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "deviceToken": notificationOpen ? _me?.deviceToken : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );
@@ -390,17 +408,20 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
+    ContactSchema? _me = await contactCommon.getMe();
     // target
     String targetAddress = "";
     String groupId = "";
     String targetTopic = "";
     int? deleteAfterSeconds;
     int? burningUpdateAt;
+    bool notificationOpen = false;
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetAddress = target.clientAddress;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
+      notificationOpen = target.options?.notificationOpen ?? false;
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
@@ -423,8 +444,9 @@ class ChatOutCommon with Tag {
         "audioDurationS": durationS,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
-        "profileVersion": (await contactCommon.getMe())?.profileVersion,
+        "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
+        "deviceToken": notificationOpen ? _me?.deviceToken : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );

@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/device_token.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -30,14 +33,27 @@ class ContactCommon with Tag {
 
   ContactCommon();
 
-  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false}) async {
+  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false, bool fetchDeviceToken = false}) async {
     List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await ContactStorage.instance.queryByClientAddress(clientAddress ?? clientCommon.address);
-    if (contact == null && canAdd) {
+    if ((contact == null) && canAdd) {
       contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
     }
+    if (contact == null) return null;
+    if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
+      String profileVersion = Uuid().v4();
+      bool success = await setProfileVersion(contact, profileVersion);
+      if (success) contact.profileVersion = profileVersion;
+    }
     if (needWallet) {
-      contact?.nknWalletAddress = await contact.tryNknWalletAddress();
+      contact.nknWalletAddress = await contact.tryNknWalletAddress();
+    }
+    if (fetchDeviceToken) {
+      DeviceToken.get(platform: PlatformName.get(), appVersion: int.tryParse(Global.build)).then((deviceToken) {
+        if ((contact?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
+          setDeviceToken(contact?.id, deviceToken, notify: true); // await
+        }
+      }); // await
     }
     return contact;
   }
