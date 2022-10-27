@@ -167,44 +167,49 @@ class ChatCommon with Tag {
       }
     }
     if (exist == null) return null;
-    // profile
-    if ((message.from != message.to) && !message.isTopic && !message.isPrivateGroup && !message.isOutbound) {
-      String? profileVersion = MessageOptions.getProfileVersion(message.options);
-      if (profileVersion != null && profileVersion.isNotEmpty) {
-        if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
-          chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
-        }
-      }
-    }
-    // burning
-    if (!(message.isTopic || message.isPrivateGroup) && message.canBurning) {
-      int? existSeconds = exist.options?.deleteAfterSeconds;
-      int? existUpdateAt = exist.options?.updateBurnAfterAt;
-      int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-      int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
-      if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
-        // no same with self
-        if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
-          // side updated latest
-          exist.options?.deleteAfterSeconds = burnAfterSeconds;
-          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-          await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
-        } else {
-          // mine updated latest
-          if ((message.sendAt ?? 0) > existUpdateAt) {
-            deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
-              if (exist == null) return;
-              if (!DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return;
-              chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
-            });
+    // options
+    if ((message.from != message.to) && !message.isOutbound) {
+      // profile
+      if (!message.isTopic && !message.isPrivateGroup) {
+        String? profileVersion = MessageOptions.getProfileVersion(message.options);
+        if (profileVersion != null && profileVersion.isNotEmpty) {
+          if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
+            chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
           }
         }
       }
-    }
-    // deviceToken
-    if (exist.options?.notificationOpen == true) {
-      // TODO:GG 根据contactOptions来判断要不要push和update token
-      // TODO:GG 或者不要在这里check，在messages页面里sync
+      // burning
+      if (!message.isTopic && !message.isPrivateGroup && message.canBurning) {
+        int? existSeconds = exist.options?.deleteAfterSeconds;
+        int? existUpdateAt = exist.options?.updateBurnAfterAt;
+        int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
+        int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
+        if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
+          // no same with self
+          if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
+            // side updated latest
+            exist.options?.deleteAfterSeconds = burnAfterSeconds;
+            exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+            await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
+          } else {
+            // mine updated latest
+            if ((message.sendAt ?? 0) > existUpdateAt) {
+              deviceInfoCommon.queryLatest(exist.clientAddress).then((deviceInfo) {
+                if (exist == null) return;
+                if (!DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) return;
+                chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
+              });
+            }
+          }
+        }
+      }
+      // deviceToken
+      if (!message.isTopic && !message.isPrivateGroup) {
+        String? deviceToken = MessageOptions.getDeviceToken(message.options);
+        if ((deviceToken?.isNotEmpty == true) && (exist.deviceToken != deviceToken)) {
+          contactCommon.setDeviceToken(exist.id, deviceToken, notify: true); // await
+        }
+      }
     }
     return exist;
   }

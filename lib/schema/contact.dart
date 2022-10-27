@@ -7,6 +7,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const me = -1;
@@ -84,7 +85,7 @@ class ContactSchema {
       type: type,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
-      profileVersion: profileVersion,
+      profileVersion: profileVersion ?? Uuid().v4(),
       nknWalletAddress: walletAddress,
     );
   }

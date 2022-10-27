@@ -1150,7 +1150,7 @@ class MessageData {
     return map;
   }
 
-  static String getPing(bool isPing, String? profileVersion, String? deviceProfile) {
+  static String getPing(bool isPing, String? profileVersion, String? deviceProfile, String? deviceToken) {
     Map data = _base(MessageContentType.ping);
     data.addAll({
       'content': isPing ? "ping" : "pong",
@@ -1162,6 +1162,10 @@ class MessageData {
     if (deviceProfile != null && deviceProfile.isNotEmpty) {
       if (data['options'] == null) data['options'] = Map();
       data['options']["deviceProfile"] = deviceProfile;
+    }
+    if (deviceToken != null && deviceToken.isNotEmpty) {
+      if (data['options'] == null) data['options'] = Map();
+      data['options']["deviceToken"] = deviceToken;
     }
     return jsonEncode(data);
   }
