@@ -99,6 +99,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.1+6"
+  card_swiper:
+    dependency: "direct main"
+    description:
+      name: card_swiper
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.4"
   characters:
     dependency: transitive
     description:
@@ -1030,14 +1037,14 @@ packages:
       name: sentry
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.6.3"
+    version: "6.13.1"
   sentry_flutter:
     dependency: "direct main"
     description:
       name: sentry_flutter
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.6.3"
+    version: "6.13.1"
   share_plus:
     dependency: "direct main"
     description:
