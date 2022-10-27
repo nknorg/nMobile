@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
@@ -74,7 +75,7 @@ class ContactSchema {
     String? walletAddress;
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-      if (pubKey?.isNotEmpty == true) {
+      if (Validate.isNknPublicKey(pubKey)) {
         walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
       }
     } catch (e, st) {
@@ -183,7 +184,7 @@ class ContactSchema {
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {
-      if (pubKey.isNotEmpty == true) {
+      if (Validate.isNknPublicKey(pubKey)) {
         nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey);
       }
     } catch (e, st) {

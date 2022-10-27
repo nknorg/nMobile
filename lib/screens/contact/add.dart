@@ -89,7 +89,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     String? walletAddress;
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-      if (pubKey?.isNotEmpty == true) {
+      if (Validate.isNknPublicKey(pubKey)) {
         walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
       }
     } catch (e, st) {
