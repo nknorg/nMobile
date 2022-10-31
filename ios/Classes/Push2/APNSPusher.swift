@@ -43,8 +43,10 @@ public class APNSPusher {
             case .success:
                 print("APNSPusher - pushed success")
             case .failure(let errorCode, let message):
-                print("APNSPusher - pushed Failed - \(errorCode), \(message)")
-                SentrySDK.capture(error: NSError(domain: message, code: errorCode))
+                print("APNSPusher - pushed Failed - \(errorCode), \(uuid), \(deviceToken), \(message)")
+                if (!message.contains("-1001") && !message.contains("-1005") && !message.contains("-1017")) {
+                    SentrySDK.capture(error: NSError(domain: "\(uuid), \(deviceToken), \(message)", code: errorCode))
+                }
             }
         }
     }
