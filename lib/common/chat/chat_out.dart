@@ -1022,6 +1022,7 @@ class ChatOutCommon with Tag {
         from: message.from,
         to: "",
         topic: message.topic, // need
+        groupId: message.groupId, // need
         contentType: MessageContentType.piece,
         content: base64Encode(data),
         options: options,

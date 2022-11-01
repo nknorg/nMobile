@@ -237,7 +237,7 @@ class ChatInCommon with Tag {
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       if (!(received.isTopic || received.isPrivateGroup)) {
-        chatCommon.checkMsgStatus(received.targetId, false); // await
+        chatCommon.checkMsgStatus(received.targetId, false, false); // await
       }
     } else {
       logger.e("$TAG - _receivePing - content content error - received:$received");
@@ -284,7 +284,7 @@ class ChatInCommon with Tag {
 
     // check msgStatus
     if (!(exists.isTopic || exists.isPrivateGroup) && (received.from != received.to) && (received.from != clientCommon.address)) {
-      chatCommon.checkMsgStatus(exists.targetId, false); // await
+      chatCommon.checkMsgStatus(exists.targetId, false, false); // await
     }
     return true;
   }
@@ -314,7 +314,7 @@ class ChatInCommon with Tag {
     // read history
     msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
     int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    await chatCommon.readMessageBySide(received.targetId, received.topic, reallySendAt);
+    await chatCommon.readMessageBySide(received.targetId, received.topic, received.groupId, reallySendAt);
 
     // check msgStatus
     // if (!exists.isTopic && (received.from != received.to) && (received.from != clientCommon.address)) {
