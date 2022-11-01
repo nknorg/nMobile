@@ -657,6 +657,7 @@ class MessageSchema {
       from: piece.from,
       to: piece.to,
       topic: piece.topic,
+      groupId: piece.groupId,
       // status
       status: MessageStatus.Received,
       isOutbound: false,

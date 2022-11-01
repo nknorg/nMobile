@@ -53,7 +53,7 @@ class ChatCommon with Tag {
     checkIpfsStateIng(fileNotify: true, thumbnailNotify: false, thumbnailAutoDownload: true); // await
   }
 
-  Future checkMsgStatus(String? targetId, bool isTopic, {bool refresh = false, int filterSec = 10}) async {
+  Future checkMsgStatus(String? targetId, bool isTopic, bool isGroup, {bool refresh = false, int filterSec = 10}) async {
     if (targetId == null || targetId.isEmpty) return;
     // delay
     if (_checkersParams[targetId] == null) _checkersParams[targetId] = Map();
@@ -77,7 +77,7 @@ class ChatCommon with Tag {
     await _checkQueue.add(() async {
       try {
         logger.i("$TAG - checkMsgStatus - start - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-        final count = await _checkMsgStatus(targetId, isTopic, filterSec: filterSec);
+        final count = await _checkMsgStatus(targetId, isTopic, isGroup, filterSec: filterSec);
         logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
         _checkersParams[targetId]?["delay"] = 0;
       } catch (e, st) {
@@ -86,7 +86,7 @@ class ChatCommon with Tag {
     }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
   }
 
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, {bool forceResend = false, int filterSec = 10}) async {
+  Future<int> _checkMsgStatus(String? targetId, bool isTopic, bool isGroup, {bool forceResend = false, int filterSec = 10}) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
 
@@ -96,7 +96,7 @@ class ChatCommon with Tag {
 
     // noAck
     for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
+      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, topic: isTopic ? targetId : "", groupId: isGroup ? targetId : "", offset: offset, limit: limit);
       final canReceipts = result.where((element) => element.canReceipt).toList();
       checkList.addAll(canReceipts);
       logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
@@ -567,10 +567,10 @@ class ChatCommon with Tag {
     }
   }
 
-  Future<int> readMessageBySide(String? targetId, String? topic, int? sendAt, {int offset = 0, int limit = 20}) async {
+  Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt, {int offset = 0, int limit = 20}) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
     // noReads
-    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, offset: offset, limit: limit);
+    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
     List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
     // read
     for (var i = 0; i < shouldReads.length; i++) {
@@ -579,7 +579,7 @@ class ChatCommon with Tag {
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     // loop
-    if (noReads.length >= limit) return readMessageBySide(targetId, topic, sendAt, offset: offset + limit, limit: limit);
+    if (noReads.length >= limit) return readMessageBySide(targetId, topic, groupId, sendAt, offset: offset + limit, limit: limit);
     logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${Time.formatTime(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
     return offset + noReads.length;
   }
