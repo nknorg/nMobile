@@ -15,8 +15,8 @@ class ContactChatProfileScreen extends BaseStateFulWidget {
   static final String routeName = "/contact/chat_profile";
   static final String argContactSchema = "contact_schema";
 
-  static Future go(BuildContext context, ContactSchema schema) {
-    logger.d("ContactChatProfileScreen - go - schema:$schema");
+  static Future go(BuildContext? context, ContactSchema schema) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
     });

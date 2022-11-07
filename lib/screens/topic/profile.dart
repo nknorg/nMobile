@@ -34,8 +34,8 @@ class TopicProfileScreen extends BaseStateFulWidget {
   static final String argTopicId = "topic_id";
   static final String argTopicTopic = "topic_topic";
 
-  static Future go(BuildContext context, {TopicSchema? schema, int? topicId, String? topic}) {
-    logger.d("TopicProfileScreen - go - id:$topicId - topic:$topic - schema:$schema");
+  static Future go(BuildContext? context, {TopicSchema? schema, int? topicId, String? topic}) {
+    if (context == null) return Future.value(null);
     if (schema == null && (topicId == null || topicId == 0)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argTopicSchema: schema,

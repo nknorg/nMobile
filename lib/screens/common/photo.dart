@@ -22,7 +22,8 @@ class PhotoScreen extends BaseStateFulWidget {
   static final String argFilePath = "file_path";
   static final String argNetUrl = "net_url";
 
-  static Future go(BuildContext context, {String? filePath, String? netUrl}) {
+  static Future go(BuildContext? context, {String? filePath, String? netUrl}) {
+    if (context == null) return Future.value(null);
     if ((filePath == null || filePath.isEmpty) && (netUrl == null || netUrl.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argFilePath: filePath,

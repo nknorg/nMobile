@@ -20,7 +20,8 @@ class WalletImportScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/import';
   static final String argWalletType = "wallet_type";
 
-  static Future go(BuildContext context, String walletType) {
+  static Future go(BuildContext? context, String walletType) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWalletType: walletType,
     });

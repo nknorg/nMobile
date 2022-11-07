@@ -38,8 +38,8 @@ class WalletSendScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/send';
   static final String argWallet = "wallet";
 
-  static Future go(BuildContext context, WalletSchema wallet) {
-    logger.d("WalletSendScreen - go - $wallet");
+  static Future go(BuildContext? context, WalletSchema wallet) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
     });

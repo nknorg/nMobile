@@ -251,6 +251,7 @@ class ChatCommon with Tag {
         } else {
           DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
           if (_exist != null) {
+            _exist.updateAt = DateTime.now().millisecondsSinceEpoch;
             bool success = await deviceInfoCommon.updateLatest(latest.contactAddress, deviceId); // await
             if (success) latest = _exist;
             bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
