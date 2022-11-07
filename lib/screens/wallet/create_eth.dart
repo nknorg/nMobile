@@ -24,7 +24,8 @@ import 'package:nmobile/utils/logger.dart';
 class WalletCreateETHScreen extends BaseStateFulWidget {
   static const String routeName = '/wallet/create_eth';
 
-  static Future go(BuildContext context) {
+  static Future go(BuildContext? context) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName);
   }
 

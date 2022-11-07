@@ -39,8 +39,8 @@ class WalletDetailScreen extends BaseStateFulWidget {
   static final String argWallet = "wallet";
   static final String argListIndex = "list_index";
 
-  static Future go(BuildContext context, WalletSchema wallet, {int? listIndex}) {
-    logger.d("WalletDetailScreen - go - $wallet");
+  static Future go(BuildContext? context, WalletSchema wallet, {int? listIndex}) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWallet: wallet,
       argListIndex: listIndex,

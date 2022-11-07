@@ -30,8 +30,8 @@ class PrivateGroupProfileScreen extends BaseStateFulWidget {
   static final String argPrivateGroupSchema = "privateGroupSchema";
   static final String argPrivateGroupId = "groupId";
 
-  static Future go(BuildContext context, {PrivateGroupSchema? schema, String? groupId}) {
-    logger.d("PrivateGroupProfileScreen - go - groupId:$groupId - schema:$schema");
+  static Future go(BuildContext? context, {PrivateGroupSchema? schema, String? groupId}) {
+    if (context == null) return Future.value(null);
     if ((schema == null) && (groupId == null)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argPrivateGroupSchema: schema,

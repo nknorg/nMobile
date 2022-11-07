@@ -31,7 +31,8 @@ import 'package:permission_handler/permission_handler.dart';
 class ContactAddScreen extends BaseStateFulWidget {
   static final String routeName = "contact/add";
 
-  static Future go(BuildContext context) {
+  static Future go(BuildContext? context) {
+    if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName);
   }
 
