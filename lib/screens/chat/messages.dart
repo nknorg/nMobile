@@ -47,8 +47,8 @@ class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
   static final String argWho = "who";
 
-  static Future go(BuildContext context, dynamic who) {
-    logger.d("ChatMessagesScreen - go - $who");
+  static Future go(BuildContext? context, dynamic who) {
+    if (context == null) return Future.value(null);
     if (who == null || !(who is ContactSchema || who is PrivateGroupSchema || who is TopicSchema)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argWho: who,

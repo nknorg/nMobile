@@ -27,7 +27,8 @@ class MediaScreen extends BaseStateFulWidget {
   static final String argMsgId = "msgId";
   static final String argMedias = "medias";
 
-  static Future go(BuildContext context, List<Map<String, dynamic>>? medias, {String? target, String? msgId}) {
+  static Future go(BuildContext? context, List<Map<String, dynamic>>? medias, {String? target, String? msgId}) {
+    if (context == null) return Future.value(null);
     if (medias == null || medias.isEmpty) return Future.value(null);
     return Navigator.push(
       context,
