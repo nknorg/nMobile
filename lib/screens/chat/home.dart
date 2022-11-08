@@ -19,6 +19,7 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -608,7 +609,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );
-                            if (address?.isNotEmpty == true) {
+                            if (Validate.isNknChatIdentifierOk(address)) {
                               ContactSchema? contact = await contactCommon.queryByClientAddress(address);
                               if (contact != null) {
                                 if (contact.type == ContactType.none) {

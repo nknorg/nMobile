@@ -11,6 +11,7 @@ import 'package:nmobile/components/private_group/header.dart';
 import 'package:nmobile/components/private_group/subscriber_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/private_group.dart';
@@ -160,7 +161,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address?.isNotEmpty == true) {
+    if (Validate.isNknChatIdentifierOk(address)) {
       bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
       if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
     }

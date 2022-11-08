@@ -10,6 +10,7 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/components/topic/subscriber_item.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -215,7 +216,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address?.isNotEmpty == true) {
+    if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
       if (_topicSchema?.isPrivate == true) {
         fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
