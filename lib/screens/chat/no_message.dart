@@ -6,6 +6,7 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
@@ -32,7 +33,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address?.isNotEmpty == true) {
+    if (Validate.isNknChatIdentifierOk(address)) {
       ContactSchema? contact = await contactCommon.queryByClientAddress(address);
       if (contact != null) {
         if (contact.type == ContactType.none) {

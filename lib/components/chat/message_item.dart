@@ -469,26 +469,28 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                     ),
                   ),
                   onTap: () async {
-                    await BottomDialog.of(Global.appContext).showInput(
+                    String? value = await BottomDialog.of(Global.appContext).showInput(
                       title: Global.locale((s) => s.accept_invitation, ctx: context),
                       desc: inviteDesc,
                       value: groupName,
                       actionText: Global.locale((s) => s.accept_invitation, ctx: context),
                       enable: false,
                     );
-                    Uint8List? ownerSeed = clientCommon.client?.seed;
-                    if (ownerSeed == null) return;
-                    Loading.show();
-                    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
-                    PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
-                    groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
-                    if (groupItemSchema != null) {
-                      await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
-                      PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
-                      if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
+                    if (value?.isNotEmpty == true) {
+                      Uint8List? ownerSeed = clientCommon.client?.seed;
+                      if (ownerSeed == null) return;
+                      Loading.show();
+                      Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
+                      PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
+                      groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
+                      if (groupItemSchema != null) {
+                        await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
+                        PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
+                        if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
+                      }
+                      Loading.dismiss();
+                      if (groupItemSchema != null) Toast.show(Global.locale((s) => s.waiting_for_data_to_sync, ctx: context));
                     }
-                    Loading.dismiss();
-                    if (groupItemSchema != null) Toast.show(Global.locale((s) => s.waiting_for_data_to_sync, ctx: context));
                   },
                 ),
               ],

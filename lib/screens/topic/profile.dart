@@ -17,6 +17,7 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/avatar_editable.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -199,7 +200,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (address?.isNotEmpty == true) {
+    if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
       if (_topicSchema?.isPrivate == true) {
         fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
