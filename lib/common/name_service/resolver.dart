@@ -34,7 +34,7 @@ class Resolver {
         config = DNS_RESOLVER_CONFIG;
         addr = await native.DnsResolver.resolve(config, addr);
       } else {
-        if (addr.startsWith(ETH_RESOLVER_CONFIG.prefix!)) {
+        if (addr.toUpperCase().startsWith(ETH_RESOLVER_CONFIG.prefix!)) {
           config = ETH_RESOLVER_CONFIG;
         } else if (addr.toUpperCase().startsWith(HARMONY_RESOLVER_CONFIG.prefix!)) {
           config = HARMONY_RESOLVER_CONFIG;
