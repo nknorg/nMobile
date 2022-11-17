@@ -1031,6 +1031,15 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.0.0"
+  receive_sharing_intent:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: master
+      resolved-ref: e1a945c3da610cdb0ec2788f1b89a96e3f0c6f32
+      url: "https://www.github.com/KasemJaffer/receive_sharing_intent.git"
+    source: git
+    version: "1.4.5"
   sentry:
     dependency: transitive
     description:

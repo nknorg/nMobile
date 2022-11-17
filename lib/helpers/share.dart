@@ -85,15 +85,15 @@ class ShareHelper {
   }
 
   static Future<Map<String, dynamic>?> _getParamsFromShareMedia(SharedMediaFile shareMedia, String? subPath, int? maxSize) async {
-    logger.i("XXX - SharedMediaFile:$shareMedia");
+    logger.i("ShareHelper - _getParamsFromShareMedia - SharedMediaFile:$shareMedia");
     // path
     if (shareMedia.path.isEmpty) {
-      logger.e("XXX - _getParamsFromShareMedia - path is empty");
+      logger.e("ShareHelper - _getParamsFromShareMedia - path is empty");
       return null;
     }
     File file = File(shareMedia.path);
     if (!file.existsSync()) {
-      logger.e("XXX - _getParamsFromShareMedia - file is empty");
+      logger.e("ShareHelper - _getParamsFromShareMedia - file is empty");
       return null;
     }
     // type

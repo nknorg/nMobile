@@ -19,6 +19,8 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/share.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
@@ -34,6 +36,7 @@ import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
@@ -44,6 +47,10 @@ class ChatHomeScreen extends BaseStateFulWidget {
 
 class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with AutomaticKeepAliveClientMixin, RouteAware, Tag {
   GlobalKey _floatingActionKey = GlobalKey();
+
+  Completer loginCompleter = Completer();
+  StreamSubscription? _intentDataTextStreamSubscription;
+  StreamSubscription? _intentDataMediaStreamSubscription;
 
   String? dbUpdateTip;
   StreamSubscription? _upgradeTipListen;
@@ -80,6 +87,38 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       lastCheckTopicsAt = int.tryParse(value?.toString() ?? "0") ?? 0;
     });
 
+    // For sharing images coming from outside the app while the app is in the memory
+    _intentDataMediaStreamSubscription = ReceiveSharingIntent.getMediaStream().listen((List<SharedMediaFile>? values) async {
+      if (values == null || values.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithFiles(this.context, values);
+    }, onError: (err, stack) {
+      handleError(err, stack);
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataTextStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String? value) async {
+      if (value == null || value.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithTexts(this.context, [value]);
+    }, onError: (err, stack) {
+      handleError(err, stack);
+    });
+
+    // For sharing images coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile>? values) async {
+      if (values == null || values.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithFiles(this.context, values);
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String? value) async {
+      if (value == null || value.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithTexts(this.context, [value]);
+    });
+
     // db
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
       setState(() {
@@ -102,10 +141,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           if (between >= Global.clientReAuthGapMs) {
             _tryAuth(); // await
           } else {
+            loginCompleter.complete();
             clientCommon.connectCheck(force: true); // await
           }
         }
       } else if (application.isGoBackground(states)) {
+        loginCompleter = Completer();
         appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
@@ -113,6 +154,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.client != null && status == ClientConnectStatus.connected) {
+        if (!(loginCompleter.isCompleted == true)) {
+          loginCompleter.complete();
+        }
         // topic subscribe+permission
         if (firstConnect) {
           firstConnect = false;
@@ -189,6 +233,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   @override
   void dispose() {
+    _intentDataTextStreamSubscription?.cancel();
+    _intentDataMediaStreamSubscription?.cancel();
     _upgradeTipListen?.cancel();
     _dbOpenedSubscription?.cancel();
     _contactMeUpdateSubscription?.cancel();

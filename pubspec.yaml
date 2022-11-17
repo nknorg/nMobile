@@ -63,6 +63,10 @@ dependencies:
   flutter_local_notifications: ^9.6.1
   background_fetch: ^1.1.0
   fixnum: ^1.0.1
+  receive_sharing_intent:
+    git:
+      url: https://www.github.com/KasemJaffer/receive_sharing_intent.git
+      ref: master
   #  get: ^4.3.8
   #  provider: ^6.0.0
   #  auto_route: ^2.3.0
