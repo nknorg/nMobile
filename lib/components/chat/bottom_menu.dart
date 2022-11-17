@@ -129,9 +129,9 @@ class ChatBottomMenu extends StatelessWidget {
         "name": name,
         "fileExt": fileExt,
         "mimeType": mimeType,
-        // "width": width,
-        // "height": height,
-        // "duration": duration,
+        "width": null,
+        "height": null,
+        "duration": null,
       };
       // thumbnail
       if ((mimeType != null) && mimeType.isNotEmpty) {

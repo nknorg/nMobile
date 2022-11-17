@@ -400,5 +400,6 @@
   "waiting_for_data_to_sync": "等待數據同步",
   "no_permission_join_group": "還未獲得入群權限，請稍後再試。",
   "no_permission_action": "無權進行此操作",
-  "upgrade_db_tips": "數據庫升級中,請勿退出app或離開此頁面。"
+  "upgrade_db_tips": "數據庫升級中,請勿退出app或離開此頁面。",
+  "share": "分享"
 }

@@ -110,7 +110,7 @@ class FileHelper {
 
   static bool isImageByExt(String? fileExt) {
     if (fileExt == null || fileExt.isEmpty) return false;
-    List<String> images = ["bmp", "jpg", "png", "tif", "gif", "pcx", "tga", "exif", "fpx", "svg", "psd", "cdr", "pcd", "dxf", "ufo", "eps", "ai", "raw", "wmf", "webp", "avif", "apng"];
+    List<String> images = ["bmp", "jpg", "jpeg", "png", "tif", "gif", "pcx", "tga", "exif", "fpx", "svg", "psd", "cdr", "pcd", "dxf", "ufo", "eps", "ai", "raw", "wmf", "webp", "avif", "apng"];
     bool isImage = false;
     images.forEach((element) {
       if (!isImage) isImage = fileExt.toLowerCase().contains(element.toLowerCase());

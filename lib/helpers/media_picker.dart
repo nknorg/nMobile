@@ -343,8 +343,9 @@ class MediaPicker {
         "name": null,
         "fileExt": ext.isEmpty ? null : ext,
         "mimeType": mimetype,
-        // "width": width,
-        // "height": height,
+        "width": null,
+        "height": null,
+        "duration": null,
       };
       logger.i("MediaPicker - takeImage - picked success - params:${params.toString()}");
       return params;
