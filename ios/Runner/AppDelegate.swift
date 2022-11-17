@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import Sentry
+import receive_sharing_intent
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -38,10 +39,22 @@ import Sentry
         NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
         
-        //return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-        return true;
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        // return true; // FIXED: with no share data
     }
     
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        let sharingIntent = SwiftReceiveSharingIntentPlugin.instance
+        if sharingIntent.hasMatchingSchemePrefix(url: url) {
+            return sharingIntent.application(app, open: url, options: options)
+        }
+
+        // For example
+        // return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
+        // return false
+        return super.application(app, open: url, options:options)
+    }
+
     func registerNotification() {
         if(!UserDefaults.standard.bool(forKey: "Notification")) {
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
