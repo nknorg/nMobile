@@ -34,6 +34,10 @@ target 'Runner' do
   pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '7.28.0'
   
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  target 'Sharing Extension' do
+      inherit! :search_paths
+  end
 end
 
 post_install do |installer|
