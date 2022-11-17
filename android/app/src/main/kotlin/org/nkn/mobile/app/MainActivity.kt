@@ -1,5 +1,6 @@
 package org.nkn.mobile.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.WindowManager
@@ -7,8 +8,8 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
 import org.nkn.mobile.app.channels.impl.Common
-import org.nkn.mobile.app.push.APNSPush
 import org.nkn.mobile.app.crypto.Crypto
+import org.nkn.mobile.app.push.APNSPush
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -19,6 +20,11 @@ class MainActivity : FlutterFragmentActivity() {
     // var blurWindow: BlurWindow? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (intent.getIntExtra("org.chromium.chrome.extra.TASK_ID", -1) == this.taskId) {
+            this.finish()
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        }
         super.onCreate(savedInstanceState)
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         instance = this

@@ -25,17 +25,20 @@ import 'package:nmobile/screens/contact/add.dart';
 import 'package:nmobile/screens/contact/home_empty.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/time.dart';
 
 class ContactHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/home';
-  static final String argIsSelect = "is_select";
+  static final String argNavTitle = "nav_title";
+  static final String argSelectContact = "select_contact";
+  static final String argSelectGroup = "select_group";
 
-  static Future go(BuildContext? context, {bool isSelect = false}) {
+  static Future go(BuildContext? context, {String? title, bool selectContact = false, bool selectGroup = false}) {
     if (context == null) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
-      argIsSelect: isSelect,
+      argNavTitle: title,
+      argSelectContact: selectContact,
+      argSelectGroup: selectGroup,
     });
   }
 
@@ -48,7 +51,12 @@ class ContactHomeScreen extends BaseStateFulWidget {
 }
 
 class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen> {
+  String _navTitle = "";
+
+  bool _selectContact = false;
+  bool _selectGroup = false;
   bool _isSelect = false;
+
   bool _pageLoaded = false;
 
   StreamSubscription? _addContactSubscription;
@@ -76,7 +84,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
   @override
   void onRefreshArguments() {
-    this._isSelect = widget.arguments?[ContactHomeScreen.argIsSelect] ?? false;
+    this._navTitle = widget.arguments?[ContactHomeScreen.argNavTitle] ?? "";
+    this._selectContact = widget.arguments?[ContactHomeScreen.argSelectContact] ?? false;
+    this._selectGroup = widget.arguments?[ContactHomeScreen.argSelectGroup] ?? false;
+    this._isSelect = _selectContact || _selectGroup;
   }
 
   @override
@@ -193,7 +204,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       friends.addAll(result);
       if (result.length < limit) break;
     }
-    List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
+    friends = (!this._isSelect || this._selectContact) ? friends : [];
     // topic
     List<TopicSchema> topics = [];
     for (int offset = 0; true; offset += limit) {
@@ -201,7 +212,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       topics.addAll(result);
       if (result.length < limit) break;
     }
-    topics = (this._isSelect == true) ? [] : topics; // can not move this line to setState
+    topics = (!this._isSelect || this._selectGroup) ? topics : []; // can not move this line to setState
     // group
     List<PrivateGroupSchema> groups = [];
     for (int offset = 0; true; offset += limit) {
@@ -209,7 +220,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       groups.addAll(result);
       if (result.length < limit) break;
     }
-    groups = (this._isSelect == true) ? [] : groups; // can not move this line to setState
+    groups = (!this._isSelect || this._selectGroup) ? groups : []; // can not move this line to setState
+    // strangers
+    List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
 
     setState(() {
       _pageLoaded = true;
@@ -255,13 +268,21 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   _onTapTopicItem(TopicSchema item) async {
-    //TopicProfileScreen.go(context, schema: item);
-    ChatMessagesScreen.go(context, item);
+    if (this._isSelect) {
+      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, item);
+    } else {
+      //TopicProfileScreen.go(context, schema: item);
+      ChatMessagesScreen.go(context, item);
+    }
   }
 
   _onTapGroupItem(PrivateGroupSchema item) async {
-    //GroupProfileScreen.go(context, schema: item);
-    ChatMessagesScreen.go(context, item);
+    if (this._isSelect) {
+      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, item);
+    } else {
+      //GroupProfileScreen.go(context, schema: item);
+      ChatMessagesScreen.go(context, item);
+    }
   }
 
   @override
@@ -299,7 +320,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
-        title: Global.locale((s) => s.contacts, ctx: context),
+        title: this._navTitle.isEmpty ? Global.locale((s) => s.contacts, ctx: context) : this._navTitle,
         actions: [
           IconButton(
             icon: Asset.iconSvg(
