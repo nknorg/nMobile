@@ -420,6 +420,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "setting_deny_notification":
             MessageLookupByLibrary.simpleMessage("已關閉對方發送離線消息通知"),
         "settings": MessageLookupByLibrary.simpleMessage("設置"),
+        "share": MessageLookupByLibrary.simpleMessage("分享"),
         "show_wallet_address_desc":
             MessageLookupByLibrary.simpleMessage("掃一掃二維碼，可以轉賬給我"),
         "slide_to_cancel": MessageLookupByLibrary.simpleMessage("< 左滑取消 <"),

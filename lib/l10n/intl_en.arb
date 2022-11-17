@@ -400,5 +400,6 @@
   "waiting_for_data_to_sync": "waiting for data to sync",
   "no_permission_join_group": "Have not been granted permission to join the group, please try again later.",
   "no_permission_action": "Not authorized to perform this operation",
-  "upgrade_db_tips": "During the database upgrade, please do not exit the app or leave this page."
+  "upgrade_db_tips": "During the database upgrade, please do not exit the app or leave this page.",
+  "share": "Share"
 }

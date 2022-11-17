@@ -495,6 +495,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "setting_deny_notification": MessageLookupByLibrary.simpleMessage(
             "Have Denied Remote Notification"),
         "settings": MessageLookupByLibrary.simpleMessage("Settings"),
+        "share": MessageLookupByLibrary.simpleMessage("Share"),
         "show_wallet_address_desc": MessageLookupByLibrary.simpleMessage(
             "Scan the QR code, you can transfer it to me"),
         "slide_to_cancel":
