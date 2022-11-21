@@ -34,11 +34,22 @@ class Upgrade5to6 {
 
     // alter table
     if ((await DB.checkTableExists(db, MessageStorage.tableName))) {
-      await db.execute('ALTER TABLE ${MessageStorage.tableName} ADD COLUMN group_id VARCHAR(200) DEFAULT ""');
-      await db.execute('CREATE INDEX `index_messages_target_id_topic_group_type` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `type`)');
-      await db.execute('CREATE INDEX `index_messages_status_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `target_id`, `topic`, `group_id`)');
-      await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `is_delete`, `target_id`, `topic`, `group_id`)');
-      await db.execute('CREATE INDEX `index_messages_target_id_topic_group_is_delete_type_send_at` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `is_delete`, `type`, `send_at`)');
+      try {
+        bool exists = await DB.checkColumnExists(db, MessageStorage.tableName, 'group_id');
+        if (exists == false) {
+          await db.execute('ALTER TABLE ${MessageStorage.tableName} ADD COLUMN group_id VARCHAR(200) DEFAULT ""');
+        }
+      } catch (e) {
+        // fore_version be set before
+      }
+      try {
+        await db.execute('CREATE INDEX `index_messages_target_id_topic_group_type` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `type`)');
+        await db.execute('CREATE INDEX `index_messages_status_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `target_id`, `topic`, `group_id`)');
+        await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic_group` ON `${MessageStorage.tableName}` (`status`, `is_delete`, `target_id`, `topic`, `group_id`)');
+        await db.execute('CREATE INDEX `index_messages_target_id_topic_group_is_delete_type_send_at` ON `${MessageStorage.tableName}` (`target_id`, `topic`, `group_id`, `is_delete`, `type`, `send_at`)');
+      } catch (e) {
+        // fore_version be set before
+      }
     }
   }
 }
