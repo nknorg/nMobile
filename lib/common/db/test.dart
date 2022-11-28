@@ -92,7 +92,7 @@ Future addTestData(
     isTop: (0 % 2 == 0) ? true : false,
     deviceToken: Uuid().v4(),
   );
-  Map<String, dynamic> entity1 = await _contact.toMap();
+  Map<String, dynamic> entity1 = _contact.toMap();
   logger.i("DB - _addTestData - contact start - eg:$entity1");
   // final batch1 = db.batch();
   for (var i = 0; i < (contactCount - 1); i++) {

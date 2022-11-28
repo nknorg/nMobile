@@ -181,6 +181,10 @@ class ContactSchema {
     return data?['notes'];
   }
 
+  List<String> get mappedAddress {
+    return (data?['mappedAddress'] ?? []).cast<String>();
+  }
+
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {
@@ -193,14 +197,14 @@ class ContactSchema {
     return nknWalletAddress;
   }
 
-  Future<Map<String, dynamic>> toMap() async {
+  Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
     }
     if (nknWalletAddress?.isNotEmpty == true) {
       data?['nknWalletAddress'] = nknWalletAddress;
     } else {
-      data?['nknWalletAddress'] = await tryNknWalletAddress();
+      //   data?['nknWalletAddress'] = await tryNknWalletAddress();
     }
     if (notes?.isNotEmpty == true) {
       data?['notes'] = notes;
@@ -230,7 +234,7 @@ class ContactSchema {
     return map;
   }
 
-  static Future<ContactSchema> fromMap(Map e) async {
+  static ContactSchema fromMap(Map e) {
     var contact = ContactSchema(
       id: e['id'],
       clientAddress: e['address'] ?? "",
@@ -263,7 +267,7 @@ class ContactSchema {
         contact.data?.addAll(data);
       }
       contact.nknWalletAddress = data?['nknWalletAddress'];
-      contact.nknWalletAddress = await contact.tryNknWalletAddress();
+      // contact.nknWalletAddress = await contact.tryNknWalletAddress();
     }
     return contact;
   }
