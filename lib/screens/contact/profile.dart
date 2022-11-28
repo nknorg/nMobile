@@ -8,9 +8,11 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -28,16 +30,13 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
+import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
-
-import '../../common/name_service/resolver.dart';
-import '../../components/button/button_icon.dart';
-import '../../utils/util.dart';
-import '../common/scanner.dart';
+import 'package:nmobile/utils/util.dart';
 
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
@@ -414,7 +413,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
-    List<String> mappeds = (_contactSchema!.data?['mappedAddress'] ?? []).cast<String>();
+    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -456,7 +455,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   backgroundColor: application.theme.strongColor,
                   onPressed: () async {
                     List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contactSchema,  modified.toSet().toList(), notify: true);
+                    await contactCommon.setMappedAddress(_contactSchema, modified.toSet().toList(), notify: true);
                     Navigator.pop(this.context);
                   },
                 ),
@@ -585,6 +584,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       ),
                     ),
 
+                    /// wallet
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                       onPressed: () {
@@ -613,9 +613,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                         ],
                       ),
                     ),
-
                     SizedBox(height: 24),
 
+                    /// mappedAddress
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -627,34 +627,28 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           icon: Asset.iconSvg('scan', width: 24, color: application.theme.primaryColor),
                           width: 48,
                           onPressed: () async {
-                            var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
-                            logger.i("$TAG - QR_DATA:$qrData");
-                            if (qrData == null) return;
-                            String address = qrData.toString();
-
+                            String? qrData = (await Navigator.pushNamed(context, ScannerScreen.routeName))?.toString();
+                            logger.i("$TAG - mapped_address - qr_data:$qrData");
+                            if (qrData == null || qrData.isEmpty) return;
                             var resolver = Resolver();
-                            var res = await resolver.resolve(address);
+                            var res = await resolver.resolve(qrData);
                             if (res != _contactSchema?.clientAddress) {
                               Toast.show(Global.locale((s) => s.mapped_address_does_not_match, ctx: context));
                               return;
                             }
-                            List<String> added = mappeds..add(address);
-                            await contactCommon.setMappedAddress(_contactSchema,  added.toSet().toList(), notify: true);
+                            List<String> added = mappeds..add(qrData);
+                            await contactCommon.setMappedAddress(_contactSchema, added.toSet().toList(), notify: true);
                           },
                         ),
                       ],
                     ),
-
                     SizedBox(height: 24),
-
                     PhysicalModel(
                       elevation: 0,
-                      clipBehavior:  Clip.antiAlias,
-                      color:application.theme.backgroundColor,
-                      borderRadius:  BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
-                      child: Column(
-                        children: mappedWidget,
-                      ),
+                      clipBehavior: Clip.antiAlias,
+                      color: application.theme.backgroundColor,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                      child: Column(children: mappedWidget),
                     ),
                   ],
                 ),
@@ -667,7 +661,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
-    List<String> mappeds = (_contactSchema!.data?['mappedAddress'] ?? []).cast<String>();
+    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -709,7 +703,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   backgroundColor: application.theme.strongColor,
                   onPressed: () async {
                     List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contactSchema,  modified.toSet().toList(), notify: true);
+                    await contactCommon.setMappedAddress(_contactSchema, modified.toSet().toList(), notify: true);
                     Navigator.pop(this.context);
                   },
                 ),
@@ -829,12 +823,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               ),
               PhysicalModel(
                 elevation: 0,
-                clipBehavior:  Clip.antiAlias,
-                color:application.theme.backgroundColor,
-                borderRadius:  BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
-                child: Column(
-                  children: mappedWidget,
-                ),
+                clipBehavior: Clip.antiAlias,
+                color: application.theme.backgroundColor,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                child: Column(children: mappedWidget),
               ),
             ],
           ),

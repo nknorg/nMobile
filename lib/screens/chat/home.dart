@@ -674,8 +674,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                                 contact = await contactCommon.add(_contact, notify: true);
                               }
                               if (contact == null) return;
-                              List<String> mappeds = (contact.data?['mappedAddress'] ?? []).cast<String>();
-                              List<String> added = mappeds..add(address);
+                              List<String> added = contact.mappedAddress..add(address);
                               await contactCommon.setMappedAddress(contact, added.toSet().toList(), notify: true);
                               ChatMessagesScreen.go(context, contact);
                             }
