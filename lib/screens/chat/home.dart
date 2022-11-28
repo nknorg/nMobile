@@ -539,7 +539,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      SizedBox(
+                      /*SizedBox(
                         height: btnSize,
                         child: Align(
                           alignment: Alignment.centerRight,
@@ -558,7 +558,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           ),
                         ),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 10),*/
                       SizedBox(
                         height: btnSize,
                         child: Align(
@@ -610,7 +610,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Button(
+                        /*Button(
                           width: btnSize,
                           height: btnSize,
                           fontColor: application.theme.fontLightColor,
@@ -625,7 +625,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             );
                           },
                         ),
-                        SizedBox(height: 10),
+                        SizedBox(height: 10),*/
                         Button(
                           width: btnSize,
                           height: btnSize,
