@@ -53,7 +53,7 @@ class ContactStorage with Tag {
   Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.clientAddress.isEmpty) return null;
-    Map<String, dynamic> entity = await schema.toMap();
+    Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
         int? id;
@@ -80,7 +80,7 @@ class ContactStorage with Tag {
           });
         }
         if (id != null) {
-          ContactSchema schema = await ContactSchema.fromMap(entity);
+          ContactSchema schema = ContactSchema.fromMap(entity);
           schema.id = id;
           logger.v("$TAG - insert - success - schema:$schema");
           return schema;
@@ -109,7 +109,7 @@ class ContactStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        ContactSchema schema = await ContactSchema.fromMap(res.first);
+        ContactSchema schema = ContactSchema.fromMap(res.first);
         logger.v("$TAG - query - success - contactId:$contactId - schema:$schema");
         return schema;
       }
@@ -135,7 +135,7 @@ class ContactStorage with Tag {
         );
       });
       if (res != null && res.length > 0) {
-        ContactSchema schema = await ContactSchema.fromMap(res.first);
+        ContactSchema schema = ContactSchema.fromMap(res.first);
         logger.v("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
       }
@@ -171,7 +171,7 @@ class ContactStorage with Tag {
         for (var i = 0; i < res.length; i++) {
           if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
           Map<String, dynamic> map = res[i][0];
-          ContactSchema schema = await ContactSchema.fromMap(map);
+          ContactSchema schema = ContactSchema.fromMap(map);
           schemaList.add(schema);
         }
         logger.v("$TAG - queryListByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
@@ -203,13 +203,12 @@ class ContactStorage with Tag {
         logger.v("$TAG - queryList - empty - contactType:$contactType");
         return [];
       }
-      List<Future<ContactSchema>> futures = <Future<ContactSchema>>[];
+      List<ContactSchema> results = <ContactSchema>[];
       String logText = '';
       res.forEach((map) {
         logText += "\n      $map";
-        futures.add(ContactSchema.fromMap(map));
+        results.add(ContactSchema.fromMap(map));
       });
-      List<ContactSchema> results = await Future.wait(futures);
       logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e, st) {
@@ -431,16 +430,20 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setRemarkProfile(int? contactId, Map<String, dynamic>? extraInfo) async {
+  Future<bool> setRemarkProfile(int? contactId, String? avatarLocalPath, String? firstName, String? lastName, {Map<String, dynamic>? oldExtraInfo}) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
+    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
+    data['avatar'] = avatarLocalPath;
+    data['firstName'] = firstName;
+    data['lastName'] = lastName;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
               return txn.update(
                 tableName,
                 {
-                  'data': (extraInfo?.isNotEmpty == true) ? jsonEncode(extraInfo) : null,
+                  'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'id = ?',
@@ -448,10 +451,10 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - extraInfo:$extraInfo");
+              logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
-            logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - extraInfo:$extraInfo");
+            logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -479,10 +482,10 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+              logger.v("$TAG - setNotes - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
-            logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$notes - old:$oldExtraInfo");
+            logger.w("$TAG - setNotes - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -491,34 +494,66 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setMappedAddress(int? contactId, List<String> mapped, {Map<String, dynamic>? oldExtraInfo}) async {
+  Future<bool> setWalletAddress(int? contactId, String? walletAddress, {Map<String, dynamic>? oldExtraInfo}) async {
+    if (db?.isOpen != true) return false;
+    if (contactId == null || contactId == 0) return false;
+    if (walletAddress == null || walletAddress.isEmpty) return false;
+    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
+    data['nknWalletAddress'] = walletAddress;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setWalletAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              return true;
+            }
+            logger.w("$TAG - setWalletAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setMappedAddress(int? contactId, List<String>? mapped, {Map<String, dynamic>? oldExtraInfo}) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
     data['mappedAddress'] = mapped;
     return await _queue.add(() async {
-      try {
-        int? count = await db?.transaction((txn) {
-          return txn.update(
-            tableName,
-            {
-              'data': jsonEncode(data),
-              'update_at': DateTime.now().millisecondsSinceEpoch,
-            },
-            where: 'id = ?',
-            whereArgs: [contactId],
-          );
-        });
-        if (count != null && count > 0) {
-          logger.v("$TAG - setNotes - success - contactId:$contactId - update:$data - new:$mapped - old:$oldExtraInfo");
-          return true;
-        }
-        logger.w("$TAG - setNotes - fail - contactId:$contactId - update:$data - new:$mapped - old:$oldExtraInfo");
-      } catch (e, st) {
-        handleError(e, st);
-      }
-      return false;
-    }) ??
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setMappedAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              return true;
+            }
+            logger.w("$TAG - setMappedAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
         false;
   }
 }
