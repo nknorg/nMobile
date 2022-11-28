@@ -46,7 +46,11 @@ class ContactCommon with Tag {
       if (success) contact.profileVersion = profileVersion;
     }
     if (needWallet) {
-      contact.nknWalletAddress = await contact.tryNknWalletAddress();
+      if ((contact.nknWalletAddress == null) || (contact.nknWalletAddress?.isEmpty == true)) {
+        String? nknWalletAddress = await contact.tryNknWalletAddress();
+        bool success = await setWalletAddress(contact, nknWalletAddress);
+        if (success) contact.nknWalletAddress = nknWalletAddress;
+      }
     }
     if (fetchDeviceToken) {
       DeviceToken.get(platform: PlatformName.get(), appVersion: int.tryParse(Global.build)).then((deviceToken) {
@@ -66,7 +70,6 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
-    schema.nknWalletAddress = await schema.tryNknWalletAddress();
     if (checkDuplicated) {
       ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
       if (exist != null) {
@@ -74,6 +77,7 @@ class ContactCommon with Tag {
         return null;
       }
     }
+    schema.nknWalletAddress = await schema.tryNknWalletAddress();
     ContactSchema? added = await ContactStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
@@ -96,7 +100,13 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    return await ContactStorage.instance.queryByClientAddress(clientAddress);
+    ContactSchema? _schema = await ContactStorage.instance.queryByClientAddress(clientAddress);
+    if ((_schema != null) && ((_schema.nknWalletAddress == null) || (_schema.nknWalletAddress?.isEmpty == true))) {
+      String? nknWalletAddress = await _schema.tryNknWalletAddress();
+      bool success = await setWalletAddress(_schema, nknWalletAddress);
+      if (success) _schema.nknWalletAddress = nknWalletAddress;
+    }
+    return _schema;
   }
 
   Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
@@ -183,23 +193,29 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
-    if (old == null || old.id == 0) return Future.value(false);
+  Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
+    if (schema == null || schema.id == 0) return Future.value(false);
     bool success = await ContactStorage.instance.setRemarkProfile(
-      old.id,
-      {'avatar': avatarLocalPath, 'firstName': old.data?['firstName'], 'lasName': old.data?['lasName']},
+      schema.id,
+      avatarLocalPath,
+      schema.data?['firstName'],
+      schema.data?['lastName'],
+      oldExtraInfo: schema.data,
     );
-    if (success && notify) queryAndNotify(old.id);
+    if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setRemarkName(ContactSchema? old, String? firstName, String? lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
+  Future<bool> setRemarkName(ContactSchema? schema, String? firstName, String? lastName, {bool notify = false}) async {
+    if (schema == null || schema.id == 0) return false;
     bool success = await ContactStorage.instance.setRemarkProfile(
-      old.id,
-      {'avatar': old.data?['avatar'], 'firstName': firstName, 'lasName': lastName},
+      schema.id,
+      schema.data?['avatar'],
+      firstName,
+      lastName,
+      oldExtraInfo: schema.data,
     );
-    if (success && notify) queryAndNotify(old.id);
+    if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
@@ -210,7 +226,14 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setMappedAddress(ContactSchema? schema, List<String> mapped, {bool notify = false}) async {
+  Future<bool> setWalletAddress(ContactSchema? schema, String? walletAddress, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await ContactStorage.instance.setWalletAddress(schema.id, walletAddress, oldExtraInfo: schema.data);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
+  Future<bool> setMappedAddress(ContactSchema? schema, List<String>? mapped, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await ContactStorage.instance.setMappedAddress(schema.id, mapped, oldExtraInfo: schema.data);
     if (success && notify) queryAndNotify(schema.id);

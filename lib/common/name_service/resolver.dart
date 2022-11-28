@@ -1,5 +1,5 @@
-import '../../native/eth_resolver.dart' as native;
-import '../../native/dns_resolver.dart' as native;
+import 'package:nmobile/native/dns_resolver.dart' as native;
+import 'package:nmobile/native/eth_resolver.dart' as native;
 
 class Resolver {
   static native.EthResolverConfig ETH_RESOLVER_CONFIG = native.EthResolverConfig(
@@ -24,7 +24,6 @@ class Resolver {
   );
 
   static native.DnsResolverConfig DNS_RESOLVER_CONFIG = native.DnsResolverConfig(dnsServer: '8.8.8.8:53');
-
 
   Future<String?> resolve(String address) async {
     String addr = address;
