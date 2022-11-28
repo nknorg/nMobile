@@ -656,27 +656,37 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );
-                            if (Validate.isNknChatIdentifierOk(address)) {
-                              var resolver = Resolver();
-                              var nknAddr = await resolver.resolve(address!);
-                              if (nknAddr == null || !Validate.isNknChatIdentifierOk(nknAddr)) {
-                                Toast.show(Global.locale((s) => s.error_client_address_format, ctx: context));
-                                return;
+                            if ((address != null) && address.isNotEmpty) {
+                              Resolver resolver = Resolver();
+                              String? clientAddress = await resolver.resolve(address);
+                              bool resolveOk = false;
+                              if ((clientAddress != null) && Validate.isNknChatIdentifierOk(clientAddress)) {
+                                resolveOk = true;
+                              } else {
+                                if (Validate.isNknChatIdentifierOk(address)) {
+                                  clientAddress = address;
+                                } else {
+                                  return;
+                                }
                               }
-                              ContactSchema? contact = await contactCommon.queryByClientAddress(nknAddr);
+                              ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
                               if (contact != null) {
                                 if (contact.type == ContactType.none) {
                                   bool success = await contactCommon.setType(contact.id, ContactType.stranger, notify: true);
                                   if (success) contact.type = ContactType.stranger;
                                 }
                               } else {
-                                ContactSchema? _contact = await ContactSchema.create(nknAddr, ContactType.stranger);
+                                ContactSchema? _contact = await ContactSchema.create(clientAddress, ContactType.stranger);
                                 contact = await contactCommon.add(_contact, notify: true);
                               }
                               if (contact == null) return;
-                              List<String> added = contact.mappedAddress..add(address);
-                              await contactCommon.setMappedAddress(contact, added.toSet().toList(), notify: true);
-                              ChatMessagesScreen.go(context, contact);
+                              if (resolveOk) {
+                                if (!contact.mappedAddress.contains(address)) {
+                                  List<String> added = contact.mappedAddress..add(address);
+                                  await contactCommon.setMappedAddress(contact, added.toSet().toList(), notify: true);
+                                }
+                              }
+                              await ChatMessagesScreen.go(context, contact);
                             }
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context); // floatActionBtn
                           },

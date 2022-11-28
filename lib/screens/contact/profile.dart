@@ -630,9 +630,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                             String? qrData = (await Navigator.pushNamed(context, ScannerScreen.routeName))?.toString();
                             logger.i("$TAG - mapped_address - qr_data:$qrData");
                             if (qrData == null || qrData.isEmpty) return;
-                            var resolver = Resolver();
-                            var res = await resolver.resolve(qrData);
-                            if (res != _contactSchema?.clientAddress) {
+                            Resolver resolver = Resolver();
+                            String? clientAddress = await resolver.resolve(qrData);
+                            if (clientAddress != _contactSchema?.clientAddress) {
                               Toast.show(Global.locale((s) => s.mapped_address_does_not_match, ctx: context));
                               return;
                             }
