@@ -135,6 +135,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     super.initState();
     // listen
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contactSchema?.id).listen((ContactSchema event) {
+      _initBurning(event);
+      _initNotification(event);
       setState(() {
         _contactSchema = event;
       });
@@ -176,8 +178,21 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       });
     });
 
-    // burn
-    int? burnAfterSeconds = _contactSchema?.options?.deleteAfterSeconds;
+    _initBurning(this._contactSchema);
+    _initNotification(this._contactSchema);
+
+    setState(() {});
+
+    // fetch
+    if (!_profileFetched && (_contactSchema?.isMe == false)) {
+      _profileFetched = true;
+      chatOutCommon.sendContactRequest(_contactSchema?.clientAddress, RequestType.header, _contactSchema?.profileVersion); // await
+      chatOutCommon.sendDeviceRequest(_contactSchema?.clientAddress); // await
+    }
+  }
+
+  _initBurning(ContactSchema? schema) {
+    int? burnAfterSeconds = schema?.options?.deleteAfterSeconds;
     _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
     if (_burnOpen) {
       _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
@@ -188,22 +203,15 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     if (_burnProgress < 0) _burnProgress = 0;
     _initBurnOpen = _burnOpen;
     _initBurnProgress = _burnProgress;
+  }
 
-    // notification
-    if (_contactSchema?.isMe == false) {
-      if (_contactSchema?.options?.notificationOpen != null) {
-        _notificationOpen = _contactSchema?.options?.notificationOpen ?? false;
+  _initNotification(ContactSchema? schema) {
+    if (schema?.isMe == false) {
+      if (schema?.options?.notificationOpen != null) {
+        _notificationOpen = schema?.options?.notificationOpen ?? false;
       } else {
         _notificationOpen = false;
       }
-    }
-    setState(() {});
-
-    // fetch
-    if (!_profileFetched && (_contactSchema?.isMe == false)) {
-      _profileFetched = true;
-      chatOutCommon.sendContactRequest(_contactSchema?.clientAddress, RequestType.header, _contactSchema?.profileVersion); // await
-      chatOutCommon.sendDeviceRequest(_contactSchema?.clientAddress); // await
     }
   }
 
@@ -812,22 +820,26 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 6),
-                child: Label(
-                  Global.locale((s) => s.mapped_address, ctx: context),
-                  type: LabelType.bodySmall,
-                  fontWeight: FontWeight.w600,
-                  softWrap: true,
-                ),
-              ),
-              PhysicalModel(
-                elevation: 0,
-                clipBehavior: Clip.antiAlias,
-                color: application.theme.backgroundColor,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
-                child: Column(children: mappedWidget),
-              ),
+              mappeds.length > 0
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 6),
+                      child: Label(
+                        Global.locale((s) => s.mapped_address, ctx: context),
+                        type: LabelType.bodySmall,
+                        fontWeight: FontWeight.w600,
+                        softWrap: true,
+                      ),
+                    )
+                  : SizedBox.shrink(),
+              mappeds.length > 0
+                  ? PhysicalModel(
+                      elevation: 0,
+                      clipBehavior: Clip.antiAlias,
+                      color: application.theme.backgroundColor,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                      child: Column(children: mappedWidget),
+                    )
+                  : SizedBox.shrink(),
             ],
           ),
           SizedBox(height: 28),
@@ -891,7 +903,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                                 activeColor: application.theme.primaryColor,
                                 inactiveColor: application.theme.fontColor2,
                                 divisions: burnValueArray.length - 1,
-                                label: burnTextArray()[_burnProgress],
+                                label: _burnProgress >= 0 ? burnTextArray()[_burnProgress] : "",
                                 onChanged: (value) {
                                   setState(() {
                                     _burnProgress = value.round();

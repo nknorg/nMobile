@@ -663,7 +663,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double borderSize = iconSize / 10;
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(_message.options);
+    int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(_message.options);
     int deleteAfterMs = (burnAfterSeconds ?? 1) * 1000;
 
     int deleteAt = _message.deleteAt ?? DateTime.now().millisecondsSinceEpoch;

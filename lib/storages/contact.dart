@@ -418,10 +418,10 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setOptionsBurn - success - contactId:$contactId - options:$options");
+              logger.v("$TAG - setBurning - success - contactId:$contactId - options:$options");
               return true;
             }
-            logger.w("$TAG - setOptionsBurn - fail - contactId:$contactId - options:$options");
+            logger.w("$TAG - setBurning - fail - contactId:$contactId - options:$options");
           } catch (e, st) {
             handleError(e, st);
           }

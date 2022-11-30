@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/private_group/avatar_editable.dart';
@@ -22,7 +24,6 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/private_group/subscribers.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 
@@ -49,12 +50,65 @@ class PrivateGroupProfileScreen extends BaseStateFulWidget {
 }
 
 class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGroupProfileScreen> {
+  static List<Duration> burnValueArray = [
+    Duration(seconds: 5),
+    Duration(seconds: 10),
+    Duration(seconds: 30),
+    Duration(minutes: 1),
+    Duration(minutes: 5),
+    Duration(minutes: 10),
+    Duration(minutes: 30),
+    Duration(hours: 1),
+    Duration(hours: 6),
+    Duration(hours: 12),
+    Duration(days: 1),
+    Duration(days: 7),
+  ];
+
+  static List<String> burnTextArray() {
+    return [
+      Global.locale((s) => s.burn_5_seconds),
+      Global.locale((s) => s.burn_10_seconds),
+      Global.locale((s) => s.burn_30_seconds),
+      Global.locale((s) => s.burn_1_minute),
+      Global.locale((s) => s.burn_5_minutes),
+      Global.locale((s) => s.burn_10_minutes),
+      Global.locale((s) => s.burn_30_minutes),
+      Global.locale((s) => s.burn_1_hour),
+      Global.locale((s) => s.burn_6_hour),
+      Global.locale((s) => s.burn_12_hour),
+      Global.locale((s) => s.burn_1_day),
+      Global.locale((s) => s.burn_1_week),
+    ];
+  }
+
+  static String getStringFromSeconds(int seconds) {
+    int currentIndex = -1;
+    for (int index = 0; index < burnValueArray.length; index++) {
+      Duration duration = burnValueArray[index];
+      if (seconds == duration.inSeconds) {
+        currentIndex = index;
+        break;
+      }
+    }
+    if (currentIndex == -1) {
+      return '';
+    } else {
+      return burnTextArray()[currentIndex];
+    }
+  }
+
   StreamSubscription? _updatePrivateGroupSubscription;
   StreamSubscription? _updatePrivateGroupItemSubscription;
 
   PrivateGroupSchema? _privateGroup;
 
   bool _isOwner = false;
+
+  bool _initBurnOpen = false;
+  int _initBurnProgress = -1;
+  bool _burnOpen = false;
+  int _burnProgress = -1;
 
   @override
   void onRefreshArguments() {
@@ -66,6 +120,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     super.initState();
     // listen
     _updatePrivateGroupSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((PrivateGroupSchema event) {
+      _initBurning(event);
       setState(() {
         _privateGroup = event;
         _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
@@ -78,6 +133,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
 
   @override
   void dispose() {
+    _updateBurnIfNeed();
     _updatePrivateGroupSubscription?.cancel();
     _updatePrivateGroupItemSubscription?.cancel();
     super.dispose();
@@ -96,7 +152,23 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     if (this._privateGroup == null) return;
     _isOwner = privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.getPublicKey());
 
+    _initBurning(this._privateGroup);
+
     setState(() {});
+  }
+
+  _initBurning(PrivateGroupSchema? privateGroup) {
+    int? burnAfterSeconds = privateGroup?.options?.deleteAfterSeconds;
+    _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
+    if (_burnOpen) {
+      _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
+      if (burnAfterSeconds != null && burnAfterSeconds > burnValueArray.last.inSeconds) {
+        _burnProgress = burnValueArray.length - 1;
+      }
+    }
+    if (_burnProgress < 0) _burnProgress = 0;
+    _initBurnOpen = _burnOpen;
+    _initBurnProgress = _burnProgress;
   }
 
   _selectAvatarPicture() async {
@@ -119,6 +191,18 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     }
 
     privateGroupCommon.updateGroupAvatar(_privateGroup?.groupId, remarkAvatarLocalPath, notify: true); // await
+  }
+
+  _updateBurnIfNeed() {
+    if (_burnOpen == _initBurnOpen && _burnProgress == _initBurnProgress) return;
+    int _burnValue;
+    if (!_burnOpen || _burnProgress < 0) {
+      _burnValue = 0;
+    } else {
+      _burnValue = burnValueArray[_burnProgress].inSeconds;
+    }
+    _privateGroup?.options?.deleteAfterSeconds = _burnValue;
+    privateGroupCommon.setOptionsBurning(_privateGroup?.groupId, _burnValue, notify: true); // await
   }
 
   _invitee() async {
@@ -164,6 +248,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
             SizedBox(height: 36),
 
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 /// name
                 TextButton(
@@ -264,10 +349,119 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
             ),
             SizedBox(height: 20),
 
+            /// burn
+            TextButton(
+              style: _buttonStyle(topRadius: true, botRadius: true, topPad: 15, botPad: 15),
+              onPressed: () {
+                if (_isOwner) {
+                  setState(() {
+                    _burnOpen = !_burnOpen;
+                  });
+                }
+              },
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
+                      SizedBox(width: 10),
+                      Label(
+                        Global.locale((s) => s.burn_after_reading, ctx: context),
+                        type: LabelType.bodyRegular,
+                        color: application.theme.fontColor1,
+                      ),
+                      Spacer(),
+                      _isOwner
+                          ? CupertinoSwitch(
+                              value: _burnOpen,
+                              activeColor: application.theme.primaryColor,
+                              onChanged: (value) {
+                                setState(() {
+                                  _burnOpen = value;
+                                });
+                              },
+                            )
+                          : Label(
+                              _burnOpen ? (_burnProgress >= 0 ? burnTextArray()[_burnProgress] : "") : Global.locale((s) => s.close, ctx: context),
+                              type: LabelType.bodyRegular,
+                              color: application.theme.fontColor2,
+                              overflow: TextOverflow.fade,
+                              textAlign: TextAlign.right,
+                            ),
+                    ],
+                  ),
+                  _isOwner
+                      ? ExpansionLayout(
+                          isExpanded: _burnOpen,
+                          child: Container(
+                            padding: EdgeInsets.only(top: 10),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Icon(Icons.alarm_on, size: 24, color: application.theme.primaryColor),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 16),
+                                        child: Label(
+                                          (!_burnOpen || _burnProgress < 0) ? Global.locale((s) => s.off, ctx: context) : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
+                                          type: LabelType.bodyRegular,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      Slider(
+                                        value: _burnProgress >= 0 ? _burnProgress.roundToDouble() : 0,
+                                        min: 0,
+                                        max: (burnValueArray.length - 1).roundToDouble(),
+                                        activeColor: application.theme.primaryColor,
+                                        inactiveColor: application.theme.fontColor2,
+                                        divisions: burnValueArray.length - 1,
+                                        label: _burnProgress >= 0 ? burnTextArray()[_burnProgress] : "",
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _burnProgress = value.round();
+                                            if (_burnProgress > burnValueArray.length - 1) {
+                                              _burnProgress = burnValueArray.length - 1;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : SizedBox.shrink(),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 6),
+              child: Label(
+                (!_burnOpen || _burnProgress < 0)
+                    ? Global.locale((s) => s.burn_after_reading_desc, ctx: context)
+                    : Global.locale(
+                        (s) => s.burn_after_reading_desc_disappear(
+                              burnTextArray()[_burnProgress],
+                            ),
+                        ctx: context),
+                type: LabelType.bodySmall,
+                fontWeight: FontWeight.w600,
+                softWrap: true,
+              ),
+            ),
+            SizedBox(height: 28),
+
             /// sendMsg
             TextButton(
               style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
               onPressed: () {
+                _updateBurnIfNeed();
                 ChatMessagesScreen.go(this.context, _privateGroup);
               },
               child: Row(
