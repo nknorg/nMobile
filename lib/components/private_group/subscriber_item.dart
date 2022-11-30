@@ -239,6 +239,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 await privateGroupCommon.kickOut(
                   this.widget.privateGroup?.groupId,
                   this.widget.privateGroupItem.invitee,
+                  notify: true,
                   toast: true,
                 );
               },

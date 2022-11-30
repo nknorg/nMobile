@@ -182,9 +182,9 @@ class ChatCommon with Tag {
       if (!message.isTopic && !message.isPrivateGroup && message.canBurning) {
         int? existSeconds = exist.options?.deleteAfterSeconds;
         int? existUpdateAt = exist.options?.updateBurnAfterAt;
-        int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-        int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
-        if (burnAfterSeconds != null && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
+        int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+        int? updateBurnAfterAt = MessageOptions.getOptionsBurningUpdateAt(message.options);
+        if ((burnAfterSeconds != null) && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
           // no same with self
           if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
             // side updated latest
@@ -304,10 +304,22 @@ class ChatCommon with Tag {
     }
     if (exists == null) return null;
     // sync
-    if ((clientCommon.address != null) && (message.from != message.to) && !message.isOutbound) {
-      if (!privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+    if ((message.from != message.to) && !message.isOutbound) {
+      if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
         String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
-        if (remoteVersion != exists.version) {
+        int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
+        int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+        if (nativeCommits < remoteCommits) {
+          // burning
+          if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
+            int? existSeconds = exists.options?.deleteAfterSeconds;
+            int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+            if ((burnAfterSeconds != null) && (burnAfterSeconds > 0) && (existSeconds != burnAfterSeconds)) {
+              exists.options?.deleteAfterSeconds = burnAfterSeconds;
+              await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
+            }
+          }
+          // request
           int nowAt = DateTime.now().millisecondsSinceEpoch;
           bool needRequestOptions = false;
           if (exists.optionsRequestedVersion != remoteVersion) {
@@ -416,7 +428,7 @@ class ChatCommon with Tag {
     if (!message.canBurning || message.isDelete) return message;
     if ((message.deleteAt != null) && ((message.deleteAt ?? 0) > 0)) return message;
     if ((message.status == MessageStatus.Sending) || (message.status == MessageStatus.SendFail)) return message; // status_read maybe updating
-    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
+    int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;

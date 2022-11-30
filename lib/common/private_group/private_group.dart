@@ -41,7 +41,7 @@ class PrivateGroupCommon with Tag {
   StreamSink<PrivateGroupItemSchema> get _updateGroupItemSink => _updateGroupItemController.sink;
   Stream<PrivateGroupItemSchema> get updateGroupItemStream => _updateGroupItemController.stream;
 
-  ///****************************************** Action *******************************************
+  ///****************************************** Member *******************************************
 
   PrivateGroupItemSchema? createInvitationModel(String? groupId, String? invitee, String? inviter, {int? permission, int? expiresMs}) {
     if (groupId == null || groupId.isEmpty) return null;
@@ -247,15 +247,14 @@ class PrivateGroupCommon with Tag {
     // members
     List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
     // group
-    List<String> splits = schemaGroup.version?.split(".") ?? [];
-    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(members));
     schemaGroup.count = members.length;
     bool success = await updateGroupVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
     return success ? schemaGroup : null;
   }
 
-  Future<bool> kickOut(String? groupId, String? target, {bool toast = false}) async {
+  Future<bool> kickOut(String? groupId, String? target, {bool notify = false, bool toast = false}) async {
     if (target == null || target.isEmpty) return false;
     if (groupId == null || groupId.isEmpty) return false;
     // check
@@ -306,7 +305,7 @@ class PrivateGroupCommon with Tag {
     blacker.inviterSignature = await genSignature(ownerPrivateKey, blacker.inviterRawData);
     blacker.inviteeSignature = "";
     if ((blacker.inviterSignature == null) || (blacker.inviterSignature?.isEmpty == true)) return false;
-    bool success = await updateGroupItemPermission(blacker, true, notify: true);
+    bool success = await updateGroupItemPermission(blacker, true, notify: notify);
     if (!success) {
       logger.e('$TAG - kickOut - kickOut member sql fail.');
       return false;
@@ -315,11 +314,10 @@ class PrivateGroupCommon with Tag {
     List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
     List<String> memberKeys = getInviteesKey(members);
     // group
-    List<String> splits = schemaGroup.version?.split(".") ?? [];
-    int commits = (splits.length >= 2 ? (int.tryParse(splits[0]) ?? 0) : 0) + 1;
+    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, memberKeys);
     schemaGroup.count = members.length;
-    success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
+    success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: notify);
     if (!success) {
       logger.e('$TAG - kickOut - kickOut group sql fail.');
       return false;
@@ -332,6 +330,62 @@ class PrivateGroupCommon with Tag {
         chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [blacker]).then((value) {
           chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
         });
+      }
+    });
+    return true;
+  }
+
+  ///****************************************** Action *******************************************
+
+  Future<bool> setOptionsBurning(String? groupId, int? burningSeconds, {bool notify = false, bool toast = false}) async {
+    if (groupId == null || groupId.isEmpty) return false;
+    String? selfAddress = clientCommon.address;
+    Uint8List? clientSeed = clientCommon.client?.seed;
+    if (selfAddress == null || clientSeed == null) return false;
+    // check
+    PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
+    if (schemaGroup == null) {
+      logger.e('$TAG - setOptionsBurning - has no group. - groupId:$groupId');
+      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
+      return false;
+    } else if (!isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
+      logger.w('$TAG - setOptionsBurning - no permission.');
+      if (toast) Toast.show("只有群主可做此操作"); // TODO:GG locale
+      return false;
+    }
+    // delete_sec
+    if (schemaGroup.options == null) schemaGroup.options = OptionsSchema();
+    schemaGroup.options?.deleteAfterSeconds = burningSeconds;
+    bool success = await setGroupOptionsBurn(schemaGroup, schemaGroup.options?.deleteAfterSeconds, notify: notify);
+    if (!success) {
+      logger.e('$TAG - setOptionsBurning - options sql fail.');
+      return false;
+    }
+    // signature
+    Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
+    schemaGroup.setSignature(signatureData);
+    if (signatureData == null || signatureData.isEmpty) {
+      logger.e('$TAG - setOptionsBurning - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
+      return false;
+    }
+    // version
+    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
+    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
+    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(members));
+    if ((schemaGroup.version == null) || (schemaGroup.version?.isEmpty == true)) {
+      logger.e('$TAG - setOptionsBurning - version update fail.');
+      return false;
+    }
+    success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: notify);
+    if (!success) {
+      logger.e('$TAG - setOptionsBurning - version sql fail.');
+      return false;
+    }
+    // sync members
+    members.forEach((m) {
+      if (m.invitee != selfAddress) {
+        chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
       }
     });
     return true;
@@ -392,12 +446,10 @@ class PrivateGroupCommon with Tag {
       exists = await addPrivateGroup(_newGroup, true, notify: true, checkDuplicated: false);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
-      List<String> splitsNative = exists.version?.split(".") ?? [];
-      int nativeVersionCommits = (splitsNative.length >= 2) ? (int.tryParse(splitsNative[0]) ?? 0) : 0;
-      List<String> splitsRemote = version.split(".");
-      int remoteVersionCommits = (splitsRemote.length >= 2) ? (int.tryParse(splitsRemote[0]) ?? 0) : 0;
+      int nativeVersionCommits = getPrivateGroupVersionCommits(exists.version) ?? 0;
+      int remoteVersionCommits = getPrivateGroupVersionCommits(version) ?? 0;
       if (nativeVersionCommits < remoteVersionCommits) {
-        bool verifiedGroup = await verifiedSignature(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), exists.signature);
+        bool verifiedGroup = await verifiedSignature(exists.ownerPublicKey, jsonEncode(exists.getRawDataMap()), signature);
         if (!verifiedGroup) {
           String? name = infos['name'];
           int? type = int.tryParse(infos['type']?.toString() ?? "");
@@ -410,7 +462,7 @@ class PrivateGroupCommon with Tag {
           if (deleteAfterSeconds != exists.options?.deleteAfterSeconds) {
             if (exists.options == null) exists.options = OptionsSchema();
             exists.options?.deleteAfterSeconds = deleteAfterSeconds;
-            await updateGroupOptions(groupId, exists.options);
+            await setGroupOptionsBurn(exists, exists.options?.deleteAfterSeconds, notify: true);
           }
           if (signature != exists.signature) {
             exists.setSignature(signature);
@@ -474,10 +526,8 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // version (can not gen version because members just not all, just check commits(version))
-    List<String> splitsNative = schemaGroup.version?.split(".") ?? [];
-    int nativeVersionCommits = (splitsNative.length >= 2) ? (int.tryParse(splitsNative[0]) ?? 0) : 0;
-    List<String> splitsRemote = remoteVersion.split(".");
-    int remoteVersionCommits = (splitsRemote.length >= 2) ? (int.tryParse(splitsRemote[0]) ?? 0) : 0;
+    int nativeVersionCommits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
+    int remoteVersionCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
     if (nativeVersionCommits > remoteVersionCommits) {
       logger.d('$TAG - updatePrivateGroupMembers - sender version lower. - remote_version:$remoteVersion - exists:$schemaGroup');
       return null;
@@ -600,10 +650,28 @@ class PrivateGroupCommon with Tag {
     }
   }
 
+  int? getPrivateGroupVersionCommits(String? version) {
+    if (version == null || version.isEmpty) return null;
+    List<String> splits = version.split(".");
+    if (splits.length < 2) return null;
+    int? commits = int.tryParse(splits[0]);
+    return commits ?? null;
+  }
+
   String genPrivateGroupVersion(int commits, String optionSignature, List<String> memberKeys) {
     memberKeys.sort((a, b) => a.compareTo(b));
     return "$commits.${hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberKeys.join(''))))}";
   }
+
+  /*String? increasePrivateGroupVersion(String? version) {
+    if (version == null || version.isEmpty) return null;
+    List<String> splits = version.split(".");
+    if (splits.length < 2) return null;
+    int? commits = int.tryParse(splits[0]);
+    if (commits == null) return null;
+    splits[0] = (commits + 1).toString() + ".";
+    return splits.join();
+  }*/
 
   Future<bool?> verifiedGroupVersion(PrivateGroupSchema? privateGroup, String? checkedVersion, {bool signVersion = false}) async {
     if (privateGroup == null) return null;
@@ -611,8 +679,7 @@ class PrivateGroupCommon with Tag {
     String? nativeVersion = privateGroup.version;
     if (nativeVersion == null || nativeVersion.isEmpty) return false;
     if (signVersion) {
-      List<String> splits = nativeVersion.split(".");
-      int commits = splits.length >= 2 ? (int.tryParse(splits[0]) ?? -1) : -1;
+      int commits = getPrivateGroupVersionCommits(nativeVersion) ?? -1;
       List<PrivateGroupItemSchema> members = await getMembersAll(privateGroup.groupId);
       String signVersion = genPrivateGroupVersion(commits, privateGroup.signature, getInviteesKey(members));
       return signVersion.isNotEmpty && (checkedVersion == nativeVersion) && (nativeVersion == signVersion);
@@ -683,10 +750,12 @@ class PrivateGroupCommon with Tag {
     return success;
   }
 
-  Future<bool> updateGroupOptions(String? groupId, OptionsSchema? options, {bool notify = false}) async {
-    if (groupId == null || groupId.isEmpty) return false;
-    bool success = await PrivateGroupStorage.instance.updateOptions(groupId, options?.toMap());
-    if (success && notify) queryAndNotifyGroup(groupId);
+  Future<bool> setGroupOptionsBurn(PrivateGroupSchema? schema, int? burningSeconds, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    OptionsSchema options = schema.options ?? OptionsSchema();
+    options.deleteAfterSeconds = burningSeconds ?? 0; // no options.updateBurnAfterAt
+    bool success = await PrivateGroupStorage.instance.updateOptions(schema.groupId, options.toMap());
+    if (success && notify) queryAndNotifyGroup(schema.groupId);
     return success;
   }
 

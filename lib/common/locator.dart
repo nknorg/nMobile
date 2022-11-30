@@ -9,7 +9,7 @@ import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/contact/contact.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/db/db.dart';
-import 'package:nmobile/common/private_group/prvaite_group.dart';
+import 'package:nmobile/common/private_group/private_group.dart';
 import 'package:nmobile/common/push/local_notification.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
