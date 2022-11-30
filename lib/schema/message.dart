@@ -359,11 +359,11 @@ class MessageSchema {
     // burn
     int? deleteAfterSeconds = extra?["deleteAfterSeconds"];
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-      this.options = MessageOptions.setContactBurningDeleteSec(this.options, deleteAfterSeconds);
+      this.options = MessageOptions.setOptionsBurningDeleteSec(this.options, deleteAfterSeconds);
     }
     int? burningUpdateAt = extra?["burningUpdateAt"];
     if (burningUpdateAt != null && burningUpdateAt > 0) {
-      this.options = MessageOptions.setContactBurningUpdateAt(this.options, burningUpdateAt);
+      this.options = MessageOptions.setOptionsBurningUpdateAt(this.options, burningUpdateAt);
     }
     // file
     int? size = int.tryParse(extra?["size"]?.toString() ?? "");
@@ -839,25 +839,25 @@ class MessageOptions {
     return options[MessageOptions.KEY_PRIVATE_GROUP_VERSION]?.toString();
   }
 
-  static Map<String, dynamic>? setContactBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
+  static Map<String, dynamic>? setOptionsBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
     return options;
   }
 
-  static int? getContactBurningDeleteSec(Map<String, dynamic>? options) {
+  static int? getOptionsBurningDeleteSec(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     var seconds = options[MessageOptions.KEY_DELETE_AFTER_SECONDS]?.toString();
     return int.tryParse(seconds ?? "");
   }
 
-  static Map<String, dynamic>? setContactBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
+  static Map<String, dynamic>? setOptionsBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
     return options;
   }
 
-  static int? getContactBurningUpdateAt(Map<String, dynamic>? options) {
+  static int? getOptionsBurningUpdateAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     return int.tryParse(update ?? "");
@@ -1241,8 +1241,8 @@ class MessageData {
   }
 
   static String getContactOptionsBurn(MessageSchema message) {
-    int? burnAfterSeconds = MessageOptions.getContactBurningDeleteSec(message.options);
-    int? updateBurnAfterAt = MessageOptions.getContactBurningUpdateAt(message.options);
+    int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+    int? updateBurnAfterAt = MessageOptions.getOptionsBurningUpdateAt(message.options);
     Map data = _base(MessageContentType.contactOptions, id: message.msgId, sendTimestamp: message.sendAt);
     data.addAll({
       'optionType': '0',
