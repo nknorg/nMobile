@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -44,22 +45,43 @@ class ChatMessageItem extends BaseStateFulWidget {
 }
 
 class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
+  StreamSubscription? _contactUpdateStreamSubscription;
+
   ContactSchema? _contact;
 
   @override
   void initState() {
     super.initState();
+    // contact
+    _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
+      if (_contact?.id == event.id) {
+        setState(() {
+          _contact = event;
+        });
+      }
+    });
   }
 
   @override
   void onRefreshArguments() {
-    if (_contact?.clientAddress != widget.message.targetId) {
-      widget.message.getSender(emptyAdd: true).then((ContactSchema? value) {
+    _contact = widget.contact;
+    // topic/group no contact
+    if ((_contact == null) || (_contact?.clientAddress != widget.message.from)) {
+      contactCommon.queryByClientAddress(widget.message.from).then((ContactSchema? value) async {
+        if (value == null) {
+          value = await contactCommon.addByType(widget.message.from, ContactType.none, notify: true, checkDuplicated: false);
+        }
         setState(() {
           _contact = value;
         });
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _contactUpdateStreamSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -186,7 +208,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
         contentsWidget.add(
           ChatBubble(
             message: this.widget.message,
-            contact: this.widget.contact,
+            contact: _contact,
             showProfile: showProfile,
             hideProfile: hideProfile,
             showTimeAndStatus: isGroupTail,

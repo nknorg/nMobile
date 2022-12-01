@@ -41,15 +41,16 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   TopicSchema? _topic;
   PrivateGroupSchema? _privateGroup;
+  ContactSchema? _groupSender;
   ContactSchema? _contact;
   MessageSchema? _lastMsg;
-  ContactSchema? _groupSender;
 
   bool loaded = false;
 
   @override
   void onRefreshArguments() {
     loaded = false;
+    // target
     if (widget.session.isTopic) {
       if (_topic == null || (widget.session.targetId != _topic?.topic)) {
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
@@ -68,8 +69,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         privateGroupCommon.queryGroup(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
-            _privateGroup = value;
             _topic = null;
+            _privateGroup = value;
             _contact = null;
           });
         });
@@ -90,25 +91,16 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     }
-    // lastMsg + topicSender
+    // message
     MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
-    if (_lastMsg?.msgId == null || _lastMsg?.msgId != lastMsg?.msgId) {
-      if ((widget.session.isTopic || widget.session.isPrivateGroup) && (_groupSender?.clientAddress == null || _groupSender?.clientAddress != lastMsg?.from)) {
-        lastMsg?.getSender(emptyAdd: true).then((ContactSchema? value) {
-          setState(() {
-            _lastMsg = lastMsg;
-            _groupSender = value;
-          });
-        });
-      } else {
-        setState(() {
-          _lastMsg = lastMsg;
-        });
-      }
+    _lastMsg = lastMsg;
+    // sender
+    if (widget.session.isTopic || widget.session.isPrivateGroup) {
+      _refreshGroupSender(_lastMsg?.from); // await
     }
     // burning
     if ((_lastMsg?.deleteAt != null) && ((_lastMsg?.deleteAt ?? 0) > 0)) {
-      _lastMsg = chatCommon.burningTick(_lastMsg!);
+      _lastMsg = chatCommon.burningTick(_lastMsg!, "session", setDelete: false);
     }
   }
 
@@ -136,6 +128,18 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     // draft
     _updateDraftSubscription = memoryCache.draftUpdateStream.where((event) => event == widget.session.targetId).listen((String event) {
       setState(() {});
+    });
+  }
+
+  _refreshGroupSender(String? clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return;
+    if ((_groupSender != null) && (clientAddress == _groupSender?.clientAddress)) return;
+    ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
+    if (contact == null) {
+      contact = await contactCommon.addByType(clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+    }
+    setState(() {
+      _groupSender = contact;
     });
   }
 
@@ -342,7 +346,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (_lastMsg?.isTopic == true ? groupSenderName : (_contact?.displayName ?? " "));
+      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : (_contact?.displayName ?? " "));
 
       if (isBurn) {
         String burnDecs = ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading, ctx: context) : Global.locale((s) => s.close_burn_after_reading, ctx: context)} ';

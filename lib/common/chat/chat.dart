@@ -154,16 +154,14 @@ class ChatCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     // duplicated
-    if (message.canDisplay) {
-      if (exist == null) {
-        logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
-        int type = (message.isTopic || message.isPrivateGroup) ? ContactType.none : ContactType.stranger;
-        exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
-      } else {
-        if ((exist.type == ContactType.none) && !((message.isTopic || message.isPrivateGroup))) {
-          bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
-          if (success) exist.type = ContactType.stranger;
-        }
+    if (exist == null) {
+      logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
+      int type = (message.isTopic || message.isPrivateGroup) ? ContactType.none : (message.canDisplay ? ContactType.stranger : ContactType.none);
+      exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
+    } else {
+      if (message.canDisplay && (exist.type == ContactType.none) && !((message.isTopic || message.isPrivateGroup))) {
+        bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
+        if (success) exist.type = ContactType.stranger;
       }
     }
     if (exist == null) return null;
@@ -424,7 +422,7 @@ class ChatCommon with Tag {
   }
 
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
-    if (message.isTopic || message.isPrivateGroup) return message;
+    if (message.isTopic) return message; // message.isPrivateGroup
     if (!message.canBurning || message.isDelete) return message;
     if ((message.deleteAt != null) && ((message.deleteAt ?? 0) > 0)) return message;
     if ((message.status == MessageStatus.Sending) || (message.status == MessageStatus.SendFail)) return message; // status_read maybe updating
@@ -440,13 +438,13 @@ class ChatCommon with Tag {
     return message;
   }
 
-  MessageSchema burningTick(MessageSchema message, {Function? onTick}) {
-    message = burningHandle(message);
+  MessageSchema burningTick(MessageSchema message, String keyPrefix, {bool setDelete = true, Function? onTick}) {
+    if (setDelete) message = burningHandle(message);
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
       String senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : (message.isPrivateGroup ? message.groupId : message.to));
       if (senderKey.isEmpty) return message;
-      String taskKey = "${TaskService.KEY_MSG_BURNING}:$senderKey:${message.msgId}";
+      String taskKey = "${TaskService.KEY_MSG_BURNING + keyPrefix}:$senderKey:${message.msgId}";
       taskService.addTask1(taskKey, (String key) {
         if (key != taskKey) {
           // remove others client burning

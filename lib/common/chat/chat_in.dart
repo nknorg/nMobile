@@ -135,16 +135,16 @@ class ChatInCommon with Tag {
         await _receiveMsgStatus(received); // need interval
         break;
       case MessageContentType.contactProfile:
-        await _receiveContact(received, contact: contact);
+        await _receiveContact(received, contact);
         break;
       case MessageContentType.contactOptions:
-        insertOk = await _receiveContactOptions(received, contact: contact);
+        insertOk = await _receiveContactOptions(received, contact);
         break;
       case MessageContentType.deviceRequest:
-        await _receiveDeviceRequest(received, contact: contact); // need interval
+        await _receiveDeviceRequest(received, contact); // need interval
         break;
       case MessageContentType.deviceResponse:
-        await _receiveDeviceInfo(received, contact: contact);
+        await _receiveDeviceInfo(received, contact);
         break;
       case MessageContentType.text:
       case MessageContentType.textExtension:
@@ -402,16 +402,14 @@ class ChatInCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> _receiveContact(MessageSchema received, {ContactSchema? contact}) async {
-    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
-    Map<String, dynamic> data = received.content; // == data
-    // duplicated
-    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
-    if (exist == null) {
-      logger.e("$TAG - receiveContact - contact is empty - data:$data");
+  Future<bool> _receiveContact(MessageSchema received, ContactSchema? contact) async {
+    if (contact == null) {
+      logger.e("$TAG - receiveContact - contact is empty - received:$received");
       return false;
     }
     // D-Chat NO RequestType.header
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
     String? requestType = data['requestType']?.toString();
     String? responseType = data['responseType']?.toString();
     String? version = data['version']?.toString();
@@ -419,15 +417,15 @@ class ChatInCommon with Tag {
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
       if (requestType == RequestType.header) {
-        chatOutCommon.sendContactResponse(exist.clientAddress, RequestType.header); // await
+        chatOutCommon.sendContactResponse(contact.clientAddress, RequestType.header); // await
       } else {
-        chatOutCommon.sendContactResponse(exist.clientAddress, RequestType.full); // await
+        chatOutCommon.sendContactResponse(contact.clientAddress, RequestType.full); // await
       }
     } else {
       // need request/save
-      if (!contactCommon.isProfileVersionSame(exist.profileVersion, version)) {
+      if (!contactCommon.isProfileVersionSame(contact.profileVersion, version)) {
         if (responseType != RequestType.full && content == null) {
-          chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
+          chatOutCommon.sendContactRequest(contact.clientAddress, RequestType.full, contact.profileVersion); // await
         } else {
           if (content == null) {
             logger.e("$TAG - receiveContact - content is empty - data:$data");
@@ -451,34 +449,32 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherProfile(exist, version, Path.convert2Local(avatar?.path), firstName, lastName, notify: true);
+          await contactCommon.setOtherProfile(contact, version, Path.convert2Local(avatar?.path), firstName, lastName, notify: true);
           logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
       } else {
-        logger.d("$TAG - receiveContact - profile version same - contact:$exist - data:$data");
+        logger.d("$TAG - receiveContact - profile version same - contact:$contact - data:$data");
       }
     }
     return true;
   }
 
   // NO topic (1 to 1)
-  Future<bool> _receiveContactOptions(MessageSchema received, {ContactSchema? contact}) async {
-    // received.isTopic (limit in out)
-    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
-    Map<String, dynamic> data = received.content; // == data
-    // duplicated
-    ContactSchema? existContact = contact ?? await received.getSender(emptyAdd: true);
-    if (existContact == null) {
+  Future<bool> _receiveContactOptions(MessageSchema received, ContactSchema? contact) async {
+    if (contact == null) {
       logger.w("$TAG - _receiveContactOptions - empty - received:$received");
       return false;
     }
+    // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
       logger.d("$TAG - _receiveContactOptions - duplicated - message:$exists");
       return false;
     }
-    // options type
+    // options type / received.isTopic (limit in out)
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
     String? optionsType = data['optionType']?.toString();
     Map<String, dynamic> content = data['content'] ?? Map();
     if (optionsType == null || optionsType.isEmpty) return false;
@@ -486,11 +482,11 @@ class ChatInCommon with Tag {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateAt = ((content['updateBurnAfterAt'] ?? content['updateBurnAfterTime']) as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.i("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
-      await contactCommon.setOptionsBurn(existContact, burningSeconds, updateAt, notify: true);
+      await contactCommon.setOptionsBurn(contact, burningSeconds, updateAt, notify: true);
     } else if (optionsType == '1') {
       String deviceToken = content['deviceToken']?.toString() ?? "";
       logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-      await contactCommon.setDeviceToken(existContact.id, deviceToken, notify: true);
+      await contactCommon.setDeviceToken(contact.id, deviceToken, notify: true);
     } else {
       logger.e("$TAG - _receiveContactOptions - setNothing - data:$data");
       return false;
@@ -504,28 +500,25 @@ class ChatInCommon with Tag {
   }
 
   // NO DB NO display
-  Future<bool> _receiveDeviceRequest(MessageSchema received, {ContactSchema? contact}) async {
-    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
-    if (exist == null) {
+  Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact) async {
+    if (contact == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
       return false;
     }
-    chatOutCommon.sendDeviceInfo(exist.clientAddress); // await
+    chatOutCommon.sendDeviceInfo(contact.clientAddress); // await
     return true;
   }
 
   // NO DB NO display
-  Future<bool> _receiveDeviceInfo(MessageSchema received, {ContactSchema? contact}) async {
-    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
-    Map<String, dynamic> data = received.content; // == data
-    // duplicated
-    ContactSchema? exist = contact ?? await received.getSender(emptyAdd: true);
-    if (exist == null || exist.id == null) {
+  Future<bool> _receiveDeviceInfo(MessageSchema received, ContactSchema? contact) async {
+    if (contact == null || contact.id == null) {
       logger.w("$TAG - _receiveDeviceInfo - contact - empty - received:$received");
       return false;
     }
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
     DeviceInfoSchema message = DeviceInfoSchema(
-      contactAddress: exist.clientAddress,
+      contactAddress: contact.clientAddress,
       deviceId: data["deviceId"],
       data: {
         'appName': data["appName"],
