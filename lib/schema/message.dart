@@ -191,15 +191,6 @@ class MessageSchema {
     return isImage || isAudio;
   }
 
-  ContactSchema? contact;
-  Future<ContactSchema?> getSender({bool emptyAdd = false}) async {
-    if (contact != null) return contact;
-    contact = await contactCommon.queryByClientAddress(from);
-    if (contact != null || !emptyAdd) return contact;
-    contact = await contactCommon.addByType(from, ContactType.none, notify: true, checkDuplicated: false);
-    return contact;
-  }
-
   MessageSchema copy() {
     MessageSchema copy = MessageSchema(
       pid: pid,

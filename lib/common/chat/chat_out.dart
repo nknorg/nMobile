@@ -255,8 +255,10 @@ class ChatOutCommon with Tag {
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     }
     if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
@@ -307,8 +309,10 @@ class ChatOutCommon with Tag {
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     }
     if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
@@ -373,8 +377,10 @@ class ChatOutCommon with Tag {
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     }
     if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // contentType
@@ -425,8 +431,10 @@ class ChatOutCommon with Tag {
     } else if (target is PrivateGroupSchema) {
       groupId = target.groupId;
       privateGroupVersion = target.version;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
+      deleteAfterSeconds = target.options?.deleteAfterSeconds;
     }
     if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
     // schema

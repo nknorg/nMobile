@@ -63,37 +63,21 @@ class ChatBubble extends BaseStateFulWidget {
 
 class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   GlobalKey _contentKey = GlobalKey();
-  StreamSubscription? _contactUpdateStreamSubscription;
+
   StreamSubscription? _onProgressStreamSubscription;
   StreamSubscription? _onPlayProgressSubscription;
 
-  bool initialized = false;
   late MessageSchema _message;
-  ContactSchema? _contact;
-
-  bool _showProfile = false;
-  bool _hideProfile = false;
-  bool _showTimeAndStatus = true;
-  bool _timeFormatBetween = false;
-  bool _hideTopMargin = false;
-  bool _hideBotMargin = false;
+  bool initialized = false;
 
   double _upDownloadProgress = -1;
-
   double _playProgress = 0;
+
   String? thumbnailPath;
 
   @override
   void initState() {
     super.initState();
-    // contact
-    _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
-      if (_contact?.id == event.id) {
-        setState(() {
-          _contact = event;
-        });
-      }
-    });
     // progress
     _onProgressStreamSubscription = chatCommon.onProgressStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
@@ -141,31 +125,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool sameBubble = initialized && (_message.msgId == widget.message.msgId);
     _message = widget.message;
     initialized = true;
-    // visible
-    _showProfile = widget.showProfile;
-    _hideProfile = widget.hideProfile;
-    _showTimeAndStatus = widget.showTimeAndStatus;
-    _timeFormatBetween = widget.timeFormatBetween;
-    _hideTopMargin = widget.hideTopMargin;
-    _hideBotMargin = widget.hideBotMargin;
-    // contact
-    if (_showProfile) {
-      if (widget.contact != null) {
-        _contact = widget.contact;
-      } else {
-        _message.getSender(emptyAdd: true).then((value) {
-          if (_contact?.clientAddress == null || _contact?.clientAddress != value?.clientAddress) {
-            setState(() {
-              _contact = value;
-            });
-          }
-        });
-      }
-    } else {
-      _contact = null;
-    }
     // burning
-    _message = chatCommon.burningTick(_message, onTick: () => setState(() {}));
+    _message = chatCommon.burningTick(_message, "bubble", onTick: () => setState(() {}));
     // progress
     _upDownloadProgress = sameBubble ? _upDownloadProgress : -1;
     // _playProgress = 0;
@@ -175,7 +136,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   @override
   void dispose() {
-    _contactUpdateStreamSubscription?.cancel();
     _onPlayProgressSubscription?.cancel();
     _onProgressStreamSubscription?.cancel();
     super.dispose();
@@ -183,11 +143,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Future _refreshMediaThumbnail() async {
     String? path = MessageOptions.getMediaThumbnailPath(_message.options);
-    if (path != null && path.isNotEmpty) {
-      File file = File(path);
-      if (!file.existsSync()) path = null;
-    }
     if (thumbnailPath != path) {
+      if (path != null && path.isNotEmpty) {
+        File file = File(path);
+        if (!file.existsSync()) path = null;
+      }
       setState(() {
         thumbnailPath = path;
       });
@@ -238,8 +198,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       padding: EdgeInsets.only(
         left: 12,
         right: 12,
-        top: _hideTopMargin ? 0.5 : (isSendOut ? 4 : 8),
-        bottom: _hideBotMargin ? 0.5 : (isSendOut ? 4 : 8),
+        top: widget.hideTopMargin ? 0.5 : (isSendOut ? 4 : 8),
+        bottom: widget.hideBotMargin ? 0.5 : (isSendOut ? 4 : 8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.max,
@@ -253,9 +213,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                SizedBox(height: _hideTopMargin ? 0 : 4),
+                SizedBox(height: widget.hideTopMargin ? 0 : 4),
                 _getName(),
-                SizedBox(height: (_showProfile && !_hideProfile) ? 4 : 0),
+                SizedBox(height: (widget.showProfile && !widget.hideProfile) ? 4 : 0),
                 Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -266,7 +226,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                     isSendOut ? SizedBox.shrink() : _getStatusTip(isSendOut),
                   ],
                 ),
-                SizedBox(height: _hideBotMargin ? 0 : 4),
+                SizedBox(height: widget.hideBotMargin ? 0 : 4),
               ],
             ),
           ),
@@ -278,21 +238,21 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getAvatar() {
-    return _showProfile
+    return widget.showProfile
         ? Opacity(
-            opacity: _hideProfile ? 0 : 1,
+            opacity: widget.hideProfile ? 0 : 1,
             child: GestureDetector(
               onTap: () async {
-                if (_hideProfile || (_contact == null)) return;
-                ContactProfileScreen.go(context, schema: _contact);
+                if (widget.hideProfile || (widget.contact == null)) return;
+                ContactProfileScreen.go(context, schema: widget.contact);
               },
               onLongPress: () {
-                if (_hideProfile || (_contact == null)) return;
-                widget.onAvatarLonePress?.call(_contact!, _message);
+                if (widget.hideProfile || (widget.contact == null)) return;
+                widget.onAvatarLonePress?.call(widget.contact!, _message);
               },
-              child: _contact != null
+              child: widget.contact != null
                   ? ContactAvatar(
-                      contact: _contact!,
+                      contact: widget.contact!,
                       radius: 20,
                     )
                   : SizedBox(width: 20 * 2, height: 20 * 2),
@@ -302,9 +262,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getName() {
-    return _showProfile && !_hideProfile
+    return widget.showProfile && !widget.hideProfile
         ? Label(
-            _contact?.displayName ?? " ",
+            widget.contact?.displayName ?? " ",
             maxWidth: Global.screenWidth() * 0.5,
             type: LabelType.h3,
             color: application.theme.primaryColor,
@@ -559,9 +519,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
     bool isSending = _message.status == MessageStatus.Sending;
 
-    bool showTime = isSending || _showTimeAndStatus;
+    bool showTime = isSending || widget.showTimeAndStatus;
     bool showBurn = _message.canBurning && (_message.deleteAt != null) && (_message.deleteAt != 0);
-    bool showStatus = (isSending || _showTimeAndStatus) && _message.isOutbound;
+    bool showStatus = (isSending || widget.showTimeAndStatus) && _message.isOutbound;
 
     return (showTime || showBurn || showStatus)
         ? Row(
@@ -1137,16 +1097,16 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           bottomLeft: const Radius.circular(12),
-          topRight: Radius.circular(_hideTopMargin ? 1 : 12),
-          bottomRight: Radius.circular(_hideBotMargin ? 1 : (_hideTopMargin ? 12 : 2)),
+          topRight: Radius.circular(widget.hideTopMargin ? 1 : 12),
+          bottomRight: Radius.circular(widget.hideBotMargin ? 1 : (widget.hideTopMargin ? 12 : 2)),
         ),
       );
     } else {
       decoration = BoxDecoration(
         color: _getBgColor(),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(_hideTopMargin ? 1 : (_hideBotMargin ? 12 : 2)),
-          bottomLeft: Radius.circular(_hideBotMargin ? 1 : 12),
+          topLeft: Radius.circular(widget.hideTopMargin ? 1 : (widget.hideBotMargin ? 12 : 2)),
+          bottomLeft: Radius.circular(widget.hideBotMargin ? 1 : 12),
           topRight: const Radius.circular(12),
           bottomRight: const Radius.circular(12),
         ),
