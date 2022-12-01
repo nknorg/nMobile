@@ -355,6 +355,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "notification_type": MessageLookupByLibrary.simpleMessage("通知類型"),
         "off": MessageLookupByLibrary.simpleMessage("關"),
         "ok": MessageLookupByLibrary.simpleMessage("確定"),
+        "only_owner_can_modify":
+            MessageLookupByLibrary.simpleMessage("僅群主可修改此項"),
         "optional": MessageLookupByLibrary.simpleMessage("可選"),
         "other_accepted_already": m4,
         "owner": MessageLookupByLibrary.simpleMessage("群主"),
