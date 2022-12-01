@@ -311,7 +311,11 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
 
     String? draft = memoryCache.getDraft(session.targetId);
-    String groupSenderName = _groupSender?.displayName ?? " ";
+    String contactName = _contact?.displayName ?? "???";
+    String groupSenderName = _groupSender?.displayName ?? "???";
+    String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : contactName);
+    String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
+    String whoPrefix = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
@@ -346,8 +350,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceToken = (optionType == '1') || (deviceToken?.isNotEmpty == true);
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
-      String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : (_contact?.displayName ?? " "));
-
       if (isBurn) {
         String burnDecs = ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading, ctx: context) : Global.locale((s) => s.close_burn_after_reading, ctx: context)} ';
         contentWidget = Label(
@@ -372,7 +374,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
-            // Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Asset.iconSvg('image', width: 16, color: application.theme.fontColor2),
           ],
         ),
@@ -382,7 +384,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
-            // Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Asset.iconSvg('microphone', width: 16, color: application.theme.fontColor2),
           ],
         ),
@@ -392,7 +394,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
-            // Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Icon(CupertinoIcons.video_camera, size: 18, color: application.theme.fontColor2),
           ],
         ),
@@ -402,18 +404,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         padding: const EdgeInsets.only(top: 0),
         child: Row(
           children: <Widget>[
-            // Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Label(prefix, type: LabelType.bodyRegular, maxLines: 1, overflow: TextOverflow.ellipsis),
             Icon(CupertinoIcons.doc, size: 16, color: application.theme.fontColor2),
           ],
         ),
       );
     } else if ((msgType == MessageContentType.topicSubscribe) || (msgType == MessageContentType.privateGroupSubscribe)) {
-      String prefix = "";
-      if (session.isTopic || session.isPrivateGroup) {
-        prefix = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : "$groupSenderName: ";
-      }
       contentWidget = Label(
-        prefix + Global.locale((s) => s.joined_channel, ctx: context),
+        whoPrefix + Global.locale((s) => s.joined_channel, ctx: context),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -427,14 +425,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       );
     } else if (_lastMsg?.content is String?) {
       contentWidget = Label(
-        (_lastMsg?.content as String?)?.trim() ?? " ",
+        prefix + ((_lastMsg?.content as String?)?.trim() ?? " "),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
     } else {
       contentWidget = Label(
-        " ",
+        prefix + " ",
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
