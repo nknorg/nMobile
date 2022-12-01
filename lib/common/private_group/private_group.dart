@@ -350,7 +350,7 @@ class PrivateGroupCommon with Tag {
       return false;
     } else if (!isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
       logger.w('$TAG - setOptionsBurning - no permission.');
-      if (toast) Toast.show("只有群主可做此操作"); // TODO:GG locale
+      if (toast) Toast.show(Global.locale((s) => s.only_owner_can_modify));
       return false;
     }
     // delete_sec
@@ -401,7 +401,7 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
-      bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, signVersion: true);
+      bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, skipCommits: false);
       if (versionOk == true) {
         logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
         return false;
@@ -490,7 +490,7 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
-      bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, signVersion: true);
+      bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, skipCommits: true);
       if (versionOk == true) {
         logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
         return false;
@@ -526,10 +526,10 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // version (can not gen version because members just not all, just check commits(version))
-    int nativeVersionCommits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
-    int remoteVersionCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-    if (nativeVersionCommits > remoteVersionCommits) {
-      logger.d('$TAG - updatePrivateGroupMembers - sender version lower. - remote_version:$remoteVersion - exists:$schemaGroup');
+    String? nativeVersionNoCommits = getPrivateGroupVersionNoCommits(schemaGroup.version);
+    String? remoteVersionNoCommits = getPrivateGroupVersionNoCommits(remoteVersion);
+    if ((nativeVersionNoCommits != null) && (nativeVersionNoCommits.isNotEmpty) && (nativeVersionNoCommits == remoteVersionNoCommits)) {
+      logger.d('$TAG - updatePrivateGroupMembers - members_keys version same. - remote_version:$remoteVersion - exists:$schemaGroup');
       return null;
     }
     // sender (can not believe sender perm because native members maybe empty)
@@ -650,6 +650,11 @@ class PrivateGroupCommon with Tag {
     }
   }
 
+  String genPrivateGroupVersion(int commits, String optionSignature, List<String> memberKeys) {
+    memberKeys.sort((a, b) => a.compareTo(b));
+    return "$commits.${hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberKeys.join(''))))}";
+  }
+
   int? getPrivateGroupVersionCommits(String? version) {
     if (version == null || version.isEmpty) return null;
     List<String> splits = version.split(".");
@@ -658,9 +663,12 @@ class PrivateGroupCommon with Tag {
     return commits ?? null;
   }
 
-  String genPrivateGroupVersion(int commits, String optionSignature, List<String> memberKeys) {
-    memberKeys.sort((a, b) => a.compareTo(b));
-    return "$commits.${hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberKeys.join(''))))}";
+  String? getPrivateGroupVersionNoCommits(String? version) {
+    if (version == null || version.isEmpty) return null;
+    List<String> splits = version.split(".");
+    if (splits.length < 2) return null;
+    splits.removeAt(0);
+    return splits.join();
   }
 
   /*String? increasePrivateGroupVersion(String? version) {
@@ -673,18 +681,17 @@ class PrivateGroupCommon with Tag {
     return splits.join();
   }*/
 
-  Future<bool?> verifiedGroupVersion(PrivateGroupSchema? privateGroup, String? checkedVersion, {bool signVersion = false}) async {
+  Future<bool?> verifiedGroupVersion(PrivateGroupSchema? privateGroup, String? checkedVersion, {bool skipCommits = false}) async {
     if (privateGroup == null) return null;
     if (checkedVersion == null || checkedVersion.isEmpty) return false;
     String? nativeVersion = privateGroup.version;
     if (nativeVersion == null || nativeVersion.isEmpty) return false;
-    if (signVersion) {
-      int commits = getPrivateGroupVersionCommits(nativeVersion) ?? -1;
-      List<PrivateGroupItemSchema> members = await getMembersAll(privateGroup.groupId);
-      String signVersion = genPrivateGroupVersion(commits, privateGroup.signature, getInviteesKey(members));
-      return signVersion.isNotEmpty && (checkedVersion == nativeVersion) && (nativeVersion == signVersion);
-    }
-    return checkedVersion == nativeVersion;
+    if (!skipCommits) return checkedVersion == nativeVersion;
+    String? checkedVersionNoCommits = getPrivateGroupVersionNoCommits(checkedVersion);
+    String? nativeVersionNoCommits = getPrivateGroupVersionNoCommits(nativeVersion);
+    if (checkedVersionNoCommits == null || checkedVersionNoCommits.isEmpty) return false;
+    if (nativeVersionNoCommits == null || nativeVersionNoCommits.isEmpty) return false;
+    return checkedVersionNoCommits == nativeVersionNoCommits;
   }
 
   List<String> getInviteesKey(List<PrivateGroupItemSchema> list) {

@@ -357,6 +357,8 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                   setState(() {
                     _burnOpen = !_burnOpen;
                   });
+                } else {
+                  Toast.show(Global.locale((s) => s.only_owner_can_modify, ctx: context));
                 }
               },
               child: Column(

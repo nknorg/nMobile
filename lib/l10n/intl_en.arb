@@ -404,5 +404,6 @@
   "upgrade_db_tips": "During the database upgrade, please do not exit the app or leave this page.",
   "share": "Share",
   "mapped_address_does_not_match": "Mapped address does not match",
-  "mapped_address": "Mapped address"
+  "mapped_address": "Mapped address",
+  "only_owner_can_modify": "Only the group owner can modify this item"
 }

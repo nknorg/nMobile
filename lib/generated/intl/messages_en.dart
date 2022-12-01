@@ -423,6 +423,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Notification Type"),
         "off": MessageLookupByLibrary.simpleMessage("Off"),
         "ok": MessageLookupByLibrary.simpleMessage("OK"),
+        "only_owner_can_modify": MessageLookupByLibrary.simpleMessage(
+            "Only the group owner can modify this item"),
         "optional": MessageLookupByLibrary.simpleMessage("optional"),
         "other_accepted_already": m4,
         "owner": MessageLookupByLibrary.simpleMessage("Owner"),

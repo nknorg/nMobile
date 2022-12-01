@@ -3919,6 +3919,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Only the group owner can modify this item`
+  String get only_owner_can_modify {
+    return Intl.message(
+      'Only the group owner can modify this item',
+      name: 'only_owner_can_modify',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
