@@ -499,12 +499,12 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       enable: false,
                     );
                     if (value?.isNotEmpty == true) {
-                      Uint8List? ownerSeed = clientCommon.client?.seed;
-                      if (ownerSeed == null) return;
+                      Uint8List? seed = clientCommon.client?.seed;
+                      if (seed == null) return;
                       Loading.show();
-                      Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(ownerSeed);
                       PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
-                      groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, ownerPrivateKey, toast: true);
+                      Uint8List privateKey = await Crypto.getPrivateKeyFromSeed(seed);
+                      groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, privateKey, toast: true);
                       if (groupItemSchema != null) {
                         await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
                         PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);

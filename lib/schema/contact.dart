@@ -202,7 +202,7 @@ class ContactSchema {
       data = new Map<String, dynamic>();
     }
     if (nknWalletAddress?.isNotEmpty == true) {
-      data?['nknWalletAddress'] = nknWalletAddress;
+      data?['nknWalletAddress'] = nknWalletAddress?.replaceAll("\n", "").trim();
     } else {
       //   data?['nknWalletAddress'] = await tryNknWalletAddress();
     }
@@ -216,6 +216,10 @@ class ContactSchema {
     if (options == null) {
       options = OptionsSchema();
     }
+
+    clientAddress = clientAddress.replaceAll("\n", "").trim();
+    profileVersion = profileVersion?.replaceAll("\n", "").trim();
+    deviceToken = deviceToken?.replaceAll("\n", "").trim();
 
     Map<String, dynamic> map = {
       'address': clientAddress,
@@ -249,6 +253,10 @@ class ContactSchema {
       deviceToken: e['device_token'],
     );
 
+    contact.clientAddress = contact.clientAddress.replaceAll("\n", "").trim();
+    contact.profileVersion = contact.profileVersion?.replaceAll("\n", "").trim();
+    contact.deviceToken = contact.deviceToken?.replaceAll("\n", "").trim();
+
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
@@ -266,7 +274,7 @@ class ContactSchema {
       if (data != null) {
         contact.data?.addAll(data);
       }
-      contact.nknWalletAddress = data?['nknWalletAddress'];
+      contact.nknWalletAddress = data?['nknWalletAddress']?.toString().replaceAll("\n", "").trim();
       // contact.nknWalletAddress = await contact.tryNknWalletAddress();
     }
     return contact;

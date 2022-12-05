@@ -78,7 +78,7 @@ class _WalletImportBySeedLayoutState extends BaseStateFulWidgetState<WalletImpor
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String seed = _seedController.text;
+      String seed = _seedController.text.replaceAll("\n", "").trim();
       String name = _nameController.text;
       String password = _passwordController.text;
       logger.i("$TAG - seed:$seed, name:$name, password:$password");

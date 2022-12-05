@@ -204,6 +204,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
   _goToTransfer() async {
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
+      _sendTo = _sendTo?.replaceAll("\n", "").trim();
       logger.i("$TAG - amount:$_amount, sendTo:$_sendTo, fee:$_fee");
 
       authorization.getWalletPassword(_wallet.address).then((String? password) async {

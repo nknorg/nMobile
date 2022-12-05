@@ -24,7 +24,7 @@ class WalletSchema {
   });
 
   static WalletSchema fromMap(Map<String, dynamic> map) {
-    return WalletSchema(
+    WalletSchema schema = WalletSchema(
       type: map['type'] ?? "",
       address: map['address'] ?? "",
       publicKey: map['publicKey'] ?? "",
@@ -33,9 +33,14 @@ class WalletSchema {
       name: map['name'],
       isBackedUp: map['isBackedUp'] ?? false,
     );
+    schema.address = schema.address.replaceAll("\n", "").trim();
+    schema.publicKey = schema.address.replaceAll("\n", "").trim();
+    return schema;
   }
 
   Map<String, dynamic> toMap() {
+    address = address.replaceAll("\n", "").trim();
+    publicKey = address.replaceAll("\n", "").trim();
     return {
       'type': type,
       'address': address,

@@ -14,7 +14,6 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
-import 'package:nmobile/components/dialog/create_private_group.dart';
 import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
