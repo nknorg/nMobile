@@ -65,7 +65,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String keystore = _keystoreController.text;
+      String keystore = _keystoreController.text.replaceAll("\n", "").trim();
       String name = _nameController.text;
       String password = _passwordController.text;
       logger.i("$TAG - keystore:$keystore, name:$name, password:$password");

@@ -107,8 +107,8 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
 
     setState(() {
       _nameController.text = nickName;
-      _clientAddressController.text = clientAddress;
-      _walletAddressController.text = walletAddress ?? "";
+      _clientAddressController.text = clientAddress.replaceAll("\n", "").trim();
+      _walletAddressController.text = walletAddress?.replaceAll("\n", "").trim() ?? "";
     });
   }
 
@@ -117,7 +117,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       (_formKey.currentState as FormState).save();
       Loading.show();
 
-      String clientAddress = _clientAddressController.text;
+      String clientAddress = _clientAddressController.text.replaceAll("\n", "").trim();
       String note = _notesController.text;
 
       String defaultName = ContactSchema.getDefaultName(clientAddress);
