@@ -7,7 +7,10 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
+import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -218,6 +221,34 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
       if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
     }
+  }
+
+  _quit() async {
+    ModalDialog.of(Global.appContext).confirm(
+      title: Global.locale((s) => s.tip),
+      content: Global.locale((s) => s.leave_group_confirm_title),
+      agree: Button(
+        width: double.infinity,
+        text: Global.locale((s) => s.unsubscribe),
+        backgroundColor: application.theme.strongColor,
+        onPressed: () async {
+          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+          Loading.show();
+          bool success = await privateGroupCommon.quit(_privateGroup?.groupId, toast: true, notify: true);
+          Loading.dismiss();
+          if (success) Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
+        },
+      ),
+      reject: Button(
+        width: double.infinity,
+        text: Global.locale((s) => s.cancel),
+        fontColor: application.theme.fontColor2,
+        backgroundColor: application.theme.backgroundLightColor,
+        onPressed: () {
+          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+        },
+      ),
+    );
   }
 
   @override
@@ -485,6 +516,28 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
               ),
             ),
             SizedBox(height: 28),
+
+            /// status
+            _privateGroup?.joined == true
+                ? TextButton(
+                    style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
+                    onPressed: () {
+                      _quit();
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.exit_to_app, color: Colors.red),
+                        SizedBox(width: 10),
+                        Label(
+                          Global.locale((s) => s.unsubscribe, ctx: context),
+                          type: LabelType.bodyRegular,
+                          color: Colors.red,
+                        ),
+                        Spacer(),
+                      ],
+                    ),
+                  )
+                : SizedBox.shrink(),
           ],
         ),
       ),

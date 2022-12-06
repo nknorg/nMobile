@@ -637,7 +637,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           ),
         ],
       ),
-      /*secondaryActions: [
+      secondaryActions: [
         IconSlideAction(
           caption: Global.locale((s) => s.delete, ctx: context),
           color: Colors.red,
@@ -645,10 +645,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           onTap: () => {
             ModalDialog.of(Global.appContext).confirm(
               title: Global.locale((s) => s.confirm_unsubscribe_group, ctx: context),
-              contentWidget: TopicItem(
-                topic: item,
-                bodyTitle: item.topicShort,
-                bodyDesc: item.topic,
+              contentWidget: PrivateGroupItem(
+                privateGroup: item,
+                bodyTitle: item.name,
+                bodyDesc: item.groupId,
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
               agree: Button(
@@ -657,14 +657,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
-                  if (fee == null) return;
                   Loading.show();
-                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee);
+                  bool success = await privateGroupCommon.quit(item.groupId, toast: true, notify: true);
                   Loading.dismiss();
-                  if (deleted != null) {
-                    Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
-                  }
+                  if (success) Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
                 },
               ),
               reject: Button(
@@ -679,7 +675,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             )
           },
         ),
-      ],*/
+      ],
     );
   }
 }

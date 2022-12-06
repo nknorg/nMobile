@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -499,12 +497,9 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       enable: false,
                     );
                     if (value?.isNotEmpty == true) {
-                      Uint8List? seed = clientCommon.client?.seed;
-                      if (seed == null) return;
                       Loading.show();
                       PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
-                      Uint8List privateKey = await Crypto.getPrivateKeyFromSeed(seed);
-                      groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, privateKey, toast: true);
+                      groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, toast: true);
                       if (groupItemSchema != null) {
                         await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
                         PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);

@@ -34,13 +34,13 @@ class WalletSchema {
       isBackedUp: map['isBackedUp'] ?? false,
     );
     schema.address = schema.address.replaceAll("\n", "").trim();
-    schema.publicKey = schema.address.replaceAll("\n", "").trim();
+    schema.publicKey = schema.publicKey.replaceAll("\n", "").trim();
     return schema;
   }
 
   Map<String, dynamic> toMap() {
     address = address.replaceAll("\n", "").trim();
-    publicKey = address.replaceAll("\n", "").trim();
+    publicKey = publicKey.replaceAll("\n", "").trim();
     return {
       'type': type,
       'address': address,

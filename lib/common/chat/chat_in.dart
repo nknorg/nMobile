@@ -103,6 +103,10 @@ class ChatInCommon with Tag {
       if (received.isGroupAction) {
         // nothing
       } else {
+        if (privateGroup.joined != true) {
+          logger.w("$TAG - _handleMessage - group - deny message - me no joined - topic:$topic");
+          return;
+        }
         PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
         if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
           logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
@@ -180,6 +184,9 @@ class ChatInCommon with Tag {
         break;
       case MessageContentType.privateGroupAccept:
         await _receivePrivateGroupAccept(received);
+        break;
+      case MessageContentType.privateGroupQuit:
+        await _receivePrivateGroupQuit(received);
         break;
       case MessageContentType.privateGroupOptionRequest:
         await _receivePrivateGroupOptionRequest(received);
@@ -787,7 +794,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // insert (sync self)
-    PrivateGroupSchema? groupSchema = await privateGroupCommon.insertInvitee(newGroupItem, notify: true);
+    PrivateGroupSchema? groupSchema = await privateGroupCommon.onInviteeAccept(newGroupItem, notify: true);
     if (groupSchema == null) {
       logger.w('$TAG - _receivePrivateGroupAccept - Invitee accept fail.');
       return false;
@@ -813,6 +820,14 @@ class ChatInCommon with Tag {
       }
     });
     return true;
+  }
+
+  // NO group (1 to 1)
+  Future<bool> _receivePrivateGroupQuit(MessageSchema received) async {
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? groupId = data['groupId']?.toString();
+    return await privateGroupCommon.onMemberQuit(received.from, groupId, notify: true);
   }
 
   // NO group (1 to 1)

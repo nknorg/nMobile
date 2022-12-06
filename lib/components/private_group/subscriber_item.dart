@@ -9,6 +9,7 @@ import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
@@ -236,12 +237,13 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               backgroundColor: application.theme.strongColor,
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                await privateGroupCommon.kickOut(
+                bool success = await privateGroupCommon.kickOut(
                   this.widget.privateGroup?.groupId,
                   this.widget.privateGroupItem.invitee,
                   notify: true,
                   toast: true,
                 );
+                if (success) Toast.show(Global.locale((s) => s.rejected));
               },
             ),
             reject: Button(
