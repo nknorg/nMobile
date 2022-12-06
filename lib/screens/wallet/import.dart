@@ -78,10 +78,10 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               PermissionStatus permissionStatus = await Permission.camera.request();
               if (permissionStatus != PermissionStatus.granted) return;
               // scan
-              var qrData = await Navigator.pushNamed(context, ScannerScreen.routeName);
+              String? qrData = (await Navigator.pushNamed(context, ScannerScreen.routeName))?.toString().replaceAll("\n", "").trim();
               logger.i("$TAG - QR_DATA:$qrData");
-              if (qrData != null && qrData.toString().isNotEmpty) {
-                _qrController.sink.add(qrData.toString());
+              if (qrData != null && qrData.isNotEmpty) {
+                _qrController.sink.add(qrData);
               } else {
                 ModalDialog.of(Global.appContext).show(
                   content: Global.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
