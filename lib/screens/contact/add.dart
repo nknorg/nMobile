@@ -188,7 +188,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
               if (permissionStatus != PermissionStatus.granted) return;
               // scan
               Navigator.pushNamed(context, ScannerScreen.routeName).then((value) {
-                formatQrDate(value?.toString());
+                formatQrDate(value?.toString().replaceAll("\n", "").trim());
               });
             },
           ),
