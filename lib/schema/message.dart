@@ -63,6 +63,7 @@ class MessageContentType {
   static const String privateGroupInvitation = 'privateGroup:invitation';
   static const String privateGroupAccept = 'privateGroup:accept';
   static const String privateGroupSubscribe = 'privateGroup:subscribe';
+  static const String privateGroupQuit = 'privateGroup:quit';
   static const String privateGroupOptionRequest = 'privateGroup:optionRequest';
   static const String privateGroupOptionResponse = 'privateGroup:optionResponse';
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest';
@@ -180,7 +181,7 @@ class MessageSchema {
   }
 
   bool get isGroupAction {
-    bool isAction = contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept || contentType == MessageContentType.privateGroupSubscribe;
+    bool isAction = contentType == MessageContentType.privateGroupInvitation || contentType == MessageContentType.privateGroupAccept || contentType == MessageContentType.privateGroupSubscribe || contentType == MessageContentType.privateGroupQuit;
     bool isSync = contentType == MessageContentType.privateGroupOptionRequest || contentType == MessageContentType.privateGroupOptionResponse || contentType == MessageContentType.privateGroupMemberRequest || contentType == MessageContentType.privateGroupMemberResponse;
     return isAction || isSync;
   }
@@ -270,6 +271,7 @@ class MessageSchema {
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
+      case MessageContentType.privateGroupQuit:
       case MessageContentType.privateGroupMemberRequest:
       case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupOptionRequest:
@@ -477,6 +479,7 @@ class MessageSchema {
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       // case MessageContentType.privateGroupSubscribe:
+      case MessageContentType.privateGroupQuit:
       case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:
@@ -545,6 +548,7 @@ class MessageSchema {
       case MessageContentType.privateGroupInvitation:
       case MessageContentType.privateGroupAccept:
       // case MessageContentType.privateGroupSubscribe:
+      case MessageContentType.privateGroupQuit:
       case MessageContentType.privateGroupOptionRequest:
       case MessageContentType.privateGroupOptionResponse:
       case MessageContentType.privateGroupMemberRequest:
@@ -1421,6 +1425,16 @@ class MessageData {
         'inviteeRawData': item.inviteeRawData,
         'inviterSignature': item.inviterSignature,
         'inviteeSignature': item.inviteeSignature,
+      }
+    });
+    return jsonEncode(data);
+  }
+
+  static String getPrivateGroupQuit(String groupId) {
+    Map data = _base(MessageContentType.privateGroupQuit);
+    data.addAll({
+      'content': {
+        'groupId': groupId,
       }
     });
     return jsonEncode(data);

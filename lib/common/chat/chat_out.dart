@@ -590,6 +590,15 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
+  Future sendPrivateGroupQuit(String? target, String? groupId) async {
+    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (target == null || target.isEmpty) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    String data = MessageData.getPrivateGroupQuit(groupId);
+    await _sendWithAddressSafe([target], data, notification: false);
+  }
+
+  // NO group (1 to 1)
   Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;

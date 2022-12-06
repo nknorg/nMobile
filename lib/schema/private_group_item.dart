@@ -4,7 +4,8 @@ import 'package:nmobile/utils/map_extension.dart';
 import 'package:nmobile/utils/util.dart';
 
 class PrivateGroupItemPerm {
-  static const black = -10;
+  static const black = -20;
+  static const quit = -10;
   static const none = 0;
   static const normal = 10;
   static const admin = 20;
