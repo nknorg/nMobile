@@ -1430,11 +1430,19 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getPrivateGroupQuit(String groupId) {
+  static String getPrivateGroupQuit(PrivateGroupItemSchema item) {
     Map data = _base(MessageContentType.privateGroupQuit);
     data.addAll({
       'content': {
-        'groupId': groupId,
+        'groupId': item.groupId,
+        'permission': item.permission,
+        'expiresAt': item.expiresAt,
+        'inviter': item.inviter,
+        'invitee': item.invitee,
+        'inviterRawData': item.inviterRawData,
+        'inviteeRawData': item.inviteeRawData,
+        'inviterSignature': item.inviterSignature,
+        'inviteeSignature': item.inviteeSignature,
       }
     });
     return jsonEncode(data);
