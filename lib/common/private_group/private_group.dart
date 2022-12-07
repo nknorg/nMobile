@@ -96,7 +96,7 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // insert
-    schemaGroup.version = genPrivateGroupVersion(1, schemaGroup.signature, getInviteesKey([schemaItem]));
+    schemaGroup.version = genPrivateGroupVersion(1, schemaGroup.signature, [schemaItem]);
     schemaGroup.joined = true;
     schemaGroup.count = 1;
     schemaGroup = await addPrivateGroup(schemaGroup, false, notify: true, checkDuplicated: false);
@@ -181,9 +181,17 @@ class PrivateGroupCommon with Tag {
       logger.w('$TAG - acceptInvitation - expiresAt check fail - expiresAt:$expiresAt - nowAt:$nowAt');
       if (toast) Toast.show(Global.locale((s) => s.invitation_has_expired));
       return null;
+    } else if ((schema.permission != PrivateGroupItemPerm.normal) && (schema.permission != PrivateGroupItemPerm.owner)) {
+      logger.e('$TAG - acceptInvitation - inviter incomplete permission - schema:$schema');
+      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
+      return null;
     }
     if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true)) {
       logger.e('$TAG - acceptInvitation - inviter incomplete data - schema:$schema');
+      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
+      return null;
+    } else if (schema.inviterRawData != jsonEncode(schema.createRawDataMap())) {
+      logger.e('$TAG - acceptInvitation - inviter incomplete raw_data - schema:$schema');
       if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
       return null;
     }
@@ -213,9 +221,15 @@ class PrivateGroupCommon with Tag {
     if ((expiresAt == null) || (expiresAt < nowAt)) {
       logger.w('$TAG - onInviteeAccept - time check fail - expiresAt:$expiresAt - nowAt:$nowAt');
       return null;
+    } else if (schema.permission != PrivateGroupItemPerm.normal) {
+      logger.e('$TAG - onInviteeAccept - inviter incomplete permission - schema:$schema');
+      return null;
     }
     if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviteeRawData == null) || (schema.inviteeRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true) || (schema.inviteeSignature == null) || (schema.inviteeSignature?.isEmpty == true)) {
       logger.e('$TAG - onInviteeAccept - inviter incomplete data - schema:$schema');
+      return null;
+    } else if ((schema.inviterRawData != jsonEncode(schema.createRawDataMap())) || (schema.inviteeRawData != jsonEncode(schema.createRawDataMap()))) {
+      logger.e('$TAG - onInviteeAccept - inviter incomplete raw_data - schema:$schema');
       return null;
     }
     bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
@@ -254,11 +268,10 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - onInviteeAccept - member create fail. - member:$schema');
       return null;
     }
-    // members
-    List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(members));
+    List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
+    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
     schemaGroup.count = members.length;
     bool success = await updateGroupVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: true);
     return success ? schemaGroup : null;
@@ -287,6 +300,20 @@ class PrivateGroupCommon with Tag {
       if (toast) Toast.show(Global.locale((s) => s.tip_ask_group_owner_permission));
       return false;
     }
+    // action
+    Uint8List? clientSeed = clientCommon.client?.seed;
+    if (clientSeed == null) return false;
+    Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
+    myself.permission = PrivateGroupItemPerm.quit;
+    myself.expiresAt = DateTime.now().millisecondsSinceEpoch;
+    myself.inviterRawData = "";
+    myself.inviteeRawData = jsonEncode(myself.createRawDataMap());
+    myself.inviterSignature = "";
+    myself.inviteeSignature = await genSignature(inviterPrivateKey, myself.inviteeRawData);
+    // message
+    List<PrivateGroupItemSchema> owners = await queryMembers(groupId, perm: PrivateGroupItemPerm.owner, limit: 1);
+    if (owners.length <= 0) return false;
+    chatOutCommon.sendPrivateGroupQuit(owners[0].inviter, myself); // await
     // join (no item modify to avoid be sync members by different group_version)
     schemaGroup.joined = false;
     bool success = await updateGroupJoined(groupId, schemaGroup.joined, notify: notify);
@@ -294,31 +321,45 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - quit - quit group join sql fail.');
       return false;
     }
-    // message
-    List<PrivateGroupItemSchema> owners = await queryMembers(groupId, perm: PrivateGroupItemPerm.owner, limit: 1);
-    if (owners.length <= 0) return false;
-    chatOutCommon.sendPrivateGroupQuit(owners[0].inviter, schemaGroup.groupId); // await
+    if (schemaGroup.data == null) schemaGroup.data = Map();
+    schemaGroup.data?["quit_at_version_commits"] = getPrivateGroupVersionCommits(schemaGroup.version);
+    await updateGroupData(groupId, schemaGroup.data);
     return true;
   }
 
-  Future<bool> onMemberQuit(String? target, String? groupId, {bool notify = false}) async {
-    if (groupId == null || groupId.isEmpty) return false;
-    if (target == null || target.isEmpty) return false;
+  Future<bool> onMemberQuit(PrivateGroupItemSchema? schema, {bool notify = false}) async {
+    if (schema == null || schema.groupId.isEmpty) return false;
     // check
-    PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
+    if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviteeRawData == null) || (schema.inviteeRawData?.isEmpty == true) || (schema.inviteeSignature == null) || (schema.inviteeSignature?.isEmpty == true)) {
+      logger.e('$TAG - onMemberQuit - inviter incomplete data - schema:$schema');
+      return false;
+    } else if ((schema.inviteeRawData != jsonEncode(schema.createRawDataMap()))) {
+      logger.e('$TAG - onInviteeAccept - invitee incomplete raw_data - schema:$schema');
+      return false;
+    } else if (schema.permission != PrivateGroupItemPerm.quit) {
+      logger.e('$TAG - onMemberQuit - invitee incomplete permission - schema:$schema');
+      return false;
+    }
+    bool verifiedInvitee = await verifiedSignature(schema.invitee, schema.inviteeRawData, schema.inviteeSignature);
+    if (!verifiedInvitee) {
+      logger.e('$TAG - onMemberQuit - signature verification failed. - verifiedInvitee:$verifiedInvitee');
+      return false;
+    }
+    // exists
+    PrivateGroupSchema? schemaGroup = await queryGroup(schema.groupId);
     if (schemaGroup == null) {
-      logger.e('$TAG - onMemberQuit - has no group. - groupId:$groupId');
+      logger.e('$TAG - onMemberQuit - has no group. - groupId:${schema.groupId}');
       return false;
     }
     String? selfAddress = clientCommon.address;
-    if ((target == selfAddress) || (selfAddress == null) || selfAddress.isEmpty) {
-      logger.w('$TAG - onMemberQuit - groupId:$groupId - target:$target');
+    if ((schema.invitee == selfAddress) || (selfAddress == null) || selfAddress.isEmpty) {
+      logger.w('$TAG - onMemberQuit - groupId:${schema.groupId} - target:${schema.invitee}');
       return false;
     }
-    PrivateGroupItemSchema? myself = await queryGroupItem(groupId, selfAddress);
-    PrivateGroupItemSchema? lefter = await queryGroupItem(groupId, target);
+    PrivateGroupItemSchema? myself = await queryGroupItem(schema.groupId, selfAddress);
+    PrivateGroupItemSchema? lefter = await queryGroupItem(schema.groupId, schema.invitee);
     if ((myself == null) || ((myself.permission ?? 0) <= PrivateGroupItemPerm.none)) {
-      logger.w('$TAG - onMemberQuit - me no in group. - groupId:$groupId');
+      logger.w('$TAG - onMemberQuit - me no in group. - groupId:${schema.groupId}');
       return false;
     } else if ((lefter == null) || ((lefter.permission ?? 0) < PrivateGroupItemPerm.none)) {
       logger.d('$TAG - onMemberQuit - Member already no exists.');
@@ -352,12 +393,10 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - onMemberQuit - kickOut member sql fail.');
       return false;
     }
-    // members
-    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
-    List<String> memberKeys = getInviteesKey(members);
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, memberKeys);
+    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
+    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
     schemaGroup.count = members.length;
     success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: notify);
     if (!success) {
@@ -432,12 +471,10 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - kickOut - kickOut member sql fail.');
       return false;
     }
-    // members
-    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
-    List<String> memberKeys = getInviteesKey(members);
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, memberKeys);
+    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
+    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
     schemaGroup.count = members.length;
     success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: notify);
     if (!success) {
@@ -486,19 +523,20 @@ class PrivateGroupCommon with Tag {
     if (clientSeed == null) return false;
     Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
-    schemaGroup.setSignature(signatureData);
     if (signatureData == null || signatureData.isEmpty) {
       logger.e('$TAG - setOptionsBurning - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
       return false;
     }
-    // version
-    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
-    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, getInviteesKey(members));
-    if ((schemaGroup.version == null) || (schemaGroup.version?.isEmpty == true)) {
-      logger.e('$TAG - setOptionsBurning - version update fail.');
+    schemaGroup.setSignature(signatureData);
+    success = await updateGroupData(groupId, schemaGroup.data, notify: true);
+    if (!success) {
+      logger.e('$TAG - setOptionsBurning - signature sql fail.');
       return false;
     }
+    // version
+    int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
+    List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
+    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
     success = await updateGroupVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count ?? 0, notify: notify);
     if (!success) {
       logger.e('$TAG - setOptionsBurning - version sql fail.');
@@ -523,8 +561,7 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
-      bool? versionOk = await verifiedGroupVersion(privateGroup, remoteVersion, skipCommits: false);
-      if (versionOk == true) {
+      if (privateGroup.version == remoteVersion) {
         logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
         return false;
       }
@@ -612,12 +649,25 @@ class PrivateGroupCommon with Tag {
     if (privateGroup == null) return false;
     // version
     if (!force && (remoteVersion != null) && remoteVersion.isNotEmpty) {
-      int commits = getPrivateGroupVersionCommits(privateGroup.version) ?? 0;
-      List<String> memberKeys = getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
-      String nativeVersion = genPrivateGroupVersion(commits, privateGroup.signature, memberKeys);
-      if (nativeVersion == remoteVersion) {
-        logger.d('$TAG - pushPrivateGroupOptions - version same - version:$remoteVersion');
-        return false;
+      int nativeCommits = getPrivateGroupVersionCommits(privateGroup.version) ?? 0;
+      List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+      String nativeVersion = genPrivateGroupVersion(nativeCommits, privateGroup.signature, members);
+      String? nativeVersionKeys = getPrivateGroupVersionKeys(nativeVersion);
+      String? remoteVersionKeys = getPrivateGroupVersionKeys(remoteVersion);
+      if ((nativeVersionKeys != null) && (nativeVersionKeys.isNotEmpty) && (nativeVersionKeys == remoteVersionKeys)) {
+        if (!privateGroup.joined) {
+          int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+          int? quitCommits = int.tryParse(privateGroup.data?["quit_at_version_commits"]?.toString() ?? "");
+          if ((quitCommits ?? remoteCommits) < remoteCommits) {
+            logger.i('$TAG - pushPrivateGroupOptions - version commits no same after quit. - remote_version:$remoteVersion - exists:$privateGroup');
+          } else {
+            logger.d('$TAG - pushPrivateGroupOptions - version commits same after quit. - remote_version:$remoteVersion - exists:$privateGroup');
+            return false;
+          }
+        } else {
+          logger.d('$TAG - pushPrivateGroupOptions - members_keys version same. - remote_version:$remoteVersion - exists:$privateGroup');
+          return false;
+        }
       }
     }
     // item
@@ -650,29 +700,40 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // version (can not gen version because members just not all, just check commits(version))
-    int commits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
-    List<String> memberKeys = getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
-    String nativeVersion = genPrivateGroupVersion(commits, schemaGroup.signature, memberKeys);
-    String? nativeVersionNoCommits = getPrivateGroupVersionNoCommits(nativeVersion);
-    String? remoteVersionNoCommits = getPrivateGroupVersionNoCommits(remoteVersion);
-    if ((nativeVersionNoCommits != null) && (nativeVersionNoCommits.isNotEmpty) && (nativeVersionNoCommits == remoteVersionNoCommits)) {
-      logger.d('$TAG - updatePrivateGroupMembers - members_keys version same. - remote_version:$remoteVersion - exists:$schemaGroup');
-      return null;
+    int nativeCommits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+    String nativeVersion = genPrivateGroupVersion(nativeCommits, schemaGroup.signature, members);
+    String? nativeVersionKeys = getPrivateGroupVersionKeys(nativeVersion);
+    String? remoteVersionKeys = getPrivateGroupVersionKeys(remoteVersion);
+    if ((nativeVersionKeys != null) && (nativeVersionKeys.isNotEmpty) && (nativeVersionKeys == remoteVersionKeys)) {
+      if (!schemaGroup.joined) {
+        int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+        int? quitCommits = int.tryParse(schemaGroup.data?["quit_at_version_commits"]?.toString() ?? "");
+        if ((quitCommits ?? remoteCommits) < remoteCommits) {
+          logger.i('$TAG - updatePrivateGroupMembers - version commits no same after quit. - remote_version:$remoteVersion - exists:$schemaGroup');
+        } else {
+          logger.d('$TAG - updatePrivateGroupMembers - version commits same after quit. - remote_version:$remoteVersion - exists:$schemaGroup');
+          return null;
+        }
+      } else {
+        logger.d('$TAG - updatePrivateGroupMembers - members_keys version same. - remote_version:$remoteVersion - exists:$schemaGroup');
+        return null;
+      }
     }
     // sender (can not believe sender perm because native members maybe empty)
-    PrivateGroupItemSchema? groupItem = await queryGroupItem(groupId, sender);
-    if (groupItem == null) {
+    PrivateGroupItemSchema? senderItem = await queryGroupItem(groupId, sender);
+    if (senderItem == null) {
       if (isOwner(schemaGroup.ownerPublicKey, sender)) {
         // nothing
       } else {
-        logger.w('$TAG - updatePrivateGroupMembers - sender no owner. - group:$schemaGroup - item:$groupItem');
+        logger.w('$TAG - updatePrivateGroupMembers - sender no owner. - group:$schemaGroup - item:$senderItem');
         return null;
       }
     } else if (isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
-      logger.d('$TAG - updatePrivateGroupMembers - self is owner. - group:$schemaGroup - item:$groupItem');
+      logger.d('$TAG - updatePrivateGroupMembers - self is owner. - group:$schemaGroup - item:$senderItem');
       return null;
-    } else if ((groupItem.permission ?? 0) <= PrivateGroupItemPerm.none) {
-      logger.w('$TAG - updatePrivateGroupMembers - sender no permission. - group:$schemaGroup - item:$groupItem');
+    } else if ((senderItem.permission ?? 0) <= PrivateGroupItemPerm.none) {
+      logger.w('$TAG - updatePrivateGroupMembers - sender no permission. - group:$schemaGroup - item:$senderItem');
       return null;
     }
     // members
@@ -683,28 +744,32 @@ class PrivateGroupCommon with Tag {
         logger.e('$TAG - updatePrivateGroupMembers - groupId incomplete data. - i$i - member:$member');
         continue;
       }
+      // verify
+      if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true)) {
+        logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete people - i$i - member:$member');
+        continue;
+      }
+      if ((member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true)) {
+        logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete inviter - i$i - member:$member');
+        continue;
+      }
+      bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
+      if (!verifiedInviter) {
+        logger.e('$TAG - updatePrivateGroupMembers - signature verification inviter failed. - verifiedInviter:$verifiedInviter');
+        continue;
+      }
       if ((member.permission ?? 0) > PrivateGroupItemPerm.none) {
-        if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true) || (member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviteeRawData == null) || (member.inviteeRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true) || (member.inviteeSignature == null) || (member.inviteeSignature?.isEmpty == true)) {
-          logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete data - i$i - member:$member');
+        if ((member.inviteeRawData == null) || (member.inviteeRawData?.isEmpty == true) || (member.inviteeSignature == null) || (member.inviteeSignature?.isEmpty == true)) {
+          logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete invitee - i$i - member:$member');
           continue;
         }
-        bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
         bool verifiedInvitee = await verifiedSignature(member.invitee, member.inviteeRawData, member.inviteeSignature);
-        if (!verifiedInviter || !verifiedInvitee) {
-          logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
-          continue;
-        }
-      } else {
-        if ((member.invitee == null) || (member.invitee?.isEmpty == true) || (member.inviter == null) || (member.inviter?.isEmpty == true) || (member.inviterRawData == null) || (member.inviterRawData?.isEmpty == true) || (member.inviterSignature == null) || (member.inviterSignature?.isEmpty == true)) {
-          logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete data - i$i - member:$member');
-          continue;
-        }
-        bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
-        if (!verifiedInviter) {
-          logger.e('$TAG - updatePrivateGroupMembers - signature verification failed. - verifiedInviter:$verifiedInviter');
+        if (!verifiedInvitee) {
+          logger.e('$TAG - updatePrivateGroupMembers - signature verification invitee failed. - verifiedInvitee:$verifiedInvitee');
           continue;
         }
       }
+      // sync
       PrivateGroupItemSchema? exists = await queryGroupItem(groupId, member.invitee);
       if (exists == null) {
         exists = await addPrivateGroupItem(member, true, notify: true, checkDuplicated: false);
@@ -715,6 +780,10 @@ class PrivateGroupCommon with Tag {
       }
       if ((member.invitee?.isNotEmpty == true) && (member.invitee == selfAddress)) {
         selfJoined = ((member.permission ?? 0) <= PrivateGroupItemPerm.none) ? -1 : 1;
+        if (schemaGroup.data?["quit_at_version_commits"] != null) {
+          schemaGroup.data?["quit_at_version_commits"] = null;
+          await updateGroupData(schemaGroup.groupId, schemaGroup.data);
+        }
       }
     }
     // joined
@@ -777,7 +846,9 @@ class PrivateGroupCommon with Tag {
     }
   }
 
-  String genPrivateGroupVersion(int commits, String optionSignature, List<String> memberKeys) {
+  String genPrivateGroupVersion(int commits, String optionSignature, List<PrivateGroupItemSchema> list) {
+    List<String> memberKeys = list.map((e) => (e.invitee?.isNotEmpty == true) ? "${e.permission}_${e.invitee}" : "").toList();
+    memberKeys.removeWhere((element) => element.isEmpty == true);
     memberKeys.sort((a, b) => a.compareTo(b));
     return "$commits.${hexEncode(Uint8List.fromList(Hash.md5(optionSignature + memberKeys.join(''))))}";
   }
@@ -790,7 +861,7 @@ class PrivateGroupCommon with Tag {
     return commits ?? null;
   }
 
-  String? getPrivateGroupVersionNoCommits(String? version) {
+  String? getPrivateGroupVersionKeys(String? version) {
     if (version == null || version.isEmpty) return null;
     List<String> splits = version.split(".");
     if (splits.length < 2) return null;
@@ -807,26 +878,6 @@ class PrivateGroupCommon with Tag {
     splits[0] = (commits + 1).toString() + ".";
     return splits.join();
   }*/
-
-  Future<bool?> verifiedGroupVersion(PrivateGroupSchema? privateGroup, String? checkedVersion, {bool skipCommits = false}) async {
-    if (privateGroup == null) return null;
-    if (checkedVersion == null || checkedVersion.isEmpty) return false;
-    String? nativeVersion = privateGroup.version;
-    if (nativeVersion == null || nativeVersion.isEmpty) return false;
-    if (!skipCommits) return checkedVersion == nativeVersion;
-    String? checkedVersionNoCommits = getPrivateGroupVersionNoCommits(checkedVersion);
-    String? nativeVersionNoCommits = getPrivateGroupVersionNoCommits(nativeVersion);
-    if (checkedVersionNoCommits == null || checkedVersionNoCommits.isEmpty) return false;
-    if (nativeVersionNoCommits == null || nativeVersionNoCommits.isEmpty) return false;
-    return checkedVersionNoCommits == nativeVersionNoCommits;
-  }
-
-  List<String> getInviteesKey(List<PrivateGroupItemSchema> list) {
-    List<String> ids = list.map((e) => (e.invitee?.isNotEmpty == true) ? "${e.permission}_${e.invitee}" : "").toList();
-    ids.removeWhere((element) => element.isEmpty == true);
-    ids.sort((a, b) => (a).compareTo(b));
-    return ids;
-  }
 
   List<Map<String, dynamic>> getMembersData(List<PrivateGroupItemSchema> list) {
     list.removeWhere((element) => element.invitee?.isEmpty == true);
