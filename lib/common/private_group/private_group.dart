@@ -652,22 +652,9 @@ class PrivateGroupCommon with Tag {
       int nativeCommits = getPrivateGroupVersionCommits(privateGroup.version) ?? 0;
       List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
       String nativeVersion = genPrivateGroupVersion(nativeCommits, privateGroup.signature, members);
-      String? nativeVersionKeys = getPrivateGroupVersionKeys(nativeVersion);
-      String? remoteVersionKeys = getPrivateGroupVersionKeys(remoteVersion);
-      if ((nativeVersionKeys != null) && (nativeVersionKeys.isNotEmpty) && (nativeVersionKeys == remoteVersionKeys)) {
-        if (!privateGroup.joined) {
-          int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-          int? quitCommits = int.tryParse(privateGroup.data?["quit_at_version_commits"]?.toString() ?? "");
-          if ((quitCommits ?? remoteCommits) < remoteCommits) {
-            logger.i('$TAG - pushPrivateGroupOptions - version commits no same after quit. - remote_version:$remoteVersion - exists:$privateGroup');
-          } else {
-            logger.d('$TAG - pushPrivateGroupOptions - version commits same after quit. - remote_version:$remoteVersion - exists:$privateGroup');
-            return false;
-          }
-        } else {
-          logger.d('$TAG - pushPrivateGroupOptions - members_keys version same. - remote_version:$remoteVersion - exists:$privateGroup');
-          return false;
-        }
+      if (nativeVersion == remoteVersion) {
+        logger.d('$TAG - pushPrivateGroupOptions - version same. - remote_version:$remoteVersion - exists:$privateGroup');
+        return false;
       }
     }
     // item
