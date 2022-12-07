@@ -590,11 +590,11 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future sendPrivateGroupQuit(String? target, String? groupId) async {
+  Future sendPrivateGroupQuit(String? target, PrivateGroupItemSchema? groupItem) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
-    if (groupId == null || groupId.isEmpty) return null;
-    String data = MessageData.getPrivateGroupQuit(groupId);
+    if (groupItem == null) return null;
+    String data = MessageData.getPrivateGroupQuit(groupItem);
     await _sendWithAddressSafe([target], data, notification: false);
   }
 
@@ -606,8 +606,8 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
-    List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
-    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
     await _sendWithAddressSafe([target], data, notification: false);
     return getVersion;
@@ -630,8 +630,8 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
-    List<String> memberKeys = privateGroupCommon.getInviteesKey(await privateGroupCommon.getMembersAll(groupId));
-    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, memberKeys);
+    List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
+    String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
     await _sendWithAddressSafe([target], data, notification: false);
     return getVersion;

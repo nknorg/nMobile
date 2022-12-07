@@ -518,7 +518,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
             SizedBox(height: 28),
 
             /// status
-            _privateGroup?.joined == true
+            (!_isOwner && (_privateGroup?.joined == true))
                 ? TextButton(
                     style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
                     onPressed: () {

@@ -826,8 +826,16 @@ class ChatInCommon with Tag {
   Future<bool> _receivePrivateGroupQuit(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
-    String? groupId = data['groupId']?.toString();
-    return await privateGroupCommon.onMemberQuit(received.from, groupId, notify: true);
+    String groupId = data['groupId']?.toString() ?? "";
+    String invitee = data['invitee']?.toString() ?? "";
+    if (groupId.isEmpty || invitee.isEmpty) return false;
+    // item
+    PrivateGroupItemSchema? newGroupItem = PrivateGroupItemSchema.fromRawData(data);
+    if (newGroupItem == null) {
+      logger.e('$TAG - _receivePrivateGroupQuit - invitee nil.');
+      return false;
+    }
+    return await privateGroupCommon.onMemberQuit(newGroupItem, notify: true);
   }
 
   // NO group (1 to 1)
