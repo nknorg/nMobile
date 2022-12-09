@@ -85,8 +85,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
   formatQrDate(String? clientAddress) async {
     logger.i("$TAG - QR_DATA - $clientAddress");
     if (clientAddress == null || clientAddress.isEmpty) return;
-
-    String nickName = ContactSchema.getDefaultName(clientAddress);
+    // wallet_address
     String? walletAddress;
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
@@ -96,7 +95,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     } catch (e, st) {
       handleError(e, st);
     }
-    logger.i("$TAG - QR_DATA_DECODE - nickname:$nickName - clientAddress:$clientAddress - walletAddress:$walletAddress");
+    logger.i("$TAG - QR_DATA_DECODE - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
       ModalDialog.of(Global.appContext).show(
         content: Global.locale((s) => s.error_unknown_nkn_qrcode),
@@ -104,9 +103,8 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       );
       return;
     }
-
+    // state
     setState(() {
-      _nameController.text = nickName;
       _clientAddressController.text = clientAddress.replaceAll("\n", "").trim();
       _walletAddressController.text = walletAddress?.replaceAll("\n", "").trim() ?? "";
     });
@@ -116,52 +114,45 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     if ((_formKey.currentState as FormState).validate()) {
       (_formKey.currentState as FormState).save();
       Loading.show();
-
+      // input
       String clientAddress = _clientAddressController.text.replaceAll("\n", "").trim();
-      String note = _notesController.text;
-
-      String defaultName = ContactSchema.getDefaultName(clientAddress);
-      String? remarkName = _nameController.text != defaultName ? _nameController.text : null;
-
       String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.convert2Local(_headImage?.path) : null;
-
-      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n firstName:$defaultName,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
-
-      ContactSchema? schema = await ContactSchema.create(clientAddress, ContactType.friend);
-      if (schema == null) return;
-      schema.firstName = defaultName;
-      schema.data = {
-        'firstName': remarkName,
-        'lastName': "",
-        'avatar': remarkAvatar,
-        "notes": note,
-      };
-
-      ContactSchema? exist = await contactCommon.queryByClientAddress(schema.clientAddress);
-      if (exist != null) {
-        if (exist.type == ContactType.friend) {
-          Toast.show(Global.locale((s) => s.add_user_duplicated, ctx: context));
-          Loading.dismiss();
-          return;
-        } else {
-          bool success1 = await contactCommon.setType(exist.id, ContactType.friend, notify: true);
-          if (success1) exist.type = ContactType.friend;
-          bool success2 = await contactCommon.setRemarkName(exist, remarkName, null, notify: true);
-          if (success2) exist.data?['firstName'] = remarkName;
-          bool success3 = await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
-          if (success3) exist.data?['avatar'] = remarkAvatar;
-          bool success4 = await contactCommon.setNotes(exist, note, notify: true);
-          if (success4) exist.data?['notes'] = note;
-        }
+      String? remarkName = _nameController.text.isNotEmpty ? _nameController.text : null;
+      String note = _notesController.text;
+      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
+      // exist
+      ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
+      if ((exist != null) && (exist.type == ContactType.friend)) {
+        Toast.show(Global.locale((s) => s.add_user_duplicated, ctx: context));
+        Loading.dismiss();
+        return;
+      } else if (exist != null) {
+        bool success1 = await contactCommon.setType(exist.id, ContactType.friend, notify: true);
+        if (success1) exist.type = ContactType.friend;
+        bool success2 = await contactCommon.setRemarkName(exist, remarkName, notify: true);
+        if (success2) exist.data?['remarkName'] = remarkName;
+        bool success3 = await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
+        if (success3) exist.data?['remarkAvatar'] = remarkAvatar;
+        bool success4 = await contactCommon.setNotes(exist, note, notify: true);
+        if (success4) exist.data?['notes'] = note;
+        Loading.dismiss();
       } else {
+        ContactSchema? schema = await ContactSchema.create(clientAddress, ContactType.friend);
+        if (schema != null) {
+          schema.data = {
+            'remarkName': remarkName,
+            'remarkAvatar': remarkAvatar,
+            "notes": note,
+          };
+        }
         ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);
         if (added == null) {
           Toast.show(Global.locale((s) => s.failure, ctx: context));
           Loading.dismiss();
           return;
         }
+        Loading.dismiss();
       }
-      Loading.dismiss();
       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
     }
   }
@@ -251,16 +242,24 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Label(
-                          Global.locale((s) => s.nickname, ctx: context),
-                          type: LabelType.h3,
-                          textAlign: TextAlign.start,
+                        Row(
+                          children: <Widget>[
+                            Label(
+                              Global.locale((s) => s.nickname, ctx: context),
+                              type: LabelType.h3,
+                              textAlign: TextAlign.start,
+                            ),
+                            Label(
+                              ' (${Global.locale((s) => s.optional, ctx: context)})',
+                              type: LabelType.bodyLarge,
+                              textAlign: TextAlign.start,
+                            ),
+                          ],
                         ),
                         FormText(
                           controller: _nameController,
                           focusNode: _nameFocusNode,
                           hintText: Global.locale((s) => s.input_name, ctx: context),
-                          validator: Validator.of(context).contactName(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_clientAddressFocusNode),
                         ),

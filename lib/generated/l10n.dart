@@ -3929,6 +3929,16 @@ class S {
       args: [],
     );
   }
+
+  /// `Are you sure you want to delete the note avatar?`
+  String get confirm_delete_remark_avatar {
+    return Intl.message(
+      'Are you sure you want to delete the note avatar?',
+      name: 'confirm_delete_remark_avatar',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

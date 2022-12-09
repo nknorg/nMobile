@@ -27,7 +27,6 @@ class RequestType {
 
 class ContactSchema {
   int? id; // <- id
-  // FIXED:GG check pubKey
   String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
   int? type; // (required) <-> type
   int? createAt; // <-> create_at
@@ -103,7 +102,6 @@ class ContactSchema {
     return defaultName;
   }
 
-  // FIXED:GG check pubKey
   String get pubKey {
     return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
   }
@@ -117,42 +115,57 @@ class ContactSchema {
   }
 
   String get fullName {
-    return firstName ?? "";
+    return firstName ?? ""; // lastName
+  }
+
+  String? get remarkName {
+    return data?['remarkName'] ?? data?['firstName'];
   }
 
   String get displayName {
     String? displayName;
-
+    // remark
     if (data?.isNotEmpty == true) {
-      if (data!['firstName']?.toString().isNotEmpty == true) {
-        displayName = data!['firstName'];
+      if (data?['remarkName']?.toString().isNotEmpty == true) {
+        displayName = data?['remarkName'];
+      } else if (data?['firstName']?.toString().isNotEmpty == true) {
+        displayName = data?['firstName'];
       }
     }
-
+    // original
     if (displayName == null || displayName.isEmpty) {
       if (firstName?.toString().isNotEmpty == true) {
         displayName = firstName;
+      } else {
+        displayName = getDefaultName(clientAddress);
       }
-    }
-
-    if (displayName == null || displayName.isEmpty) {
-      displayName = getDefaultName(clientAddress);
     }
     return displayName ?? "";
   }
 
-  String? get displayAvatarPath {
-    String? avatarLocalPath;
+  String? get remarkAvatarLocalPath {
+    return data?['remarkAvatar'] ?? data?['avatar'];
+  }
 
+  String? get displayAvatarLocalPath {
+    String? avatarLocalPath;
+    // remark
     if (data?.toString().isNotEmpty == true) {
-      if (data!['avatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = data!['avatar'];
+      if (data?['remarkAvatar']?.toString().isNotEmpty == true) {
+        avatarLocalPath = data?['remarkAvatar'];
+      } else if (data?['avatar']?.toString().isNotEmpty == true) {
+        avatarLocalPath = data?['avatar'];
       }
     }
-
+    // original
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
       avatarLocalPath = avatar?.path;
     }
+    return avatarLocalPath;
+  }
+
+  String? get displayAvatarPath {
+    String? avatarLocalPath = displayAvatarLocalPath;
     if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
       return null;
     }
@@ -168,7 +181,7 @@ class ContactSchema {
     if (completePath == null || completePath.isEmpty) {
       return Future.value(null);
     }
-
+    // file
     File avatarFile = File(completePath);
     bool exits = await avatarFile.exists();
     if (!exits) {
