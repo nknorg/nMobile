@@ -73,12 +73,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   TextEditingController _searchController = TextEditingController();
 
   List<ContactSchema> _allFriends = <ContactSchema>[];
-  List<ContactSchema> _allStrangers = <ContactSchema>[];
+  /*List<ContactSchema> _allStrangers = <ContactSchema>[];*/
   List<TopicSchema> _allTopics = <TopicSchema>[];
   List<PrivateGroupSchema> _allGroups = <PrivateGroupSchema>[];
 
   List<ContactSchema> _searchFriends = <ContactSchema>[];
-  List<ContactSchema> _searchStrangers = <ContactSchema>[];
+  /*List<ContactSchema> _searchStrangers = <ContactSchema>[];*/
   List<TopicSchema> _searchTopics = <TopicSchema>[];
   List<PrivateGroupSchema> _searchGroups = <PrivateGroupSchema>[];
 
@@ -97,9 +97,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
       if (schema.type == ContactType.friend) {
         _allFriends.insert(0, schema);
-      } else if (schema.type == ContactType.friend) {
+      } /* else if (schema.type == ContactType.stranger) {
         _allStrangers.insert(0, schema);
-      }
+      }*/
       _searchAction(_searchController.text);
     });
     // _deleteContactSubscription = contactCommon.deleteStream.listen((int contactId) {
@@ -124,7 +124,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         _searchAction(_searchController.text);
       }
       // stranger
-      int strangerIndex = -1;
+      /*int strangerIndex = -1;
       _allStrangers.asMap().forEach((key, value) {
         if (value.id == event.id) {
           strangerIndex = key;
@@ -137,15 +137,15 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           _allStrangers.removeAt(strangerIndex);
         }
         _searchAction(_searchController.text);
-      }
+      }*/
       // type
       if ((friendIndex < 0) && (event.type == ContactType.friend)) {
         _allFriends.insert(0, event);
         _searchAction(_searchController.text);
-      } else if ((strangerIndex < 0) && (event.type == ContactType.stranger)) {
+      } /* else if ((strangerIndex < 0) && (event.type == ContactType.stranger)) {
         _allStrangers.insert(0, event);
         _searchAction(_searchController.text);
-      }
+      }*/
     });
 
     // topic listen
@@ -222,18 +222,18 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     }
     groups = (!this._isSelect || this._selectGroup) ? groups : []; // can not move this line to setState
     // strangers
-    List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20);
+    /*List<ContactSchema> strangers = await contactCommon.queryList(contactType: ContactType.stranger, limit: 20)*/;
 
     setState(() {
       _pageLoaded = true;
       // total
       _allFriends = friends;
-      _allStrangers = strangers;
+      /*_allStrangers = strangers;*/
       _allTopics = topics;
       _allGroups = groups;
       // search
       _searchFriends = _allFriends;
-      _searchStrangers = _allStrangers;
+      /*_searchStrangers = _allStrangers;*/
       _searchTopics = _allTopics;
       _searchGroups = _allGroups;
     });
@@ -245,13 +245,13 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     if (val == null || val.isEmpty) {
       setState(() {
         _searchFriends = _allFriends;
-        _searchStrangers = _allStrangers;
+        /*_searchStrangers = _allStrangers;*/
         _searchTopics = _allTopics;
         _searchGroups = _allGroups;
       });
     } else {
       setState(() {
-        _searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
+        /*_searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();*/
         _searchFriends = _allFriends.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
         _searchTopics = _allTopics.where((TopicSchema e) => e.topic.contains(val)).toList();
         _searchGroups = _allGroups.where((PrivateGroupSchema e) => e.name.contains(val)).toList();
@@ -290,9 +290,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     int totalFriendDataCount = _allFriends.length;
     int totalTopicDataCount = _allTopics.length;
     int totalGroupDataCount = _allGroups.length;
-    int totalStrangerDataCount = _allStrangers.length;
+    /*int totalStrangerDataCount = _allStrangers.length;*/
 
-    int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalGroupDataCount + totalStrangerDataCount;
+    int totalDataCount = totalFriendDataCount + totalTopicDataCount + totalGroupDataCount; // + totalStrangerDataCount;
     if (totalDataCount <= 0 && _pageLoaded) {
       return ContactHomeEmptyLayout();
     }
@@ -301,12 +301,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     int searchFriendViewCount = (searchFriendDataCount > 0 ? 1 : 0) + searchFriendDataCount;
     int searchTopicDataCount = _searchTopics.length;
     int searchTopicViewCount = (searchTopicDataCount > 0 ? 1 : 0) + searchTopicDataCount;
-    int searchGroupDataCount = _allGroups.length;
+    int searchGroupDataCount = _searchGroups.length;
     int searchGroupViewCount = (searchGroupDataCount > 0 ? 1 : 0) + searchGroupDataCount;
-    int searchStrangerDataCount = _searchStrangers.length;
-    int searchStrangerViewCount = (searchStrangerDataCount > 0 ? 1 : 0) + searchStrangerDataCount;
+    /*int searchStrangerDataCount = _searchStrangers.length;
+    int searchStrangerViewCount = (searchStrangerDataCount > 0 ? 1 : 0) + searchStrangerDataCount;*/
 
-    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + searchGroupViewCount + searchStrangerViewCount;
+    int listItemViewCount = searchFriendViewCount + searchTopicViewCount + searchGroupViewCount; //  + searchStrangerViewCount;
 
     int friendStartIndex = 0;
     int friendEndIndex = searchFriendViewCount - 1;
@@ -314,8 +314,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     int topicEndIndex = topicStartIndex + searchTopicViewCount - 1;
     int groupStartIndex = topicEndIndex + 1;
     int groupEndIndex = groupStartIndex + searchGroupViewCount - 1;
-    int strangerStartIndex = groupEndIndex + 1;
-    int strangerEndIndex = strangerStartIndex + searchStrangerViewCount - 1;
+    /* int strangerStartIndex = groupEndIndex + 1;
+    int strangerEndIndex = strangerStartIndex + searchStrangerViewCount - 1;*/
 
     return Layout(
       headerColor: application.theme.primaryColor,
@@ -387,7 +387,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                   int friendItemIndex = index - 1;
                   int topicItemIndex = index - searchFriendViewCount - 1;
                   int groupItemIndex = index - searchTopicViewCount - searchFriendViewCount - 1;
-                  int strangerItemIndex = index - searchGroupViewCount - searchTopicViewCount - searchFriendViewCount - 1;
+                  /*int strangerItemIndex = index - searchGroupViewCount - searchTopicViewCount - searchFriendViewCount - 1;*/
 
                   if (searchFriendViewCount > 0 && index >= friendStartIndex && index <= friendEndIndex) {
                     if (index == friendStartIndex) {
@@ -422,7 +422,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       );
                     }
                     return _getGroupItemView(_searchGroups[groupItemIndex]);
-                  } else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
+                  } /*else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
                     if (index == strangerStartIndex) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
@@ -433,7 +433,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       );
                     }
                     return _getStrangerItemView(_searchStrangers[strangerItemIndex]);
-                  }
+                  }*/
                   return SizedBox.shrink();
                 },
               ),
@@ -511,7 +511,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     );
   }
 
-  Widget _getStrangerItemView(ContactSchema item) {
+  /*Widget _getStrangerItemView(ContactSchema item) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -539,7 +539,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
         ),
       ],
     );
-  }
+  }*/
 
   Widget _getTopicItemView(TopicSchema item) {
     return Slidable(
