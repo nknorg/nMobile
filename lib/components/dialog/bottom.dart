@@ -42,6 +42,7 @@ class BottomDialog extends BaseStateFulWidget {
     required WidgetBuilder builder,
     Widget? action,
     double? height,
+    bool onTapClose = true,
     bool animated = true,
   }) {
     this.builder = builder;
@@ -50,6 +51,7 @@ class BottomDialog extends BaseStateFulWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
+      isDismissible: onTapClose,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       backgroundColor: application.theme.backgroundLightColor,
       builder: (BuildContext context) {
@@ -70,10 +72,12 @@ class BottomDialog extends BaseStateFulWidget {
     Widget? action,
     String? desc = "",
     double? height = 300,
+    bool canTapClose = true,
   }) {
     return show<T>(
       height: height,
       action: action,
+      onTapClose: canTapClose,
       builder: (context) => GestureDetector(
         onTap: () {
           FocusScope.of(context).requestFocus(FocusNode());
@@ -290,6 +294,7 @@ class BottomDialog extends BaseStateFulWidget {
     int maxLength = 10000,
     bool enable = true,
     bool contactSelect = false,
+    bool canTapClose = true,
   }) async {
     TextEditingController _inputController = TextEditingController();
     _inputController.text = value ?? "";
@@ -298,6 +303,7 @@ class BottomDialog extends BaseStateFulWidget {
       title: title,
       desc: desc,
       height: height,
+      canTapClose: canTapClose,
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
