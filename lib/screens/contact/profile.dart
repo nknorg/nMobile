@@ -263,6 +263,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
   }
 
+  _onDropRemarkAvatar() async {
+    if (_contactSchema?.type == ContactType.me) return;
+    contactCommon.setRemarkAvatar(_contactSchema, null, notify: true); // await
+  }
+
   _selectAvatarPicture() async {
     String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _contactSchema?.clientAddress, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
@@ -298,12 +303,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       value: _contactSchema?.displayName,
       actionText: Global.locale((s) => s.save, ctx: context),
       maxLength: 20,
+      canTapClose: false,
     );
-    if (newName == null || newName.trim().isEmpty) return;
     if (_contactSchema?.type == ContactType.me) {
-      contactCommon.setSelfName(_contactSchema, newName.trim(), null, notify: true); // await
+      contactCommon.setSelfName(_contactSchema, newName?.trim(), null, notify: true); // await
     } else {
-      contactCommon.setRemarkName(_contactSchema, newName.trim(), null, notify: true); // await
+      contactCommon.setRemarkName(_contactSchema, newName?.trim(), notify: true); // await
     }
   }
 
@@ -669,6 +674,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
+    bool remarkNameExists = _contactSchema?.remarkName?.isNotEmpty == true;
+    bool originalNameExists = _contactSchema?.fullName.isNotEmpty == true;
+    String clientAddress = _contactSchema?.clientAddress ?? "";
+    bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
+    bool showOriginalName = remarkNameExists && originalNameExists && !isDefaultName;
+
     List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
@@ -743,10 +754,25 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     contact: _contactSchema!,
                     placeHolder: false,
                     onSelect: _selectAvatarPicture,
+                    onDrop: _onDropRemarkAvatar,
                   )
                 : SizedBox.shrink(),
           ),
-          SizedBox(height: 36),
+          SizedBox(height: 6),
+
+          /// name(original)
+          showOriginalName
+              ? Center(
+                  child: Label(
+                    _contactSchema?.fullName ?? "",
+                    type: LabelType.h3,
+                    color: application.theme.fontColor2,
+                    overflow: TextOverflow.fade,
+                    textAlign: TextAlign.right,
+                  ),
+                )
+              : SizedBox.shrink(),
+          SizedBox(height: showOriginalName ? 24 : 30),
 
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

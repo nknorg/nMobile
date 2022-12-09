@@ -130,7 +130,9 @@ class ContactCommon with Tag {
     bool success = await ContactStorage.instance.setProfile(
       old.id,
       Uuid().v4(),
-      {'avatar': avatarLocalPath, 'first_name': old.firstName, 'last_name': old.lastName},
+      avatarLocalPath,
+      old.firstName,
+      old.lastName,
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
@@ -141,7 +143,9 @@ class ContactCommon with Tag {
     bool success = await ContactStorage.instance.setProfile(
       old.id,
       Uuid().v4(),
-      {'avatar': Path.convert2Local(old.avatar?.path), 'first_name': firstName, 'last_name': lastName},
+      Path.convert2Local(old.avatar?.path),
+      firstName,
+      lastName,
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
@@ -152,7 +156,9 @@ class ContactCommon with Tag {
     bool success = await ContactStorage.instance.setProfile(
       old.id,
       profileVersion,
-      {'avatar': avatarLocalPath, 'first_name': firstName, 'last_name': lastName},
+      avatarLocalPath,
+      firstName,
+      lastName,
     );
     if (success && notify) queryAndNotify(old.id);
     return success;
@@ -195,24 +201,26 @@ class ContactCommon with Tag {
 
   Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return Future.value(false);
+    String? oldRemarkName = schema.data?['firstName'];
+    schema.data?['firstName'] = null; // clear history error
     bool success = await ContactStorage.instance.setRemarkProfile(
       schema.id,
       avatarLocalPath,
-      schema.data?['firstName'],
-      schema.data?['lastName'],
+      schema.data?['remarkName'] ?? oldRemarkName,
       oldExtraInfo: schema.data,
     );
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }
 
-  Future<bool> setRemarkName(ContactSchema? schema, String? firstName, String? lastName, {bool notify = false}) async {
+  Future<bool> setRemarkName(ContactSchema? schema, String? remarkName, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return false;
+    String? oldRemarkAvatar = schema.data?['avatar'];
+    schema.data?['avatar'] = null; // clear history error
     bool success = await ContactStorage.instance.setRemarkProfile(
       schema.id,
-      schema.data?['avatar'],
-      firstName,
-      lastName,
+      schema.data?['remarkAvatar'] ?? oldRemarkAvatar,
+      remarkName,
       oldExtraInfo: schema.data,
     );
     if (success && notify) queryAndNotify(schema.id);

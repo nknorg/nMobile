@@ -113,6 +113,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "close_burn_after_reading":
             MessageLookupByLibrary.simpleMessage("禁用了阅后即焚"),
         "coming_soon": MessageLookupByLibrary.simpleMessage("敬请期待..."),
+        "confirm_delete_remark_avatar":
+            MessageLookupByLibrary.simpleMessage("确定要删除备注头像吗?"),
         "confirm_password": MessageLookupByLibrary.simpleMessage("确认密码"),
         "confirm_resend": MessageLookupByLibrary.simpleMessage("确认重新发送？"),
         "confirm_unsubscribe_group":

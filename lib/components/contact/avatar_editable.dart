@@ -1,25 +1,28 @@
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
+import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/screens/common/media.dart';
-import 'package:nmobile/utils/asset.dart';
 
 class ContactAvatarEditable extends BaseStateFulWidget {
   final ContactSchema contact;
   final double? radius;
   final bool? placeHolder;
   final Function? onSelect;
+  final Function? onDrop;
 
   ContactAvatarEditable({
     required this.contact,
     this.radius,
     this.placeHolder = false,
     this.onSelect,
+    this.onDrop,
   });
 
   @override
@@ -29,8 +32,13 @@ class ContactAvatarEditable extends BaseStateFulWidget {
 class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarEditable> {
   File? _avatarFile;
 
+  bool canDrop = false;
+
   @override
   void onRefreshArguments() {
+    bool remarkExists = widget.contact.remarkAvatarLocalPath?.isNotEmpty == true;
+    bool onDropEnable = widget.onDrop != null;
+    canDrop = remarkExists && onDropEnable;
     _checkAvatarFileExists();
   }
 
@@ -40,6 +48,34 @@ class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarE
       setState(() {
         _avatarFile = avatarFile;
       });
+    }
+  }
+
+  _onPressEdit() {
+    if (canDrop) {
+      ModalDialog.of(Global.appContext).confirm(
+        title: Global.locale((s) => s.confirm_delete_remark_avatar),
+        agree: Button(
+          width: double.infinity,
+          text: Global.locale((s) => s.ok),
+          backgroundColor: application.theme.strongColor,
+          onPressed: () async {
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+            widget.onDrop?.call();
+          },
+        ),
+        reject: Button(
+          width: double.infinity,
+          text: Global.locale((s) => s.cancel),
+          fontColor: application.theme.fontColor2,
+          backgroundColor: application.theme.backgroundLightColor,
+          onPressed: () {
+            if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+          },
+        ),
+      );
+    } else {
+      _selectAvatarFile();
     }
   }
 
@@ -82,13 +118,13 @@ class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarE
               width: radius / 2,
               height: radius / 2,
               backgroundColor: application.theme.primaryColor,
-              child: Asset.iconSvg(
-                'camera',
+              child: Icon(
+                canDrop ? CupertinoIcons.clear : CupertinoIcons.camera_fill,
                 color: application.theme.backgroundLightColor,
-                width: radius / 5,
+                size: canDrop ? radius / 3 : radius / 4,
               ),
               onPressed: () {
-                _selectAvatarFile();
+                _onPressEdit();
               },
             ),
           )
