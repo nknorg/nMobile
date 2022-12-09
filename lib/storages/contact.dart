@@ -246,7 +246,7 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setProfile(int? contactId, String? profileVersion, Map<String, dynamic> profileInfo) async {
+  Future<bool> setProfile(int? contactId, String? profileVersion, String? avatarLocalPath, String? firstName, String? lastName) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     return await _queue.add(() async {
@@ -255,9 +255,9 @@ class ContactStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'avatar': profileInfo['avatar'],
-                  'first_name': profileInfo['first_name'],
-                  'last_name': profileInfo['last_name'],
+                  'avatar': avatarLocalPath,
+                  'first_name': firstName,
+                  'last_name': lastName,
                   'profile_version': profileVersion,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
@@ -266,10 +266,10 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
+              logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
               return true;
             }
-            logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - profileInfo:$profileInfo");
+            logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -430,13 +430,12 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setRemarkProfile(int? contactId, String? avatarLocalPath, String? firstName, String? lastName, {Map<String, dynamic>? oldExtraInfo}) async {
+  Future<bool> setRemarkProfile(int? contactId, String? avatarLocalPath, String? remarkName, {Map<String, dynamic>? oldExtraInfo}) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
-    data['avatar'] = avatarLocalPath;
-    data['firstName'] = firstName;
-    data['lastName'] = lastName;
+    data['remarkAvatar'] = avatarLocalPath;
+    data['remarkName'] = remarkName;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {

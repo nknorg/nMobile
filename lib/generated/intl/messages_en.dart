@@ -130,6 +130,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "close_burn_after_reading": MessageLookupByLibrary.simpleMessage(
             "disabled disappearing messages"),
         "coming_soon": MessageLookupByLibrary.simpleMessage("Coming Soon..."),
+        "confirm_delete_remark_avatar": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to delete the note avatar?"),
         "confirm_password":
             MessageLookupByLibrary.simpleMessage("Confirm Password"),
         "confirm_resend":
