@@ -585,10 +585,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       }
       Map<String, dynamic>? media;
       if (contentType == MessageContentType.image || contentType == MessageContentType.media) {
-        media = MediaScreen.createMediasItemByImagePath(path);
+        media = MediaScreen.createMediasItemByImagePath(element.msgId, path);
       } else if (contentType == MessageContentType.video) {
         String? thumbnail = MessageOptions.getMediaThumbnailPath(element.options);
-        media = MediaScreen.createMediasItemByVideoPath(path, thumbnail);
+        media = MediaScreen.createMediasItemByVideoPath(element.msgId, path, thumbnail);
       }
       if (media != null) medias.add(media);
     }
