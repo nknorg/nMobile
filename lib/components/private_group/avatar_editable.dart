@@ -48,7 +48,7 @@ class _PrivateGroupSchemaEditableState extends BaseStateFulWidgetState<PrivateGr
   }
 
   _photoShow(BuildContext context) {
-    Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_avatarFile?.path);
+    Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(null, _avatarFile?.path);
     if (item != null) MediaScreen.go(context, [item]);
   }
 
