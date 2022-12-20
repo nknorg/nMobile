@@ -14,6 +14,7 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/create_private_group.dart';
 import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -538,7 +539,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      /*SizedBox(
+                      SizedBox(
                         height: btnSize,
                         child: Align(
                           alignment: Alignment.centerRight,
@@ -557,7 +558,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                           ),
                         ),
                       ),
-                      SizedBox(height: 10),*/
+                      SizedBox(height: 10),
                       SizedBox(
                         height: btnSize,
                         child: Align(
@@ -609,7 +610,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        /*Button(
+                        Button(
                           width: btnSize,
                           height: btnSize,
                           fontColor: application.theme.fontLightColor,
@@ -624,7 +625,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                             );
                           },
                         ),
-                        SizedBox(height: 10),*/
+                        SizedBox(height: 10),
                         Button(
                           width: btnSize,
                           height: btnSize,

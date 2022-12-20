@@ -11,7 +11,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
-import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/theme/theme.dart';
@@ -42,28 +41,24 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
 
     if (_privateSelected) {
-      /*if (clientCommon.getPublicKey() == null) return false;
+      if (clientCommon.getPublicKey() == null) return false;
       if (Validate.isPrivateTopicOk(topicName)) {
         int index = topicName.lastIndexOf('.');
         String owner = topicName.substring(index + 1);
         if (owner != clientCommon.getPublicKey()) return false;
       } else {
         topicName = '$topicName.${clientCommon.getPublicKey()}';
-      }*/
-      Loading.show();
-      PrivateGroupSchema? privateGroupSchema = await privateGroupCommon.createPrivateGroup(topicName, toast: true);
-      Loading.dismiss();
-      if (privateGroupSchema == null) return false;
-      ChatMessagesScreen.go(Global.appContext, privateGroupSchema);
-    } else {
-      double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
-      if (fee == null) return false;
-      Loading.show();
-      TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
-      Loading.dismiss();
-      if (_topic == null) return false;
-      ChatMessagesScreen.go(Global.appContext, _topic);
+      }
     }
+
+    double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
+    if (fee == null) return false;
+    Loading.show();
+    TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
+    Loading.dismiss();
+
+    if (_topic == null) return false;
+    ChatMessagesScreen.go(Global.appContext, _topic);
     return true;
   }
 
