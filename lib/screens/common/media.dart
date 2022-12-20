@@ -21,6 +21,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:video_player/video_player.dart';
 
+class ReverseTransformer extends ScaleAndFadeTransformer {
+  final bool reverse;
+  ReverseTransformer({this.reverse = true}) : super(fade: null, scale: null);
+}
+
 class MediaScreen extends BaseStateFulWidget {
   static final String routeName = "/media";
   static final String argTarget = "target";
@@ -77,18 +82,20 @@ class MediaScreen extends BaseStateFulWidget {
     return data;
   }
 
-  static Map<String, dynamic>? createMediasItemByImagePath(String? imagePath) {
+  static Map<String, dynamic>? createMediasItemByImagePath(String? id, String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return null;
     return {
+      "id": id,
       "mediaType": "image",
       "contentType": "path",
       "content": imagePath,
     };
   }
 
-  static Map<String, dynamic>? createMediasItemByVideoPath(String? contentPath, String? thumbnailPath) {
+  static Map<String, dynamic>? createMediasItemByVideoPath(String? id, String? contentPath, String? thumbnailPath) {
     if (contentPath == null || contentPath.isEmpty) return null;
     return {
+      "id": id,
       "mediaType": "video",
       "contentType": "path",
       "content": contentPath,
@@ -167,6 +174,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   void _initVideoController(int index) async {
     _videoController?.pause();
+    // logger.i("-----> 333 index:$index");
+    if ((index < 0) || (index >= _medias.length)) return null;
     Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return;
     String mediaType = media["mediaType"] ?? "";
@@ -334,6 +343,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
               index: _showIndex,
               itemCount: _medias.length,
               onIndexChanged: (index) {
+                index = _medias.length - (index + 1);
                 // logger.i("-----> 111 index:$index");
                 if ((index < 0) || (index >= _medias.length)) return;
                 setState(() {
@@ -345,7 +355,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                 _initVideoController(index); // await
                 _tryFetchMedias();
               },
+              transformer: ReverseTransformer(),
               itemBuilder: (BuildContext context, int index) {
+                index = _medias.length - (index + 1);
                 // logger.i("-----> 222 index:$index");
                 if ((index < 0) || (index >= _medias.length)) return SizedBox.shrink();
                 Map<String, dynamic>? media = _medias[index];
@@ -363,7 +375,6 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                         File(content),
                         fit: BoxFit.contain,
                         frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                          // logger.i("-----> 333 index:$index - frame$frame - loaded:$wasSynchronouslyLoaded");
                           return ((frame != null) || wasSynchronouslyLoaded)
                               ? child
                               : SpinKitRing(

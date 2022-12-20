@@ -389,7 +389,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
-            Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(file.path);
+            Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_message.msgId, file.path);
             if (item != null) onTap = () => MediaScreen.go(context, [item], target: _message.targetId, msgId: _message.msgId);
           }
         } else {
@@ -406,7 +406,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
-              Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(file.path);
+              Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_message.msgId, file.path);
               if (item != null) onTap = () => MediaScreen.go(context, [item], target: _message.targetId, msgId: _message.msgId);
             }
           }
@@ -429,7 +429,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         if (_message.isOutbound || (_message.contentType != MessageContentType.ipfs)) {
           if (_message.content is File) {
             File file = _message.content as File;
-            Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(file.path, thumbnailPath);
+            Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, thumbnailPath);
             if (item != null) onTap = () => MediaScreen.go(context, [item], target: _message.targetId, msgId: _message.msgId);
           }
         } else {
@@ -446,7 +446,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           } else {
             if (_message.content is File) {
               File file = _message.content as File;
-              Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(file.path, thumbnailPath);
+              Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, thumbnailPath);
               if (item != null) onTap = () => MediaScreen.go(context, [item], target: _message.targetId, msgId: _message.msgId);
             }
           }
