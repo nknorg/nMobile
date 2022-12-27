@@ -36,6 +36,26 @@ class ContactCommon with Tag {
 
   ContactCommon();
 
+  Future<String?> resolveClientAddress(String? address) async {
+    if ((address == null) || address.isEmpty) return null;
+    String? clientAddress;
+    try {
+      Resolver resolver = Resolver();
+      clientAddress = await resolver.resolve(address);
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    if ((clientAddress != null) && Validate.isNknChatIdentifierOk(clientAddress)) {
+      return clientAddress;
+    } else {
+      if (Validate.isNknChatIdentifierOk(address)) {
+        return address;
+      } else {
+        return null;
+      }
+    }
+  }
+
   Future<ContactSchema?> resolveByAddress(String? address, {bool canAdd = false}) async {
     if ((address == null) || address.isEmpty) return null;
     // address

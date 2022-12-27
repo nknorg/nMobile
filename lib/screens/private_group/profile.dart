@@ -19,8 +19,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
-import 'package:nmobile/helpers/validate.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
@@ -214,13 +212,14 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       title: Global.locale((s) => s.invite_members),
       inputTip: Global.locale((s) => s.send_to),
       inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
-      validator: Validator.of(context).identifierNKN(),
+      // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (Validate.isNknChatIdentifierOk(address)) {
-      bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
-      if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
-    }
+    Loading.show();
+    String? clientAddress = await contactCommon.resolveClientAddress(address);
+    Loading.dismiss();
+    bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, clientAddress, toast: true);
+    if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
   }
 
   _quit() async {
