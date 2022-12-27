@@ -31,7 +31,6 @@ import 'package:nmobile/screens/wallet/receive.dart';
 import 'package:nmobile/screens/wallet/send.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 
 class WalletDetailScreen extends BaseStateFulWidget {

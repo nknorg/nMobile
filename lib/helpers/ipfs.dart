@@ -6,8 +6,8 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/native/crypto.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 
 class IpfsHelper with Tag {

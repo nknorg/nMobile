@@ -17,7 +17,6 @@ import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 
 class TopicSubscribersScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/members';

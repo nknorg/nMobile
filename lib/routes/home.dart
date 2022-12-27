@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/screens/common/media.dart';
-import 'package:nmobile/screens/common/photo.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/common/select.dart';
-import 'package:nmobile/screens/common/video.dart';
 
 Map<String, WidgetBuilder> _routes = {
   ScannerScreen.routeName: (BuildContext context) => ScannerScreen(),
