@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -32,6 +35,49 @@ class ContactCommon with Tag {
   Stream<ContactSchema?> get meUpdateStream => _meUpdateController.stream;
 
   ContactCommon();
+
+  Future<ContactSchema?> resolveByAddress(String? address, {bool canAdd = false}) async {
+    if ((address == null) || address.isEmpty) return null;
+    // address
+    String? clientAddress;
+    try {
+      Resolver resolver = Resolver();
+      clientAddress = await resolver.resolve(address);
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    bool resolveOk = false;
+    if ((clientAddress != null) && Validate.isNknChatIdentifierOk(clientAddress)) {
+      resolveOk = true;
+    } else {
+      if (Validate.isNknChatIdentifierOk(address)) {
+        clientAddress = address;
+      } else {
+        return null;
+      }
+    }
+    // query
+    ContactSchema? contact = await queryByClientAddress(clientAddress);
+    // add
+    if (canAdd) {
+      if (contact != null) {
+        if (contact.type == ContactType.none) {
+          bool success = await setType(contact.id, ContactType.stranger, notify: true);
+          if (success) contact.type = ContactType.stranger;
+        }
+      } else {
+        ContactSchema? _contact = await ContactSchema.create(clientAddress, ContactType.stranger);
+        contact = await add(_contact, notify: true);
+      }
+    }
+    if ((contact != null) && resolveOk) {
+      if (!contact.mappedAddress.contains(address)) {
+        List<String> added = contact.mappedAddress..add(address);
+        await setMappedAddress(contact, added.toSet().toList(), notify: true);
+      }
+    }
+    return contact;
+  }
 
   Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false, bool fetchDeviceToken = false}) async {
     List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);

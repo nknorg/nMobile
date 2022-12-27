@@ -6,8 +6,6 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/helpers/validate.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -30,22 +28,13 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
       title: Global.locale((s) => s.new_whisper, ctx: context),
       inputTip: Global.locale((s) => s.send_to, ctx: context),
       inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
-      validator: Validator.of(context).identifierNKN(),
+      // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (Validate.isNknChatIdentifierOk(address)) {
-      ContactSchema? contact = await contactCommon.queryByClientAddress(address);
-      if (contact != null) {
-        if (contact.type == ContactType.none) {
-          bool success = await contactCommon.setType(contact.id, ContactType.stranger, notify: true);
-          if (success) contact.type = ContactType.stranger;
-        }
-      } else {
-        ContactSchema? _contact = await ContactSchema.create(address, ContactType.stranger);
-        contact = await contactCommon.add(_contact, notify: true);
-      }
-      await ChatMessagesScreen.go(Global.appContext, contact);
-    }
+    Loading.show();
+    ContactSchema? contact = await contactCommon.resolveByAddress(address, canAdd: true);
+    Loading.dismiss();
+    if (contact != null) await ChatMessagesScreen.go(Global.appContext, contact);
   }
 
   void subscribePopularTopic(String? topicName) async {

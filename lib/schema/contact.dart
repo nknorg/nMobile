@@ -94,7 +94,9 @@ class ContactSchema {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String defaultName;
     var index = clientAddress.lastIndexOf('.');
-    if (index < 0) {
+    if (clientAddress.length <= 6) {
+      defaultName = clientAddress;
+    } else if (index < 0) {
       defaultName = clientAddress.substring(0, 6);
     } else {
       defaultName = clientAddress.substring(0, index + 7);
