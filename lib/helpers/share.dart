@@ -9,10 +9,10 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/topic.dart';
+import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import 'package:nmobile/screens/contact/home.dart';
 
 class ShareHelper {
   static Future showWithTexts(BuildContext? context, List<String> shareTexts) async {
