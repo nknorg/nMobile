@@ -9,12 +9,12 @@ import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/header.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/create_private_group.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -22,8 +22,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/share.dart';
-import 'package:nmobile/helpers/validate.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -653,41 +651,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               title: Global.locale((s) => s.new_whisper, ctx: context),
                               inputTip: Global.locale((s) => s.send_to, ctx: context),
                               inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
-                              validator: Validator.of(context).identifierNKN(),
+                              // validator: Validator.of(context).identifierNKN(),
                               contactSelect: true,
                             );
-                            if ((address != null) && address.isNotEmpty) {
-                              Resolver resolver = Resolver();
-                              String? clientAddress = await resolver.resolve(address);
-                              bool resolveOk = false;
-                              if ((clientAddress != null) && Validate.isNknChatIdentifierOk(clientAddress)) {
-                                resolveOk = true;
-                              } else {
-                                if (Validate.isNknChatIdentifierOk(address)) {
-                                  clientAddress = address;
-                                } else {
-                                  return;
-                                }
-                              }
-                              ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
-                              if (contact != null) {
-                                if (contact.type == ContactType.none) {
-                                  bool success = await contactCommon.setType(contact.id, ContactType.stranger, notify: true);
-                                  if (success) contact.type = ContactType.stranger;
-                                }
-                              } else {
-                                ContactSchema? _contact = await ContactSchema.create(clientAddress, ContactType.stranger);
-                                contact = await contactCommon.add(_contact, notify: true);
-                              }
-                              if (contact == null) return;
-                              if (resolveOk) {
-                                if (!contact.mappedAddress.contains(address)) {
-                                  List<String> added = contact.mappedAddress..add(address);
-                                  await contactCommon.setMappedAddress(contact, added.toSet().toList(), notify: true);
-                                }
-                              }
-                              await ChatMessagesScreen.go(context, contact);
-                            }
+                            Loading.show();
+                            ContactSchema? contact = await contactCommon.resolveByAddress(address, canAdd: true);
+                            Loading.dismiss();
+                            if (contact != null) await ChatMessagesScreen.go(context, contact);
                             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context); // floatActionBtn
                           },
                         ),
