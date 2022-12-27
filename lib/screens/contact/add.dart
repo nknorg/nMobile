@@ -115,12 +115,13 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       (_formKey.currentState as FormState).save();
       Loading.show();
       // input
-      String clientAddress = _clientAddressController.text.replaceAll("\n", "").trim();
+      String address = _clientAddressController.text.replaceAll("\n", "").trim();
       String? remarkAvatar = _headImage?.path.isNotEmpty == true ? Path.convert2Local(_headImage?.path) : null;
       String? remarkName = _nameController.text.isNotEmpty ? _nameController.text : null;
       String note = _notesController.text;
-      logger.i("$TAG - _saveContact -\n clientAddress:$clientAddress,\n note:$note,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
+      logger.i("$TAG - _saveContact -\n address:$address,\n note:$note,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
       // exist
+      String? clientAddress = await contactCommon.resolveClientAddress(address);
       ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
       if ((exist != null) && (exist.type == ContactType.friend)) {
         Toast.show(Global.locale((s) => s.add_user_duplicated, ctx: context));

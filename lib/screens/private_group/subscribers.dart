@@ -5,20 +5,18 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
+import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/private_group/header.dart';
 import 'package:nmobile/components/private_group/subscriber_item.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/validate.dart';
-import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 
 class PrivateGroupSubscribersScreen extends BaseStateFulWidget {
   static const String routeName = '/privateGroup/members';
@@ -158,13 +156,14 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       title: Global.locale((s) => s.invite_members),
       inputTip: Global.locale((s) => s.send_to),
       inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
-      validator: Validator.of(context).identifierNKN(),
+      // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
-    if (Validate.isNknChatIdentifierOk(address)) {
-      bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, address, toast: true);
-      if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
-    }
+    Loading.show();
+    String? clientAddress = await contactCommon.resolveClientAddress(address);
+    Loading.dismiss();
+    bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, clientAddress, toast: true);
+    if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
   }
 
   @override
