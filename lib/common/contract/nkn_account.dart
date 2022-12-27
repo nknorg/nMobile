@@ -1,7 +1,7 @@
+import 'package:http/http.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:http/http.dart';
 
 class NKNAccount {
   static const SMART_CONTRACT_ADDRESS = '0xf6Af6126D18FD3d64A771E5F449c706bb4121953';

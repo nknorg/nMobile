@@ -7,7 +7,6 @@ import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 

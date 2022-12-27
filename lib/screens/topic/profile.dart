@@ -25,7 +25,6 @@ import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
 import 'package:nmobile/utils/asset.dart';
-import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 
