@@ -19,9 +19,9 @@ import 'package:nmobile/utils/time.dart';
 
 class ChatMessageItem extends BaseStateFulWidget {
   final MessageSchema message;
+  // final ContactSchema? contact;
   // final TopicSchema? topic;
   // final PrivateGroupSchema? privateGroup;
-  final ContactSchema? contact;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
@@ -29,9 +29,9 @@ class ChatMessageItem extends BaseStateFulWidget {
 
   ChatMessageItem({
     required this.message,
+    // required this.contact,
     // required this.topic,
     // required this.privateGroup,
-    required this.contact,
     this.prevMessage,
     this.nextMessage,
     this.onAvatarLonePress,
@@ -62,16 +62,17 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
 
   @override
   void onRefreshArguments() {
-    _contact = widget.contact;
     // topic/group no contact
     if ((_contact == null) || (_contact?.clientAddress != widget.message.from)) {
-      contactCommon.queryByClientAddress(widget.message.from).then((ContactSchema? value) async {
+      contactCommon.queryByClientAddress(widget.message.from).then((value) async {
         if (value == null) {
           value = await contactCommon.addByType(widget.message.from, ContactType.none, notify: true, checkDuplicated: false);
         }
-        setState(() {
-          _contact = value;
-        });
+        if ((_contact == null) || ((_contact?.clientAddress != value?.clientAddress) && (value != null))) {
+          setState(() {
+            _contact = value;
+          });
+        }
       });
     }
   }
@@ -292,7 +293,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.widget.contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
@@ -312,7 +313,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this.widget.contact);
+                  ContactProfileScreen.go(context, schema: this._contact);
                 },
               ),
             ],
@@ -331,7 +332,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this.widget.contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
                     maxWidth: Global.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
@@ -351,7 +352,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this.widget.contact);
+                  ContactProfileScreen.go(context, schema: this._contact);
                 },
               ),
             ],

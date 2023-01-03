@@ -765,9 +765,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                         MessageSchema msg = _messages[index];
                         return ChatMessageItem(
                           message: msg,
+                          // contact: _contact,
                           // topic: _topic,
                           // privateGroup: _privateGroup,
-                          contact: _contact,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
                           onAvatarLonePress: (ContactSchema contact, _) {
