@@ -5,6 +5,7 @@ import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
+import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
@@ -97,13 +98,13 @@ class ShareHelper {
       return null;
     }
     // type
-    String mimetype = "";
+    String mimeType = "";
     if (shareMedia.type == SharedMediaType.IMAGE) {
-      mimetype = "image";
+      mimeType = "image";
     } else if (shareMedia.type == SharedMediaType.VIDEO) {
-      mimetype = "video";
+      mimeType = "video";
     } else if (shareMedia.type == SharedMediaType.FILE) {
-      mimetype = "file";
+      mimeType = "file";
     }
     // ext
     String ext = Path.getFileExt(file, "");
@@ -122,6 +123,16 @@ class ShareHelper {
         return null;
       }
     }
+    // save
+    String filePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: ext);
+    File saveFile = File(filePath);
+    if (!await saveFile.exists()) {
+      await saveFile.create(recursive: true);
+    } else {
+      await saveFile.delete();
+      await saveFile.create(recursive: true);
+    }
+    saveFile = await file.copy(filePath);
     // thumbnail
     String? thumbnailPath;
     int? thumbnailSize;
@@ -140,16 +151,23 @@ class ShareHelper {
         thumbnailSize = saveThumbnail.lengthSync();
       }
     }
-    // media
-    String filePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: ext);
-    File saveFile = File(filePath);
-    if (!await saveFile.exists()) {
-      await saveFile.create(recursive: true);
-    } else {
-      await saveFile.delete();
-      await saveFile.create(recursive: true);
+    if (thumbnailPath == null || thumbnailPath.isEmpty) {
+      if (mimeType.contains("video") == true) {
+        thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+        Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(filePath, thumbnailPath);
+        if (res != null && res.isNotEmpty) {
+          thumbnailPath = res["path"];
+          thumbnailSize = res["size"];
+        }
+      } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesMaxSize)) {
+        thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+        File? thumbnail = await MediaPicker.compressImageBySize(File(filePath), savePath: thumbnailPath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
+        if (thumbnail != null) {
+          thumbnailPath = thumbnail.absolute.path;
+          thumbnailSize = thumbnail.lengthSync();
+        }
+      }
     }
-    saveFile = await file.copy(filePath);
     // map
     if (filePath.isNotEmpty) {
       int? duration = shareMedia.duration;
@@ -158,7 +176,7 @@ class ShareHelper {
         "size": size,
         "name": null,
         "fileExt": ext.isEmpty ? null : ext,
-        "mimeType": mimetype,
+        "mimeType": mimeType,
         "width": null,
         "height": null,
         "duration": (duration != null) ? (duration / 1000) : null,
