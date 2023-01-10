@@ -55,13 +55,13 @@ dependencies:
   synchronized: ^3.0.0+2
   dio: ^4.0.6
   get_it: ^7.2.0
-  uuid: ^3.0.6
+  uuid: ^3.0.7
   crypto: ^3.0.2
   mime_type: ^1.0.0
-  permission_handler: ^10.0.0
-  vibration: ^1.7.3
+  permission_handler: ^10.2.0
+  vibration: ^1.7.6
   flutter_local_notifications: ^9.6.1
-  background_fetch: ^1.1.0
+  background_fetch: ^1.1.2
   fixnum: ^1.0.1
   receive_sharing_intent:
     git:
@@ -132,7 +132,7 @@ dependencies:
   video_thumbnail: ^0.5.3
 
   # QR
-  qr_code_scanner: ^1.0.0
+  qr_code_scanner: ^1.0.1
   qr_flutter: ^4.0.0
 
   # eth
