@@ -1,5 +1,5 @@
 PODS:
-  - background_fetch (1.1.0):
+  - background_fetch (1.1.2):
     - Flutter
   - camera_avfoundation (0.0.1):
     - Flutter
@@ -43,7 +43,7 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
-  - flutter_image_compress (0.0.1):
+  - flutter_image_compress (1.0.0):
     - Flutter
     - Mantle
     - SDWebImage
@@ -140,7 +140,7 @@ PODS:
   - TOCropViewController (2.6.1)
   - url_launcher_ios (0.0.1):
     - Flutter
-  - vibration (1.7.3):
+  - vibration (1.7.5):
     - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
@@ -280,7 +280,7 @@ CHECKOUT OPTIONS:
     :tag: 7.31.5
 
 SPEC CHECKSUMS:
-  background_fetch: 3795af8a49054dc526477cc2f60d2ed41de60587
+  background_fetch: aaf8fc9d1da7f04e5373aabd4bb239704a5be6eb
   camera_avfoundation: 07c77549ea54ad95d8581be86617c094a46280d9
   connectivity_plus: 413a8857dd5d9f1c399a39130850d02fe0feaf7e
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
@@ -288,7 +288,7 @@ SPEC CHECKSUMS:
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
   file_picker: 817ab1d8cd2da9d2da412a417162deee3500fc95
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  flutter_image_compress: fd2b476345226e1a10ea352fa306af95704642c1
+  flutter_image_compress: 5a5e9aee05b6553048b8df1c3bc456d0afaac433
   flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_native_splash: 52501b97d1c0a5f898d687f1646226c1f93c56ef
   flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
@@ -324,11 +324,11 @@ SPEC CHECKSUMS:
   SwiftyGif: 6c3eafd0ce693cad58bb63d2b2fb9bacb8552780
   TOCropViewController: edfd4f25713d56905ad1e0b9f5be3fbe0f59c863
   url_launcher_ios: 02f1989d4e14e998335b02b67a7590fa34f971af
-  vibration: b5a33e764c3f609a975b9dca73dce20fdde627dc
+  vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
   video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
   video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
   webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
 
-PODFILE CHECKSUM: 707acfdcab935059fe42b4e38b227938b1d6ccb7
+PODFILE CHECKSUM: b0ba4b08b4450251589d1940d4da2cbb1f0c80b4
 
 COCOAPODS: 1.11.3
