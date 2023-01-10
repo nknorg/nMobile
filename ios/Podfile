@@ -31,8 +31,8 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '7.28.0'
-  
+  pod 'Sentry', :git => 'https://github.com/getsentry/sentry-cocoa.git', :tag => '7.31.5'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   target 'Sharing Extension' do
