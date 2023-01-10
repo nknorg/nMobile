@@ -112,13 +112,14 @@ PODS:
   - SDWebImageWebPCoder (0.9.1):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.13)
-  - Sentry (7.28.0):
-    - Sentry/Core (= 7.28.0)
-  - Sentry/Core (7.28.0)
+  - Sentry (7.31.5):
+    - Sentry/Core (= 7.31.5)
+  - Sentry/Core (7.31.5)
+  - Sentry/HybridSDK (7.31.5)
   - sentry_flutter (0.0.1):
     - Flutter
     - FlutterMacOS
-    - Sentry (~> 7.28.0)
+    - Sentry/HybridSDK (= 7.31.5)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_ios (0.0.1):
@@ -173,7 +174,7 @@ DEPENDENCIES:
   - photo_manager (from `.symlinks/plugins/photo_manager/ios`)
   - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
   - receive_sharing_intent (from `.symlinks/plugins/receive_sharing_intent/ios`)
-  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `7.28.0`)
+  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `7.31.5`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
@@ -251,7 +252,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/receive_sharing_intent/ios"
   Sentry:
     :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 7.28.0
+    :tag: 7.31.5
   sentry_flutter:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   share_plus:
@@ -276,7 +277,7 @@ EXTERNAL SOURCES:
 CHECKOUT OPTIONS:
   Sentry:
     :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 7.28.0
+    :tag: 7.31.5
 
 SPEC CHECKSUMS:
   background_fetch: 3795af8a49054dc526477cc2f60d2ed41de60587
@@ -313,8 +314,8 @@ SPEC CHECKSUMS:
   receive_sharing_intent: c0d87310754e74c0f9542947e7cbdf3a0335a3b1
   SDWebImage: af5bbffef2cde09f148d826f9733dcde1a9414cd
   SDWebImageWebPCoder: 18503de6621dd2c420d680e33d46bf8e1d5169b0
-  Sentry: 2c6053e4cfe6dea6608135dea1928ffbb4ecfba5
-  sentry_flutter: fad3ef0917dc1afa7d242af0743696ed9a9a8864
+  Sentry: 4c9babff9034785067c896fd580b1f7de44da020
+  sentry_flutter: d3dad547d3db4918a8051a5ef738cc195c427b4b
   share_plus: 056a1e8ac890df3e33cb503afffaf1e9b4fbae68
   shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
@@ -328,6 +329,6 @@ SPEC CHECKSUMS:
   video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
   webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
 
-PODFILE CHECKSUM: 5f3f04c9e904bd941a12039516f44cd4607d53a8
+PODFILE CHECKSUM: 707acfdcab935059fe42b4e38b227938b1d6ccb7
 
 COCOAPODS: 1.11.3

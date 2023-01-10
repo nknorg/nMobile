@@ -1046,14 +1046,14 @@ packages:
       name: sentry
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.13.1"
+    version: "6.18.2"
   sentry_flutter:
     dependency: "direct main"
     description:
       name: sentry_flutter
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "6.13.1"
+    version: "6.18.2"
   share_plus:
     dependency: "direct main"
     description:
