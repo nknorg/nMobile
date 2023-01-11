@@ -81,7 +81,7 @@ dependencies:
   flutter_cupertino_localizations: ^1.0.1
 
   # storage
-  flutter_secure_storage: ^5.0.2
+  flutter_secure_storage: ^7.0.1
   sqflite: ^2.0.3
   sqflite_sqlcipher: ^2.1.1
   hive: ^2.2.3
@@ -137,7 +137,7 @@ dependencies:
   qr_flutter: ^4.0.0
 
   # eth
-  web3dart: ^2.4.1
+  web3dart: ^2.5.3
 
   # plugins
   nkn_sdk_flutter:
