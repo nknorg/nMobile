@@ -39,6 +39,7 @@ android {
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
 
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
@@ -83,6 +84,7 @@ android {
     }
     compileOptions {
         encoding "UTF-8"
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -124,6 +126,10 @@ dependencies {
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     // sentry
     implementation 'io.sentry:sentry-android:6.11.0'
+    // local_notification
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+    implementation 'androidx.window:window:1.0.0'
+    implementation 'androidx.window:window-java:1.0.0'
     // apns
     implementation 'com.clevertap.apns:apns-http2:1.0.3'
     // google

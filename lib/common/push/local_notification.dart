@@ -19,7 +19,7 @@ class LocalNotification {
     var initializationSettingsAndroid = new AndroidInitializationSettings(
       '@mipmap/ic_launcher_round',
     );
-    var initializationSettingsIOS = IOSInitializationSettings(
+    var initializationSettingsIOS = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestSoundPermission: true,
       requestBadgePermission: true,
@@ -34,7 +34,7 @@ class LocalNotification {
       iOS: initializationSettingsIOS,
     );
 
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? payload) async {
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings, onDidReceiveNotificationResponse: (NotificationResponse details) async {
       _flutterLocalNotificationsPlugin.cancelAll();
     });
   }
@@ -64,10 +64,11 @@ class LocalNotification {
       vibrationPattern: Int64List.fromList([0, 30, 100, 30]),
       enableLights: true,
       groupKey: targetId,
+      number: badgeNumber,
     );
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
-      badgeNumber: badgeNumber,
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails(
       threadIdentifier: targetId,
+      badgeNumber: badgeNumber,
     );
 
     var platformChannelSpecifics = NotificationDetails(

@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -91,8 +92,8 @@ class Global {
 
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
+      Global.deviceId = (await AndroidId().getId()) ?? "";
       AndroidDeviceInfo _info = await deviceInfo.androidInfo;
-      Global.deviceId = _info.androidId ?? "";
       Global.deviceVersionName = _info.version.release ?? "";
       Global.deviceVersion = Global.deviceVersionName.split(".")[0];
     } else if (Platform.isIOS) {

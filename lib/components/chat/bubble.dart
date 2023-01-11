@@ -26,7 +26,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/time.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_filex/open_filex.dart';
 
 class ChatBubble extends BaseStateFulWidget {
   final MessageSchema message;
@@ -461,7 +461,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             File file = _message.content as File;
             onTap = () {
               try {
-                OpenFile.open(file.path);
+                OpenFilex.open(file.path);
               } catch (e, st) {
                 handleError(e, st);
               }
@@ -483,7 +483,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               File file = _message.content as File;
               onTap = () {
                 try {
-                  OpenFile.open(file.path);
+                  OpenFilex.open(file.path);
                 } catch (e, st) {
                   handleError(e, st);
                 }
