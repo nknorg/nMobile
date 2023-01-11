@@ -12,7 +12,7 @@ import receive_sharing_intent
         super.application(application, didFinishLaunchingWithOptions: launchOptions)
         
         if #available(iOS 10.0, *) {
-            UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+            UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
         }
         
         SentrySDK.start { options in
