@@ -248,15 +248,26 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if (type != "request") return;
       String target = response[0]["target"]?.toString() ?? "";
       if (target != targetId) return;
+      bool isLeft = response[0]["isLeft"] ?? true;
       String msgId = response[0]["msgId"]?.toString() ?? "";
-      // messages
-      int limit = 10;
-      List<MessageSchema> messages = await _getMediasMessages(limit, msgId, null);
-      if (messages.isEmpty) return; // no return
       // medias
-      List<Map<String, dynamic>> medias = _getMediasData(messages);
+      int limit = 10;
+      List<MessageSchema> messages = [];
+      List<Map<String, dynamic>> medias = [];
+      while (medias.length < limit) {
+        List<MessageSchema> msgList = await _getMediasMessages(limit, isLeft, msgId);
+        if (msgList.isEmpty) break;
+        if (isLeft || messages.isEmpty) {
+          messages.addAll(msgList);
+        } else {
+          messages.insertAll(0, msgList);
+        }
+        msgId = isLeft ? messages.last.msgId : messages.first.msgId;
+        medias = _getMediasData(messages);
+      }
+      if (medias.isEmpty) return; // no return
       // response
-      List<Map<String, dynamic>>? request = MediaScreen.createFetchResponse(target, messages.last.msgId, medias);
+      List<Map<String, dynamic>>? request = MediaScreen.createFetchResponse(target, isLeft, msgId, medias);
       if (request != null) MediaScreen.onFetchSink.add(request);
     });
 
@@ -535,10 +546,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  Future<List<MessageSchema>> _getMediasMessages(int limit, String msgId, List<MessageSchema>? messages) async {
-    messages = messages ?? [];
+  Future<List<MessageSchema>> _getMediasMessages(int limit, bool isLeft, String msgId) async {
+    List<MessageSchema> result = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await chatCommon.queryMessagesByTargetIdWithTypeNotDel(
+      List<MessageSchema> msgList = await chatCommon.queryMessagesByTargetIdWithTypeNotDel(
         targetId,
         _topic?.topic,
         _privateGroup?.groupId,
@@ -546,19 +557,30 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         offset: offset,
         limit: limit,
       );
-      if (messages.isEmpty) {
-        int index = result.indexWhere((element) => element.msgId == msgId);
-        if (index >= 0) {
-          messages.addAll(result.skip(index).toList());
+      if (msgList.isEmpty) break;
+      int index = msgList.indexWhere((element) => element.msgId == msgId);
+      if (index >= 0) {
+        if (isLeft) {
+          offset = offset + index + 1;
+        } else {
+          offset = offset - limit + index;
+          if (offset < 0) {
+            offset = 0;
+            limit = index;
+          }
         }
-      } else {
-        messages.addAll(result);
+        result = await chatCommon.queryMessagesByTargetIdWithTypeNotDel(
+          targetId,
+          _topic?.topic,
+          _privateGroup?.groupId,
+          [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
+          offset: offset,
+          limit: limit,
+        );
+        break;
       }
-      if (result.length < limit) break;
-      if (messages.length >= limit) break;
     }
-    if (messages.isNotEmpty) messages.removeAt(0);
-    return messages;
+    return result;
   }
 
   List<Map<String, dynamic>> _getMediasData(List<MessageSchema> messages) {
@@ -573,7 +595,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       } else if (element.content is String) {
         path = element.content;
       }
-      if (path == null || path.isEmpty) continue;
+      if (path == null || path.isEmpty) continue; // TODO:GG 考虑下载
       String contentType = element.contentType;
       if (contentType == MessageContentType.ipfs) {
         int? type = MessageOptions.getFileType(element.options);

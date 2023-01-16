@@ -165,8 +165,9 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               File qrFile = File(path);
               qrFile = await qrFile.writeAsBytes(imgBytes);
               Loading.dismiss();
+              XFile xFile = XFile(qrFile.path, mimeType: "image/png");
               // share
-              Share.shareFiles([qrFile.path]);
+              Share.shareXFiles([xFile]);
             },
           )
         ],
