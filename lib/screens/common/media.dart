@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -15,26 +14,25 @@ import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:video_player/video_player.dart';
 
-class ReverseTransformer extends ScaleAndFadeTransformer {
-  final bool reverse;
-  ReverseTransformer({this.reverse = true}) : super(fade: null, scale: null);
-}
-
 class MediaScreen extends BaseStateFulWidget {
   static final String routeName = "/media";
-  static final String argTarget = "target";
-  static final String argMsgId = "msgId";
   static final String argMedias = "medias";
+  static final String argTarget = "target";
+  static final String argLeftMsgId = "leftMsgId";
+  static final String argRightMsgId = "rightMsgId";
 
-  static Future go(BuildContext? context, List<Map<String, dynamic>>? medias, {String? target, String? msgId}) {
+  static Future go(BuildContext? context, List<Map<String, dynamic>>? medias, {String? target, String? leftMsgId, String? rightMsgId}) {
     if (context == null) return Future.value(null);
     if (medias == null || medias.isEmpty) return Future.value(null);
+    if (leftMsgId == null && rightMsgId != null) leftMsgId = rightMsgId;
+    if (rightMsgId == null && leftMsgId != null) rightMsgId = leftMsgId;
     return Navigator.push(
       context,
       PageRouteBuilder(
@@ -45,9 +43,10 @@ class MediaScreen extends BaseStateFulWidget {
             opacity: animation,
             child: MediaScreen(
               arguments: {
-                argTarget: target,
-                argMsgId: msgId,
                 argMedias: medias,
+                argTarget: target,
+                argLeftMsgId: leftMsgId,
+                argRightMsgId: rightMsgId,
               },
             ),
           );
@@ -68,16 +67,16 @@ class MediaScreen extends BaseStateFulWidget {
   static StreamSink<List<Map<String, dynamic>>> get onFetchSink => _onFetchController.sink;
   static Stream<List<Map<String, dynamic>>> get onFetchStream => _onFetchController.stream;
 
-  static List<Map<String, dynamic>>? createFetchRequest(String? target, String? msgId) {
+  static List<Map<String, dynamic>>? createFetchRequest(String? target, bool isLeft, String? msgId) {
     if (target == null || target.isEmpty) return null;
     return [
-      {"type": "request", "target": target, "msgId": msgId}
+      {"type": "request", "target": target, "isLeft": isLeft, "msgId": msgId}
     ];
   }
 
-  static createFetchResponse(String? target, String? msgId, List<Map<String, dynamic>> medias) {
+  static createFetchResponse(String? target, bool isLeft, String? msgId, List<Map<String, dynamic>> medias) {
     List<Map<String, dynamic>> data = [];
-    data.add({"type": "response", "target": target, "msgId": msgId});
+    data.add({"type": "response", "target": target, "isLeft": isLeft, "msgId": msgId});
     data.addAll(medias);
     return data;
   }
@@ -107,15 +106,19 @@ class MediaScreen extends BaseStateFulWidget {
 class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with SingleTickerProviderStateMixin {
   final double dragQuitOffsetY = Global.screenHeight() / 6;
 
+  ParallelQueue _queue = ParallelQueue("media_fetch", onLog: (log, error) => error ? logger.w(log) : null);
   StreamSubscription? _onFetchMediasSubscription;
+
+  PageController? _pageController;
+  List<Map<String, dynamic>> _medias = [];
+  int _dataIndex = 0;
   final int fetchLimit = 3;
-  bool fetchLoading = false;
 
   String? _target;
-  String? _msgId;
-
-  List<Map<String, dynamic>> _medias = [];
-  int _showIndex = 0;
+  String? _leftMsgId;
+  bool _leftFetchLoading = false;
+  String? _rightMsgId;
+  bool _rightFetchLoading = false;
 
   VideoPlayerController? _videoController;
   bool _isVideoPlaying = false;
@@ -128,13 +131,15 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   @override
   void onRefreshArguments() {
     _target = widget.arguments?[MediaScreen.argTarget]?.toString();
-    _msgId = widget.arguments?[MediaScreen.argMsgId]?.toString();
+    _leftMsgId = widget.arguments?[MediaScreen.argLeftMsgId]?.toString();
+    _rightMsgId = widget.arguments?[MediaScreen.argRightMsgId]?.toString();
     _medias = widget.arguments?[MediaScreen.argMedias] ?? _medias;
   }
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _dataIndex);
     // fetch
     _onFetchMediasSubscription = MediaScreen.onFetchStream.listen((response) {
       if (response.isEmpty || response[0].isEmpty) return;
@@ -142,39 +147,66 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       if (type != "response") return;
       String target = response[0]["target"]?.toString() ?? "";
       if (target != _target) return;
+      bool isLeft = response[0]["isLeft"] ?? true;
       String msgId = response[0]["msgId"]?.toString() ?? "";
       var medias = response..removeAt(0);
       if (medias.isEmpty) return;
-      if (!fetchLoading) return;
-      setState(() {
-        _msgId = msgId;
-        _medias += medias;
+      _queue.add(() async {
+        if (isLeft) {
+          if (!_leftFetchLoading) return;
+          setState(() {
+            _leftMsgId = msgId;
+            _dataIndex = _dataIndex + medias.length;
+            _medias.insertAll(0, medias.reversed);
+            _pageController?.jumpToPage(_dataIndex);
+          });
+          _leftFetchLoading = false;
+        } else {
+          if (!_rightFetchLoading) return;
+          setState(() {
+            _rightMsgId = msgId;
+            // _dataIndex = _dataIndex;
+            _medias.addAll(medias.reversed);
+            // _pageController?.jumpToPage(_dataIndex);
+          });
+          _rightFetchLoading = false;
+        }
       });
-      fetchLoading = false;
     });
+    // data
     _tryFetchMedias();
-    // video first
-    _initVideoController(_showIndex); // await
+    // video
+    _initVideoController(_dataIndex); // await
   }
 
   @override
   void dispose() {
     super.dispose();
+    _pageController?.dispose();
     _videoController?.dispose();
     _onFetchMediasSubscription?.cancel();
   }
 
   void _tryFetchMedias() {
-    if ((_showIndex + 1) < (_medias.length - fetchLimit)) return;
-    if (fetchLoading) return;
-    fetchLoading = true;
-    List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target, _msgId);
-    if (request != null) MediaScreen.onFetchSink.add(request);
+    if ((_dataIndex + 1) <= fetchLimit) {
+      if (!_leftFetchLoading) {
+        _leftFetchLoading = true;
+        List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target, true, _leftMsgId);
+        if (request != null) MediaScreen.onFetchSink.add(request);
+      }
+    }
+    if (_dataIndex >= (_medias.length - fetchLimit)) {
+      if (!_rightFetchLoading) {
+        _rightFetchLoading = true;
+        List<Map<String, dynamic>>? request = MediaScreen.createFetchRequest(_target, false, _rightMsgId);
+        if (request != null) MediaScreen.onFetchSink.add(request);
+      }
+    }
   }
 
   void _initVideoController(int index) async {
     _videoController?.pause();
-    // logger.i("-----> 333 index:$index");
+    // logger.i("-----> 333 - index:$index - size:${_medias.length}");
     if ((index < 0) || (index >= _medias.length)) return null;
     Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return;
@@ -208,9 +240,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     });
   }
 
-  bool? _toggleVideoPlay({bool? play}) {
-    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
-    Map<String, dynamic>? media = _medias[_showIndex];
+  bool? _toggleVideoPlay(int index, {bool? play}) {
+    if ((index < 0) || (index >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return null;
     String mediaType = media["mediaType"] ?? "";
     String content = media["content"] ?? "";
@@ -225,7 +257,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     return needPlay;
   }
 
-  Future _save() async {
+  Future _save(int index) async {
     // permission
     if ((await Permission.mediaLibrary.request()) != PermissionStatus.granted) {
       return null;
@@ -234,8 +266,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       return null;
     }
     // data
-    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
-    Map<String, dynamic>? media = _medias[_showIndex];
+    if ((index < 0) || (index >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return null;
     String mediaType = media["mediaType"] ?? "";
     String contentType = media["contentType"] ?? "";
@@ -267,10 +299,10 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     }
   }
 
-  Future _share() async {
+  Future _share(int index) async {
     // data
-    if ((_showIndex < 0) || (_showIndex >= _medias.length)) return null;
-    Map<String, dynamic>? media = _medias[_showIndex];
+    if ((index < 0) || (index >= _medias.length)) return null;
+    Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return null;
     String mediaType = media["mediaType"] ?? "";
     String contentType = media["contentType"] ?? "";
@@ -282,7 +314,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         if (!file.existsSync()) return;
         logger.i("MediaScreen - share image file - path:${file.path}");
         String mimeType = Platform.isAndroid ? "image/*" : "image/jpeg";
-        Share.shareFiles([file.path], mimeTypes: [mimeType]);
+        XFile xFile = XFile(file.path, mimeType: mimeType);
+        Share.shareXFiles([xFile]);
       }
     } else if (mediaType == "video") {
       if ((contentType == "path") && content.isNotEmpty) {
@@ -290,7 +323,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         if (!file.existsSync()) return;
         logger.i("MediaScreen - share video file - path:${file.path}");
         String mimeType = Platform.isAndroid ? "video/*" : "video/mp4";
-        Share.shareFiles([file.path], mimeTypes: [mimeType]);
+        XFile xFile = XFile(file.path, mimeType: mimeType);
+        Share.shareXFiles([xFile]);
       }
     }
   }
@@ -301,6 +335,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     double iconSize = Global.screenWidth() / 15;
     double btnSize = Global.screenWidth() / 10;
     double playSize = Global.screenWidth() / 5;
+    // logger.i("-----> 000 - index:$_dataIndex - size:${_medias.length}");
     return Layout(
       bodyColor: Colors.black.withAlpha(alpha),
       headerColor: Colors.transparent,
@@ -308,7 +343,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
       body: DropDownScaleLayout(
         triggerOffsetY: dragQuitOffsetY,
         onTap: () {
-          bool nextHide = _toggleVideoPlay() ?? !hideComponents;
+          bool nextHide = _toggleVideoPlay(_dataIndex) ?? !hideComponents;
           setState(() {
             hideComponents = nextHide;
           });
@@ -337,17 +372,14 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         },
         content: Stack(
           children: [
-            Swiper(
-              loop: false,
-              autoplay: false,
-              index: _showIndex,
+            PageView.builder(
+              controller: _pageController,
               itemCount: _medias.length,
-              onIndexChanged: (index) {
-                index = _medias.length - (index + 1);
-                // logger.i("-----> 111 index:$index");
+              onPageChanged: (index) {
+                // logger.i("-----> 222 - index:$index - size:${_medias.length}");
                 if ((index < 0) || (index >= _medias.length)) return;
                 setState(() {
-                  _showIndex = index;
+                  _dataIndex = index;
                   _isVideoPlaying = false;
                   hideComponents = false;
                   bgOpacity = 1;
@@ -355,10 +387,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                 _initVideoController(index); // await
                 _tryFetchMedias();
               },
-              transformer: ReverseTransformer(),
               itemBuilder: (BuildContext context, int index) {
-                index = _medias.length - (index + 1);
-                // logger.i("-----> 222 index:$index");
+                // logger.i("-----> 111 - index:$index  - size:${_medias.length}");
                 if ((index < 0) || (index >= _medias.length)) return SizedBox.shrink();
                 Map<String, dynamic>? media = _medias[index];
                 if (media.isEmpty) return SizedBox.shrink();
@@ -390,8 +420,8 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   }
                 } else if (mediaType == "video") {
                   if ((contentType == "path") && content.isNotEmpty) {
-                    bool isReady = (index == _showIndex) && (_videoController?.value.isInitialized == true);
-                    bool isPlaying = (index == _showIndex) && (_videoController?.value.isPlaying == true);
+                    bool isReady = (index == _dataIndex) && (_videoController?.value.isInitialized == true);
+                    bool isPlaying = (index == _dataIndex) && (_videoController?.value.isPlaying == true);
                     child = Stack(children: [
                       thumbnail.isNotEmpty
                           ? Positioned(
@@ -510,7 +540,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               size: iconSize,
                             ),
                           ),
-                          onPressed: () => _share(),
+                          onPressed: () => _share(_dataIndex),
                         ),
                         Spacer(),
                         Button(
@@ -531,7 +561,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               size: iconSize,
                             ),
                           ),
-                          onPressed: () => _save(),
+                          onPressed: () => _save(_dataIndex),
                         ),
                         SizedBox(width: btnSize / 4),
                       ],
