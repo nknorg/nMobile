@@ -121,6 +121,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
   bool _rightFetchLoading = false;
 
   Lock _mediaLoadLock = new Lock();
+  String? currentMediaType;
 
   PhotoViewScaleStateController? _imageScaleController;
   int? _imageInitIndex;
@@ -216,9 +217,14 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     Map<String, dynamic>? media = _medias[index];
     if (media.isEmpty) return;
     String mediaType = media["mediaType"] ?? "";
-    String contentType = media["contentType"] ?? "";
     String content = media["content"] ?? "";
     if (content.isEmpty) return;
+    String contentType = media["contentType"] ?? "";
+    if (mediaType != currentMediaType) {
+      setState(() {
+        currentMediaType = mediaType;
+      });
+    }
     await _mediaLoadLock.synchronized(() async {
       if (mediaType == "image") {
         if (_imageInitIndex == index) return;
@@ -260,7 +266,6 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
     });
   }
 
-  // TODO:GG ???
   bool? _toggleVideoPlay(int index, {bool? play}) {
     if ((index < 0) || (index >= _medias.length)) return null;
     Map<String, dynamic>? media = _medias[index];
@@ -352,8 +357,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   @override
   Widget build(BuildContext context) {
-    double iconSize = Global.screenWidth() / 15;
+    double iconSize = Global.screenWidth() / 20;
     double btnSize = Global.screenWidth() / 10;
+    double btnPad = btnSize * 0.2;
     double playSize = Global.screenWidth() / 5;
     // logger.i("-----> 000 - index:$_dataIndex - size:${_medias.length}");
     return Stack(
@@ -361,32 +367,23 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         DismissiblePage(
           isFullScreen: true,
           backgroundColor: Colors.black,
-          behavior: HitTestBehavior.deferToChild,
+          behavior: HitTestBehavior.opaque,
           direction: DismissiblePageDismissDirection.multi,
           minScale: .70,
           reverseDuration: const Duration(milliseconds: 200),
           onDismissed: () {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
           },
-          onDragStart: () {
-            // TODO:GG 不走？
-            setState(() {
-              hideComponents = true;
-            });
-          },
           onDragUpdate: (info) {
-            // if ((1 - info.overallDragValue) >= 0) {
-            //   setState(() {
-            //     bgOpacity = 1 - info.overallDragValue;
-            //   });
-            // }
-          },
-          onDragEnd: () {
-            // TODO:GG 不走？
-            setState(() {
-              hideComponents = false;
-              // bgOpacity = 1;
-            });
+            if ((hideComponents == false) && (info.overallDragValue > 0)) {
+              setState(() {
+                hideComponents = true;
+              });
+            } else if ((hideComponents == true) && (info.overallDragValue <= 0)) {
+              setState(() {
+                hideComponents = false;
+              });
+            }
           },
           child: PhotoViewGestureDetectorScope(
             axis: Axis.horizontal,
@@ -401,7 +398,6 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                   _dataIndex = index;
                   _isVideoPlaying = false;
                   hideComponents = false;
-                  // bgOpacity = 1;
                 });
                 _loadMedia(index); // await
                 _tryFetchMedias();
@@ -422,6 +418,9 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                 } else if (mediaType == "image") {
                   if (contentType == "path") {
                     child = PhotoView(
+                        onTapUp: (BuildContext context, TapUpDetails details, PhotoViewControllerValue controllerValue) {
+                          if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                        },
                         imageProvider: FileImage(File(content)),
                         backgroundDecoration: const BoxDecoration(color: Colors.transparent),
                         scaleStateController: _imageScaleController,
@@ -482,6 +481,13 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                               lineWidth: playSize / 12,
                               size: playSize / 1.2,
                             ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          _toggleVideoPlay(_dataIndex);
+                        },
+                        child: SizedBox.expand(),
+                      ),
                     ]);
                   } else {
                     child = SizedBox.shrink();
@@ -494,63 +500,53 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
             ),
           ),
         ),
-        // top
-        hideComponents
-            ? SizedBox.shrink()
-            : Positioned(
-                left: 0,
-                right: 0,
-                top: Platform.isAndroid ? 40 : 35,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(width: btnSize / 4),
-                    Button(
-                      width: btnSize,
-                      height: btnSize,
-                      backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                      child: Container(
-                        width: btnSize,
-                        height: btnSize,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(60),
-                          borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
-                        ),
-                        child: Icon(
-                          CupertinoIcons.back,
-                          color: Colors.white,
-                          size: iconSize,
-                        ),
-                      ),
-                      onPressed: () {
-                        if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
-                      },
-                    ),
-                    Spacer(),
-                  ],
-                ),
-              ),
         // bottom
         hideComponents
             ? SizedBox.shrink()
             : Positioned(
                 left: 0,
                 right: 0,
-                bottom: 15,
+                bottom: 0,
                 child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(width: btnSize / 4),
+                    SizedBox(width: iconSize - btnPad),
+                    currentMediaType != "image"
+                        ? Button(
+                            width: btnSize + btnPad * 2,
+                            height: btnSize + btnPad * 2,
+                            backgroundColor: Colors.transparent,
+                            padding: EdgeInsets.symmetric(horizontal: btnPad, vertical: btnPad),
+                            child: Container(
+                              width: btnSize,
+                              height: btnSize,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(80),
+                                borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: iconSize,
+                              ),
+                            ),
+                            onPressed: () {
+                              if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                            },
+                          )
+                        : SizedBox.shrink(),
+                    Spacer(),
                     Button(
-                      width: btnSize,
-                      height: btnSize,
+                      width: btnSize + btnPad * 2,
+                      height: btnSize + btnPad * 2,
                       backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                      padding: EdgeInsets.symmetric(horizontal: btnPad, vertical: btnPad),
                       child: Container(
                         width: btnSize,
                         height: btnSize,
                         decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(60),
+                          color: Colors.white.withAlpha(80),
                           borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
                         ),
                         child: Icon(
@@ -561,17 +557,16 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                       ),
                       onPressed: () => _share(_dataIndex),
                     ),
-                    Spacer(),
                     Button(
-                      width: btnSize,
-                      height: btnSize,
+                      width: btnSize + btnPad * 2,
+                      height: btnSize + btnPad * 2,
                       backgroundColor: Colors.transparent,
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                      padding: EdgeInsets.symmetric(horizontal: btnPad, vertical: btnPad),
                       child: Container(
                         width: btnSize,
                         height: btnSize,
                         decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(60),
+                          color: Colors.white.withAlpha(80),
                           borderRadius: BorderRadius.all(Radius.circular(btnSize / 2)),
                         ),
                         child: Icon(
@@ -582,44 +577,11 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                       ),
                       onPressed: () => _save(_dataIndex),
                     ),
-                    SizedBox(width: btnSize / 4),
+                    SizedBox(width: iconSize - btnPad),
                   ],
                 ),
               ),
       ],
     );
-    // Layout(
-    //   bodyColor: Colors.black.withAlpha(alpha),
-    //   headerColor: Colors.transparent,
-    //   borderRadius: BorderRadius.zero,
-    //   body: ,
-    //   // body: DropDownScaleLayout(
-    //   //   triggerOffsetY: dragQuitOffsetY,
-    //   //   onTap: () {
-    //   //  TODO:GG 视频状态
-    //   //     bool nextHide = _toggleVideoPlay(_dataIndex) ?? !hideComponents;
-    //   //     setState(() {
-    //   //       hideComponents = nextHide;
-    //   //     });
-    //   //   },
-    //   //   onDragStart: () {
-    //
-    //   //   },
-    //   //   onDragUpdate: (percent) {
-    //
-    //   //   },
-    //   //   onDragEnd: (quiet) {
-    //   //     if (quiet) {
-    //   //       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-    //   //     } else {
-    //   //       setState(() {
-    //   //         hideComponents = false;
-    //   //         bgOpacity = 1;
-    //   //       });
-    //   //     }
-    //   //   },
-    //   //   content: ,
-    //   // ),
-    // );
   }
 }
