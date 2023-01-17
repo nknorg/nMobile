@@ -595,7 +595,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       } else if (element.content is String) {
         path = element.content;
       }
-      if (path == null || path.isEmpty) continue; // TODO:GG 考虑下载
+      if (path == null || path.isEmpty) continue;
       String contentType = element.contentType;
       if (contentType == MessageContentType.ipfs) {
         int? type = MessageOptions.getFileType(element.options);
