@@ -439,7 +439,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
                     bool isReady = (index == _dataIndex) && (_videoController?.value.isInitialized == true);
                     bool isPlaying = (index == _dataIndex) && (_videoController?.value.isPlaying == true);
                     child = Stack(children: [
-                      thumbnail.isNotEmpty
+                      (!isPlaying && thumbnail.isNotEmpty)
                           ? Positioned(
                               left: 0,
                               right: 0,
