@@ -218,6 +218,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.7.3"
+  eip1559:
+    dependency: transitive
+    description:
+      name: eip1559
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.6.0"
   eip55:
     dependency: transitive
     description:
@@ -353,7 +360,7 @@ packages:
       name: flutter_native_splash
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.2.16"
+    version: "2.2.17"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -519,7 +526,7 @@ packages:
       name: image
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.3.0"
+    version: "4.0.10"
   image_cropper:
     dependency: "direct main"
     description:
@@ -997,7 +1004,7 @@ packages:
       name: shared_preferences
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.15"
+    version: "2.0.16"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -1005,13 +1012,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.10"
-  shared_preferences_ios:
+  shared_preferences_foundation:
     dependency: transitive
     description:
-      name: shared_preferences_ios
+      name: shared_preferences_foundation
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.9"
+    version: "2.1.1"
   shared_preferences_linux:
     dependency: transitive
     description:
@@ -1019,13 +1026,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.4"
-  shared_preferences_macos:
-    dependency: transitive
-    description:
-      name: shared_preferences_macos
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.2"
   shared_preferences_platform_interface:
     dependency: transitive
     description:
@@ -1114,7 +1114,7 @@ packages:
       name: synchronized
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.0.0+3"
+    version: "3.0.1"
   term_glyph:
     dependency: transitive
     description:
@@ -1262,13 +1262,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.5.3"
+  wallet:
+    dependency: transitive
+    description:
+      name: wallet
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.0.7"
   web3dart:
     dependency: "direct main"
     description:
       name: web3dart
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.5.3"
+    version: "2.6.1"
   webview_flutter:
     dependency: "direct main"
     description:

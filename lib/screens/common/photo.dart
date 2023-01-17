@@ -130,7 +130,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                       ),
                     ),
                     onPressed: () {
-                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                     },
                   ),
                   Spacer(),
