@@ -188,7 +188,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                       ),
                     ),
                     onPressed: () {
-                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                     },
                   ),
                   Spacer(),
