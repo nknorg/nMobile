@@ -52,6 +52,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "advanced": MessageLookupByLibrary.simpleMessage("高级"),
         "agree": MessageLookupByLibrary.simpleMessage("同意"),
         "album": MessageLookupByLibrary.simpleMessage("相册"),
+        "allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage("允许推送消息通知给其他人"),
+        "allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage("允许上传应用异常日志"),
         "amount": MessageLookupByLibrary.simpleMessage("数量"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("版本号"),
@@ -179,6 +183,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "delete_wallet_confirm_title":
             MessageLookupByLibrary.simpleMessage("您确定要删除此账户吗?"),
         "disconnect": MessageLookupByLibrary.simpleMessage("断开连接"),
+        "do_not_allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage("不允许推送消息通知给其他人"),
+        "do_not_allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage("不允许上传应用异常日志"),
         "done": MessageLookupByLibrary.simpleMessage("完成"),
         "edit": MessageLookupByLibrary.simpleMessage("编辑"),
         "edit_contact": MessageLookupByLibrary.simpleMessage("编辑"),
@@ -204,6 +212,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("账户地址无效"),
         "error_required": MessageLookupByLibrary.simpleMessage("必填"),
         "error_seed_format": MessageLookupByLibrary.simpleMessage("Seed 错误"),
+        "error_tracking": MessageLookupByLibrary.simpleMessage("异常跟踪"),
         "error_unknown_nkn_qrcode":
             MessageLookupByLibrary.simpleMessage("识别失败"),
         "eth": MessageLookupByLibrary.simpleMessage("ETH"),
@@ -351,6 +360,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "not_backed_up": MessageLookupByLibrary.simpleMessage("尚未全部备份"),
         "notes": MessageLookupByLibrary.simpleMessage("备注"),
         "notification": MessageLookupByLibrary.simpleMessage("通知"),
+        "notification_push": MessageLookupByLibrary.simpleMessage("通知推送"),
         "notification_push_content":
             MessageLookupByLibrary.simpleMessage("新消息!"),
         "notification_sound": MessageLookupByLibrary.simpleMessage("推送声音"),
@@ -470,6 +480,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("群聊续订"),
         "total_balance": MessageLookupByLibrary.simpleMessage("余额"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
+        "tracker": MessageLookupByLibrary.simpleMessage("跟踪器"),
         "transfer_initiated": MessageLookupByLibrary.simpleMessage("转账初始化"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "您的转帐正在进行中，可能需要花一些时间才能出现在区块链上。"),

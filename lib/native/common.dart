@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';

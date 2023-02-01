@@ -19,11 +19,11 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
@@ -90,7 +90,6 @@ class ChatOutCommon with Tag {
         return null;
       } else if (errStr.contains(NknError.messageOversize)) {
         logger.e("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
-        Sentry.captureMessage("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
         return null;
       }
       if ((maxTryTimes - tryTimes) <= 1) handleError(e, st);
@@ -856,7 +855,7 @@ class ChatOutCommon with Tag {
         contactCommon.queryListByClientAddress(clientAddressList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken);
+            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
           }
         });
       }
@@ -879,7 +878,7 @@ class ChatOutCommon with Tag {
     if (pid?.isNotEmpty == true) {
       if (notification) {
         if (contact != null && !contact.isMe) {
-          String uuid = _sendPush(contact.deviceToken);
+          String uuid = await _sendPush(contact.deviceToken); // async
           message.options = MessageOptions.setPushNotifyId(message.options, uuid);
           MessageStorage.instance.updateOptions(message.msgId, message.options); // await
         }
@@ -947,7 +946,7 @@ class ChatOutCommon with Tag {
         contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken);
+            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
           }
         });
       }
@@ -1004,7 +1003,7 @@ class ChatOutCommon with Tag {
         contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
           for (var i = 0; i < contactList.length; i++) {
             ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken);
+            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
           }
         });
       }
@@ -1069,7 +1068,10 @@ class ChatOutCommon with Tag {
     return null;
   }
 
-  String _sendPush(String? deviceToken) {
+  Future<String> _sendPush(String? deviceToken) async {
+    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
+    if (close == true) return "closed";
+
     if (deviceToken == null || deviceToken.isEmpty == true) return "";
 
     String title = Global.locale((s) => s.new_message);

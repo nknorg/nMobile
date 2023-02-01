@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -140,10 +141,12 @@ String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, St
     bool no2 = errStr.contains("address = fcm.googleapis.com");
     bool no3 = errStr.contains("address = mainnet.infura.io");
     bool no4 = errStr.contains("address = eth-mainnet.g.alchemy.com");
-    if (!no0 && !no1 && !no2 && !no3 && !no4) {
-      if (upload) {
-        Sentry.captureException(error, stackTrace: stackTrace);
-      }
+    if (upload && !no0 && !no1 && !no2 && !no3 && !no4) {
+      SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API).then((close) {
+        if (close != true) {
+          Sentry.captureException(error, stackTrace: stackTrace);
+        }
+      });
     }
   } else if (Settings.debug) {
     logger.e(error);

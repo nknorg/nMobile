@@ -406,5 +406,12 @@
   "mapped_address_does_not_match": "映射地址不匹配",
   "mapped_address": "關聯地址",
   "only_owner_can_modify": "僅群主可修改此項",
-  "confirm_delete_remark_avatar": "確定要刪除備註頭像嗎?"
+  "confirm_delete_remark_avatar": "確定要刪除備註頭像嗎?",
+  "tracker": "跟踪器",
+  "notification_push": "通知推送",
+  "error_tracking": "異常跟踪",
+  "allow_push_message_notifications_to_others": "允許推送消息通知給其他人",
+  "do_not_allow_push_message_notifications_to_others": "不允許推送消息通知給其他人",
+  "allow_uploading_application_exception_logs": "允許上傳應用異常日誌",
+  "do_not_allow_uploading_application_exception_logs": "不允許上傳應用異常日誌"
 }
