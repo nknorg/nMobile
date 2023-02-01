@@ -3939,6 +3939,76 @@ class S {
       args: [],
     );
   }
+
+  /// `Tracker`
+  String get tracker {
+    return Intl.message(
+      'Tracker',
+      name: 'tracker',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Notification Push`
+  String get notification_push {
+    return Intl.message(
+      'Notification Push',
+      name: 'notification_push',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Error Tracking`
+  String get error_tracking {
+    return Intl.message(
+      'Error Tracking',
+      name: 'error_tracking',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow push message notifications to others`
+  String get allow_push_message_notifications_to_others {
+    return Intl.message(
+      'Allow push message notifications to others',
+      name: 'allow_push_message_notifications_to_others',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Do not allow push message notifications to others`
+  String get do_not_allow_push_message_notifications_to_others {
+    return Intl.message(
+      'Do not allow push message notifications to others',
+      name: 'do_not_allow_push_message_notifications_to_others',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow uploading application exception logs`
+  String get allow_uploading_application_exception_logs {
+    return Intl.message(
+      'Allow uploading application exception logs',
+      name: 'allow_uploading_application_exception_logs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Do not allow uploading application exception logs`
+  String get do_not_allow_uploading_application_exception_logs {
+    return Intl.message(
+      'Do not allow uploading application exception logs',
+      name: 'do_not_allow_uploading_application_exception_logs',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

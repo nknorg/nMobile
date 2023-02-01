@@ -57,6 +57,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
         "agree": MessageLookupByLibrary.simpleMessage("Agree"),
         "album": MessageLookupByLibrary.simpleMessage("Album"),
+        "allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage(
+                "Allow push message notifications to others"),
+        "allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage(
+                "Allow uploading application exception logs"),
         "amount": MessageLookupByLibrary.simpleMessage("Amount"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("App Version"),
@@ -209,6 +215,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "delete_wallet_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this account?"),
         "disconnect": MessageLookupByLibrary.simpleMessage("Disconnect"),
+        "do_not_allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage(
+                "Do not allow push message notifications to others"),
+        "do_not_allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage(
+                "Do not allow uploading application exception logs"),
         "done": MessageLookupByLibrary.simpleMessage("Done"),
         "edit": MessageLookupByLibrary.simpleMessage("Edit"),
         "edit_contact": MessageLookupByLibrary.simpleMessage("Edit Contact"),
@@ -240,6 +252,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("This field is required."),
         "error_seed_format":
             MessageLookupByLibrary.simpleMessage("Seed format does not match."),
+        "error_tracking":
+            MessageLookupByLibrary.simpleMessage("Error Tracking"),
         "error_unknown_nkn_qrcode":
             MessageLookupByLibrary.simpleMessage("Unknown NKN qr code."),
         "eth": MessageLookupByLibrary.simpleMessage("ETH"),
@@ -417,6 +431,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Not backed up yet"),
         "notes": MessageLookupByLibrary.simpleMessage("Notes"),
         "notification": MessageLookupByLibrary.simpleMessage("Notification"),
+        "notification_push":
+            MessageLookupByLibrary.simpleMessage("Notification Push"),
         "notification_push_content":
             MessageLookupByLibrary.simpleMessage("New Message!"),
         "notification_sound":
@@ -550,6 +566,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Topic renewal"),
         "total_balance": MessageLookupByLibrary.simpleMessage("TOTAL BALANCE"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
+        "tracker": MessageLookupByLibrary.simpleMessage("Tracker"),
         "transfer_initiated":
             MessageLookupByLibrary.simpleMessage("Transfer Initiated"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(

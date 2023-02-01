@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/native/common.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class DeviceToken {
@@ -13,6 +14,8 @@ class DeviceToken {
   static const PREFIX_VIVO = "[VIVO]:";
 
   static Future<String?> get({String? platform, int? appVersion}) async {
+    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
+    if (close == true) return null;
     String? token;
     if (Platform.isIOS) {
       token = await getAPNS(platform: platform, appVersion: appVersion);
