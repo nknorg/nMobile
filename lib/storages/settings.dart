@@ -7,6 +7,9 @@ class SettingsStorage {
   static const String NOTIFICATION_TYPE_KEY = 'notification_type'; // not support 'local_notification_type'
   static const String BIOMETRICS_AUTHENTICATION = 'auth';
 
+  static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
+  static const String CLOSE_BUG_UPLOAD_API = 'close_bug_upload_api';
+
   static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
   static const String CHAT_TIP_NOTIFICATION = 'chat_tip_notification'; // not support 'NKN_MESSAGE_NOTIFICATION_ALERT'
 

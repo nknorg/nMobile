@@ -21,7 +21,7 @@ class PlatformName {
 class Settings {
   static const bool debug = true;
   static const String appName = "nMobile";
-  static const String sentryDSN = 'https://c4d9d78cefc7457db9ade3f8026e9a34@o466976.ingest.sentry.io/5483254';
+  static const String sentryDSN = '';
 
   // notification
   static late String locale;

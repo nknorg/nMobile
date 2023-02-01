@@ -52,6 +52,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "advanced": MessageLookupByLibrary.simpleMessage("高級"),
         "agree": MessageLookupByLibrary.simpleMessage("同意"),
         "album": MessageLookupByLibrary.simpleMessage("相冊"),
+        "allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage("允許推送消息通知給其他人"),
+        "allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage("允許上傳應用異常日誌"),
         "amount": MessageLookupByLibrary.simpleMessage("數量"),
         "app_name": MessageLookupByLibrary.simpleMessage("nMobile"),
         "app_version": MessageLookupByLibrary.simpleMessage("版本號"),
@@ -179,6 +183,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "delete_wallet_confirm_title":
             MessageLookupByLibrary.simpleMessage("您確定要刪除此帳戶嗎?"),
         "disconnect": MessageLookupByLibrary.simpleMessage("斷開連接"),
+        "do_not_allow_push_message_notifications_to_others":
+            MessageLookupByLibrary.simpleMessage("不允許推送消息通知給其他人"),
+        "do_not_allow_uploading_application_exception_logs":
+            MessageLookupByLibrary.simpleMessage("不允許上傳應用異常日誌"),
         "done": MessageLookupByLibrary.simpleMessage("完成"),
         "edit": MessageLookupByLibrary.simpleMessage("編輯"),
         "edit_contact": MessageLookupByLibrary.simpleMessage("編輯"),
@@ -204,6 +212,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("賬戶地址無效"),
         "error_required": MessageLookupByLibrary.simpleMessage("必填"),
         "error_seed_format": MessageLookupByLibrary.simpleMessage("Seed 錯誤"),
+        "error_tracking": MessageLookupByLibrary.simpleMessage("異常跟踪"),
         "error_unknown_nkn_qrcode":
             MessageLookupByLibrary.simpleMessage("識別失敗"),
         "eth": MessageLookupByLibrary.simpleMessage("ETH"),
@@ -351,6 +360,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "not_backed_up": MessageLookupByLibrary.simpleMessage("尚未全部備份"),
         "notes": MessageLookupByLibrary.simpleMessage("備註"),
         "notification": MessageLookupByLibrary.simpleMessage("通知"),
+        "notification_push": MessageLookupByLibrary.simpleMessage("通知推送"),
         "notification_push_content":
             MessageLookupByLibrary.simpleMessage("新消息!"),
         "notification_sound": MessageLookupByLibrary.simpleMessage("推送聲音"),
@@ -470,6 +480,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("群聊續訂"),
         "total_balance": MessageLookupByLibrary.simpleMessage("余額"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
+        "tracker": MessageLookupByLibrary.simpleMessage("跟踪器"),
         "transfer_initiated": MessageLookupByLibrary.simpleMessage("轉賬初始化"),
         "transfer_initiated_desc": MessageLookupByLibrary.simpleMessage(
             "您的轉帳正在進行中，可能需要花一些時間才能出現在區塊鏈上。"),
