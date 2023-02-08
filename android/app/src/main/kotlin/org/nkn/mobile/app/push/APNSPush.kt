@@ -47,7 +47,14 @@ class APNSPush {
             // apnsClient?.cose()
         }
 
-        fun push(assetManager: AssetManager, uuid: String, deviceToken: String, pushPayload: String) {
+        fun push(
+            assetManager: AssetManager,
+            uuid: String,
+            deviceToken: String,
+            pushPayload: String,
+            onSuccess: (() -> Unit)?,
+            onFailure: ((notificationErrorCode: Int?, httpStatusCode: Int?, cause: String?) -> Unit)?
+        ) {
             if (apnsClient == null) {
                 openClient(assetManager)
             }
@@ -80,12 +87,14 @@ class APNSPush {
             apnsClient?.push(n, object : NotificationResponseListener {
                 override fun onSuccess(notification: Notification?) {
                     Log.d("SendPush", "push - success - deviceToken:$deviceToken")
+                    onSuccess?.invoke()
                 }
 
                 override fun onFailure(notification: Notification?, nr: NotificationResponse) {
                     Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
                     Sentry.captureException(nr.cause)
                     openClient(assetManager)
+                    onFailure?.invoke(nr.error?.errorCode, nr.httpStatusCode, nr.cause?.localizedMessage)
                 }
             })
         }

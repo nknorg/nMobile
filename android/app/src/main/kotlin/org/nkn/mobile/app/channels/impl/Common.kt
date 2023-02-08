@@ -177,12 +177,25 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                APNSPush.push(MainActivity.instance.assets, uuid, deviceToken, pushPayload)
-                val resp = hashMapOf(
-                    "event" to "sendPushAPNS",
-                )
-                resultSuccess(result, resp)
-                return@launch
+                APNSPush.push(MainActivity.instance.assets, uuid, deviceToken, pushPayload, {
+                    val resp = hashMapOf(
+                        "event" to "sendPushAPNS",
+                    )
+                    viewModelScope.launch(Dispatchers.IO) {
+                        resultSuccess(result, resp)
+                    }
+                    return@push
+                }, { notificationErrorCode: Int?, httpStatusCode: Int?, _ ->
+                    val resp = hashMapOf(
+                        "event" to "sendPushAPNS",
+                        "notificationErrorCode" to notificationErrorCode,
+                        "httpStatusCode" to httpStatusCode,
+                    )
+                    viewModelScope.launch(Dispatchers.IO) {
+                        resultSuccess(result, resp)
+                    }
+                    return@push
+                })
             } catch (e: Throwable) {
                 resultError(result, e)
                 return@launch
