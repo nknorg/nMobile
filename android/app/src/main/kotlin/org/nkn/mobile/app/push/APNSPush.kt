@@ -2,15 +2,17 @@ package org.nkn.mobile.app.push
 
 import android.content.res.AssetManager
 import android.util.Log
-import com.clevertap.apns.ApnsClient
-import com.clevertap.apns.Notification
-import com.clevertap.apns.NotificationResponse
-import com.clevertap.apns.NotificationResponseListener
-import com.clevertap.apns.clients.ApnsClientBuilder
 import io.sentry.Sentry
+import okhttp3.ConnectionPool
 import org.json.JSONException
 import org.json.JSONObject
+import org.nkn.mobile.app.push.apns.ApnsClient
+import org.nkn.mobile.app.push.apns.clients.ApnsClientBuilder
+import org.nkn.mobile.app.push.apns.notification.Notification
+import org.nkn.mobile.app.push.apns.notification.NotificationResponse
+import org.nkn.mobile.app.push.apns.notification.NotificationResponseListener
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by JZG on 2021/6/28.
@@ -27,6 +29,7 @@ class APNSPush {
             try {
                 val inputStream = assetManager.open(ApnsAssetsPath)
                 apnsClient = ApnsClientBuilder()
+                    .withConnectionPool(ConnectionPool(20, 5, TimeUnit.MINUTES))
                     .withProductionGateway()
                     .inAsynchronousMode()
                     .withCertificate(inputStream)
@@ -34,7 +37,7 @@ class APNSPush {
                     .withDefaultTopic(ApnsTopic)
                     .build()
             } catch (e: Exception) {
-                Log.i("SendPush", "openClient: ${e.message}")
+                Log.e("SendPush", "openClient: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -82,6 +85,7 @@ class APNSPush {
                 override fun onFailure(notification: Notification?, nr: NotificationResponse) {
                     Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
                     Sentry.captureException(nr.cause)
+                    openClient(assetManager)
                 }
             })
         }
