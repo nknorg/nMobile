@@ -67,18 +67,18 @@ class Common {
     return null;
   }
 
-  static Future<bool> sendPushAPNS(String uuid, String deviceToken, String pushPayload) async {
+  static Future<int?> sendPushAPNS(String uuid, String deviceToken, String pushPayload) async {
     try {
-      await _methodChannel.invokeMethod('sendPushAPNS', {
+      final Map resp = await _methodChannel.invokeMethod('sendPushAPNS', {
         'uuid': uuid,
         'deviceToken': deviceToken,
         'pushPayload': pushPayload,
       });
-      return true;
+      return resp['notificationErrorCode']; // resp['httpStatusCode']
     } catch (e, st) {
       handleError(e, st);
     }
-    return false;
+    return null;
   }
 
   static Future<bool> isGoogleServiceAvailable() async {
