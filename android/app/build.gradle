@@ -130,12 +130,16 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation 'androidx.window:window:1.0.0'
     implementation 'androidx.window:window-java:1.0.0'
-    // apns
-    implementation 'com.clevertap.apns:apns-http2:1.0.3'
     // google
-    implementation 'com.google.firebase:firebase-core:21.1.1'
-    implementation 'com.google.firebase:firebase-messaging:23.1.0'
-    implementation 'com.google.firebase:firebase-iid:21.1.0'
-    implementation "com.google.android.gms:play-services-base:18.1.0"
+    // implementation 'com.google.firebase:firebase-core:21.1.1'
+    implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    // implementation 'com.google.firebase:firebase-iid:21.1.0'
+    // implementation "com.google.android.gms:play-services-base:18.1.0"
+    // common
+    implementation "com.squareup.okhttp3:okhttp:4.10.0"
+    implementation "com.squareup.okhttp3:mockwebserver:4.10.0"
+    implementation "com.squareup.okhttp3:okhttp-tls:4.10.0"
+    implementation "com.fasterxml.jackson.core:jackson-core:2.11.1"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.1"
 }
 apply plugin: 'com.google.gms.google-services'
