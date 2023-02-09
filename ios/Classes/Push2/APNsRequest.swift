@@ -45,8 +45,8 @@ public struct APNsRequest {
     }
     
     public var url: URL? {
-        // let urlString = "https://" + server.rawValue + ":\(port.rawValue)" + "/3/device/" + deviceToken
-        let urlString = "https://" + server.rawValue + "/3/device/" + deviceToken
+        let urlString = "https://" + server.rawValue + ":\(port.rawValue)" + "/3/device/" + deviceToken
+        // let urlString = "https://" + server.rawValue + "/3/device/" + deviceToken
         return URL(string: urlString)
     }
     

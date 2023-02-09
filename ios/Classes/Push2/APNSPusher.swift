@@ -8,46 +8,47 @@
 import Foundation
 import Sentry
 
-let pushTopic = "com.xxx.xxx"
 let p12FileName = "fileName"
 let p12FilePasswordd = "password"
 
-
-var connection: Connection? = nil
-
 public class APNSPusher {
     
+    static var apnsClient: Connection? = nil
+
     static func connect() -> Connection? {
         var _connection: Connection?
         do {
             _connection = try Connection(p12FileName: p12FileName, passPhrase: p12FilePasswordd)
-        } catch {
-            print("APNSPusher - connect faile")
+        } catch let e {
+            print("APNSPusher - connect faile - error:\(e.localizedDescription)")
             return nil
         }
-        print("APNSPusher - connect success")
         return _connection
     }
     
-    static func push(uuid: String, deviceToken: String, payload: String) {
-        if(connection == nil) {
-            connection = connect();
+    static func push(uuid: String, deviceToken: String, topic: String, payload: String, onSuccess: (() -> Void)?, onFailure: ((Int, String) -> Void)?) {
+        if apnsClient == nil {
+            apnsClient = connect();
         }
-        
-        let header = APNsRequest.Header(id: uuid, priority: APNsRequest.Header.Priority.p10, topic: pushTopic)
+        if apnsClient == nil {
+            onFailure?(-1, "apnsClient is nil on IOS")
+            return
+        }
+        let header = APNsRequest.Header(id: uuid, priority: APNsRequest.Header.Priority.p10, topic: topic)
         let payload = APNsPayload(str: payload)
-        let request = APNsRequest(port: APNsPort.p2197, server: APNsServer.production, deviceToken: deviceToken, header: header, payload: payload)
+        let request = APNsRequest(port: APNsPort.p443, server: APNsServer.production, deviceToken: deviceToken, header: header, payload: payload)
         
-        connection?.send(request: request) {
+        try apnsClient?.send(request: request) {
             switch $0 {
             case .success:
-                print("APNSPusher - pushed success")
+                print("APNSPusher - pushed success - deviceToken:\(deviceToken)")
+                onSuccess?()
             case .failure(let errorCode, let message):
                 print("APNSPusher - pushed Failed - \(errorCode), \(uuid), \(deviceToken), \(message)")
-                if (!message.contains("-1001") && !message.contains("-1005") && !message.contains("-1017")) {
-                    SentrySDK.capture(error: NSError(domain: "\(uuid), \(deviceToken), \(message)", code: errorCode))
-                }
+                apnsClient = connect();
+                onFailure?(errorCode, message)
             }
         }
+        
     }
 }

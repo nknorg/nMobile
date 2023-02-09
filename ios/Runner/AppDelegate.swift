@@ -38,8 +38,8 @@ import receive_sharing_intent
         
         registerNotification();
         
-        NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        // NotificationCenter.default.addObserver(self, selector:#selector(becomeActive), name: UIApplication.didBecomeActiveNotification, object: nil)
+        // NotificationCenter.default.addObserver(self, selector:#selector(becomeDeath), name: UIApplication.didEnterBackgroundNotification, object: nil)
         
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
         // return true; // FIXED: with no share data
@@ -59,29 +59,33 @@ import receive_sharing_intent
 
     func registerNotification() {
         if(!UserDefaults.standard.bool(forKey: "Notification")) {
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            DispatchQueue.main.async {
+                UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            }
             UserDefaults.standard.set(true, forKey: "Notification")
         }
         
         let center = UNUserNotificationCenter.current()
         center.delegate = self
         center.requestAuthorization(options: [.alert, .badge, .sound]) { (isSucceseed: Bool, error:Error?) in
-            if isSucceseed == true{
+            if isSucceseed == true {
                 print("Application - registerNotification - success")
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
             } else {
                 print("Application - registerNotification - fail - error = \(String(describing:error))")
             }
         }
-        UIApplication.shared.registerForRemoteNotifications()
     }
     
-    @objc func becomeActive(noti:Notification) {
-        //APNSPushService.shared().connectAPNS()
-    }
-    
-    @objc func becomeDeath(noti:Notification) {
-        //APNSPushService.shared().disConnectAPNS()
-    }
+//    @objc func becomeActive(noti:Notification) {
+//        //APNSPushService.shared().connectAPNS()
+//    }
+
+//    @objc func becomeDeath(noti:Notification) {
+//        APNSPushService.shared().disConnectAPNS()
+//    }
     
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         // deviceToken = 32 bytes
@@ -138,18 +142,15 @@ import receive_sharing_intent
     }
     
     override func applicationDidEnterBackground(_ application: UIApplication) {
-        
     }
     
     override func applicationWillEnterForeground(_ application: UIApplication) {
-        
     }
     
     override func applicationDidBecomeActive(_ application: UIApplication) {
         // UIApplication.shared.applicationIconBadgeNumber = 0
         self.visualEffectView.removeFromSuperview()
     }
-    
     
     lazy var visualEffectView: UIVisualEffectView = {
            let blur = UIBlurEffect.init(style: UIBlurEffect.Style.light)

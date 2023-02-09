@@ -14,34 +14,29 @@ public class Connection: NSObject, URLSessionDelegate {
     }
     
     public func send(request: APNsRequest, resultHandler: @escaping (Result) -> Void) {
-        let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+        let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: OperationQueue.main)
         if let urlRequest = request.urlRequest {
             let task = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
                 // The APNs server response for the requst is returned with the data object.
                 // If the error object is not nil, there is more likely a problem with the connection or the network.
-                if let error = error {
+                guard error == nil else {
                     resultHandler(.failure(errorCode: 0, message: "Unkonwn Error Occured: \(error)"))
                     return
                 }
-                
-                guard let data = data else {
-                    resultHandler(.success)
+                guard let response = response as? HTTPURLResponse else {
+                    resultHandler(.failure(errorCode: 0, message: "None HttpResponse Error Occured: \(error)"))
                     return
                 }
+                let httpResponse = response as! HTTPURLResponse
                 
-                if data.isEmpty {
-                    resultHandler(.success)
-                    return
-                }
-                
-                if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String],
-                    let reason = json["reason"],
-                    let httpResponse = response as? HTTPURLResponse {
+                if let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: String], let reason = json["reason"] {
                     resultHandler(.failure(errorCode: httpResponse.statusCode, message: reason))
-                    return
                 } else {
-                    resultHandler(.failure(errorCode: 0, message: "Unkonwn Error Occured"))
-                    return
+                    if httpResponse.statusCode != 200 {
+                        resultHandler(.failure(errorCode: httpResponse.statusCode, message: "Wrong Reason Error Occured: \(error)"))
+                    } else {
+                        resultHandler(.success)
+                    }
                 }
             })
             task.resume()
@@ -69,7 +64,6 @@ public class Connection: NSObject, URLSessionDelegate {
                 let credential = URLCredential(trust: serverTrust)
                 completionHandler(.useCredential, credential)
             }
-            
         default:
             break
         }

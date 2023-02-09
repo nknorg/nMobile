@@ -2,7 +2,6 @@ package org.nkn.mobile.app.push
 
 import android.content.res.AssetManager
 import android.util.Log
-import io.sentry.Sentry
 import okhttp3.ConnectionPool
 import org.json.JSONException
 import org.json.JSONObject
@@ -19,7 +18,6 @@ import java.util.concurrent.TimeUnit
  */
 class APNSPush {
     companion object {
-        private const val ApnsTopic = "com.xxx.xxx"
         private const val ApnsAssetsPath = "ApnsFilePath"
         private const val ApnsPassword = "ApnsFilePwd"
 
@@ -34,7 +32,6 @@ class APNSPush {
                     .inAsynchronousMode()
                     .withCertificate(inputStream)
                     .withPassword(ApnsPassword)
-                    .withDefaultTopic(ApnsTopic)
                     .build()
             } catch (e: Exception) {
                 Log.e("SendPush", "openClient: ${e.message}")
@@ -51,13 +48,17 @@ class APNSPush {
             assetManager: AssetManager,
             uuid: String,
             deviceToken: String,
+            topic: String,
             pushPayload: String,
             onSuccess: (() -> Unit)?,
-            onFailure: ((notificationErrorCode: Int?, httpStatusCode: Int?, cause: String?) -> Unit)?
+            onFailure: ((errCode: Int?, cause: String?) -> Unit)?
         ) {
+            if (apnsClient == null) openClient(assetManager)
             if (apnsClient == null) {
-                openClient(assetManager)
+                onFailure?.invoke(-1, "apnsClient is nil on Android")
+                return
             }
+
             val rootMap = getMap(pushPayload, null) ?: mapOf()
 
             val apsJson = rootMap["aps"] as? JSONObject
@@ -80,9 +81,9 @@ class APNSPush {
             }
             builder.uuid(UUID.fromString(uuid))
                 .customField("apns-push-type", "alert")
+                .topic(topic)
                 .expiration(-1)
                 .priority(Notification.Priority.IMMEDIATE)
-                .topic(ApnsTopic)
             val n: Notification = builder.build()
             apnsClient?.push(n, object : NotificationResponseListener {
                 override fun onSuccess(notification: Notification?) {
@@ -92,9 +93,8 @@ class APNSPush {
 
                 override fun onFailure(notification: Notification?, nr: NotificationResponse) {
                     Log.e("SendPush", "push - fail - deviceToken:$deviceToken - response:$nr")
-                    Sentry.captureException(nr.cause)
                     openClient(assetManager)
-                    onFailure?.invoke(nr.error?.errorCode, nr.httpStatusCode, nr.cause?.localizedMessage)
+                    onFailure?.invoke(nr.httpStatusCode, nr.responseBody)
                 }
             })
         }
