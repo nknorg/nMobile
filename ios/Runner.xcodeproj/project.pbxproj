@@ -119,7 +119,6 @@
 		C62BB8122689AA0E00DAAC43 /* NWType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NWType.h; sourceTree = "<group>"; };
 		C62BB8132689AA0E00DAAC43 /* NWHub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWHub.m; sourceTree = "<group>"; };
 		C62BB8142689AA0E00DAAC43 /* NWSecTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NWSecTools.m; sourceTree = "<group>"; };
-		C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_p.p12; sourceTree = "<group>"; };
 		C62BB8242689B1CA00DAAC43 /* NKNPush.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = NKNPush.cer; sourceTree = "<group>"; };
 		C62BB8252689B1CA00DAAC43 /* nkn.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn.p12; sourceTree = "<group>"; };
 		C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; path = nkn_test.p12; sourceTree = "<group>"; };
@@ -293,7 +292,6 @@
 			isa = PBXGroup;
 			children = (
 				C6824CEC272CFB6D00BA7AAF /* nkn_test.p12 */,
-				C62BB8232689B1CA00DAAC43 /* nkn_p.p12 */,
 				C62BB8252689B1CA00DAAC43 /* nkn.p12 */,
 				C62BB8242689B1CA00DAAC43 /* NKNPush.cer */,
 			);

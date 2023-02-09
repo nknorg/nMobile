@@ -127,15 +127,27 @@ class Common : ChannelBase, FlutterStreamHandler {
         let args = call.arguments as! [String: Any]
         let uuid = args["uuid"] as? String ?? ""
         let deviceToken = args["deviceToken"] as? String ?? ""
+        let topic = args["topic"] as? String ?? ""
         let pushPayload = args["pushPayload"] as? String ?? ""
         
         commonQueue.async {
-            APNSPusher.push(uuid: uuid, deviceToken: deviceToken, payload: pushPayload)
+            do {
+                APNSPusher.push(uuid: uuid, deviceToken: deviceToken, topic: topic, payload: pushPayload, onSuccess: { () -> Void in
+                    var resp: [String: Any] = [String: Any]()
+                    resp["event"] = "sendPushAPNS"
+                    self.resultSuccess(result: result, resp: resp)
+                }, onFailure: { (errCode, reason) -> Void in
+                    var resp: [String: Any] = [String: Any]()
+                    resp["event"] = "sendPushAPNS"
+                    resp["errCode"] = errCode
+                    resp["errMsg"] = reason
+                    self.resultSuccess(result: result, resp: resp)
+                })
+            } catch let e {
+                print("APNSPusher - send faile - err:\(e.localizedDescription)")
+                self.resultError(result: result, error: e)
+            }
             // APNSPushService.shared().pushContent(pushPayload, token: deviceToken)
-            var resp: [String: Any] = [String: Any]()
-            resp["event"] = "sendPushAPNS"
-            self.resultSuccess(result: result, resp: resp)
-            return
         }
     }
     

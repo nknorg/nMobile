@@ -67,14 +67,15 @@ class Common {
     return null;
   }
 
-  static Future<int?> sendPushAPNS(String uuid, String deviceToken, String pushPayload) async {
+  static Future<Map<String, dynamic>?> sendPushAPNS(String uuid, String deviceToken, String topic, String pushPayload) async {
     try {
       final Map resp = await _methodChannel.invokeMethod('sendPushAPNS', {
         'uuid': uuid,
         'deviceToken': deviceToken,
+        'topic': topic,
         'pushPayload': pushPayload,
       });
-      return resp['notificationErrorCode']; // resp['httpStatusCode']
+      return {"code": resp['errCode'], "error": resp['errMsg']};
     } catch (e, st) {
       handleError(e, st);
     }
