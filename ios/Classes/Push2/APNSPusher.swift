@@ -26,7 +26,7 @@ public class APNSPusher {
         return _connection
     }
     
-    static func push(uuid: String, deviceToken: String, topic: String, payload: String, onSuccess: (() -> Void)?, onFailure: ((Int, String) -> Void)?) {
+    static func push(uuid: String, deviceToken: String, topic: String, payload: String, onSuccess: (() -> Void)?, onFailure: ((Int, String) -> Void)?) throws {
         if apnsClient == nil {
             apnsClient = connect();
         }

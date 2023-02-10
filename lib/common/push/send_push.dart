@@ -6,6 +6,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SendPush {
   static Future<bool> send(String uuid, String deviceToken, String title, String content) async {
@@ -47,13 +48,20 @@ class SendPush {
         'sound': "default",
       },
     });
-    bool ok = await Common.sendPushAPNS(uuid, deviceToken, payload);
-    if (ok) {
-      logger.i("SendPush - sendAPNS - success - payload:$payload");
-    } else {
-      logger.e("SendPush - sendAPNS - fail - payload:$payload");
+    int tryTimes = 0;
+    while (tryTimes < 3) {
+      Map<String, dynamic>? result = await Common.sendPushAPNS(uuid, deviceToken, Settings.apnsTopic, payload);
+      if (result == null) {
+        tryTimes++;
+      } else if ((result["code"] != null) && (result["code"]?.toString() != "200")) {
+        logger.e("SendPush - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
+        if (tryTimes >= 2) Sentry.captureMessage("${result["code"]}\n${result["error"]}");
+        tryTimes++;
+      } else {
+        logger.i("SendPush - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
+      }
     }
-    return ok;
+    return tryTimes < 3;
   }
 
   static Future<bool> sendFCM(String deviceToken, String title, String content) async {

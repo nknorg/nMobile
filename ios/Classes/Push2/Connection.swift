@@ -1,6 +1,6 @@
 import Foundation
 
-public class Connection: NSObject, URLSessionDelegate {
+public class Connection: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
     public enum Result {
         case success
         case failure(errorCode: Int, message: String)
@@ -13,7 +13,12 @@ public class Connection: NSObject, URLSessionDelegate {
         super.init()
     }
     
-    public func send(request: APNsRequest, resultHandler: @escaping (Result) -> Void) {
+    public init(pcks12adapter: PKCS12Adapter) throws {
+        self.adapter = pcks12adapter
+        super.init()
+    }
+    
+    public func send(request: APNsRequest, resultHandler: @escaping (Result) -> Void) throws -> URLSessionDataTask? {
         let session = URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: OperationQueue.main)
         if let urlRequest = request.urlRequest {
             let task = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
@@ -40,7 +45,9 @@ public class Connection: NSObject, URLSessionDelegate {
                 }
             })
             task.resume()
+            return task
         }
+        return nil
     }
     
     public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
@@ -53,6 +60,7 @@ public class Connection: NSObject, URLSessionDelegate {
     }
 #endif
     
+    // URLSessionDelegate
     public func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         switch challenge.protectionSpace.authenticationMethod {
         case NSURLAuthenticationMethodClientCertificate:
