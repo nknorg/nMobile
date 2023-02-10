@@ -805,11 +805,11 @@ class ChatCommon with Tag {
     return message;
   }
 
-  Future<MessageSchema?> tryDownloadIpfsThumbnail(MessageSchema message, {int tryTimes = 0}) async {
+  Future tryDownloadIpfsThumbnail(MessageSchema message, {int tryTimes = 0}) async {
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
       logger.e("$TAG - tryDownloadIpfsThumbnail - ipfsHash is empty - message:$message");
-      return null;
+      return;
     }
     // path
     String? savePath = MessageOptions.getMediaThumbnailPath(message.options);
@@ -847,13 +847,12 @@ class ChatCommon with Tag {
         _onUpdateSink.add(message);
         _onIpfsUpOrDownload(message.msgId, "THUMBNAIL", false, false).then((value) {
           if (tryTimes >= 2) return; // try 3 times
-          Future.delayed(Duration(seconds: 3)).then((value) {
+          Future.delayed(Duration(seconds: 1)).then((value) {
             tryDownloadIpfsThumbnail(message, tryTimes: tryTimes + 1);
           });
         }); // await
       },
     );
-    return message;
   }
 
   Future<List<String>> _onIpfsUpOrDownload(String msgId, String type, bool upload, bool completed) async {
