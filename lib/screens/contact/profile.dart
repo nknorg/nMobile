@@ -23,7 +23,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -325,8 +324,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
-    DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contactSchema?.clientAddress);
-    String? deviceToken = notificationOpen ? await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion) : null;
+    String? deviceToken = notificationOpen ? await DeviceToken.get() : null;
     bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
     bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
     if (notificationOpen && (noMobile || tokenNull)) {
