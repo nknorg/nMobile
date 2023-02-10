@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -8,21 +7,16 @@ import 'package:nmobile/utils/logger.dart';
 class DeviceToken {
   static const PREFIX_APNS = "[APNS]:";
   static const PREFIX_FCM = "[FCM]:";
-  static const PREFIX_HUAWEI = "[HUAWEI]:";
-  static const PREFIX_XIAOMI = "[XIAOMI]:";
-  static const PREFIX_OPPO = "[OPPO]:";
-  static const PREFIX_VIVO = "[VIVO]:";
 
-  static Future<String?> get({String? platform, int? appVersion}) async {
+  static Future<String?> get() async {
     bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
     if (close == true) return null;
     String? token;
     if (Platform.isIOS) {
-      token = await getAPNS(platform: platform, appVersion: appVersion);
+      token = await getAPNS();
     } else if (Platform.isAndroid) {
       if (await Common.isGoogleServiceAvailable()) {
-        // chinese mobile phone maybe support google service, but token is null
-        token = await getFCM(platform: platform, appVersion: appVersion);
+        token = await getFCM();
       } else {
         // other
       }
@@ -31,39 +25,19 @@ class DeviceToken {
     return token;
   }
 
-  static Future<String> getAPNS({String? platform, int? appVersion}) async {
+  static Future<String?> getAPNS() async {
     String? token = await Common.getAPNSToken();
     if (token?.isNotEmpty == true) {
-      if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
-        token = PREFIX_APNS + token!;
-      }
+      return PREFIX_APNS + token!;
     }
-    return token ?? "";
+    return null;
   }
 
-  static Future<String> getFCM({String? platform, int? appVersion}) async {
+  static Future<String?> getFCM() async {
     String? token = await Common.getFCMToken();
     if (token?.isNotEmpty == true) {
-      if (DeviceInfoCommon.isDeviceTokenNoCombineEnable(platform, appVersion)) {
-        token = PREFIX_FCM + token!;
-      }
+      return PREFIX_FCM + token!;
     }
-    return token ?? "";
-  }
-
-  static Future<String?> getHuaWei() async {
-    return null;
-  }
-
-  static Future<String?> getXiaoMi() async {
-    return null;
-  }
-
-  static Future<String?> getOPPO() async {
-    return null;
-  }
-
-  static Future<String?> getVIVO() async {
     return null;
   }
 
@@ -71,19 +45,7 @@ class DeviceToken {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_APNS)) {
       return token.replaceAll(PREFIX_APNS, "");
-    } else if (token.startsWith(PREFIX_FCM) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
-      return "";
     }
-    // SUPPORT:START
-    if (token.contains('__FCMToken__:')) {
-      List<String> sList = token.split('__FCMToken__:');
-      if (sList.length >= 2) {
-        return sList[0].toString();
-      }
-    } else if (token.length == 64) {
-      return token; // apns
-    }
-    // SUPPORT:END
     return "";
   }
 
@@ -91,35 +53,7 @@ class DeviceToken {
     if (token == null || token.isEmpty) return "";
     if (token.startsWith(PREFIX_FCM)) {
       return token.replaceAll(PREFIX_FCM, "");
-    } else if (token.startsWith(PREFIX_APNS) || token.startsWith(PREFIX_HUAWEI) || token.startsWith(PREFIX_XIAOMI) || token.startsWith(PREFIX_OPPO) || token.startsWith(PREFIX_VIVO)) {
-      return "";
     }
-    // SUPPORT:START
-    if (token.contains('__FCMToken__:')) {
-      List<String> sList = token.split('__FCMToken__:');
-      if (sList.length >= 2) {
-        return sList[1].toString();
-      }
-    } else if (token.length == 163) {
-      return token; // fcm
-    }
-    // SUPPORT:END
-    return "";
-  }
-
-  static String splitHuaWei(String? token) {
-    return "";
-  }
-
-  static String splitXiaoMi(String? token) {
-    return "";
-  }
-
-  static String splitOPPO(String? token) {
-    return "";
-  }
-
-  static String splitVIVO(String? token) {
     return "";
   }
 }

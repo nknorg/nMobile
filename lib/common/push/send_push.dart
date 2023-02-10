@@ -18,22 +18,6 @@ class SendPush {
     if (fcm.isNotEmpty) {
       return sendFCM(fcm, title, content);
     }
-    String huawei = DeviceToken.splitHuaWei(deviceToken);
-    if (huawei.isNotEmpty) {
-      return sendHuaWei(huawei, title, content);
-    }
-    String xiaomi = DeviceToken.splitXiaoMi(deviceToken);
-    if (xiaomi.isNotEmpty) {
-      return sendXiaoMi(xiaomi, title, content);
-    }
-    String oppo = DeviceToken.splitOPPO(deviceToken);
-    if (oppo.isNotEmpty) {
-      return sendOPPO(oppo, title, content);
-    }
-    String vivo = DeviceToken.splitVIVO(deviceToken);
-    if (vivo.isNotEmpty) {
-      return sendVIVO(vivo, title, content);
-    }
     return false;
   }
 
@@ -120,42 +104,6 @@ class SendPush {
     } catch (e, st) {
       handleError(e, st);
     }
-    return false;
-  }
-
-  static Future<bool> sendHuaWei(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
-    return false;
-  }
-
-  static Future<bool> sendXiaoMi(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
-    return false;
-  }
-
-  static Future<bool> sendOPPO(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
-    return false;
-  }
-
-  static Future<bool> sendVIVO(
-    String deviceToken,
-    String title,
-    String content, {
-    int? badgeNumber,
-  }) async {
     return false;
   }
 }
