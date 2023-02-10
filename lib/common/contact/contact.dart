@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/common/push/device_token.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -119,7 +117,7 @@ class ContactCommon with Tag {
       }
     }
     if (fetchDeviceToken) {
-      DeviceToken.get(platform: PlatformName.get(), appVersion: int.tryParse(Global.build)).then((deviceToken) {
+      DeviceToken.get().then((deviceToken) {
         if ((contact?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
           setDeviceToken(contact?.id, deviceToken, notify: true); // await
         }

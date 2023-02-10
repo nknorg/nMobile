@@ -22,7 +22,6 @@ import 'package:nmobile/components/topic/header.dart';
 import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
@@ -527,8 +526,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       // FUTURE:GG group notificationOpen
     } else {
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
-      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact?.clientAddress);
-      String? deviceToken = nextOpen ? (await DeviceToken.get(platform: _deviceInfo?.platform, appVersion: _deviceInfo?.appVersion)) : null;
+      String? deviceToken = nextOpen ? (await DeviceToken.get()) : null;
       bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
       bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
       if (nextOpen && (noMobile || tokenNull)) {
