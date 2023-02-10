@@ -40,7 +40,7 @@ class ChatOutCommon with Tag {
 
   void clear() {}
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 10}) async {
+  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data) async {
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
       logger.e("$TAG - sendData - destList is empty - destList:$destList - data:$data");
@@ -51,19 +51,21 @@ class ChatOutCommon with Tag {
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;
     }
-    if (tryTimes >= maxTryTimes) {
-      logger.w("$TAG - sendData - try over - destList:$destList - data:$data");
-      return null;
+    int tryTimes = 0;
+    while (tryTimes < 30) {
+      if (clientCommon.isClientCreated && !clientCommon.clientClosing && (selfAddress == clientCommon.address)) {
+        break;
+      }
+      logger.w("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
+      tryTimes++;
+      await Future.delayed(Duration(seconds: 1));
     }
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.w("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
-      await Future.delayed(Duration(seconds: 2));
-      return sendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-    }
+    if (tryTimes >= 30) return null;
     return await _sendQueue.add(() => _clientSendData(selfAddress, destList, data));
   }
 
-  Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 5}) async {
+  // FUTURE:GG remove params tryTimes, use retry with subscribe
+  Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 10}) async {
     if (tryTimes >= maxTryTimes) {
       logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
       return null;
@@ -97,13 +99,13 @@ class ChatOutCommon with Tag {
       bool isLastTryTime = (maxTryTimes - tryTimes) <= 2;
       if (isClientError || isLastTryTime) {
         if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
-          await Future.delayed(Duration(milliseconds: 1000));
+          await Future.delayed(Duration(seconds: 1));
           return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
         } else {
           final client = (await clientCommon.reSignIn(false))[0];
           if ((client != null) && (client.address.isNotEmpty == true)) {
             logger.i("$TAG - _clientSendData - reSignIn success - tryTimes:$tryTimes - destList:$destList data:$data");
-            await Future.delayed(Duration(milliseconds: 500));
+            await Future.delayed(Duration(seconds: 1));
             return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
           } else {
             // maybe always no here

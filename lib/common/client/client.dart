@@ -128,12 +128,13 @@ class ClientCommon with Tag {
 
   /// ******************************************************   Client   ****************************************************** ///
 
-  Future<Map<String, dynamic>> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) {
+  Future<Map<String, dynamic>> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password}) {
     return _lock.synchronized(() {
-      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password, tryTimes: tryTimes);
+      return _signIn(wallet, fetchRemote: fetchRemote, loadingVisible: loadingVisible, password: password);
     });
   }
 
+  // FUTURE:GG remove params tryTimes, use retry with subscribe
   // return [client, pwdError]
   Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) async {
     // if (client != null) await close(); // async boom!!!
