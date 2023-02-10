@@ -24,6 +24,7 @@ class Settings {
   static const String sentryDSN = '';
 
   // notification
+  static const String apnsTopic = "";
   static late String locale;
   static late int notificationType;
   static late bool biometricsAuthentication;

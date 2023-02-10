@@ -132,7 +132,7 @@ class Common : ChannelBase, FlutterStreamHandler {
         
         commonQueue.async {
             do {
-                APNSPusher.push(uuid: uuid, deviceToken: deviceToken, topic: topic, payload: pushPayload, onSuccess: { () -> Void in
+                try APNSPusher.push(uuid: uuid, deviceToken: deviceToken, topic: topic, payload: pushPayload, onSuccess: { () -> Void in
                     var resp: [String: Any] = [String: Any]()
                     resp["event"] = "sendPushAPNS"
                     self.resultSuccess(result: result, resp: resp)
