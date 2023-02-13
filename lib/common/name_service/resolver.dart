@@ -3,22 +3,22 @@ import 'package:nmobile/native/eth_resolver.dart' as native;
 
 class Resolver {
   static native.EthResolverConfig ETH_RESOLVER_CONFIG = native.EthResolverConfig(
-    contractAddress: '0x1ff7f20f6db039c3c65ae4bc3c52c2caeb36ab7e',
-    rpcServer: 'https://goerli.infura.io/v3/3398e48e733d4b9bb337702c05a77c2d',
+    contractAddress: '0x7BfFaF65698ecA3187CEE7651d0678127Bd7e1e2',
+    rpcServer: 'https://mainnet.infura.io/v3/3398e48e733d4b9bb337702c05a77c2d',
     prefix: 'ETH:',
   );
   static native.EthResolverConfig HARMONY_RESOLVER_CONFIG = native.EthResolverConfig(
-    contractAddress: '0x1ff7F20f6db039C3c65ae4bC3C52c2cAEB36ab7e',
+    contractAddress: '0x5969aC08B88819201A30CdBaA9D1c5a04Dc0C52d',
     rpcServer: 'https://api.harmony.one',
     prefix: 'ONE:',
   );
   static native.EthResolverConfig IOTEX_RESOLVER_CONFIG = native.EthResolverConfig(
-    contractAddress: '0x1e811343025e9f4b70fe7e5fe545f1d16bc1beeb',
-    rpcServer: 'https://babel-api.testnet.iotex.io',
+    contractAddress: '0xFE9Ca78B57D72226266113660e92B111a5D2E316',
+    rpcServer: 'https://babel-api.mainnet.iotex.io',
     prefix: 'IOTX:',
   );
   static native.EthResolverConfig THETA_RESOLVER_CONFIG = native.EthResolverConfig(
-    contractAddress: '0x1ff7f20f6db039c3c65ae4bc3c52c2caeb36ab7e',
+    contractAddress: '0x748f7CeF212ce30e6Ce8c176D2b581a3E4EbD729',
     rpcServer: 'https://eth-rpc-api.thetatoken.org/rpc',
     prefix: 'TFUEL:',
   );
