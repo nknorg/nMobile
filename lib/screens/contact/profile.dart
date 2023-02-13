@@ -3,13 +3,16 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
+import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -26,11 +29,13 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
+import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/util.dart';
 
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
@@ -419,7 +424,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
-    /*List<String> mappeds = _contactSchema?.mappedAddress ?? [];
+    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -479,7 +484,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           ),
         ],
       ));
-    }*/
+    }
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -622,7 +627,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     SizedBox(height: 24),
 
                     /// mappedAddress
-                    /*Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Label(
@@ -660,7 +665,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       color: application.theme.backgroundColor,
                       borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
                       child: Column(children: mappedWidget),
-                    ),*/
+                    ),
                   ],
                 ),
               ),
@@ -678,7 +683,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
     bool showOriginalName = remarkNameExists && originalNameExists && !isDefaultName;
 
-    /*List<String> mappeds = _contactSchema?.mappedAddress ?? [];
+    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -738,7 +743,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           ),
         ],
       ));
-    }*/
+    }
     return SingleChildScrollView(
       padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
       child: Column(
@@ -844,7 +849,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                 ),
               ),
 
-              /*mappeds.length > 0
+              mappeds.length > 0
                   ? Padding(
                       padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 6),
                       child: Label(
@@ -863,7 +868,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
                       child: Column(children: mappedWidget),
                     )
-                  : SizedBox.shrink(),*/
+                  : SizedBox.shrink(),
             ],
           ),
           SizedBox(height: 28),
