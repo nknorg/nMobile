@@ -119,7 +119,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":golib")
     implementation "org.bouncycastle:bcprov-jdk15to18:1.68"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.10"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.20"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
@@ -131,8 +131,13 @@ dependencies {
     implementation 'androidx.window:window:1.0.0'
     implementation 'androidx.window:window-java:1.0.0'
     // google
-    // implementation 'com.google.firebase:firebase-core:21.1.1'
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    // implementation('com.google.firebase:firebase-messaging:23.1.1') {
+    //     exclude group: 'com.google.firebase', module: 'firebase-core'
+    //     exclude group: 'com.google.firebase', module: 'firebase-analytics'
+    //     exclude group: 'com.google.firebase', module: 'analytics'
+    // }
+    // implementation 'com.google.firebase:firebase-core:21.1.1'
     // implementation 'com.google.firebase:firebase-iid:21.1.0'
     // implementation "com.google.android.gms:play-services-base:18.1.0"
     // common
