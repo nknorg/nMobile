@@ -43,6 +43,7 @@ class SendPush {
         tryTimes++;
       } else {
         logger.i("SendPush - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
+        break;
       }
     }
     return tryTimes < 3;
