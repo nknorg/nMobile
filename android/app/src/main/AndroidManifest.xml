@@ -150,7 +150,7 @@
         <!-- sentry -->
         <meta-data
             android:name="io.sentry.dsn"
-            android:value="https://e8e2c15b0e914295a8b318919f766701@o466976.ingest.sentry.io/5483308" />
+            android:value="" />
 
 
         <!-- flutter image_cropper -->

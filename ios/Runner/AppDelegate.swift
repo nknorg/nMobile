@@ -16,7 +16,7 @@ import receive_sharing_intent
         }
         
         SentrySDK.start { options in
-            options.dsn = "https://0d2217601b1c4eb4bf310ca001fabf39@o466976.ingest.sentry.io/5680254"
+            options.dsn = ""
             let infoDictionary = Bundle.main.infoDictionary
             if let infoDictionary = infoDictionary {
                 let appBuild:String = infoDictionary["CFBundleVersion"] as! String
