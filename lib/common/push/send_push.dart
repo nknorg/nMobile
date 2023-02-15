@@ -9,19 +9,19 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 class SendPush {
-  static Future<bool> send(String uuid, String deviceToken, String title, String content) async {
+  static Future<String?> send(String uuid, String deviceToken, String title, String content) async {
     String apns = DeviceToken.splitAPNS(deviceToken);
     if (apns.isNotEmpty) {
-      return sendAPNS(uuid, apns, title, content);
+      return sendAPNS(uuid, apns, Settings.apnsTopic, title, content);
     }
     String fcm = DeviceToken.splitFCM(deviceToken);
     if (fcm.isNotEmpty) {
-      return sendFCM(fcm, title, content);
+      return sendFCM(Settings.getGooglePushToken(), uuid, fcm, title, content);
     }
-    return false;
+    return null;
   }
 
-  static Future<bool> sendAPNS(String uuid, String deviceToken, String title, String content) async {
+  static Future<String?> sendAPNS(String uuid, String deviceToken, String topic, String title, String content) async {
     String payload = jsonEncode({
       'aps': {
         'alert': {
@@ -34,77 +34,74 @@ class SendPush {
     });
     int tryTimes = 0;
     while (tryTimes < 3) {
-      Map<String, dynamic>? result = await Common.sendPushAPNS(uuid, deviceToken, Settings.apnsTopic, payload);
+      Map<String, dynamic>? result = await Common.sendPushAPNS(uuid, deviceToken, topic, payload);
       if (result == null) {
         tryTimes++;
       } else if ((result["code"] != null) && (result["code"]?.toString() != "200")) {
         logger.e("SendPush - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
-        if (tryTimes >= 2) Sentry.captureMessage("${result["code"]}\n${result["error"]}");
+        if (tryTimes >= 2) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
         tryTimes++;
       } else {
         logger.i("SendPush - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
         break;
       }
     }
-    return tryTimes < 3;
+    return (tryTimes < 3) ? uuid : null;
   }
 
-  static Future<bool> sendFCM(String deviceToken, String title, String content) async {
-    try {
-      // body
-      String body = jsonEncode({
-        'to': deviceToken,
-        // 'token': token,
-        // 'data': {
-        //   'via': 'FlutterFire Cloud Messaging!!!',
-        //   'count': "_messageCount.toString()",
-        // },
-        'notification': {
-          'title': title,
-          'body': content,
-        },
-        "priority": "high",
-        "android": {
-          // "collapseKey": targetId,
-          "priority": "high",
-          // "ttl": "${expireS}s",
-        },
-        "apns": {
-          // "apns-collapse-id": targetId,
-          "headers": {
-            "apns-priority": "5",
-            // "apns-expiration": "${DateTime.now().add(Duration(seconds: expireS)).millisecondsSinceEpoch / 1000}",
+  static Future<String?> sendFCM(String authorization, String uuid, String deviceToken, String title, String content) async {
+    String body = jsonEncode({
+      "to": deviceToken,
+      "priority": "high",
+      "notification": {
+        'title': title,
+        'body': content,
+      },
+      "android": {
+        "priority": "HIGH",
+        "ttl": "0s",
+        // "collapse_key": targetId,
+        // "restricted_package_name": packageName,
+        "notification": {
+          "tag": uuid,
+        }
+        // "data": {extra},
+      },
+    });
+    String? notificationId;
+    int tryTimes = 0;
+    while (tryTimes < 3) {
+      try {
+        // http
+        http.Response response = await http.post(
+          Uri.parse('https://fcm.googleapis.com/fcm/send'),
+          // Uri.parse('https://fcm.googleapis.com/v1/projects/nmobile/messages:send'), // need auth 2.0
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+            'Authorization': 'key=$authorization',
           },
-        },
-        "webpush": {
-          // "Topic": targetId,
-          "headers": {
-            "Urgency": "high",
-            // "TTL": "$expireS",
+          body: body,
+        );
+        // response
+        if (response.statusCode == 200) {
+          logger.i("SendPush - sendFCM - success - body:${response.body}");
+          Map<String, dynamic>? result = jsonDecode(response.body);
+          if ((result != null) && (result["results"] is List) && (result["results"].length > 0)) {
+            notificationId = result["results"][0]["message_id"]?.toString();
+          } else {
+            notificationId = "";
           }
-        },
-      });
-      // http
-      http.Response response = await http.post(
-        Uri.parse('https://fcm.googleapis.com/fcm/send'),
-        // Uri.parse('https://fcm.googleapis.com/v1/projects/nmobile/messages:send'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-          'Authorization': 'key=${Settings.getGooglePushToken()}',
-        },
-        body: body,
-      );
-      // response
-      if (response.statusCode == 200) {
-        logger.i("SendPush - sendFCM - success - body:$body");
-        return true;
-      } else {
-        logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:$body");
-        return false;
+          break;
+        } else {
+          logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:${response.reasonPhrase}");
+          if (tryTimes >= 2) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
+          tryTimes++;
+        }
+      } catch (e, st) {
+        handleError(e, st);
+        tryTimes++;
       }
-    } catch (e, st) {
-      handleError(e, st);
     }
-    return false;
+    return (tryTimes < 3) ? notificationId : null;
   }
 }
