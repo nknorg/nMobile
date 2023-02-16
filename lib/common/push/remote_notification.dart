@@ -1,15 +1,53 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-class SendPush {
-  static Future<String?> send(String uuid, String deviceToken, String title, String content) async {
+class RemoteNotification {
+  static Future<String?> send(String? deviceToken, {String? uuid, String? title, String? content}) async {
+    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
+    if (close == true) return "closed";
+
+    if (deviceToken == null || deviceToken.isEmpty == true) return "";
+
+    uuid = uuid ?? Uuid().v4();
+
+    title = title ?? Global.locale((s) => s.new_message);
+    // if (topic != null) {
+    //   title = '[${topic.topicShort}] ${contact?.displayName}';
+    // } else if (contact != null) {
+    //   title = contact.displayName;
+    // }
+
+    content = content ?? Global.locale((s) => s.you_have_new_message);
+    // switch (message.contentType) {
+    //   case MessageContentType.text:
+    //   case MessageContentType.textExtension:
+    //     content = message.content;
+    //     break;
+    //   case MessageContentType.ipfs:
+    //   case MessageContentType.media:
+    //   case MessageContentType.image:
+    //     content = '[${localizations.image}]';
+    //     break;
+    //   case MessageContentType.audio:
+    //     content = '[${localizations.audio}]';
+    //     break;
+    //   case MessageContentType.topicSubscribe:
+    //   case MessageContentType.topicUnsubscribe:
+    //   case MessageContentType.topicInvitation:
+    //   case MessageContentType.topicKickOut:
+    //     break;
+    // }
+
     String apns = DeviceToken.splitAPNS(deviceToken);
     if (apns.isNotEmpty) {
       return sendAPNS(uuid, apns, Settings.apnsTopic, title, content);
