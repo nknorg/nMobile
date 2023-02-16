@@ -1,22 +1,39 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:nmobile/utils/util.dart';
 
+class PlatformName {
+  static const web = "web";
+  static const android = "android";
+  static const ios = "ios";
+  static const window = "window";
+  static const mac = "mac";
+
+  static String get() {
+    return Platform.isAndroid ? android : (Platform.isIOS ? ios : "");
+  }
+
+  static List<String> list() {
+    return [web, android, ios, window, mac];
+  }
+}
+
 class DeviceInfoSchema {
   int? id; // <- id
-  String contactAddress; // (required) <-> contact_address
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
+  String contactAddress; // (required) <-> contact_address
   String? deviceId; //  <-> device_id
 
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
   DeviceInfoSchema({
     this.id,
-    required this.contactAddress,
     this.createAt,
     this.updateAt,
+    required this.contactAddress,
     this.deviceId,
     this.data,
   }) {
@@ -31,7 +48,7 @@ class DeviceInfoSchema {
   String get appName {
     String? appName;
     if (data?.isNotEmpty == true) {
-      String? name = data!['appName']?.toString();
+      String? name = data?['appName']?.toString();
       if (name?.isNotEmpty == true) {
         appName = name;
       }
@@ -42,7 +59,7 @@ class DeviceInfoSchema {
   int get appVersion {
     int? appVersion;
     if (data?.isNotEmpty == true) {
-      String? version = data!['appVersion']?.toString();
+      String? version = data?['appVersion']?.toString();
       if (version?.isNotEmpty == true) {
         appVersion = int.tryParse(version ?? "");
       }
@@ -53,7 +70,7 @@ class DeviceInfoSchema {
   String get platform {
     String? platform;
     if (data?.isNotEmpty == true) {
-      String? name = data!['platform']?.toString();
+      String? name = data?['platform']?.toString();
       if (name?.isNotEmpty == true) {
         platform = name;
       }
@@ -64,7 +81,7 @@ class DeviceInfoSchema {
   int get platformVersion {
     int? platformVersion;
     if (data?.isNotEmpty == true) {
-      String? version = data!['platformVersion']?.toString();
+      String? version = data?['platformVersion']?.toString();
       if (version?.isNotEmpty == true) {
         platformVersion = int.tryParse(version ?? "");
       }
@@ -72,14 +89,23 @@ class DeviceInfoSchema {
     return platformVersion ?? 0;
   }
 
+  String? get deviceToken {
+    if (data?.isNotEmpty == true) {
+      String _token = data?['deviceToken']?.toString() ?? "";
+      if (_token.isEmpty) return null;
+      return _token;
+    }
+    return null;
+  }
+
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
     }
     Map<String, dynamic> map = {
-      'contact_address': contactAddress,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'contact_address': contactAddress,
       'device_id': deviceId,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
@@ -89,9 +115,9 @@ class DeviceInfoSchema {
   static DeviceInfoSchema fromMap(Map e) {
     var deviceInfo = DeviceInfoSchema(
       id: e['id'],
-      contactAddress: e['contact_address'] ?? "",
       createAt: e['create_at'],
       updateAt: e['update_at'],
+      contactAddress: e['contact_address'] ?? "",
       deviceId: e['device_id'],
     );
 

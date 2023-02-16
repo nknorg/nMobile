@@ -90,7 +90,7 @@ Future addTestData(
     profileVersion: Uuid().v4(),
     // profileUpdateAt: DateTime.now().millisecondsSinceEpoch + 2,
     isTop: (0 % 2 == 0) ? true : false,
-    deviceToken: Uuid().v4(),
+    // deviceToken: Uuid().v4(),
   );
   Map<String, dynamic> entity1 = _contact.toMap();
   logger.i("DB - _addTestData - contact start - eg:$entity1");

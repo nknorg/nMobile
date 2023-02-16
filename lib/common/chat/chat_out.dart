@@ -5,9 +5,8 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/contact/device_info.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/send_push.dart';
+import 'package:nmobile/common/push/remote_notification.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
@@ -19,7 +18,6 @@ import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
@@ -40,85 +38,88 @@ class ChatOutCommon with Tag {
 
   void clear() {}
 
-  Future<OnMessage?> sendData(String? selfAddress, List<String> destList, String data) async {
+  Future<OnMessage?> sendMsg(String? selfAddress, List<String> destList, String data) async {
+    // dest
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
-      logger.e("$TAG - sendData - destList is empty - destList:$destList - data:$data");
+      logger.e("$TAG - sendMsg - destList is empty - destList:$destList - data:$data");
       return null;
     }
+    // size
     if (data.length >= MessageSchema.msgMaxSize) {
-      logger.w("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+      logger.w("$TAG - sendMsg - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;
     }
+    // client
     int tryTimes = 0;
-    while (tryTimes < 30) {
+    while (tryTimes < 20) {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing && (selfAddress == clientCommon.address)) {
         break;
       }
-      logger.w("$TAG - sendData - client error - closing:${clientCommon.clientClosing} - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
+      logger.w("$TAG - sendMsg - client error - closing:${clientCommon.clientClosing} - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
       tryTimes++;
       await Future.delayed(Duration(seconds: 1));
     }
-    if (tryTimes >= 30) return null;
-    return await _sendQueue.add(() => _clientSendData(selfAddress, destList, data));
+    if (tryTimes >= 20) return null;
+    // send
+    return await _sendQueue.add(() async {
+      OnMessage? onMessage;
+      int tryTimes = 0;
+      while (tryTimes < 10) {
+        List<dynamic> result = await _sendData(selfAddress, destList, data);
+        bool canTry = result[0];
+        onMessage = result[1];
+        int delay = result[2];
+        if (!canTry) break;
+        if (onMessage?.messageId.isNotEmpty == true) break;
+        tryTimes++;
+        await Future.delayed(Duration(milliseconds: delay)); // TODO:GG 会delay吗？
+      }
+      if (tryTimes >= 10) {
+        logger.w("$TAG - sendMsg - try over - destList:$destList - data:$data");
+      }
+      return onMessage;
+    });
   }
 
-  // FUTURE:GG remove params tryTimes, use retry with subscribe
-  Future<OnMessage?> _clientSendData(String? selfAddress, List<String> destList, String data, {int tryTimes = 0, int maxTryTimes = 10}) async {
-    if (tryTimes >= maxTryTimes) {
-      logger.w("$TAG - _clientSendData - try over - destList:$destList - data:$data");
-      return null;
-    }
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing || (selfAddress != clientCommon.address)) {
-      logger.w("$TAG - _clientSendData - client error - closing:${clientCommon.clientClosing} - tryTimes:$tryTimes - destList:$destList - data:$data");
-      await Future.delayed(Duration(seconds: 1));
-      return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
-    }
+  Future<List<dynamic>> _sendData(String? selfAddress, List<String> destList, String data) async {
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
-        logger.d("$TAG - _clientSendData - send success - destList:$destList - data:$data");
-        return onMessage;
+        logger.d("$TAG - _sendData - send success - destList:$destList - data:$data");
       } else {
-        logger.e("$TAG - _clientSendData - onMessage msgId is empty - tryTimes:$tryTimes - destList:$destList - data:$data");
-        await Future.delayed(Duration(milliseconds: 100));
-        return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+        logger.e("$TAG - _sendData - onMessage msgId is empty - - destList:$destList - data:$data");
       }
+      return [true, onMessage, 100];
     } catch (e, st) {
       String errStr = e.toString().toLowerCase();
       if (errStr.contains(NknError.invalidDestination)) {
-        logger.e("$TAG - _clientSendData - wrong clientAddress - destList:$destList");
-        return null;
+        logger.e("$TAG - _sendData - wrong clientAddress - destList:$destList");
+        return [false, null, 0];
       } else if (errStr.contains(NknError.messageOversize)) {
-        logger.e("$TAG - _clientSendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
-        return null;
+        logger.e("$TAG - _sendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+        return [false, null, 0];
       }
-      if ((maxTryTimes - tryTimes) <= 1) handleError(e, st);
-      bool isClientError = NknError.isClientError(e);
-      bool isLastTryTime = (maxTryTimes - tryTimes) <= 2;
-      if (isClientError || isLastTryTime) {
+      handleError(e, st);
+      if (NknError.isClientError(e)) {
         if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
-          await Future.delayed(Duration(seconds: 1));
-          return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+          return [true, null, 1000];
         } else {
           final client = (await clientCommon.reSignIn(false))[0];
           if ((client != null) && (client.address.isNotEmpty == true)) {
-            logger.i("$TAG - _clientSendData - reSignIn success - tryTimes:$tryTimes - destList:$destList data:$data");
-            await Future.delayed(Duration(seconds: 1));
-            return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+            logger.i("$TAG - _sendData - reSignIn success - destList:$destList data:$data");
+            return [true, null, 1000];
           } else {
+            logger.e("$TAG - _sendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
             // maybe always no here
-            logger.e("$TAG - _clientSendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-            return null;
           }
         }
       } else {
-        logger.e("$TAG - _clientSendData - try by error - tryTimes:$tryTimes - destList:$destList - data:$data");
-        await Future.delayed(Duration(milliseconds: 100));
-        return _clientSendData(selfAddress, destList, data, tryTimes: ++tryTimes, maxTryTimes: maxTryTimes);
+        logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
       }
     }
+    return [true, null, 300];
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -131,11 +132,13 @@ class ChatOutCommon with Tag {
     String? deviceProfile = isSelf ? null : deviceInfoCommon.getDeviceProfile();
     String? deviceToken;
     if (!isSelf && (clientAddressList.length == 1)) {
+      // TODO:GG 要每次都传输这么多吗
       ContactSchema? _other = await contactCommon.queryByClientAddress(clientAddressList[0]);
-      deviceToken = (_other?.options?.notificationOpen == true) ? _me?.deviceToken : null;
+      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_me?.clientAddress);
+      deviceToken = (_other?.options?.notificationOpen == true) ? (_deviceInfo?.deviceToken ?? _me?.deviceToken) : null;
     }
     String data = MessageData.getPing(isPing, profileVersion, deviceProfile, deviceToken);
-    await _sendWithAddressSafe(clientAddressList, data, notification: false);
+    await _sendWithAddress(clientAddressList, data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -144,7 +147,7 @@ class ChatOutCommon with Tag {
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return; // topic/group no receipt, just send message to myself
     received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId, received.receiveAt);
-    await _sendWithAddressSafe([received.from], data, notification: false);
+    await _sendWithAddress([received.from], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -152,7 +155,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     String data = MessageData.getRead(msgIds);
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -160,7 +163,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
     String data = MessageData.getMsgStatus(ask, msgIds);
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -168,7 +171,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     String data = MessageData.getContactProfileRequest(requestType, profileVersion);
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -182,7 +185,7 @@ class ChatOutCommon with Tag {
     } else {
       data = await MessageData.getContactProfileResponseFull(_me?.profileVersion, _me?.avatar, _me?.firstName, _me?.lastName);
     }
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   // NO topic (1 to 1)
@@ -213,6 +216,7 @@ class ChatOutCommon with Tag {
       to: clientAddress,
       contentType: MessageContentType.contactOptions,
       extra: {
+        // TODO:GG 怎么改？接收端修改deviceInfo而不是contact
         "deviceToken": deviceToken,
       },
     );
@@ -225,7 +229,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     String data = MessageData.getDeviceRequest();
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   // NO DB NO display (1 to 1)
@@ -233,13 +237,14 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     if (clientAddress == null || clientAddress.isEmpty) return;
     String data = MessageData.getDeviceInfo();
-    await _sendWithAddressSafe([clientAddress], data, notification: false);
+    await _sendWithAddress([clientAddress], data);
   }
 
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
     ContactSchema? _me = await contactCommon.getMe();
+    DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_me?.clientAddress);
     // target
     String targetAddress = "";
     String targetTopic = "";
@@ -272,11 +277,12 @@ class ChatOutCommon with Tag {
       contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
       content: content,
       extra: {
+        // TODO:GG 要每次都传输这么多吗
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
         "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
-        "deviceToken": notificationOpen ? _me?.deviceToken : null,
+        "deviceToken": notificationOpen ? (_deviceInfo?.deviceToken ?? _me?.deviceToken) : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );
@@ -288,6 +294,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     ContactSchema? _me = await contactCommon.getMe();
+    DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_me?.clientAddress);
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -327,11 +334,12 @@ class ChatOutCommon with Tag {
       content: content,
       extra: data
         ..addAll({
+          // TODO:GG 要每次都传输这么多吗
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
           "profileVersion": _me?.profileVersion,
           "deviceProfile": deviceInfoCommon.getDeviceProfile(),
-          "deviceToken": notificationOpen ? _me?.deviceToken : null,
+          "deviceToken": notificationOpen ? (_deviceInfo?.deviceToken ?? _me?.deviceToken) : null,
           "privateGroupVersion": privateGroupVersion,
         }),
     );
@@ -362,6 +370,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     ContactSchema? _me = await contactCommon.getMe();
+    DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_me?.clientAddress);
     // target
     String targetAddress = "";
     String targetTopic = "";
@@ -397,13 +406,14 @@ class ChatOutCommon with Tag {
       contentType: contentType,
       content: content,
       extra: {
+        // TODO:GG 要每次都传输这么多吗
         "fileType": MessageOptions.fileTypeImage,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
         "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
-        "deviceToken": notificationOpen ? _me?.deviceToken : null,
+        "deviceToken": notificationOpen ? (_deviceInfo?.deviceToken ?? _me?.deviceToken) : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );
@@ -416,6 +426,7 @@ class ChatOutCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     ContactSchema? _me = await contactCommon.getMe();
+    DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_me?.clientAddress);
     // target
     String targetAddress = "";
     String groupId = "";
@@ -448,6 +459,7 @@ class ChatOutCommon with Tag {
       contentType: MessageContentType.audio,
       content: content,
       extra: {
+        // TODO:GG 要每次都传输这么多吗
         "fileType": MessageOptions.fileTypeAudio,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
         "audioDurationS": durationS,
@@ -455,7 +467,7 @@ class ChatOutCommon with Tag {
         "burningUpdateAt": burningUpdateAt,
         "profileVersion": _me?.profileVersion,
         "deviceProfile": deviceInfoCommon.getDeviceProfile(),
-        "deviceToken": notificationOpen ? _me?.deviceToken : null,
+        "deviceToken": notificationOpen ? (_deviceInfo?.deviceToken ?? _me?.deviceToken) : null,
         "privateGroupVersion": privateGroupVersion,
       },
     );
@@ -470,7 +482,7 @@ class ChatOutCommon with Tag {
     int timeNowAt = DateTime.now().millisecondsSinceEpoch;
     await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await sendData(clientCommon.address, clientAddressList, data);
+    OnMessage? onResult = await sendMsg(clientCommon.address, clientAddressList, data);
     if ((onResult == null) || onResult.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress
@@ -517,7 +529,7 @@ class ChatOutCommon with Tag {
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicUnSubscribe(send);
-    await _sendWithTopicSafe(_schema, send, data, notification: false);
+    await _sendWithTopic(_schema, send, data, notification: false);
   }
 
   // NO topic (1 to 1)
@@ -548,7 +560,7 @@ class ChatOutCommon with Tag {
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicKickOut(send);
-    await _sendWithTopicSafe(_schema, send, data, notification: false);
+    await _sendWithTopic(_schema, send, data, notification: false);
   }
 
   // NO group (1 to 1)
@@ -587,7 +599,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return null;
     if (groupItem == null) return null;
     String data = MessageData.getPrivateGroupAccept(groupItem);
-    await _sendWithAddressSafe([target], data, notification: false);
+    await _sendWithAddress([target], data);
   }
 
   // NO group (1 to 1)
@@ -596,7 +608,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return null;
     if (groupItem == null) return null;
     String data = MessageData.getPrivateGroupQuit(groupItem);
-    await _sendWithAddressSafe([target], data, notification: false);
+    await _sendWithAddress([target], data);
   }
 
   // NO group (1 to 1)
@@ -610,7 +622,7 @@ class ChatOutCommon with Tag {
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
-    await _sendWithAddressSafe([target], data, notification: false);
+    await _sendWithAddress([target], data);
     return getVersion;
   }
 
@@ -620,7 +632,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return null;
     if (group == null) return null;
     String data = MessageData.getPrivateGroupOptionResponse(group);
-    await _sendWithAddressSafe([target], data, notification: false);
+    await _sendWithAddress([target], data);
   }
 
   // NO group (1 to 1)
@@ -634,7 +646,7 @@ class ChatOutCommon with Tag {
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
-    await _sendWithAddressSafe([target], data, notification: false);
+    await _sendWithAddress([target], data);
     return getVersion;
   }
 
@@ -645,7 +657,7 @@ class ChatOutCommon with Tag {
     if (schema == null) return null;
     List<Map<String, dynamic>> membersData = privateGroupCommon.getMembersData(members);
     String data = MessageData.getPrivateGroupMemberResponse(schema, membersData);
-    await _sendWithAddressSafe([target], data);
+    await _sendWithAddress([target], data);
   }
 
   Future<MessageSchema?> resend(MessageSchema? message) async {
@@ -768,15 +780,15 @@ class ChatOutCommon with Tag {
     Uint8List? pid;
     if (message.isTopic) {
       TopicSchema? topic = await chatCommon.topicHandle(message);
-      pid = await _sendWithTopicSafe(topic, message, msgData, notification: notification ?? message.canNotification);
+      pid = await _sendWithTopic(topic, message, msgData, notification: notification ?? message.canNotification);
       logger.d("$TAG - _send - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.isPrivateGroup) {
       PrivateGroupSchema? group = await chatCommon.privateGroupHandle(message);
-      pid = await _sendWithPrivateGroupSafe(group, message, msgData, notification: notification ?? message.canNotification);
+      pid = await _sendWithPrivateGroup(group, message, msgData, notification: notification ?? message.canNotification);
       logger.d("$TAG - _send - with_group - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
-      pid = await _sendWithContactSafe(contact, message, msgData, notification: notification ?? message.canNotification);
+      pid = await _sendWithContact(contact, message, msgData, notification: notification ?? message.canNotification);
       logger.d("$TAG - _send - with_contact - to:${message.to} - pid:$pid");
     }
     // pid
@@ -811,58 +823,10 @@ class ChatOutCommon with Tag {
     return message;
   }
 
-  Future<Uint8List?> _sendWithAddressSafe(List<String> clientAddressList, String? msgData, {bool notification = false}) async {
-    try {
-      return _sendWithAddress(clientAddressList, msgData, notification: notification);
-    } catch (e, st) {
-      handleError(e, st);
-      return null;
-    }
-  }
-
-  Future<Uint8List?> _sendWithContactSafe(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
-    try {
-      return _sendWithContact(contact, message, msgData, notification: notification);
-    } catch (e, st) {
-      handleError(e, st);
-      return null;
-    }
-  }
-
-  Future<Uint8List?> _sendWithTopicSafe(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = false}) async {
-    try {
-      return _sendWithTopic(topic, message, msgData, notification: notification);
-    } catch (e, st) {
-      handleError(e, st);
-      return null;
-    }
-  }
-
-  Future<Uint8List?> _sendWithPrivateGroupSafe(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
-    try {
-      return _sendWithPrivateGroup(group, message, msgData, notification: notification);
-    } catch (e, st) {
-      handleError(e, st);
-      return null;
-    }
-  }
-
-  Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData, {bool notification = false}) async {
+  Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData) async {
     if (clientAddressList.isEmpty || msgData == null) return null;
     logger.d("$TAG - _sendWithAddress - clientAddressList:$clientAddressList - msgData:$msgData - msgData:$msgData");
-    Uint8List? pid = (await sendData(clientCommon.address, clientAddressList, msgData))?.messageId;
-    // push
-    if (pid?.isNotEmpty == true) {
-      if (notification) {
-        contactCommon.queryListByClientAddress(clientAddressList).then((List<ContactSchema> contactList) async {
-          for (var i = 0; i < contactList.length; i++) {
-            ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
-          }
-        });
-      }
-    }
-    return pid;
+    return (await sendMsg(clientCommon.address, clientAddressList, msgData))?.messageId;
   }
 
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
@@ -871,19 +835,28 @@ class ChatOutCommon with Tag {
     // send
     Uint8List? pid;
     if (message.canTryPiece) {
-      pid = await _sendByPieces([message.to], message);
+      try {
+        pid = await _sendWithPieces([message.to], message);
+      } catch (e, st) {
+        handleError(e, st);
+        return null;
+      }
     }
     if ((pid == null) || pid.isEmpty) {
-      pid = (await sendData(clientCommon.address, [message.to], msgData))?.messageId;
+      pid = (await sendMsg(clientCommon.address, [message.to], msgData))?.messageId;
     }
-    // push
-    if (pid?.isNotEmpty == true) {
-      if (notification) {
-        if (contact != null && !contact.isMe) {
-          String uuid = await _sendPush(contact.deviceToken); // async
-          message.options = MessageOptions.setPushNotifyId(message.options, uuid);
-          MessageStorage.instance.updateOptions(message.msgId, message.options); // await
-        }
+    if (pid == null || pid.isEmpty) return pid;
+    // notification
+    if (notification) {
+      if ((contact != null) && !contact.isMe) {
+        deviceInfoCommon.queryLatest(contact.clientAddress).then((DeviceInfoSchema? _deviceInfo) async {
+          String? deviceToken = _deviceInfo?.deviceToken ?? contact.deviceToken;
+          String? uuid = await RemoteNotification.send(deviceToken);
+          if (uuid != null && uuid.isNotEmpty) {
+            message.options = MessageOptions.setPushNotifyId(message.options, uuid);
+            MessageStorage.instance.updateOptions(message.msgId, message.options); // await
+          }
+        });
       }
     }
     return pid;
@@ -930,33 +903,40 @@ class ChatOutCommon with Tag {
     Uint8List? pid;
     if (destList.isNotEmpty) {
       if (message.canTryPiece) {
-        pid = await _sendByPieces(destList, message);
+        try {
+          pid = await _sendWithPieces(destList, message);
+        } catch (e, st) {
+          handleError(e, st);
+          return null;
+        }
       }
       if ((pid == null) || pid.isEmpty) {
-        pid = (await sendData(selfAddress, destList, msgData))?.messageId;
+        pid = (await sendMsg(selfAddress, destList, msgData))?.messageId;
       }
     }
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      Uint8List? _pid = (await sendData(selfAddress, [selfAddress], data))?.messageId;
+      Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
-    }
-    // push
-    if (pid?.isNotEmpty == true) {
-      if (notification) {
-        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
-          for (var i = 0; i < contactList.length; i++) {
-            ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
-          }
-        });
-      }
     }
     // do not forget delete (replace by setJoined)
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
     //   await topicCommon.delete(topic.id, notify: true);
     // }
+    if (pid == null || pid.isEmpty) return pid;
+    // notification
+    if (notification) {
+      contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+        for (var i = 0; i < contactList.length; i++) {
+          ContactSchema _contact = contactList[i];
+          if (_contact.isMe) continue;
+          DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact.clientAddress);
+          String? deviceToken = _deviceInfo?.deviceToken ?? _contact.deviceToken;
+          RemoteNotification.send(deviceToken); // async // no result
+        }
+      });
+    }
     return pid;
   }
 
@@ -987,33 +967,40 @@ class ChatOutCommon with Tag {
     Uint8List? pid;
     if (destList.isNotEmpty) {
       if (message.canTryPiece) {
-        pid = await _sendByPieces(destList, message);
+        try {
+          pid = await _sendWithPieces(destList, message);
+        } catch (e, st) {
+          handleError(e, st);
+          return null;
+        }
       }
       if ((pid == null) || pid.isEmpty) {
-        pid = (await sendData(selfAddress, destList, msgData))?.messageId;
+        pid = (await sendMsg(selfAddress, destList, msgData))?.messageId;
       }
     }
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      Uint8List? _pid = (await sendData(selfAddress, [selfAddress], data))?.messageId;
+      Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
-    // push
-    if (pid?.isNotEmpty == true) {
-      if (notification) {
-        contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
-          for (var i = 0; i < contactList.length; i++) {
-            ContactSchema _contact = contactList[i];
-            if (!_contact.isMe) _sendPush(_contact.deviceToken); // async
-          }
-        });
-      }
+    if (pid == null || pid.isEmpty) return pid;
+    // notification
+    if (notification) {
+      contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+        for (var i = 0; i < contactList.length; i++) {
+          ContactSchema _contact = contactList[i];
+          if (_contact.isMe) continue;
+          DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(_contact.clientAddress);
+          String? deviceToken = _deviceInfo?.deviceToken ?? _contact.deviceToken;
+          RemoteNotification.send(deviceToken); // async // no result
+        }
+      });
     }
     return pid;
   }
 
-  Future<Uint8List?> _sendByPieces(List<String> clientAddressList, MessageSchema message, {double totalPercent = -1}) async {
+  Future<Uint8List?> _sendWithPieces(List<String> clientAddressList, MessageSchema message, {double totalPercent = -1}) async {
     Map<String, dynamic> results = await MessageSchema.piecesSplits(message);
     if (results.isEmpty) return null;
     String dataBytesString = results["data"];
@@ -1025,7 +1012,7 @@ class ChatOutCommon with Tag {
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty) return null;
 
-    logger.i("$TAG - _sendByPieces:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _sendWithPieces:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
 
     List<MessageSchema> resultList = [];
     for (var index = 0; index < dataList.length; index++) {
@@ -1053,7 +1040,7 @@ class ChatOutCommon with Tag {
       double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
       MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
       if ((result == null) || (result.pid == null)) {
-        logger.w("$TAG - _sendByPieces:ERROR - msgId:${piece.msgId}");
+        logger.w("$TAG - _sendWithPieces:ERROR - msgId:${piece.msgId}");
       } else {
         resultList.add(result);
       }
@@ -1062,50 +1049,11 @@ class ChatOutCommon with Tag {
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
     finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     if (finds.length >= total) {
-      logger.i("$TAG - _sendByPieces:SUCCESS - count:${resultList.length} - total:$total - message:$message");
+      logger.i("$TAG - _sendWithPieces:SUCCESS - count:${resultList.length} - total:$total - message:$message");
       if (finds.isNotEmpty) return finds[0].pid;
     } else {
-      logger.w("$TAG - _sendByPieces:FAIL - count:${resultList.length} - total:$total - message:$message");
+      logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - message:$message");
     }
     return null;
-  }
-
-  Future<String> _sendPush(String? deviceToken) async {
-    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
-    if (close == true) return "closed";
-
-    if (deviceToken == null || deviceToken.isEmpty == true) return "";
-
-    String title = Global.locale((s) => s.new_message);
-    // if (topic != null) {
-    //   title = '[${topic.topicShort}] ${contact?.displayName}';
-    // } else if (contact != null) {
-    //   title = contact.displayName;
-    // }
-
-    String content = Global.locale((s) => s.you_have_new_message);
-    // switch (message.contentType) {
-    //   case MessageContentType.text:
-    //   case MessageContentType.textExtension:
-    //     content = message.content;
-    //     break;
-    //   case MessageContentType.ipfs:
-    //   case MessageContentType.media:
-    //   case MessageContentType.image:
-    //     content = '[${localizations.image}]';
-    //     break;
-    //   case MessageContentType.audio:
-    //     content = '[${localizations.audio}]';
-    //     break;
-    //   case MessageContentType.topicSubscribe:
-    //   case MessageContentType.topicUnsubscribe:
-    //   case MessageContentType.topicInvitation:
-    //   case MessageContentType.topicKickOut:
-    //     break;
-    // }
-
-    String uuid = Uuid().v4();
-    SendPush.send(uuid, deviceToken, title, content); // await
-    return uuid;
   }
 }

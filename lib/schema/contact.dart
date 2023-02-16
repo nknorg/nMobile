@@ -27,19 +27,20 @@ class RequestType {
 
 class ContactSchema {
   int? id; // <- id
-  String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
-  int? type; // (required) <-> type
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
+
+  String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
+  int? type; // (required) <-> type
 
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
   String? profileVersion; // <-> profile_version
-  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at
+  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at TODO:GG multi_device_sync
 
   bool isTop = false; // <-> is_top
-  String? deviceToken; // <-> device_token
+  String? deviceToken; // <-> device_token TODO:GG remove to deviceInfo
 
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
@@ -49,10 +50,10 @@ class ContactSchema {
 
   ContactSchema({
     this.id,
-    required this.clientAddress,
-    this.type,
     this.createAt,
     this.updateAt,
+    required this.clientAddress,
+    this.type,
     this.avatar,
     this.firstName,
     this.lastName,
@@ -81,10 +82,10 @@ class ContactSchema {
       handleError(e, st);
     }
     return ContactSchema(
-      clientAddress: clientAddress,
-      type: type,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
+      clientAddress: clientAddress,
+      type: type,
       profileVersion: profileVersion ?? Uuid().v4(),
       nknWalletAddress: walletAddress,
     );
@@ -237,10 +238,10 @@ class ContactSchema {
     deviceToken = deviceToken?.replaceAll("\n", "").trim();
 
     Map<String, dynamic> map = {
-      'address': clientAddress,
-      'type': type,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'address': clientAddress,
+      'type': type,
       'avatar': Path.convert2Local(avatar?.path),
       'first_name': firstName ?? getDefaultName(clientAddress),
       'last_name': lastName,
@@ -256,10 +257,10 @@ class ContactSchema {
   static ContactSchema fromMap(Map e) {
     var contact = ContactSchema(
       id: e['id'],
-      clientAddress: e['address'] ?? "",
-      type: e['type'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
+      clientAddress: e['address'] ?? "",
+      type: e['type'],
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
