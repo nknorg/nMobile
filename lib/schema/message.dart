@@ -96,14 +96,16 @@ class MessageSchema {
 
   int status; // <-> status
   bool isOutbound; // <-> is_outbound
-  bool isDelete; // <-> is_delete
 
   int? sendAt; // <-> send_at (== create_at/receive_at)
   int? receiveAt; // <-> receive_at (== ack_at/read_at)
+
+  bool isDelete; // <-> is_delete
   int? deleteAt; // <-> delete_at
 
   String contentType; // (required) <-> type
   dynamic content; // <-> content
+
   Map<String, dynamic>? options; // <-> options
 
   MessageSchema({
@@ -116,10 +118,11 @@ class MessageSchema {
     // status
     required this.status,
     required this.isOutbound,
-    this.isDelete = false,
     // at
     required this.sendAt,
     this.receiveAt,
+    // delete
+    this.isDelete = false,
     this.deleteAt,
     // data
     required this.contentType,
@@ -202,9 +205,9 @@ class MessageSchema {
       groupId: groupId,
       status: status,
       isOutbound: isOutbound,
-      isDelete: isDelete,
       sendAt: sendAt,
       receiveAt: receiveAt,
+      isDelete: isDelete,
       deleteAt: deleteAt,
       contentType: contentType,
       content: content,
@@ -229,10 +232,11 @@ class MessageSchema {
       // status
       status: MessageStatus.Received,
       isOutbound: false,
-      isDelete: false,
       // at
       sendAt: data['send_timestamp'] ?? data['sendTimestamp'] ?? data['timestamp'] ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: null, // set in ack(isTopic) / read(contact)
+      // delete
+      isDelete: false,
       deleteAt: null, // set in messages bubble
       // data
       contentType: data['contentType'] ?? "",
@@ -438,10 +442,11 @@ class MessageSchema {
       // status
       'status': status,
       'is_outbound': isOutbound ? 1 : 0,
-      'is_delete': isDelete ? 1 : 0,
       // at
       'send_at': sendAt,
       'receive_at': receiveAt,
+      // delete
+      'is_delete': isDelete ? 1 : 0,
       'delete_at': deleteAt,
       // data
       'type': contentType,
@@ -505,10 +510,11 @@ class MessageSchema {
       // status
       status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
-      isDelete: (e['is_delete'] != null && e['is_delete'] == 1) ? true : false,
       // at
       sendAt: e['send_at'] != null ? e['send_at'] : null,
       receiveAt: e['receive_at'] != null ? e['receive_at'] : null,
+      // delete
+      isDelete: (e['is_delete'] != null && e['is_delete'] == 1) ? true : false,
       deleteAt: e['delete_at'] != null ? e['delete_at'] : null,
       // data
       contentType: e['type'] ?? "",
@@ -656,10 +662,11 @@ class MessageSchema {
       // status
       status: MessageStatus.Received,
       isOutbound: false,
-      isDelete: false,
       // at
       sendAt: piece.sendAt,
       receiveAt: null, // set in ack(isTopic) / read(contact)
+      // delete
+      isDelete: false,
       deleteAt: null, // set in messages bubble
       // data
       contentType: piece.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",

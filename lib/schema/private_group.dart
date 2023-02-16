@@ -12,33 +12,35 @@ class PrivateGroupType {
 
 class PrivateGroupSchema {
   int? id;
-  String groupId;
-  String name;
-  int? type;
-  String? version;
-  bool joined = false;
-
   int? createAt;
   int? updateAt;
-  bool isTop = false;
+
+  String groupId;
+  int? type;
+  String name;
+
+  String? version;
   int? count;
   File? avatar;
+
+  bool joined;
+  bool isTop;
 
   OptionsSchema? options;
   Map<String, dynamic>? data;
 
   PrivateGroupSchema({
     this.id,
-    required this.groupId,
-    required this.name,
-    this.type = PrivateGroupType.normal,
-    this.version,
-    this.joined = false,
     this.createAt,
     this.updateAt,
-    this.isTop = false,
+    required this.groupId,
+    this.type = PrivateGroupType.normal,
+    required this.name,
+    this.version,
     this.count,
     this.avatar,
+    this.isTop = false,
+    this.joined = false,
     this.options,
     this.data,
   }) {
@@ -51,13 +53,13 @@ class PrivateGroupSchema {
     if (groupId == null || groupId.isEmpty) return null;
     if (name == null || name.isEmpty) name = groupId;
     return PrivateGroupSchema(
-      groupId: groupId,
-      name: name,
-      type: type ?? PrivateGroupType.normal,
-      joined: joined ?? false,
-      version: version,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
+      groupId: groupId,
+      type: type ?? PrivateGroupType.normal,
+      name: name,
+      version: version,
+      joined: joined ?? false,
     );
   }
 
@@ -150,16 +152,16 @@ class PrivateGroupSchema {
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
       'id': id,
-      'group_id': groupId,
-      'name': name,
-      'type': type ?? PrivateGroupType.normal,
-      'version': version,
-      'joined': joined ? 1 : 0,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'is_top': isTop ? 1 : 0,
+      'group_id': groupId,
+      'type': type ?? PrivateGroupType.normal,
+      'name': name,
+      'version': version,
       'count': count,
       'avatar': Path.convert2Local(avatar?.path),
+      'joined': joined ? 1 : 0,
+      'is_top': isTop ? 1 : 0,
       'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
       'data': data != null ? jsonEncode(data) : null,
     };
@@ -169,16 +171,16 @@ class PrivateGroupSchema {
   static PrivateGroupSchema fromMap(Map<String, dynamic> e) {
     var schema = PrivateGroupSchema(
       id: e['id'],
-      groupId: e['group_id'] ?? "",
-      name: e['name'] ?? "",
-      type: e['type'] ?? PrivateGroupType.normal,
-      version: e['version'],
-      joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
+      groupId: e['group_id'] ?? "",
+      type: e['type'] ?? PrivateGroupType.normal,
+      name: e['name'] ?? "",
+      version: e['version'],
       count: e['count'],
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
+      joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
+      isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
 
     if (e['options']?.toString().isNotEmpty == true) {

@@ -11,6 +11,7 @@ class SessionType {
 
 class SessionSchema {
   int? id; // <-> id
+
   String targetId; // (required) <-> target_id
   int type; // (required) <-> type
 
