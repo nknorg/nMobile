@@ -23,8 +23,8 @@ class SessionStorage with Tag {
         `type` INT,
         `last_message_at` BIGINT,
         `last_message_options` TEXT,
-        `un_read_count` INT,
-        `is_top` BOOLEAN DEFAULT 0
+        `is_top` BOOLEAN DEFAULT 0,
+        `un_read_count` INT
       )''';
 
   SessionStorage();

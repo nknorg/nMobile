@@ -19,9 +19,9 @@ class DeviceInfoStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `contact_address` VARCHAR(200),
         `create_at` BIGINT,
         `update_at` BIGINT,
+        `contact_address` VARCHAR(200),
         `device_id` TEXT,
         `data` TEXT
       )''';

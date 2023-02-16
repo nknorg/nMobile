@@ -21,10 +21,10 @@ class ContactStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `address` VARCHAR(200),
-        `type` INT,
         `create_at` BIGINT,
         `update_at` BIGINT,
+        `address` VARCHAR(200),
+        `type` INT,
         `avatar` TEXT,
         `first_name` VARCHAR(50),
         `last_name` VARCHAR(50),
@@ -42,10 +42,10 @@ class ContactStorage with Tag {
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
-    await db.execute('CREATE INDEX `index_contact_first_name` ON `$tableName` (`first_name`)');
-    await db.execute('CREATE INDEX `index_contact_last_name` ON `$tableName` (`last_name`)');
     await db.execute('CREATE INDEX `index_contact_create_at` ON `$tableName` (`create_at`)');
     await db.execute('CREATE INDEX `index_contact_update_at` ON `$tableName` (`update_at`)');
+    await db.execute('CREATE INDEX `index_contact_first_name` ON `$tableName` (`first_name`)');
+    await db.execute('CREATE INDEX `index_contact_last_name` ON `$tableName` (`last_name`)');
     await db.execute('CREATE INDEX `index_contact_type_create_at` ON `$tableName` (`type`, `create_at`)');
     await db.execute('CREATE INDEX `index_contact_type_update_at` ON `$tableName` (`type`, `update_at`)');
   }
@@ -336,7 +336,7 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
+  /*Future<bool> setDeviceToken(int? contactId, String? deviceToken) async {
     if (db?.isOpen != true) return false;
     if (contactId == null || contactId == 0) return false;
     return await _queue.add(() async {
@@ -364,7 +364,7 @@ class ContactStorage with Tag {
           return false;
         }) ??
         false;
-  }
+  }*/
 
   Future<bool> setNotificationOpen(int? contactId, bool open, {OptionsSchema? old}) async {
     if (db?.isOpen != true) return false;
