@@ -19,16 +19,16 @@ class PrivateGroupStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `group_id` VARCHAR(200),
-        `name` VARCHAR(200),
-        `type` INT,
-        `version` TEXT,
-        `joined` BOOLEAN DEFAULT 0,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `is_top` BOOLEAN DEFAULT 0,
+        `group_id` VARCHAR(200),
+        `type` INT,
+        `name` VARCHAR(200),
+        `version` TEXT,
         `count` INT,
         `avatar` TEXT,
+        `joined` BOOLEAN DEFAULT 0,
+        `is_top` BOOLEAN DEFAULT 0,
         `options` TEXT,
         `data` TEXT
       )''';
