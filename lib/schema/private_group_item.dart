@@ -14,6 +14,7 @@ class PrivateGroupItemPerm {
 
 class PrivateGroupItemSchema {
   int? id;
+
   String groupId;
   int? permission;
   int? expiresAt;
