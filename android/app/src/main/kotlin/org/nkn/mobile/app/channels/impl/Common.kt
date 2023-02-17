@@ -108,9 +108,9 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             "sendPushAPNS" -> {
                 sendPushAPNS(call, result)
             }
-            "isGoogleServiceAvailable" -> {
-                isGoogleServiceAvailable(call, result)
-            }
+            //"isGoogleServiceAvailable" -> {
+            //    isGoogleServiceAvailable(call, result)
+            //}
             "getFCMToken" -> {
                 getFCMToken(call, result)
             }
@@ -204,7 +204,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
-    private fun isGoogleServiceAvailable(call: MethodCall, result: MethodChannel.Result) {
+    /*private fun isGoogleServiceAvailable(call: MethodCall, result: MethodChannel.Result) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(MainActivity.instance)
@@ -226,7 +226,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 return@launch
             }
         }
-    }
+    }*/
 
     @SuppressLint("CommitPrefEdits")
     private fun getFCMToken(call: MethodCall, result: MethodChannel.Result) {
@@ -234,7 +234,13 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             try {
                 val sharedPreferences = MainActivity.instance.getSharedPreferences("fcmToken", Context.MODE_PRIVATE)
                 val deviceToken = sharedPreferences.getString("token", null)
-                if (!deviceToken.isNullOrEmpty()) {
+                val resp = hashMapOf(
+                    "event" to "getFCMToken",
+                    "token" to deviceToken,
+                )
+                resultSuccess(result, resp)
+                return@launch
+                /*if (!deviceToken.isNullOrEmpty()) {
                     val resp = hashMapOf(
                         "event" to "getFCMToken",
                         "token" to deviceToken,
@@ -242,6 +248,15 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     resultSuccess(result, resp)
                     return@launch
                 } else {
+                    val code = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(MainActivity.instance)
+                    if (code != ConnectionResult.SUCCESS) {
+                        val resp = hashMapOf(
+                            "event" to "getFCMToken",
+                            "token" to null,
+                        )
+                        resultSuccess(result, resp)
+                        return@launch
+                    }
                     val task = FirebaseMessaging.getInstance().token
                     task.addOnSuccessListener { fetchToken ->
                         sharedPreferences.edit().putString("token", fetchToken).apply()
@@ -272,7 +287,7 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         }
                         return@addOnFailureListener
                     }
-                }
+                }*/
             } catch (e: Throwable) {
                 resultError(result, e)
                 return@launch

@@ -15,11 +15,7 @@ class DeviceToken {
     if (Platform.isIOS) {
       token = await getAPNS();
     } else if (Platform.isAndroid) {
-      if (await Common.isGoogleServiceAvailable()) {
-        token = await getFCM();
-      } else {
-        // other
-      }
+      token = await getFCM();
     }
     logger.i("DeviceToken - getToken - $token");
     return token;
