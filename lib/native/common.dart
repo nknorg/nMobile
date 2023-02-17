@@ -82,7 +82,7 @@ class Common {
     return null;
   }
 
-  static Future<bool> isGoogleServiceAvailable() async {
+  /*static Future<bool> isGoogleServiceAvailable() async {
     try {
       final Map resp = await _methodChannel.invokeMethod('isGoogleServiceAvailable', {});
       return resp['availability'] ?? false;
@@ -90,7 +90,7 @@ class Common {
       handleError(e, st);
     }
     return false;
-  }
+  }*/
 
   static Future<String?> getFCMToken() async {
     try {
