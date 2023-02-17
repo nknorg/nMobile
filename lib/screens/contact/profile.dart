@@ -9,7 +9,6 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/name_service/resolver.dart';
-import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
@@ -26,6 +25,7 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -329,9 +329,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
-    String? deviceToken = notificationOpen ? await DeviceToken.get() : null;
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true);
+    if (deviceInfo == null) return;
+    if (!notificationOpen) deviceInfo.data?['deviceToken'] = null;
     bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
-    bool tokenNull = (deviceToken == null) || deviceToken.isEmpty;
+    bool tokenNull = (deviceInfo.deviceToken == null) || (deviceInfo.deviceToken?.isEmpty == true);
     if (notificationOpen && (noMobile || tokenNull)) {
       setState(() {
         _notificationOpen = false;
@@ -340,11 +342,14 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       return;
     }
     _contactSchema?.options?.notificationOpen = notificationOpen;
-    // inside update
-    contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true); // await
-    // outside update
-    chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken); // await
-    SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress); // await
+    // update
+    await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
+    bool success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo);
+    if (success) {
+      await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress);
+    } else {
+      await contactCommon.setNotificationOpen(_contactSchema, !notificationOpen, notify: true);
+    }
   }
 
   _addFriend() {
