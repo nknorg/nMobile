@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/name_service/resolver.dart';
-import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -97,7 +96,7 @@ class ContactCommon with Tag {
     return contact;
   }
 
-  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false, bool fetchDeviceToken = false}) async {
+  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false}) async {
     List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : await ContactStorage.instance.queryByClientAddress(clientAddress ?? clientCommon.address);
     if ((contact == null) && canAdd) {
@@ -115,13 +114,6 @@ class ContactCommon with Tag {
         bool success = await setWalletAddress(contact, nknWalletAddress);
         if (success) contact.nknWalletAddress = nknWalletAddress;
       }
-    }
-    if (fetchDeviceToken) {
-      DeviceToken.get().then((deviceToken) {
-        if ((contact?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
-          setDeviceToken(contact?.id, deviceToken, notify: true); // await
-        }
-      }); // await
     }
     return contact;
   }
@@ -242,12 +234,12 @@ class ContactCommon with Tag {
     return success;
   }
 
-  Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
+  /*Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
     if (contactId == null || contactId == 0) return false;
     bool success = await ContactStorage.instance.setDeviceToken(contactId, deviceToken);
     if (success && notify) queryAndNotify(contactId);
     return success;
-  }
+  }*/
 
   Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
@@ -308,6 +300,20 @@ class ContactCommon with Tag {
   Future<bool> setMappedAddress(ContactSchema? schema, List<String>? mapped, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await ContactStorage.instance.setMappedAddress(schema.id, mapped, oldExtraInfo: schema.data);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
+  Future<bool> setPingAt(ContactSchema? schema, int pingAt, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await ContactStorage.instance.setPingAt(schema.id, pingAt, oldExtraInfo: schema.data);
+    if (success && notify) queryAndNotify(schema.id);
+    return success;
+  }
+
+  Future<bool> setPongAt(ContactSchema? schema, int pongAt, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    bool success = await ContactStorage.instance.setPongAt(schema.id, pongAt, oldExtraInfo: schema.data);
     if (success && notify) queryAndNotify(schema.id);
     return success;
   }

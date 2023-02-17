@@ -71,14 +71,16 @@ class Global {
 
   static int? blockHeight;
 
-  static int topicDefaultSubscribeHeight = 400000; // 93day
-  static int topicWarnBlockExpireHeight = 100000; // 23day
+  // TODO:GG 一般都移动到这里
+  static const int clientReAuthGapMs = 1 * 60 * 1000; // 1m
+  static const int contactPingGapMs = 1 * 60 * 60 * 1000; // 1h
+  static const int sessionPingGapMs = 24 * 60 * 60 * 1000; // 24h
+  static const int privateGroupInviteExpiresMs = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-  static int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static int topicSubscribeCheckGapMs = 12 * 60 * 60 * 1000; // 12h
-  static int contactsPingGapMs = 3 * 60 * 60 * 1000; // 3h
-  static int txPoolDelayMs = 1 * 60 * 1000; // 1m
-  static int privateGroupInviteExpiresMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+  static const int txPoolDelayMs = 1 * 60 * 1000; // 1m
+  static const int topicSubscribeCheckGapMs = 12 * 60 * 60 * 1000; // 12h
+  static const int topicDefaultSubscribeHeight = 400000; // 93day
+  static const int topicWarnBlockExpireHeight = 100000; // 23day
 
   static double topicSubscribeFeeDefault = 0.00010009; // fee
 

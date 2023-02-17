@@ -37,10 +37,11 @@ class ContactSchema {
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
   String? profileVersion; // <-> profile_version
-  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at TODO:GG multi_device_sync
+  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at // FUTURE:GG multi_device_sync
 
   bool isTop = false; // <-> is_top
-  String? deviceToken; // <-> device_token TODO:GG remove to deviceInfo
+  @Deprecated('replace by DeviceInfo.deviceToken')
+  String? deviceToken; // <-> device_token
 
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
@@ -201,6 +202,14 @@ class ContactSchema {
     return (data?['mappedAddress'] ?? []).cast<String>();
   }
 
+  int? get pingAt {
+    return int.tryParse(data?['pingAt'] ?? "");
+  }
+
+  int? get pongAt {
+    return int.tryParse(data?['pongAt'] ?? "");
+  }
+
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {
@@ -220,10 +229,7 @@ class ContactSchema {
     if (nknWalletAddress?.isNotEmpty == true) {
       data?['nknWalletAddress'] = nknWalletAddress?.replaceAll("\n", "").trim();
     } else {
-      //   data?['nknWalletAddress'] = await tryNknWalletAddress();
-    }
-    if (notes?.isNotEmpty == true) {
-      data?['notes'] = notes;
+      // data?['nknWalletAddress'] = await tryNknWalletAddress();
     }
     if (data?.keys.length == 0) {
       data = null;

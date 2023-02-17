@@ -31,9 +31,10 @@ class DeviceInfoStorage with Tag {
     await db.execute(createSQL);
 
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id_update_at` ON `$tableName` (`contact_address`, `device_id`, `update_at`)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)'); // TODO:GG 升级
     await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_update_at` ON `$tableName` (`contact_address`, `update_at`)');
+    await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_update_at` ON `$tableName` (`contact_address`, `device_id`, `update_at`)');
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
@@ -86,7 +87,40 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+  Future<List<DeviceInfoSchema>> queryLatestList(String? contactAddress, {int offset = 0, int limit = 20}) async {
+    if (db?.isOpen != true) return [];
+    if (contactAddress == null || contactAddress.isEmpty) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'contact_address = ?',
+          whereArgs: [contactAddress],
+          offset: offset,
+          limit: limit,
+          orderBy: 'update_at DESC',
+        );
+      });
+      if (res == null || res.isEmpty) {
+        logger.v("$TAG - queryLatestList - empty - contactAddress:$contactAddress");
+        return [];
+      }
+      List<DeviceInfoSchema> results = <DeviceInfoSchema>[];
+      String logText = '';
+      res.forEach((map) {
+        logText += "\n      $map";
+        results.add(DeviceInfoSchema.fromMap(map));
+      });
+      logger.v("$TAG - queryLatestList - items:$logText");
+      return results;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
+  }
+
+  /*Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
     try {
@@ -123,7 +157,7 @@ class DeviceInfoStorage with Tag {
       handleError(e, st);
     }
     return [];
-  }
+  }*/
 
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (db?.isOpen != true) return null;
