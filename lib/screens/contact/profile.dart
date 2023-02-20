@@ -323,15 +323,15 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     _contactSchema?.options?.deleteAfterSeconds = _burnValue;
     _contactSchema?.options?.updateBurnAfterAt = timeNow;
     // inside update
-    contactCommon.setOptionsBurn(_contactSchema, _burnValue, timeNow, notify: true); // await
-    // outside update
-    chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue, timeNow); // await
+    contactCommon.setOptionsBurn(_contactSchema, _burnValue, timeNow, notify: true).then((success) {
+      // outside update
+      if (success) chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue, timeNow); // await
+    });
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true);
     if (deviceInfo == null) return;
-    if (!notificationOpen) deviceInfo.data?['deviceToken'] = null;
     bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
     bool tokenNull = (deviceInfo.deviceToken == null) || (deviceInfo.deviceToken?.isEmpty == true);
     if (notificationOpen && (noMobile || tokenNull)) {
@@ -344,7 +344,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     _contactSchema?.options?.notificationOpen = notificationOpen;
     // update
     await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
-    bool success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo);
+    bool success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo, notificationOpen);
     if (success) {
       await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress);
     } else {

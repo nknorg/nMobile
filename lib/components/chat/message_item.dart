@@ -502,9 +502,10 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
                       groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, toast: true);
                       if (groupItemSchema != null) {
-                        await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema);
-                        PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
-                        if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
+                        if (await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema)) {
+                          PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
+                          if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
+                        }
                       }
                       Loading.dismiss();
                       if (groupItemSchema != null) Toast.show(Global.locale((s) => s.waiting_for_data_to_sync, ctx: context));
