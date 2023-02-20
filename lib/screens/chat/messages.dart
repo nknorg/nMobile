@@ -438,9 +438,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     if (needOptionsMembers) {
       await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId).then((version) async {
-        _privateGroup?.setOptionsRequestAt(nowAt);
-        _privateGroup?.setOptionsRequestedVersion(version);
-        await privateGroupCommon.updateGroupData(_privateGroup?.groupId, _privateGroup?.data);
+        if (version?.isNotEmpty == true) {
+          _privateGroup?.setOptionsRequestAt(nowAt);
+          _privateGroup?.setOptionsRequestedVersion(version);
+          await privateGroupCommon.updateGroupData(_privateGroup?.groupId, _privateGroup?.data);
+        }
       });
     }
   }
@@ -521,14 +523,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _toggleNotificationOpen() async {
     if (this._topic != null) {
-      // FUTURE:GG topic notificationOpen
+      // nothing
     } else if (this._privateGroup != null) {
-      // FUTURE:GG group notificationOpen
+      // TODO:GG group notificationOpen?
     } else {
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true);
       if (deviceInfo == null) return;
-      if (!nextOpen) deviceInfo.data?['deviceToken'] = null;
       bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
       bool tokenNull = (deviceInfo.deviceToken == null) || (deviceInfo.deviceToken?.isEmpty == true);
       if (nextOpen && (noMobile || tokenNull)) {
@@ -540,7 +541,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       });
       // update
       await contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
-      bool success = await chatOutCommon.sendDeviceInfo(_contact?.clientAddress, deviceInfo);
+      bool success = await chatOutCommon.sendDeviceInfo(_contact?.clientAddress, deviceInfo, nextOpen);
       if (success) {
         await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId); // await
       } else {
@@ -734,7 +735,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         ),
         actions: [
           _topic != null || _privateGroup != null
-              ? SizedBox.shrink() // FUTURE:GG topic notificationOpen
+              ? SizedBox.shrink() // TODO:GG topic notificationOpen?
               : Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: IconButton(

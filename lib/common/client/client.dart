@@ -134,7 +134,7 @@ class ClientCommon with Tag {
     });
   }
 
-  // FUTURE:GG remove params tryTimes, use retry with subscribe
+  // TODO:GG remove params tryTimes, use retry with subscribe
   // return [client, pwdError]
   Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password, int tryTimes = 1}) async {
     // if (client != null) await close(); // async boom!!!
@@ -167,7 +167,7 @@ class ClientCommon with Tag {
           await dbCommon.open(pubKey, seed!);
           // wallet + contact
           BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
-          ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true, fetchDeviceToken: true);
+          ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
           contactCommon.meUpdateSink.add(me);
         }
       }
@@ -198,7 +198,7 @@ class ClientCommon with Tag {
         await dbCommon.open(pubKey, seed);
         // wallet + contact
         BlocProvider.of<WalletBloc>(Global.appContext).add(DefaultWallet(wallet.address));
-        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true, fetchDeviceToken: true);
+        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
         contactCommon.meUpdateSink.add(me);
       }
     } catch (e, st) {

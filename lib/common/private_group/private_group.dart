@@ -161,8 +161,8 @@ class PrivateGroupCommon with Tag {
     Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     invitee.inviterSignature = await genSignature(inviterPrivateKey, invitee.inviterRawData);
     if ((invitee.inviterSignature == null) || (invitee.inviterSignature?.isEmpty == true)) return false;
-    chatOutCommon.sendPrivateGroupInvitee(target, schemaGroup, invitee); // await
-    return true;
+    var result = await chatOutCommon.sendPrivateGroupInvitee(target, schemaGroup, invitee);
+    return result != null;
   }
 
   Future<PrivateGroupItemSchema?> acceptInvitation(PrivateGroupItemSchema? schema, {Uint8List? inviteePrivateKey, bool toast = false}) async {
@@ -313,10 +313,14 @@ class PrivateGroupCommon with Tag {
     // message
     List<PrivateGroupItemSchema> owners = await queryMembers(groupId, perm: PrivateGroupItemPerm.owner, limit: 1);
     if (owners.length <= 0) return false;
-    chatOutCommon.sendPrivateGroupQuit(owners[0].inviter, myself); // await
+    bool success = await chatOutCommon.sendPrivateGroupQuit(owners[0].inviter, myself);
+    if (!success) {
+      logger.e('$TAG - quit - quit group join rpc fail.');
+      return false;
+    }
     // join (no item modify to avoid be sync members by different group_version)
     schemaGroup.joined = false;
-    bool success = await updateGroupJoined(groupId, schemaGroup.joined, notify: notify);
+    success = await updateGroupJoined(groupId, schemaGroup.joined, notify: notify);
     if (!success) {
       logger.e('$TAG - quit - quit group join sql fail.');
       return false;
@@ -407,8 +411,8 @@ class PrivateGroupCommon with Tag {
     members.add(lefter);
     members.forEach((m) {
       if (m.invitee != selfAddress) {
-        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [lefter]).then((value) {
-          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
+        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [lefter]).then((success) {
+          if (success) chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
         });
       }
     });
@@ -485,8 +489,8 @@ class PrivateGroupCommon with Tag {
     members.add(blacker);
     members.forEach((m) {
       if (m.invitee != selfAddress) {
-        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [blacker]).then((value) {
-          chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
+        chatOutCommon.sendPrivateGroupMemberResponse(m.invitee, schemaGroup, [blacker]).then((success) {
+          if (success) chatOutCommon.sendPrivateGroupOptionResponse(m.invitee, schemaGroup); // await
         });
       }
     });
@@ -575,7 +579,11 @@ class PrivateGroupCommon with Tag {
       return await pushPrivateGroupMembers(target, groupId, remoteVersion, force: true);
     }
     // send
-    chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup); // await
+    bool success = await chatOutCommon.sendPrivateGroupOptionResponse(target, privateGroup);
+    if (!success) {
+      logger.e('$TAG - pushPrivateGroupOptions - send data fail');
+      return false;
+    }
     return true;
   }
 
@@ -663,8 +671,7 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - pushPrivateGroupMembers - request is not in group.');
       return false;
     } else if ((privateGroupItem.permission ?? 0) <= PrivateGroupItemPerm.none) {
-      chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, [privateGroupItem]); // await
-      return true;
+      return await chatOutCommon.sendPrivateGroupMemberResponse(target, privateGroup, [privateGroupItem]);
     }
     // send
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId, all: true);
