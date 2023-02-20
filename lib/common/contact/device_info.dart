@@ -174,16 +174,6 @@ class DeviceInfoCommon with Tag {
 //  SUPPORT:END
 
 //  SUPPORT:START
-  static bool isMsgImageEnable(String? platform, int? appVersion) {
-    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
-    bool platformOK = false, versionOk = false;
-    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
-    versionOk = appVersion >= 224;
-    return platformOK && versionOk;
-  }
-//  SUPPORT:END
-
-//  SUPPORT:START
   static bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
