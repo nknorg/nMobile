@@ -26,6 +26,11 @@ class DeviceInfoSchema {
 
   String contactAddress; // (required) <-> contact_address
   String? deviceId; //  <-> device_id
+  String? deviceToken; // <-> device_token
+
+  int onlineAt; // <-> online_at
+  int? pingAt; // <-> ping_at
+  int? pongAt; // <-> pong_at
 
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
@@ -35,6 +40,10 @@ class DeviceInfoSchema {
     this.updateAt,
     required this.contactAddress,
     this.deviceId,
+    this.deviceToken,
+    required this.onlineAt,
+    this.pingAt,
+    this.pongAt,
     this.data,
   }) {
     if (this.createAt == null) {
@@ -89,15 +98,6 @@ class DeviceInfoSchema {
     return platformVersion ?? 0;
   }
 
-  String? get deviceToken {
-    if (data?.isNotEmpty == true) {
-      String _token = data?['deviceToken']?.toString() ?? "";
-      if (_token.isEmpty) return null;
-      return _token;
-    }
-    return null;
-  }
-
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
@@ -107,6 +107,10 @@ class DeviceInfoSchema {
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'contact_address': contactAddress,
       'device_id': deviceId,
+      'device_token': deviceToken,
+      'online_at': onlineAt,
+      'ping_at': pingAt,
+      'pong_at': pongAt,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
@@ -119,6 +123,10 @@ class DeviceInfoSchema {
       updateAt: e['update_at'],
       contactAddress: e['contact_address'] ?? "",
       deviceId: e['device_id'],
+      deviceToken: e['device_token'],
+      onlineAt: e['online_at'],
+      pingAt: e['ping_at'],
+      pongAt: e['pong_at'],
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
@@ -136,6 +144,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, data: $data}';
+    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, deviceToken: $deviceToken, onlineAt: $onlineAt, pingAt: $pingAt, pongAt: $pongAt, data: $data}';
   }
 }

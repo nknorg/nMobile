@@ -202,14 +202,6 @@ class ContactSchema {
     return (data?['mappedAddress'] ?? []).cast<String>();
   }
 
-  int? get pingAt {
-    return int.tryParse(data?['pingAt'] ?? "");
-  }
-
-  int? get pongAt {
-    return int.tryParse(data?['pongAt'] ?? "");
-  }
-
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {

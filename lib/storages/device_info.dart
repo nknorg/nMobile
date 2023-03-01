@@ -23,18 +23,24 @@ class DeviceInfoStorage with Tag {
         `update_at` BIGINT,
         `contact_address` VARCHAR(200),
         `device_id` TEXT,
+        `device_token` TEXT,
+        `online_at` BIGINT,
+        `ping_at` BIGINT,
+        `pong_at` BIGINT,
         `data` TEXT
       )''';
 
   static create(Database db) async {
     // create table
+    // TODO:GG 升级(device_token("") + online_at(0) + ping_at(0) + pong_at(0))
     await db.execute(createSQL);
 
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)'); // TODO:GG 升级
+    // TODO:GG 升级 (几乎都有改，有个旧的uq不影响)
+    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
     await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
-    await db.execute('CREATE INDEX `index_device_info_contact_address_update_at` ON `$tableName` (`contact_address`, `update_at`)');
-    await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_update_at` ON `$tableName` (`contact_address`, `device_id`, `update_at`)');
+    await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
+    await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_online_at` ON `$tableName` (`contact_address`, `device_id`, `online_at`)');
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
@@ -72,7 +78,7 @@ class DeviceInfoStorage with Tag {
           whereArgs: [contactAddress],
           offset: 0,
           limit: 1,
-          orderBy: 'update_at DESC',
+          orderBy: 'online_at DESC',
         );
       });
       if (res != null && res.length > 0) {
@@ -99,7 +105,7 @@ class DeviceInfoStorage with Tag {
           whereArgs: [contactAddress],
           offset: offset,
           limit: limit,
-          orderBy: 'update_at DESC',
+          orderBy: 'online_at DESC',
         );
       });
       if (res == null || res.isEmpty) {
@@ -135,7 +141,7 @@ class DeviceInfoStorage with Tag {
               whereArgs: [contactAddress],
               offset: 0,
               limit: 1,
-              orderBy: 'update_at DESC',
+              orderBy: 'online_at DESC',
             );
           }
         });
@@ -171,7 +177,7 @@ class DeviceInfoStorage with Tag {
           whereArgs: [contactAddress, deviceId],
           offset: 0,
           limit: 1,
-          orderBy: 'update_at DESC',
+          orderBy: 'online_at DESC',
         );
       });
       if (res != null && res.length > 0) {
@@ -184,6 +190,123 @@ class DeviceInfoStorage with Tag {
       handleError(e, st);
     }
     return null;
+  }
+
+  Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
+    if (db?.isOpen != true) return false;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'device_token': deviceToken,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setDeviceToken - success - contactAddress:$contactAddress - deviceId:$deviceId - deviceToken:$deviceToken");
+              return true;
+            }
+            logger.w("$TAG - setDeviceToken - fail - contactAddress:$contactAddress - deviceId:$deviceId - deviceToken:$deviceToken");
+            return false;
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setOnlineAt(String? contactAddress, String? deviceId, {int? onlineAt}) async {
+    if (db?.isOpen != true) return false;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'online_at': onlineAt ?? DateTime.now().millisecondsSinceEpoch,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setOnlineAt - success - contactAddress:$contactAddress - deviceId:$deviceId - onlineAt:$onlineAt");
+              return true;
+            }
+            logger.w("$TAG - setOnlineAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - onlineAt:$onlineAt");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setPingAt(String? contactAddress, String? deviceId, {int? pingAt}) async {
+    if (db?.isOpen != true) return false;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'ping_at': pingAt ?? DateTime.now().millisecondsSinceEpoch,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setPingAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pingAt:$pingAt");
+              return true;
+            }
+            logger.w("$TAG - setPingAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pingAt:$pingAt");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setPongAt(String? contactAddress, String? deviceId, {int? pongAt}) async {
+    if (db?.isOpen != true) return false;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'pong_at': pongAt ?? DateTime.now().millisecondsSinceEpoch,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setPingAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
+              return true;
+            }
+            logger.w("$TAG - setPingAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setData(int? deviceInfoId, Map<String, dynamic>? newData) async {
@@ -207,33 +330,6 @@ class DeviceInfoStorage with Tag {
               return true;
             }
             logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
-  }
-
-  Future<bool> setUpdate(String? contactAddress, String? deviceId, {int? updateAt}) async {
-    if (db?.isOpen != true) return false;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'contact_address = ? AND device_id = ?',
-                whereArgs: [contactAddress, deviceId],
-              );
-            });
-            if (count != null && count > 0) {
-              logger.v("$TAG - setUpdate - success - contactAddress:$contactAddress - deviceId:$deviceId");
-              return true;
-            }
-            logger.w("$TAG - setUpdate - fail - contactAddress:$contactAddress - deviceId:$deviceId");
           } catch (e, st) {
             handleError(e, st);
           }
