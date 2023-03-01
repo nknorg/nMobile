@@ -123,6 +123,7 @@ Future addTestData(
     createAt: DateTime.now().millisecondsSinceEpoch,
     updateAt: DateTime.now().millisecondsSinceEpoch + 1,
     deviceId: Uuid().v4(),
+    onlineAt: 0,
     data: {'appName': "", 'appVersion': "", 'platform': "", 'platformVersion': ""},
   );
   Map<String, dynamic> entity2 = _deviceInfo.toMap();
