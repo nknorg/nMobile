@@ -32,11 +32,11 @@ class DeviceInfoStorage with Tag {
 
   static create(Database db) async {
     // create table
-    // TODO:GG 升级(device_token("") + online_at(0) + ping_at(0) + pong_at(0))
+    // TODO:GG 升级(device_token("") + online_at(updateAt) + ping_at(0) + pong_at(0))?
     await db.execute(createSQL);
 
     // index
-    // TODO:GG 升级 (几乎都有改，有个旧的uq不影响)
+    // TODO:GG 升级 (几乎都有改，有个旧的uq不影响)?
     await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
     await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
@@ -126,7 +126,7 @@ class DeviceInfoStorage with Tag {
     return [];
   }
 
-  /*Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
     if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
     try {
@@ -163,11 +163,12 @@ class DeviceInfoStorage with Tag {
       handleError(e, st);
     }
     return [];
-  }*/
+  }
 
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (db?.isOpen != true) return null;
-    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    deviceId = deviceId ?? "";
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -195,6 +196,7 @@ class DeviceInfoStorage with Tag {
   Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
     if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -225,6 +227,7 @@ class DeviceInfoStorage with Tag {
   Future<bool> setOnlineAt(String? contactAddress, String? deviceId, {int? onlineAt}) async {
     if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -254,6 +257,7 @@ class DeviceInfoStorage with Tag {
   Future<bool> setPingAt(String? contactAddress, String? deviceId, {int? pingAt}) async {
     if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -283,6 +287,7 @@ class DeviceInfoStorage with Tag {
   Future<bool> setPongAt(String? contactAddress, String? deviceId, {int? pongAt}) async {
     if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
