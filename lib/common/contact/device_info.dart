@@ -17,7 +17,7 @@ class DeviceInfoCommon with Tag {
     String appVersion = (deviceInfo != null) ? deviceInfo.appVersion.toString() : Global.build;
     String platform = (deviceInfo != null) ? deviceInfo.platform : PlatformName.get();
     String platformVersion = (deviceInfo != null) ? deviceInfo.platformVersion.toString() : Global.deviceVersion;
-    String deviceId = (deviceInfo != null) ? (deviceInfo.deviceId ?? "") : Global.deviceId;
+    String deviceId = (deviceInfo != null) ? deviceInfo.deviceId : Global.deviceId;
     return "$appName:$appVersion:$platform:$platformVersion:$deviceId";
   }
 
@@ -31,25 +31,34 @@ class DeviceInfoCommon with Tag {
     DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Global.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
-        deviceInfo = await set(DeviceInfoSchema(contactAddress: clientAddress, deviceId: Global.deviceId, data: {
-          'appName': appName,
-          'appVersion': appVersion,
-          'platform': platform,
-          'platformVersion': platformVersion,
-        }));
+        deviceInfo = await set(DeviceInfoSchema(
+          contactAddress: clientAddress,
+          deviceId: Global.deviceId,
+          onlineAt: 0,
+          data: {
+            'appName': appName,
+            'appVersion': appVersion,
+            'platform': platform,
+            'platformVersion': platformVersion,
+          },
+        ));
       } else {
         return null;
       }
     } else {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
-        deviceInfo = await set(DeviceInfoSchema(contactAddress: deviceInfo.contactAddress, deviceId: deviceInfo.deviceId, data: {
-          'appName': appName,
-          'appVersion': appVersion,
-          'platform': platform,
-          'platformVersion': platformVersion,
-          'deviceToken': deviceInfo.deviceToken,
-        }));
+        deviceInfo = await set(DeviceInfoSchema(
+          contactAddress: deviceInfo.contactAddress,
+          deviceId: deviceInfo.deviceId,
+          onlineAt: 0,
+          data: {
+            'appName': appName,
+            'appVersion': appVersion,
+            'platform': platform,
+            'platformVersion': platformVersion,
+          },
+        ));
       }
     }
     if (deviceInfo == null) return null;
@@ -59,7 +68,7 @@ class DeviceInfoCommon with Tag {
       // SUPPORT:END
       if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
         bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
-        if (success) deviceInfo.data?["deviceToken"] = deviceToken;
+        if (success) deviceInfo.deviceToken = deviceToken;
       }
     }
     return deviceInfo;
@@ -82,7 +91,27 @@ class DeviceInfoCommon with Tag {
     return exist;
   }
 
-  Future<List<String>> getDeviceTokenList(String? contactAddress, {int max = 3, int days = 3}) async {
+  Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    return await DeviceInfoStorage.instance.queryLatest(contactAddress);
+  }
+
+  Future<List<DeviceInfoSchema>> queryLatestList(String? contactAddress, {int offset = 0, int limit = 20}) async {
+    if (contactAddress == null || contactAddress.isEmpty) return [];
+    return await DeviceInfoStorage.instance.queryLatestList(contactAddress, offset: offset, limit: limit);
+  }
+
+  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+    if (contactAddressList == null || contactAddressList.isEmpty) return [];
+    return await DeviceInfoStorage.instance.queryListLatest(contactAddressList);
+  }
+
+  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId ?? "");
+  }
+
+  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 3, int days = 3}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
     int minUpdateAt = DateTime.now().subtract(Duration(days: days)).millisecond;
@@ -110,45 +139,23 @@ class DeviceInfoCommon with Tag {
   }
 
   Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
-    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return false;
-    DeviceInfoSchema? schema = await queryByDeviceId(contactAddress, deviceId);
-    if (schema == null) {
-      schema = await set(DeviceInfoSchema(
-        contactAddress: contactAddress,
-        deviceId: deviceId,
-        data: {'deviceToken': deviceToken},
-      ));
-      return schema != null;
-    }
-    if (schema.data?["deviceToken"]?.toString() == deviceToken) return true;
-    if (schema.data == null) schema.data = new Map<String, dynamic>();
-    schema.data?["deviceToken"] = deviceToken;
-    return (await set(schema)) != null;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setDeviceToken(contactAddress, deviceId, deviceToken);
   }
 
-  Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
-    if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await DeviceInfoStorage.instance.queryLatest(contactAddress);
+  Future<bool> setOnlineAt(String? contactAddress, String? deviceId, {int? onlineAt}) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setOnlineAt(contactAddress, deviceId, onlineAt: onlineAt);
   }
 
-  Future<List<DeviceInfoSchema>> queryLatestList(String? contactAddress, {int offset = 0, int limit = 20}) async {
-    if (contactAddress == null || contactAddress.isEmpty) return [];
-    return await DeviceInfoStorage.instance.queryLatestList(contactAddress, offset: offset, limit: limit);
+  Future<bool> setPingAt(String? contactAddress, String? deviceId, {int? pingAt}) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setPingAt(contactAddress, deviceId, pingAt: pingAt);
   }
 
-  /*Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
-    if (contactAddressList == null || contactAddressList.isEmpty) return [];
-    return await DeviceInfoStorage.instance.queryListLatest(contactAddressList);
-  }*/
-
-  Future<bool> updateLatest(String? contactAddress, String? deviceId) async {
-    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return false;
-    return await DeviceInfoStorage.instance.setUpdate(contactAddress, deviceId, updateAt: DateTime.now().millisecondsSinceEpoch);
-  }
-
-  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
-    if (contactAddress == null || contactAddress.isEmpty || deviceId == null || deviceId.isEmpty) return null;
-    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId);
+  Future<bool> setPongAt(String? contactAddress, String? deviceId, {int? pongAt}) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setPongAt(contactAddress, deviceId, pongAt: pongAt);
   }
 
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {

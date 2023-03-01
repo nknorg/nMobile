@@ -25,7 +25,7 @@ class DeviceInfoSchema {
   int? updateAt; // <-> update_at
 
   String contactAddress; // (required) <-> contact_address
-  String? deviceId; //  <-> device_id
+  String deviceId; //  <-> device_id
   String? deviceToken; // <-> device_token
 
   int onlineAt; // <-> online_at
@@ -39,7 +39,7 @@ class DeviceInfoSchema {
     this.createAt,
     this.updateAt,
     required this.contactAddress,
-    this.deviceId,
+    required this.deviceId,
     this.deviceToken,
     required this.onlineAt,
     this.pingAt,
@@ -122,7 +122,7 @@ class DeviceInfoSchema {
       createAt: e['create_at'],
       updateAt: e['update_at'],
       contactAddress: e['contact_address'] ?? "",
-      deviceId: e['device_id'],
+      deviceId: e['device_id'] ?? "",
       deviceToken: e['device_token'],
       onlineAt: e['online_at'],
       pingAt: e['ping_at'],
