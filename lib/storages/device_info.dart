@@ -302,10 +302,10 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setPingAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
+              logger.v("$TAG - setPongAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
               return true;
             }
-            logger.w("$TAG - setPingAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
+            logger.w("$TAG - setPongAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
           } catch (e, st) {
             handleError(e, st);
           }

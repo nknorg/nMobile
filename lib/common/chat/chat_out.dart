@@ -629,12 +629,19 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId) async {
+  Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId, {int? gap}) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
+    if (gap != null) {
+      int timePast = DateTime.now().millisecond - group.optionsRequestAt;
+      if (timePast < gap) {
+        logger.d('$TAG - sendPrivateGroupOptionRequest - time gap small - past:$timePast');
+        return null;
+      }
+    }
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
@@ -654,12 +661,19 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<String?> sendPrivateGroupMemberRequest(String? target, String? groupId) async {
+  Future<String?> sendPrivateGroupMemberRequest(String? target, String? groupId, {int? gap}) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
+    if (gap != null) {
+      int timePast = DateTime.now().millisecond - group.membersRequestAt;
+      if (timePast < gap) {
+        logger.d('$TAG - sendPrivateGroupMemberRequest - time gap small - past:$timePast');
+        return null;
+      }
+    }
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
@@ -757,9 +771,17 @@ class ChatOutCommon with Tag {
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
           return await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
       }
+      // notification
+      if (notification == null) {
+        if (message.isTopic || message.isPrivateGroup) {
+          notification = false;
+        } else {
+          bool sendNoReply = message.status < MessageStatus.SendReceipt;
+          String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
+          notification = sendNoReply && pushNotifyId.isEmpty;
+        }
+      }
       // send
-      String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
-      notification = notification ?? ((message.isTopic || message.isPrivateGroup) ? false : pushNotifyId.isEmpty);
       return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
     };
     return await _resendQueue.add(() async {
@@ -869,7 +891,7 @@ class ChatOutCommon with Tag {
         deviceInfoCommon.queryDeviceTokenList(contact.clientAddress).then((tokens) async {
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
-            String? uuid = await RemoteNotification.send(tokens[i]);
+            String? uuid = await RemoteNotification.send(tokens[i]); // need result
             if (!pushOk && (uuid != null) && uuid.isNotEmpty) {
               message.options = MessageOptions.setPushNotifyId(message.options, uuid);
               bool success = await MessageStorage.instance.updateOptions(message.msgId, message.options);
@@ -953,7 +975,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             tokens.forEach((token) {
-              RemoteNotification.send(token); // async // no result
+              RemoteNotification.send(token); // await // no need result
             });
           });
         }
@@ -1015,7 +1037,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             tokens.forEach((token) {
-              RemoteNotification.send(token); // async // no result
+              RemoteNotification.send(token); // await // no need result
             });
           });
         }
