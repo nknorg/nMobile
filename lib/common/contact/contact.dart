@@ -234,13 +234,6 @@ class ContactCommon with Tag {
     return success;
   }
 
-  /*Future<bool> setDeviceToken(int? contactId, String? deviceToken, {bool notify = false}) async {
-    if (contactId == null || contactId == 0) return false;
-    bool success = await ContactStorage.instance.setDeviceToken(contactId, deviceToken);
-    if (success && notify) queryAndNotify(contactId);
-    return success;
-  }*/
-
   Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     bool success = await ContactStorage.instance.setNotificationOpen(schema.id, open, old: schema.options);

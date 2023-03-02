@@ -343,8 +343,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
     _contactSchema?.options?.notificationOpen = notificationOpen;
     // update
-    await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
-    bool success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo, notificationOpen);
+    bool success = await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
+    if (!success) return;
+    success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo, notificationOpen);
     if (success) {
       await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress);
     } else {
