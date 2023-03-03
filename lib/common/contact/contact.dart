@@ -83,8 +83,7 @@ class ContactCommon with Tag {
           if (success) contact.type = ContactType.stranger;
         }
       } else {
-        ContactSchema? _contact = await ContactSchema.create(clientAddress, ContactType.stranger);
-        contact = await add(_contact, notify: true);
+        contact = await addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
       }
     }
     if ((contact != null) && resolveOk) {
