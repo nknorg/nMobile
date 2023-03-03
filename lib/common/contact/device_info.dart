@@ -28,37 +28,22 @@ class DeviceInfoCommon with Tag {
     String appVersion = Global.build;
     String platform = PlatformName.get();
     String platformVersion = Global.deviceVersion;
+    Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
     DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Global.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
-        deviceInfo = await set(DeviceInfoSchema(
-          contactAddress: clientAddress,
-          deviceId: Global.deviceId,
-          onlineAt: 0,
-          data: {
-            'appName': appName,
-            'appVersion': appVersion,
-            'platform': platform,
-            'platformVersion': platformVersion,
-          },
-        ));
+        deviceInfo = await add(
+          DeviceInfoSchema(contactAddress: clientAddress, deviceId: Global.deviceId, onlineAt: 0, data: newData),
+          checkDuplicated: false,
+        );
       } else {
         return null;
       }
     } else {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
-        deviceInfo = await set(DeviceInfoSchema(
-          contactAddress: deviceInfo.contactAddress,
-          deviceId: deviceInfo.deviceId,
-          onlineAt: 0,
-          data: {
-            'appName': appName,
-            'appVersion': appVersion,
-            'platform': platform,
-            'platformVersion': platformVersion,
-          },
-        ));
+        bool success = await setData(deviceInfo.contactAddress, deviceInfo.deviceId, newData);
+        if (success) deviceInfo.data = newData;
       }
     }
     if (deviceInfo == null) return null;
@@ -74,21 +59,19 @@ class DeviceInfoCommon with Tag {
     return deviceInfo;
   }
 
-  Future<DeviceInfoSchema?> set(DeviceInfoSchema? schema) async {
+  Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema, {bool checkDuplicated = true}) async {
     if (schema == null || schema.contactAddress.isEmpty) return null;
-    DeviceInfoSchema? exist = await queryByDeviceId(schema.contactAddress, schema.deviceId);
-    if (exist == null) {
-      schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
-      schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      exist = await DeviceInfoStorage.instance.insert(schema);
-    } else {
-      bool success = await DeviceInfoStorage.instance.setData(exist.id, schema.data);
-      if (success) {
-        exist.data = schema.data;
-        exist.updateAt = DateTime.now().millisecondsSinceEpoch;
+    if (checkDuplicated) {
+      DeviceInfoSchema? exist = await queryByDeviceId(schema.contactAddress, schema.deviceId);
+      if (exist != null) {
+        logger.d("$TAG - add - duplicated - schema:$exist");
+        return null;
       }
     }
-    return exist;
+    schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
+    schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
+    DeviceInfoSchema? added = await DeviceInfoStorage.instance.insert(schema);
+    return added;
   }
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
@@ -111,15 +94,15 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId ?? "");
   }
 
-  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 3, int days = 3}) async {
+  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 3, int days = 5}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
-    int minUpdateAt = DateTime.now().subtract(Duration(days: days)).millisecond;
+    int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
     List<DeviceInfoSchema> schemaList = await queryLatestList(contactAddress, limit: max);
     for (int i = 0; i < schemaList.length; i++) {
       DeviceInfoSchema schema = schemaList[i];
       if (tokens.isNotEmpty) {
-        if ((schema.updateAt ?? 0) < minUpdateAt) continue;
+        if (schema.onlineAt < minOnlineAt) continue;
       }
       String deviceToken = schema.deviceToken ?? "";
       if (deviceToken.isNotEmpty) {
@@ -156,6 +139,11 @@ class DeviceInfoCommon with Tag {
   Future<bool> setPongAt(String? contactAddress, String? deviceId, {int? pongAt}) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     return await DeviceInfoStorage.instance.setPongAt(contactAddress, deviceId, pongAt: pongAt);
+  }
+
+  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? newData) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    return await DeviceInfoStorage.instance.setData(contactAddress, deviceId, newData);
   }
 
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
