@@ -126,6 +126,7 @@ class ClientCommon with Tag {
     return null;
   }
 
+  // TODO:GG 整改，调整不合格的逻辑
   /// ******************************************************   Client   ****************************************************** ///
 
   Future<Map<String, dynamic>> signIn(WalletSchema? wallet, {bool fetchRemote = true, Function(bool, int)? loadingVisible, String? password}) {
@@ -219,9 +220,9 @@ class ClientCommon with Tag {
     try {
       // client create
       if (client == null) {
-        chatCommon.clear();
-        chatInCommon.clear();
-        chatOutCommon.clear();
+        chatCommon.reset();
+        chatInCommon.reset();
+        chatOutCommon.reset();
 
         List<String> seedRpcList = await Global.getRpcServers(wallet.address, measure: true);
         while (client == null) {
