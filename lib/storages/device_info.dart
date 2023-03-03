@@ -314,9 +314,10 @@ class DeviceInfoStorage with Tag {
         false;
   }
 
-  Future<bool> setData(int? deviceInfoId, Map<String, dynamic>? newData) async {
+  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? newData) async {
     if (db?.isOpen != true) return false;
-    if (deviceInfoId == null || deviceInfoId == 0) return false;
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -326,15 +327,15 @@ class DeviceInfoStorage with Tag {
                   'data': newData != null ? jsonEncode(newData) : null,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [deviceInfoId],
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setData - success - deviceInfoId:$deviceInfoId - data:$newData");
+              logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
               return true;
             }
-            logger.w("$TAG - setData - fail - deviceInfoId:$deviceInfoId - data:$newData");
+            logger.w("$TAG - setData - fail - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
           } catch (e, st) {
             handleError(e, st);
           }

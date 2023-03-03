@@ -168,7 +168,7 @@ class ChatOutCommon with Tag {
     Uint8List? pid = await _sendWithAddress(destList, data);
     // ping/pong at
     if ((pid?.isNotEmpty == true) && (gap > 0)) {
-      int mowAt = DateTime.now().millisecond;
+      int mowAt = DateTime.now().millisecondsSinceEpoch;
       deviceInfoCommon.queryListLatest(destList).then((deviceInfoList) {
         for (int i = 0; i < deviceInfoList.length; i++) {
           DeviceInfoSchema deviceInfo = deviceInfoList[i];
@@ -636,7 +636,7 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     if (gap != null) {
-      int timePast = DateTime.now().millisecond - group.optionsRequestAt;
+      int timePast = DateTime.now().millisecondsSinceEpoch - group.optionsRequestAt;
       if (timePast < gap) {
         logger.d('$TAG - sendPrivateGroupOptionRequest - time gap small - past:$timePast');
         return null;
@@ -651,12 +651,12 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<bool> sendPrivateGroupOptionResponse(String? target, PrivateGroupSchema? group) async {
+  Future<bool> sendPrivateGroupOptionResponse(List<String> clientAddressList, PrivateGroupSchema? group) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
-    if (target == null || target.isEmpty) return false;
+    if (clientAddressList.isEmpty || clientAddressList[0].isEmpty) return false;
     if (group == null) return false;
     String data = MessageData.getPrivateGroupOptionResponse(group);
-    Uint8List? pid = await _sendWithAddress([target], data);
+    Uint8List? pid = await _sendWithAddress(clientAddressList, data);
     return pid?.isNotEmpty == true;
   }
 
@@ -668,7 +668,7 @@ class ChatOutCommon with Tag {
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
     if (group == null) return null;
     if (gap != null) {
-      int timePast = DateTime.now().millisecond - group.membersRequestAt;
+      int timePast = DateTime.now().millisecondsSinceEpoch - group.membersRequestAt;
       if (timePast < gap) {
         logger.d('$TAG - sendPrivateGroupMemberRequest - time gap small - past:$timePast');
         return null;
@@ -683,13 +683,13 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<bool> sendPrivateGroupMemberResponse(String? target, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
+  Future<bool> sendPrivateGroupMemberResponse(List<String> clientAddressList, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
-    if (target == null || target.isEmpty) return false;
+    if (clientAddressList.isEmpty || clientAddressList[0].isEmpty) return false;
     if (schema == null) return false;
     List<Map<String, dynamic>> membersData = privateGroupCommon.getMembersData(members);
     String data = MessageData.getPrivateGroupMemberResponse(schema, membersData);
-    Uint8List? pid = await _sendWithAddress([target], data);
+    Uint8List? pid = await _sendWithAddress(clientAddressList, data);
     return pid?.isNotEmpty == true;
   }
 
