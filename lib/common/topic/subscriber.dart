@@ -58,8 +58,7 @@ class SubscriberCommon with Tag {
       DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
       if (_deviceInfo == null) {
         logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
-        _deviceInfo = await deviceInfoCommon.set(DeviceInfoSchema(contactAddress: sub.clientAddress, onlineAt: 0));
-        await chatOutCommon.sendDeviceRequest(_deviceInfo?.contactAddress);
+        await chatOutCommon.sendDeviceRequest(sub.clientAddress);
         await Future.delayed(Duration(milliseconds: 10));
       }
     }
