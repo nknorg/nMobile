@@ -79,7 +79,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   void initState() {
     super.initState();
     // progress
-    _onProgressStreamSubscription = chatCommon.onProgressStream.listen((Map<String, dynamic> event) {
+    _onProgressStreamSubscription = messageCommon.onProgressStream.listen((Map<String, dynamic> event) {
       String? msgId = event["msg_id"];
       double? percent = event["percent"];
       if (msgId == null || msgId != this._message.msgId) {
@@ -126,6 +126,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _message = widget.message;
     initialized = true;
     // burning
+    _message = chatCommon.burningHandle(_message);
     _message = chatCommon.burningTick(_message, "bubble", onTick: () => setState(() {}));
     // progress
     _upDownloadProgress = sameBubble ? _upDownloadProgress : -1;

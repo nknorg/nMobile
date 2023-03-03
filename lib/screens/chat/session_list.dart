@@ -92,10 +92,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // message
-    _onMessageUpdateStreamSubscription = chatCommon.onUpdateStream.listen((message) {
+    _onMessageUpdateStreamSubscription = messageCommon.onUpdateStream.listen((message) {
       _onMessageUpdate(message);
     });
-    _onMessageDeleteStreamSubscription = chatCommon.onDeleteStream.listen((String msgId) {
+    _onMessageDeleteStreamSubscription = messageCommon.onDeleteStream.listen((String msgId) {
       _onMessageDelete(msgId);
     });
 
@@ -136,7 +136,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   _refreshBadge() async {
-    int unread = await chatCommon.unreadCount();
+    int unread = await messageCommon.unreadCount();
     Badge.refreshCount(count: unread);
   }
 

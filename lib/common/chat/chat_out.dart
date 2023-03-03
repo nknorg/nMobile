@@ -24,18 +24,13 @@ import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
-  // ignore: close_sinks
-  StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
-  StreamSink<MessageSchema> get _onSavedSink => _onSavedController.sink;
-  Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
+  ChatOutCommon();
+
+  void reset() {}
 
   // queue
   ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
   ParallelQueue _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : null);
-
-  ChatOutCommon();
-
-  void clear() {}
 
   Future<OnMessage?> sendMsg(String? selfAddress, List<String> destList, String data) async {
     // dest
@@ -330,7 +325,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String data = MessageData.getText(message);
-    return _send(message, data);
+    return await _send(message, data);
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
@@ -386,7 +381,9 @@ class ChatOutCommon with Tag {
     MessageSchema? inserted = await insertMessage(message);
     if (inserted == null) return null;
     // ipfs
-    chatCommon.startIpfsUpload(inserted.msgId); // await
+    chatCommon.startIpfsUpload(inserted.msgId).then((msg) {
+      if (msg != null) chatOutCommon.sendIpfs(msg.msgId);
+    }); // await
     return inserted;
   }
 
@@ -397,7 +394,7 @@ class ChatOutCommon with Tag {
     if (message == null) return null;
     // data
     String? data = MessageData.getIpfs(message);
-    return _send(message, data, insert: false);
+    return await _send(message, data, insert: false);
   }
 
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
@@ -442,7 +439,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getImage(message);
-    return _send(message, data);
+    return await _send(message, data);
   }
 
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
@@ -488,7 +485,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getAudio(message);
-    return _send(message, data);
+    return await _send(message, data);
   }
 
   // NO DB NO display
@@ -504,7 +501,7 @@ class ChatOutCommon with Tag {
     if (percent > 0 && percent <= 1) {
       if (percent <= 1.05) {
         // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        chatCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
+        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       }
     } else {
       int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
@@ -512,7 +509,7 @@ class ChatOutCommon with Tag {
       double percent = (index ?? 0) / (total ?? 1);
       if (percent <= 1.05) {
         // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        chatCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
+        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       }
     }
     return message;
@@ -559,7 +556,7 @@ class ChatOutCommon with Tag {
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
-    return _send(message, data);
+    return await _send(message, data);
   }
 
   // NO DB NO single
@@ -695,7 +692,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> resend(MessageSchema? message) async {
     if (message == null) return null;
-    message = await chatCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
+    message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
     await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
     message.sendAt = DateTime.now().millisecondsSinceEpoch;
     // send
@@ -705,7 +702,8 @@ class ChatOutCommon with Tag {
         if (MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes) {
           return await chatOutCommon.sendIpfs(message.msgId);
         } else {
-          return await chatCommon.startIpfsUpload(message.msgId);
+          MessageSchema? msg = await chatCommon.startIpfsUpload(message.msgId);
+          return await chatOutCommon.sendIpfs(msg?.msgId);
         }
       }
       String? msgData;
@@ -769,7 +767,7 @@ class ChatOutCommon with Tag {
         default:
           logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-          return await chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
+          return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
       }
       // notification
       if (notification == null) {
@@ -798,7 +796,7 @@ class ChatOutCommon with Tag {
     if (message == null) return null;
     message = await MessageStorage.instance.insert(message); // DB
     if (message == null) return null;
-    if (notify) _onSavedSink.add(message); // display, resend just update sendTime
+    if (notify) messageCommon.onSavedSink.add(message); // display, resend just update sendTime
     return message;
   }
 
@@ -843,18 +841,18 @@ class ChatOutCommon with Tag {
         if (!message.canReceipt) {
           // no received receipt/read
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-          chatCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
+          messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
         } else {
-          chatCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
+          messageCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
         }
       } else {
         logger.w("$TAG - _send - pid = null - message:$message");
         if (message.canResend) {
-          message = await chatCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+          message = await messageCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
         } else {
           // noResend just delete
           int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
-          if (count > 0) chatCommon.onDeleteSink.add(message.msgId);
+          if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
           return null;
         }
       }

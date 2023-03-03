@@ -28,6 +28,8 @@ class SessionCommon with Tag {
 
   SessionCommon();
 
+  // TODO:GG 整改，调整不合格的逻辑
+
   Future<SessionSchema?> set(
     String? targetId,
     int type, {
@@ -42,7 +44,7 @@ class SessionCommon with Tag {
       String topic = (type == SessionType.TOPIC) ? targetId : "";
       String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
-      List<MessageSchema> history = await chatCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
       MessageSchema? existLastMsg = history.isNotEmpty ? history[0] : null;
       MessageSchema? appendLastMsg;
       if ((newLastMsg == null) && (existLastMsg == null)) {
@@ -64,7 +66,7 @@ class SessionCommon with Tag {
       if (chatCommon.currentChatTargetId == targetId) {
         appendUnreadCount = 0;
       } else {
-        appendUnreadCount = unReadCount ?? await chatCommon.unReadCountByTargetId(targetId, topic, group);
+        appendUnreadCount = unReadCount ?? await messageCommon.unReadCountByTargetId(targetId, topic, group);
         if (unreadChange != 0) appendUnreadCount = appendUnreadCount + unreadChange;
         appendUnreadCount = appendUnreadCount >= 0 ? appendUnreadCount : 0;
       }
@@ -115,7 +117,7 @@ class SessionCommon with Tag {
     if (success && notify) _deleteSink.add([targetId, type]);
     String topic = (type == SessionType.TOPIC) ? targetId : "";
     String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-    await chatCommon.deleteByTargetId(targetId, topic, group); // await
+    await messageCommon.deleteByTargetId(targetId, topic, group);
     return success;
   }
 
