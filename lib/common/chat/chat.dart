@@ -660,6 +660,7 @@ class ChatCommon with Tag {
     // thumbnail
     MessageSchema? msg = await startIpfsThumbnailUpload(message);
     if (msg == null) {
+      message = await messageCommon.updateMessageStatus(message, MessageStatus.SendFail, reQuery: true, force: true, notify: true);
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await MessageStorage.instance.updateOptions(message.msgId, message.options);
       messageCommon.onUpdateSink.add(message);

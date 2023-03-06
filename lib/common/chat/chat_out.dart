@@ -844,12 +844,12 @@ class ChatOutCommon with Tag {
     // status
     if (statusSync) {
       if (pid?.isNotEmpty == true) {
-        if (!message.canReceipt) {
+        if (message.canReceipt) {
+          messageCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
+        } else {
           // no received receipt/read
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
           messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
-        } else {
-          messageCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
         }
       } else {
         logger.w("$TAG - _send - pid = null - message:$message");
