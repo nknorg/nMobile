@@ -1,25 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/helpers/file.dart';
-import 'package:nmobile/helpers/ipfs.dart';
-import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
-import 'package:nmobile/schema/private_group.dart';
-import 'package:nmobile/schema/session.dart';
-import 'package:nmobile/schema/subscriber.dart';
-import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/parallel_queue.dart';
-import 'package:nmobile/utils/path.dart';
-import 'package:nmobile/utils/time.dart';
 
 class MessageCommon with Tag {
   MessageCommon();
@@ -43,10 +28,6 @@ class MessageCommon with Tag {
   StreamController<Map<String, dynamic>> _onProgressController = StreamController<Map<String, dynamic>>.broadcast();
   StreamSink<Map<String, dynamic>> get onProgressSink => _onProgressController.sink;
   Stream<Map<String, dynamic>> get onProgressStream => _onProgressController.stream.distinct((prev, next) => (next['msg_id'] == prev['msg_id']) && (next['percent'] < prev['percent']));
-
-  Future<int> unreadCount() {
-    return MessageStorage.instance.unReadCount();
-  }
 
   Future<int> unReadCountByTargetId(String? targetId, String? topic, String? groupId) {
     return MessageStorage.instance.unReadCountByTargetId(targetId, topic, groupId);
@@ -102,18 +83,21 @@ class MessageCommon with Tag {
       if (_latest != null) message = _latest;
     }
     if ((status <= message.status) && !force) {
-      if (status == message.status) return message;
-      logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
+      if (status != message.status) {
+        logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
+      }
       return message;
     }
     // update
-    message.status = status;
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
-    if (status == MessageStatus.SendSuccess) {
-      message.options = MessageOptions.setOutAt(message.options, DateTime.now().millisecondsSinceEpoch);
-      await MessageStorage.instance.updateOptions(message.msgId, message.options);
+    if (success) {
+      message.status = status;
+      if (message.status == MessageStatus.SendSuccess) {
+        message.options = MessageOptions.setOutAt(message.options, DateTime.now().millisecondsSinceEpoch);
+        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      }
+      if (notify) onUpdateSink.add(message);
     }
-    if (success && notify) onUpdateSink.add(message);
     // delete later
     if (message.isDelete && (message.content != null)) {
       bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
@@ -126,44 +110,49 @@ class MessageCommon with Tag {
     return message;
   }
 
-  Future readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {
-    if (targetId == null || targetId.isEmpty) return;
-    // update messages
+  Future<int> readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {
+    if (targetId == null || targetId.isEmpty) return 0;
     int limit = 20;
-
+    // query
     List<MessageSchema> unreadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, groupId, offset: offset, limit: limit);
       unreadList.addAll(result);
       if (result.length < limit) break;
     }
-
+    // update
     List<String> msgIds = [];
     for (var i = 0; i < unreadList.length; i++) {
       MessageSchema element = unreadList[i];
-      msgIds.add(element.msgId);
-      await updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false);
+      element = await updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false);
+      if (element.status == MessageStatus.Read) {
+        msgIds.add(element.msgId);
+      }
     }
-    // send messages
+    // send
     if ((clientAddress?.isNotEmpty == true) && msgIds.isNotEmpty) {
       await chatOutCommon.sendRead(clientAddress, msgIds);
     }
+    return msgIds.length;
   }
 
-  Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt, {int offset = 0, int limit = 20}) async {
+  Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
-    // noReads
-    List<MessageSchema> noReads = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
-    List<MessageSchema> shouldReads = noReads.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
-    // read
-    for (var i = 0; i < shouldReads.length; i++) {
-      MessageSchema element = shouldReads[i];
+    int limit = 20;
+    // query
+    List<MessageSchema> unReadList = [];
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
+      List<MessageSchema> needReads = result.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
+      unReadList.addAll(needReads);
+      if (result.length < limit) break;
+    }
+    // update
+    for (var i = 0; i < unReadList.length; i++) {
+      MessageSchema element = unReadList[i];
       int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
-    // loop
-    if (noReads.length >= limit) return readMessageBySide(targetId, topic, groupId, sendAt, offset: offset + limit, limit: limit);
-    logger.i("$TAG - readMessageBySide - readCount:${offset + noReads.length} - reallySendAt:${Time.formatTime(DateTime.fromMillisecondsSinceEpoch(sendAt))}");
-    return offset + noReads.length;
+    return unReadList.length;
   }
 }

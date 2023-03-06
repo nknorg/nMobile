@@ -130,6 +130,10 @@ class SessionCommon with Tag {
     return SessionStorage.instance.queryListRecent(offset: offset, limit: limit);
   }
 
+  Future<int> unreadCount() {
+    return SessionStorage.instance.unReadCount();
+  }
+
   /*Future<bool> setLastMessageAndUnReadCount(String? targetId, int type, MessageSchema? lastMessage, int unread, {int? sendAt, bool notify = false}) async {
     if (targetId == null || targetId.isEmpty) return false;
     SessionSchema session = SessionSchema(targetId: targetId, type: type);

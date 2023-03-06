@@ -136,7 +136,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   _refreshBadge() async {
-    int unread = await messageCommon.unreadCount();
+    int unread = await sessionCommon.unreadCount();
     Badge.refreshCount(count: unread);
   }
 

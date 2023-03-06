@@ -289,26 +289,6 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<int> unReadCount() async {
-    if (db?.isOpen != true) return 0;
-    try {
-      final res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['COUNT(id)'],
-          where: 'status = ? AND is_delete = ?',
-          whereArgs: [MessageStatus.Received, 0],
-        );
-      });
-      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - unReadCount - count:$count");
-      return count ?? 0;
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return 0;
-  }
-
   Future<List<MessageSchema>> queryListByTargetIdWithUnRead(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
