@@ -719,6 +719,12 @@ class ChatOutCommon with Tag {
         case MessageContentType.audio:
           msgData = await MessageData.getAudio(message);
           break;
+        case MessageContentType.topicInvitation:
+          msgData = MessageData.getTopicInvitee(message);
+          break;
+        case MessageContentType.privateGroupInvitation:
+          msgData = MessageData.getPrivateGroupInvitation(message);
+          break;
       }
       return await _send(message, msgData, insert: false);
     };
@@ -764,10 +770,10 @@ class ChatOutCommon with Tag {
           msgData = MessageData.getPrivateGroupInvitation(message);
           logger.i("$TAG - resendMute - resend group invitee - targetId:${message.targetId} - msgData:$msgData");
           break;
-        default:
-          logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
-          int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-          return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
+        // default:
+        //   logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
+        //   int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+        //   return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
       }
       // notification
       if (notification == null) {
