@@ -165,6 +165,24 @@ class SessionStorage with Tag {
     return [];
   }
 
+  Future<int> unReadCount() async {
+    if (db?.isOpen != true) return 0;
+    try {
+      final res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['SUM(un_read_count)'],
+        );
+      });
+      int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
+      logger.v("$TAG - unReadCount - count:$count");
+      return count ?? 0;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return 0;
+  }
+
   Future<bool> updateLastMessageAndUnReadCount(SessionSchema? schema) async {
     if (db?.isOpen != true) return false;
     if (schema == null || schema.targetId.isEmpty) return false;
