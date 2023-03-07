@@ -6,31 +6,32 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
-  bool receiveOpen; // FUTURE:GG options unread + notification
-  bool notificationOpen; // FUTURE:GG options  topic
-
-  int? deleteAfterSeconds; // FUTURE:GG options  topic
-  int? updateBurnAfterAt; // FUTURE:GG options  topic
-
+  bool receiveOpen; // FUTURE:GG options unread + notification TODO:GG 拉黑?
+  int? muteExpireAt; // FUTURE:GG options  chat TODO:GG 需要把deviceToken传进去的时候，顺便在后面跟上过期时间，不跟随deviceInfo
+  bool notificationOpen; // FUTURE:GG options  topic TODO:GG 和muteExpireAt功能重合了，可以根据muteExpireAt来做成get属性
   String? soundResource; // FUTURE:GG options  chat
-  int? muteExpireAt; // FUTURE:GG options  chat
 
+  // burning
+  int? deleteAfterSeconds;
+  int? updateBurnAfterAt;
+  // contact_style
   Color? avatarBgColor;
   Color? avatarNameColor;
-
+  // chat_style
   File? chatBgFile; // FUTURE:GG options  ui
   Color? chatBgColor; // FUTURE:GG options  ui
-
   Color? chatBubbleBgColor; // FUTURE:GG options  ui
   Color? chatBubbleTextColor; // FUTURE:GG options  ui
 
   OptionsSchema({
     this.receiveOpen = false,
+    this.muteExpireAt = -1,
     this.notificationOpen = false,
+    this.soundResource,
     this.deleteAfterSeconds,
     this.updateBurnAfterAt,
-    this.avatarNameColor,
     this.avatarBgColor,
+    this.avatarNameColor,
     this.chatBgFile,
     this.chatBgColor,
     this.chatBubbleBgColor,
@@ -48,11 +49,11 @@ class OptionsSchema {
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {};
     map['receiveOpen'] = receiveOpen ? 1 : 0;
+    map['muteExpireAt'] = muteExpireAt;
     map['notificationOpen'] = notificationOpen ? 1 : 0;
+    map['soundResource'] = soundResource;
     map['deleteAfterSeconds'] = deleteAfterSeconds;
     map['updateBurnAfterAt'] = updateBurnAfterAt;
-    map['soundResource'] = soundResource;
-    map['muteExpireAt'] = muteExpireAt;
     map['avatarBgColor'] = avatarBgColor?.value;
     map['avatarNameColor'] = avatarNameColor?.value;
     map['chatBgFile'] = Path.convert2Local(chatBgFile?.path);
@@ -65,11 +66,11 @@ class OptionsSchema {
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
     schema.receiveOpen = (map['receiveOpen'] != null && map['receiveOpen'].toString() == '1') ? true : false;
+    schema.muteExpireAt = map['muteExpireAt'];
     schema.notificationOpen = (map['notificationOpen'] != null && map['notificationOpen'].toString() == '1') ? true : false;
+    schema.soundResource = map['soundResource'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
     schema.updateBurnAfterAt = map['updateBurnAfterAt'];
-    schema.soundResource = map['soundResource'];
-    schema.muteExpireAt = map['muteExpireAt'];
     schema.avatarBgColor = map['avatarBgColor'] != null ? Color(map['avatarBgColor']) : schema.avatarBgColor;
     schema.avatarNameColor = map['avatarNameColor'] != null ? Color(map['avatarNameColor']) : schema.avatarNameColor;
     schema.chatBgFile = Path.convert2Complete(map['chatBgFile']) != null ? File(Path.convert2Complete(map['chatBgFile'])!) : null;
