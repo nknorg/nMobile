@@ -16,7 +16,6 @@ import 'package:nmobile/services/task.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
 
 class ChatCommon with Tag {
@@ -26,14 +25,15 @@ class ChatCommon with Tag {
   String? currentChatTargetId;
 
   // checker
-  Map<String, Map<String, dynamic>> _checkersParams = Map();
-  ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : null);
+  // Map<String, Map<String, dynamic>> _checkersParams = Map();
+  // ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : null);
 
-  void reset() {
+  void reset({bool reClient = false, bool netError = false}) {
     // currentChatTargetId = null; // can not be reset
-    _checkersParams.clear();
+    // _checkersParams.clear();
+    // TODO:GG reClient和netError 是否会导致msg和ipfs的中断????
     resetMessageSending(force: true); // await
-    resetIpfsDownloadIng(thumbnailAutoDownload: true); // await
+    if (!reClient || netError) resetIpfsDownloadIng(thumbnailAutoDownload: true); // await
   }
 
   // TODO:GG 再看看
@@ -158,8 +158,6 @@ class ChatCommon with Tag {
     await chatOutCommon.sendPing(targetIds, true, gap: gap);
   }
 
-  // TODO:GG 能放进clear里吗？网络切换要调用吗？
-  // TODO:GG 只有第一次登录会有？其他时候靠errorCallback？
   Future<int> resetMessageSending({bool force = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
@@ -207,8 +205,6 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  // TODO:GG 能放进clear里吗？网络切换要调用吗？
-  // TODO:GG 只有第一次登录会有？其他时候靠errorCallback？
   Future resetIpfsDownloadIng({bool thumbnailAutoDownload = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
@@ -298,7 +294,7 @@ class ChatCommon with Tag {
           String? profileVersion = MessageOptions.getProfileVersion(message.options);
           if (profileVersion != null && profileVersion.isNotEmpty) {
             if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
-              chatOutCommon.sendContactRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
+              chatOutCommon.sendContactProfileRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
             }
           }
         }
@@ -338,13 +334,13 @@ class ChatCommon with Tag {
   }
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message) async {
-    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceResponse)) return null;
+    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceInfo)) return null;
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     // latest
     DeviceInfoSchema? latest;
     String? deviceId = MessageOptions.getDeviceId(message.options);
-    if (deviceId?.isNotEmpty == true) {
+    if (!message.isOutbound && (deviceId?.isNotEmpty == true)) {
       latest = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
     } else {
       latest = await deviceInfoCommon.queryLatest(clientAddress);
@@ -414,7 +410,7 @@ class ChatCommon with Tag {
             }
           }
         }
-        // device_token
+        // device_token (empty updated on receiveDeviceInfo)
         String? deviceToken = MessageOptions.getDeviceToken(message.options);
         if ((deviceToken != null) && (deviceToken.length > 1)) {
           if (latest?.deviceToken != deviceToken) {
@@ -712,7 +708,7 @@ class ChatCommon with Tag {
       logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
       return null;
     }
-    // path TODO:GG 这是为啥？
+    // path
     String? savePath = (message.content as File?)?.absolute.path;
     if (savePath == null || savePath.isEmpty) return null;
     int? ipfsSize = MessageOptions.getFileSize(message.options) ?? -1;
