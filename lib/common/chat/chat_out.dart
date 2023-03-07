@@ -26,7 +26,14 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
-  void reset() {}
+  void reset({bool reClient = false, bool netError = false}) {
+    if (!reClient) {
+      _sendQueue.cancel();
+      _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
+      _resendQueue.cancel();
+      _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : null);
+    }
+  }
 
   // queue
   ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
@@ -156,7 +163,7 @@ class ChatOutCommon with Tag {
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
       );
     } else {
-      // self + other
+      // self or group
       data = MessageData.getPing(isPing);
     }
     // send
@@ -207,7 +214,7 @@ class ChatOutCommon with Tag {
   }*/
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendContactRequest(String? clientAddress, String requestType, String? profileVersion) async {
+  Future<bool> sendContactProfileRequest(String? clientAddress, String requestType, String? profileVersion) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getContactProfileRequest(requestType, profileVersion);
@@ -216,7 +223,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendContactResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
+  Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     ContactSchema? _me = me ?? await contactCommon.getMe();
@@ -690,58 +697,25 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
-  Future<MessageSchema?> resend(MessageSchema? message) async {
+  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false}) async {
     if (message == null) return null;
-    message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
-    await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
-    message.sendAt = DateTime.now().millisecondsSinceEpoch;
+    // sendAt
+    if (!mute) {
+      message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
+      await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
+      message.sendAt = DateTime.now().millisecondsSinceEpoch;
+    }
+    // ipfs
+    if (message.contentType == MessageContentType.ipfs) {
+      String? fileHash = MessageOptions.getIpfsHash(message.options);
+      if (fileHash == null || fileHash.isEmpty) {
+        message = await chatCommon.startIpfsUpload(message.msgId);
+        if (message == null) return null;
+      }
+    }
     // send
     Function func = () async {
       if (message == null) return null;
-      if (message.contentType == MessageContentType.ipfs) {
-        if (MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes) {
-          return await chatOutCommon.sendIpfs(message.msgId);
-        } else {
-          MessageSchema? msg = await chatCommon.startIpfsUpload(message.msgId);
-          return await chatOutCommon.sendIpfs(msg?.msgId);
-        }
-      }
-      String? msgData;
-      switch (message.contentType) {
-        case MessageContentType.text:
-        case MessageContentType.textExtension:
-          msgData = MessageData.getText(message);
-          break;
-        case MessageContentType.media:
-        case MessageContentType.image:
-          msgData = await MessageData.getImage(message);
-          break;
-        case MessageContentType.audio:
-          msgData = await MessageData.getAudio(message);
-          break;
-        case MessageContentType.topicInvitation:
-          msgData = MessageData.getTopicInvitee(message);
-          break;
-        case MessageContentType.privateGroupInvitation:
-          msgData = MessageData.getPrivateGroupInvitation(message);
-          break;
-      }
-      return await _send(message, msgData, insert: false);
-    };
-    return await _resendQueue.add(() async {
-      try {
-        return await func();
-      } catch (e, st) {
-        handleError(e, st);
-      }
-      return null;
-    }, id: message.msgId);
-  }
-
-  Future<MessageSchema?> resendMute(MessageSchema? message, {bool? notification}) async {
-    if (message == null) return null;
-    Function func = () async {
-      // msgData
       String? msgData;
       switch (message.contentType) {
         case MessageContentType.text:
@@ -751,7 +725,7 @@ class ChatOutCommon with Tag {
           break;
         case MessageContentType.ipfs:
           msgData = MessageData.getIpfs(message);
-          logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
+          logger.i("$TAG - resendMute - resend ipfs - targetId:${message.targetId} - msgData:$msgData");
           break;
         case MessageContentType.media:
         case MessageContentType.image:
@@ -775,8 +749,9 @@ class ChatOutCommon with Tag {
         //   int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
         //   return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
       }
-      // notification
-      if (notification == null) {
+      if (mute) {
+        // notification
+        bool notification;
         if (message.isTopic || message.isPrivateGroup) {
           notification = false;
         } else {
@@ -784,9 +759,11 @@ class ChatOutCommon with Tag {
           String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
           notification = sendNoReply && pushNotifyId.isEmpty;
         }
+        // send_mute
+        return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
       }
       // send
-      return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
+      return await _send(message, msgData, insert: false);
     };
     return await _resendQueue.add(() async {
       try {

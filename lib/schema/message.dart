@@ -7,10 +7,10 @@ import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -24,10 +24,8 @@ class MessageStatus {
   static const int SendFail = 110;
   static const int SendSuccess = 120;
   static const int SendReceipt = 130;
-
   // receive
   static const int Received = 200;
-
   // common
   static const int Read = 310;
 }
@@ -37,13 +35,13 @@ class MessageContentType {
   // static const String system = 'system';
   static const String receipt = 'receipt'; // status
   static const String read = 'read'; // status
-  static const String msgStatus = 'msgStatus'; // status + resend
+  // static const String msgStatus = 'msgStatus'; // status + resend
 
   static const String contactProfile = 'contact'; // . TODO:GG rename to 'contact:profile'
   static const String contactOptions = 'event:contactOptions'; // db + visible TODO:GG rename to 'contact:options'
 
   static const String deviceRequest = 'device:request'; // .
-  static const String deviceResponse = 'device:info'; // db
+  static const String deviceInfo = 'device:info'; // db
 
   static const String text = 'text'; // db + visible
   static const String textExtension = 'textExtension'; // db + visible TODO:GG maybe can remove
@@ -159,13 +157,13 @@ class MessageSchema {
 
   // ++ resend
   bool get canResend {
-    return canBurning;
+    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
+    return canBurning || isEvent;
   }
 
   // ++ receipt
   bool get canReceipt {
-    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
-    return canResend || isEvent;
+    return canResend;
   }
 
   // ++ unReadCount / notification
@@ -251,11 +249,11 @@ class MessageSchema {
       case MessageContentType.read:
         schema.content = data['readIds'];
         break;
-      case MessageContentType.msgStatus:
+      // case MessageContentType.msgStatus:
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
-      case MessageContentType.deviceResponse:
+      case MessageContentType.deviceInfo:
         schema.content = data;
         break;
       case MessageContentType.ipfs:
@@ -286,11 +284,8 @@ class MessageSchema {
     }
 
     // options
-    if (schema.options == null) {
-      schema.options = Map();
-    }
-
-    // getAt
+    if (schema.options == null) schema.options = Map();
+    schema.options = MessageOptions.setDeviceId(schema.options, data['deviceId']);
     schema.options = MessageOptions.setInAt(schema.options, DateTime.now().millisecondsSinceEpoch);
 
     // SUPPORT:START
@@ -337,13 +332,13 @@ class MessageSchema {
     if (this.options == null) this.options = Map();
 
     // settings
-    String? deviceToken = extra?["deviceToken"];
-    if (deviceToken != null && deviceToken.isNotEmpty) {
-      this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
-    }
     String? profileVersion = extra?["profileVersion"];
     if (profileVersion != null && profileVersion.isNotEmpty) {
       this.options = MessageOptions.setProfileVersion(this.options, profileVersion);
+    }
+    String? deviceToken = extra?["deviceToken"];
+    if (deviceToken != null && deviceToken.isNotEmpty) {
+      this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
     }
     String? deviceProfile = extra?["deviceProfile"];
     if (deviceProfile != null && deviceProfile.isNotEmpty) {
@@ -459,7 +454,7 @@ class MessageSchema {
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
-      case MessageContentType.deviceResponse:
+      case MessageContentType.deviceInfo:
         map['content'] = content is Map ? jsonEncode(content) : content;
         break;
       case MessageContentType.ipfs: // maybe null
@@ -526,7 +521,7 @@ class MessageSchema {
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
-      case MessageContentType.deviceResponse:
+      case MessageContentType.deviceInfo:
         if ((e['content']?.toString().isNotEmpty == true) && (e['content'] is String)) {
           schema.content = Util.jsonFormatMap(e['content']);
         } else {
@@ -707,8 +702,9 @@ class MessageOptions {
   static const KEY_IN_AT = "in_at"; // TODO:GG rename to 'inAt'
   static const KEY_RESEND_MUTE_AT = "resendMuteAt";
 
-  static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_PROFILE_VERSION = "profileVersion";
+  static const KEY_DEVICE_ID = "deviceId";
+  static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_DEVICE_PROFILE = "deviceProfile";
   static const KEY_PRIVATE_GROUP_VERSION = "privateGroupVersion";
 
@@ -797,17 +793,6 @@ class MessageOptions {
     return int.tryParse(options[MessageOptions.KEY_RESEND_MUTE_AT]?.toString() ?? "");
   }
 
-  static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
-    if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
-    return options;
-  }
-
-  static String? getDeviceToken(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_DEVICE_TOKEN]?.toString();
-  }
-
   static Map<String, dynamic>? setProfileVersion(Map<String, dynamic>? options, String profileVersion) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_PROFILE_VERSION] = profileVersion;
@@ -817,6 +802,28 @@ class MessageOptions {
   static String? getProfileVersion(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_PROFILE_VERSION]?.toString();
+  }
+
+  static Map<String, dynamic>? setDeviceId(Map<String, dynamic>? options, String deviceId) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_DEVICE_ID] = deviceId;
+    return options;
+  }
+
+  static String? getDeviceId(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_DEVICE_ID]?.toString();
+  }
+
+  static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
+    return options;
+  }
+
+  static String? getDeviceToken(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_DEVICE_TOKEN]?.toString();
   }
 
   static Map<String, dynamic>? setDeviceProfile(Map<String, dynamic>? options, String deviceProfile) {
@@ -1138,6 +1145,7 @@ class MessageData {
       'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
       'sendTimestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch,
       'send_timestamp': sendTimestamp ?? DateTime.now().millisecondsSinceEpoch, // TODO:GG replace by 'sendTimestamp'
+      'deviceId': Global.deviceId,
       'contentType': contentType,
     };
     return map;
@@ -1153,7 +1161,7 @@ class MessageData {
     return map;
   }
 
-  static String getPing(bool isPing, String? profileVersion, String? deviceProfile, String? deviceToken) {
+  static String getPing(bool isPing, {String? profileVersion, String? deviceToken, String? deviceProfile}) {
     Map data = _base(MessageContentType.ping);
     data.addAll({
       'content': isPing ? "ping" : "pong",
@@ -1162,13 +1170,13 @@ class MessageData {
       if (data['options'] == null) data['options'] = Map();
       data['options']["profileVersion"] = profileVersion;
     }
-    if (deviceProfile != null && deviceProfile.isNotEmpty) {
-      if (data['options'] == null) data['options'] = Map();
-      data['options']["deviceProfile"] = deviceProfile;
-    }
     if (deviceToken != null && deviceToken.isNotEmpty) {
       if (data['options'] == null) data['options'] = Map();
       data['options']["deviceToken"] = deviceToken;
+    }
+    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+      if (data['options'] == null) data['options'] = Map();
+      data['options']["deviceProfile"] = deviceProfile;
     }
     return jsonEncode(data);
   }
@@ -1190,14 +1198,14 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getMsgStatus(bool ask, List<String>? msgIdList) {
+  /*static String getMsgStatus(bool ask, List<String>? msgIdList) {
     Map data = _base(MessageContentType.msgStatus);
     data.addAll({
       'requestType': ask ? "ask" : "reply",
       'messageIds': msgIdList,
     });
     return jsonEncode(data);
-  }
+  }*/
 
   static String getContactProfileRequest(String requestType, String? profileVersion) {
     Map data = _base(MessageContentType.contactProfile);
@@ -1259,7 +1267,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactOptionsToken(MessageSchema message) {
+  /*static String getContactOptionsToken(MessageSchema message) {
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
     Map data = _base(MessageContentType.contactOptions, id: message.msgId, timestamp: message.sendAt, sendTimestamp: message.sendAt);
     data.addAll({
@@ -1269,21 +1277,22 @@ class MessageData {
       },
     });
     return jsonEncode(data);
-  }
+  }*/
 
   static String getDeviceRequest() {
     Map data = _base(MessageContentType.deviceRequest);
     return jsonEncode(data);
   }
 
-  static String getDeviceInfo() {
-    Map data = _base(MessageContentType.deviceResponse);
+  static String getDeviceInfo(DeviceInfoSchema info) {
+    Map data = _base(MessageContentType.deviceInfo);
     data.addAll({
-      'deviceId': Global.deviceId,
-      'appName': Settings.appName,
-      'appVersion': Global.build,
-      'platform': PlatformName.get(),
-      'platformVersion': Global.deviceVersion,
+      'deviceId': info.deviceId,
+      'appName': info.appName,
+      'appVersion': info.appVersion,
+      'platform': info.platform,
+      'platformVersion': info.platform,
+      'deviceToken': info.deviceToken,
     });
     return jsonEncode(data);
   }

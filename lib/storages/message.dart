@@ -256,7 +256,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByIdContentType(String? msgId, String? contentType, int limit) async {
+  Future<List<MessageSchema>> queryListByIdContentType(String? msgId, String? contentType, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty || contentType == null || contentType.isEmpty) return [];
     try {
@@ -266,7 +266,7 @@ class MessageStorage with Tag {
           columns: ['*'],
           where: 'msg_id = ? AND type = ?',
           whereArgs: [msgId, contentType],
-          offset: 0,
+          offset: offset,
           limit: limit,
         );
       });
