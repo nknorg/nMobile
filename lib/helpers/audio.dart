@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
@@ -69,7 +69,7 @@ class AudioHelper with Tag {
     // path
     File localFile = File(localPath);
     if (localPath.isEmpty || !localFile.existsSync()) {
-      Toast.show(Global.locale((s) => s.file_not_exist));
+      Toast.show(Settings.locale((s) => s.file_not_exist));
       return false;
     }
     if (Platform.isAndroid) localPath = 'file:///' + localPath;

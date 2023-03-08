@@ -20,7 +20,7 @@ class ContactType {
 // static const String me = 'me';
 }
 
-class RequestType {
+class ContactRequestType {
   static const header = 'header';
   static const full = 'full';
 }

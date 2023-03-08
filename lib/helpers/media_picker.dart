@@ -7,8 +7,8 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime_type/mime_type.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
@@ -41,13 +41,13 @@ class MediaPicker {
     List<AssetEntity>? pickedResults;
     try {
       pickedResults = await AssetPicker.pickAssets(
-        Global.appContext,
+        Settings.appContext,
         pickerConfig: AssetPickerConfig(
           // themeColor: application.theme.primaryColor,
           requestType: RequestType.common,
           pickerTheme: _getTheme(),
           maxAssets: maxNum,
-          previewThumbnailSize: Platform.isAndroid ? ThumbnailSize.square(Global.screenWidth().toInt()) : null,
+          previewThumbnailSize: Platform.isAndroid ? ThumbnailSize.square(Settings.screenWidth().toInt()) : null,
           gridCount: 4,
           pageSize: 32,
         ),
@@ -119,7 +119,7 @@ class MediaPicker {
       int size = file.lengthSync();
       if (maxSize != null && maxSize > 0) {
         if (size >= maxSize) {
-          Toast.show(Global.locale((s) => s.file_too_big));
+          Toast.show(Settings.locale((s) => s.file_too_big));
           continue;
         }
       }
@@ -174,7 +174,7 @@ class MediaPicker {
     AssetEntity? entity;
     try {
       entity = await CameraPicker.pickFromCamera(
-        Global.appContext,
+        Settings.appContext,
         pickerConfig: CameraPickerConfig(
           enableRecording: true,
           enableTapRecording: false,
@@ -369,7 +369,7 @@ class MediaPicker {
     List<AssetEntity>? pickedResults;
     try {
       pickedResults = await AssetPicker.pickAssets(
-        Global.appContext,
+        Settings.appContext,
         pickerConfig: AssetPickerConfig(
           themeColor: application.theme.primaryColor,
           requestType: RequestType.image,
@@ -488,7 +488,7 @@ class MediaPicker {
         logger.i('MediaPicker - _compressImage - ok with only maxSize - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         return original;
       } else if (isGif) {
-        if (toast) Toast.show(Global.locale((s) => s.file_too_big));
+        if (toast) Toast.show(Settings.locale((s) => s.file_too_big));
         return null;
       } else {
         // go compress
@@ -508,7 +508,7 @@ class MediaPicker {
         return original;
       } else if (isGif) {
         if (originalSize > maxSize) {
-          if (toast) Toast.show(Global.locale((s) => s.file_too_big));
+          if (toast) Toast.show(Settings.locale((s) => s.file_too_big));
           return null;
         } else {
           return original;
@@ -570,7 +570,7 @@ class MediaPicker {
 
     if (compressSize > maxSize) {
       logger.w('MediaPicker - _compressImage - compress:BREAK - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
-      if (toast) Toast.show(Global.locale((s) => s.file_too_big));
+      if (toast) Toast.show(Settings.locale((s) => s.file_too_big));
       return null;
     }
     logger.i('MediaPicker - _compressImage - compress:END - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
@@ -628,7 +628,7 @@ class MediaPicker {
       permission = Permission.camera;
     } else if (source == ImageSource.gallery) {
       if (Platform.isIOS) {
-        int osVersion = int.tryParse(Global.deviceVersion) ?? 0;
+        int osVersion = int.tryParse(Settings.deviceVersion) ?? 0;
         if (osVersion >= 14) {
           permission = Permission.photos;
         } else {

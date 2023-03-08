@@ -3,7 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/client/rpc.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
@@ -161,9 +162,9 @@ class TopicSchema {
 
   Future<bool> shouldResubscribe({int? globalHeight}) async {
     if ((expireBlockHeight == null) || ((expireBlockHeight ?? 0) <= 0)) return true;
-    globalHeight = globalHeight ?? (await Global.getBlockHeight());
+    globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
-      return ((expireBlockHeight ?? 0) - globalHeight) < Global.topicWarnBlockExpireHeight;
+      return ((expireBlockHeight ?? 0) - globalHeight) < Settings.topicWarnBlockExpireHeight;
     } else {
       return true;
     }

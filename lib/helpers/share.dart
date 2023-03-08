@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
@@ -18,7 +18,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 class ShareHelper {
   static Future showWithTexts(BuildContext? context, List<String> shareTexts) async {
     if (shareTexts.isEmpty) return;
-    var target = await ContactHomeScreen.go(context, title: Global.locale((s) => s.share, ctx: context), selectContact: true, selectGroup: true);
+    var target = await ContactHomeScreen.go(context, title: Settings.locale((s) => s.share, ctx: context), selectContact: true, selectGroup: true);
     if (target == null) return;
     await _sendShareTexts(shareTexts, target);
   }
@@ -35,7 +35,7 @@ class ShareHelper {
 
   static Future showWithFiles(BuildContext? context, List<SharedMediaFile> shareMedias) async {
     if (shareMedias.isEmpty) return;
-    var target = await ContactHomeScreen.go(context, title: Global.locale((s) => s.share, ctx: context), selectContact: true, selectGroup: true);
+    var target = await ContactHomeScreen.go(context, title: Settings.locale((s) => s.share, ctx: context), selectContact: true, selectGroup: true);
     if (target == null) return;
     // subPath
     String? subPath;
@@ -60,7 +60,7 @@ class ShareHelper {
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < shareMedias.length; i++) {
       SharedMediaFile result = shareMedias[i];
-      Map<String, dynamic>? params = await _getParamsFromShareMedia(result, subPath, MessageSchema.ipfsMaxSize);
+      Map<String, dynamic>? params = await _getParamsFromShareMedia(result, subPath, Settings.ipfsMaxSize);
       if (params == null || params.isEmpty) continue;
       results.add(params);
     }
@@ -119,7 +119,7 @@ class ShareHelper {
     int size = file.lengthSync();
     if (maxSize != null && maxSize > 0) {
       if (size >= maxSize) {
-        Toast.show(Global.locale((s) => s.file_too_big));
+        Toast.show(Settings.locale((s) => s.file_too_big));
         return null;
       }
     }
