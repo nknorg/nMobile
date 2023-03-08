@@ -1,60 +1,14 @@
 import 'dart:collection';
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:android_id/android_id.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/material.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 
-class Global {
-  static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
-
-  static late BuildContext appContext;
-  static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
-
-  static String packageName = '';
-  static String version = '';
-  static String build = '';
-
-  static String get versionFormat {
-    String suffix = (Global.packageName.endsWith("test") || Global.packageName.endsWith("Test")) ? " + test" : "";
-    return '${Global.version} + (Build ${Global.build})$suffix';
-  }
-
-  static String deviceId = "";
-  static String deviceVersionName = "";
-  static String deviceVersion = "";
-
-  static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
-  static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
-
-  static S? _s;
-
-  static S? s({BuildContext? ctx}) {
-    if (_s != null) return _s;
-    if (ctx != null) return S.maybeOf(ctx);
-    if (appContext != null) {
-      S? s = S.maybeOf(appContext);
-      if ((s != null) && (_s == null)) _s = s;
-    }
-    return _s;
-  }
-
-  static String locale(Function(S s) func, {BuildContext? ctx, String defShow = " "}) {
-    S? __s = s(ctx: ctx);
-    if (__s == null) return defShow;
-    return func(__s);
-  }
-
+class PRC {
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
@@ -71,41 +25,6 @@ class Global {
 
   static int? blockHeight;
 
-  // TODO:GG 一般都移动到这里
-  static const int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static const int contactPingGapMs = 1 * 60 * 60 * 1000; // 1h
-  static const int sessionPingGapMs = 24 * 60 * 60 * 1000; // 24h
-  static const int privateGroupInviteExpiresMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  static const int txPoolDelayMs = 1 * 60 * 1000; // 1m
-  static const int topicSubscribeCheckGapMs = 12 * 60 * 60 * 1000; // 12h
-  static const int topicDefaultSubscribeHeight = 400000; // 93day
-  static const int topicWarnBlockExpireHeight = 100000; // 23day
-
-  static double topicSubscribeFeeDefault = 0.00010009; // fee
-
-  static init() async {
-    Global.applicationRootDirectory = await getApplicationDocumentsDirectory();
-
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    Global.packageName = packageInfo.packageName;
-    Global.version = packageInfo.version;
-    Global.build = packageInfo.buildNumber.replaceAll('.', '');
-
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      Global.deviceId = (await AndroidId().getId()) ?? "";
-      AndroidDeviceInfo _info = await deviceInfo.androidInfo;
-      Global.deviceVersionName = _info.version.release ?? "";
-      Global.deviceVersion = Global.deviceVersionName.split(".")[0];
-    } else if (Platform.isIOS) {
-      IosDeviceInfo _info = await deviceInfo.iosInfo;
-      Global.deviceId = _info.identifierForVendor ?? "";
-      Global.deviceVersionName = _info.systemVersion ?? "";
-      Global.deviceVersion = Global.deviceVersionName.split(".")[0];
-    }
-  }
-
   /// ***********************************************************************************************************
   /// ********************************************* SeedRpcServers **********************************************
   /// ***********************************************************************************************************
@@ -116,7 +35,7 @@ class Global {
 
     // get
     List<String> list = await _getRpcServers(walletAddress: walletAddress);
-    logger.d("Global - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
+    logger.d("$PRC - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
 
     // append
     bool appendDefault = false;
@@ -135,9 +54,9 @@ class Global {
         if (walletAddress?.isNotEmpty == true) {
           List<String> saved = await _getRpcServers(walletAddress: walletAddress);
           if (saved.isEmpty) {
-            logger.w("Global - getRpcServers - saved empty - walletAddress:$walletAddress");
+            logger.w("PRC - getRpcServers - saved empty - walletAddress:$walletAddress");
           } else {
-            logger.i("Global - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
+            logger.i("PRC - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
           }
         }
       } catch (e, st) {
@@ -151,7 +70,7 @@ class Global {
       if (!appendDefault) return getRpcServers(walletAddress, measure: measure, delayMs: 0);
     }
 
-    logger.d("Global - getRpcServers - return - walletAddress:$walletAddress - length:${list.length} - list:$list");
+    logger.d("PRC - getRpcServers - return - walletAddress:$walletAddress - length:${list.length} - list:$list");
     return list;
   }
 
@@ -207,7 +126,7 @@ class Global {
         newBlockHeight = await clientCommon.client?.getHeight();
       }
       if ((newBlockHeight == null) || (newBlockHeight <= 0)) {
-        List<String> seedRpcList = await Global.getRpcServers(null);
+        List<String> seedRpcList = await getRpcServers(null);
         newBlockHeight = await Wallet.getHeight(config: RpcConfig(seedRPCServerAddr: seedRpcList));
       }
     } catch (e, st) {
@@ -227,7 +146,7 @@ class Global {
     try {
       if ((walletAddress != null) && walletAddress.isNotEmpty) {
         // walletAddress no check
-        List<String> seedRpcList = await Global.getRpcServers(walletAddress);
+        List<String> seedRpcList = await getRpcServers(walletAddress);
         nonce = await Wallet.getNonceByAddress(walletAddress, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
       } else if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         // client no check rpcSeed
@@ -237,7 +156,7 @@ class Global {
       handleError(e, st);
     }
     Uint8List? pk = clientCommon.client?.publicKey;
-    logger.d("Global - getNonce - nonce:$nonce - txPool:$txPool - walletAddress:$walletAddress - clientPublicKey:${(pk != null) ? hexEncode(pk) : ""}");
+    logger.d("PRC - getNonce - nonce:$nonce - txPool:$txPool - walletAddress:$walletAddress - clientPublicKey:${(pk != null) ? hexEncode(pk) : ""}");
     return nonce;
   }
 }
