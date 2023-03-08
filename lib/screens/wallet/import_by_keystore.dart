@@ -8,8 +8,8 @@ import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -58,7 +58,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
 
   _import() async {
     if (!_termsChecked) {
-      Toast.show(Global.locale((s) => s.read_and_agree_terms, ctx: context));
+      Toast.show(Settings.locale((s) => s.read_and_agree_terms, ctx: context));
       return;
     }
     if ((_formKey.currentState as FormState).validate()) {
@@ -101,7 +101,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
           walletCommon.queryETHBalance(wallet, notifyIfNeed: true, delayMs: 1000); // await
         }
         Loading.dismiss();
-        Toast.show(Global.locale((s) => s.success, ctx: context));
+        Toast.show(Settings.locale((s) => s.success, ctx: context));
         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       } catch (e, st) {
         Loading.dismiss();
@@ -128,7 +128,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 24),
                   child: Label(
-                    Global.locale((s) => s.import_with_keystore_title, ctx: context),
+                    Settings.locale((s) => s.import_with_keystore_title, ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.start,
                   ),
@@ -136,7 +136,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                 Padding(
                   padding: const EdgeInsets.only(left: 20, right: 20, bottom: 32),
                   child: Label(
-                    Global.locale((s) => s.import_with_keystore_desc, ctx: context),
+                    Settings.locale((s) => s.import_with_keystore_desc, ctx: context),
                     type: LabelType.bodyRegular,
                     textAlign: TextAlign.start,
                     softWrap: true,
@@ -145,7 +145,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    Global.locale((s) => s.keystore, ctx: context),
+                    Settings.locale((s) => s.keystore, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -155,7 +155,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                   child: FormText(
                     controller: _keystoreController,
                     focusNode: _keystoreFocusNode,
-                    hintText: Global.locale((s) => s.input_keystore, ctx: context),
+                    hintText: Settings.locale((s) => s.input_keystore, ctx: context),
                     validator: widget.walletType == WalletType.nkn ? Validator.of(context).keystoreNKN() : Validator.of(context).keystoreETH(),
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => FocusScope.of(context).requestFocus(_nameFocusNode),
@@ -195,7 +195,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    Global.locale((s) => s.wallet_name, ctx: context),
+                    Settings.locale((s) => s.wallet_name, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -205,7 +205,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                   child: FormText(
                     controller: _nameController,
                     focusNode: _nameFocusNode,
-                    hintText: Global.locale((s) => s.hint_enter_wallet_name, ctx: context),
+                    hintText: Settings.locale((s) => s.hint_enter_wallet_name, ctx: context),
                     validator: Validator.of(context).walletName(),
                     textInputAction: TextInputAction.next,
                     onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -214,7 +214,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                 Padding(
                   padding: EdgeInsets.only(left: 20, right: 20),
                   child: Label(
-                    Global.locale((s) => s.wallet_password, ctx: context),
+                    Settings.locale((s) => s.wallet_password, ctx: context),
                     type: LabelType.h4,
                     textAlign: TextAlign.start,
                   ),
@@ -224,7 +224,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                   child: FormText(
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
-                    hintText: Global.locale((s) => s.input_password, ctx: context),
+                    hintText: Settings.locale((s) => s.input_password, ctx: context),
                     validator: Validator.of(context).password(),
                     textInputAction: TextInputAction.done,
                     onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
@@ -246,12 +246,12 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                         },
                       ),
                       Label(
-                        Global.locale((s) => s.read_and_agree_terms_01, ctx: context),
+                        Settings.locale((s) => s.read_and_agree_terms_01, ctx: context),
                         type: LabelType.bodyRegular,
                       ),
                       Button(
                         child: Label(
-                          Global.locale((s) => s.read_and_agree_terms_02, ctx: context),
+                          Settings.locale((s) => s.read_and_agree_terms_02, ctx: context),
                           color: Colors.blue,
                           type: LabelType.bodyRegular,
                           decoration: TextDecoration.underline,
@@ -275,7 +275,7 @@ class _WalletImportByKeystoreLayoutState extends BaseStateFulWidgetState<WalletI
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30),
                     child: Button(
-                      text: widget.walletType == WalletType.nkn ? Global.locale((s) => s.import_nkn_wallet, ctx: context) : Global.locale((s) => s.import_ethereum_wallet, ctx: context),
+                      text: widget.walletType == WalletType.nkn ? Settings.locale((s) => s.import_nkn_wallet, ctx: context) : Settings.locale((s) => s.import_ethereum_wallet, ctx: context),
                       width: double.infinity,
                       disabled: !_formValid,
                       onPressed: _import,

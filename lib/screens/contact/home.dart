@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/item.dart';
@@ -97,7 +97,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
       if (schema.type == ContactType.friend) {
         _allFriends.insert(0, schema);
-      } /* else if (schema.type == ContactType.stranger) {
+      }
+      /* else if (schema.type == ContactType.stranger) {
         _allStrangers.insert(0, schema);
       }*/
       _searchAction(_searchController.text);
@@ -320,7 +321,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
-        title: this._navTitle.isEmpty ? Global.locale((s) => s.contacts, ctx: context) : this._navTitle,
+        title: this._navTitle.isEmpty ? Settings.locale((s) => s.contacts, ctx: context) : this._navTitle,
         actions: [
           IconButton(
             icon: Asset.iconSvg(
@@ -366,7 +367,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                         },
                         style: TextStyle(fontSize: 14, height: 1.5),
                         decoration: InputDecoration(
-                          hintText: Global.locale((s) => s.search, ctx: context),
+                          hintText: Settings.locale((s) => s.search, ctx: context),
                           contentPadding: const EdgeInsets.only(left: 0, right: 16, top: 9, bottom: 9),
                           border: UnderlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -394,7 +395,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 12, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchFriendDataCount) ${Global.locale((s) => s.friends, ctx: context)}',
+                          '($searchFriendDataCount) ${Settings.locale((s) => s.friends, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -405,7 +406,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchTopicDataCount) ${Global.locale((s) => s.group_chat, ctx: context)}',
+                          '($searchTopicDataCount) ${Settings.locale((s) => s.group_chat, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -416,18 +417,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchGroupDataCount) ${Global.locale((s) => s.group_chat, ctx: context)}',
+                          '($searchGroupDataCount) ${Settings.locale((s) => s.group_chat, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
                     }
                     return _getGroupItemView(_searchGroups[groupItemIndex]);
-                  } /*else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
+                  }
+                  /*else if (searchStrangerViewCount > 0 && index >= strangerStartIndex && index <= strangerEndIndex) {
                     if (index == strangerStartIndex) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 24, bottom: 16, left: 16, right: 16),
                         child: Label(
-                          '($searchStrangerDataCount) ${Global.locale((s) => s.recent, ctx: context)}',
+                          '($searchStrangerDataCount) ${Settings.locale((s) => s.recent, ctx: context)}',
                           type: LabelType.h3,
                         ),
                       );
@@ -474,12 +476,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       secondaryActions: [
         IconSlideAction(
-          caption: Global.locale((s) => s.delete, ctx: context),
+          caption: Settings.locale((s) => s.delete, ctx: context),
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(Global.appContext).confirm(
-              title: Global.locale((s) => s.delete_contact_confirm_title, ctx: context),
+            ModalDialog.of(Settings.appContext).confirm(
+              title: Settings.locale((s) => s.delete_contact_confirm_title, ctx: context),
               contentWidget: ContactItem(
                 contact: item,
                 bodyTitle: item.displayName,
@@ -488,7 +490,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               agree: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.delete_contact, ctx: context),
+                text: Settings.locale((s) => s.delete_contact, ctx: context),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -497,7 +499,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               reject: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.cancel, ctx: context),
+                text: Settings.locale((s) => s.cancel, ctx: context),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {
@@ -568,12 +570,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       secondaryActions: [
         IconSlideAction(
-          caption: Global.locale((s) => s.delete, ctx: context),
+          caption: Settings.locale((s) => s.delete, ctx: context),
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(Global.appContext).confirm(
-              title: Global.locale((s) => s.confirm_unsubscribe_group, ctx: context),
+            ModalDialog.of(Settings.appContext).confirm(
+              title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
               contentWidget: TopicItem(
                 topic: item,
                 bodyTitle: item.topicShort,
@@ -582,7 +584,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               agree: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.delete, ctx: context),
+                text: Settings.locale((s) => s.delete, ctx: context),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -592,13 +594,13 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                   TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee);
                   Loading.dismiss();
                   if (deleted != null) {
-                    Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
+                    Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
                   }
                 },
               ),
               reject: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.cancel, ctx: context),
+                text: Settings.locale((s) => s.cancel, ctx: context),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {
@@ -639,12 +641,12 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       secondaryActions: [
         IconSlideAction(
-          caption: Global.locale((s) => s.delete, ctx: context),
+          caption: Settings.locale((s) => s.delete, ctx: context),
           color: Colors.red,
           icon: Icons.delete,
           onTap: () => {
-            ModalDialog.of(Global.appContext).confirm(
-              title: Global.locale((s) => s.confirm_unsubscribe_group, ctx: context),
+            ModalDialog.of(Settings.appContext).confirm(
+              title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
               contentWidget: PrivateGroupItem(
                 privateGroup: item,
                 bodyTitle: item.name,
@@ -653,19 +655,19 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               ),
               agree: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.delete, ctx: context),
+                text: Settings.locale((s) => s.delete, ctx: context),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
                   Loading.show();
                   bool success = await privateGroupCommon.quit(item.groupId, toast: true, notify: true);
                   Loading.dismiss();
-                  if (success) Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
+                  if (success) Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
                 },
               ),
               reject: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.cancel, ctx: context),
+                text: Settings.locale((s) => s.cancel, ctx: context),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {

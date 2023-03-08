@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -89,7 +89,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: Global.locale((s) => s.export_wallet, ctx: context),
+        title: Settings.locale((s) => s.export_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: Column(
@@ -118,10 +118,10 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           ),
                           Column(
                             children: <Widget>[
-                              _getItemWidgets('wallet', Global.locale((s) => s.wallet_address, ctx: context), _address),
-                              _getItemWidgets('key', Global.locale((s) => s.public_key, ctx: context), _publicKey),
-                              _getItemWidgets('key', Global.locale((s) => s.seed, ctx: context), _seed, backupOk: true),
-                              _getItemWidgets('key', Global.locale((s) => s.keystore, ctx: context), _keystore, backupOk: true),
+                              _getItemWidgets('wallet', Settings.locale((s) => s.wallet_address, ctx: context), _address),
+                              _getItemWidgets('key', Settings.locale((s) => s.public_key, ctx: context), _publicKey),
+                              _getItemWidgets('key', Settings.locale((s) => s.seed, ctx: context), _seed, backupOk: true),
+                              _getItemWidgets('key', Settings.locale((s) => s.keystore, ctx: context), _keystore, backupOk: true),
                             ],
                           )
                         ],
@@ -143,7 +143,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           padding: EdgeInsets.symmetric(horizontal: 30),
                           child: Button(
                             child: Label(
-                              Global.locale((s) => s.view_qrcode, ctx: context),
+                              Settings.locale((s) => s.view_qrcode, ctx: context),
                               type: LabelType.h3,
                               color: application.theme.primaryColor,
                             ),
@@ -151,9 +151,9 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                             fontColor: application.theme.primaryColor,
                             width: double.infinity,
                             onPressed: () {
-                              BottomDialog.of(Global.appContext).showQrcode(
-                                title: Global.locale((s) => s.seed) + Global.locale((s) => s.qrcode),
-                                desc: Global.locale((s) => s.seed_qrcode_dec),
+                              BottomDialog.of(Settings.appContext).showQrcode(
+                                title: Settings.locale((s) => s.seed) + Settings.locale((s) => s.qrcode),
+                                desc: Settings.locale((s) => s.seed_qrcode_dec),
                                 data: _seed!,
                               );
                               _setBackupFlag();
@@ -206,7 +206,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           textAlign: TextAlign.start,
                         ),
                         Label(
-                          Global.locale((s) => s.copy, ctx: context),
+                          Settings.locale((s) => s.copy, ctx: context),
                           color: application.theme.primaryColor,
                           type: LabelType.bodyRegular,
                         ),

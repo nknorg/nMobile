@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -58,7 +57,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
   _create() async {
     if (!_termsChecked) {
-      Toast.show(Global.locale((s) => s.read_and_agree_terms, ctx: context));
+      Toast.show(Settings.locale((s) => s.read_and_agree_terms, ctx: context));
       return;
     }
     if ((_formKey.currentState as FormState).validate()) {
@@ -90,13 +89,13 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
 
   @override
   Widget build(BuildContext context) {
-    double headIconSize = Global.screenWidth() / 3;
+    double headIconSize = Settings.screenWidth() / 3;
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       clipAlias: false,
       header: Header(
-        title: Global.locale((s) => s.create_ethereum_wallet, ctx: context),
+        title: Settings.locale((s) => s.create_ethereum_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: Container(
@@ -120,7 +119,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                 ),
               ),
               Container(
-                constraints: BoxConstraints.expand(height: Global.screenHeight() - Header.height - headIconSize - 24 * 2 - 30),
+                constraints: BoxConstraints.expand(height: Settings.screenHeight() - Header.height - headIconSize - 24 * 2 - 30),
                 decoration: BoxDecoration(
                   color: application.theme.backgroundLightColor,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -141,7 +140,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20, top: 32),
                               child: Label(
-                                Global.locale((s) => s.wallet_name, ctx: context),
+                                Settings.locale((s) => s.wallet_name, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -151,7 +150,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                               child: FormText(
                                 controller: _nameController,
                                 focusNode: _nameFocusNode,
-                                hintText: Global.locale((s) => s.hint_enter_wallet_name, ctx: context),
+                                hintText: Settings.locale((s) => s.hint_enter_wallet_name, ctx: context),
                                 validator: Validator.of(context).walletName(),
                                 textInputAction: TextInputAction.next,
                                 onEditingComplete: () => FocusScope.of(context).requestFocus(_passwordFocusNode),
@@ -161,7 +160,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Label(
-                                Global.locale((s) => s.wallet_password, ctx: context),
+                                Settings.locale((s) => s.wallet_password, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -171,7 +170,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                               child: FormText(
                                 controller: _passwordController,
                                 focusNode: _passwordFocusNode,
-                                hintText: Global.locale((s) => s.input_password, ctx: context),
+                                hintText: Settings.locale((s) => s.input_password, ctx: context),
                                 validator: Validator.of(context).password(),
                                 textInputAction: TextInputAction.next,
                                 onEditingComplete: () => FocusScope.of(context).requestFocus(_confirmPasswordFocusNode),
@@ -181,7 +180,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Text(
-                                Global.locale((s) => s.wallet_password_mach, ctx: context),
+                                Settings.locale((s) => s.wallet_password_mach, ctx: context),
                                 style: application.theme.bodyText2,
                               ),
                             ),
@@ -189,7 +188,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                             Padding(
                               padding: EdgeInsets.only(left: 20, right: 20),
                               child: Label(
-                                Global.locale((s) => s.confirm_password, ctx: context),
+                                Settings.locale((s) => s.confirm_password, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
@@ -198,7 +197,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                               padding: EdgeInsets.only(left: 20, right: 20, bottom: 10),
                               child: FormText(
                                 focusNode: _confirmPasswordFocusNode,
-                                hintText: Global.locale((s) => s.input_password_again, ctx: context),
+                                hintText: Settings.locale((s) => s.input_password_again, ctx: context),
                                 validator: Validator.of(context).confirmPassword(_passwordController.text),
                                 textInputAction: TextInputAction.done,
                                 onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
@@ -220,12 +219,12 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                                     },
                                   ),
                                   Label(
-                                    Global.locale((s) => s.read_and_agree_terms_01, ctx: context),
+                                    Settings.locale((s) => s.read_and_agree_terms_01, ctx: context),
                                     type: LabelType.bodyRegular,
                                   ),
                                   Button(
                                     child: Label(
-                                      Global.locale((s) => s.read_and_agree_terms_02, ctx: context),
+                                      Settings.locale((s) => s.read_and_agree_terms_02, ctx: context),
                                       color: Colors.blue,
                                       type: LabelType.bodyRegular,
                                       decoration: TextDecoration.underline,
@@ -249,7 +248,7 @@ class _WalletCreateETHScreenState extends BaseStateFulWidgetState<WalletCreateET
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 30),
                                 child: Button(
-                                  text: Global.locale((s) => s.create_wallet, ctx: context),
+                                  text: Settings.locale((s) => s.create_wallet, ctx: context),
                                   width: double.infinity,
                                   disabled: !_formValid,
                                   onPressed: _create,

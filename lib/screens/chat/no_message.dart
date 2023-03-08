@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -24,17 +24,17 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
   void onRefreshArguments() {}
 
   void addContact() async {
-    String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: Global.locale((s) => s.new_whisper, ctx: context),
-      inputTip: Global.locale((s) => s.send_to, ctx: context),
-      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
+    String? address = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.new_whisper, ctx: context),
+      inputTip: Settings.locale((s) => s.send_to, ctx: context),
+      inputHint: Settings.locale((s) => s.enter_or_select_a_user_pubkey, ctx: context),
       // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
     Loading.show();
     ContactSchema? contact = await contactCommon.resolveByAddress(address, canAdd: true);
     Loading.dismiss();
-    if (contact != null) await ChatMessagesScreen.go(Global.appContext, contact);
+    if (contact != null) await ChatMessagesScreen.go(Settings.appContext, contact);
   }
 
   void subscribePopularTopic(String? topicName) async {
@@ -44,7 +44,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
     Loading.dismiss();
-    if (_topic != null) ChatMessagesScreen.go(Global.appContext, _topic);
+    if (_topic != null) ChatMessagesScreen.go(Settings.appContext, _topic);
   }
 
   @override
@@ -58,7 +58,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
             children: [
               SizedBox(width: 20),
               Label(
-                Global.locale((s) => s.popular_channels, ctx: context),
+                Settings.locale((s) => s.popular_channels, ctx: context),
                 type: LabelType.h3,
                 textAlign: TextAlign.left,
               ),
@@ -80,13 +80,13 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
           Column(
             children: <Widget>[
               Label(
-                Global.locale((s) => s.chat_no_messages_title, ctx: context),
+                Settings.locale((s) => s.chat_no_messages_title, ctx: context),
                 type: LabelType.h2,
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 8),
               Label(
-                Global.locale((s) => s.chat_no_messages_desc, ctx: context),
+                Settings.locale((s) => s.chat_no_messages_desc, ctx: context),
                 type: LabelType.bodyRegular,
                 textAlign: TextAlign.center,
               )
@@ -108,7 +108,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                   ),
                 ),
                 Label(
-                  Global.locale((s) => s.start_chat, ctx: context),
+                  Settings.locale((s) => s.start_chat, ctx: context),
                   type: LabelType.h2,
                   dark: true,
                 ),
@@ -176,7 +176,7 @@ class _ChatNoMessageLayoutState extends BaseStateFulWidgetState<ChatNoMessageLay
                 },
                 child: Center(
                   child: Text(
-                    Global.locale((s) => s.subscribe, ctx: context),
+                    Settings.locale((s) => s.subscribe, ctx: context),
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),

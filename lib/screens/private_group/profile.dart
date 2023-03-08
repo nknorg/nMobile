@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -19,7 +19,6 @@ import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -68,18 +67,18 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
 
   static List<String> burnTextArray() {
     return [
-      Global.locale((s) => s.burn_5_seconds),
-      Global.locale((s) => s.burn_10_seconds),
-      Global.locale((s) => s.burn_30_seconds),
-      Global.locale((s) => s.burn_1_minute),
-      Global.locale((s) => s.burn_5_minutes),
-      Global.locale((s) => s.burn_10_minutes),
-      Global.locale((s) => s.burn_30_minutes),
-      Global.locale((s) => s.burn_1_hour),
-      Global.locale((s) => s.burn_6_hour),
-      Global.locale((s) => s.burn_12_hour),
-      Global.locale((s) => s.burn_1_day),
-      Global.locale((s) => s.burn_1_week),
+      Settings.locale((s) => s.burn_5_seconds),
+      Settings.locale((s) => s.burn_10_seconds),
+      Settings.locale((s) => s.burn_30_seconds),
+      Settings.locale((s) => s.burn_1_minute),
+      Settings.locale((s) => s.burn_5_minutes),
+      Settings.locale((s) => s.burn_10_minutes),
+      Settings.locale((s) => s.burn_30_minutes),
+      Settings.locale((s) => s.burn_1_hour),
+      Settings.locale((s) => s.burn_6_hour),
+      Settings.locale((s) => s.burn_12_hour),
+      Settings.locale((s) => s.burn_1_day),
+      Settings.locale((s) => s.burn_1_week),
     ];
   }
 
@@ -179,8 +178,8 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: MessageSchema.avatarBestSize,
-      maxSize: MessageSchema.avatarMaxSize,
+      bestSize: Settings.avatarBestSize,
+      maxSize: Settings.avatarMaxSize,
       savePath: remarkAvatarPath,
     );
     if (picked == null) {
@@ -208,10 +207,10 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
 
   _invitee() async {
     if (_privateGroup == null) return;
-    String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: Global.locale((s) => s.invite_members),
-      inputTip: Global.locale((s) => s.send_to),
-      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
+    String? address = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.invite_members),
+      inputTip: Settings.locale((s) => s.send_to),
+      inputHint: Settings.locale((s) => s.enter_or_select_a_user_pubkey),
       // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -219,28 +218,28 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     String? clientAddress = await contactCommon.resolveClientAddress(address);
     Loading.dismiss();
     bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, clientAddress, toast: true);
-    if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
+    if (success) Toast.show(Settings.locale((s) => s.invite_and_send_success));
   }
 
   _quit() async {
-    ModalDialog.of(Global.appContext).confirm(
-      title: Global.locale((s) => s.tip),
-      content: Global.locale((s) => s.leave_group_confirm_title),
+    ModalDialog.of(Settings.appContext).confirm(
+      title: Settings.locale((s) => s.tip),
+      content: Settings.locale((s) => s.leave_group_confirm_title),
       agree: Button(
         width: double.infinity,
-        text: Global.locale((s) => s.unsubscribe),
+        text: Settings.locale((s) => s.unsubscribe),
         backgroundColor: application.theme.strongColor,
         onPressed: () async {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
           Loading.show();
           bool success = await privateGroupCommon.quit(_privateGroup?.groupId, toast: true, notify: true);
           Loading.dismiss();
-          if (success) Toast.show(Global.locale((s) => s.unsubscribed, ctx: context));
+          if (success) Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
         },
       ),
       reject: Button(
         width: double.infinity,
-        text: Global.locale((s) => s.cancel),
+        text: Settings.locale((s) => s.cancel),
         fontColor: application.theme.fontColor2,
         backgroundColor: application.theme.backgroundLightColor,
         onPressed: () {
@@ -257,7 +256,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: Global.locale((s) => s.channel_settings, ctx: context),
+        title: Settings.locale((s) => s.channel_settings, ctx: context),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
@@ -291,7 +290,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                       Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.nickname, ctx: context),
+                        Settings.locale((s) => s.nickname, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -325,14 +324,14 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                       Asset.image('chat/group-blue.png', width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.view_channel_members, ctx: context),
+                        Settings.locale((s) => s.view_channel_members, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "${_privateGroup?.count ?? "--"} ${Global.locale((s) => s.members, ctx: context)}",
+                          "${_privateGroup?.count ?? "--"} ${Settings.locale((s) => s.members, ctx: context)}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -360,7 +359,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                             Asset.image('chat/invisit-blue.png', width: 24),
                             SizedBox(width: 10),
                             Label(
-                              Global.locale((s) => s.invite_members, ctx: context),
+                              Settings.locale((s) => s.invite_members, ctx: context),
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor1,
                             ),
@@ -388,7 +387,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                     _burnOpen = !_burnOpen;
                   });
                 } else {
-                  Toast.show(Global.locale((s) => s.only_owner_can_modify, ctx: context));
+                  Toast.show(Settings.locale((s) => s.only_owner_can_modify, ctx: context));
                 }
               },
               child: Column(
@@ -399,7 +398,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                       Asset.image('contact/xiaohui.png', color: application.theme.primaryColor, width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.burn_after_reading, ctx: context),
+                        Settings.locale((s) => s.burn_after_reading, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -415,7 +414,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                               },
                             )
                           : Label(
-                              _burnOpen ? (_burnProgress >= 0 ? burnTextArray()[_burnProgress] : "") : Global.locale((s) => s.close, ctx: context),
+                              _burnOpen ? (_burnProgress >= 0 ? burnTextArray()[_burnProgress] : "") : Settings.locale((s) => s.close, ctx: context),
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               overflow: TextOverflow.fade,
@@ -439,7 +438,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                                       Padding(
                                         padding: const EdgeInsets.only(left: 16),
                                         child: Label(
-                                          (!_burnOpen || _burnProgress < 0) ? Global.locale((s) => s.off, ctx: context) : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
+                                          (!_burnOpen || _burnProgress < 0) ? Settings.locale((s) => s.off, ctx: context) : getStringFromSeconds(burnValueArray[_burnProgress].inSeconds),
                                           type: LabelType.bodyRegular,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -476,8 +475,8 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
               padding: const EdgeInsets.only(left: 20, right: 20, top: 6),
               child: Label(
                 (!_burnOpen || _burnProgress < 0)
-                    ? Global.locale((s) => s.burn_after_reading_desc, ctx: context)
-                    : Global.locale(
+                    ? Settings.locale((s) => s.burn_after_reading_desc, ctx: context)
+                    : Settings.locale(
                         (s) => s.burn_after_reading_desc_disappear(
                               burnTextArray()[_burnProgress],
                             ),
@@ -501,7 +500,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                   Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
                   SizedBox(width: 10),
                   Label(
-                    Global.locale((s) => s.send_message, ctx: context),
+                    Settings.locale((s) => s.send_message, ctx: context),
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor1,
                   ),
@@ -528,7 +527,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
                         Icon(Icons.exit_to_app, color: Colors.red),
                         SizedBox(width: 10),
                         Label(
-                          Global.locale((s) => s.unsubscribe, ctx: context),
+                          Settings.locale((s) => s.unsubscribe, ctx: context),
                           type: LabelType.bodyRegular,
                           color: Colors.red,
                         ),

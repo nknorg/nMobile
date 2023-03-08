@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -47,7 +47,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: Global.locale((s) => s.d_chat_address, ctx: context),
+        title: Settings.locale((s) => s.d_chat_address, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
       ),
       body: SingleChildScrollView(
@@ -72,7 +72,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Label(
-                        Global.locale((s) => s.d_chat_address, ctx: context),
+                        Settings.locale((s) => s.d_chat_address, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -120,7 +120,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                       : SizedBox.shrink(),
                   SizedBox(height: 20),
                   Label(
-                    Global.locale((s) => s.scan_show_me_desc, ctx: context),
+                    Settings.locale((s) => s.scan_show_me_desc, ctx: context),
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor2,
                     overflow: TextOverflow.fade,

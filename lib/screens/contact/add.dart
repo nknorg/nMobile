@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -21,7 +21,6 @@ import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -68,8 +67,8 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      maxSize: MessageSchema.avatarMaxSize,
-      bestSize: MessageSchema.avatarBestSize,
+      maxSize: Settings.avatarMaxSize,
+      bestSize: Settings.avatarBestSize,
       savePath: savePath,
     );
     if (picked == null || !picked.existsSync()) {
@@ -97,8 +96,8 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     }
     logger.i("$TAG - QR_DATA_DECODE - clientAddress:$clientAddress - walletAddress:$walletAddress");
     if (walletAddress == null || !Validate.isNknAddressOk(walletAddress)) {
-      ModalDialog.of(Global.appContext).show(
-        content: Global.locale((s) => s.error_unknown_nkn_qrcode),
+      ModalDialog.of(Settings.appContext).show(
+        content: Settings.locale((s) => s.error_unknown_nkn_qrcode),
         hasCloseButton: true,
       );
       return;
@@ -124,7 +123,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       String? clientAddress = await contactCommon.resolveClientAddress(address);
       ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
       if ((exist != null) && (exist.type == ContactType.friend)) {
-        Toast.show(Global.locale((s) => s.add_user_duplicated, ctx: context));
+        Toast.show(Settings.locale((s) => s.add_user_duplicated, ctx: context));
         Loading.dismiss();
         return;
       } else if (exist != null) {
@@ -148,7 +147,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
         }
         ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);
         if (added == null) {
-          Toast.show(Global.locale((s) => s.failure, ctx: context));
+          Toast.show(Settings.locale((s) => s.failure, ctx: context));
           Loading.dismiss();
           return;
         }
@@ -165,7 +164,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: Global.locale((s) => s.add_new_contact, ctx: context),
+        title: Settings.locale((s) => s.add_new_contact, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -246,12 +245,12 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         Row(
                           children: <Widget>[
                             Label(
-                              Global.locale((s) => s.nickname, ctx: context),
+                              Settings.locale((s) => s.nickname, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
                             Label(
-                              ' (${Global.locale((s) => s.optional, ctx: context)})',
+                              ' (${Settings.locale((s) => s.optional, ctx: context)})',
                               type: LabelType.bodyLarge,
                               textAlign: TextAlign.start,
                             ),
@@ -260,20 +259,20 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         FormText(
                           controller: _nameController,
                           focusNode: _nameFocusNode,
-                          hintText: Global.locale((s) => s.input_name, ctx: context),
+                          hintText: Settings.locale((s) => s.input_name, ctx: context),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_clientAddressFocusNode),
                         ),
                         SizedBox(height: 14),
                         Label(
-                          Global.locale((s) => s.d_chat_address, ctx: context),
+                          Settings.locale((s) => s.d_chat_address, ctx: context),
                           type: LabelType.h3,
                           textAlign: TextAlign.start,
                         ),
                         FormText(
                           controller: _clientAddressController,
                           focusNode: _clientAddressFocusNode,
-                          hintText: Global.locale((s) => s.input_d_chat_address, ctx: context),
+                          hintText: Settings.locale((s) => s.input_d_chat_address, ctx: context),
                           validator: Validator.of(context).pubKeyNKN(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_walletAddressFocusNode),
@@ -283,12 +282,12 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         Row(
                           children: <Widget>[
                             Label(
-                              Global.locale((s) => s.wallet_address, ctx: context),
+                              Settings.locale((s) => s.wallet_address, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
                             Label(
-                              ' (${Global.locale((s) => s.optional, ctx: context)})',
+                              ' (${Settings.locale((s) => s.optional, ctx: context)})',
                               type: LabelType.bodyLarge,
                               textAlign: TextAlign.start,
                             ),
@@ -297,7 +296,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         FormText(
                           controller: _walletAddressController,
                           focusNode: _walletAddressFocusNode,
-                          hintText: Global.locale((s) => s.input_wallet_address, ctx: context),
+                          hintText: Settings.locale((s) => s.input_wallet_address, ctx: context),
                           validator: Validator.of(context).addressNKNOrEmpty(),
                           textInputAction: TextInputAction.next,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_notesFocusNode),
@@ -305,12 +304,12 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         Row(
                           children: <Widget>[
                             Label(
-                              Global.locale((s) => s.notes, ctx: context),
+                              Settings.locale((s) => s.notes, ctx: context),
                               type: LabelType.h3,
                               textAlign: TextAlign.start,
                             ),
                             Label(
-                              ' (${Global.locale((s) => s.optional, ctx: context)})',
+                              ' (${Settings.locale((s) => s.optional, ctx: context)})',
                               type: LabelType.bodyLarge,
                               textAlign: TextAlign.start,
                             ),
@@ -319,7 +318,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                         FormText(
                           controller: _notesController,
                           focusNode: _notesFocusNode,
-                          hintText: Global.locale((s) => s.input_notes, ctx: context),
+                          hintText: Settings.locale((s) => s.input_notes, ctx: context),
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(null),
                         ),
@@ -337,7 +336,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 30),
                       child: Button(
-                        text: Global.locale((s) => s.save_contact, ctx: context),
+                        text: Settings.locale((s) => s.save_contact, ctx: context),
                         width: double.infinity,
                         disabled: !_formValid,
                         onPressed: () {

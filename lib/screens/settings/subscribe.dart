@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -43,7 +43,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
 
   _refreshSubscribeFee() async {
     _fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-    if (_fee <= 0) _fee = Global.topicSubscribeFeeDefault;
+    if (_fee <= 0) _fee = Settings.topicSubscribeFeeDefault;
     _feeController.text = _fee.toStringAsFixed(8);
   }
 
@@ -63,7 +63,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: Global.locale((s) => s.accelerate, ctx: context),
+        title: Settings.locale((s) => s.accelerate, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(
@@ -91,7 +91,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.nkn, ctx: context),
+                            Settings.locale((s) => s.nkn, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -100,7 +100,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                           Row(
                             children: <Widget>[
                               SizedBox(
-                                width: Global.screenWidth() / 3,
+                                width: Settings.screenWidth() / 3,
                                 child: FixedTextField(
                                   controller: _feeController,
                                   focusNode: _feeFocusNode,
@@ -110,7 +110,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                                   textAlign: TextAlign.end,
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
-                                    hintText: Global.locale((s) => s.enter_amount, ctx: context),
+                                    hintText: Settings.locale((s) => s.enter_amount, ctx: context),
                                     hintStyle: TextStyle(color: application.theme.fontColor2.withAlpha(100)),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
@@ -120,14 +120,14 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                                   ),
                                   onChanged: (v) {
                                     double fee = v.isNotEmpty ? (double.tryParse(v) ?? 0) : 0;
-                                    if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+                                    if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
                                     _fee = fee;
                                   },
                                 ),
                               ),
                               // Container(
                               //   alignment: Alignment.centerRight,
-                              //   child: Label(Global.locale((s) => s.nkn), type: LabelType.bodyRegular),
+                              //   child: Label(Settings.locale((s) => s.nkn), type: LabelType.bodyRegular),
                               // ),
                             ],
                           ),
@@ -141,7 +141,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
             Padding(
               padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
               child: Label(
-                Global.locale((s) => s.transfer_speed_up_fee, ctx: context),
+                Settings.locale((s) => s.transfer_speed_up_fee, ctx: context),
                 type: LabelType.bodySmall,
                 fontWeight: FontWeight.w600,
                 softWrap: true,
@@ -164,7 +164,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.topic_resubscribe_enable, ctx: context),
+                            Settings.locale((s) => s.topic_resubscribe_enable, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -194,7 +194,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
             Padding(
               padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
               child: Label(
-                Global.locale((s) => _subscribeSpeedEnable ? s.topic_renewal_speed_up_auto : s.topic_renewal_speed_up_auto_no, ctx: context),
+                Settings.locale((s) => _subscribeSpeedEnable ? s.topic_renewal_speed_up_auto : s.topic_renewal_speed_up_auto_no, ctx: context),
                 type: LabelType.bodySmall,
                 fontWeight: FontWeight.w600,
                 softWrap: true,

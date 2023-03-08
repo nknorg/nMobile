@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -28,7 +28,7 @@ class _SettingsTermsScreenState extends BaseStateFulWidgetState<SettingsTermsScr
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: Global.locale((s) => s.terms, ctx: context),
+        title: Settings.locale((s) => s.terms, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(

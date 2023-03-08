@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -20,12 +20,12 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
 
   @override
   Widget build(BuildContext context) {
-    double imgSize = Global.screenWidth() / 2;
+    double imgSize = Settings.screenWidth() / 2;
 
     return Layout(
       headerColor: application.theme.primaryColor,
       header: Header(
-        title: Global.locale((s) => s.my_contact, ctx: context),
+        title: Settings.locale((s) => s.my_contact, ctx: context),
         actions: [
           IconButton(
             onPressed: () {
@@ -50,14 +50,14 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
               Column(
                 children: <Widget>[
                   Label(
-                    Global.locale((s) => s.contact_no_contact_title, ctx: context),
+                    Settings.locale((s) => s.contact_no_contact_title, ctx: context),
                     type: LabelType.h2,
                     textAlign: TextAlign.center,
                     maxLines: 10,
                   ),
                   SizedBox(height: 50),
                   Label(
-                    Global.locale((s) => s.contact_no_contact_desc, ctx: context),
+                    Settings.locale((s) => s.contact_no_contact_desc, ctx: context),
                     type: LabelType.bodySmall,
                     textAlign: TextAlign.center,
                     softWrap: true,
@@ -80,7 +80,7 @@ class _ContactHomeEmptyLayoutState extends BaseStateFulWidgetState<ContactHomeEm
                             Asset.iconSvg('user-plus', color: application.theme.backgroundLightColor, width: 24),
                             SizedBox(width: 24),
                             Label(
-                              Global.locale((s) => s.add_contact, ctx: context),
+                              Settings.locale((s) => s.add_contact, ctx: context),
                               type: LabelType.h3,
                               color: application.theme.fontLightColor,
                             )

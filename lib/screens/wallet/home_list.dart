@@ -8,8 +8,8 @@ import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -90,18 +90,18 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
   }
 
   _onNotBackedUpTipClicked() {
-    ModalDialog dialog = ModalDialog.of(Global.appContext);
+    ModalDialog dialog = ModalDialog.of(Settings.appContext);
     dialog.show(
-      title: Global.locale((s) => s.d_not_backed_up_title),
-      content: Global.locale((s) => s.d_not_backed_up_desc),
+      title: Settings.locale((s) => s.d_not_backed_up_title),
+      content: Settings.locale((s) => s.d_not_backed_up_desc),
       hasCloseButton: false,
       actions: [
         Button(
-          text: Global.locale((s) => s.go_backup, ctx: context),
+          text: Settings.locale((s) => s.go_backup, ctx: context),
           width: double.infinity,
           onPressed: () async {
             await dialog.close();
-            WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(title: Global.locale((s) => s.select_asset_to_backup, ctx: context));
+            WalletSchema? result = await BottomDialog.of(Settings.appContext).showWalletSelect(title: Settings.locale((s) => s.select_asset_to_backup, ctx: context));
             _readyExport(result);
           },
         ),
@@ -125,7 +125,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         Loading.dismiss();
 
         if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != schema.address) {
-          Toast.show(Global.locale((s) => s.password_wrong));
+          Toast.show(Settings.locale((s) => s.password_wrong));
           return;
         }
 
@@ -143,7 +143,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         Loading.dismiss();
 
         if (nkn.address.isEmpty || nkn.address != schema.address) {
-          Toast.show(Global.locale((s) => s.password_wrong));
+          Toast.show(Settings.locale((s) => s.password_wrong));
           return;
         }
 
@@ -173,7 +173,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         titleChild: Padding(
           padding: EdgeInsets.only(left: 20),
           child: Label(
-            Global.locale((s) => s.my_wallets, ctx: context),
+            Settings.locale((s) => s.my_wallets, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -191,7 +191,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
                     ),
                     SizedBox(width: 4),
                     Text(
-                      Global.locale((s) => s.not_backed_up, ctx: context),
+                      Settings.locale((s) => s.not_backed_up, ctx: context),
                       textAlign: TextAlign.end,
                       style: TextStyle(fontSize: application.theme.bodyText3.fontSize, color: application.theme.strongColor),
                       overflow: TextOverflow.ellipsis,
@@ -207,9 +207,9 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
             icon: Asset.iconSvg('more', width: 24),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             onSelected: (int result) async {
-              String? walletType = await BottomDialog.of(Global.appContext).showWalletTypeSelect(
-                title: Global.locale((s) => s.select_wallet_type),
-                desc: Global.locale((s) => s.select_wallet_type_desc),
+              String? walletType = await BottomDialog.of(Settings.appContext).showWalletTypeSelect(
+                title: Settings.locale((s) => s.select_wallet_type),
+                desc: Settings.locale((s) => s.select_wallet_type_desc),
               );
               switch (result) {
                 case 0:
@@ -232,14 +232,14 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
               PopupMenuItem<int>(
                 value: 0,
                 child: Label(
-                  Global.locale((s) => s.no_wallet_create, ctx: context),
+                  Settings.locale((s) => s.no_wallet_create, ctx: context),
                   type: LabelType.display,
                 ),
               ),
               PopupMenuItem<int>(
                 value: 1,
                 child: Label(
-                  Global.locale((s) => s.import_wallet, ctx: context),
+                  Settings.locale((s) => s.import_wallet, ctx: context),
                   type: LabelType.display,
                 ),
               ),
@@ -251,7 +251,7 @@ class _WalletHomeListLayoutState extends BaseStateFulWidgetState<WalletHomeListL
         builder: (context, state) {
           if (state is WalletLoaded) {
             return ListView.builder(
-              padding: EdgeInsets.only(top: 22, bottom: 80 + Global.screenHeight() * 0.05),
+              padding: EdgeInsets.only(top: 22, bottom: 80 + Settings.screenHeight() * 0.05),
               itemCount: state.wallets.length,
               itemBuilder: (context, index) {
                 if (index < 0 || index >= state.wallets.length) return SizedBox.shrink();

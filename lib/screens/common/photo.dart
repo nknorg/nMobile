@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -77,13 +77,13 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
     Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: imageName, isReturnImagePathOfIOS: true);
 
     logger.i("PhotoScreen - save copy file - path:${result?["filePath"]}");
-    Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+    Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
   }
 
   @override
   Widget build(BuildContext context) {
-    double btnSize = Global.screenWidth() / 10;
-    double iconSize = Global.screenWidth() / 15;
+    double btnSize = Settings.screenWidth() / 10;
+    double iconSize = Settings.screenWidth() / 15;
 
     ImageProvider? provider;
     if (this._contentType == TYPE_FILE) {
@@ -155,7 +155,7 @@ class _PhotoScreenState extends BaseStateFulWidgetState<PhotoScreen> with Single
                         PopupMenuItem<int>(
                           value: 0,
                           child: Label(
-                            Global.locale((s) => s.save_to_album, ctx: context),
+                            Settings.locale((s) => s.save_to_album, ctx: context),
                             type: LabelType.display,
                           ),
                         ),
