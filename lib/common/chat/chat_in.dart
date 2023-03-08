@@ -384,16 +384,16 @@ class ChatInCommon with Tag {
     Map<String, dynamic>? content = data['content'];
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
-      if (requestType == RequestType.header) {
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, RequestType.header); // await
+      if (requestType == ContactRequestType.header) {
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header); // await
       } else {
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, RequestType.full); // await
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full); // await
       }
     } else {
       // need request/save
       if (!contactCommon.isProfileVersionSame(contact.profileVersion, version)) {
-        if (responseType != RequestType.full && content == null) {
-          chatOutCommon.sendContactProfileRequest(contact.clientAddress, RequestType.full, contact.profileVersion); // await
+        if (responseType != ContactRequestType.full && content == null) {
+          chatOutCommon.sendContactProfileRequest(contact.clientAddress, ContactRequestType.full, contact.profileVersion); // await
         } else {
           if (content == null) {
             logger.e("$TAG - receiveContact - content is empty - data:$data");

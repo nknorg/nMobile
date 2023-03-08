@@ -4,7 +4,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -136,9 +135,9 @@ Future addTestData(
     entity2['device_id'] = Uuid().v4();
     entity2['data'] = jsonEncode({
       'appName': Settings.appName,
-      'appVersion': Global.build,
-      'platform': (i % 3 == 0) ? PlatformName.web : ((i % 3 == 1) ? PlatformName.android : PlatformName.ios),
-      'platformVersion': Global.deviceVersion,
+      'appVersion': Settings.build,
+      'platform': (i % 3 == 0) ? DevicePlatformName.web : ((i % 3 == 1) ? DevicePlatformName.android : DevicePlatformName.ios),
+      'platformVersion': Settings.deviceVersion,
     });
     final id = await db.insert(DeviceInfoStorage.tableName, entity2);
     logger.i("DB - _addTestData - deviceInfo added - i:$i - id:$id");
