@@ -3,8 +3,9 @@ import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -45,8 +46,8 @@ class TopSub {
 
     if (!success) {
       if (isBlock && fee > 0) {
-        int? blockNonce = await Global.getNonce(null, txPool: false);
-        int? poolNonce = await Global.getNonce(null, txPool: true);
+        int? blockNonce = await RPC.getNonce(null, txPool: false);
+        int? poolNonce = await RPC.getNonce(null, txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
@@ -77,7 +78,7 @@ class TopSub {
         logger.w("TopSub - subscribeWithPermission - clientSubscribe fail - topic:$topic - permPage:$permissionPage - meta:$meta");
       }
     } else if (success && (fee > 0)) {
-      int? blockNonce = await Global.getNonce(null, txPool: false);
+      int? blockNonce = await RPC.getNonce(null, txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
           await _subscribeReplace(i, fee);
@@ -137,8 +138,8 @@ class TopSub {
 
     if (!success) {
       if (isBlock && fee > 0) {
-        int? blockNonce = await Global.getNonce(null, txPool: false);
-        int? poolNonce = await Global.getNonce(null, txPool: true);
+        int? blockNonce = await RPC.getNonce(null, txPool: false);
+        int? poolNonce = await RPC.getNonce(null, txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
           for (var i = blockNonce; i <= poolNonce; i++) {
             List results = isJoin ? await _subscribe(topic, fee: fee, identifier: identifier, meta: "", nonce: i) : await _unsubscribe(topic, fee: fee, identifier: identifier, nonce: i);
@@ -166,7 +167,7 @@ class TopSub {
         logger.w("TopSub - subscribeWithJoin - clientSubscribe fail - topic:$topic - identifier:$identifier");
       }
     } else if (success && (fee > 0)) {
-      int? blockNonce = await Global.getNonce(null, txPool: false);
+      int? blockNonce = await RPC.getNonce(null, txPool: false);
       if ((blockNonce != null) && (blockNonce >= 0) && (_nonce != null) && (_nonce > blockNonce)) {
         for (var i = blockNonce; i < _nonce; i++) {
           await _subscribeReplace(i, fee);
@@ -217,7 +218,7 @@ class TopSub {
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
-    int? _nonce = nonce ?? await Global.getNonce(null);
+    int? _nonce = nonce ?? await RPC.getNonce(null);
 
     bool? success;
     bool canTryTimer = true;
@@ -226,7 +227,7 @@ class TopSub {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
           topic: genTopicHash(topic),
-          duration: Global.topicDefaultSubscribeHeight,
+          duration: Settings.topicDefaultSubscribeHeight,
           fee: fee.toStringAsFixed(8),
           identifier: identifier,
           meta: meta,
@@ -241,20 +242,20 @@ class TopSub {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _subscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
-          if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
+          if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.something_went_wrong));
           success = false;
           _nonce = null;
         } else {
-          nonce = await Global.getNonce(null);
+          nonce = await RPC.getNonce(null);
         }
       } else if (e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is too low
         logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        nonce = await Global.getNonce(null);
+        nonce = await RPC.getNonce(null);
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _subscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.request_processed));
+        if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.request_processed));
         success = false; // permission action can add to try timer
         isBlock = true;
         _nonce = null;
@@ -266,14 +267,14 @@ class TopSub {
       } else if (e.toString().contains("txpool full")) {
         // txpool full, rejecting transaction with low priority
         logger.w("TopSub - _subscribe - txpool full - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.something_went_wrong));
+        if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.something_went_wrong));
         success = false;
         canTryTimer = false;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _subscribe - not sufficient funds - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$meta");
-        if (toast && identifier.isEmpty) Toast.show(Global.locale((s) => s.balance_not_enough));
+        if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
         _nonce = null;
@@ -315,7 +316,7 @@ class TopSub {
   }) async {
     if (topic == null || topic.isEmpty) return [false, false];
     int maxTryTimes = 2; // 3
-    int? _nonce = nonce ?? await Global.getNonce(null);
+    int? _nonce = nonce ?? await RPC.getNonce(null);
 
     bool? success;
     bool canTryTimer = true;
@@ -337,20 +338,20 @@ class TopSub {
         // can not append tx to txpool: nonce is not continuous
         logger.w("TopSub - _unsubscribe - try over by nonce is not continuous - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
         if ((nonce != null) || (tryTimes >= maxTryTimes)) {
-          if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
+          if (toast) Toast.show(Settings.locale((s) => s.something_went_wrong));
           success = false;
           _nonce = null;
         } else {
-          nonce = await Global.getNonce(null);
+          nonce = await RPC.getNonce(null);
         }
       } else if (e.toString().contains("nonce is too low")) {
         // can not append tx to txpool: nonce is too low
         logger.w("TopSub - _subscribe - try over by nonce is too low - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        nonce = await Global.getNonce(null);
+        nonce = await RPC.getNonce(null);
       } else if (e.toString().contains('duplicate subscription exist in block')) {
         // can not append tx to txpool: duplicate subscription exist in block
         logger.w("TopSub - _unsubscribe - block duplicated - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        if (toast) Toast.show(Global.locale((s) => s.request_processed));
+        if (toast) Toast.show(Settings.locale((s) => s.request_processed));
         success = false;
         isBlock = true;
         _nonce = null;
@@ -362,14 +363,14 @@ class TopSub {
       } else if (e.toString().contains("txpool full")) {
         // txpool full, rejecting transaction with low priority
         logger.w("TopSub - _unsubscribe - txpool full - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        if (toast) Toast.show(Global.locale((s) => s.something_went_wrong));
+        if (toast) Toast.show(Settings.locale((s) => s.something_went_wrong));
         success = false;
         canTryTimer = false;
         _nonce = null;
       } else if (e.toString().contains('not sufficient funds')) {
         // can not append tx to txpool: not sufficient funds
         logger.w("TopSub - _unsubscribe - not sufficient funds - tryTimes:$tryTimes - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier");
-        if (toast) Toast.show(Global.locale((s) => s.balance_not_enough));
+        if (toast) Toast.show(Settings.locale((s) => s.balance_not_enough));
         success = false;
         canTryTimer = false;
         _nonce = null;
@@ -410,7 +411,7 @@ class TopSub {
         if (keystore.isEmpty) return false;
         String? password = await walletCommon.getPassword(address);
         if (password == null || password.isEmpty) return false;
-        List<String> seedRpcList = await Global.getRpcServers(address);
+        List<String> seedRpcList = await RPC.getRpcServers(address);
         Wallet nkn = await Wallet.restore(keystore, config: WalletConfig(password: password, seedRPCServerAddr: seedRpcList));
         String? txHash = await nkn.transfer(address, "0.00000001", fee: fee.toStringAsFixed(8), nonce: nonce);
         success = (txHash != null) && (txHash.isNotEmpty);
@@ -433,7 +434,7 @@ class TopSub {
         );
       }
       if ((results == null) || results.isEmpty) {
-        List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
+        List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
         results = await Wallet.getSubscription(
           genTopicHash(topic),
           subscriber,
@@ -478,7 +479,7 @@ class TopSub {
             // subscriberHashPrefix: subscriberHashPrefix,
           );
           if ((result == null) || result.isEmpty) {
-            List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
+            List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
             result = await Wallet.getSubscribers(
               topic: genTopicHash(topic),
               offset: offset,
@@ -525,7 +526,7 @@ class TopSub {
         );
       }
       if ((count == null) || (count <= 0)) {
-        List<String> seedRpcList = await Global.getRpcServers(await walletCommon.getDefaultAddress());
+        List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
         count = await Wallet.getSubscribersCount(
           genTopicHash(topic),
           // subscriberHashPrefix: subscriberHashPrefix

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -20,14 +19,14 @@ class RemoteNotification {
 
     uuid = uuid ?? Uuid().v4();
 
-    title = title ?? Global.locale((s) => s.new_message);
+    title = title ?? Settings.locale((s) => s.new_message);
     // if (topic != null) {
     //   title = '[${topic.topicShort}] ${contact?.displayName}';
     // } else if (contact != null) {
     //   title = contact.displayName;
     // }
 
-    content = content ?? Global.locale((s) => s.you_have_new_message);
+    content = content ?? Settings.locale((s) => s.you_have_new_message);
     // switch (message.contentType) {
     //   case MessageContentType.text:
     //   case MessageContentType.textExtension:
