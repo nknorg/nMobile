@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 class Util {
   static void copyText(String? content, {bool toast = true}) {
     Clipboard.setData(ClipboardData(text: content));
-    if (toast) Toast.show(Global.locale((s) => s.copy_success));
+    if (toast) Toast.show(Settings.locale((s) => s.copy_success));
   }
 
   static void launchUrl(String? url) async {

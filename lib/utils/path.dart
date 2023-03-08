@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
@@ -58,7 +58,7 @@ class Path {
 
   /// eg:/data/user/0/org.nkn.mobile.app/app_flutter/{mPubKey}/{dirType}/
   static String getDir(String? uid, String? dirType, {String? subPath}) {
-    String dirPath = Global.applicationRootDirectory.path;
+    String dirPath = Settings.applicationRootDirectory.path;
     if (uid != null && uid.isNotEmpty) {
       dirPath = join(dirPath, uid);
     }
@@ -126,13 +126,13 @@ class Path {
   /// eg:{rootPath}/{localPath}
   static String? convert2Complete(String? localPath) {
     if (localPath == null || localPath.isEmpty) return null;
-    return join(Global.applicationRootDirectory.path, localPath);
+    return join(Settings.applicationRootDirectory.path, localPath);
   }
 
   /// eg:{localPath}
   static String? convert2Local(String? completePath) {
     if (completePath == null || completePath.isEmpty) return null;
-    String rootDir = Global.applicationRootDirectory.path.endsWith("/") ? Global.applicationRootDirectory.path : (Global.applicationRootDirectory.path + "/");
+    String rootDir = Settings.applicationRootDirectory.path.endsWith("/") ? Settings.applicationRootDirectory.path : (Settings.applicationRootDirectory.path + "/");
     return completePath.split(rootDir).last;
   }
 }
