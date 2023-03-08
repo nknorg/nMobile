@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -120,7 +120,7 @@ class Upgrade4to5 {
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // profileExtra
         String? newProfileVersion = Uuid().v4(); // (result["profile_version"]?.toString().length ?? 0) > 300) ? result["profile_version"]?.toString().substring(0, 300) : result["profile_version"]) ?? Uuid().v4();
-        // int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Global.profileExpireMs);
+        // int? newProfileExpireAt = result["profile_expires_at"] ?? (DateTime.now().millisecondsSinceEpoch - Settings.profileExpireMs);
         // top + token
         int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
         String? newDeviceToken = result["device_token"];
@@ -312,7 +312,7 @@ class Upgrade4to5 {
         if (oldCreateAt == null || oldCreateAt == 0 || oldUpdateAt == null || oldUpdateAt == 0) {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
-        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Global.txPoolDelayMs) : oldCreateAt;
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.txPoolDelayMs) : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // subscribe_at + expire_height
         int? newSubscribeAt = result["time_update"];
@@ -470,7 +470,7 @@ class Upgrade4to5 {
         if (oldCreateAt == null || oldCreateAt == 0) {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
-        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Global.txPoolDelayMs) : oldCreateAt;
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.txPoolDelayMs) : oldCreateAt;
         int newUpdateAt = newCreateAt;
         // type
         int? oldStatus = result["member_status"];

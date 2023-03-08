@@ -291,7 +291,7 @@ class ChatCommon with Tag {
       String? profileVersion = MessageOptions.getProfileVersion(message.options);
       if (profileVersion != null && profileVersion.isNotEmpty) {
         if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
-          chatOutCommon.sendContactProfileRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
+          chatOutCommon.sendContactProfileRequest(exist.clientAddress, ContactRequestType.full, exist.profileVersion); // await
         }
       }
     }
