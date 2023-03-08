@@ -176,7 +176,7 @@ class TopicCommon with Tag {
       var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
       if ((isAuto != null) && (isAuto.toString() == "true" || isAuto == true)) {
         fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-        if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
+        if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
       }
       for (var i = 0; i < topics.length; i++) {
         TopicSchema topic = topics[i];
@@ -213,7 +213,7 @@ class TopicCommon with Tag {
       List result = await getPermissionExpireAtByNode(topic.topic, i);
       int expireHeight = result[0] ?? 0;
       Map<String, dynamic> meta = result[1] ?? Map();
-      if ((expireHeight > 0) && ((expireHeight - globalHeight) < Settings.topicWarnBlockExpireHeight)) {
+      if ((expireHeight > 0) && ((expireHeight - globalHeight) < Settings.blockHeightTopicWarnBlockExpire)) {
         await TopSub.subscribeWithPermission(topic.topic, fee: fee, permissionPage: i, meta: meta, nonce: nonce, toast: false);
       }
     }
@@ -372,7 +372,7 @@ class TopicCommon with Tag {
         // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.delayTxPoolMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -395,7 +395,7 @@ class TopicCommon with Tag {
         // DB is joined + node no joined
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.delayTxPoolMs) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) {
@@ -423,7 +423,7 @@ class TopicCommon with Tag {
         var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
         if (isAuto != null && (isAuto.toString() == "true" || isAuto == true)) {
           fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-          if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
+          if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
         }
       }
       // client subscribe
@@ -436,7 +436,7 @@ class TopicCommon with Tag {
 
       // db update
       var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
-      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Settings.topicDefaultSubscribeHeight;
+      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Settings.blockHeightTopicSubscribeDefault;
       bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, refreshCreateAt: true, notify: true);
       if (setSuccess) {
         exists.joined = true;
@@ -790,7 +790,7 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topic);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.txPoolDelayMs) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.delayTxPoolMs) {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
@@ -899,7 +899,7 @@ class TopicCommon with Tag {
     subscribers.forEach((SubscriberSchema element) {
       if ((element.clientAddress.isNotEmpty == true) && (element.clientAddress != append.clientAddress)) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.delayTxPoolMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
           if ((element.status == SubscriberStatus.InvitedSend) || (element.status == SubscriberStatus.InvitedReceipt) || (element.status == SubscriberStatus.Subscribed)) {
             // add to accepts

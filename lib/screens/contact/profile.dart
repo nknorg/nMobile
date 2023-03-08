@@ -273,8 +273,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      maxSize: Settings.avatarMaxSize,
-      bestSize: Settings.avatarBestSize,
+      maxSize: Settings.sizeAvatarMax,
+      bestSize: Settings.sizeAvatarBest,
       savePath: remarkAvatarPath,
     );
     if (picked == null) {

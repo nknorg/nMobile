@@ -178,8 +178,8 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      bestSize: Settings.avatarBestSize,
-      maxSize: Settings.avatarMaxSize,
+      bestSize: Settings.sizeAvatarBest,
+      maxSize: Settings.sizeAvatarMax,
       savePath: remarkAvatarPath,
     );
     if (picked == null) {

@@ -164,7 +164,7 @@ class TopicSchema {
     if ((expireBlockHeight == null) || ((expireBlockHeight ?? 0) <= 0)) return true;
     globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
-      return ((expireBlockHeight ?? 0) - globalHeight) < Settings.topicWarnBlockExpireHeight;
+      return ((expireBlockHeight ?? 0) - globalHeight) < Settings.blockHeightTopicWarnBlockExpire;
     } else {
       return true;
     }
