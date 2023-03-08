@@ -1,12 +1,10 @@
 import 'dart:async';
 
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:nmobile/utils/parallel_queue.dart';
 
 class SessionCommon with Tag {
   // ignore: close_sinks
@@ -24,91 +22,106 @@ class SessionCommon with Tag {
   StreamSink<SessionSchema> get _updateSink => _updateController.sink;
   Stream<SessionSchema> get updateStream => _updateController.stream;
 
-  Map<String, ParallelQueue> _queues = Map();
-
   SessionCommon();
 
-  // TODO:GG 整改，调整不合格的逻辑
-
-  Future<SessionSchema?> set(
+  Future<SessionSchema?> add(
     String? targetId,
-    int type, {
-    MessageSchema? newLastMsg,
-    int? newLastMsgAt,
+    int? type, {
+    MessageSchema? lastMsg,
+    int? lastMsgAt,
     int? unReadCount,
-    int unreadChange = 0,
-    bool notify = false,
+    bool notify = true,
+    bool checkDuplicated = true,
   }) async {
-    if (targetId == null || targetId.isEmpty) return null;
-    Function func = () async {
-      String topic = (type == SessionType.TOPIC) ? targetId : "";
-      String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-      // lastMsg
-      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
-      MessageSchema? existLastMsg = history.isNotEmpty ? history[0] : null;
-      MessageSchema? appendLastMsg;
-      if ((newLastMsg == null) && (existLastMsg == null)) {
-        appendLastMsg = null;
-      } else if (newLastMsg == null) {
-        appendLastMsg = existLastMsg;
-      } else if (existLastMsg == null) {
-        appendLastMsg = newLastMsg;
-      } else {
-        if ((existLastMsg.sendAt ?? 0) <= (newLastMsg.sendAt ?? 0)) {
-          appendLastMsg = newLastMsg;
-        } else {
-          appendLastMsg = existLastMsg;
-        }
-      }
-      int appendLastMsgAt = newLastMsgAt ?? appendLastMsg?.sendAt ?? MessageOptions.getInAt(appendLastMsg?.options) ?? DateTime.now().millisecondsSinceEpoch;
-      // unRead
-      int appendUnreadCount;
-      if (chatCommon.currentChatTargetId == targetId) {
-        appendUnreadCount = 0;
-      } else {
-        appendUnreadCount = unReadCount ?? await messageCommon.unReadCountByTargetId(targetId, topic, group);
-        if (unreadChange != 0) appendUnreadCount = appendUnreadCount + unreadChange;
-        appendUnreadCount = appendUnreadCount >= 0 ? appendUnreadCount : 0;
-      }
-      // if ((unreadChange != 0) && (newLastMsg != null) && (newLastMsg.msgId != existLastMsg?.msgId)) {
-      //   if (!newLastMsg.isOutbound && newLastMsg.canNotification) {
-      //     appendUnreadCount = appendUnreadCount + unreadChange;
-      //   }
-      // }
-      // add
+    if (targetId == null || targetId.isEmpty || type == null) return null;
+    String topic = (type == SessionType.TOPIC) ? targetId : "";
+    String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
+    // duplicated
+    if (checkDuplicated) {
       SessionSchema? exist = await query(targetId, type);
-      if (exist == null) {
-        SessionSchema? added = SessionSchema(
-          targetId: targetId,
-          type: type,
-          lastMessageOptions: appendLastMsg?.toMap(),
-          lastMessageAt: appendLastMsgAt,
-          unReadCount: appendUnreadCount,
-        );
-        added = await SessionStorage.instance.insert(added);
-        if ((added != null) && notify) _addSink.add(added);
-        return added;
+      if (exist != null) {
+        logger.i("$TAG - add - duplicated - schema:$exist");
+        return exist;
       }
-      // update
-      exist.lastMessageAt = appendLastMsgAt;
-      exist.lastMessageOptions = appendLastMsg?.toMap();
-      exist.unReadCount = appendUnreadCount;
-      bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
-      if (success && notify) queryAndNotify(targetId, type);
-      return exist;
-    };
-    // queue
-    if (_queues[targetId] == null) {
-      _queues[targetId] = ParallelQueue("session_$targetId", onLog: (log, error) => error ? logger.w(log) : null);
     }
-    return await _queues[targetId]?.add(() async {
-      try {
-        return await func();
-      } catch (e, st) {
-        handleError(e, st);
+    // lastMsg
+    if (lastMsg == null) {
+      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+      lastMsg = history.isNotEmpty ? history[0] : null;
+    }
+    // lastMsgAt
+    if ((lastMsgAt == null) || (lastMsgAt == 0)) {
+      lastMsgAt = lastMsg?.sendAt;
+    }
+    // unReadCount
+    if ((unReadCount == null) || (unReadCount < 0)) {
+      if (lastMsg != null) {
+        unReadCount = (!lastMsg.isOutbound && lastMsg.canNotification) ? 1 : 0;
       }
+    }
+    // schema
+    SessionSchema? added = SessionSchema(
+      targetId: targetId,
+      type: type,
+      lastMessageOptions: lastMsg?.toMap(),
+      lastMessageAt: lastMsgAt,
+      unReadCount: unReadCount ?? 0,
+    );
+    // insert
+    added = await SessionStorage.instance.insert(added);
+    if ((added != null) && notify) _addSink.add(added);
+    return added;
+  }
+
+  Future<SessionSchema?> update(
+    String? targetId,
+    int? type, {
+    MessageSchema? lastMsg,
+    int? lastMsgAt,
+    int? unReadCount,
+    int? unreadChange,
+    bool notify = true,
+  }) async {
+    if (targetId == null || targetId.isEmpty || type == null) return null;
+    SessionSchema? exist = await query(targetId, type);
+    if (exist == null) {
+      logger.i("$TAG - update - empty - schema:$targetId - type:$type");
       return null;
-    });
+    }
+    String topic = (type == SessionType.TOPIC) ? targetId : "";
+    String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
+    // lastMsg
+    MessageSchema? newLastMsg;
+    List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+    MessageSchema? oldLastMsg = history.isNotEmpty ? history[0] : null;
+    if (lastMsg == null) {
+      newLastMsg = oldLastMsg;
+    } else if (oldLastMsg == null) {
+      newLastMsg = lastMsg;
+    } else {
+      if ((lastMsg.sendAt ?? 0) >= (oldLastMsg.sendAt ?? 0)) {
+        newLastMsg = lastMsg;
+      } else {
+        newLastMsg = oldLastMsg;
+      }
+    }
+    // lastMsgAt
+    int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
+    // unReadCount
+    int newUnReadCount;
+    if (unreadChange != null) {
+      newUnReadCount = exist.unReadCount + unreadChange;
+    } else {
+      newUnReadCount = unReadCount ?? (await messageCommon.unReadCountByTargetId(targetId, topic, group));
+    }
+    newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
+    // update
+    exist.lastMessageOptions = newLastMsg?.toMap();
+    exist.lastMessageAt = newLastMsgAt;
+    exist.unReadCount = newUnReadCount;
+    bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
+    if (success && notify) queryAndNotify(targetId, type);
+    return exist;
   }
 
   Future<bool> delete(String? targetId, int? type, {bool notify = false}) async {
@@ -155,16 +168,16 @@ class SessionCommon with Tag {
     return success;
   }*/
 
-  Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
+  Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.updateIsTop(targetId, type, top);
+    bool success = await SessionStorage.instance.updateUnReadCount(targetId, type, unread);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
 
-  Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
+  Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.updateUnReadCount(targetId, type, unread);
+    bool success = await SessionStorage.instance.updateIsTop(targetId, type, top);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }

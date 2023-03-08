@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -267,6 +269,7 @@ class ChatCommon with Tag {
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
+    if (message.from == message.to) return exist;
     // duplicated
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
@@ -282,49 +285,41 @@ class ChatCommon with Tag {
       logger.e("$TAG - contactHandle - exist is nil - clientAddress:$clientAddress");
       return null;
     }
-    // sync
-    if (message.from == message.to) {
-      // nothing
-    } else {
-      if (message.isOutbound) {
-        // nothing
-      } else {
-        // profile
-        if (!message.isTopic && !message.isPrivateGroup) {
-          String? profileVersion = MessageOptions.getProfileVersion(message.options);
-          if (profileVersion != null && profileVersion.isNotEmpty) {
-            if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
-              chatOutCommon.sendContactProfileRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
-            }
-          }
+    if (message.isOutbound) return exist;
+    // profile
+    if (!message.isTopic && !message.isPrivateGroup) {
+      String? profileVersion = MessageOptions.getProfileVersion(message.options);
+      if (profileVersion != null && profileVersion.isNotEmpty) {
+        if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
+          chatOutCommon.sendContactProfileRequest(exist.clientAddress, RequestType.full, exist.profileVersion); // await
         }
-        // burning
-        if (!message.isTopic && !message.isPrivateGroup && message.canBurning) {
-          int? existSeconds = exist.options?.deleteAfterSeconds;
-          int? existUpdateAt = exist.options?.updateBurnAfterAt;
-          int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
-          int? updateBurnAfterAt = MessageOptions.getOptionsBurningUpdateAt(message.options);
-          if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
-            // no same with self
-            if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
-              // side updated latest
-              exist.options?.deleteAfterSeconds = burnAfterSeconds;
-              exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-              await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
+      }
+    }
+    // burning
+    if (!message.isTopic && !message.isPrivateGroup && message.canBurning) {
+      int? existSeconds = exist.options?.deleteAfterSeconds;
+      int? existUpdateAt = exist.options?.updateBurnAfterAt;
+      int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+      int? updateBurnAfterAt = MessageOptions.getOptionsBurningUpdateAt(message.options);
+      if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
+        // no same with self
+        if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
+          // side updated latest
+          exist.options?.deleteAfterSeconds = burnAfterSeconds;
+          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+          await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
+        } else {
+          // mine updated latest
+          if ((message.sendAt ?? 0) > existUpdateAt) {
+            DeviceInfoSchema? deviceInfo;
+            String? deviceId = MessageOptions.getDeviceId(message.options);
+            if (deviceId?.isNotEmpty == true) {
+              deviceInfo = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
             } else {
-              // mine updated latest
-              if ((message.sendAt ?? 0) > existUpdateAt) {
-                DeviceInfoSchema? deviceInfo;
-                String? deviceId = MessageOptions.getDeviceId(message.options);
-                if (deviceId?.isNotEmpty == true) {
-                  deviceInfo = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
-                } else {
-                  deviceInfo = await deviceInfoCommon.queryLatest(clientAddress);
-                }
-                if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-                  chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
-                }
-              }
+              deviceInfo = await deviceInfoCommon.queryLatest(clientAddress);
+            }
+            if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
+              chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
             }
           }
         }
@@ -345,6 +340,7 @@ class ChatCommon with Tag {
     } else {
       latest = await deviceInfoCommon.queryLatest(clientAddress);
     }
+    if (message.from == message.to) return latest;
     // duplicated
     if (latest == null) {
       logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress");
@@ -363,67 +359,59 @@ class ChatCommon with Tag {
       logger.e("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
       return null;
     }
-    // sync (no send client msg so can contains topic)
-    if (message.from == message.to) {
-      // nothing
-    } else {
-      if (message.isOutbound) {
+    if (message.isOutbound) return latest;
+    // data
+    String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
+    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+      List<String> splits = deviceProfile.split(":");
+      String? appName = splits.length > 0 ? splits[0] : null;
+      String? appVersion = splits.length > 1 ? splits[1] : null;
+      String? platform = splits.length > 2 ? splits[2] : null;
+      String? platformVersion = splits.length > 3 ? splits[3] : null;
+      Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
+      String? deviceId = splits.length > 4 ? splits[4] : null;
+      if (deviceId == null || deviceId.isEmpty) {
         // nothing
+      } else if (deviceId == latest.deviceId) {
+        // right here
+        bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
+        if (!sameProfile) {
+          bool success = await deviceInfoCommon.setData(latest.contactAddress, latest.deviceId, newData);
+          if (success) latest.data = newData;
+        }
       } else {
-        // data
-        String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
-        if (deviceProfile != null && deviceProfile.isNotEmpty) {
-          List<String> splits = deviceProfile.split(":");
-          String? appName = splits.length > 0 ? splits[0] : null;
-          String? appVersion = splits.length > 1 ? splits[1] : null;
-          String? platform = splits.length > 2 ? splits[2] : null;
-          String? platformVersion = splits.length > 3 ? splits[3] : null;
-          Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
-          String? deviceId = splits.length > 4 ? splits[4] : null;
-          if (deviceId == null || deviceId.isEmpty) {
-            // nothing
-          } else if (deviceId == latest.deviceId) {
-            // right here
-            bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
-            if (!sameProfile) {
-              bool success = await deviceInfoCommon.setData(latest.contactAddress, latest.deviceId, newData);
-              if (success) latest.data = newData;
-            }
-          } else {
-            // wrong here
-            DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
-            if (_exist != null) {
-              bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
-              if (!sameProfile) {
-                bool success = await deviceInfoCommon.setData(_exist.contactAddress, _exist.deviceId, newData);
-                if (success) _exist.data = newData;
-              }
-              latest = _exist;
-            } else {
-              DeviceInfoSchema _schema = DeviceInfoSchema(
-                contactAddress: latest.contactAddress,
-                deviceId: deviceId,
-                onlineAt: DateTime.now().millisecondsSinceEpoch,
-                data: newData,
-              );
-              latest = await deviceInfoCommon.add(_schema);
-            }
+        // wrong here
+        DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
+        if (_exist != null) {
+          bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
+          if (!sameProfile) {
+            bool success = await deviceInfoCommon.setData(_exist.contactAddress, _exist.deviceId, newData);
+            if (success) _exist.data = newData;
           }
+          latest = _exist;
+        } else {
+          DeviceInfoSchema _schema = DeviceInfoSchema(
+            contactAddress: latest.contactAddress,
+            deviceId: deviceId,
+            onlineAt: DateTime.now().millisecondsSinceEpoch,
+            data: newData,
+          );
+          latest = await deviceInfoCommon.add(_schema);
         }
-        // device_token (empty updated on receiveDeviceInfo)
-        String? deviceToken = MessageOptions.getDeviceToken(message.options);
-        if ((deviceToken != null) && (deviceToken.length > 1)) {
-          if (latest?.deviceToken != deviceToken) {
-            bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
-            if (success) latest?.deviceToken = deviceToken;
-          }
-        }
-        // online_at
-        int nowAt = DateTime.now().millisecondsSinceEpoch;
-        bool success = await deviceInfoCommon.setOnlineAt(latest?.contactAddress, latest?.deviceId, onlineAt: nowAt);
-        if (success) latest?.onlineAt = nowAt;
       }
     }
+    // device_token (empty updated on receiveDeviceInfo)
+    String? deviceToken = MessageOptions.getDeviceToken(message.options);
+    if ((deviceToken != null) && (deviceToken.length > 1)) {
+      if (latest?.deviceToken != deviceToken) {
+        bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
+        if (success) latest?.deviceToken = deviceToken;
+      }
+    }
+    // online_at
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    bool success = await deviceInfoCommon.setOnlineAt(latest?.contactAddress, latest?.deviceId, onlineAt: nowAt);
+    if (success) latest?.onlineAt = nowAt;
     return latest;
   }
 
@@ -510,57 +498,50 @@ class ChatCommon with Tag {
     if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
     // duplicated
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
+    if (message.from == message.to) return exists;
     if (exists == null) {
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
-      exists = await privateGroupCommon.addPrivateGroup(schema, false, notify: true, checkDuplicated: false);
+      exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
     }
     if (exists == null) return null;
+    if (message.isOutbound) return exists;
     // sync
-    if (message.from == message.to) {
-      // nothing
-    } else {
-      if (message.isOutbound) {
-        // nothing
-      } else {
-        if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
-          String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
-          int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
-          int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-          if (nativeCommits < remoteCommits) {
-            // burning
-            if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
-              int? existSeconds = exists.options?.deleteAfterSeconds;
-              int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
-              if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
-                logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds');
-                exists.options?.deleteAfterSeconds = burnAfterSeconds;
-                await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
-              }
-            }
-            // request
-            if (exists.optionsRequestedVersion != remoteVersion) {
-              logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-              int gap = 5 * 60 * 1000; // 5m
-              chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) async {
-                if (version?.isNotEmpty == true) {
-                  exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
-                  exists?.setOptionsRequestedVersion(version);
-                  await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data, notify: true);
-                }
-              }); // await
-            }
+    if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+      String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
+      int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
+      int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+      if (nativeCommits < remoteCommits) {
+        // burning
+        if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
+          int? existSeconds = exists.options?.deleteAfterSeconds;
+          int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+          if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
+            logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds');
+            exists.options?.deleteAfterSeconds = burnAfterSeconds;
+            await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
           }
+        }
+        // request
+        if (exists.optionsRequestedVersion != remoteVersion) {
+          logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
+          int gap = 5 * 60 * 1000; // 5m
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) async {
+            if (version?.isNotEmpty == true) {
+              exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
+              exists?.setOptionsRequestedVersion(version);
+              await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data, notify: true);
+            }
+          }); // await
         }
       }
     }
     return exists;
   }
 
-  // TODO:GG 这块得整改!
   Future<SessionSchema?> sessionHandle(MessageSchema message) async {
     if (!message.canDisplay) return null;
-    // duplicated
     if (message.targetId.isEmpty) return null;
+    if (message.from == message.to) return null;
     // type
     int type = SessionType.CONTACT;
     if (message.isTopic) {
@@ -568,9 +549,24 @@ class ChatCommon with Tag {
     } else if (message.isPrivateGroup) {
       type = SessionType.PRIVATE_GROUP;
     }
+    // unreadCount
+    bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
+    int unreadCountUp = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
+    unreadCountUp = inSessionPage ? 0 : unreadCountUp;
     // set
-    // int unreadChange = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
-    return await sessionCommon.set(message.targetId, type, newLastMsg: message, notify: true);
+    SessionSchema? exist = await sessionCommon.query(message.targetId, type);
+    if (exist == null) {
+      exist = await sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp, checkDuplicated: false);
+    } else {
+      exist = await sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp);
+    }
+    // badge
+    if ((exist != null) && !message.isOutbound && message.canNotification) {
+      if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
+        Badge.onCountUp(1); // await
+      }
+    }
+    return exist;
   }
 
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {

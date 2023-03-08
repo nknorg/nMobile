@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -44,7 +42,6 @@ class ChatInCommon with Tag {
       logger.e("$TAG - onMessageReceive - contentType is empty - received:$message");
       return;
     }
-
     // topic msg published callback can be used receipt
     if ((message.isTopic || message.isPrivateGroup) && !message.isOutbound && ((message.from == message.to) || (message.from == clientCommon.address))) {
       if (message.contentType != MessageContentType.receipt) {
@@ -54,10 +51,8 @@ class ChatInCommon with Tag {
         message.content = message.msgId;
       }
     }
-
     // status
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
-
     // queue
     _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
     _receiveQueues[message.targetId]?.add(() async {
@@ -94,7 +89,6 @@ class ChatInCommon with Tag {
         }
       }
     }
-
     // group
     PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
     if (privateGroup != null) {
@@ -117,7 +111,6 @@ class ChatInCommon with Tag {
         }
       }
     }
-
     // message
     bool insertOk = false;
     switch (received.contentType) {
@@ -180,7 +173,9 @@ class ChatInCommon with Tag {
       case MessageContentType.privateGroupAccept:
         await _receivePrivateGroupAccept(received);
         break;
-      // case MessageContentType.privateGroupSubscribe: native handle
+      case MessageContentType.privateGroupSubscribe:
+        insertOk = await _receivePrivateGroupSubscribe(received);
+        break;
       case MessageContentType.privateGroupQuit:
         await _receivePrivateGroupQuit(received);
         break;
@@ -197,7 +192,6 @@ class ChatInCommon with Tag {
         await _receivePrivateGroupMemberResponse(received);
         break;
     }
-
     // receipt
     if (insertOk && received.canReceipt) {
       if (received.isTopic) {
@@ -208,18 +202,9 @@ class ChatInCommon with Tag {
         chatOutCommon.sendReceipt(received); // await
       }
     }
-
     // session
     if (insertOk && received.canDisplay) {
-      await chatCommon.sessionHandle(received); // must await
-    }
-
-    // badge
-    if (insertOk && received.canNotification) {
-      bool skipBadgeUp = (chatCommon.currentChatTargetId == received.targetId) && (application.appLifecycleState == AppLifecycleState.resumed);
-      if (!skipBadgeUp) {
-        Badge.onCountUp(1); // await
-      }
+      await chatCommon.sessionHandle(received); // await
     }
   }
 
@@ -839,6 +824,22 @@ class ChatInCommon with Tag {
   }
 
   // NO group (1 to 1)
+  Future<bool> _receivePrivateGroupSubscribe(MessageSchema received) async {
+    // duplicated
+    MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
+    if (exists != null) {
+      logger.d("$TAG - _receivePrivateGroupSubscribe - duplicated - message:$exists");
+      return false;
+    }
+    // DB
+    MessageSchema? inserted = await MessageStorage.instance.insert(received);
+    if (inserted == null) return false;
+    // display
+    messageCommon.onSavedSink.add(inserted);
+    return true;
+  }
+
+  // NO group (1 to 1)
   Future<bool> _receivePrivateGroupQuit(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
@@ -944,7 +945,7 @@ class ChatInCommon with Tag {
         MessageSchema piece = pieces[i];
         if (piece.content is File) {
           if ((piece.content as File).existsSync()) {
-            (piece.content as File).delete(); // await
+            await (piece.content as File).delete();
             // logger.v("$TAG - _deletePieces - DELETE:PROGRESS - path:${(piece.content as File).path}");
             count++;
           } else {
