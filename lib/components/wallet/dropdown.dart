@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/wallet/item.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -37,8 +37,8 @@ class WalletDropdown extends StatelessWidget with Tag {
         child: Asset.iconSvg('down2', width: 24),
       ),
       onTap: () async {
-        WalletSchema? result = await BottomDialog.of(Global.appContext).showWalletSelect(
-          title: this.selectTitle ?? Global.locale((s) => s.select_another_wallet, ctx: context),
+        WalletSchema? result = await BottomDialog.of(Settings.appContext).showWalletSelect(
+          title: this.selectTitle ?? Settings.locale((s) => s.select_another_wallet, ctx: context),
           onlyNKN: this.onlyNKN,
         );
         logger.i("$TAG - wallet dropdown select - wallet:$result");

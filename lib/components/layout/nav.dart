@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/utils/asset.dart';
 
@@ -45,17 +45,17 @@ class _NavState extends BaseStateFulWidgetState<Nav> {
         BottomNavigationBarItem(
           icon: Asset.iconSvg('chat', color: _color),
           activeIcon: Asset.iconSvg('chat', color: _selectedColor),
-          label: Global.locale((s) => s.menu_chat, ctx: context),
+          label: Settings.locale((s) => s.menu_chat, ctx: context),
         ),
         BottomNavigationBarItem(
           icon: Asset.iconSvg('wallet', color: _color),
           activeIcon: Asset.iconSvg('wallet', color: _selectedColor),
-          label: Global.locale((s) => s.menu_wallet, ctx: context),
+          label: Settings.locale((s) => s.menu_wallet, ctx: context),
         ),
         BottomNavigationBarItem(
           icon: Asset.iconSvg('settings', color: _color),
           activeIcon: Asset.iconSvg('settings', color: _selectedColor),
-          label: Global.locale((s) => s.menu_settings, ctx: context),
+          label: Settings.locale((s) => s.menu_settings, ctx: context),
         ),
       ],
     );

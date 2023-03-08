@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
@@ -161,7 +161,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       items: [
         PopMenu.MenuItem(
           userInfo: 0,
-          title: Global.locale((s) => s.copy, ctx: context),
+          title: Settings.locale((s) => s.copy, ctx: context),
           textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
         ),
       ],
@@ -266,7 +266,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     return widget.showProfile && !widget.hideProfile
         ? Label(
             widget.contact?.displayName ?? " ",
-            maxWidth: Global.screenWidth() * 0.5,
+            maxWidth: Settings.screenWidth() * 0.5,
             type: LabelType.h3,
             color: application.theme.primaryColor,
           )
@@ -317,12 +317,12 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         height: 50,
         padding: EdgeInsets.zero,
         onPressed: () {
-          ModalDialog.of(Global.appContext).confirm(
-            title: Global.locale((s) => s.confirm_resend, ctx: context),
+          ModalDialog.of(Settings.appContext).confirm(
+            title: Settings.locale((s) => s.confirm_resend, ctx: context),
             hasCloseButton: true,
             agree: Button(
               width: double.infinity,
-              text: Global.locale((s) => s.send_message, ctx: context),
+              text: Settings.locale((s) => s.send_message, ctx: context),
               backgroundColor: application.theme.strongColor,
               onPressed: () {
                 widget.onResend?.call(_message.msgId);
@@ -358,7 +358,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   Widget _getContent(BoxDecoration decoration) {
-    double maxWidth = Global.screenWidth() - (12 + 20 * 2 + 8) * 2;
+    double maxWidth = Settings.screenWidth() - (12 + 20 * 2 + 8) * 2;
 
     String contentType = _message.contentType;
     if (contentType == MessageContentType.ipfs) {
@@ -711,10 +711,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyImage() {
-    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+    double iconSize = min(Settings.screenWidth() * 0.1, Settings.screenHeight() * 0.06);
 
-    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
-    double maxHeight = Global.screenHeight() * 0.3;
+    double maxWidth = Settings.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
+    double maxHeight = Settings.screenHeight() * 0.3;
     double minWidth = maxWidth / 2;
     double minHeight = maxHeight / 2;
 
@@ -842,8 +842,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double? durationS = MessageOptions.getAudioDuration(_message.options);
     double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
-    double minWidth = Global.screenWidth() * 0.05;
-    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.3 : 0.35);
+    double minWidth = Settings.screenWidth() * 0.05;
+    double maxWidth = Settings.screenWidth() * (widget.showProfile ? 0.3 : 0.35);
     double progressWidth = minWidth + (maxWidth - minWidth) * durationRatio;
 
     num durationText = Util.getNumByValueDouble(durationS ?? 0, 2) ?? 0;
@@ -883,10 +883,10 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyVideo() {
-    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+    double iconSize = min(Settings.screenWidth() * 0.1, Settings.screenHeight() * 0.06);
 
-    double maxWidth = Global.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
-    double maxHeight = Global.screenHeight() * 0.3;
+    double maxWidth = Settings.screenWidth() * (widget.showProfile ? 0.5 : 0.55);
+    double maxHeight = Settings.screenHeight() * 0.3;
     double minWidth = maxWidth / 2;
     double minHeight = maxHeight / 2;
 
@@ -986,9 +986,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _getContentBodyFile() {
-    double iconSize = min(Global.screenWidth() * 0.1, Global.screenHeight() * 0.06);
+    double iconSize = min(Settings.screenWidth() * 0.1, Settings.screenHeight() * 0.06);
 
-    double labelWidth = Global.screenWidth() * 0.35;
+    double labelWidth = Settings.screenWidth() * 0.35;
 
     String fileName = MessageOptions.getFileName(_message.options) ?? "---";
     int _size = MessageOptions.getFileSize(_message.options) ?? 0;

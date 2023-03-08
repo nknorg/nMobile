@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -94,7 +94,7 @@ class ModalDialog extends StatelessWidget {
       actions.add(Button(
         backgroundColor: application.theme.backgroundLightColor,
         fontColor: application.theme.fontColor2,
-        text: Global.locale((s) => s.close, ctx: context),
+        text: Settings.locale((s) => s.close, ctx: context),
         width: double.infinity,
         onPressed: () => this.close(),
       ));
@@ -107,11 +107,11 @@ class ModalDialog extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            width: Global.screenWidth() - 40,
+            width: Settings.screenWidth() - 40,
             height: this.height,
             constraints: BoxConstraints(
               minHeight: 150,
-              maxHeight: Global.screenHeight() - 180,
+              maxHeight: Settings.screenHeight() - 180,
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -123,7 +123,7 @@ class ModalDialog extends StatelessWidget {
                     padding: EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 36),
                     child: this.titleWidget ??
                         Label(
-                          this.title ?? Global.locale((s) => s.warning, ctx: context),
+                          this.title ?? Settings.locale((s) => s.warning, ctx: context),
                           type: LabelType.h2,
                           maxLines: 5,
                         ),

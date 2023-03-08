@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -37,7 +37,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
 
     Loading.show();
     PrivateGroupSchema? privateGroupSchema = await privateGroupCommon.createPrivateGroup(groupName, toast: true);
-    if (privateGroupSchema != null) ChatMessagesScreen.go(Global.appContext, privateGroupSchema);
+    if (privateGroupSchema != null) ChatMessagesScreen.go(Settings.appContext, privateGroupSchema);
     Loading.dismiss();
     return true;
   }
@@ -69,7 +69,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
                   children: <Widget>[
                     SizedBox(width: 20),
                     Label(
-                      Global.locale((s) => s.name),
+                      Settings.locale((s) => s.name),
                       type: LabelType.bodyRegular,
                       color: _theme.fontColor1,
                       textAlign: TextAlign.start,
@@ -87,7 +87,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
                       Expanded(
                         child: FormText(
                           controller: _groupController,
-                          hintText: Global.locale((s) => s.input_name),
+                          hintText: Settings.locale((s) => s.input_name),
                           validator: Validator.of(context).required(),
                         ),
                       ),
@@ -104,7 +104,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<CreatePrivateGroup
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 18, bottom: 18),
                 child: Button(
                   width: double.infinity,
-                  text: Global.locale((s) => s.continue_text),
+                  text: Settings.locale((s) => s.continue_text),
                   onPressed: () {
                     if (_formValid) createPrivateGroup(_groupController.text);
                   },

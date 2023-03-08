@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -51,14 +51,14 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
-    double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
+    double? fee = await BottomDialog.of(Settings.appContext).showTransactionSpeedUp();
     if (fee == null) return false;
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);
     Loading.dismiss();
 
     if (_topic == null) return false;
-    ChatMessagesScreen.go(Global.appContext, _topic);
+    ChatMessagesScreen.go(Settings.appContext, _topic);
     return true;
   }
 
@@ -86,7 +86,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                 children: <Widget>[
                   SizedBox(width: 20),
                   Label(
-                    Global.locale((s) => s.name),
+                    Settings.locale((s) => s.name),
                     type: LabelType.bodyRegular,
                     color: _theme.fontColor1,
                     textAlign: TextAlign.start,
@@ -95,7 +95,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                   Row(
                     children: <Widget>[
                       Label(
-                        Global.locale((s) => s.private_channel),
+                        Settings.locale((s) => s.private_channel),
                         type: LabelType.bodyRegular,
                         color: _theme.fontColor1,
                       ),
@@ -122,7 +122,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                     Expanded(
                       child: FormText(
                         controller: _topicController,
-                        hintText: Global.locale((s) => s.input_name),
+                        hintText: Settings.locale((s) => s.input_name),
                         validator: Validator.of(context).required(),
                       ),
                     ),
@@ -132,7 +132,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               Padding(
                 padding: EdgeInsets.only(left: 16, top: 16),
                 child: Label(
-                  Global.locale((s) => s.popular_channels),
+                  Settings.locale((s) => s.popular_channels),
                   type: LabelType.h4,
                   textAlign: TextAlign.start,
                 ),
@@ -148,7 +148,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
               padding: const EdgeInsets.only(left: 20, right: 20, top: 18, bottom: 18),
               child: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.continue_text),
+                text: Settings.locale((s) => s.continue_text),
                 onPressed: () {
                   if (_formValid) createOrJoinTopic(_topicController.text);
                 },

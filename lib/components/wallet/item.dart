@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/wallet/avatar.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -97,7 +97,7 @@ class WalletItem extends StatelessWidget {
                   color: this.walletType == WalletType.eth ? theme.ethLogoBackground.withAlpha(25) : theme.successColor.withAlpha(25),
                 ),
                 child: Text(
-                  this.walletType == WalletType.eth ? Global.locale((s) => s.ERC_20, ctx: context) : Global.locale((s) => s.mainnet, ctx: context),
+                  this.walletType == WalletType.eth ? Settings.locale((s) => s.ERC_20, ctx: context) : Settings.locale((s) => s.mainnet, ctx: context),
                   style: TextStyle(
                     color: this.walletType == WalletType.eth ? theme.ethLogoBackground : theme.successColor,
                     fontSize: 10,
