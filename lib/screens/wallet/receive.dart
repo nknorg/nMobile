@@ -7,8 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -87,7 +87,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                     child: Column(
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.wallet_address, ctx: context),
+                          Settings.locale((s) => s.wallet_address, ctx: context),
                           type: LabelType.h4,
                           textAlign: TextAlign.start,
                         ),
@@ -112,7 +112,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                               ),
                             ),
                             Label(
-                              Global.locale((s) => s.copy_to_clipboard, ctx: context),
+                              Settings.locale((s) => s.copy_to_clipboard, ctx: context),
                               color: application.theme.primaryColor,
                               type: LabelType.h4,
                             ),
@@ -129,7 +129,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
               child: QrImage(
                 data: _wallet.address,
                 version: QrVersions.auto,
-                size: Global.screenWidth() * 0.57,
+                size: Settings.screenWidth() * 0.57,
               ),
             ),
           ],
@@ -140,7 +140,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: (Global.locale((s) => s.receive, ctx: context) + ' ' + Global.locale((s) => s.nkn, ctx: context)),
+        title: (Settings.locale((s) => s.receive, ctx: context) + ' ' + Settings.locale((s) => s.nkn, ctx: context)),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -193,7 +193,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                       Padding(
                         padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
                         child: WalletDropdown(
-                          selectTitle: Global.locale((s) => s.select_asset_to_receive, ctx: context),
+                          selectTitle: Settings.locale((s) => s.select_asset_to_receive, ctx: context),
                           wallet: _wallet,
                           onTapWave: false,
                           onSelected: (WalletSchema picked) {
@@ -220,7 +220,7 @@ class _WalletReceiveScreenState extends BaseStateFulWidgetState<WalletReceiveScr
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 30),
                     child: Button(
-                      text: Global.locale((s) => s.done, ctx: context),
+                      text: Settings.locale((s) => s.done, ctx: context),
                       width: double.infinity,
                       onPressed: () {
                         if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);

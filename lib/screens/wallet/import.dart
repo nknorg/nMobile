@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -60,12 +60,12 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
 
   @override
   Widget build(BuildContext context) {
-    List<String> tabTitles = [Global.locale((s) => s.tab_keystore, ctx: context), Global.locale((s) => s.tab_seed, ctx: context)];
+    List<String> tabTitles = [Settings.locale((s) => s.tab_keystore, ctx: context), Settings.locale((s) => s.tab_seed, ctx: context)];
 
     return Layout(
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: this._walletType == WalletType.eth ? Global.locale((s) => s.import_ethereum_wallet, ctx: context) : Global.locale((s) => s.import_nkn_wallet, ctx: context),
+        title: this._walletType == WalletType.eth ? Settings.locale((s) => s.import_ethereum_wallet, ctx: context) : Settings.locale((s) => s.import_nkn_wallet, ctx: context),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           IconButton(
@@ -83,8 +83,8 @@ class _ImportWalletScreenState extends BaseStateFulWidgetState<WalletImportScree
               if (qrData != null && qrData.isNotEmpty) {
                 _qrController.sink.add(qrData);
               } else {
-                ModalDialog.of(Global.appContext).show(
-                  content: Global.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
+                ModalDialog.of(Settings.appContext).show(
+                  content: Settings.locale((s) => s.error_unknown_nkn_qrcode, ctx: context),
                   hasCloseButton: true,
                 );
               }

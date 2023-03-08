@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -42,7 +42,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
     return Layout(
       headerColor: application.theme.headBarColor2,
       header: Header(
-        title: Global.locale((s) => s.tracker, ctx: context),
+        title: Settings.locale((s) => s.tracker, ctx: context),
         backgroundColor: application.theme.headBarColor2,
       ),
       body: Container(
@@ -66,7 +66,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.notification_push, ctx: context),
+                            Settings.locale((s) => s.notification_push, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
             Padding(
               padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
               child: Label(
-                Global.locale((s) => _pushEnable ? s.allow_push_message_notifications_to_others : s.do_not_allow_push_message_notifications_to_others, ctx: context),
+                Settings.locale((s) => _pushEnable ? s.allow_push_message_notifications_to_others : s.do_not_allow_push_message_notifications_to_others, ctx: context),
                 type: LabelType.bodySmall,
                 fontWeight: FontWeight.w600,
                 softWrap: true,
@@ -119,7 +119,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Label(
-                            Global.locale((s) => s.error_tracking, ctx: context),
+                            Settings.locale((s) => s.error_tracking, ctx: context),
                             type: LabelType.bodyRegular,
                             color: application.theme.fontColor1,
                             fontWeight: FontWeight.bold,
@@ -149,7 +149,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
             Padding(
               padding: const EdgeInsets.only(left: 18, right: 18, top: 6),
               child: Label(
-                Global.locale((s) => _bugEnable ? s.allow_uploading_application_exception_logs : s.do_not_allow_uploading_application_exception_logs, ctx: context),
+                Settings.locale((s) => _bugEnable ? s.allow_uploading_application_exception_logs : s.do_not_allow_uploading_application_exception_logs, ctx: context),
                 type: LabelType.bodySmall,
                 fontWeight: FontWeight.w600,
                 softWrap: true,
