@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -9,7 +8,7 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? onZoneError}) {
-  if (!Global.isRelease) {
+  if (!Settings.isRelease) {
     callback?.call();
     return;
   }
@@ -25,7 +24,7 @@ catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? 
   }));
   // flutter
   FlutterError.onError = (details, {bool forceReport = false}) {
-    if (!Global.isRelease) {
+    if (!Settings.isRelease) {
       // just print
       FlutterError.dumpErrorToConsole(details);
     } else {
@@ -134,7 +133,7 @@ class NknError {
 }
 
 String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast, bool upload = true}) {
-  if (Global.isRelease) {
+  if (Settings.isRelease) {
     String errStr = error?.toString().toLowerCase() ?? "";
     bool no0 = errStr.contains("wrong password");
     bool no1 = errStr.contains(NknError.rpcRequestFail);
@@ -175,6 +174,6 @@ String? getErrorShow(dynamic error) {
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
   if (errStr.contains("wrong password") == true) return error?.toString();
-  return Settings.debug ? error.toString() : ""; // Global.locale((s) => s.something_went_wrong)
+  return Settings.debug ? error.toString() : ""; // Settings.locale((s) => s.something_went_wrong)
   // return error.toString();
 }
