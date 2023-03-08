@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -223,8 +224,7 @@ class ChatInCommon with Tag {
     String content = received.content as String;
     if (content == "ping") {
       logger.i("$TAG - _receivePing - receive pang - received:$received");
-      int gap = 30 * 1000; // 30s
-      chatOutCommon.sendPing([received.from], false, gap: gap); // await
+      chatOutCommon.sendPing([received.from], false, gap: Settings.gapReplyPingMs); // await
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       // nothing
@@ -880,8 +880,7 @@ class ChatInCommon with Tag {
         logger.d('$TAG - _receivePrivateGroupOptionResponse - version same - version:$version');
       } else {
         logger.i('$TAG - _receivePrivateGroupOptionResponse - version diff - version1:${group.membersRequestedVersion} - version2:$version');
-        int gap = 5 * 60 * 1000; // 5m
-        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((version) async {
+        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
           if (version?.isNotEmpty == true) {
             group.setMembersRequestAt(DateTime.now().millisecondsSinceEpoch);
             group.setMembersRequestedVersion(version);

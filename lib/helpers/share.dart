@@ -7,7 +7,6 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/home.dart';
@@ -60,7 +59,7 @@ class ShareHelper {
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < shareMedias.length; i++) {
       SharedMediaFile result = shareMedias[i];
-      Map<String, dynamic>? params = await _getParamsFromShareMedia(result, subPath, Settings.ipfsMaxSize);
+      Map<String, dynamic>? params = await _getParamsFromShareMedia(result, subPath, Settings.sizeIpfsMax);
       if (params == null || params.isEmpty) continue;
       results.add(params);
     }
@@ -75,9 +74,9 @@ class ShareHelper {
       if (path.isEmpty) continue;
       // no message_type(video/file), and result no mime_type from file_picker
       // so big_file and video+file go with type_ipfs
-      if ((mimeType?.contains("image") == true) && (size <= MessageSchema.piecesMaxSize)) {
+      if ((mimeType?.contains("image") == true) && (size <= Settings.piecesMaxSize)) {
         chatOutCommon.sendImage(target, File(path)); // await
-      } else if ((mimeType?.contains("audio") == true) && (size <= MessageSchema.piecesMaxSize)) {
+      } else if ((mimeType?.contains("audio") == true) && (size <= Settings.piecesMaxSize)) {
         chatOutCommon.sendAudio(target, File(path), durationS); // await
       } else {
         chatOutCommon.saveIpfs(target, result); // await
@@ -159,9 +158,9 @@ class ShareHelper {
           thumbnailPath = res["path"];
           thumbnailSize = res["size"];
         }
-      } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesMaxSize)) {
+      } else if ((mimeType.contains("image") == true) && (size > Settings.piecesMaxSize)) {
         thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-        File? thumbnail = await MediaPicker.compressImageBySize(File(filePath), savePath: thumbnailPath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
+        File? thumbnail = await MediaPicker.compressImageBySize(File(filePath), savePath: thumbnailPath, maxSize: Settings.sizeThumbnailMax, bestSize: Settings.sizeThumbnailBest, force: true);
         if (thumbnail != null) {
           thumbnailPath = thumbnail.absolute.path;
           thumbnailSize = thumbnail.lengthSync();

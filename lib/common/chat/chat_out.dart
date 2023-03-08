@@ -48,7 +48,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     // size
-    if (data.length >= Settings.msgMaxSize) {
+    if (data.length >= Settings.sizeMsgMax) {
       logger.w("$TAG - sendMsg - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;

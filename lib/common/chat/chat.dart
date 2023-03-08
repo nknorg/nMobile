@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -34,7 +35,7 @@ class ChatCommon with Tag {
     // currentChatTargetId = null; // can not be reset
     // _checkersParams.clear();
     // TODO:GG reClient和netError 是否会导致msg和ipfs的中断????
-    resetMessageSending(force: true); // await
+    resetMessageSending(); // await
     if (!reClient || netError) resetIpfsDownloadIng(thumbnailAutoDownload: true); // await
   }
 
@@ -139,7 +140,6 @@ class ChatCommon with Tag {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     int max = 20;
     int limit = 20;
-    int filterDay = 5; // 5 days filter
     List<String> targetIds = [];
     // sessions
     for (int offset = 0; true; offset += limit) {
@@ -147,7 +147,7 @@ class ChatCommon with Tag {
       bool lastTimeOK = true;
       result.forEach((element) {
         int between = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
-        lastTimeOK = between < (filterDay * 24 * 60 * 60 * 1000);
+        lastTimeOK = between < Settings.gapPingSessionOnlineMs;
         if (element.isContact && lastTimeOK) {
           targetIds.add(element.targetId);
         }
@@ -156,11 +156,10 @@ class ChatCommon with Tag {
       if (!lastTimeOK || (result.length < limit) || (targetIds.length >= max)) break;
     }
     // send
-    int gap = 6 * 60 * 60 * 1000; // 6h
-    await chatOutCommon.sendPing(targetIds, true, gap: gap);
+    await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
   }
 
-  Future<int> resetMessageSending({bool force = false, int? delayMs}) async {
+  Future<int> resetMessageSending({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     // if (application.inBackGround) return;
     // sending list
@@ -175,32 +174,17 @@ class ChatCommon with Tag {
     // update status
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
-      bool isFail = false;
-      if (force) {
-        isFail = true;
+      logger.i("$TAG - resetMessageSending - sendFail add - targetId:${message.targetId} - message:$message");
+      if (message.canResend) {
+        message = await messageCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+        if (message.contentType == MessageContentType.ipfs) {
+          message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
+          await MessageStorage.instance.updateOptions(message.msgId, message.options);
+        }
       } else {
-        int normalWait = 2 * 60 * 1000; // 2m
-        int mediaWait = 5 * 60 * 1000; // 5m
-        int msgSendAt = message.sendAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (!(message.content is File)) {
-          isFail = (DateTime.now().millisecondsSinceEpoch - msgSendAt) >= normalWait;
-        } else {
-          isFail = (DateTime.now().millisecondsSinceEpoch - msgSendAt) >= mediaWait;
-        }
-      }
-      if (isFail) {
-        logger.i("$TAG - resetMessageSending - sendFail add - targetId:${message.targetId} - message:$message");
-        if (message.canResend) {
-          message = await messageCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
-          if (message.contentType == MessageContentType.ipfs) {
-            message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
-            await MessageStorage.instance.updateOptions(message.msgId, message.options);
-          }
-        } else {
-          // lost some msg, need resend
-          int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
-          if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
-        }
+        // lost some msg, need resend
+        int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
+        if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
       }
     }
     logger.i("$TAG - resetMessageSending - checkCount:${sendingList.length}");
@@ -329,7 +313,6 @@ class ChatCommon with Tag {
   }
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message) async {
-    if ((message.contentType == MessageContentType.deviceRequest) || (message.contentType == MessageContentType.deviceInfo)) return null;
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     // latest
@@ -524,8 +507,7 @@ class ChatCommon with Tag {
         // request
         if (exists.optionsRequestedVersion != remoteVersion) {
           logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-          int gap = 5 * 60 * 1000; // 5m
-          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) async {
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
             if (version?.isNotEmpty == true) {
               exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
               exists?.setOptionsRequestedVersion(version);

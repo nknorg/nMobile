@@ -395,7 +395,7 @@ class BottomDialog extends BaseStateFulWidget {
     TextEditingController _inputController = TextEditingController();
 
     fee = fee ?? double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-    if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
+    if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
     _inputController.text = fee.toStringAsFixed(8);
 
     return showWithTitle<double>(

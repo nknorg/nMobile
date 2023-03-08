@@ -47,7 +47,7 @@ class PrivateGroupCommon with Tag {
     if (invitee == null || invitee.isEmpty) return null;
     if (inviter == null || inviter.isEmpty) return null;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    int expiresAt = nowAt + (expiresMs ?? Settings.privateGroupInviteExpiresMs);
+    int expiresAt = nowAt + (expiresMs ?? Settings.timeoutPrivateGroupInviteMs);
     PrivateGroupItemSchema? schema = PrivateGroupItemSchema.create(
       groupId,
       permission: permission ?? PrivateGroupItemPerm.normal,
@@ -151,7 +151,7 @@ class PrivateGroupCommon with Tag {
       invitee = createInvitationModel(groupId, target, selfAddress);
     } else {
       invitee.permission = PrivateGroupItemPerm.normal;
-      invitee.expiresAt = DateTime.now().millisecondsSinceEpoch + Settings.privateGroupInviteExpiresMs;
+      invitee.expiresAt = DateTime.now().millisecondsSinceEpoch + Settings.timeoutPrivateGroupInviteMs;
       invitee.inviterRawData = jsonEncode(invitee.createRawDataMap());
     }
     if (invitee == null) return false;
@@ -248,7 +248,7 @@ class PrivateGroupCommon with Tag {
       logger.i('$TAG - onInviteeAccept - invitee is exist.');
       return schemaGroup;
     } else if ((itemExist != null) && (itemExist.permission == PrivateGroupItemPerm.quit)) {
-      if ((expiresAt - Settings.privateGroupInviteExpiresMs) < (itemExist.expiresAt ?? 0)) {
+      if ((expiresAt - Settings.timeoutPrivateGroupInviteMs) < (itemExist.expiresAt ?? 0)) {
         logger.i('$TAG - onInviteeAccept - invitee later by quit.');
         return null;
       }

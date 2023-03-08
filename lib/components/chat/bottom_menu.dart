@@ -12,7 +12,6 @@ import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -46,10 +45,7 @@ class ChatBottomMenu extends StatelessWidget {
         String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
         savePaths.add(savePath);
       }
-      results = await MediaPicker.pickCommons(
-        savePaths,
-        maxSize: Settings.ipfsMaxSize,
-      );
+      results = await MediaPicker.pickCommons(savePaths, maxSize: Settings.sizeIpfsMax);
     }
     if (results.isEmpty) return;
     for (var i = 0; i < results.length; i++) {
@@ -65,9 +61,9 @@ class ChatBottomMenu extends StatelessWidget {
             results[i]["thumbnailPath"] = res["path"];
             results[i]["thumbnailSize"] = res["size"];
           }
-        } else if ((mimeType.contains("image") == true) && ((size ?? 0) > MessageSchema.piecesMaxSize)) {
+        } else if ((mimeType.contains("image") == true) && ((size ?? 0) > Settings.piecesMaxSize)) {
           String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-          File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(original), savePath: savePath, maxSize: Settings.sizeThumbnailMax, bestSize: Settings.sizeThumbnailBest, force: true);
           if (thumbnail != null) {
             results[i]["thumbnailPath"] = thumbnail.absolute.path;
             results[i]["thumbnailSize"] = thumbnail.lengthSync();
@@ -142,9 +138,9 @@ class ChatBottomMenu extends StatelessWidget {
             map["thumbnailPath"] = res["path"];
             map["thumbnailSize"] = res["size"];
           }
-        } else if ((mimeType.contains("image") == true) && (size > MessageSchema.piecesMaxSize)) {
+        } else if ((mimeType.contains("image") == true) && (size > Settings.piecesMaxSize)) {
           String thumbnailPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-          File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: 100 * 1000, bestSize: 20 * 1000, force: true);
+          File? thumbnail = await MediaPicker.compressImageBySize(File(savePath), savePath: thumbnailPath, maxSize: Settings.sizeThumbnailMax, bestSize: Settings.sizeThumbnailBest, force: true);
           if (thumbnail != null) {
             map["thumbnailPath"] = thumbnail.absolute.path;
             map["thumbnailSize"] = thumbnail.lengthSync();
@@ -254,7 +250,7 @@ class ChatBottomMenu extends StatelessWidget {
                       color: application.theme.fontColor2,
                     ),
                     onPressed: () {
-                      _pickFiles(maxSize: Settings.ipfsMaxSize);
+                      _pickFiles(maxSize: Settings.sizeIpfsMax);
                     },
                   ),
                 ),
