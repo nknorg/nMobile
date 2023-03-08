@@ -104,8 +104,8 @@ class DeviceInfoCommon with Tag {
       if (tokens.isNotEmpty) {
         if (schema.onlineAt < minOnlineAt) continue;
       }
-      String deviceToken = schema.deviceToken ?? "";
-      if (deviceToken.isNotEmpty) {
+      String deviceToken = schema.deviceToken?.trim() ?? "";
+      if (deviceToken.isNotEmpty && !tokens.contains(deviceToken)) {
         tokens.add(deviceToken);
       }
     }
