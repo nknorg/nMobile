@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -152,10 +152,10 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
 
   _invitee() async {
     if (_privateGroup == null) return;
-    String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: Global.locale((s) => s.invite_members),
-      inputTip: Global.locale((s) => s.send_to),
-      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
+    String? address = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.invite_members),
+      inputTip: Settings.locale((s) => s.send_to),
+      inputHint: Settings.locale((s) => s.enter_or_select_a_user_pubkey),
       // validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -163,7 +163,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
     String? clientAddress = await contactCommon.resolveClientAddress(address);
     Loading.dismiss();
     bool success = await privateGroupCommon.invitee(_privateGroup?.groupId, clientAddress, toast: true);
-    if (success) Toast.show(Global.locale((s) => s.invite_and_send_success));
+    if (success) Toast.show(Settings.locale((s) => s.invite_and_send_success));
   }
 
   @override
@@ -185,7 +185,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: Global.locale((s) => s.channel_members, ctx: context),
+        title: Settings.locale((s) => s.channel_members, ctx: context),
         actions: actions,
       ),
       body: Column(
@@ -205,14 +205,14 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
                             return Container(
                               padding: EdgeInsets.only(left: 3),
                               child: Label(
-                                '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
+                                '${_privateGroup?.count ?? '--'} ' + Settings.locale((s) => s.members, ctx: context),
                                 type: LabelType.bodyRegular,
                                 color: application.theme.successColor,
                               ),
                             );
                           } else {
                             return Label(
-                              '${_privateGroup?.count ?? '--'} ' + Global.locale((s) => s.members, ctx: context),
+                              '${_privateGroup?.count ?? '--'} ' + Settings.locale((s) => s.members, ctx: context),
                               type: LabelType.bodyRegular,
                               color: application.theme.successColor,
                             );

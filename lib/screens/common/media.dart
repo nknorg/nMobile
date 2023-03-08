@@ -7,7 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -104,7 +104,7 @@ class MediaScreen extends BaseStateFulWidget {
 }
 
 class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with SingleTickerProviderStateMixin {
-  final double dragQuitOffsetY = Global.screenHeight() / 6;
+  final double dragQuitOffsetY = Settings.screenHeight() / 6;
 
   ParallelQueue _queue = ParallelQueue("media_fetch", onLog: (log, error) => error ? logger.w(log) : null);
   StreamSubscription? _onFetchMediasSubscription;
@@ -309,7 +309,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
         Map? result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: mediaName, isReturnImagePathOfIOS: true);
         logger.i("MediaScreen - save copy image - path:${result?["filePath"]}");
-        Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+        Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }
     } else if (mediaType == "video") {
       if ((contentType == "path") && content.isNotEmpty) {
@@ -320,7 +320,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         String mediaName = 'nkn_' + DateTime.now().millisecondsSinceEpoch.toString() + "." + ext;
         Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: mediaName, isReturnPathOfIOS: true);
         logger.i("MediaScreen - save copy video - path:${result?["filePath"]}");
-        Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+        Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
       }
     }
   }
@@ -357,10 +357,10 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
 
   @override
   Widget build(BuildContext context) {
-    double iconSize = Global.screenWidth() / 20;
-    double btnSize = Global.screenWidth() / 10;
+    double iconSize = Settings.screenWidth() / 20;
+    double btnSize = Settings.screenWidth() / 10;
     double btnPad = btnSize * 0.2;
-    double playSize = Global.screenWidth() / 5;
+    double playSize = Settings.screenWidth() / 5;
     // logger.i("-----> 000 - index:$_dataIndex - size:${_medias.length}");
     return Stack(
       children: [

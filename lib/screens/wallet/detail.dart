@@ -9,8 +9,8 @@ import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -110,20 +110,20 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
     WalletSendScreen.go(context, _wallet!).then((FutureOr success) async {
       if (success != null && await success) {
         NotificationDialog.of(context).show(
-          title: Global.locale((s) => s.transfer_initiated, ctx: context),
-          content: Global.locale((s) => s.transfer_initiated_desc, ctx: context),
+          title: Settings.locale((s) => s.transfer_initiated, ctx: context),
+          content: Settings.locale((s) => s.transfer_initiated_desc, ctx: context),
         );
       }
     });
   }
 
   _showChangeNameDialog() async {
-    String? newName = await BottomDialog.of(Global.appContext).showInput(
-      title: Global.locale((s) => s.wallet_name),
-      inputTip: Global.locale((s) => s.hint_enter_wallet_name),
-      inputHint: Global.locale((s) => s.hint_enter_wallet_name),
+    String? newName = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.wallet_name),
+      inputTip: Settings.locale((s) => s.hint_enter_wallet_name),
+      inputHint: Settings.locale((s) => s.hint_enter_wallet_name),
       value: this._wallet?.name ?? "",
-      actionText: Global.locale((s) => s.save),
+      actionText: Settings.locale((s) => s.save),
       maxLength: 20,
     );
     if (this._wallet == null || newName == null || newName.isEmpty) return;
@@ -150,7 +150,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             Loading.dismiss();
 
             if (ethAddress.isEmpty || ethKeystore.isEmpty || ethAddress != _wallet?.address) {
-              Toast.show(Global.locale((s) => s.password_wrong));
+              Toast.show(Settings.locale((s) => s.password_wrong));
               return;
             }
 
@@ -168,7 +168,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             Loading.dismiss();
 
             if (nkn.address.isEmpty || nkn.address != _wallet?.address) {
-              Toast.show(Global.locale((s) => s.password_wrong));
+              Toast.show(Settings.locale((s) => s.password_wrong));
               return;
             }
 
@@ -188,12 +188,12 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
         });
         break;
       case 1: // delete
-        ModalDialog.of(Global.appContext).confirm(
-          title: Global.locale((s) => s.delete_wallet_confirm_title),
-          content: Global.locale((s) => s.delete_wallet_confirm_text),
+        ModalDialog.of(Settings.appContext).confirm(
+          title: Settings.locale((s) => s.delete_wallet_confirm_title),
+          content: Settings.locale((s) => s.delete_wallet_confirm_text),
           agree: Button(
             width: double.infinity,
-            text: Global.locale((s) => s.delete_wallet),
+            text: Settings.locale((s) => s.delete_wallet),
             backgroundColor: application.theme.strongColor,
             onPressed: () async {
               String? wAddress = _wallet?.address;
@@ -225,7 +225,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
           ),
           reject: Button(
             width: double.infinity,
-            text: Global.locale((s) => s.cancel),
+            text: Settings.locale((s) => s.cancel),
             fontColor: application.theme.fontColor2,
             backgroundColor: application.theme.backgroundLightColor,
             onPressed: () {
@@ -243,7 +243,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
       // floatingActionButton: FloatingActionButton(onPressed: () => AppScreen.go(context, index: 1)), // test
       headerColor: application.theme.backgroundColor4,
       header: Header(
-        title: isDefault ? Global.locale((s) => s.main_wallet, ctx: context) : (this._wallet?.name?.toUpperCase() ?? ""),
+        title: isDefault ? Settings.locale((s) => s.main_wallet, ctx: context) : (this._wallet?.name?.toUpperCase() ?? ""),
         backgroundColor: application.theme.backgroundColor4,
         actions: [
           PopupMenuButton(
@@ -255,12 +255,12 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
             itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
               PopupMenuItem<int>(
                 value: 0,
-                child: Label(Global.locale((s) => s.export_wallet, ctx: context), type: LabelType.display),
+                child: Label(Settings.locale((s) => s.export_wallet, ctx: context), type: LabelType.display),
               ),
               PopupMenuItem<int>(
                 value: 1,
                 child: Label(
-                  Global.locale((s) => s.delete_wallet, ctx: context),
+                  Settings.locale((s) => s.delete_wallet, ctx: context),
                   type: LabelType.display,
                   color: application.theme.strongColor,
                 ),
@@ -306,7 +306,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                           _wallet != null
                               ? Label(
                                   Format.nknBalance(_wallet?.balance ?? 0, decimalDigits: 4),
-                                  maxWidth: Global.screenWidth() * 0.7,
+                                  maxWidth: Settings.screenWidth() * 0.7,
                                   type: LabelType.h1,
                                   maxLines: 10,
                                   softWrap: true,
@@ -339,14 +339,14 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 children: <Widget>[
                   Expanded(
                     child: Button(
-                      text: Global.locale((s) => s.send, ctx: context),
+                      text: Settings.locale((s) => s.send, ctx: context),
                       onPressed: _send,
                     ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
                     child: Button(
-                      text: Global.locale((s) => s.receive, ctx: context),
+                      text: Settings.locale((s) => s.receive, ctx: context),
                       onPressed: _receive,
                     ),
                   ),
@@ -369,7 +369,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                         children: [
                           SizedBox(height: 15),
                           Label(
-                            Global.locale((s) => s.wallet_name, ctx: context),
+                            Settings.locale((s) => s.wallet_name, ctx: context),
                             type: LabelType.h3,
                             textAlign: TextAlign.start,
                           ),
@@ -402,12 +402,12 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
                               Label(
-                                Global.locale((s) => s.wallet_address, ctx: context),
+                                Settings.locale((s) => s.wallet_address, ctx: context),
                                 type: LabelType.h3,
                                 textAlign: TextAlign.start,
                               ),
                               Label(
-                                Global.locale((s) => s.copy, ctx: context),
+                                Settings.locale((s) => s.copy, ctx: context),
                                 color: application.theme.primaryColor,
                                 type: LabelType.bodyLarge,
                               ),

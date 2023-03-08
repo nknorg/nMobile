@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/layout/layout.dart';
@@ -121,14 +121,14 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
     Map? result = await ImageGallerySaver.saveFile(file.absolute.path, name: videoName, isReturnPathOfIOS: true);
 
     logger.i("VideoScreen - save copy file - path:${result?["filePath"]}");
-    Toast.show(Global.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
+    Toast.show(Settings.locale((s) => (result?["isSuccess"] ?? false) ? s.success : s.failure, ctx: context));
   }
 
   @override
   Widget build(BuildContext context) {
-    double playSize = Global.screenWidth() / 5;
-    double btnSize = Global.screenWidth() / 10;
-    double iconSize = Global.screenWidth() / 15;
+    double playSize = Settings.screenWidth() / 5;
+    double btnSize = Settings.screenWidth() / 10;
+    double iconSize = Settings.screenWidth() / 15;
 
     return Layout(
       bodyColor: Colors.black,
@@ -213,7 +213,7 @@ class _VideoScreenState extends BaseStateFulWidgetState<VideoScreen> with Single
                         PopupMenuItem<int>(
                           value: 0,
                           child: Label(
-                            Global.locale((s) => s.save_to_album, ctx: context),
+                            Settings.locale((s) => s.save_to_album, ctx: context),
                             type: LabelType.display,
                           ),
                         ),

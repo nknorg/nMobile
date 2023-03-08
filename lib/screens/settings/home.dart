@@ -6,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_event.dart';
 import 'package:nmobile/blocs/settings/settings_state.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -67,7 +66,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
     _initData();
 
-    _currentLanguage = _getLanguageText(Settings.locale);
+    _currentLanguage = _getLanguageText(Settings.language);
     _biometricsSelected = Settings.biometricsAuthentication;
   }
 
@@ -80,7 +79,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
   _initData() {
     _languageList = <SelectListItem>[
       SelectListItem(
-        text: Global.locale((s) => s.language_auto),
+        text: Settings.locale((s) => s.language_auto),
         value: 'auto',
       ),
       SelectListItem(
@@ -98,15 +97,15 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
     ];
     _notificationTypeList = <SelectListItem>[
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_only_name),
+        text: Settings.locale((s) => s.local_notification_only_name),
         value: NotificationType.only_name,
       ),
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_both_name_message),
+        text: Settings.locale((s) => s.local_notification_both_name_message),
         value: NotificationType.name_and_message,
       ),
       SelectListItem(
-        text: Global.locale((s) => s.local_notification_none_display),
+        text: Settings.locale((s) => s.local_notification_none_display),
         value: NotificationType.none,
       ),
     ];
@@ -115,13 +114,13 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
 
   String _getLanguageText(String? lang) {
     if (lang == null || lang.isEmpty || lang == 'auto') {
-      return Global.locale((s) => s.language_auto);
+      return Settings.locale((s) => s.language_auto);
     }
     try {
       return _languageList.firstWhere((x) => x.value == lang).text;
     } catch (e, st) {
       handleError(e, st);
-      return Global.locale((s) => s.language_auto);
+      return Settings.locale((s) => s.language_auto);
     }
   }
 
@@ -140,7 +139,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
         titleChild: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: Label(
-            Global.locale((s) => s.menu_settings, ctx: context),
+            Settings.locale((s) => s.menu_settings, ctx: context),
             type: LabelType.h2,
             color: application.theme.fontLightColor,
           ),
@@ -157,7 +156,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  Global.locale((s) => s.general, ctx: context),
+                  Settings.locale((s) => s.general, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -177,8 +176,8 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     style: _buttonStyle(top: true, bottom: true),
                     onPressed: () async {
                       Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: Global.locale((s) => s.change_language, ctx: context),
-                        SelectScreen.selectedValue: Settings.locale,
+                        SelectScreen.title: Settings.locale((s) => s.change_language, ctx: context),
+                        SelectScreen.selectedValue: Settings.language,
                         SelectScreen.list: _languageList,
                       }).then((lang) {
                         if ((lang != null) && (lang is String)) {
@@ -190,7 +189,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.language, ctx: context),
+                          Settings.locale((s) => s.language, ctx: context),
                           type: LabelType.bodyRegular,
                           fontWeight: FontWeight.bold,
                           color: application.theme.fontColor1,
@@ -225,7 +224,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
             child: Row(
               children: <Widget>[
                 Label(
-                  Global.locale((s) => s.security, ctx: context),
+                  Settings.locale((s) => s.security, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -249,7 +248,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.biometrics, ctx: context),
+                          Settings.locale((s) => s.biometrics, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -267,22 +266,22 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                                     if (wallets.isNotEmpty) _wallet = wallets[0];
                                   }
                                   if (_wallet == null || _wallet.address.isEmpty) {
-                                    ModalDialog.of(Global.appContext).confirm(
-                                      title: Global.locale((s) => s.wallet_missing),
+                                    ModalDialog.of(Settings.appContext).confirm(
+                                      title: Settings.locale((s) => s.wallet_missing),
                                       hasCloseButton: true,
                                     );
                                     return;
                                   }
-                                  String? input = await BottomDialog.of(Global.appContext).showInput(
-                                    title: Global.locale((s) => s.verify_wallet_password),
-                                    inputTip: Global.locale((s) => s.wallet_password),
-                                    inputHint: Global.locale((s) => s.input_password),
-                                    actionText: Global.locale((s) => s.continue_text),
+                                  String? input = await BottomDialog.of(Settings.appContext).showInput(
+                                    title: Settings.locale((s) => s.verify_wallet_password),
+                                    inputTip: Settings.locale((s) => s.wallet_password),
+                                    inputHint: Settings.locale((s) => s.input_password),
+                                    actionText: Settings.locale((s) => s.continue_text),
                                     validator: Validator.of(context).password(),
                                     password: true,
                                   );
                                   if (!(await walletCommon.isPasswordRight(_wallet.address, input))) {
-                                    Toast.show(Global.locale((s) => s.tip_password_error));
+                                    Toast.show(Settings.locale((s) => s.tip_password_error));
                                     return;
                                   }
                                   Settings.biometricsAuthentication = value;
@@ -308,7 +307,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
             child: Row(
               children: <Widget>[
                 Label(
-                  Global.locale((s) => s.notification, ctx: context),
+                  Settings.locale((s) => s.notification, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -332,7 +331,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.notification_type, ctx: context),
+                          Settings.locale((s) => s.notification_type, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -357,7 +356,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     ),
                     onPressed: () {
                       Navigator.pushNamed(context, SelectScreen.routeName, arguments: {
-                        SelectScreen.title: Global.locale((s) => s.local_notification),
+                        SelectScreen.title: Settings.locale((s) => s.local_notification),
                         SelectScreen.selectedValue: Settings.notificationType,
                         SelectScreen.list: _notificationTypeList,
                       }).then((type) {
@@ -384,7 +383,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  Global.locale((s) => s.about, ctx: context),
+                  Settings.locale((s) => s.about, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -406,14 +405,14 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.version, ctx: context),
+                          Settings.locale((s) => s.version, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
                           height: 1,
                         ),
                         Label(
-                          Global.versionFormat,
+                          Settings.versionFormat,
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           height: 1,
@@ -433,7 +432,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.contact_us, ctx: context),
+                          Settings.locale((s) => s.contact_us, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -466,7 +465,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.help, ctx: context),
+                          Settings.locale((s) => s.help, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -499,7 +498,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.terms, ctx: context),
+                          Settings.locale((s) => s.terms, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -534,7 +533,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 Label(
-                  Global.locale((s) => s.advanced, ctx: context),
+                  Settings.locale((s) => s.advanced, ctx: context),
                   type: LabelType.h3,
                 ),
               ],
@@ -556,7 +555,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.Accelerate, ctx: context),
+                          Settings.locale((s) => s.Accelerate, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -588,7 +587,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.cache, ctx: context),
+                          Settings.locale((s) => s.cache, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,
@@ -620,7 +619,7 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Label(
-                          Global.locale((s) => s.tracker, ctx: context),
+                          Settings.locale((s) => s.tracker, ctx: context),
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor1,
                           fontWeight: FontWeight.bold,

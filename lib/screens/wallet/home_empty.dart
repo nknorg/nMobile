@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -28,12 +28,12 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Center(
-            child: Asset.image("wallet/pig.png", width: Global.screenWidth() / 3),
+            child: Asset.image("wallet/pig.png", width: Settings.screenWidth() / 3),
           ),
           Column(
             children: <Widget>[
               Label(
-                Global.locale((s) => s.no_wallet_title, ctx: context),
+                Settings.locale((s) => s.no_wallet_title, ctx: context),
                 color: application.theme.fontLightColor,
                 type: LabelType.h2,
                 dark: true,
@@ -42,7 +42,7 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
               Padding(
                 padding: EdgeInsets.only(top: 16, left: 24, right: 24),
                 child: Label(
-                  Global.locale((s) => s.no_wallet_desc, ctx: context),
+                  Settings.locale((s) => s.no_wallet_desc, ctx: context),
                   color: application.theme.fontLightColor,
                   type: LabelType.h4,
                   dark: true,
@@ -55,7 +55,7 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
           Column(
             children: <Widget>[
               Button(
-                text: Global.locale((s) => s.no_wallet_create, ctx: context),
+                text: Settings.locale((s) => s.no_wallet_create, ctx: context),
                 width: double.infinity,
                 fontColor: application.theme.fontLightColor,
                 backgroundColor: application.theme.primaryColor,
@@ -65,7 +65,7 @@ class _WalletHomeEmptyLayoutState extends BaseStateFulWidgetState<WalletHomeEmpt
               ),
               SizedBox(height: 12),
               Button(
-                text: Global.locale((s) => s.no_wallet_import, ctx: context),
+                text: Settings.locale((s) => s.no_wallet_import, ctx: context),
                 width: double.infinity,
                 fontColor: application.theme.fontLightColor,
                 backgroundColor: application.theme.primaryColor.withAlpha(20),

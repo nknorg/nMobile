@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -19,7 +19,6 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/helpers/media_picker.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/chat/messages.dart';
@@ -175,8 +174,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      maxSize: MessageSchema.avatarMaxSize,
-      bestSize: MessageSchema.avatarBestSize,
+      maxSize: Settings.avatarMaxSize,
+      bestSize: Settings.avatarBestSize,
       savePath: remarkAvatarPath,
     );
     if (picked == null) {
@@ -192,10 +191,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _invitee() async {
     if (_topicSchema == null) return;
-    String? address = await BottomDialog.of(Global.appContext).showInput(
-      title: Global.locale((s) => s.invite_members),
-      inputTip: Global.locale((s) => s.send_to),
-      inputHint: Global.locale((s) => s.enter_or_select_a_user_pubkey),
+    String? address = await BottomDialog.of(Settings.appContext).showInput(
+      title: Settings.locale((s) => s.invite_members),
+      inputTip: Settings.locale((s) => s.send_to),
+      inputHint: Settings.locale((s) => s.enter_or_select_a_user_pubkey),
       validator: Validator.of(context).identifierNKN(),
       contactSelect: true,
     );
@@ -224,14 +223,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       Loading.show();
       TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic, fee: fee);
       Loading.dismiss();
-      if (result != null) Toast.show(Global.locale((s) => s.subscribed));
+      if (result != null) Toast.show(Settings.locale((s) => s.subscribed));
     } else {
-      ModalDialog.of(Global.appContext).confirm(
-        title: Global.locale((s) => s.tip),
-        content: Global.locale((s) => s.leave_group_confirm_title),
+      ModalDialog.of(Settings.appContext).confirm(
+        title: Settings.locale((s) => s.tip),
+        content: Settings.locale((s) => s.leave_group_confirm_title),
         agree: Button(
           width: double.infinity,
-          text: Global.locale((s) => s.unsubscribe),
+          text: Settings.locale((s) => s.unsubscribe),
           backgroundColor: application.theme.strongColor,
           onPressed: () async {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -241,14 +240,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, fee: fee, toast: true);
             Loading.dismiss();
             if (deleted != null) {
-              Toast.show(Global.locale((s) => s.unsubscribed));
+              Toast.show(Settings.locale((s) => s.unsubscribed));
               // if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
             }
           },
         ),
         reject: Button(
           width: double.infinity,
-          text: Global.locale((s) => s.cancel),
+          text: Settings.locale((s) => s.cancel),
           fontColor: application.theme.fontColor2,
           backgroundColor: application.theme.backgroundLightColor,
           onPressed: () {
@@ -266,7 +265,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       clipAlias: false,
       header: Header(
         backgroundColor: application.theme.backgroundColor4,
-        title: Global.locale((s) => s.channel_settings, ctx: context),
+        title: Settings.locale((s) => s.channel_settings, ctx: context),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(top: 20, bottom: 30, left: 16, right: 16),
@@ -299,7 +298,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       Asset.iconSvg('user', color: application.theme.primaryColor, width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.nickname, ctx: context),
+                        Settings.locale((s) => s.nickname, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -333,14 +332,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       Asset.image('chat/group-blue.png', width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.view_channel_members, ctx: context),
+                        Settings.locale((s) => s.view_channel_members, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "${_topicSchema?.count ?? "--"} ${Global.locale((s) => s.members, ctx: context)}",
+                          "${_topicSchema?.count ?? "--"} ${Settings.locale((s) => s.members, ctx: context)}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -367,7 +366,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       Asset.image('chat/invisit-blue.png', width: 24),
                       SizedBox(width: 10),
                       Label(
-                        Global.locale((s) => s.invite_members, ctx: context),
+                        Settings.locale((s) => s.invite_members, ctx: context),
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor1,
                       ),
@@ -396,7 +395,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                   Asset.iconSvg('chat', color: application.theme.primaryColor, width: 24),
                   SizedBox(width: 10),
                   Label(
-                    Global.locale((s) => s.send_message, ctx: context),
+                    Settings.locale((s) => s.send_message, ctx: context),
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor1,
                   ),
@@ -426,7 +425,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                         ),
                         SizedBox(width: 10),
                         Label(
-                          (_isJoined ?? false) ? Global.locale((s) => s.unsubscribe, ctx: context) : Global.locale((s) => s.subscribe, ctx: context),
+                          (_isJoined ?? false) ? Settings.locale((s) => s.unsubscribe, ctx: context) : Settings.locale((s) => s.subscribe, ctx: context),
                           type: LabelType.bodyRegular,
                           color: (_isJoined ?? false) ? Colors.red : application.theme.primaryColor,
                         ),
