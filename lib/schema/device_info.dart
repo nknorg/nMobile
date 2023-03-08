@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:nmobile/utils/util.dart';
 
-class PlatformName {
+class DevicePlatformName {
   static const web = "web";
   static const android = "android";
   static const ios = "ios";
