@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
@@ -14,10 +13,10 @@ class DeviceInfoCommon with Tag {
 
   String getDeviceProfile({DeviceInfoSchema? deviceInfo}) {
     String appName = (deviceInfo != null) ? deviceInfo.appName : Settings.appName;
-    String appVersion = (deviceInfo != null) ? deviceInfo.appVersion.toString() : Global.build;
-    String platform = (deviceInfo != null) ? deviceInfo.platform : PlatformName.get();
-    String platformVersion = (deviceInfo != null) ? deviceInfo.platformVersion.toString() : Global.deviceVersion;
-    String deviceId = (deviceInfo != null) ? deviceInfo.deviceId : Global.deviceId;
+    String appVersion = (deviceInfo != null) ? deviceInfo.appVersion.toString() : Settings.build;
+    String platform = (deviceInfo != null) ? deviceInfo.platform : DevicePlatformName.get();
+    String platformVersion = (deviceInfo != null) ? deviceInfo.platformVersion.toString() : Settings.deviceVersion;
+    String deviceId = (deviceInfo != null) ? deviceInfo.deviceId : Settings.deviceId;
     return "$appName:$appVersion:$platform:$platformVersion:$deviceId";
   }
 
@@ -25,15 +24,15 @@ class DeviceInfoCommon with Tag {
     clientAddress = clientAddress ?? clientCommon.address;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String appName = Settings.appName;
-    String appVersion = Global.build;
-    String platform = PlatformName.get();
-    String platformVersion = Global.deviceVersion;
+    String appVersion = Settings.build;
+    String platform = DevicePlatformName.get();
+    String platformVersion = Settings.deviceVersion;
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
-    DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Global.deviceId);
+    DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Settings.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
         deviceInfo = await add(
-          DeviceInfoSchema(contactAddress: clientAddress, deviceId: Global.deviceId, onlineAt: 0, data: newData),
+          DeviceInfoSchema(contactAddress: clientAddress, deviceId: Settings.deviceId, onlineAt: 0, data: newData),
           checkDuplicated: false,
         );
       } else {
@@ -147,7 +146,7 @@ class DeviceInfoCommon with Tag {
   }
 
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
-    deviceVersion = deviceVersion.isEmpty ? Global.deviceVersionName : deviceVersion;
+    deviceVersion = deviceVersion.isEmpty ? Settings.deviceVersionName : deviceVersion;
     List<String> vList = deviceVersion.split(".");
     String vStr0 = vList.length > 0 ? vList[0] : "";
     String vStr1 = vList.length > 1 ? vList[1] : "";
@@ -162,7 +161,7 @@ class DeviceInfoCommon with Tag {
   static bool isMsgReadEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
-    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
     versionOk = appVersion >= 224;
     return platformOK && versionOk;
   }
@@ -172,7 +171,7 @@ class DeviceInfoCommon with Tag {
   static bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
-    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
     versionOk = appVersion >= 224;
     return platformOK && versionOk;
   }
@@ -182,7 +181,7 @@ class DeviceInfoCommon with Tag {
   static bool isDeviceTokenEnable(String? platform, int? appVersion) {
     if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
     bool platformOK = false, versionOk = false;
-    platformOK = (platform == PlatformName.android) || (platform == PlatformName.ios);
+    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
     versionOk = appVersion >= 282;
     return platformOK && versionOk;
   }

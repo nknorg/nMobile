@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/remote_notification.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
@@ -47,7 +48,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     // size
-    if (data.length >= MessageSchema.msgMaxSize) {
+    if (data.length >= Settings.msgMaxSize) {
       logger.w("$TAG - sendMsg - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;
@@ -228,7 +229,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     String data;
-    if (requestType == RequestType.header) {
+    if (requestType == ContactRequestType.header) {
       data = MessageData.getContactProfileResponseHeader(_me?.profileVersion);
     } else {
       data = await MessageData.getContactProfileResponseFull(_me?.profileVersion, _me?.avatar, _me?.firstName, _me?.lastName);
