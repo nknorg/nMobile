@@ -11,6 +11,15 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 
 class IpfsHelper with Tag {
+  // infura
+  static String INFURA_PROJECT_ID = "";
+  static String INFURA_API_KEY_SECRET = "";
+
+  static init(String infuraProjectId, String infuraApiKeySecret) async {
+    INFURA_PROJECT_ID = infuraProjectId;
+    INFURA_API_KEY_SECRET = infuraApiKeySecret;
+  }
+
   static List<Map<String, dynamic>> _writeableGateway = [
     {
       "protocol": "http",
@@ -76,10 +85,6 @@ class IpfsHelper with Tag {
     // 'gateway.ipfs.io:5001' // disable
     // 'cloudflare-ipfs.com:5001', // disable
   ];
-
-  // infura project
-  static const String INFURA_PROJECT_ID = "";
-  static const String INFURA_API_KEY_SECRET = "";
 
   static const String KEY_IP = "ip";
   static const String KEY_HASH = "Hash";
