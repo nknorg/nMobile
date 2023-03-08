@@ -67,8 +67,8 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-      maxSize: Settings.avatarMaxSize,
-      bestSize: Settings.avatarBestSize,
+      maxSize: Settings.sizeAvatarMax,
+      bestSize: Settings.sizeAvatarBest,
       savePath: savePath,
     );
     if (picked == null || !picked.existsSync()) {

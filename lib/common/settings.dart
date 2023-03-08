@@ -75,27 +75,48 @@ class Settings {
   static double screenWidth({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.width;
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
+  // gap
+  static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
+  static const int gapMessagesGroupSec = 2 * 60; // 2m
+  static const int gapPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
+  static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
+  static const int gapPingContactMs = 3 * 60 * 1000; // 3m
+  static const int gapReplyPingMs = 30 * 1000; // 30s
+  static const int gapRequestGroupOptionsMs = 5 * 60 * 1000; // 5m
+  static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
+  static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
+
+  // timeout TODO:GG 完善?
+  static const int timeoutMeasureSeedMs = 3 * 1000; // 3s
+  static const int timeoutPrivateGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
+
+  // delay TODO:GG 完善还是消除？
+  static const int delayTxPoolMs = 1 * 60 * 1000; // 1m
+
+  // block_height
+  static const int blockHeightTopicSubscribeDefault = 400000; // 93day
+  static const int blockHeightTopicWarnBlockExpire = 100000; // 23day
+
+  // fee
+  static double feeTopicSubscribeDefault = 0.00010009; // fee
+
   // size
-  static const int msgMaxSize = 32 * 1000; // < 32K
-  static const int nknMaxSize = 4 * 1000 * 1000; // < 4,000,000
-  static const int ipfsMaxSize = 100 * 1000 * 1000; // 100M
-  static const int avatarMaxSize = 25 * 1000; // 25K < 32K
-  static const int avatarBestSize = avatarMaxSize ~/ 2; // 12K
+  static const int sizeMsgMax = 32 * 1000; // < 32K
+  static const int sizeNknSendMax = 4 * 1000 * 1000; // < 4,000,000
+  static const int sizeIpfsMax = 100 * 1000 * 1000; // 100M
+  static const int sizeAvatarMax = 25 * 1000; // 25K < 32K(sizeMsgMax)
+  static const int sizeAvatarBest = 10 * 1000; // 12K
+  static const int sizeThumbnailMax = 100 * 1000; // 100K
+  static const int sizeThumbnailBest = 20 * 1000; // 20K
 
-  // gap TODO:GG 有待完善
-  static const int clientReAuthGapMs = 1 * 60 * 1000; // 1m
-  static const int contactPingGapMs = 1 * 60 * 60 * 1000; // 1h
-  // static const int sessionPingGapMs = 24 * 60 * 60 * 1000; // 24h
-  static const int privateGroupInviteExpiresMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  // TODO:GG 其他的变量
-
-  // topic
-  static const int txPoolDelayMs = 1 * 60 * 1000; // 1m
-  static const int topicSubscribeCheckGapMs = 24 * 60 * 60 * 1000; // 24h
-  static const int topicDefaultSubscribeHeight = 400000; // 93day
-  static const int topicWarnBlockExpireHeight = 100000; // 23day
-  static double topicSubscribeFeeDefault = 0.00010009; // fee
+  // piece
+  static const int piecesPreMinLen = 10 * 1000; // >= 10K
+  static const int piecesPreMaxLen = 16 * 1000; // <= 16K < 32K(sizeMsgMax)
+  static const int piecesMinParity = 1; // >= 1
+  static const int piecesMinTotal = 3 - piecesMinParity; // >= 2 ((2*10)K < 32K)
+  static const int piecesMaxParity = 2; // <= 2
+  static const int piecesMaxTotal = 12 - piecesMaxParity; // <= 10
+  static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 160K
 
   static init() async {
     // settings TODO:GG pro+dev

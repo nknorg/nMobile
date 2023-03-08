@@ -227,7 +227,7 @@ class TopSub {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
         String? topicHash = await clientCommon.client?.subscribe(
           topic: genTopicHash(topic),
-          duration: Settings.topicDefaultSubscribeHeight,
+          duration: Settings.blockHeightTopicSubscribeDefault,
           fee: fee.toStringAsFixed(8),
           identifier: identifier,
           meta: meta,
