@@ -1,6 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/text/label.dart';
 
 class Loading {
@@ -13,7 +13,7 @@ class Loading {
       BotToast.showCustomLoading(toastBuilder: (cancelFunc) {
         return Container(
           constraints: BoxConstraints(
-            maxWidth: Global.screenHeight() / 4,
+            maxWidth: Settings.screenHeight() / 4,
           ),
           padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
           decoration: BoxDecoration(

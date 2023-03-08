@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
@@ -167,10 +167,10 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     // _mark
     List<String> marks = [];
     if (clientAddress == clientCommon.address) {
-      marks.add(Global.locale((s) => s.you));
+      marks.add(Settings.locale((s) => s.you));
     }
     if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress)) {
-      marks.add(Global.locale((s) => s.owner));
+      marks.add(Settings.locale((s) => s.owner));
     } else if (privateGroupCommon.isOwner(privateGroup?.ownerPublicKey, clientAddress)) {
       // FUTURE:GG PG admin
     }
@@ -221,8 +221,8 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
         ),
         onTap: () async {
           // subscriber.canBeKick
-          ModalDialog.of(Global.appContext).confirm(
-            title: Global.locale((s) => s.reject_user_tip),
+          ModalDialog.of(Settings.appContext).confirm(
+            title: Settings.locale((s) => s.reject_user_tip),
             contentWidget: contact != null
                 ? ContactItem(
                     contact: contact,
@@ -233,7 +233,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 : SizedBox.shrink(),
             agree: Button(
               width: double.infinity,
-              text: Global.locale((s) => s.ok),
+              text: Settings.locale((s) => s.ok),
               backgroundColor: application.theme.strongColor,
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -243,12 +243,12 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                   notify: true,
                   toast: true,
                 );
-                if (success) Toast.show(Global.locale((s) => s.rejected));
+                if (success) Toast.show(Settings.locale((s) => s.rejected));
               },
             ),
             reject: Button(
               width: double.infinity,
-              text: Global.locale((s) => s.cancel),
+              text: Settings.locale((s) => s.cancel),
               fontColor: application.theme.fontColor2,
               backgroundColor: application.theme.backgroundLightColor,
               onPressed: () {

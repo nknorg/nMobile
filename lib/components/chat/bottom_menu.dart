@@ -4,8 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -48,7 +48,7 @@ class ChatBottomMenu extends StatelessWidget {
       }
       results = await MediaPicker.pickCommons(
         savePaths,
-        maxSize: MessageSchema.ipfsMaxSize,
+        maxSize: Settings.ipfsMaxSize,
       );
     }
     if (results.isEmpty) return;
@@ -106,7 +106,7 @@ class ChatBottomMenu extends StatelessWidget {
       int size = file.lengthSync();
       if (maxSize != null && maxSize > 0) {
         if (size >= maxSize) {
-          Toast.show(Global.locale((s) => s.file_too_big));
+          Toast.show(Settings.locale((s) => s.file_too_big));
           continue;
         }
       }
@@ -160,7 +160,7 @@ class ChatBottomMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double btnSize = Global.screenWidth() / 6;
+    double btnSize = Settings.screenWidth() / 6;
     double iconSize = btnSize / 2;
 
     return ExpansionLayout(
@@ -198,7 +198,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.album, ctx: context),
+                  Settings.locale((s) => s.album, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
@@ -229,7 +229,7 @@ class ChatBottomMenu extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.camera, ctx: context),
+                  Settings.locale((s) => s.camera, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,
@@ -254,13 +254,13 @@ class ChatBottomMenu extends StatelessWidget {
                       color: application.theme.fontColor2,
                     ),
                     onPressed: () {
-                      _pickFiles(maxSize: MessageSchema.ipfsMaxSize);
+                      _pickFiles(maxSize: Settings.ipfsMaxSize);
                     },
                   ),
                 ),
                 SizedBox(height: 8),
                 Label(
-                  Global.locale((s) => s.files, ctx: context),
+                  Settings.locale((s) => s.files, ctx: context),
                   type: LabelType.bodySmall,
                   fontWeight: FontWeight.w600,
                   color: application.theme.fontColor4,

@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/form_text.dart';
@@ -144,7 +144,7 @@ class BottomDialog extends BaseStateFulWidget {
                   ),
                   Expanded(
                     child: Label(
-                      Global.locale((s) => s.nkn_mainnet, ctx: context),
+                      Settings.locale((s) => s.nkn_mainnet, ctx: context),
                       type: LabelType.h3,
                     ),
                   ),
@@ -160,7 +160,7 @@ class BottomDialog extends BaseStateFulWidget {
                           color: application.theme.successColor.withAlpha(25),
                         ),
                         child: Text(
-                          Global.locale((s) => s.mainnet, ctx: context),
+                          Settings.locale((s) => s.mainnet, ctx: context),
                           style: TextStyle(
                             color: application.theme.successColor,
                             fontSize: 10,
@@ -193,7 +193,7 @@ class BottomDialog extends BaseStateFulWidget {
                   ),
                   Expanded(
                     child: Label(
-                      Global.locale((s) => s.ethereum, ctx: context),
+                      Settings.locale((s) => s.ethereum, ctx: context),
                       type: LabelType.h3,
                     ),
                   ),
@@ -209,7 +209,7 @@ class BottomDialog extends BaseStateFulWidget {
                           color: application.theme.ethLogoBackground.withAlpha(25),
                         ),
                         child: Text(
-                          Global.locale((s) => s.ERC_20, ctx: context),
+                          Settings.locale((s) => s.ERC_20, ctx: context),
                           style: TextStyle(
                             color: application.theme.ethLogoBackground,
                             fontSize: 10,
@@ -307,7 +307,7 @@ class BottomDialog extends BaseStateFulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: actionText ?? Global.locale((s) => s.continue_text, ctx: context),
+          text: actionText ?? Settings.locale((s) => s.continue_text, ctx: context),
           width: double.infinity,
           onPressed: () {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, _inputController.text);
@@ -340,7 +340,7 @@ class BottomDialog extends BaseStateFulWidget {
                             _inputController.text = contact.clientAddress;
                           }
                         } else {
-                          Toast.show(Global.locale((s) => s.d_chat_not_login, ctx: context));
+                          Toast.show(Settings.locale((s) => s.d_chat_not_login, ctx: context));
                         }
                       },
                       child: Container(
@@ -369,7 +369,7 @@ class BottomDialog extends BaseStateFulWidget {
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
         child: Button(
-          text: Global.locale((s) => s.close, ctx: context),
+          text: Settings.locale((s) => s.close, ctx: context),
           width: double.infinity,
           backgroundColor: application.theme.primaryColor.withAlpha(20),
           fontColor: application.theme.primaryColor,
@@ -395,12 +395,12 @@ class BottomDialog extends BaseStateFulWidget {
     TextEditingController _inputController = TextEditingController();
 
     fee = fee ?? double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-    if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+    if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
     _inputController.text = fee.toStringAsFixed(8);
 
     return showWithTitle<double>(
-      title: Global.locale((s) => s.transfer_speed_up_enable, ctx: context),
-      desc: Global.locale((s) => s.transfer_speed_up_desc, ctx: context),
+      title: Settings.locale((s) => s.transfer_speed_up_enable, ctx: context),
+      desc: Settings.locale((s) => s.transfer_speed_up_desc, ctx: context),
       height: 350,
       action: Padding(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 34),
@@ -409,7 +409,7 @@ class BottomDialog extends BaseStateFulWidget {
             Expanded(
               flex: 1,
               child: Button(
-                text: Global.locale((s) => s.accelerate_no, ctx: context),
+                text: Settings.locale((s) => s.accelerate_no, ctx: context),
                 // width: double.infinity,
                 onPressed: () {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context, 0.0);
@@ -420,7 +420,7 @@ class BottomDialog extends BaseStateFulWidget {
             Expanded(
               flex: 1,
               child: Button(
-                text: Global.locale((s) => s.accelerate, ctx: context),
+                text: Settings.locale((s) => s.accelerate, ctx: context),
                 width: double.infinity,
                 backgroundColor: application.theme.strongColor,
                 onPressed: () {
@@ -441,7 +441,7 @@ class BottomDialog extends BaseStateFulWidget {
             Row(
               children: [
                 Label(
-                  Global.locale((s) => s.pay_nkn, ctx: context),
+                  Settings.locale((s) => s.pay_nkn, ctx: context),
                   type: LabelType.h4,
                   textAlign: TextAlign.start,
                 ),
@@ -453,7 +453,7 @@ class BottomDialog extends BaseStateFulWidget {
                     textInputAction: TextInputAction.done,
                     inputFormatters: [FilteringTextInputFormatter.allow(Validate.regWalletAmount)],
                     textAlign: TextAlign.start,
-                    hintText: Global.locale((s) => s.enter_amount, ctx: context),
+                    hintText: Settings.locale((s) => s.enter_amount, ctx: context),
                   ),
                 ),
               ],
@@ -499,7 +499,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
     _dy = details.globalPosition.dy;
 
     setState(() {
-      _currentHeight = Global.screenHeight() - _dy;
+      _currentHeight = Settings.screenHeight() - _dy;
     });
   }
 
@@ -552,7 +552,7 @@ class _BottomDialogState extends BaseStateFulWidgetState<BottomDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    _maxHeight = Global.screenHeight() - 86 - 38;
+    _maxHeight = Settings.screenHeight() - 86 - 38;
 
     List<Widget> body = <Widget>[
       Expanded(
