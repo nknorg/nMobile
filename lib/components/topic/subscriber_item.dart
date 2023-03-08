@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
@@ -168,21 +168,21 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     // _mark
     List<String> marks = [];
     if (clientAddress == clientCommon.address) {
-      marks.add(Global.locale((s) => s.you));
+      marks.add(Settings.locale((s) => s.you));
     }
     if (topic?.isOwner(clientAddress) == true) {
-      marks.add(Global.locale((s) => s.owner));
+      marks.add(Settings.locale((s) => s.owner));
     } else if (topic?.isOwner(clientCommon.address) == true) {
       if (status == SubscriberStatus.InvitedSend) {
-        marks.add(Global.locale((s) => s.invitation_sent));
+        marks.add(Settings.locale((s) => s.invitation_sent));
       } else if (status == SubscriberStatus.InvitedReceipt) {
-        marks.add(Global.locale((s) => s.invite_and_send_success));
+        marks.add(Settings.locale((s) => s.invite_and_send_success));
       } else if (status == SubscriberStatus.Subscribed) {
-        marks.add(Global.locale((s) => s.accepted));
+        marks.add(Settings.locale((s) => s.accepted));
       } else if (status == SubscriberStatus.Unsubscribed) {
-        marks.add(Global.locale((s) => s.has_left_the_group));
+        marks.add(Settings.locale((s) => s.has_left_the_group));
       } else {
-        marks.add(Global.locale((s) => s.join_but_not_invite));
+        marks.add(Settings.locale((s) => s.join_but_not_invite));
       }
     }
     String marksText = marks.isNotEmpty ? "(${marks.join(", ")})" : " ";
@@ -248,8 +248,8 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
         ),
         onTap: () async {
           if (subscriber.canBeKick) {
-            ModalDialog.of(Global.appContext).confirm(
-              title: Global.locale((s) => s.reject_user_tip),
+            ModalDialog.of(Settings.appContext).confirm(
+              title: Settings.locale((s) => s.reject_user_tip),
               contentWidget: contact != null
                   ? ContactItem(
                       contact: contact,
@@ -260,7 +260,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                   : SizedBox.shrink(),
               agree: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.ok),
+                text: Settings.locale((s) => s.ok),
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -278,7 +278,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               ),
               reject: Button(
                 width: double.infinity,
-                text: Global.locale((s) => s.cancel),
+                text: Settings.locale((s) => s.cancel),
                 fontColor: application.theme.fontColor2,
                 backgroundColor: application.theme.backgroundLightColor,
                 onPressed: () {

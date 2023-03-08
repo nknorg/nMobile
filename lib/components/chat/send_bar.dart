@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/fixed_text_field.dart';
@@ -146,7 +146,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, 1);
           }
         }
-      } else if (ActionWidth < offsetX && offsetX < (Global.screenWidth() - ActionWidth)) {
+      } else if (ActionWidth < offsetX && offsetX < (Settings.screenWidth() - ActionWidth)) {
         // center
         if (!_audioRecordVisible) {
           // text editing
@@ -155,7 +155,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
           if (!isMove) {
             recordCancel?.call();
           } else {
-            double touchWidth = (Global.screenWidth() - ActionWidth * 2);
+            double touchWidth = (Settings.screenWidth() - ActionWidth * 2);
             double percent = 1;
             if ((offsetX - ActionWidth) > (touchWidth / 2)) {
               percent = 1 - (((touchWidth / 2) - (offsetX - ActionWidth)) / (touchWidth / 2)).abs();
@@ -163,7 +163,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
             this._onRecordLockAndPercentChange(false, percent);
           }
         }
-      } else if ((Global.screenWidth() - ActionWidth) <= offsetX && offsetX <= Global.screenWidth()) {
+      } else if ((Settings.screenWidth() - ActionWidth) <= offsetX && offsetX <= Settings.screenWidth()) {
         // right
         if (_canSendText) {
           // text send
@@ -190,7 +190,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       if (!_audioRecordVisible) {
         // nothing
       } else {
-        if ((Global.screenWidth() - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Global.screenWidth() - ChatSendBar.LockActionMargin)) {
+        if ((Settings.screenWidth() - ChatSendBar.LockActionMargin - ChatSendBar.LockActionSize) <= offsetX && offsetX <= (Settings.screenWidth() - ChatSendBar.LockActionMargin)) {
           // lock mode
           if (!isMove) {
             this._onRecordLockAndPercentChange(true, 0);
@@ -367,7 +367,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                 child: FixedTextField(
                                   style: TextStyle(fontSize: 14, height: 1.4),
                                   decoration: InputDecoration(
-                                    hintText: Global.locale((s) => s.type_a_message, ctx: context),
+                                    hintText: Settings.locale((s) => s.type_a_message, ctx: context),
                                     hintStyle: TextStyle(color: _theme.fontColor2),
                                     contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                                     border: UnderlineInputBorder(
@@ -423,7 +423,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     height: ActionHeight,
                                     child: Center(
                                       child: Label(
-                                        _audioLockedMode ? Global.locale((s) => s.cancel, ctx: context) : (_audioDragPercent != 0 ? Global.locale((s) => s.release_to_cancel, ctx: context) : Global.locale((s) => s.slide_to_cancel)),
+                                        _audioLockedMode ? Settings.locale((s) => s.cancel, ctx: context) : (_audioDragPercent != 0 ? Settings.locale((s) => s.release_to_cancel, ctx: context) : Settings.locale((s) => s.slide_to_cancel)),
                                         type: LabelType.bodyLarge,
                                         textAlign: TextAlign.center,
                                         color: recordWidgetColor,
@@ -459,7 +459,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                         alignment: Alignment.center,
                         color: application.theme.backgroundColor1,
                         child: Label(
-                          Global.locale((s) => s.send, ctx: context),
+                          Settings.locale((s) => s.send, ctx: context),
                           type: LabelType.bodyLarge,
                           textAlign: TextAlign.center,
                           color: _theme.primaryColor,

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/avatar.dart';
@@ -53,11 +53,11 @@ class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarE
 
   _onPressEdit() {
     if (canDrop) {
-      ModalDialog.of(Global.appContext).confirm(
-        title: Global.locale((s) => s.confirm_delete_remark_avatar),
+      ModalDialog.of(Settings.appContext).confirm(
+        title: Settings.locale((s) => s.confirm_delete_remark_avatar),
         agree: Button(
           width: double.infinity,
-          text: Global.locale((s) => s.ok),
+          text: Settings.locale((s) => s.ok),
           backgroundColor: application.theme.strongColor,
           onPressed: () async {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -66,7 +66,7 @@ class _ContactAvatarEditableState extends BaseStateFulWidgetState<ContactAvatarE
         ),
         reject: Button(
           width: double.infinity,
-          text: Global.locale((s) => s.cancel),
+          text: Settings.locale((s) => s.cancel),
           fontColor: application.theme.fontColor2,
           backgroundColor: application.theme.backgroundLightColor,
           onPressed: () {
