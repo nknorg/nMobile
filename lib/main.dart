@@ -12,7 +12,6 @@ import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -44,7 +43,6 @@ void main() async {
   // init
   application.registerInitialize(() async {
     Routes.init();
-    await Global.init();
     await Settings.init();
   });
   await application.initialize();
@@ -53,10 +51,10 @@ void main() async {
   application.registerMounted(() async {
     application.init();
     // await dbCommon.openByDefault();
-    await taskService.init();
     await localNotification.init();
+    await taskService.init();
     // await backgroundFetchService.install();
-    if (Global.appContext != null) BlocProvider.of<WalletBloc>(Global.appContext).add(LoadWallet());
+    if (Settings.appContext != null) BlocProvider.of<WalletBloc>(Settings.appContext).add(LoadWallet());
   });
 
   // error
@@ -65,10 +63,10 @@ void main() async {
     if (close != true) {
       await SentryFlutter.init(
         (options) {
-          options.debug = !Global.isRelease;
+          options.debug = !Settings.isRelease;
           options.dsn = Settings.sentryDSN;
-          options.environment = Global.isRelease ? 'production' : 'debug';
-          options.release = Global.versionFormat;
+          options.environment = Settings.isRelease ? 'production' : 'debug';
+          options.release = Settings.versionFormat;
         },
         //appRunner: () => runApp(Main()),
       );
@@ -96,7 +94,7 @@ class _MainState extends State<Main> {
   @override
   void initState() {
     super.initState();
-    Global.appContext = context; // be replace by app.context
+    Settings.appContext = context; // be replace by app.context
   }
 
   @override
@@ -122,7 +120,7 @@ class _MainState extends State<Main> {
             ],
             onGenerateRoute: Routes.onGenerateRoute,
             initialRoute: AppScreen.routeName,
-            locale: Settings.locale == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.locale),
+            locale: Settings.language == 'auto' ? null : Locale.fromSubtags(languageCode: Settings.language),
             localizationsDelegates: [
               S.delegate,
               GlobalMaterialLocalizations.delegate,
