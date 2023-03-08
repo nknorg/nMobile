@@ -5,8 +5,8 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/crypto.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
@@ -47,7 +47,7 @@ class PrivateGroupCommon with Tag {
     if (invitee == null || invitee.isEmpty) return null;
     if (inviter == null || inviter.isEmpty) return null;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    int expiresAt = nowAt + (expiresMs ?? Global.privateGroupInviteExpiresMs);
+    int expiresAt = nowAt + (expiresMs ?? Settings.privateGroupInviteExpiresMs);
     PrivateGroupItemSchema? schema = PrivateGroupItemSchema.create(
       groupId,
       permission: permission ?? PrivateGroupItemPerm.normal,
@@ -109,24 +109,24 @@ class PrivateGroupCommon with Tag {
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - invitee - has no group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
+      if (toast) Toast.show(Settings.locale((s) => s.group_no_exist));
       return false;
     }
     String? selfAddress = clientCommon.address;
     if ((target == selfAddress) || (selfAddress == null) || selfAddress.isEmpty) {
       logger.e('$TAG - invitee - invitee self. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invite_yourself_error));
       return false;
     }
     PrivateGroupItemSchema? myself = await queryGroupItem(groupId, selfAddress);
     PrivateGroupItemSchema? invitee = await queryGroupItem(groupId, target);
     if ((myself == null) || ((myself.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.e('$TAG - invitee - me no in group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.contact_invite_group_tip));
+      if (toast) Toast.show(Settings.locale((s) => s.contact_invite_group_tip));
       return false;
     } else if ((invitee != null) && ((invitee.permission ?? 0) > PrivateGroupItemPerm.none)) {
       logger.d('$TAG - invitee - Invitee already exists.');
-      if (toast) Toast.show(Global.locale((s) => s.invitee_already_exists));
+      if (toast) Toast.show(Settings.locale((s) => s.invitee_already_exists));
       return false;
     } else if ((invitee != null) && (invitee.permission == PrivateGroupItemPerm.black)) {
       logger.d('$TAG - invitee - Invitee again black.');
@@ -143,7 +143,7 @@ class PrivateGroupCommon with Tag {
       }
     } else {
       logger.d('$TAG - invitee - Invitee no adminer.');
-      if (toast) Toast.show(Global.locale((s) => s.no_permission_action));
+      if (toast) Toast.show(Settings.locale((s) => s.no_permission_action));
       return false;
     }
     // action
@@ -151,7 +151,7 @@ class PrivateGroupCommon with Tag {
       invitee = createInvitationModel(groupId, target, selfAddress);
     } else {
       invitee.permission = PrivateGroupItemPerm.normal;
-      invitee.expiresAt = DateTime.now().millisecondsSinceEpoch + Global.privateGroupInviteExpiresMs;
+      invitee.expiresAt = DateTime.now().millisecondsSinceEpoch + Settings.privateGroupInviteExpiresMs;
       invitee.inviterRawData = jsonEncode(invitee.createRawDataMap());
     }
     if (invitee == null) return false;
@@ -170,7 +170,7 @@ class PrivateGroupCommon with Tag {
     PrivateGroupItemSchema? itemExists = await queryGroupItem(schema.groupId, schema.invitee);
     if ((itemExists != null) && ((itemExists.permission ?? 0) > PrivateGroupItemPerm.none)) {
       logger.w('$TAG - acceptInvitation - already in group - exists:$itemExists');
-      if (toast) Toast.show(Global.locale((s) => s.accepted_already));
+      if (toast) Toast.show(Settings.locale((s) => s.accepted_already));
       return null;
     }
     // check
@@ -178,26 +178,26 @@ class PrivateGroupCommon with Tag {
     int nowAt = DateTime.now().millisecondsSinceEpoch;
     if ((expiresAt == null) || (expiresAt < nowAt)) {
       logger.w('$TAG - acceptInvitation - expiresAt check fail - expiresAt:$expiresAt - nowAt:$nowAt');
-      if (toast) Toast.show(Global.locale((s) => s.invitation_has_expired));
+      if (toast) Toast.show(Settings.locale((s) => s.invitation_has_expired));
       return null;
     } else if ((schema.permission != PrivateGroupItemPerm.normal) && (schema.permission != PrivateGroupItemPerm.owner)) {
       logger.e('$TAG - acceptInvitation - inviter incomplete permission - schema:$schema');
-      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invitation_information_error));
       return null;
     }
     if ((schema.invitee == null) || (schema.invitee?.isEmpty == true) || (schema.inviter == null) || (schema.inviter?.isEmpty == true) || (schema.inviterRawData == null) || (schema.inviterRawData?.isEmpty == true) || (schema.inviterSignature == null) || (schema.inviterSignature?.isEmpty == true)) {
       logger.e('$TAG - acceptInvitation - inviter incomplete data - schema:$schema');
-      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invitation_information_error));
       return null;
     } else if (schema.inviterRawData != jsonEncode(schema.createRawDataMap())) {
       logger.e('$TAG - acceptInvitation - inviter incomplete raw_data - schema:$schema');
-      if (toast) Toast.show(Global.locale((s) => s.invitation_information_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invitation_information_error));
       return null;
     }
     bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
     if (!verifiedInviter) {
       logger.e('$TAG - acceptInvitation - signature verification failed.');
-      if (toast) Toast.show(Global.locale((s) => s.invitation_signature_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invitation_signature_error));
       return null;
     }
     // set
@@ -248,7 +248,7 @@ class PrivateGroupCommon with Tag {
       logger.i('$TAG - onInviteeAccept - invitee is exist.');
       return schemaGroup;
     } else if ((itemExist != null) && (itemExist.permission == PrivateGroupItemPerm.quit)) {
-      if ((expiresAt - Global.privateGroupInviteExpiresMs) < (itemExist.expiresAt ?? 0)) {
+      if ((expiresAt - Settings.privateGroupInviteExpiresMs) < (itemExist.expiresAt ?? 0)) {
         logger.i('$TAG - onInviteeAccept - invitee later by quit.');
         return null;
       }
@@ -282,7 +282,7 @@ class PrivateGroupCommon with Tag {
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - quit - has no group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
+      if (toast) Toast.show(Settings.locale((s) => s.group_no_exist));
       return false;
     }
     String? selfAddress = clientCommon.address;
@@ -296,7 +296,7 @@ class PrivateGroupCommon with Tag {
     PrivateGroupItemSchema? myself = await queryGroupItem(groupId, selfAddress);
     if ((myself == null) || ((myself.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.d('$TAG - quit - Member already no exists.');
-      if (toast) Toast.show(Global.locale((s) => s.tip_ask_group_owner_permission));
+      if (toast) Toast.show(Settings.locale((s) => s.tip_ask_group_owner_permission));
       return false;
     }
     // action
@@ -424,24 +424,24 @@ class PrivateGroupCommon with Tag {
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - kickOut - has no group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
+      if (toast) Toast.show(Settings.locale((s) => s.group_no_exist));
       return false;
     }
     String? selfAddress = clientCommon.address;
     if ((target == selfAddress) || (selfAddress == null) || selfAddress.isEmpty) {
       logger.w('$TAG - kickOut - kickOut self. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.kick_yourself_error));
+      if (toast) Toast.show(Settings.locale((s) => s.kick_yourself_error));
       return false;
     }
     PrivateGroupItemSchema? myself = await queryGroupItem(groupId, selfAddress);
     PrivateGroupItemSchema? blacker = await queryGroupItem(groupId, target);
     if ((myself == null) || ((myself.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.w('$TAG - kickOut - me no in group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.contact_invite_group_tip));
+      if (toast) Toast.show(Settings.locale((s) => s.contact_invite_group_tip));
       return false;
     } else if ((blacker == null) || ((blacker.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.d('$TAG - kickOut - Member already no exists.');
-      if (toast) Toast.show(Global.locale((s) => s.member_already_no_permission));
+      if (toast) Toast.show(Settings.locale((s) => s.member_already_no_permission));
       return false;
     }
     if (isAdmin(schemaGroup, myself)) {
@@ -454,7 +454,7 @@ class PrivateGroupCommon with Tag {
       }
     } else {
       logger.d('$TAG - kickOut - kickOut no adminer.');
-      if (toast) Toast.show(Global.locale((s) => s.no_permission_action));
+      if (toast) Toast.show(Settings.locale((s) => s.no_permission_action));
       return false;
     }
     // action
@@ -505,13 +505,13 @@ class PrivateGroupCommon with Tag {
     PrivateGroupSchema? schemaGroup = await queryGroup(groupId);
     if (schemaGroup == null) {
       logger.e('$TAG - setOptionsBurning - has no group. - groupId:$groupId');
-      if (toast) Toast.show(Global.locale((s) => s.group_no_exist));
+      if (toast) Toast.show(Settings.locale((s) => s.group_no_exist));
       return false;
     }
     String? selfAddress = clientCommon.address;
     if ((selfAddress == null) || selfAddress.isEmpty || !isOwner(schemaGroup.ownerPublicKey, selfAddress)) {
       logger.w('$TAG - setOptionsBurning - no permission.');
-      if (toast) Toast.show(Global.locale((s) => s.only_owner_can_modify));
+      if (toast) Toast.show(Settings.locale((s) => s.only_owner_can_modify));
       return false;
     }
     // delete_sec

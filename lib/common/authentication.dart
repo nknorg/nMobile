@@ -1,5 +1,4 @@
 import 'package:local_auth/local_auth.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -22,7 +21,7 @@ class Authorization {
 
   Future<bool> authentication([String? localizedReason]) async {
     if (localizedReason == null || localizedReason.isEmpty) {
-      localizedReason = Global.locale((s) => s.authenticate_to_access);
+      localizedReason = Settings.locale((s) => s.authenticate_to_access);
     }
     try {
       bool success = await _localAuth.authenticate(
@@ -64,12 +63,12 @@ class Authorization {
     }).then((bool authOk) async {
       String? pwd = await walletCommon.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(Global.appContext).showInput(
-          title: Global.locale((s) => s.verify_wallet_password),
-          inputTip: Global.locale((s) => s.wallet_password),
-          inputHint: Global.locale((s) => s.input_password),
-          actionText: Global.locale((s) => s.continue_text),
-          validator: Validator.of(Global.appContext).password(),
+        return BottomDialog.of(Settings.appContext).showInput(
+          title: Settings.locale((s) => s.verify_wallet_password),
+          inputTip: Settings.locale((s) => s.wallet_password),
+          inputHint: Settings.locale((s) => s.input_password),
+          actionText: Settings.locale((s) => s.continue_text),
+          validator: Validator.of(Settings.appContext).password(),
           password: true,
         );
       }

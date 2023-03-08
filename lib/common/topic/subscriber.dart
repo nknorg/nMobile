@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/top_sub.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -51,7 +51,7 @@ class SubscriberCommon with Tag {
       if (_contact == null) {
         logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
         _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
-        await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, RequestType.header, null);
+        await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, ContactRequestType.header, null);
         await Future.delayed(Duration(milliseconds: 10));
       }
       // deviceInfo
@@ -115,8 +115,8 @@ class SubscriberCommon with Tag {
       // filter in txPool
       int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs;
-      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs;
+      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.txPoolDelayMs;
+      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs;
       if (isCreateJustNow) {
         if (dbItem.status == SubscriberStatus.None) {
           logger.i("$TAG - refreshSubscribers - DB created just now, next by status none - dbSub:$dbItem");

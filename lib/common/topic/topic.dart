@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:nmobile/common/client/client.dart';
-import 'package:nmobile/common/global.dart';
+import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/top_sub.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validate.dart';
@@ -169,13 +170,13 @@ class TopicCommon with Tag {
       });
       if ((result.length < limit) || (topics.length >= topicMax)) break;
     }
-    int? globalHeight = await Global.getBlockHeight();
+    int? globalHeight = await RPC.getBlockHeight();
     if (globalHeight != null && globalHeight > 0) {
       double fee = 0;
       var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
       if ((isAuto != null) && (isAuto.toString() == "true" || isAuto == true)) {
         fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-        if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+        if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
       }
       for (var i = 0; i < topics.length; i++) {
         TopicSchema topic = topics[i];
@@ -212,7 +213,7 @@ class TopicCommon with Tag {
       List result = await getPermissionExpireAtByNode(topic.topic, i);
       int expireHeight = result[0] ?? 0;
       Map<String, dynamic> meta = result[1] ?? Map();
-      if ((expireHeight > 0) && ((expireHeight - globalHeight) < Global.topicWarnBlockExpireHeight)) {
+      if ((expireHeight > 0) && ((expireHeight - globalHeight) < Settings.topicWarnBlockExpireHeight)) {
         await TopSub.subscribeWithPermission(topic.topic, fee: fee, permissionPage: i, meta: meta, nonce: nonce, toast: false);
       }
     }
@@ -306,16 +307,16 @@ class TopicCommon with Tag {
       if ((acceptAll != true)) {
         if (isReject == true) {
           if (justNow) {
-            Toast.show(Global.locale((s) => s.no_permission_join_group));
+            Toast.show(Settings.locale((s) => s.no_permission_join_group));
           } else {
-            Toast.show(Global.locale((s) => s.removed_group_tip));
+            Toast.show(Settings.locale((s) => s.removed_group_tip));
           }
           return null;
         } else if (isAccept != true) {
           if (justNow) {
-            Toast.show(Global.locale((s) => s.no_permission_join_group));
+            Toast.show(Settings.locale((s) => s.no_permission_join_group));
           } else {
-            Toast.show(Global.locale((s) => s.contact_invite_group_tip));
+            Toast.show(Settings.locale((s) => s.contact_invite_group_tip));
           }
           return null;
         } else {
@@ -371,7 +372,7 @@ class TopicCommon with Tag {
         // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Global.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -394,7 +395,7 @@ class TopicCommon with Tag {
         // DB is joined + node no joined
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Global.txPoolDelayMs) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.txPoolDelayMs) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) {
@@ -414,7 +415,7 @@ class TopicCommon with Tag {
     }
 
     // subscribe
-    int? globalHeight = await Global.getBlockHeight();
+    int? globalHeight = await RPC.getBlockHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight: globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // subscribe fee
@@ -422,7 +423,7 @@ class TopicCommon with Tag {
         var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
         if (isAuto != null && (isAuto.toString() == "true" || isAuto == true)) {
           fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-          if (fee <= 0) fee = Global.topicSubscribeFeeDefault;
+          if (fee <= 0) fee = Settings.topicSubscribeFeeDefault;
         }
       }
       // client subscribe
@@ -435,7 +436,7 @@ class TopicCommon with Tag {
 
       // db update
       var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
-      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Global.topicDefaultSubscribeHeight;
+      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Settings.topicDefaultSubscribeHeight;
       bool setSuccess = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, refreshCreateAt: true, notify: true);
       if (setSuccess) {
         exists.joined = true;
@@ -462,23 +463,23 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (isPrivate && !isOwner) {
-      if (toast) Toast.show(Global.locale((s) => s.member_no_auth_invite));
+      if (toast) Toast.show(Settings.locale((s) => s.member_no_auth_invite));
       return null;
     }
     if (clientAddress == clientCommon.address) {
-      if (toast) Toast.show(Global.locale((s) => s.invite_yourself_error));
+      if (toast) Toast.show(Settings.locale((s) => s.invite_yourself_error));
       return null;
     }
 
     // check status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if (_subscriber != null && _subscriber.status == SubscriberStatus.Subscribed) {
-      if (toast) Toast.show(Global.locale((s) => s.group_member_already));
+      if (toast) Toast.show(Settings.locale((s) => s.group_member_already));
       return null;
     }
     int? oldStatus = _subscriber?.status;
 
-    // if (isPrivate && toast) Toast.show(Global.locale((s) => s.inviting));
+    // if (isPrivate && toast) Toast.show(Settings.locale((s) => s.inviting));
 
     // check permission
     int? appendPermPage;
@@ -490,7 +491,7 @@ class TopicCommon with Tag {
 
       // just owner can invitee reject item
       if (!isOwner && (acceptAll != true) && (isReject == true)) {
-        if (toast) Toast.show(Global.locale((s) => s.blocked_user_disallow_invite));
+        if (toast) Toast.show(Settings.locale((s) => s.blocked_user_disallow_invite));
         return null;
       }
 
@@ -518,13 +519,13 @@ class TopicCommon with Tag {
     if (sendMsg) {
       MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(clientAddress, topic);
       if (_msg == null) {
-        if (toast) Toast.show(Global.locale((s) => s.failure));
+        if (toast) Toast.show(Settings.locale((s) => s.failure));
         return null;
       }
     } else if (oldStatus == SubscriberStatus.InvitedReceipt) {
       await subscriberCommon.setStatus(_subscriber?.id, SubscriberStatus.InvitedReceipt, notify: true);
     }
-    if (toast) Toast.show(Global.locale((s) => s.invitation_sent));
+    if (toast) Toast.show(Settings.locale((s) => s.invitation_sent));
     return _subscriber;
   }
 
@@ -579,7 +580,7 @@ class TopicCommon with Tag {
     int? permPage = permission[0] ?? _subscriber.permPage;
     bool? acceptAll = permission[1];
     if (permPage == null) {
-      if (toast) Toast.show(Global.locale((s) => s.failure));
+      if (toast) Toast.show(Settings.locale((s) => s.failure));
       return null;
     }
 
@@ -601,7 +602,7 @@ class TopicCommon with Tag {
 
     // send message
     await chatOutCommon.sendTopicKickOut(topic, clientAddress);
-    if (toast) Toast.show(Global.locale((s) => s.rejected));
+    if (toast) Toast.show(Settings.locale((s) => s.rejected));
     return _subscriber;
   }
 
@@ -629,7 +630,7 @@ class TopicCommon with Tag {
       if (acceptAll == null || acceptAll != true) {
         if (isReject == true || isAccept != true) {
           if (tryTimes >= maxTryTimes) {
-            // (Global.txPoolDelayMs / (5 * 1000))
+            // (Settings.txPoolDelayMs / (5 * 1000))
             logger.w("$TAG - onSubscribe - subscriber permission is not ok - topic:$_topic - clientAddress:$clientAddress - permission:$permission");
             return null;
           }
@@ -789,7 +790,7 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topic);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Global.txPoolDelayMs) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.txPoolDelayMs) {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
@@ -798,7 +799,7 @@ class TopicCommon with Tag {
       logger.i("$TAG - isJoined - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
       return false;
     }
-    globalHeight = globalHeight ?? (await Global.getBlockHeight());
+    globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight == null || globalHeight <= 0) {
       logger.w("$TAG - isJoined - globalHeight <= 0 - topic:$topic");
       return false;
@@ -898,7 +899,7 @@ class TopicCommon with Tag {
     subscribers.forEach((SubscriberSchema element) {
       if ((element.clientAddress.isNotEmpty == true) && (element.clientAddress != append.clientAddress)) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Global.txPoolDelayMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.txPoolDelayMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
           if ((element.status == SubscriberStatus.InvitedSend) || (element.status == SubscriberStatus.InvitedReceipt) || (element.status == SubscriberStatus.Subscribed)) {
             // add to accepts
