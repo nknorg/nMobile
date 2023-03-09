@@ -722,7 +722,7 @@ class Upgrade4to5 {
         int newStatus = MessageStatus.Read;
         if (newIsOutbound == 1) {
           if (oldIsSendError == 1) {
-            newStatus = MessageStatus.SendFail;
+            newStatus = MessageStatus.Error;
           }
         } else if (newIsOutbound == 0) {
           if (oldIsRead == null || oldIsRead == 0) {

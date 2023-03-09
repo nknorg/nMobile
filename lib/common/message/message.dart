@@ -48,7 +48,7 @@ class MessageCommon with Tag {
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
+    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.Receipt) || (message.status == MessageStatus.Read)) : true;
     bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
     if (notify) onDeleteSink.add(message.msgId); // no need success
     // delete file
@@ -77,7 +77,7 @@ class MessageCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = false}) async {
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = true}) async {
     if (reQuery) {
       MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
       if (_latest != null) message = _latest;
@@ -92,15 +92,16 @@ class MessageCommon with Tag {
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (success) {
       message.status = status;
-      if (message.status == MessageStatus.SendSuccess) {
-        message.options = MessageOptions.setOutAt(message.options, DateTime.now().millisecondsSinceEpoch);
-        await MessageStorage.instance.updateOptions(message.msgId, message.options);
+      if (message.status == MessageStatus.Success) {
+        var options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
+        bool optionsOK = await updateMessageOptions(message, message.options, notify: false);
+        if (optionsOK) message.options = options;
       }
       if (notify) onUpdateSink.add(message);
     }
     // delete later
     if (message.isDelete && (message.content != null)) {
-      bool clearContent = message.isOutbound ? ((message.status == MessageStatus.SendReceipt) || (message.status == MessageStatus.Read)) : true;
+      bool clearContent = message.isOutbound ? ((message.status == MessageStatus.Receipt) || (message.status == MessageStatus.Read)) : true;
       if (clearContent) {
         messageDelete(message, notify: false); // await
       } else {
@@ -108,6 +109,20 @@ class MessageCommon with Tag {
       }
     }
     return message;
+  }
+
+  Future<bool> updateMessageOptions(MessageSchema? message, Map<String, dynamic>? options, {bool reQuery = false, bool notify = false}) async {
+    if (message == null || message.msgId.isEmpty) return false;
+    if (reQuery) {
+      MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
+      if (_latest != null) message = _latest;
+    }
+    bool success = await MessageStorage.instance.updateOptions(message.msgId, options);
+    if (success) {
+      message.options = options;
+      if (notify) onUpdateSink.add(message);
+    }
+    return success;
   }
 
   Future<int> readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {
@@ -124,7 +139,7 @@ class MessageCommon with Tag {
     List<String> msgIds = [];
     for (var i = 0; i < unreadList.length; i++) {
       MessageSchema element = unreadList[i];
-      element = await updateMessageStatus(element, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: false);
+      element = await updateMessageStatus(element, MessageStatus.Read);
       if (element.status == MessageStatus.Read) {
         msgIds.add(element.msgId);
       }
@@ -136,13 +151,13 @@ class MessageCommon with Tag {
     return msgIds.length;
   }
 
-  Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt) async {
+  /*Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
     int limit = 20;
     // query
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
+      List<MessageSchema> result = await MessageStorage.instance.queryListByStatus(MessageStatus.Receipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
       List<MessageSchema> needReads = result.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
@@ -154,5 +169,5 @@ class MessageCommon with Tag {
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     return unReadList.length;
-  }
+  }*/
 }

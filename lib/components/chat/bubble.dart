@@ -191,7 +191,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     }
 
     bool isSendOut = _message.isOutbound;
-    bool isTipBottom = _message.status == MessageStatus.SendSuccess || _message.status == MessageStatus.SendReceipt;
+    bool isTipBottom = _message.status == MessageStatus.Success || _message.status == MessageStatus.Receipt;
 
     BoxDecoration decoration = _getStyles();
 
@@ -275,7 +275,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Widget _getStatusTip(bool self) {
     // bool isSending = _message.status == MessageStatus.Sending;
-    bool isSendFail = _message.status == MessageStatus.SendFail;
+    bool isSendFail = _message.status == MessageStatus.Error;
     // bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
     // bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
 
@@ -417,7 +417,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         // just audio, no ipfs_audio
         _bodyList = _getContentBodyAudio();
         if (_message.content is File) {
-          double? durationS = MessageOptions.getAudioDuration(_message.options);
+          double? durationS = MessageOptions.getMediaDuration(_message.options);
           int? durationMs = durationS == null ? null : ((durationS * 1000).round());
           File file = _message.content as File;
           onTap = () => audioHelper.playStart(_message.msgId, file.path, durationMs: durationMs);
@@ -516,7 +516,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _bottomRightWidget() {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int? sendAt = _message.isOutbound ? _message.sendAt : (_message.sendAt ?? MessageOptions.getInAt(_message.options));
+    int? sendAt = _message.reallySendAt;
     String sendTime = ((sendAt != null) && (sendAt != 0)) ? Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
     bool isSending = _message.status == MessageStatus.Sending;
 
@@ -554,8 +554,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
     bool isSending = _message.status == MessageStatus.Sending;
-    bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
-    bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
+    bool isSendSuccess = _message.status == MessageStatus.Success;
+    bool isSendReceipt = _message.status == MessageStatus.Receipt;
     bool isSendRead = _message.status == MessageStatus.Read;
 
     bool showProgress = isSending && (_message.content is File) && (_upDownloadProgress < 1) && (_upDownloadProgress > 0);
@@ -839,7 +839,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Color progressBgColor = _message.isOutbound ? Colors.white.withAlpha(230) : application.theme.primaryColor.withAlpha(30);
     Color progressValueColor = _message.isOutbound ? application.theme.backgroundColor4.withAlpha(127) : application.theme.primaryColor.withAlpha(200);
 
-    double? durationS = MessageOptions.getAudioDuration(_message.options);
+    double? durationS = MessageOptions.getMediaDuration(_message.options);
     double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
     double minWidth = Settings.screenWidth() * 0.05;
@@ -895,7 +895,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double placeholderWidth = ratioWH[0] ?? minWidth;
     double placeholderHeight = ratioWH[1] ?? minHeight;
 
-    double? duration = MessageOptions.getMediaDuration(_message.options) ?? MessageOptions.getAudioDuration(_message.options);
+    double? duration = MessageOptions.getMediaDuration(_message.options);
     String? durationText;
     if ((duration != null) && (duration >= 0)) {
       int min = duration ~/ 60;
