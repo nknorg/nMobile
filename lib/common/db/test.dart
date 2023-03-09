@@ -230,7 +230,7 @@ Future addTestData(
     from: (0 % 2 == 0) ? clientAddressList[0] : clientAddressList[1],
     to: (0 % 2 == 0) ? clientAddressList[1] : clientAddressList[0],
     topic: (0 % (contactCount ~/ topicCount) == 0) ? topicNameList[0] : "",
-    status: (0 % 10 == 0) ? ((0 % 2 == 0) ? ((0 % 2 == 0) ? MessageStatus.SendReceipt : MessageStatus.SendSuccess) : MessageStatus.Received) : MessageStatus.Read,
+    status: (0 % 10 == 0) ? ((0 % 2 == 0) ? ((0 % 2 == 0) ? MessageStatus.Receipt : MessageStatus.Success) : MessageStatus.Received) : MessageStatus.Read,
     isOutbound: (0 % 2 == 0) ? true : false,
     isDelete: (0 % 20 == 0) ? true : false,
     sendAt: DateTime.now().millisecondsSinceEpoch,
@@ -249,7 +249,7 @@ Future addTestData(
     entity5['receiver'] = (i % 2 == 0) ? clientAddressList[1] : clientAddressList[0];
     entity5['topic'] = null;
     entity5['target_id'] = (i % 2 == 0) ? entity5['receiver'] : entity5['sender'];
-    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.SendReceipt : MessageStatus.SendSuccess) : MessageStatus.Received) : MessageStatus.Read;
+    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.Receipt : MessageStatus.Success) : MessageStatus.Received) : MessageStatus.Read;
     entity5['is_outbound'] = (i % 2 == 0) ? 1 : 0;
     entity5['is_delete'] = (i % 20 == 0) ? 1 : 0;
     entity5['send_at'] = entity5['send_at'] + 1;
@@ -269,7 +269,7 @@ Future addTestData(
     entity5['receiver'] = null;
     entity5['topic'] = topicNameList[0];
     entity5['target_id'] = entity5['topic'];
-    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.SendReceipt : MessageStatus.SendSuccess) : MessageStatus.Received) : MessageStatus.Read;
+    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.Receipt : MessageStatus.Success) : MessageStatus.Received) : MessageStatus.Read;
     entity5['is_outbound'] = (i % 10 == 0) ? 1 : 0;
     entity5['is_delete'] = (i % 20 == 0) ? 1 : 0;
     entity5['send_at'] = entity5['send_at'] + 1;
@@ -289,7 +289,7 @@ Future addTestData(
     entity5['receiver'] = (i % (contactCount ~/ topicCount) != 0) ? ((i % 2 == 0) ? entity5['sender'] : clientAddressList[0]) : null;
     entity5['topic'] = (i % (contactCount ~/ topicCount) == 0) ? topicNameList[Random().nextInt(topicNameList.length - 1) + 1] : null;
     entity5['target_id'] = (entity5['topic'] != null) ? entity5['topic'] : ((i % 2 == 0) ? entity5['receiver'] : entity5['sender']);
-    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.SendReceipt : MessageStatus.SendSuccess) : MessageStatus.Received) : MessageStatus.Read;
+    entity5['status'] = (i % 10 == 0) ? ((i % 2 == 0) ? ((i % 2 == 0) ? MessageStatus.Receipt : MessageStatus.Success) : MessageStatus.Received) : MessageStatus.Read;
     entity5['is_outbound'] = (i % 2 == 0) ? 1 : 0;
     entity5['is_delete'] = (i % 20 == 0) ? 1 : 0;
     entity5['send_at'] = entity5['send_at'] + 1;

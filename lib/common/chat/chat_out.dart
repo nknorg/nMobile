@@ -191,7 +191,7 @@ class ChatOutCommon with Tag {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
     received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
-    String data = MessageData.getReceipt(received.msgId, received.receiveAt);
+    String data = MessageData.getReceipt(received.msgId);
     Uint8List? pid = await _sendWithAddress([received.from], data);
     return pid?.isNotEmpty == true;
   }
@@ -488,39 +488,12 @@ class ChatOutCommon with Tag {
         "burningUpdateAt": burningUpdateAt,
         "fileType": MessageOptions.fileTypeAudio,
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_AUDIO_EXT),
-        "audioDurationS": durationS,
+        "duration": durationS,
       },
     );
     // data
     String? data = await MessageData.getAudio(message);
     return await _send(message, data);
-  }
-
-  // NO DB NO display
-  Future<MessageSchema?> sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
-    int timeNowAt = DateTime.now().millisecondsSinceEpoch;
-    await Future.delayed(Duration(milliseconds: (message.sendAt ?? timeNowAt) - timeNowAt));
-    String data = MessageData.getPiece(message);
-    OnMessage? onResult = await sendMsg(clientCommon.address, clientAddressList, data);
-    if ((onResult == null) || onResult.messageId.isEmpty) return null;
-    message.pid = onResult.messageId;
-    // progress
-    if (percent > 0 && percent <= 1) {
-      if (percent <= 1.05) {
-        // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
-      }
-    } else {
-      int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
-      int? index = message.options?[MessageOptions.KEY_PIECE_INDEX];
-      double percent = (index ?? 0) / (total ?? 1);
-      if (percent <= 1.05) {
-        // logger.v("$TAG - sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
-        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
-      }
-    }
-    return message;
   }
 
   // NO DB NO single
@@ -698,13 +671,22 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
-  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false}) async {
+  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false, int gapMute = 0}) async {
     if (message == null) return null;
     // sendAt
-    if (!mute) {
-      message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true, notify: true);
-      await MessageStorage.instance.updateSendAt(message.msgId, message.sendAt);
-      message.sendAt = DateTime.now().millisecondsSinceEpoch;
+    if (mute) {
+      int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
+      if ((gapMute > 0) && (resendMuteAt > 0)) {
+        int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
+        if (interval < gapMute) {
+          logger.i("$TAG - resendMute - resend gap small - targetId:${message.targetId} - interval:$interval");
+          return null;
+        }
+      }
+    } else {
+      bool success = await MessageStorage.instance.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      if (success) message.sendAt = DateTime.now().millisecondsSinceEpoch;
+      message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true);
     }
     // ipfs
     if (message.contentType == MessageContentType.ipfs) {
@@ -757,12 +739,18 @@ class ChatOutCommon with Tag {
         if (message.isTopic || message.isPrivateGroup) {
           notification = false;
         } else {
-          bool sendNoReply = message.status < MessageStatus.SendReceipt;
+          bool sendNoReply = message.status < MessageStatus.Receipt;
           String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
           notification = sendNoReply && pushNotifyId.isEmpty;
         }
         // send_mute
-        return await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
+        MessageSchema? result = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
+        if (result != null) {
+          var options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
+          bool optionsOK = await messageCommon.updateMessageOptions(result, options, reQuery: true, notify: false);
+          if (optionsOK) result.options = options;
+        }
+        return result;
       }
       // send
       return await _send(message, msgData, insert: false);
@@ -824,7 +812,7 @@ class ChatOutCommon with Tag {
     if (statusSync) {
       if (pid?.isNotEmpty == true) {
         if (message.canReceipt) {
-          messageCommon.updateMessageStatus(message, MessageStatus.SendSuccess, reQuery: true, notify: true); // await
+          messageCommon.updateMessageStatus(message, MessageStatus.Success, reQuery: true); // await
         } else {
           // no received receipt/read
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
@@ -833,7 +821,7 @@ class ChatOutCommon with Tag {
       } else {
         logger.w("$TAG - _send - pid = null - message:$message");
         if (message.canResend) {
-          message = await messageCommon.updateMessageStatus(message, MessageStatus.SendFail, force: true, notify: true);
+          message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
         } else if (message.canDisplay) {
           // noResend just delete
           int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
@@ -882,9 +870,9 @@ class ChatOutCommon with Tag {
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
             if (!pushOk && (uuid != null) && uuid.isNotEmpty) {
-              message.options = MessageOptions.setPushNotifyId(message.options, uuid);
-              bool success = await MessageStorage.instance.updateOptions(message.msgId, message.options);
-              if (success) pushOk = true;
+              var options = MessageOptions.setPushNotifyId(message.options, uuid);
+              bool optionsOK = await messageCommon.updateMessageOptions(message, options, reQuery: true, notify: false);
+              if (optionsOK) pushOk = true;
             }
           }
         });
@@ -950,7 +938,7 @@ class ChatOutCommon with Tag {
     }
     // self
     if (selfIsReceiver) {
-      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
@@ -1019,7 +1007,7 @@ class ChatOutCommon with Tag {
     }
     // self
     if (selfIsReceiver) {
-      String data = MessageData.getReceipt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
@@ -1064,9 +1052,9 @@ class ChatOutCommon with Tag {
       MessageSchema piece = MessageSchema.fromSend(
         msgId: message.msgId,
         from: message.from,
-        to: "",
-        topic: message.topic, // need
-        groupId: message.groupId, // need
+        to: message.to,
+        topic: message.topic,
+        groupId: message.groupId,
         contentType: MessageContentType.piece,
         content: base64Encode(data),
         options: options,
@@ -1079,7 +1067,7 @@ class ChatOutCommon with Tag {
         },
       );
       double percent = (totalPercent > 0 && totalPercent <= 1) ? (index / total * totalPercent) : -1;
-      MessageSchema? result = await sendPiece(clientAddressList, piece, percent: percent);
+      MessageSchema? result = await _sendPiece(clientAddressList, piece, percent: percent);
       if ((result == null) || (result.pid == null)) {
         logger.w("$TAG - _sendWithPieces:ERROR - msgId:${piece.msgId}");
       } else {
@@ -1095,5 +1083,29 @@ class ChatOutCommon with Tag {
     }
     logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - message:$message");
     return [null, false];
+  }
+
+  Future<MessageSchema?> _sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    String data = MessageData.getPiece(message);
+    OnMessage? onResult = await sendMsg(clientCommon.address, clientAddressList, data);
+    if ((onResult == null) || onResult.messageId.isEmpty) return null;
+    message.pid = onResult.messageId;
+    // progress
+    if ((percent > 0) && (percent <= 1)) {
+      if (percent <= 1.05) {
+        // logger.v("$TAG - _sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
+      }
+    } else {
+      int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
+      int? index = message.options?[MessageOptions.KEY_PIECE_INDEX];
+      double percent = (index ?? 0) / (total ?? 1);
+      if (percent <= 1.05) {
+        // logger.v("$TAG - _sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:$message - data:$data");
+        messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
+      }
+    }
+    return message;
   }
 }
