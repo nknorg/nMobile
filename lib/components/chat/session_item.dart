@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/contact/item.dart';
 import 'package:nmobile/components/private_group/item.dart';
@@ -52,7 +52,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     loaded = false;
     // target
     if (widget.session.isTopic) {
-      if (_topic == null || (widget.session.targetId != _topic?.topic)) {
+      if ((_topic == null) || (widget.session.targetId != _topic?.topic)) {
         topicCommon.queryByTopic(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
@@ -65,7 +65,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     } else if (widget.session.isPrivateGroup) {
-      if (_privateGroup == null || (widget.session.targetId != _privateGroup?.groupId)) {
+      if ((_privateGroup == null) || (widget.session.targetId != _privateGroup?.groupId)) {
         privateGroupCommon.queryGroup(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
@@ -78,7 +78,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         loaded = true;
       }
     } else {
-      if (_contact == null || (widget.session.targetId != _contact?.clientAddress)) {
+      if ((_contact == null) || (widget.session.targetId != _contact?.clientAddress)) {
         contactCommon.queryByClientAddress(widget.session.targetId).then((value) {
           setState(() {
             loaded = true;
@@ -92,7 +92,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }
     }
     // message
-    MessageSchema? lastMsg = widget.session.lastMessageOptions != null ? MessageSchema.fromMap(widget.session.lastMessageOptions!) : null;
+    Map<String, dynamic>? msgOptions = widget.session.lastMessageOptions;
+    MessageSchema? lastMsg = (msgOptions != null) ? MessageSchema.fromMap(msgOptions) : null;
     _lastMsg = lastMsg;
     // sender
     if (widget.session.isTopic || widget.session.isPrivateGroup) {
@@ -100,7 +101,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
     // burning
     if ((_lastMsg?.deleteAt != null) && ((_lastMsg?.deleteAt ?? 0) > 0)) {
-      _lastMsg = chatCommon.burningTick(_lastMsg!, "session", setDelete: false);
+      _lastMsg = chatCommon.burningTick(_lastMsg!, "session");
     }
   }
 
@@ -135,9 +136,6 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     if (clientAddress == null || clientAddress.isEmpty) return;
     if ((_groupSender != null) && (clientAddress == _groupSender?.clientAddress)) return;
     ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
-    if (contact == null) {
-      contact = await contactCommon.addByType(clientAddress, ContactType.none, notify: true, checkDuplicated: false);
-    }
     setState(() {
       _groupSender = contact;
     });
@@ -155,7 +153,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   Widget build(BuildContext context) {
     if ((_contact == null) && (_topic == null) && (_privateGroup == null) && loaded) {
-      sessionCommon.delete(widget.session.targetId, widget.session.type);
+      sessionCommon.delete(widget.session.targetId, widget.session.type); // await
       return SizedBox.shrink();
     }
     SessionSchema session = widget.session;
@@ -313,9 +311,9 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     String? draft = memoryCache.getDraft(session.targetId);
     String contactName = _contact?.displayName ?? "???";
     String groupSenderName = _groupSender?.displayName ?? "???";
-    String who = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : contactName);
+    String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : contactName);
     String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
-    String whoPrefix = (_lastMsg?.isOutbound == true) ? Global.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
+    String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
@@ -323,7 +321,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       contentWidget = Row(
         children: <Widget>[
           Label(
-            Global.locale((s) => s.placeholder_draft, ctx: context),
+            Settings.locale((s) => s.placeholder_draft, ctx: context),
             type: LabelType.bodyRegular,
             color: Colors.red,
             overflow: TextOverflow.ellipsis,
@@ -351,7 +349,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       bool isDeviceTokenOPen = deviceToken?.isNotEmpty == true;
 
       if (isBurn) {
-        String burnDecs = ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading, ctx: context) : Global.locale((s) => s.close_burn_after_reading, ctx: context)} ';
+        String burnDecs = ' ${isBurnOpen ? Settings.locale((s) => s.update_burn_after_reading, ctx: context) : Settings.locale((s) => s.close_burn_after_reading, ctx: context)} ';
         contentWidget = Label(
           who + burnDecs,
           type: LabelType.bodyRegular,
@@ -359,7 +357,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
           overflow: TextOverflow.ellipsis,
         );
       } else if (isDeviceToken) {
-        String deviceDesc = isDeviceTokenOPen ? ' ${Global.locale((s) => s.setting_accept_notification, ctx: context)}' : ' ${Global.locale((s) => s.setting_deny_notification, ctx: context)}';
+        String deviceDesc = isDeviceTokenOPen ? ' ${Settings.locale((s) => s.setting_accept_notification, ctx: context)}' : ' ${Settings.locale((s) => s.setting_deny_notification, ctx: context)}';
         contentWidget = Label(
           who + deviceDesc,
           type: LabelType.bodyRegular,
@@ -411,14 +409,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       );
     } else if ((msgType == MessageContentType.topicSubscribe) || (msgType == MessageContentType.privateGroupSubscribe)) {
       contentWidget = Label(
-        whoPrefix + Global.locale((s) => s.joined_channel, ctx: context),
+        whoPrefix + Settings.locale((s) => s.joined_channel, ctx: context),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
     } else if ((msgType == MessageContentType.topicInvitation) || (msgType == MessageContentType.privateGroupInvitation)) {
       contentWidget = Label(
-        Global.locale((s) => s.channel_invitation, ctx: context),
+        Settings.locale((s) => s.channel_invitation, ctx: context),
         type: LabelType.bodyRegular,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -443,8 +441,8 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
   Widget _unReadWidget(SessionSchema session) {
     String countStr = session.unReadCount.toString();
-    if ((session.unReadCount) > 999) {
-      countStr = '999+';
+    if ((session.unReadCount) > 99) {
+      countStr = '99+';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),

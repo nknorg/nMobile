@@ -256,7 +256,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
       _audioDragPercent = percent > 1 ? 1 : percent;
     });
     var result = await widget.onRecordTap?.call(visible, complete, _audioRecordDurationMs);
-    if (visible && result == false) {
+    if (visible && (result == false)) {
       _setAudioRecordVisible(false, false);
     }
   }

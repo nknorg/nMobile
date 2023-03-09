@@ -258,9 +258,9 @@ class ChatOutCommon with Tag {
   }
 
   // NO topic (1 to 1)
-  /*Future sendContactOptionsToken(String? clientAddress, String? deviceToken) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    if (clientAddress == null || clientAddress.isEmpty) return;
+  Future<bool> sendContactOptionsToken(String? clientAddress, String? deviceToken) async {
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (clientAddress == null || clientAddress.isEmpty) return false;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: clientCommon.address ?? "",
@@ -271,8 +271,9 @@ class ChatOutCommon with Tag {
       },
     );
     send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
-    await _send(send, send.content);
-  }*/
+    var result = await _send(send, send.content);
+    return result != null;
+  }
 
   // NO DB NO display (1 to 1)
   Future<bool> sendDeviceRequest(String? clientAddress) async {

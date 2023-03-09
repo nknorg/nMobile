@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bubble.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
@@ -13,6 +13,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/time.dart';
@@ -50,7 +51,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   @override
   void initState() {
     super.initState();
-    // contact
+    // contact TODO:GG 头像闪烁，是不是没改回去？以前也闪吗？
     _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
       if (_contact?.id == event.id) {
         setState(() {
@@ -62,15 +63,14 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
 
   @override
   void onRefreshArguments() {
-    // topic/group no contact
+    // topic/group no contact TODO:GG 头像闪烁，是不是没改回去？以前也闪吗？
     if ((_contact == null) || (_contact?.clientAddress != widget.message.from)) {
-      contactCommon.queryByClientAddress(widget.message.from).then((value) async {
-        if (value == null) {
-          value = await contactCommon.addByType(widget.message.from, ContactType.none, notify: true, checkDuplicated: false);
-        }
-        if ((_contact == null) || ((_contact?.clientAddress != value?.clientAddress) && (value != null))) {
+      contactCommon.queryByClientAddress(widget.message.from).then((contact) async {
+        bool existsErr = (_contact == null) || (_contact?.clientAddress != widget.message.from);
+        bool newRight = (contact != null) || (contact?.clientAddress == widget.message.from);
+        if (existsErr && newRight) {
           setState(() {
-            _contact = value;
+            _contact = contact;
           });
         }
       });
@@ -108,13 +108,11 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     bool canShowProfileByNextType = widget.nextMessage?.canBurning == true;
 
     // sendAt
-    int? prevSendAt = (widget.prevMessage?.isOutbound == true) ? widget.prevMessage?.sendAt : (widget.prevMessage?.sendAt ?? MessageOptions.getInAt(widget.prevMessage?.options));
-    int? currSendAt = (widget.message.isOutbound == true) ? widget.message.sendAt : (widget.message.sendAt ?? MessageOptions.getInAt(widget.message.options));
-    int? nextSendAt = (widget.nextMessage?.isOutbound == true) ? widget.nextMessage?.sendAt : (widget.nextMessage?.sendAt ?? MessageOptions.getInAt(widget.nextMessage?.options));
+    int? prevSendAt = widget.prevMessage?.reallySendAt;
+    int? currSendAt = widget.message.reallySendAt;
+    int? nextSendAt = widget.nextMessage?.reallySendAt;
 
     // group
-    int oneGroupSeconds = 2 * 60; // 2m
-
     bool isGroupHead = false;
     if (widget.nextMessage == null) {
       isGroupHead = true;
@@ -131,7 +129,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     } else {
       int curSec = currSendAt ~/ 1000;
       int nextSec = nextSendAt ~/ 1000;
-      if ((curSec - nextSec) >= oneGroupSeconds) {
+      if ((curSec - nextSec) >= Settings.gapMessagesGroupSec) {
         isGroupHead = true;
       }
     }
@@ -152,7 +150,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     } else {
       int prevSec = prevSendAt ~/ 1000;
       int curSec = currSendAt ~/ 1000;
-      if ((prevSec - curSec) >= oneGroupSeconds) {
+      if ((prevSec - curSec) >= Settings.gapMessagesGroupSec) {
         isGroupTail = true;
       }
     }
@@ -282,7 +280,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                           type: LabelType.bodySmall,
                         )
                       : Label(
-                          Global.locale((s) => s.off, ctx: context),
+                          Settings.locale((s) => s.off, ctx: context),
                           type: LabelType.bodySmall,
                           fontWeight: FontWeight.bold,
                         ),
@@ -293,13 +291,13 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
-                    ' ${isBurnOpen ? Global.locale((s) => s.update_burn_after_reading, ctx: context) : Global.locale((s) => s.close_burn_after_reading, ctx: context)} ',
-                    maxWidth: Global.screenWidth() * 0.7,
+                    ' ${isBurnOpen ? Settings.locale((s) => s.update_burn_after_reading, ctx: context) : Settings.locale((s) => s.close_burn_after_reading, ctx: context)} ',
+                    maxWidth: Settings.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                     softWrap: true,
                   ),
@@ -308,7 +306,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               SizedBox(height: 4),
               InkWell(
                 child: Label(
-                  Global.locale((s) => s.click_to_change, ctx: context),
+                  Settings.locale((s) => s.click_to_change, ctx: context),
                   color: application.theme.primaryColor,
                   type: LabelType.bodyRegular,
                 ),
@@ -332,14 +330,14 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
-                    maxWidth: Global.screenWidth() * 0.3,
+                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
+                    maxWidth: Settings.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
                   Label(
-                    isDeviceTokenOpen ? ' ${Global.locale((s) => s.setting_accept_notification, ctx: context)}' : ' ${Global.locale((s) => s.setting_deny_notification, ctx: context)}',
-                    maxWidth: Global.screenWidth() * 0.7,
+                    isDeviceTokenOpen ? ' ${Settings.locale((s) => s.setting_accept_notification, ctx: context)}' : ' ${Settings.locale((s) => s.setting_deny_notification, ctx: context)}',
+                    maxWidth: Settings.screenWidth() * 0.7,
                     type: LabelType.bodyRegular,
                   ),
                 ],
@@ -347,7 +345,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               SizedBox(height: 4),
               InkWell(
                 child: Label(
-                  Global.locale((s) => s.click_to_change, ctx: context),
+                  Settings.locale((s) => s.click_to_change, ctx: context),
                   color: application.theme.primaryColor,
                   type: LabelType.bodyRegular,
                 ),
@@ -365,8 +363,8 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   Widget _topicSubscribeWidget(BuildContext context) {
-    String who = widget.message.isOutbound ? Global.locale((s) => s.you, ctx: context) : _contact?.displayName ?? widget.message.from.substring(0, 6);
-    String content = who + Global.locale((s) => s.joined_channel, ctx: context);
+    String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _contact?.displayName ?? widget.message.from.substring(0, 6);
+    String content = who + Settings.locale((s) => s.joined_channel, ctx: context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 6),
@@ -382,7 +380,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   Widget _topicInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
-    String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
+    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -399,7 +397,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               SizedBox(width: 2),
               Label(
                 TopicSchema(topic: widget.message.content?.toString() ?? " ").topicShort,
-                maxWidth: Global.screenWidth() * 0.5,
+                maxWidth: Settings.screenWidth() * 0.5,
                 type: LabelType.bodyRegular,
                 fontWeight: FontWeight.bold,
                 color: application.theme.fontColor1,
@@ -412,29 +410,29 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
                     child: Label(
-                      Global.locale((s) => s.accept, ctx: context),
+                      Settings.locale((s) => s.accept, ctx: context),
                       type: LabelType.bodyRegular,
                       fontWeight: FontWeight.bold,
                       color: application.theme.primaryColor,
                     ),
                   ),
                   onTap: () async {
-                    String? topic = await BottomDialog.of(Global.appContext).showInput(
-                      title: Global.locale((s) => s.accept_invitation, ctx: context),
+                    String? topic = await BottomDialog.of(Settings.appContext).showInput(
+                      title: Settings.locale((s) => s.accept_invitation, ctx: context),
                       desc: inviteDesc,
                       value: widget.message.content?.toString() ?? " ",
-                      actionText: Global.locale((s) => s.accept_invitation, ctx: context),
+                      actionText: Settings.locale((s) => s.accept_invitation, ctx: context),
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
-                      double? fee = await BottomDialog.of(Global.appContext).showTransactionSpeedUp();
+                      double? fee = await BottomDialog.of(Settings.appContext).showTransactionSpeedUp();
                       if (fee == null) return;
                       Loading.show();
-                      int sendAt = widget.message.sendAt ?? MessageOptions.getInAt(widget.message.options) ?? 0;
-                      bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Global.txPoolDelayMs;
+                      int sendAt = widget.message.sendAt ?? 0;
+                      bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Settings.delayTxPoolMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow, fee: fee);
                       Loading.dismiss();
-                      if (result != null) Toast.show(Global.locale((s) => s.subscribed, ctx: context));
+                      if (result != null) Toast.show(Settings.locale((s) => s.subscribed, ctx: context));
                     }
                   },
                 )
@@ -446,7 +444,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   Widget _privateGroupInvitedWidget(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
-    String inviteDesc = widget.message.isOutbound ? Global.locale((s) => s.invites_desc_other(to), ctx: context) : Global.locale((s) => s.invites_desc_me(from), ctx: context);
+    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
 
     Map content = (widget.message.content != null) ? (widget.message.content as Map) : Map();
     String groupId = content['groupId']?.toString() ?? "";
@@ -460,14 +458,14 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     Widget expiresWidget;
     if (expiresAt < DateTime.now().millisecondsSinceEpoch) {
       expiresWidget = Label(
-        Global.locale((s) => s.expired, ctx: context),
+        Settings.locale((s) => s.expired, ctx: context),
         color: application.theme.fontColor2,
         type: LabelType.bodyRegular,
       );
     } else {
       expiresWidget = widget.message.isOutbound
           ? Label(
-              Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
+              Settings.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
               color: application.theme.fontColor2,
               type: LabelType.bodyRegular,
             )
@@ -475,7 +473,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Label(
-                  Global.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
+                  Settings.locale((s) => s.expiration, ctx: context) + ': ' + Time.formatTimeFromNow(DateTime.fromMillisecondsSinceEpoch(expiresAt)),
                   color: application.theme.fontColor2,
                   type: LabelType.bodyRegular,
                 ),
@@ -483,32 +481,38 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 8, right: 8, top: 4, bottom: 4),
                     child: Label(
-                      Global.locale((s) => s.accept, ctx: context),
+                      Settings.locale((s) => s.accept, ctx: context),
                       type: LabelType.bodyRegular,
                       fontWeight: FontWeight.bold,
                       color: application.theme.primaryColor,
                     ),
                   ),
                   onTap: () async {
-                    String? value = await BottomDialog.of(Global.appContext).showInput(
-                      title: Global.locale((s) => s.accept_invitation, ctx: context),
+                    String? value = await BottomDialog.of(Settings.appContext).showInput(
+                      title: Settings.locale((s) => s.accept_invitation, ctx: context),
                       desc: inviteDesc,
                       value: groupName,
-                      actionText: Global.locale((s) => s.accept_invitation, ctx: context),
+                      actionText: Settings.locale((s) => s.accept_invitation, ctx: context),
                       enable: false,
                     );
                     if (value?.isNotEmpty == true) {
                       Loading.show();
+                      PrivateGroupSchema? groupSchema;
                       PrivateGroupItemSchema? groupItemSchema = PrivateGroupItemSchema.fromRawData(itemData);
                       groupItemSchema = await privateGroupCommon.acceptInvitation(groupItemSchema, toast: true);
                       if (groupItemSchema != null) {
                         if (await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema)) {
-                          PrivateGroupSchema? groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
-                          if (groupSchema != null) await privateGroupCommon.addPrivateGroup(groupSchema, true, notify: true, checkDuplicated: false);
+                          groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
+                          if (groupSchema != null) {
+                            groupSchema = await privateGroupCommon.addPrivateGroup(groupSchema, notify: true, checkDuplicated: false);
+                          }
+                          if (groupSchema != null) {
+                            await sessionCommon.add(groupSchema.groupId, SessionType.PRIVATE_GROUP, lastMsgAt: DateTime.now().millisecondsSinceEpoch, unReadCount: 0);
+                          }
                         }
                       }
                       Loading.dismiss();
-                      if (groupItemSchema != null) Toast.show(Global.locale((s) => s.waiting_for_data_to_sync, ctx: context));
+                      if (groupSchema != null) Toast.show(Settings.locale((s) => s.waiting_for_data_to_sync, ctx: context));
                     }
                   },
                 ),
@@ -531,7 +535,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               SizedBox(width: 2),
               Label(
                 groupName,
-                maxWidth: Global.screenWidth() * 0.5,
+                maxWidth: Settings.screenWidth() * 0.5,
                 type: LabelType.bodyRegular,
                 fontWeight: FontWeight.bold,
                 color: application.theme.fontColor1,
@@ -548,8 +552,8 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     String invitee = widget.message.content?.toString() ?? "";
     if (invitee.isEmpty) return SizedBox.shrink();
     String inviteeDisplay = (invitee.length > 6) ? invitee.substring(0, 6) : invitee;
-    String who = ((clientCommon.address == invitee) ? Global.locale((s) => s.you, ctx: context) : "$inviteeDisplay: ");
-    String content = who + Global.locale((s) => s.joined_channel, ctx: context);
+    String who = ((clientCommon.address == invitee) ? Settings.locale((s) => s.you, ctx: context) : "$inviteeDisplay: ");
+    String content = who + Settings.locale((s) => s.joined_channel, ctx: context);
     return Container(
       padding: EdgeInsets.symmetric(vertical: 6),
       alignment: Alignment.center,
