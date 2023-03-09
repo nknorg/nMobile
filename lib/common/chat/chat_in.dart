@@ -243,7 +243,10 @@ class ChatInCommon with Tag {
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
-    } else if ((exists.status == MessageStatus.SendReceipt) || (exists.status == MessageStatus.Read)) {
+    } else if (!exists.isOutbound || (exists.status == MessageStatus.Received)) {
+      logger.d("$TAG - receiveReceipt - outbound error - exists:$exists");
+      return false;
+    } else if ((exists.status == MessageStatus.Receipt) || (exists.status == MessageStatus.Read)) {
       logger.d("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
     } else if ((exists.isTopic || exists.isPrivateGroup) && !((received.from == received.to) && (received.from == clientCommon.address))) {
@@ -252,10 +255,10 @@ class ChatInCommon with Tag {
     }
     // status
     bool readSupport = DeviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
-    if (exists.isTopic || exists.isPrivateGroup || (received.receiveAt != null) || !readSupport) {
-      await messageCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
+    if (exists.isTopic || exists.isPrivateGroup || !readSupport) {
+      await messageCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
     } else {
-      await messageCommon.updateMessageStatus(exists, MessageStatus.SendReceipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
+      await messageCommon.updateMessageStatus(exists, MessageStatus.Receipt, receiveAt: DateTime.now().millisecondsSinceEpoch);
     }
     // topicInvitation
     if (exists.contentType == MessageContentType.topicInvitation) {
@@ -281,13 +284,13 @@ class ChatInCommon with Tag {
     for (var i = 0; i < msgList.length; i++) {
       MessageSchema message = msgList[i];
       int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-      await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt, notify: true);
+      await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
     }
     // TODO:GG 会导致有的没发过去，但这里显示read，check时被遗漏，所以需要加吗？可以看看新版需要怎么做
     // read history
-    msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
-    int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    await messageCommon.readMessageBySide(received.targetId, received.topic, received.groupId, reallySendAt);
+    // msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
+    // int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
+    // await messageCommon.readMessageBySide(received.targetId, received.topic, received.groupId, reallySendAt);
     return true;
   }
 
@@ -448,7 +451,7 @@ class ChatInCommon with Tag {
     if (optionsType == null || optionsType.isEmpty) return false;
     if (optionsType == '0') {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
-      int updateAt = ((content['updateBurnAfterAt'] ?? content['updateBurnAfterTime']) as int?) ?? DateTime.now().millisecondsSinceEpoch;
+      int updateAt = (content['updateBurnAfterAt'] as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.i("$TAG - _receiveContactOptions - setBurning - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)} - data:$data");
       bool success = await contactCommon.setOptionsBurn(contact, burningSeconds, updateAt, notify: true);
       if (!success) return false;
