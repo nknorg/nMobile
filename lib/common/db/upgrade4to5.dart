@@ -312,7 +312,7 @@ class Upgrade4to5 {
         if (oldCreateAt == null || oldCreateAt == 0 || oldUpdateAt == null || oldUpdateAt == 0) {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
-        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.delayTxPoolMs) : oldCreateAt;
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.gapTxPoolUpdateMs) : oldCreateAt;
         int newUpdateAt = (oldUpdateAt == null || oldUpdateAt == 0) ? newCreateAt : oldUpdateAt;
         // subscribe_at + expire_height
         int? newSubscribeAt = result["time_update"];
@@ -470,7 +470,7 @@ class Upgrade4to5 {
         if (oldCreateAt == null || oldCreateAt == 0) {
           logger.w("Upgrade4to5 - $oldTableName query - at is null - data:$result");
         }
-        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.delayTxPoolMs) : oldCreateAt;
+        int newCreateAt = (oldCreateAt == null || oldCreateAt == 0) ? (DateTime.now().millisecondsSinceEpoch - Settings.gapTxPoolUpdateMs) : oldCreateAt;
         int newUpdateAt = newCreateAt;
         // type
         int? oldStatus = result["member_status"];

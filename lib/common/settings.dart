@@ -77,6 +77,7 @@ class Settings {
 
   // gap
   static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
+  static const int gapTxPoolUpdateMs = 1 * 60 * 1000; // 1m
   static const int gapMessagesGroupSec = 2 * 60; // 2m
   static const int gapPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
@@ -86,12 +87,9 @@ class Settings {
   static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
   static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
 
-  // timeout TODO:GG 完善?
+  // timeout
   static const int timeoutMeasureSeedMs = 3 * 1000; // 3s
   static const int timeoutPrivateGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
-
-  // delay TODO:GG 完善还是消除？
-  static const int delayTxPoolMs = 1 * 60 * 1000; // 1m
 
   // block_height
   static const int blockHeightTopicSubscribeDefault = 400000; // 93day
