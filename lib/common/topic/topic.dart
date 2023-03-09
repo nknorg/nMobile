@@ -372,7 +372,7 @@ class TopicCommon with Tag {
         // DB no joined + node is joined
         noSubscribed = false;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.delayTxPoolMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.gapTxPoolUpdateMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(exists.id, true, subscribeAt: subscribeAt, expireBlockHeight: expireHeight, notify: true);
@@ -395,7 +395,7 @@ class TopicCommon with Tag {
         // DB is joined + node no joined
         noSubscribed = true;
         int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.delayTxPoolMs) {
+        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.gapTxPoolUpdateMs) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
           bool success = await setJoined(exists.id, false, notify: true);
           if (success) {
@@ -790,7 +790,7 @@ class TopicCommon with Tag {
     if (topic == null || topic.isEmpty) return false;
     TopicSchema? exists = await queryByTopic(topic);
     int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.delayTxPoolMs) {
+    if (exists != null && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.gapTxPoolUpdateMs) {
       logger.i("$TAG - isJoined - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
@@ -899,7 +899,7 @@ class TopicCommon with Tag {
     subscribers.forEach((SubscriberSchema element) {
       if ((element.clientAddress.isNotEmpty == true) && (element.clientAddress != append.clientAddress)) {
         int updateAt = element.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.delayTxPoolMs) {
+        if ((DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.gapTxPoolUpdateMs) {
           logger.i("$TAG - _buildMetaByAppend - subscriber update just now, maybe in txPool - element:$element");
           if ((element.status == SubscriberStatus.InvitedSend) || (element.status == SubscriberStatus.InvitedReceipt) || (element.status == SubscriberStatus.Subscribed)) {
             // add to accepts
