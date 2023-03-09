@@ -115,8 +115,8 @@ class SubscriberCommon with Tag {
       // filter in txPool
       int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
       int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.delayTxPoolMs;
-      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.delayTxPoolMs;
+      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.gapTxPoolUpdateMs;
+      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.gapTxPoolUpdateMs;
       if (isCreateJustNow) {
         if (dbItem.status == SubscriberStatus.None) {
           logger.i("$TAG - refreshSubscribers - DB created just now, next by status none - dbSub:$dbItem");

@@ -429,7 +429,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       if (fee == null) return;
                       Loading.show();
                       int sendAt = widget.message.sendAt ?? 0;
-                      bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Settings.delayTxPoolMs;
+                      bool isJustNow = (DateTime.now().millisecondsSinceEpoch - sendAt) < Settings.gapTxPoolUpdateMs;
                       TopicSchema? result = await topicCommon.subscribe(topic, fetchSubscribers: true, justNow: isJustNow, fee: fee);
                       Loading.dismiss();
                       if (result != null) Toast.show(Settings.locale((s) => s.subscribed, ctx: context));
