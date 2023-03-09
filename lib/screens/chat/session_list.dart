@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:nmobile/common/global.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/chat/session_item.dart';
@@ -61,13 +61,16 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states)) {
+      if (application.isFromBackground(states) || application.isGoBackground(states)) {
         _refreshBadge();
       }
     });
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
+      if (chatCommon.currentChatTargetId == event.targetId) {
+        event.unReadCount = 0;
+      }
       if (_sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList().isEmpty) {
         _sessionList.insert(0, event);
       }
@@ -155,32 +158,30 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   Future _onMessageUpdate(MessageSchema msg) async {
-    var findIndex = -1;
+    SessionSchema? session;
     for (var i = 0; i < _sessionList.length; i++) {
-      SessionSchema session = _sessionList[i];
-      if (session.lastMessageOptions != null && session.lastMessageOptions!["msg_id"] == msg.msgId) {
-        findIndex = i;
+      SessionSchema index = _sessionList[i];
+      if ((index.lastMessageOptions != null) && (index.lastMessageOptions!["msg_id"] == msg.msgId)) {
+        session = index;
         break;
       }
     }
-    if (findIndex >= 0 && findIndex < _sessionList.length) {
-      SessionSchema session = _sessionList[findIndex];
-      await sessionCommon.set(session.targetId, session.type, newLastMsg: msg, notify: true);
+    if (session != null) {
+      await sessionCommon.update(session.targetId, session.type, lastMsg: msg);
     }
   }
 
   Future _onMessageDelete(String msgId) async {
-    var findIndex = -1;
+    SessionSchema? session;
     for (var i = 0; i < _sessionList.length; i++) {
-      SessionSchema session = _sessionList[i];
-      if (session.lastMessageOptions != null && session.lastMessageOptions!["msg_id"] == msgId) {
-        findIndex = i;
+      SessionSchema index = _sessionList[i];
+      if ((index.lastMessageOptions != null) && (index.lastMessageOptions!["msg_id"] == msgId)) {
+        session = index;
         break;
       }
     }
-    if (findIndex >= 0 && findIndex < _sessionList.length) {
-      SessionSchema session = _sessionList[findIndex];
-      await sessionCommon.set(session.targetId, session.type, newLastMsgAt: session.lastMessageAt, notify: true);
+    if (session != null) {
+      await sessionCommon.update(session.targetId, session.type, lastMsgAt: session.lastMessageAt);
     }
   }
 
@@ -207,7 +208,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(item.isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top),
                     ),
-                    Label(item.isTop ? Global.locale((s) => s.top_cancel, ctx: context) : Global.locale((s) => s.top, ctx: context)),
+                    Label(item.isTop ? Settings.locale((s) => s.top_cancel, ctx: context) : Settings.locale((s) => s.top, ctx: context)),
                   ],
                 ),
               ),
@@ -226,18 +227,18 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                       padding: const EdgeInsets.only(right: 12),
                       child: Icon(Icons.delete_outline),
                     ),
-                    Label(Global.locale((s) => s.delete, ctx: context)),
+                    Label(Settings.locale((s) => s.delete, ctx: context)),
                   ],
                 ),
               ),
               onPressed: () async {
                 if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                ModalDialog.of(Global.appContext).confirm(
-                  content: Global.locale((s) => s.delete_session_confirm_title, ctx: context),
+                ModalDialog.of(Settings.appContext).confirm(
+                  content: Settings.locale((s) => s.delete_session_confirm_title, ctx: context),
                   hasCloseButton: true,
                   agree: Button(
                     width: double.infinity,
-                    text: Global.locale((s) => s.delete_session, ctx: context),
+                    text: Settings.locale((s) => s.delete_session, ctx: context),
                     backgroundColor: application.theme.strongColor,
                     onPressed: () async {
                       if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -279,12 +280,12 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         }
         return Container(
           width: double.infinity,
-          height: Global.screenWidth() / 25 + 20,
+          height: Settings.screenWidth() / 25 + 20,
           decoration: BoxDecoration(border: Border(bottom: BorderSide(color: application.theme.backgroundColor6.withAlpha(150), width: 0.5))),
           // color: application.theme.backgroundColor6,
           child: SpinKitThreeBounce(
             color: application.theme.backgroundColor5.withAlpha(100),
-            size: Global.screenWidth() / 25,
+            size: Settings.screenWidth() / 25,
           ),
         );
       },
@@ -317,14 +318,14 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: Label(
-                        Global.locale((s) => s.private_messages, ctx: context),
+                        Settings.locale((s) => s.private_messages, ctx: context),
                         type: LabelType.h3,
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Label(
-                        Global.locale((s) => s.private_messages_desc, ctx: context),
+                        Settings.locale((s) => s.private_messages_desc, ctx: context),
                         type: LabelType.bodyRegular,
                         softWrap: true,
                       ),
@@ -336,7 +337,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                           Util.launchUrl('https://nmobile.nkn.org/');
                         },
                         child: Label(
-                          Global.locale((s) => s.learn_more, ctx: context),
+                          Settings.locale((s) => s.learn_more, ctx: context),
                           type: LabelType.bodySmall,
                           color: application.theme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -371,7 +372,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   Widget _sessionListView() {
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: 80 + Global.screenHeight() * 0.05),
+      padding: EdgeInsets.only(bottom: 80 + Settings.screenHeight() * 0.05),
       controller: _scrollController,
       itemCount: _sessionList.length,
       itemBuilder: (BuildContext context, int index) {

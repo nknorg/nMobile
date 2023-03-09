@@ -456,14 +456,12 @@ class ChatInCommon with Tag {
       bool success = await contactCommon.setOptionsBurn(contact, burningSeconds, updateAt, notify: true);
       if (!success) return false;
     } else if (optionsType == '1') {
-      if (!DeviceInfoCommon.isDeviceTokenEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-        // SUPPORT:START
-        String deviceToken = content['deviceToken']?.toString() ?? "";
+      String deviceToken = content['deviceToken']?.toString() ?? "";
+      if (deviceInfo?.deviceToken != deviceToken) {
         logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
         await deviceInfoCommon.setDeviceToken(deviceInfo?.contactAddress, deviceInfo?.deviceId, deviceToken);
-        // SUPPORT:END
       } else {
-        // nothing
+        logger.i("$TAG - _receiveContactOptions - deviceToken same - deviceToken:$deviceToken - data:$data");
       }
     } else {
       logger.e("$TAG - _receiveContactOptions - setNothing - data:$data");

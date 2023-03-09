@@ -329,11 +329,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
-    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: true);
-    if (deviceInfo == null) return;
-    bool noMobile = false; // (_deviceInfo == null) || (_deviceInfo.appName != Settings.appName);
-    bool tokenNull = (deviceInfo.deviceToken == null) || (deviceInfo.deviceToken?.isEmpty == true);
-    if (notificationOpen && (noMobile || tokenNull)) {
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: notificationOpen);
+    String? deviceToken = notificationOpen ? deviceInfo?.deviceToken : null;
+    bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
+    if (notificationOpen && tokenEmpty) {
       setState(() {
         _notificationOpen = false;
       });
@@ -344,7 +343,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // update
     bool success = await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
     if (!success) return;
-    success = await chatOutCommon.sendDeviceInfo(_contactSchema?.clientAddress, deviceInfo, notificationOpen);
+    success = await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
     if (success) {
       await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress);
     } else {

@@ -1108,7 +1108,7 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  /*static String getContactOptionsToken(MessageSchema message) {
+  static String getContactOptionsToken(MessageSchema message) {
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
     Map data = _base(MessageContentType.contactOptions, id: message.msgId, timestamp: message.sendAt);
     data.addAll({
@@ -1118,7 +1118,7 @@ class MessageData {
       },
     });
     return jsonEncode(data);
-  }*/
+  }
 
   static String getDeviceRequest() {
     Map data = _base(MessageContentType.deviceRequest);

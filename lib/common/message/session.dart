@@ -92,8 +92,14 @@ class SessionCommon with Tag {
     String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
     // lastMsg
     MessageSchema? newLastMsg;
-    List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
-    MessageSchema? oldLastMsg = history.isNotEmpty ? history[0] : null;
+    MessageSchema? oldLastMsg;
+    Map<String, dynamic>? oldLastMessageOptions = exist.lastMessageOptions ?? Map();
+    if ((lastMsg != null) && oldLastMessageOptions.isNotEmpty) {
+      oldLastMsg = MessageSchema.fromMap(oldLastMessageOptions);
+    } else if (oldLastMsg == null) {
+      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+      oldLastMsg = history.isNotEmpty ? history[0] : null;
+    }
     if (lastMsg == null) {
       newLastMsg = oldLastMsg;
     } else if (oldLastMsg == null) {
