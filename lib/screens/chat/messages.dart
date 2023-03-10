@@ -96,9 +96,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSubscription? _onFetchMediasSubscription;
 
   ScrollController _scrollController = ScrollController();
-  bool _moreLoading = false;
+
   ParallelQueue _fetchMsgQueue = ParallelQueue("messages_fetch", onLog: (log, error) => error ? logger.w(log) : null);
+
   int _pageLimit = 30;
+  bool _moreLoading = false;
   List<MessageSchema> _messages = <MessageSchema>[];
 
   Timer? _delRefreshTimer;
@@ -140,11 +142,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // client
     _clientStatusSubscription = clientCommon.statusStream.listen((int status) {
-      Future.delayed(Duration(milliseconds: 100), () {
+      if (isClientOk != clientCommon.isClientCreated) {
         setState(() {
           isClientOk = clientCommon.isClientCreated;
         });
-      });
+      }
     });
 
     // appLife
@@ -751,11 +753,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                         MessageSchema msg = _messages[index];
                         return ChatMessageItem(
                           message: msg,
-                          // contact: _contact,
+                          // sender: _sender,
                           // topic: _topic,
                           // privateGroup: _privateGroup,
                           prevMessage: (index - 1) >= 0 ? _messages[index - 1] : null,
                           nextMessage: (index + 1) < _messages.length ? _messages[index + 1] : null,
+                          onAvatarPress: (ContactSchema contact, _) {
+                            ContactProfileScreen.go(context, schema: contact);
+                          },
                           onAvatarLonePress: (ContactSchema contact, _) {
                             _onInputChangeSink.add({"type": ChatSendBar.ChangeTypeAppend, "content": ' @${contact.fullName} '});
                           },

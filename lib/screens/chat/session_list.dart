@@ -61,8 +61,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states) || application.isGoBackground(states)) {
-        _refreshBadge();
+      if (application.isFromBackground(states)) {
+        _refreshBadge(delayMs: 500);
+      } else if (application.isGoBackground(states)) {
+        _refreshBadge(delayMs: 0);
       }
     });
 
@@ -123,7 +125,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // unread
-    _refreshBadge();
+    _refreshBadge(delayMs: 250);
   }
 
   @override
@@ -138,7 +140,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     super.dispose();
   }
 
-  _refreshBadge() async {
+  _refreshBadge({int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     int unread = await sessionCommon.unreadCount();
     Badge.refreshCount(count: unread);
   }
@@ -384,7 +387,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
               session: session,
               onTap: (who) {
                 ChatMessagesScreen.go(context, who).then((value) {
-                  _refreshBadge();
+                  _refreshBadge(delayMs: 0);
                 });
               },
               onLongPress: (who) {
