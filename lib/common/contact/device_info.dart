@@ -93,7 +93,7 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId ?? "");
   }
 
-  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 3, int days = 5}) async {
+  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 1, int days = 10}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
     int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
