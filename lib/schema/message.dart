@@ -227,7 +227,10 @@ class MessageSchema {
     }
     // options
     if (schema.options == null) schema.options = Map();
-    schema.options = MessageOptions.setDeviceId(schema.options, data['deviceId']);
+    String? deviceId = data["deviceId"];
+    if (deviceId != null && deviceId.isNotEmpty) {
+      schema.options = MessageOptions.setDeviceId(schema.options, deviceId);
+    }
     return schema;
   }
 

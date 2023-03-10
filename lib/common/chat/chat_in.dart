@@ -224,7 +224,7 @@ class ChatInCommon with Tag {
     String content = received.content as String;
     if (content == "ping") {
       logger.i("$TAG - _receivePing - receive pang - received:$received");
-      chatOutCommon.sendPing([received.from], false, gap: Settings.gapReplyPingMs); // await
+      chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongMs); // await
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       // nothing
