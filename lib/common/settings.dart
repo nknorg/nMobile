@@ -82,7 +82,7 @@ class Settings {
   static const int gapPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 3 * 60 * 1000; // 3m
-  static const int gapReplyPingMs = 30 * 1000; // 30s
+  static const int gapPongMs = 30 * 1000; // 30s
   static const int gapRequestGroupOptionsMs = 5 * 60 * 1000; // 5m
   static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
   static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
