@@ -109,15 +109,15 @@ class TopicCommon with Tag {
     // check + try
     for (var i = 0; i < topicsWithSubscribe.length; i++) {
       TopicSchema topic = topicsWithSubscribe[i];
-      await checkAndTrySubscribe(topic, true);
+      await _checkAndTrySubscribe(topic, true);
     }
     for (var i = 0; i < topicsWithUnSubscribe.length; i++) {
       TopicSchema topic = topicsWithUnSubscribe[i];
-      await checkAndTrySubscribe(topic, false);
+      await _checkAndTrySubscribe(topic, false);
     }
   }
 
-  Future<bool> checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
+  Future<bool> _checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return false;
 
     int expireHeight = await getSubscribeExpireAtByNode(topic.topic, clientCommon.address);
@@ -180,7 +180,7 @@ class TopicCommon with Tag {
       }
       for (var i = 0; i < topics.length; i++) {
         TopicSchema topic = topics[i];
-        await checkAndTryPermissionExpire(topic, globalHeight, fee);
+        await _checkAndTryPermissionExpire(topic, globalHeight, fee);
       }
     }
     // subscribers permission
@@ -201,11 +201,11 @@ class TopicCommon with Tag {
     for (var i = 0; i < subscribers.length; i++) {
       SubscriberSchema subscribe = subscribers[i];
       int? progressStatus = subscribe.isPermissionProgress();
-      await checkAndTryPermission(subscribe, progressStatus);
+      await _checkAndTryPermission(subscribe, progressStatus);
     }
   }
 
-  Future checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee, {int? nonce}) async {
+  Future _checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee, {int? nonce}) async {
     if (topic == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
 
     int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topic.topic);
@@ -219,7 +219,7 @@ class TopicCommon with Tag {
     }
   }
 
-  Future<bool> checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = false}) async {
+  Future<bool> _checkAndTryPermission(SubscriberSchema? subscriber, int? status, {bool txPool = false}) async {
     if (subscriber == null || status == null || !clientCommon.isClientCreated || clientCommon.clientClosing) return false;
 
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);

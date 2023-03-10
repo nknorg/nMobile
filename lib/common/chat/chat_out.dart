@@ -55,20 +55,21 @@ class ChatOutCommon with Tag {
     }
     // client
     int tryTimes = 0;
-    while (tryTimes < 20) {
+    while (tryTimes < Settings.tryTimesSendMsgUntilClientOk) {
       if (clientCommon.isClientCreated && !clientCommon.clientClosing && (selfAddress == clientCommon.address)) {
         break;
       }
       logger.w("$TAG - sendMsg - client error - closing:${clientCommon.clientClosing} - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
       tryTimes++;
-      await Future.delayed(Duration(seconds: 1));
+      int waitMs = (10 * 1000) ~/ Settings.tryTimesSendMsgUntilClientOk; // 500ms
+      await Future.delayed(Duration(milliseconds: waitMs));
     }
-    if (tryTimes >= 20) return null;
+    if (tryTimes >= Settings.tryTimesSendMsgUntilClientOk) return null;
     // send
     return await _sendQueue.add(() async {
       OnMessage? onMessage;
       int tryTimes = 0;
-      while (tryTimes < 10) {
+      while (tryTimes < Settings.tryTimesSendMsg) {
         List<dynamic> result = await _sendData(selfAddress, destList, data);
         bool canTry = result[0];
         onMessage = result[1];
@@ -78,7 +79,7 @@ class ChatOutCommon with Tag {
         tryTimes++;
         await Future.delayed(Duration(milliseconds: delay)); // TODO:GG 会delay吗?
       }
-      if (tryTimes >= 10) {
+      if (tryTimes >= Settings.tryTimesSendMsg) {
         logger.w("$TAG - sendMsg - try over - destList:$destList - data:$data");
       }
       return onMessage;
@@ -106,12 +107,12 @@ class ChatOutCommon with Tag {
       handleError(e, st);
       if (NknError.isClientError(e)) {
         if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
-          return [true, null, 1000];
+          return [true, null, 500];
         } else {
           final client = (await clientCommon.reSignIn(false))[0];
           if ((client != null) && (client.address.isNotEmpty == true)) {
             logger.i("$TAG - _sendData - reSignIn success - destList:$destList data:$data");
-            return [true, null, 1000];
+            return [true, null, 500];
           } else {
             logger.e("$TAG - _sendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
             // maybe always no here
@@ -121,7 +122,7 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
       }
     }
-    return [true, null, 300];
+    return [true, null, 250];
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -866,7 +867,7 @@ class ChatOutCommon with Tag {
     // notification
     if (notification) {
       if ((contact != null) && !contact.isMe) {
-        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress).then((tokens) async {
+        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
@@ -954,7 +955,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) {
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
@@ -1019,7 +1020,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) {
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
