@@ -127,12 +127,12 @@ class AudioHelper with Tag {
     } catch (e, st) {
       handleError(e, st);
     }
-    _onPlayProgressSink.add({
-      "id": this.playerId,
-      "duration": this.playerDurationMs,
-      "position": 0.01,
-      "percent": 0.01,
-    });
+    // _onPlayProgressSink.add({
+    //   "id": this.playerId,
+    //   "duration": this.playerDurationMs,
+    //   "position": 0.01,
+    //   "percent": 0.01,
+    // });
     return true;
   }
 

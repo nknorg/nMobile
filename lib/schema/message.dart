@@ -87,6 +87,8 @@ class MessageSchema {
 
   Map<String, dynamic>? options; // <-> options
 
+  Map<String, dynamic>? temp; // no_sql
+
   MessageSchema({
     this.pid,
     required this.msgId,
