@@ -51,12 +51,22 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   StreamSubscription? _onPlayProgressSubscription;
 
   late MessageSchema _message;
-  bool initialized = false;
 
   double _fetchProgress = -1;
-  double _playProgress = 0;
+  double _playProgress = -1;
+  String? _thumbnailPath;
 
-  String? thumbnailPath;
+  @override
+  void onRefreshArguments() {
+    _message = widget.message;
+    // burning
+    _message = chatCommon.burningHandle(_message);
+    _message = chatCommon.burningTick(_message, "bubble", onTick: () => setState(() {}));
+    // progress
+    _refreshProgress();
+    // thumbnail
+    _refreshMediaThumbnail();
+  }
 
   @override
   void initState() {
@@ -68,13 +78,15 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       if ((msgId == null) || (msgId != this._message.msgId)) {
         // just skip
       } else if ((percent == null) || (percent < 0)) {
-        if (_fetchProgress != -1) {
+        _message.temp?["mediaFetchProgress"] = 0;
+        if (_fetchProgress != 0) {
           setState(() {
-            _fetchProgress = -1;
+            _fetchProgress = 0;
           });
         }
       } else {
         // logger.v("onPieceOutStream - percent:$percent - msgId:$msgId - receive_msgId:${this._message.msgId}");
+        _message.temp?["mediaFetchProgress"] = percent;
         if (_fetchProgress != percent) {
           this.setState(() {
             _fetchProgress = percent;
@@ -89,6 +101,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       if ((playerId == null) || (playerId != this._message.msgId)) {
         // just skip
       } else if ((percent == null) || (percent < 0)) {
+        _message.temp?["mediaPlayProgress"] = 0;
         if (_playProgress != 0) {
           setState(() {
             _playProgress = 0;
@@ -96,6 +109,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         }
       } else {
         // logger.v("onPlayProgressStream - percent:$percent - playerId:$playerId - receive_msgId:${this._message.msgId}");
+        _message.temp?["mediaPlayProgress"] = percent;
         if (_playProgress != percent) {
           this.setState(() {
             _playProgress = percent;
@@ -106,37 +120,46 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   @override
-  void onRefreshArguments() {
-    bool sameBubble = initialized && (_message.msgId == widget.message.msgId);
-    _message = widget.message;
-    initialized = true;
-    // burning
-    _message = chatCommon.burningHandle(_message);
-    _message = chatCommon.burningTick(_message, "bubble", onTick: () => setState(() {}));
-    // progress
-    _fetchProgress = sameBubble ? _fetchProgress : -1;
-    // _playProgress = sameBubble ? _playProgress : 0;
-    // thumbnail
-    _refreshMediaThumbnail(); // await
-  }
-
-  @override
   void dispose() {
     _onProgressStreamSubscription?.cancel();
     _onPlayProgressSubscription?.cancel();
+    _message.temp?["mediaPlayProgress"] = 0; // need init
     super.dispose();
   }
 
-  Future _refreshMediaThumbnail() async {
-    String? path = MessageOptions.getMediaThumbnailPath(_message.options);
-    if (thumbnailPath != path) {
-      if (path != null && path.isNotEmpty) {
+  void _refreshProgress() {
+    if (_message.temp == null) _message.temp = Map();
+    Map? temp = _message.temp;
+    // fetchProgress
+    double fetchProgress = double.tryParse(temp?["mediaFetchProgress"]?.toString() ?? "0") ?? 0;
+    if ((_fetchProgress < 0) || (_fetchProgress > 1) || (_fetchProgress != fetchProgress)) {
+      _fetchProgress = (_message.status == MessageStatus.Sending) ? fetchProgress : -1;
+    }
+    // playProgress
+    double playProgress = double.tryParse(temp?["mediaPlayProgress"]?.toString() ?? "0") ?? 0;
+    if ((_playProgress < 0) || (_playProgress > 1) || (_playProgress != playProgress)) {
+      _playProgress = playProgress;
+    }
+  }
+
+  void _refreshMediaThumbnail() {
+    if (_message.temp == null) _message.temp = Map();
+    Map? temp = _message.temp;
+    if ((_thumbnailPath?.isNotEmpty == true) && (_thumbnailPath == temp?["existsMediaThumbnailPath"])) return;
+    if (temp?["existsMediaThumbnailPath"] == null) {
+      String? path = MessageOptions.getMediaThumbnailPath(_message.options);
+      if ((path != null) && path.isNotEmpty) {
         File file = File(path);
-        if (!file.existsSync()) path = null;
+        if (!(file.existsSync())) {
+          path = null;
+        }
       }
-      setState(() {
-        thumbnailPath = path;
-      });
+      widget.message.temp?["existsMediaThumbnailPath"] = path;
+      if (_thumbnailPath != path) {
+        _thumbnailPath = path;
+      }
+    } else {
+      _thumbnailPath = temp?["existsMediaThumbnailPath"];
     }
   }
 
@@ -357,9 +380,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           }
         } else if (state == MessageOptions.ipfsStateNo) {
           onTap = () {
-            setState(() {
-              _fetchProgress = 0;
-            });
             chatCommon.startIpfsDownload(_message);
           };
         } else if (state == MessageOptions.ipfsStateIng) {
@@ -385,7 +405,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         bool fileDownloaded = state == MessageOptions.ipfsStateYes;
         if (fileType && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
-          Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, thumbnailPath);
+          Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, _thumbnailPath);
           if (item != null) {
             onTap = () {
               MediaScreen.go(context, [item], target: _message.targetId, leftMsgId: _message.msgId);
@@ -393,9 +413,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           }
         } else if (state == MessageOptions.ipfsStateNo) {
           onTap = () {
-            setState(() {
-              _fetchProgress = 0;
-            });
             chatCommon.startIpfsDownload(_message);
           };
         } else if (state == MessageOptions.ipfsStateIng) {
@@ -419,9 +436,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           };
         } else if (state == MessageOptions.ipfsStateNo) {
           onTap = () {
-            setState(() {
-              _fetchProgress = 0;
-            });
             chatCommon.startIpfsDownload(_message);
           };
         } else if (state == MessageOptions.ipfsStateIng) {
@@ -662,9 +676,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
                   minHeight: minHeight,
                 ),
                 color: Colors.black,
-                child: (thumbnailPath != null)
+                child: (_thumbnailPath != null)
                     ? Image.file(
-                        File(thumbnailPath!),
+                        File(_thumbnailPath!),
                         fit: BoxFit.cover,
                         cacheWidth: ratioWH[0]?.toInt(),
                         cacheHeight: ratioWH[1]?.toInt(),
@@ -750,7 +764,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   }
 
   List<Widget> _widgetBubbleAudio() {
-    bool isPlaying = _playProgress > 0;
+    bool isPlaying = (_playProgress > 0) && (_playProgress < 1);
 
     Color iconColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.primaryColor.withAlpha(200);
     Color textColor = _message.isOutbound ? Colors.white.withAlpha(200) : application.theme.fontColor2.withAlpha(200);
@@ -840,9 +854,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               minHeight: minHeight,
             ),
             color: Colors.black,
-            child: (thumbnailPath != null)
+            child: (_thumbnailPath != null)
                 ? Image.file(
-                    File(thumbnailPath!),
+                    File(_thumbnailPath!),
                     fit: BoxFit.cover,
                     cacheWidth: ratioWH[0]?.toInt(),
                     cacheHeight: ratioWH[1]?.toInt(),
