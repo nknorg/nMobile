@@ -369,7 +369,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         int state = MessageOptions.getIpfsState(_message.options);
         bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
-        bool fileDownloaded = state == MessageOptions.ipfsStateYes;
+        bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
         if (fileType && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_message.msgId, file.path);
@@ -402,7 +402,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         int state = MessageOptions.getIpfsState(_message.options);
         bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
-        bool fileDownloaded = state == MessageOptions.ipfsStateYes;
+        bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
         if (fileType && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, _thumbnailPath);
@@ -424,7 +424,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         int state = MessageOptions.getIpfsState(_message.options);
         bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
-        bool fileDownloaded = state == MessageOptions.ipfsStateYes;
+        bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
         if (fileType && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           onTap = () {

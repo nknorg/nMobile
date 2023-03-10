@@ -5,6 +5,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/chat/bubble.dart';
+import 'package:nmobile/components/contact/avatar.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -20,21 +21,17 @@ import 'package:nmobile/utils/time.dart';
 
 class ChatMessageItem extends BaseStateFulWidget {
   final MessageSchema message;
-  // final ContactSchema? contact;
-  // final TopicSchema? topic;
-  // final PrivateGroupSchema? privateGroup;
   final MessageSchema? prevMessage;
   final MessageSchema? nextMessage;
+  final Function(ContactSchema, MessageSchema)? onAvatarPress;
   final Function(ContactSchema, MessageSchema)? onAvatarLonePress;
   final Function(String)? onResend;
 
   ChatMessageItem({
     required this.message,
-    // required this.contact,
-    // required this.topic,
-    // required this.privateGroup,
     this.prevMessage,
     this.nextMessage,
+    this.onAvatarPress,
     this.onAvatarLonePress,
     this.onResend,
   });
@@ -46,16 +43,17 @@ class ChatMessageItem extends BaseStateFulWidget {
 class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   StreamSubscription? _contactUpdateStreamSubscription;
 
-  ContactSchema? _contact;
+  ContactSchema? _sender;
 
   @override
   void initState() {
     super.initState();
-    // contact TODO:GG 头像闪烁，是不是没改回去？以前也闪吗？
+    // contact
     _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
-      if (_contact?.id == event.id) {
+      if (_sender?.id == event.id) {
+        widget.message.temp?["sender"] = event;
         setState(() {
-          _contact = event;
+          _sender = event;
         });
       }
     });
@@ -63,17 +61,24 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
 
   @override
   void onRefreshArguments() {
-    // topic/group no contact TODO:GG 头像闪烁，是不是没改回去？以前也闪吗？
-    if ((_contact == null) || (_contact?.clientAddress != widget.message.from)) {
-      contactCommon.queryByClientAddress(widget.message.from).then((contact) async {
-        bool existsErr = (_contact == null) || (_contact?.clientAddress != widget.message.from);
-        bool newRight = (contact != null) || (contact?.clientAddress == widget.message.from);
-        if (existsErr && newRight) {
+    _refreshSender();
+  }
+
+  void _refreshSender() {
+    if (widget.message.temp == null) widget.message.temp = Map();
+    Map? temp = widget.message.temp;
+    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == temp?["sender"]?.clientAddress)) return;
+    if (temp?["sender"] == null) {
+      contactCommon.queryByClientAddress(widget.message.from).then((sender) {
+        if (widget.message.from == sender?.clientAddress) {
+          widget.message.temp?["sender"] = sender;
           setState(() {
-            _contact = contact;
+            _sender = sender;
           });
         }
-      });
+      }); // await
+    } else {
+      _sender = temp?["sender"];
     }
   }
 
@@ -95,149 +100,197 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     // }
 
     // user
-    bool isOneUserWithPrev = widget.message.from == widget.prevMessage?.from;
-    bool isOneUserWithNext = widget.message.from == widget.nextMessage?.from;
-
+    bool sameUserBot = widget.message.from == widget.prevMessage?.from;
+    bool sameUserTop = widget.message.from == widget.nextMessage?.from;
+    // isOutbound
+    bool sameReceiveBot = (widget.message.isOutbound == false) && (widget.message.isOutbound == widget.prevMessage?.isOutbound);
+    bool sameReceiveTop = (widget.message.isOutbound == false) && (widget.message.isOutbound == widget.nextMessage?.isOutbound);
     // status
-    bool isSameStatusWithPrev = widget.message.status == widget.prevMessage?.status;
-    bool isSameStatusWithNext = widget.message.status == widget.nextMessage?.status;
-
+    bool sameStatusBot = (sameUserBot && sameReceiveBot) ? true : widget.message.status == widget.prevMessage?.status;
+    bool sameStatusTop = (sameUserTop && sameReceiveTop) ? true : widget.message.status == widget.nextMessage?.status;
     // type
-    bool canShowProfileByPrevType = widget.prevMessage?.canBurning == true;
-    bool canShowProfileByCurrType = widget.message.canBurning == true;
-    bool canShowProfileByNextType = widget.nextMessage?.canBurning == true;
-
-    // sendAt
-    int? prevSendAt = widget.prevMessage?.reallySendAt;
-    int? currSendAt = widget.message.reallySendAt;
-    int? nextSendAt = widget.nextMessage?.reallySendAt;
+    bool visibleBot = widget.prevMessage?.canBurning == true;
+    bool visibleSelf = widget.message.canBurning == true;
+    bool visibleTop = widget.nextMessage?.canBurning == true;
+    // time
+    int? timeBot = widget.prevMessage?.reallySendAt;
+    int? timeSelf = widget.message.reallySendAt;
+    int? timeTop = widget.nextMessage?.reallySendAt;
 
     // group
     bool isGroupHead = false;
     if (widget.nextMessage == null) {
       isGroupHead = true;
-    } else if (currSendAt == null || currSendAt == 0) {
+    } else if ((timeSelf == null) || (timeSelf == 0)) {
       isGroupHead = true;
-    } else if (nextSendAt == null || nextSendAt == 0) {
+    } else if ((timeTop == null) || (timeTop == 0)) {
       isGroupHead = true;
-    } else if (!isOneUserWithNext) {
+    } else if (!sameUserTop) {
       isGroupHead = true;
-    } else if (!isSameStatusWithNext) {
+    } else if (!sameStatusTop) {
       isGroupHead = true;
-    } else if (!canShowProfileByNextType) {
+    } else if (!visibleTop) {
       isGroupHead = true;
     } else {
-      int curSec = currSendAt ~/ 1000;
-      int nextSec = nextSendAt ~/ 1000;
+      int curSec = timeSelf ~/ 1000;
+      int nextSec = timeTop ~/ 1000;
       if ((curSec - nextSec) >= Settings.gapMessagesGroupSec) {
         isGroupHead = true;
       }
     }
-
     bool isGroupTail = false;
     if (widget.prevMessage == null) {
       isGroupTail = true;
-    } else if (currSendAt == null || currSendAt == 0) {
+    } else if (timeSelf == null || timeSelf == 0) {
       isGroupTail = true;
-    } else if (prevSendAt == null || prevSendAt == 0) {
+    } else if (timeBot == null || timeBot == 0) {
       isGroupTail = true;
-    } else if (!isOneUserWithPrev) {
+    } else if (!sameUserBot) {
       isGroupTail = true;
-    } else if (!isSameStatusWithPrev) {
+    } else if (!sameStatusBot) {
       isGroupTail = true;
-    } else if (!canShowProfileByPrevType) {
+    } else if (!visibleBot) {
       isGroupTail = true;
     } else {
-      int prevSec = prevSendAt ~/ 1000;
-      int curSec = currSendAt ~/ 1000;
+      int prevSec = timeBot ~/ 1000;
+      int curSec = timeSelf ~/ 1000;
       if ((prevSec - curSec) >= Settings.gapMessagesGroupSec) {
         isGroupTail = true;
       }
     }
-
     bool isGroupBody = true;
     if (isGroupHead || isGroupTail) {
       isGroupBody = false;
-    } else if (!isOneUserWithPrev || !isOneUserWithNext) {
+    } else if (!sameUserBot || !sameUserTop) {
       isGroupBody = false;
-    } else if (!isSameStatusWithPrev || !isSameStatusWithNext) {
+    } else if (!sameStatusBot || !sameStatusTop) {
       isGroupBody = false;
-    } else if (!canShowProfileByPrevType || !canShowProfileByNextType) {
+    } else if (!visibleBot || !visibleTop) {
       isGroupBody = false;
     }
 
     // profile
-    bool showProfile = canShowProfileByCurrType && !widget.message.isOutbound && (widget.message.isTopic || widget.message.isPrivateGroup);
-    bool hideProfile = showProfile && !isGroupHead;
+    bool leftBigMargin = visibleSelf && !widget.message.isOutbound && (widget.message.isTopic || widget.message.isPrivateGroup);
 
     List<Widget> contentsWidget = <Widget>[];
-
-    // if (isGroupHead) {
-    //   contentsWidget.add(
-    //     Padding(
-    //       padding: const EdgeInsets.only(top: 12, bottom: 6),
-    //       child: Label(
-    //         formatChatTime(DateTime.fromMillisecondsSinceEpoch(this.message.sendAt ?? DateTime.now().millisecondsSinceEpoch)),
-    //         type: LabelType.bodySmall,
-    //         fontSize: application.theme.bodyText2.fontSize ?? 14,
-    //       ),
-    //     ),
-    //   );
-    // }
-
     switch (this.widget.message.contentType) {
-      // case MessageContentType.ping:
-      // case MessageContentType.receipt:
-      // case MessageContentType.read:
-      // case MessageContentType.msgStatus:
-      // case MessageContentType.contact:
-      case MessageContentType.contactOptions:
-        contentsWidget.add(_contactOptionsWidget(context));
-        break;
-      // case MessageContentType.deviceRequest:
-      // case MessageContentType.deviceInfo:
       case MessageContentType.text:
       case MessageContentType.textExtension:
       case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
       case MessageContentType.ipfs:
-        contentsWidget.add(
-          ChatBubble(
-            message: this.widget.message,
-            contact: _contact,
-            showProfile: showProfile,
-            hideProfile: hideProfile,
-            showTimeAndStatus: isGroupTail,
-            // timeFormatBetween: false,
-            hideTopMargin: isGroupBody || (isGroupTail && !isGroupHead),
-            hideBotMargin: isGroupBody || (isGroupHead && !isGroupTail),
-            onAvatarLonePress: this.widget.onAvatarLonePress,
-            onResend: this.widget.onResend,
-          ),
-        );
+        contentsWidget.add(_widgetBubbleRoot(
+          leftBigMargin,
+          leftBigMargin && !isGroupHead,
+          leftBigMargin && isGroupHead,
+          isGroupTail,
+          isGroupBody || (isGroupTail && !isGroupHead),
+          isGroupBody || (isGroupHead && !isGroupTail),
+        ));
         break;
-      // case MessageContentType.nknOnePiece:
+      case MessageContentType.contactOptions:
+        contentsWidget.add(_widgetContactOptions(context));
+        break;
       case MessageContentType.topicSubscribe:
-        contentsWidget.add(_topicSubscribeWidget(context));
+        contentsWidget.add(_widgetTopicSubscribe(context));
         break;
-      // case MessageContentType.topicUnsubscribe:
       case MessageContentType.topicInvitation:
-        contentsWidget.add(_topicInvitedWidget(context));
+        contentsWidget.add(_widgetTopicInvited(context));
         break;
-      // case MessageContentType.topicKickOut:
       case MessageContentType.privateGroupInvitation:
-        contentsWidget.add(_privateGroupInvitedWidget(context));
+        contentsWidget.add(_widgetPrivateGroupInvited(context));
         break;
-      // case MessageContentType.privateGroupAccept:
       case MessageContentType.privateGroupSubscribe:
-        contentsWidget.add(_privateGroupSubscribeWidget(context));
+        contentsWidget.add(_widgetPrivateGroupSubscribe(context));
         break;
     }
     return Column(children: contentsWidget);
   }
 
-  Widget _contactOptionsWidget(BuildContext context) {
+  Widget _widgetBubbleRoot(
+    bool avatarVisible,
+    bool avatarTrans,
+    bool nameVisible,
+    bool showTimeAndStatus,
+    bool hideTopMargin,
+    bool hideBotMargin,
+  ) {
+    bool isSendOut = widget.message.isOutbound;
+    return Container(
+      padding: EdgeInsets.only(
+        left: 12,
+        right: 12,
+        top: hideTopMargin ? 0.5 : (isSendOut ? 4 : 8),
+        bottom: hideBotMargin ? 0.5 : (isSendOut ? 4 : 8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          isSendOut ? SizedBox.shrink() : _widgetBubbleAvatar(avatarVisible, avatarTrans),
+          SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: isSendOut ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: hideTopMargin ? 0 : 4),
+                _widgetBubbleName(nameVisible),
+                SizedBox(height: nameVisible ? 4 : 0),
+                ChatBubble(
+                  message: this.widget.message,
+                  showTimeAndStatus: showTimeAndStatus,
+                  hideTopMargin: hideTopMargin,
+                  hideBotMargin: hideBotMargin,
+                  onResend: this.widget.onResend,
+                ),
+                SizedBox(height: hideBotMargin ? 0 : 4),
+              ],
+            ),
+          ),
+          SizedBox(width: 8),
+          isSendOut ? _widgetBubbleAvatar(avatarVisible, avatarTrans) : SizedBox.shrink(),
+        ],
+      ),
+    );
+  }
+
+  Widget _widgetBubbleAvatar(bool visible, bool trans) {
+    return visible
+        ? Opacity(
+            opacity: trans ? 0 : 1,
+            child: GestureDetector(
+              onTap: () async {
+                if (!trans) this.widget.onAvatarPress?.call(_sender!, widget.message);
+              },
+              onLongPress: () {
+                if (!trans) this.widget.onAvatarLonePress?.call(_sender!, widget.message);
+              },
+              child: (_sender != null)
+                  ? ContactAvatar(
+                      contact: _sender!,
+                      radius: 20,
+                    )
+                  : SizedBox(width: 20 * 2, height: 20 * 2),
+            ),
+          )
+        : SizedBox.shrink();
+  }
+
+  Widget _widgetBubbleName(bool visible) {
+    return visible
+        ? Label(
+            _sender?.displayName ?? " ",
+            maxWidth: Settings.screenWidth() * 0.5,
+            type: LabelType.h3,
+            color: application.theme.primaryColor,
+          )
+        : SizedBox.shrink();
+  }
+
+  Widget _widgetContactOptions(BuildContext context) {
     Map<String, dynamic> optionData = this.widget.message.content ?? Map<String, dynamic>();
     Map<String, dynamic> content = optionData['content'] ?? Map<String, dynamic>();
     if (content.keys.length <= 0) return SizedBox.shrink();
@@ -291,7 +344,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._sender?.displayName ?? " "),
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
                   ),
@@ -311,7 +364,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this._contact);
+                  ContactProfileScreen.go(context, schema: this._sender);
                 },
               ),
             ],
@@ -330,7 +383,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Label(
-                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._contact?.displayName ?? " "),
+                    widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : (this._sender?.displayName ?? " "),
                     maxWidth: Settings.screenWidth() * 0.3,
                     type: LabelType.bodyRegular,
                     fontWeight: FontWeight.bold,
@@ -350,7 +403,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                   type: LabelType.bodyRegular,
                 ),
                 onTap: () {
-                  ContactProfileScreen.go(context, schema: this._contact);
+                  ContactProfileScreen.go(context, schema: this._sender);
                 },
               ),
             ],
@@ -362,8 +415,8 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     }
   }
 
-  Widget _topicSubscribeWidget(BuildContext context) {
-    String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _contact?.displayName ?? widget.message.from.substring(0, 6);
+  Widget _widgetTopicSubscribe(BuildContext context) {
+    String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _sender?.displayName ?? widget.message.from.substring(0, 6);
     String content = who + Settings.locale((s) => s.joined_channel, ctx: context);
 
     return Container(
@@ -377,7 +430,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     );
   }
 
-  Widget _topicInvitedWidget(BuildContext context) {
+  Widget _widgetTopicInvited(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
     String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
@@ -441,7 +494,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     );
   }
 
-  Widget _privateGroupInvitedWidget(BuildContext context) {
+  Widget _widgetPrivateGroupInvited(BuildContext context) {
     String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
     String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
     String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
@@ -548,7 +601,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     );
   }
 
-  Widget _privateGroupSubscribeWidget(BuildContext context) {
+  Widget _widgetPrivateGroupSubscribe(BuildContext context) {
     String invitee = widget.message.content?.toString() ?? "";
     if (invitee.isEmpty) return SizedBox.shrink();
     String inviteeDisplay = (invitee.length > 6) ? invitee.substring(0, 6) : invitee;
