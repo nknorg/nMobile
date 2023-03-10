@@ -584,7 +584,7 @@ class ChatInCommon with Tag {
     messageCommon.onSavedSink.add(inserted);
     // thumbnail
     if (ipfsThumbnailHash != null && ipfsThumbnailHash.isNotEmpty) {
-      chatCommon.startIpfsThumbnailDownload(inserted); // await
+      chatCommon.startIpfsThumbnailDownload(inserted, maxTryTimes: Settings.tryTimesIpfsThumbnailDownload); // await
     }
     return true;
   }

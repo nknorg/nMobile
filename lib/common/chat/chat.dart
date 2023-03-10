@@ -138,10 +138,9 @@ class ChatCommon with Tag {
 
   Future sendPings2LatestSessions() async {
     if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
-    int max = 20;
-    int limit = 20;
-    List<String> targetIds = [];
     // sessions
+    List<String> targetIds = [];
+    int limit = Settings.maxCountPingSessions;
     for (int offset = 0; true; offset += limit) {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       bool lastTimeOK = true;
@@ -153,7 +152,7 @@ class ChatCommon with Tag {
         }
       });
       logger.d("$TAG - sendPings2LatestSessions - offset:$offset - current_len:${result.length} - total_len:${targetIds.length}");
-      if (!lastTimeOK || (result.length < limit) || (targetIds.length >= max)) break;
+      if (!lastTimeOK || (result.length < limit) || (targetIds.length >= Settings.maxCountPingSessions)) break;
     }
     // send
     await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
@@ -244,7 +243,7 @@ class ChatCommon with Tag {
       int gap = 3 * 24 * 60 * 60 * 1000; // 3d
       int between = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
       if ((between < gap) && thumbnailAutoDownload) {
-        startIpfsThumbnailDownload(message); // await
+        startIpfsThumbnailDownload(message, maxTryTimes: Settings.tryTimesIpfsThumbnailDownload); // await
       } else {
         await _onIpfsDownload(message.msgId, "THUMBNAIL", true);
       }
@@ -639,7 +638,7 @@ class ChatCommon with Tag {
     bool optionOk = await messageCommon.updateMessageOptions(message, options, notify: true);
     if (optionOk) message.options = options;
     // thumbnail
-    MessageSchema? msg = await startIpfsThumbnailUpload(message);
+    MessageSchema? msg = await startIpfsThumbnailUpload(message, maxTryTimes: Settings.tryTimesIpfsThumbnailUpload);
     if (msg == null) {
       var options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       bool optionsOK = await messageCommon.updateMessageOptions(message, options, reQuery: true, notify: false);
@@ -742,7 +741,7 @@ class ChatCommon with Tag {
     return success ? message : null;
   }
 
-  Future<MessageSchema?> startIpfsThumbnailUpload(MessageSchema? message, {int maxTryTimes = 3}) async {
+  Future<MessageSchema?> startIpfsThumbnailUpload(MessageSchema? message, {int maxTryTimes = 1}) async {
     int tryTimes = 0;
     MessageSchema? msg;
     while (tryTimes < maxTryTimes) {
@@ -816,7 +815,7 @@ class ChatCommon with Tag {
     return [success ? message : null, true];
   }
 
-  Future<MessageSchema?> startIpfsThumbnailDownload(MessageSchema? message, {int maxTryTimes = 3}) async {
+  Future<MessageSchema?> startIpfsThumbnailDownload(MessageSchema? message, {int maxTryTimes = 1}) async {
     int tryTimes = 0;
     MessageSchema? msg;
     while (tryTimes < maxTryTimes) {

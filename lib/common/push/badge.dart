@@ -49,6 +49,10 @@ class Badge {
   static Future _updateCount(int count) async {
     if (!(await checkEnable())) return;
     logger.d("Badge - updateCount - count:$count");
+    if (count < 0) {
+      _currentCount = 0;
+      count = 0;
+    }
     await Common.updateBadgeCount(count);
   }
 }

@@ -70,20 +70,20 @@ class RemoteNotification {
       },
     });
     int tryTimes = 0;
-    while (tryTimes < 3) {
+    while (tryTimes < Settings.tryTimesNotificationPush) {
       Map<String, dynamic>? result = await Common.sendPushAPNS(uuid, deviceToken, topic, payload);
       if (result == null) {
         tryTimes++;
       } else if ((result["code"] != null) && (result["code"]?.toString() != "200")) {
         logger.e("SendPush - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
-        if (tryTimes >= 2) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
+        if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
         tryTimes++;
       } else {
         logger.i("SendPush - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
         break;
       }
     }
-    return (tryTimes < 3) ? uuid : null;
+    return (tryTimes < Settings.tryTimesNotificationPush) ? uuid : null;
   }
 
   static Future<String?> sendFCM(String authorization, String uuid, String deviceToken, String title, String content) async {
@@ -107,7 +107,7 @@ class RemoteNotification {
     });
     String? notificationId;
     int tryTimes = 0;
-    while (tryTimes < 3) {
+    while (tryTimes < Settings.tryTimesNotificationPush) {
       try {
         // http
         http.Response response = await http.post(
@@ -131,7 +131,7 @@ class RemoteNotification {
           break;
         } else {
           logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:${response.reasonPhrase}");
-          if (tryTimes >= 2) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
+          if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
           tryTimes++;
         }
       } catch (e, st) {
@@ -139,6 +139,6 @@ class RemoteNotification {
         tryTimes++;
       }
     }
-    return (tryTimes < 3) ? notificationId : null;
+    return (tryTimes < Settings.tryTimesNotificationPush) ? notificationId : null;
   }
 }
