@@ -87,7 +87,7 @@ class Settings {
   static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
   static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
   // timeout
-  static const int timeoutMeasureSeedMs = 3 * 1000; // 3s
+  static const int timeoutMeasureSeedMs = 5 * 1000; // 5s
   static const int timeoutPrivateGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
   static const int timeoutDeviceTokensDay = 5; // 5d
   // tryTimes

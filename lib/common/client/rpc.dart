@@ -4,11 +4,12 @@ import 'dart:typed_data';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 
-class PRC {
+class RPC {
   static List<String> defaultSeedRpcList = [
     'http://seed.nkn.org:30003',
     'http://mainnet-seed-0001.nkn.org:30003',
@@ -31,11 +32,10 @@ class PRC {
 
   static Future<List<String>> getRpcServers(String? walletAddress, {bool measure = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
 
     // get
     List<String> list = await _getRpcServers(walletAddress: walletAddress);
-    logger.d("$PRC - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
+    logger.d("PRC - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
 
     // append
     bool appendDefault = false;
@@ -48,7 +48,7 @@ class PRC {
     // measure
     if (measure || appendDefault) {
       try {
-        list = await Wallet.measureSeedRPCServer(list, 3 * 1000) ?? [];
+        list = await Wallet.measureSeedRPCServer(list, Settings.timeoutMeasureSeedMs) ?? [];
         await setRpcServers(walletAddress, list);
 
         if (walletAddress?.isNotEmpty == true) {
@@ -67,7 +67,7 @@ class PRC {
 
     // again
     if (list.length <= 2) {
-      if (!appendDefault) return getRpcServers(walletAddress, measure: measure, delayMs: 0);
+      if (!measure && !appendDefault) return await getRpcServers(walletAddress, measure: measure);
     }
 
     logger.d("PRC - getRpcServers - return - walletAddress:$walletAddress - length:${list.length} - list:$list");
