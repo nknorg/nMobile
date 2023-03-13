@@ -24,12 +24,14 @@ class SessionStorage with Tag {
         `last_message_at` BIGINT,
         `last_message_options` TEXT,
         `is_top` BOOLEAN DEFAULT 0,
-        `un_read_count` INT
+        `un_read_count` INT,
+        `data` TEXT
       )''';
 
   SessionStorage();
 
   static create(Database db) async {
+    // TODO:GG data
     // create table
     await db.execute(createSQL);
 
@@ -252,6 +254,35 @@ class SessionStorage with Tag {
             });
             logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
             return (count ?? 0) > 0;
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setData(String? targetId, int? type, Map<String, dynamic>? newData) async {
+    if (db?.isOpen != true) return false;
+    if (targetId == null || targetId.isEmpty || type == null) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'data': newData != null ? jsonEncode(newData) : null,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'target_id = ? AND type = ?',
+                whereArgs: [targetId, type],
+              );
+            });
+            if (count != null && count > 0) {
+              logger.v("$TAG - setData - success - targetId:$targetId - type:$type - data:$newData");
+              return true;
+            }
+            logger.w("$TAG - setData - fail - targetId:$targetId - type:$type - data:$newData");
           } catch (e, st) {
             handleError(e, st);
           }

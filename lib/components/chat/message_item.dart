@@ -49,13 +49,11 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   void initState() {
     super.initState();
     // contact
-    _contactUpdateStreamSubscription = contactCommon.updateStream.listen((event) {
-      if (_sender?.id == event.id) {
-        widget.message.temp?["sender"] = event;
-        setState(() {
-          _sender = event;
-        });
-      }
+    _contactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _sender?.id).listen((event) {
+      widget.message.temp?["sender"] = event;
+      setState(() {
+        _sender = event;
+      });
     });
   }
 
@@ -72,6 +70,11 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
       contactCommon.queryByClientAddress(widget.message.from).then((sender) {
         if (widget.message.from == sender?.clientAddress) {
           widget.message.temp?["sender"] = sender;
+          setState(() {
+            _sender = sender;
+          });
+        } else {
+          sender = ContactSchema.createWithNoPublicKey(widget.message.from, ContactType.none);
           setState(() {
             _sender = sender;
           });

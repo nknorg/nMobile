@@ -61,21 +61,32 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     super.initState();
     // listen
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == contact?.id).listen((ContactSchema event) {
+      widget.subscriber.temp?["contact"] = event;
       setState(() {
         contact = event;
       });
     });
   }
 
-  _refreshContact() async {
-    if ((contact?.clientAddress == null) || (contact?.clientAddress.isEmpty == true) || (contact?.clientAddress != widget.subscriber.clientAddress)) {
-      ContactSchema? _contact = await contactCommon.queryByClientAddress(widget.subscriber.clientAddress);
-      if (_contact == null) {
-        _contact = await contactCommon.addByType(widget.subscriber.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
-      }
-      setState(() {
-        contact = _contact;
-      });
+  void _refreshContact() {
+    if (widget.subscriber.temp == null) widget.subscriber.temp = Map();
+    Map? temp = widget.subscriber.temp;
+    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == temp?["contact"]?.clientAddress)) return;
+    if (temp?["contact"] == null) {
+      String? address = widget.subscriber.clientAddress;
+      contactCommon.queryByClientAddress(address).then((result) async {
+        if (result == null) {
+          result = await contactCommon.addByType(address, ContactType.none, notify: true, checkDuplicated: false);
+        }
+        if ((address == result?.clientAddress) && (address == widget.subscriber.clientAddress)) {
+          widget.subscriber.temp?["contact"] = result;
+          setState(() {
+            contact = result;
+          });
+        }
+      }); // await
+    } else {
+      contact = temp?["contact"];
     }
   }
 

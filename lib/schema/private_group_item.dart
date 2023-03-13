@@ -28,6 +28,8 @@ class PrivateGroupItemSchema {
 
   Map<String, dynamic>? data;
 
+  Map<String, dynamic>? temp; // no_sql
+
   PrivateGroupItemSchema({
     this.id,
     required this.groupId,
@@ -142,6 +144,6 @@ class PrivateGroupItemSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, invitee: $invitee, inviter: $inviter, inviteeRawData: $inviteeRawData, inviterRawData: $inviterRawData, inviteeSignature: $inviteeSignature, inviterSignature: $inviterSignature, data: $data}';
+    return 'PrivateGroupItemSchema{id: $id, groupId: $groupId, permission: $permission, expiresAt: $expiresAt, inviter: $inviter, invitee: $invitee, inviterRawData: $inviterRawData, inviteeRawData: $inviteeRawData, inviterSignature: $inviterSignature, inviteeSignature: $inviteeSignature, data: $data, temp: $temp}';
   }
 }
