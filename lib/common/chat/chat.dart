@@ -104,9 +104,9 @@ class ChatCommon with Tag {
     // filter
     checkList = checkList.where((element) {
       int msgSendAt = MessageOptions.getOutAt(element.options) ?? 0;
-      int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
+      int gap = DateTime.now().millisecondsSinceEpoch - msgSendAt;
       int filter = element.canTryPiece ? (filterSec + 10) : filterSec;
-      if (between < (filter * 1000)) {
+      if (gap < (filter * 1000)) {
         logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;
       }
@@ -145,8 +145,8 @@ class ChatCommon with Tag {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       bool lastTimeOK = true;
       result.forEach((element) {
-        int between = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
-        lastTimeOK = between < Settings.gapPingSessionOnlineMs;
+        int gap = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
+        lastTimeOK = gap < Settings.gapPingSessionOnlineMs;
         if (element.isContact && lastTimeOK) {
           targetIds.add(element.targetId);
         }
@@ -160,7 +160,6 @@ class ChatCommon with Tag {
 
   Future<int> resetMessageSending({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
     // sending list
     List<MessageSchema> sendingList = [];
     int limit = 20;
@@ -193,7 +192,6 @@ class ChatCommon with Tag {
 
   Future resetIpfsDownloadIng({bool thumbnailAutoDownload = false, int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    // if (application.inBackGround) return;
     // file
     String fileDownloadKey = "IPFS_FILE_DOWNLOAD_PROGRESS_IDS_${clientCommon.address}";
     List fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
@@ -240,9 +238,9 @@ class ChatCommon with Tag {
       bool optionsOK = await messageCommon.updateMessageOptions(message, options, notify: false);
       if (optionsOK) message.options = options;
       // try download TODO:GG 为什么要有时间限制？节点过期？
-      int gap = 3 * 24 * 60 * 60 * 1000; // 3d
-      int between = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
-      if ((between < gap) && thumbnailAutoDownload) {
+      int minGap = 3 * 24 * 60 * 60 * 1000; // 3d
+      int gap = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
+      if ((gap < minGap) && thumbnailAutoDownload) {
         startIpfsThumbnailDownload(message, maxTryTimes: Settings.tryTimesIpfsThumbnailDownload); // await
       } else {
         await _onIpfsDownload(message.msgId, "THUMBNAIL", true);
