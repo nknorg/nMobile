@@ -348,12 +348,12 @@ class ChatInCommon with Tag {
         if ((status == null) || (status == 0)) {
           // resend msg
           int? resendAt = MessageOptions.getResendMuteAt(message.options);
-          int between = DateTime.now().millisecondsSinceEpoch - (resendAt ?? DateTime.now().millisecondsSinceEpoch);
-          if ((resendAt != null) && (between < 5 * 60 * 1000)) {
-            logger.i("$TAG - _receiveMsgStatus - resend just now - between:${between / 1000} - msgId:$msgId - received:$received");
+          int gap = DateTime.now().millisecondsSinceEpoch - (resendAt ?? DateTime.now().millisecondsSinceEpoch);
+          if ((resendAt != null) && (gap < 5 * 60 * 1000)) {
+            logger.i("$TAG - _receiveMsgStatus - resend just now - gap:${gap / 1000} - msgId:$msgId - received:$received");
             continue;
           }
-          logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - between:${between / 1000} - received:$received");
+          logger.i("$TAG - _receiveMsgStatus - msg resend - status:$status - gap:${gap / 1000} - received:$received");
           message.options = MessageOptions.setResendMuteAt(message.options, DateTime.now().millisecondsSinceEpoch);
           await MessageStorage.instance.updateOptions(msgId, message.options);
           chatOutCommon.resendMute(message); // await

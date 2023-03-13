@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/layout/nav.dart';
@@ -9,6 +11,8 @@ import 'package:nmobile/native/common.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/settings/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
+import 'package:nmobile/services/task.dart';
+import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class AppScreen extends StatefulWidget {
@@ -41,22 +45,62 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   late PageController _pageController;
 
+  StreamSubscription? _clientStatusChangeSubscription;
+
+  bool firstConnect = true;
+  int lastTopicsCheckAt = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+    // init
     Settings.appContext = context; // before at mounted
     application.mounted(); // await
 
+    // page_controller
     this._currentIndex = widget.arguments != null ? (widget.arguments?[AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
+
+    SettingsStorage.getSettings(SettingsStorage.LAST_CHECK_TOPICS_AT).then((value) {
+      lastTopicsCheckAt = int.tryParse(value?.toString() ?? "0") ?? 0;
+    });
+
+    // client status
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if ((clientCommon.client != null) && (status == ClientConnectStatus.connected)) {
+        // topic subscribe+permission
+        if (firstConnect) {
+          firstConnect = false;
+          taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
+          taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
+          taskService.addTask30(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true), delayMs: 10 * 1000);
+        }
+        // send pings (5d+6h)
+        chatCommon.sendPings2LatestSessions(); // await
+        // topics check (24h)
+        int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
+        logger.i("App - checkAllTopics - gap:$lastCheckTopicGap");
+        if (lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs) {
+          Future.delayed(Duration(milliseconds: 1000)).then((value) {
+            topicCommon.checkAllTopics(refreshSubscribers: false); // await
+            lastTopicsCheckAt = DateTime.now().millisecondsSinceEpoch;
+            SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastTopicsCheckAt);
+          });
+        }
+      }
+    });
+
+    // wallet
+    taskService.addTask60(TaskService.KEY_WALLET_BALANCE, (key) => walletCommon.queryAllBalance(), delayMs: 1000);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _clientStatusChangeSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
