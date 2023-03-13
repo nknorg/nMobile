@@ -62,7 +62,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        _refreshBadge(delayMs: 500);
+        _refreshBadge(delayMs: 1000);
       } else if (application.isGoBackground(states)) {
         _refreshBadge(delayMs: 0);
       }
@@ -125,7 +125,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // unread
-    _refreshBadge(delayMs: 250);
+    _refreshBadge(delayMs: 500);
   }
 
   @override

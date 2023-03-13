@@ -144,6 +144,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, contactAddress: $contactAddress, createAt: $createAt, updateAt: $updateAt, deviceId: $deviceId, deviceToken: $deviceToken, onlineAt: $onlineAt, pingAt: $pingAt, pongAt: $pongAt, data: $data}';
+    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactAddress: $contactAddress, deviceId: $deviceId, deviceToken: $deviceToken, onlineAt: $onlineAt, pingAt: $pingAt, pongAt: $pongAt, data: $data}';
   }
 }

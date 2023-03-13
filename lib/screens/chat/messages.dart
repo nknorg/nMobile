@@ -152,7 +152,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        _readMessages(true, true); // await
+        _readMessages(true, false); // await
       } else if (application.isGoBackground(states)) {
         audioHelper.playerRelease(); // await
         audioHelper.recordRelease(); // await

@@ -281,6 +281,7 @@ class PrivateGroupStorage with Tag {
                 tableName,
                 {
                   'options': options != null ? jsonEncode(options) : null,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ?',
                 whereArgs: [groupId],
@@ -306,6 +307,7 @@ class PrivateGroupStorage with Tag {
                 tableName,
                 {
                   'data': data != null ? jsonEncode(data) : null,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ?',
                 whereArgs: [groupId],

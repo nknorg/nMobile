@@ -82,6 +82,6 @@ class OptionsSchema {
 
   @override
   String toString() {
-    return 'OptionsSchema{receiveOpen: $receiveOpen, notificationOpen: $notificationOpen, deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterAt: $updateBurnAfterAt, soundResource: $soundResource, muteExpireAt: $muteExpireAt, avatarBgColor: $avatarBgColor, avatarNameColor: $avatarNameColor, chatBgFile: $chatBgFile, chatBgColor: $chatBgColor, chatBubbleBgColor: $chatBubbleBgColor, chatBubbleTextColor: $chatBubbleTextColor}';
+    return 'OptionsSchema{receiveOpen: $receiveOpen, muteExpireAt: $muteExpireAt, notificationOpen: $notificationOpen, soundResource: $soundResource, deleteAfterSeconds: $deleteAfterSeconds, updateBurnAfterAt: $updateBurnAfterAt, avatarBgColor: $avatarBgColor, avatarNameColor: $avatarNameColor, chatBgFile: $chatBgFile, chatBgColor: $chatBgColor, chatBubbleBgColor: $chatBubbleBgColor, chatBubbleTextColor: $chatBubbleTextColor}';
   }
 }

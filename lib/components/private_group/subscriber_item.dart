@@ -60,21 +60,32 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     super.initState();
     // listen
     _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == contact?.id).listen((ContactSchema event) {
+      widget.privateGroupItem.temp?["contact"] = event;
       setState(() {
         contact = event;
       });
     });
   }
 
-  _refreshContact() async {
-    if ((contact?.clientAddress == null) || (contact?.clientAddress.isEmpty == true) || (contact?.clientAddress != widget.privateGroupItem.invitee)) {
-      ContactSchema? _contact = await contactCommon.queryByClientAddress(widget.privateGroupItem.invitee);
-      if (_contact == null) {
-        _contact = await contactCommon.addByType(widget.privateGroupItem.invitee, ContactType.none, notify: true, checkDuplicated: false);
-      }
-      setState(() {
-        contact = _contact;
-      });
+  void _refreshContact() {
+    if (widget.privateGroupItem.temp == null) widget.privateGroupItem.temp = Map();
+    Map? temp = widget.privateGroupItem.temp;
+    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == temp?["contact"]?.clientAddress)) return;
+    if (temp?["contact"] == null) {
+      String? address = widget.privateGroupItem.invitee;
+      contactCommon.queryByClientAddress(address).then((result) async {
+        if (result == null) {
+          result = await contactCommon.addByType(address, ContactType.none, notify: true, checkDuplicated: false);
+        }
+        if ((address == result?.clientAddress) && (address == widget.privateGroupItem.invitee)) {
+          widget.privateGroupItem.temp?["contact"] = result;
+          setState(() {
+            contact = result;
+          });
+        }
+      }); // await
+    } else {
+      contact = temp?["contact"];
     }
   }
 

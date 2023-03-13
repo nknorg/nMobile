@@ -31,6 +31,8 @@ class SubscriberSchema {
   int? permPage; // <-> perm_page
   Map<String, dynamic>? data; // <-> data[...]
 
+  Map<String, dynamic>? temp; // no_sql
+
   SubscriberSchema({
     this.id,
     required this.topic,
@@ -138,6 +140,6 @@ class SubscriberSchema {
 
   @override
   String toString() {
-    return 'SubscriberSchema{id: $id, topic: $topic, clientAddress: $clientAddress, createAt: $createAt, updateAt: $updateAt, status: $status, permPage: $permPage, data: $data}';
+    return 'SubscriberSchema{id: $id, topic: $topic, clientAddress: $clientAddress, createAt: $createAt, updateAt: $updateAt, status: $status, permPage: $permPage, data: $data, temp: $temp}';
   }
 }

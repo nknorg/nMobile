@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/session.dart';
@@ -59,6 +60,16 @@ class SessionCommon with Tag {
         unReadCount = (!lastMsg.isOutbound && lastMsg.canNotification) ? 1 : 0;
       }
     }
+    // senderName
+    String? groupSenderName;
+    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+      if (lastMsg != null) {
+        ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg.from);
+        if (_sender?.displayName.isNotEmpty == true) {
+          groupSenderName = _sender?.displayName ?? " ";
+        }
+      }
+    }
     // schema
     SessionSchema? added = SessionSchema(
       targetId: targetId,
@@ -67,6 +78,9 @@ class SessionCommon with Tag {
       lastMessageAt: lastMsgAt,
       unReadCount: unReadCount ?? 0,
     );
+    if (groupSenderName?.isNotEmpty == true) {
+      added.data = {"groupSenderName": groupSenderName};
+    }
     // insert
     added = await SessionStorage.instance.insert(added);
     if ((added != null) && notify) _addSink.add(added);
@@ -121,7 +135,24 @@ class SessionCommon with Tag {
       newUnReadCount = unReadCount ?? (await messageCommon.unReadCountByTargetId(targetId, topic, group));
     }
     newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
+    // senderName
+    String? newGroupSenderName;
+    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+      if (newLastMsg != null) {
+        ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.from);
+        if (_sender?.displayName.isNotEmpty == true) {
+          newGroupSenderName = _sender?.displayName ?? " ";
+        }
+      }
+    }
     // update
+    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+      if (newGroupSenderName != exist.data?["groupSenderName"]?.toString()) {
+        Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
+        bool success = await SessionStorage.instance.setData(targetId, type, newData);
+        if (success) exist.data = newData;
+      }
+    }
     exist.lastMessageOptions = newLastMsg?.toMap();
     exist.lastMessageAt = newLastMsgAt;
     exist.unReadCount = newUnReadCount;
