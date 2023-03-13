@@ -92,6 +92,17 @@ class ContactSchema {
     );
   }
 
+  static ContactSchema? createWithNoPublicKey(String? clientAddress, int? type, {String? profileVersion}) {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    return ContactSchema(
+      createAt: DateTime.now().millisecondsSinceEpoch,
+      updateAt: DateTime.now().millisecondsSinceEpoch,
+      clientAddress: clientAddress,
+      type: type,
+      profileVersion: profileVersion ?? Uuid().v4(),
+    );
+  }
+
   static getDefaultName(String? clientAddress) {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     String defaultName;
@@ -296,6 +307,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, clientAddress: $clientAddress, type: $type, createAt: $createAt, updateAt: $updateAt, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
+    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, clientAddress: $clientAddress, type: $type, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
   }
 }

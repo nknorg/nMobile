@@ -205,6 +205,6 @@ class PrivateGroupSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupSchema{id: $id, groupId: $groupId, name: $name, type: $type, version: $version, count: $count, createAt: $createAt, updateAt: $updateAt, isTop: $isTop, avatar: ${avatar?.path}, options: $options, data: $data}';
+    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, type: $type, name: $name, version: $version, count: $count, avatar: $avatar, joined: $joined, isTop: $isTop, options: $options, data: $data}';
   }
 }

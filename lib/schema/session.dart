@@ -21,6 +21,10 @@ class SessionSchema {
   bool isTop; // <-> is_top
   int unReadCount; // <-> un_read_count
 
+  Map<String, dynamic>? data; // <-> data
+
+  Map<String, dynamic>? temp; // no_sql
+
   SessionSchema({
     this.id,
     required this.targetId,
@@ -29,6 +33,7 @@ class SessionSchema {
     this.lastMessageOptions,
     this.isTop = false,
     this.unReadCount = 0,
+    this.data,
   });
 
   bool get isContact {
@@ -62,6 +67,7 @@ class SessionSchema {
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
+      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
   }
@@ -76,11 +82,22 @@ class SessionSchema {
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
       unReadCount: e['un_read_count'] ?? 0,
     );
+
+    if (e['data']?.toString().isNotEmpty == true) {
+      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
+
+      if (schema.data == null) {
+        schema.data = new Map<String, dynamic>();
+      }
+      if (data != null) {
+        schema.data?.addAll(data);
+      }
+    }
     return schema;
   }
 
   @override
   String toString() {
-    return 'SessionSchema{id: $id, targetId: $targetId, type: $type, unReadCount: $unReadCount, isTop: $isTop, lastMessageAt: $lastMessageAt, lastMessageOptions: $lastMessageOptions}';
+    return 'SessionSchema{id: $id, targetId: $targetId, type: $type, lastMessageAt: $lastMessageAt, lastMessageOptions: $lastMessageOptions, isTop: $isTop, unReadCount: $unReadCount, data: $data, temp: $temp}';
   }
 }
