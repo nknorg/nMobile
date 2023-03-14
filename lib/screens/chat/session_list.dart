@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart';
 import 'package:nmobile/common/settings.dart';
@@ -264,7 +263,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     }
     return Column(
       children: [
-        _getClientStatusView(),
+        //_getClientStatusView(),
         _isShowTip ? _getTipView() : SizedBox.shrink(),
         Expanded(
           child: _sessionListView(),
@@ -273,7 +272,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     );
   }
 
-  _getClientStatusView() {
+  /*_getClientStatusView() {
     return StreamBuilder<bool>(
       stream: clientCommon.connectingVisibleStream,
       initialData: false,
@@ -293,7 +292,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
         );
       },
     );
-  }
+  }*/
 
   _getTipView() {
     return Container(

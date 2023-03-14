@@ -74,9 +74,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         // topic subscribe+permission
         if (firstConnect) {
           firstConnect = false;
+          taskService.addTask10(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), delayMs: 3 * 1000);
           taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
           taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
-          taskService.addTask30(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(force: true), delayMs: 10 * 1000);
         }
         // send pings (5d+6h)
         chatCommon.sendPings2LatestSessions(); // await

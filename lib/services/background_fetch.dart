@@ -73,11 +73,11 @@ class BackgroundFetchService with Tag {
       BackgroundFetch.finish(taskId);
       return;
     }
-    if (!clientCommon.isClientCreated) {
+    /*if (clientCommon.client  == null) {
       logger.i("$TAG - _onBackgroundFetch - finish - client closed - taskId:$taskId");
       BackgroundFetch.finish(taskId);
       return;
-    }
+    }*/
     // signOut
     logger.i("$TAG - _onBackgroundFetch - run start - taskId:$taskId");
     try {
