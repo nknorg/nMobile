@@ -224,7 +224,7 @@ class TopSub {
     bool canTryTimer = true;
     bool isBlock = false;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         String? topicHash = await clientCommon.client?.subscribe(
           topic: genTopicHash(topic),
           duration: Settings.blockHeightTopicSubscribeDefault,
@@ -322,7 +322,7 @@ class TopSub {
     bool canTryTimer = true;
     bool isBlock = false;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         String? topicHash = await clientCommon.client?.unsubscribe(
           topic: genTopicHash(topic),
           identifier: identifier,
@@ -404,7 +404,7 @@ class TopSub {
   static _subscribeReplace(int nonce, double fee) async {
     bool? success;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         String? address = await walletCommon.getDefaultAddress();
         if (address == null || address.isEmpty) return false;
         String keystore = await walletCommon.getKeystore(address);
@@ -427,7 +427,7 @@ class TopSub {
     if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
     Map<String, dynamic>? results;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         results = await clientCommon.client?.getSubscription(
           topic: genTopicHash(topic),
           subscriber: subscriber,
@@ -468,7 +468,7 @@ class TopSub {
     Map<String, dynamic>? results;
     try {
       bool loop = true;
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         while (loop) {
           Map<String, dynamic>? result = await clientCommon.client?.getSubscribers(
             topic: genTopicHash(topic),
@@ -519,7 +519,7 @@ class TopSub {
     if (topic == null || topic.isEmpty) return 0;
     int? count;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         count = await clientCommon.client?.getSubscribersCount(
           topic: genTopicHash(topic),
           // subscriberHashPrefix: subscriberHashPrefix,

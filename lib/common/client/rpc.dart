@@ -122,7 +122,7 @@ class RPC {
   static Future<int?> getBlockHeight() async {
     int? newBlockHeight;
     try {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      if (clientCommon.isClientOK) {
         newBlockHeight = await clientCommon.client?.getHeight();
       }
       if ((newBlockHeight == null) || (newBlockHeight <= 0)) {
@@ -148,7 +148,7 @@ class RPC {
         // walletAddress no check
         List<String> seedRpcList = await getRpcServers(walletAddress);
         nonce = await Wallet.getNonceByAddress(walletAddress, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
-      } else if (clientCommon.isClientCreated && !clientCommon.clientClosing) {
+      } else if (clientCommon.isClientOK) {
         // client no check rpcSeed
         nonce = await clientCommon.client?.getNonce(txPool: txPool);
       }

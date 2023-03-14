@@ -56,10 +56,8 @@ class ChatOutCommon with Tag {
     // client
     int tryTimes = 0;
     while (tryTimes < Settings.tryTimesSendMsgUntilClientOk) {
-      if (clientCommon.isClientCreated && !clientCommon.clientClosing && (selfAddress == clientCommon.address)) {
-        break;
-      }
-      logger.w("$TAG - sendMsg - client error - closing:${clientCommon.clientClosing} - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
+      if (clientCommon.isClientOK && (selfAddress == clientCommon.address)) break;
+      logger.w("$TAG - sendMsg - client no ok - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
       tryTimes++;
       int waitMs = (10 * 1000) ~/ Settings.tryTimesSendMsgUntilClientOk; // 500ms
       await Future.delayed(Duration(milliseconds: waitMs));
@@ -106,21 +104,13 @@ class ChatOutCommon with Tag {
       }
       handleError(e, st);
       if (NknError.isClientError(e)) {
-        if (clientCommon.clientResigning || (clientCommon.checkTimes > 0)) {
-          return [true, null, 500];
-        } else {
-          final client = (await clientCommon.reSignIn(false))[0];
-          if ((client != null) && (client.address.isNotEmpty == true)) {
-            logger.i("$TAG - _sendData - reSignIn success - destList:$destList data:$data");
-            return [true, null, 500];
-          } else {
-            logger.e("$TAG - _sendData - reSignIn fail - wallet:${await walletCommon.getDefault()}");
-            // maybe always no here
-          }
-        }
-      } else {
-        logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
+        // if (clientCommon.isConnected) return [true, null, 100];
+        if (clientCommon.isConnecting) return [true, null, 500];
+        logger.i("$TAG - _sendData - reSignIn - destList:$destList data:$data");
+        bool success = await clientCommon.reLogin(false);
+        return [true, null, success ? 500 : 1000];
       }
+      logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
     }
     return [true, null, 250];
   }
@@ -296,7 +286,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || content.trim().isEmpty) return null;
     // target
     String targetAddress = "";
@@ -339,7 +329,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -408,7 +398,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetAddress = "";
@@ -453,7 +443,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetAddress = "";
@@ -560,7 +550,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<MessageSchema?> sendPrivateGroupInvitee(String? target, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     if (target == null || target.isEmpty) return null;
     if (privateGroup == null || groupItem == null) return null;
     MessageSchema message = MessageSchema.fromSend(
@@ -590,7 +580,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupAccept(String? target, PrivateGroupItemSchema? groupItem) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupAccept(groupItem);
@@ -600,7 +590,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupQuit(String? target, PrivateGroupItemSchema? groupItem) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupQuit(groupItem);
