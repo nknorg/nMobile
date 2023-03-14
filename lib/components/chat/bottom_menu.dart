@@ -28,7 +28,6 @@ class ChatBottomMenu extends StatelessWidget {
   });
 
   _pickImages({required ImageSource source}) async {
-    if (!clientCommon.isClientCreated) return;
     List<Map<String, dynamic>> results;
     if (source == ImageSource.camera) {
       // no video so no encode
@@ -76,7 +75,6 @@ class ChatBottomMenu extends StatelessWidget {
   }
 
   _pickFiles({int? maxSize}) async {
-    if (!clientCommon.isClientCreated) return;
     FilePickerResult? result;
     try {
       result = await FilePicker.platform.pickFiles(

@@ -15,6 +15,9 @@ class TaskService {
   Timer? _timer1;
   Map<String, Function(String)> _tasks1 = Map<String, Function(String)>();
 
+  Timer? _timer10;
+  Map<String, Function(String)> _tasks10 = Map<String, Function(String)>();
+
   Timer? _timer30;
   Map<String, Function(String)> _tasks30 = Map<String, Function(String)>();
 
@@ -54,6 +57,16 @@ class TaskService {
           });
         });
 
+    // timer 10s
+    _timer10 = _timer10 ??
+        Timer.periodic(Duration(seconds: 10), (timer) async {
+          _tasks10.keys.forEach((String key) {
+            // logger.v("TaskService - tick_10 - key:$key");
+            if (application.inBackGround) return;
+            _tasks10[key]?.call(key);
+          });
+        });
+
     // timer 30s
     _timer30 = _timer30 ??
         Timer.periodic(Duration(seconds: 30), (timer) {
@@ -89,12 +102,15 @@ class TaskService {
 
   uninstall() {
     // _tasks1.clear();
+    // _tasks10.clear();
     // _tasks30.clear();
     // _tasks60.clear();
     // _tasks300.clear();
 
     _timer1?.cancel();
     _timer1 = null;
+    _timer10?.cancel();
+    _timer10 = null;
     _timer30?.cancel();
     _timer30 = null;
     _timer60?.cancel();
@@ -144,6 +160,43 @@ class TaskService {
         }
       });
       _tasks1 = temp;
+    }, id: key);
+  }
+
+  bool isTask10Run(String key) {
+    return _tasks10[key] != null;
+  }
+
+  void addTask10(String key, Function(String) func, {int? delayMs}) {
+    _queue.add(() async {
+      logger.d("TaskService - addTask10 - key:$key - func:${func.toString()}");
+      if (delayMs == null) {
+        // nothing
+      } else if (delayMs == 0) {
+        func.call(key);
+      } else if (delayMs > 0) {
+        _delayMap["10___$key"]?.cancel();
+        _delayMap["10___$key"] = new Timer(Duration(milliseconds: delayMs), () {
+          if (application.inBackGround) return;
+          if (!_tasks10.keys.contains(key)) return;
+          logger.i("TaskService - addTask10 - call by delay - key:$key - delayMs:$delayMs");
+          func.call(key);
+        });
+      }
+      _tasks10[key] = func;
+    }, id: key);
+  }
+
+  void removeTask10(String key) {
+    _queue.add(() async {
+      if (!_tasks10.keys.contains(key)) return;
+      Map<String, Function(String)> temp = Map();
+      _tasks10.forEach((k, v) {
+        if (k != key) {
+          temp[k] = v;
+        }
+      });
+      _tasks10 = temp;
     }, id: key);
   }
 

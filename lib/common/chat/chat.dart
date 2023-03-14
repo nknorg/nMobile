@@ -137,7 +137,6 @@ class ChatCommon with Tag {
   }*/
 
   Future sendPings2LatestSessions() async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
     // sessions
     List<String> targetIds = [];
     int limit = Settings.maxCountPingSessions;

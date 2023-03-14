@@ -71,7 +71,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   PrivateGroupSchema? _privateGroup;
   bool? _isJoined;
 
-  bool isClientOk = clientCommon.isClientCreated;
+  bool isClientOk = clientCommon.isClientOK;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
@@ -141,10 +141,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _moreLoading = false;
 
     // client
-    _clientStatusSubscription = clientCommon.statusStream.listen((int status) {
-      if (isClientOk != clientCommon.isClientCreated) {
+    _clientStatusSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
+      if (isClientOk != clientCommon.isClientOK) {
         setState(() {
-          isClientOk = clientCommon.isClientCreated;
+          isClientOk = clientCommon.isClientOK;
         });
       }
     });
@@ -354,7 +354,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _refreshTopicJoined() async {
-    if ((_topic == null) || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if ((_topic == null) || !clientCommon.isClientOK) return;
     bool isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
     if (isJoined && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
@@ -375,7 +375,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       await topicCommon.setCount(_topic?.id, count, notify: true);
     }
     // fetch
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!clientCommon.isClientOK) return;
     bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
     bool topicCountSmall = (_topic?.count ?? 0) <= TopicSchema.minRefreshCount;
     if (fetch || topicCountEmpty || topicCountSmall) {
@@ -399,7 +399,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _checkPrivateGroupVersion() async {
-    if ((_privateGroup == null) || !clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (_privateGroup == null) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
       if (version?.isNotEmpty == true) {

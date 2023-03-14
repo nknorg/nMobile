@@ -90,16 +90,16 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
       if (application.isFromBackground(states)) {
         if (!firstLogin) {
           int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (gap >= Settings.gapClientReAuthMs) {
-            _tryAuth(); // await
+            await _tryAuth();
           } else {
             loginCompleter.complete();
-            clientCommon.connectCheck(force: true); // await
           }
+          clientCommon.connectCheck(reconnect: true); // await
         }
       } else if (application.isGoBackground(states)) {
         loginCompleter = Completer();
@@ -212,6 +212,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryLogin - wallet default is empty");
+      isLoginProgress = true;
       return;
     }
 
@@ -219,22 +220,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
 
     // client
-    Map<String, dynamic> result = await clientCommon.signIn(wallet, fetchRemote: true, loadingVisible: (show, tryTimes) {
-      if (tryTimes > 1) return;
+    var client = await clientCommon.signIn(wallet, null, loading: (visible) {
       _setConnected(true); // TODO:GG 这是为啥?
     });
-    final client = result["client"];
-    final doSignOut = result["signOut"];
-    _setConnected((client != null) || !doSignOut);
+    _setConnected(true);
     if (client == null) {
-      if (doSignOut) {
-        logger.i("$TAG - _tryLogin - need sign out, close all");
-        await clientCommon.signOut(clearWallet: false, closeDB: true);
-      } else {
-        // should be not go here
-        logger.e("$TAG - _tryLogin - others error, should be not go here");
-        await clientCommon.signOut(clearWallet: false, closeDB: false);
-      }
+      // TODO:GG 无网环境会关闭db吗?
+      logger.i("$TAG - _tryLogin - need sign out, close all");
+      await clientCommon.signOut(clearWallet: false, closeDB: true);
     }
 
     isLoginProgress = false;
@@ -248,11 +241,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     AppScreen.go(this.context);
 
     // client
-    if (!clientCommon.isClientCreated && (clientCommon.status != ClientConnectStatus.connecting)) {
-      isAuthProgress = false;
+    if (!clientCommon.isDisConnecting || clientCommon.isDisConnected) {
       // _setConnected(false);
       // AppScreen.go(this.context);
-      return _tryLogin();
+      await _tryLogin();
+      isAuthProgress = false;
+      return;
     }
     // TODO:GG showSessionListed 后台返回？
     _setConnected(false);
@@ -263,6 +257,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryAuth - wallet default is empty");
       await clientCommon.signOut(clearWallet: true, closeDB: true);
+      isAuthProgress = false;
       return;
     }
 
@@ -273,14 +268,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       logger.i("$TAG - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
       await clientCommon.signOut(clearWallet: false, closeDB: true);
+      isAuthProgress = false;
       return;
     }
     _setConnected(true);
 
     isAuthProgress = false;
-
-    // connect
-    await clientCommon.connectCheck(force: true, reconnect: true);
   }
 
   _setConnected(bool show) {
@@ -388,7 +381,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   Widget _headerBody() {
     return StreamBuilder<int>(
-      stream: clientCommon.statusStream,
+      stream: clientCommon.statusStream.distinct((prev, next) => prev == next),
       initialData: clientCommon.status,
       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
         Widget statusWidget;
