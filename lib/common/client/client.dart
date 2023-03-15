@@ -21,7 +21,6 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:synchronized/synchronized.dart';
 
 class ClientConnectStatus {
-  // TODO:GG 只是显示？具体要判断client？
   static const int connecting = 1;
   static const int connected = 2;
   static const int disconnecting = 3;
@@ -68,11 +67,9 @@ class ClientCommon with Tag {
 
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
-  Client? client; // TODO:GG 也不能直接拿这个判断 不能直接拿外部判断 client != null
+  Client? client;
 
-  String? get address => client?.address; // == chat_id // TODO:GG 不能拿这个判断 不能直接拿外部判断 client != null
-
-  int status = ClientConnectStatus.disconnected; // TODO:GG 用这个判断? 不能直接拿外部判断 client != null
+  int status = ClientConnectStatus.disconnected;
 
   bool _isClientReSign = false;
   bool _isConnectCheck = false;
@@ -87,18 +84,20 @@ class ClientCommon with Tag {
 
   // bool isNetworkOk = true; // TODO:GG 应该有用吧
 
-  String? loginedWalletAddress;
+  String? _lastLoginWalletAddress;
+  String? _lastLoginClientAddress;
 
-  // int checkTimes = 0; // TODO:GG 留着吗？
+  String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id
 
   ClientCommon() {
     // client
-    onErrorStream.listen((dynamic event) {
-      // handleError(event, null);
-      reLogin(false); // TODO:GG 没问题吗？
+    onErrorStream.listen((dynamic event) async {
+      handleError(event, null);
+      await reLogin(false); // TODO:GG 没问题吗？
     });
-    // network
     // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
+    // TODO:GG chatOutCommon.stop()
+    // network
     // Connectivity().onConnectivityChanged.listen((status) {
     //   if (status == ConnectivityResult.none) {
     //     logger.w("$TAG - onConnectivityChanged - status:$status");
@@ -113,10 +112,6 @@ class ClientCommon with Tag {
     //     if (isClientCreated) connectCheck(force: true, reconnect: true);
     //   }
     // });
-    // clientClosing = false;
-    // clientResigning = false;
-    // check
-    // checkTimes = 0;
   }
 
   String? getPublicKey() {
@@ -135,8 +130,6 @@ class ClientCommon with Tag {
   /// **********************************   Client   ****************************************** ///
   /// **************************************************************************************** ///
 
-  // TODO:GG 注意caller的返回值矫正
-  // TODO:GG 不能并行，不能二次
   Future<Client?> signIn(WalletSchema? wallet, String? password, {Function(bool)? loading}) async {
     // status
     if (status == ClientConnectStatus.connecting) return null;
@@ -151,9 +144,13 @@ class ClientCommon with Tag {
         Map<String, dynamic> result = await _signIn(wallet, password);
         Client? client = result["client"];
         bool canTry = result["canTry"];
-        if ((client != null) || !canTry) {
-          logger.i("$TAG - signIn - try over - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
+        if (client != null) {
+          logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           c = client;
+          break;
+        } else if (!canTry) {
+          logger.e("$TAG - signIn - try fail - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
+          await signOut(clearWallet: true, closeDB: true);
           break;
         }
         logger.w("$TAG - signIn - try ing - tryTimes:$tryTimes - wallet:$wallet - password:$password");
@@ -164,16 +161,14 @@ class ClientCommon with Tag {
       if (tryTimes <= 0) await Future.delayed(Duration(milliseconds: 500));
       return c;
     });
-    if (cc == null) await signOut(clearWallet: false, closeDB: false);
     // status (set in signOut)
     loading?.call(false);
     return cc;
   }
 
-  // TODO:GG 注意这个只能由上级唯一调用
   Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password) async {
     if ((wallet == null) || wallet.address.isEmpty) {
-      logger.w("$TAG - _signIn - wallet is null");
+      logger.e("$TAG - _signIn - wallet is null");
       return {"client": null, "canTry": false};
     }
     // password
@@ -220,10 +215,7 @@ class ClientCommon with Tag {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         return {"client": null, "canTry": false};
       }
-      // TODO:GG 防这里好？还是其他地方好
-      chatCommon.reset(reClient: loginedWalletAddress == wallet.address);
-      chatInCommon.reset(reClient: loginedWalletAddress == wallet.address);
-      chatOutCommon.reset(reClient: loginedWalletAddress == wallet.address);
+      chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
       return {"client": null, "canTry": false};
@@ -236,8 +228,11 @@ class ClientCommon with Tag {
         while (client == null) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config);
         }
-        loginedWalletAddress = wallet.address;
-
+        // init
+        chatInCommon.start(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
+        chatOutCommon.start(wallet.address, reClient: _lastLoginClientAddress == client?.address);
+        _lastLoginWalletAddress = wallet.address;
+        _lastLoginClientAddress = client?.address;
         // TODO:GG 是不是这些listen失效了？test弱网下断掉再走下面的流程，看看reconnect会不会触发这些listen
         // client error
         _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
@@ -258,7 +253,7 @@ class ClientCommon with Tag {
             status = ClientConnectStatus.connected;
             _statusSink.add(ClientConnectStatus.connected);
           }
-          chatInCommon.onMessageReceive(MessageSchema.fromReceive(event)); // await
+          chatInCommon.onMessageReceive(MessageSchema.fromReceive(address ?? "", event)); // await
         });
       } else {
         await client?.reconnect(); // no onConnect callback // TODO:GG await???
@@ -272,8 +267,6 @@ class ClientCommon with Tag {
     }
   }
 
-  // TODO:GG 注意caller的返回值矫正
-  // TODO:GG 不能并行，不能二次
   Future signOut({bool clearWallet = false, bool closeDB = true}) async {
     // status
     if (status == ClientConnectStatus.disconnecting) return;
@@ -288,7 +281,7 @@ class ClientCommon with Tag {
           logger.i("$TAG - signOut - try over - tryTimes:$tryTimes");
           break;
         }
-        logger.w("$TAG - signOut - try ing - tryTimes:$tryTimes");
+        logger.e("$TAG - signOut - try ing - tryTimes:$tryTimes");
         tryTimes++;
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 1000 : (tryTimes * 250))); // TODO:GG 会delay吗
       }
@@ -299,16 +292,17 @@ class ClientCommon with Tag {
     return;
   }
 
-  // TODO:GG 注意这个只能由上级唯一调用
   Future<bool> _signOut({bool clearWallet = true, bool closeDB = true}) async {
     try {
+      chatOutCommon.stop(clear: closeDB);
+      chatInCommon.stop(clear: closeDB);
       await client?.close();
       await _onErrorStreamSubscription?.cancel();
       await _onConnectStreamSubscription?.cancel();
       await _onMessageStreamSubscription?.cancel();
-      client = null;
       if (clearWallet) BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(null));
       if (closeDB) await dbCommon.close();
+      client = null;
     } catch (e, st) {
       handleError(e, st);
       return false;
@@ -348,7 +342,7 @@ class ClientCommon with Tag {
     // client
     int tryTimes = 0;
     while (true) {
-      if (isConnecting) {
+      if (isConnecting && (tryTimes <= 20)) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReSign:$_isClientReSign - status:$status");
         ++tryTimes;
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 500 : (tryTimes * 100))); // TODO:GG 会delay吗
@@ -363,15 +357,15 @@ class ClientCommon with Tag {
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 500 : (tryTimes * 100))); // TODO:GG 会delay吗
         continue;
       } else if (reconnect) {
-        logger.i("$TAG - connectCheck - need reSign - tryTimes:$tryTimes");
+        logger.w("$TAG - connectCheck - need reSign - tryTimes:$tryTimes");
         bool success = await reLogin(false);
         if (success) {
-          ++tryTimes;
+          tryTimes = 0;
           await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 500 : (tryTimes * 100))); // TODO:GG 会delay吗
           continue;
-        } else {
-          break;
         }
+        logger.e("$TAG - connectCheck - reSign fail - tryTimes:$tryTimes");
+        break;
       } else {
         logger.w("$TAG - connectCheck - connect check stop - tryTimes:$tryTimes - status:$status");
         break;
