@@ -274,7 +274,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
             );
       return txHash.length > 10;
     } catch (e, st) {
-      handleError(e, st, toast: Settings.locale((s) => s.failure, ctx: context));
+      handleError(e, st, text: Settings.locale((s) => s.failure, ctx: context));
       return false;
     } finally {
       Loading.dismiss();
@@ -343,7 +343,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
         int? nonce = await RPC.getNonce(this._wallet.address);
         return _transferNKN(name, keystore, password, nonce: nonce, replaceFee: replaceFee);
       } else {
-        handleError(e, st, toast: Settings.locale((s) => s.failure, ctx: context));
+        handleError(e, st, text: Settings.locale((s) => s.failure, ctx: context));
       }
       return false;
     } finally {
@@ -563,7 +563,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
-                                              if (clientCommon.status == ClientConnectStatus.connected) {
+                                              if (clientCommon.isClientOK) {
                                                 var contact = await ContactHomeScreen.go(context, selectContact: true);
                                                 if ((contact != null) && (contact is ContactSchema)) {
                                                   String? nknWalletAddress = await contact.tryNknWalletAddress();

@@ -334,7 +334,7 @@ class BottomDialog extends BaseStateFulWidget {
               suffixIcon: contactSelect
                   ? GestureDetector(
                       onTap: () async {
-                        if (clientCommon.status == ClientConnectStatus.connected) {
+                        if (clientCommon.isClientOK) {
                           var contact = await ContactHomeScreen.go(context, selectContact: true);
                           if ((contact != null) && (contact is ContactSchema)) {
                             _inputController.text = contact.clientAddress;

@@ -74,6 +74,7 @@ class NknError {
 
   static List<String> clientErrors = [
     writeBroken,
+    readBroken,
     wrongNode,
     rpcRequestFail,
     clientClosed,
@@ -132,7 +133,7 @@ class NknError {
   }
 }
 
-String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, String? toast, bool upload = true}) {
+void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, String? text, bool upload = true}) {
   if (Settings.isRelease) {
     String errStr = error?.toString().toLowerCase() ?? "";
     bool no0 = errStr.contains("wrong password");
@@ -151,18 +152,19 @@ String? handleError(dynamic error, StackTrace? stackTrace, {bool show = true, St
     logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
-  if (!show) return null;
-  String? text = getErrorShow(error);
-  if ((toast != null) && toast.isNotEmpty) {
-    Toast.show(toast);
-  } else if (text != null && text.isNotEmpty) {
+  if (!toast) return null;
+  text = text ?? getErrorShow(error);
+  if ((text != null) && text.isNotEmpty) {
     Toast.show(text);
   }
-  return text;
+  return;
 }
 
 String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
+  if (Settings.debug) return error;
+
+  // release
   if (errStr.isEmpty) return "";
   if (errStr.contains(NknError.rpcRequestFail)) return "";
   if (errStr.contains(NknError.writeBroken)) return "";
@@ -174,6 +176,7 @@ String? getErrorShow(dynamic error) {
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
   if (errStr.contains("wrong password") == true) return error?.toString();
-  return Settings.debug ? error.toString() : ""; // Settings.locale((s) => s.something_went_wrong)
+  return Settings.locale((s) => s.something_went_wrong);
+  // return "";
   // return error.toString();
 }

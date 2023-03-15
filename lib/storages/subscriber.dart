@@ -16,7 +16,7 @@ class SubscriberStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_subscriber", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_subscriber", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (

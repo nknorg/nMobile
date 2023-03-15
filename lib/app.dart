@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/layout/nav.dart';
@@ -70,7 +69,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if ((clientCommon.client != null) && (status == ClientConnectStatus.connected)) {
+      if (clientCommon.isClientOK) {
         // topic subscribe+permission
         if (firstConnect) {
           firstConnect = false;
@@ -78,7 +77,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
           taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
           taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
         }
-        // send pings (5d+6h)
+        // send pings (5d+6h) TODO:GG 会重复触发吗？status.connected 还是说放进appLife里面?
         chatCommon.sendPings2LatestSessions(); // await
         // topics check (24h)
         int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
