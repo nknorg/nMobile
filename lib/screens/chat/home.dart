@@ -114,7 +114,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           } else {
             loginCompleter.complete();
           }
-          clientCommon.connectCheck(reconnect: true); // await
         }
       } else if (application.isGoBackground(states)) {
         loginCompleter = Completer();
