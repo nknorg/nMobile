@@ -48,9 +48,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _upgradeTipListen;
   StreamSubscription? _dbOpenedSubscription;
 
-  StreamSubscription? _appLifeChangeSubscription;
-  StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _contactMeUpdateSubscription;
+
+  StreamSubscription? _clientStatusChangeSubscription;
+  StreamSubscription? _appLifeChangeSubscription;
 
   StreamSubscription? _intentDataTextStreamSubscription;
   StreamSubscription? _intentDataMediaStreamSubscription;
@@ -89,6 +90,20 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       if (open) _refreshContactMe(deviceInfo: true);
     });
 
+    // contactMe
+    _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
+      _refreshContactMe();
+    });
+
+    // clientStatus
+    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      if (clientCommon.isClientOK) {
+        if (!(loginCompleter.isCompleted == true)) {
+          loginCompleter.complete();
+        }
+      }
+    });
+
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
       if (application.isFromBackground(states)) {
@@ -105,20 +120,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         loginCompleter = Completer();
         appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
-    });
-
-    // client status
-    _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if (clientCommon.isClientOK) {
-        if (!(loginCompleter.isCompleted == true)) {
-          loginCompleter.complete();
-        }
-      }
-    });
-
-    // contactMe
-    _contactMeUpdateSubscription = contactCommon.meUpdateStream.listen((event) {
-      _refreshContactMe();
     });
 
     // For sharing images coming from outside the app while the app is in the memory
@@ -191,9 +192,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   void dispose() {
     _upgradeTipListen?.cancel();
     _dbOpenedSubscription?.cancel();
-    _appLifeChangeSubscription?.cancel();
-    _clientStatusChangeSubscription?.cancel();
     _contactMeUpdateSubscription?.cancel();
+    _clientStatusChangeSubscription?.cancel();
+    _appLifeChangeSubscription?.cancel();
     _intentDataTextStreamSubscription?.cancel();
     _intentDataMediaStreamSubscription?.cancel();
     Routes.routeObserver.unsubscribe(this);
