@@ -39,7 +39,7 @@ public class FCMPushService extends FirebaseMessagingService {
             // isApplicationForeground
             boolean isApplicationForeground = false;
             MainActivity mActivity = MainActivity.Companion.getInstance();
-            if(mActivity != null) isApplicationForeground = Common.Companion.isApplicationForeground(mActivity);
+            if (mActivity != null) isApplicationForeground = Common.Companion.isApplicationForeground(mActivity);
             // notify flutter
             HashMap<String, Object> resultMap = new HashMap<>();
             resultMap.put("isApplicationForeground", isApplicationForeground);
