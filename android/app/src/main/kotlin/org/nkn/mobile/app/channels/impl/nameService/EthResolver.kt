@@ -8,7 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 import org.nkn.mobile.app.channels.IChannelHandler
 
 
-class EthResolver: IChannelHandler, MethodChannel.MethodCallHandler, ViewModel() {
+class EthResolver : IChannelHandler, MethodChannel.MethodCallHandler, ViewModel() {
     companion object {
         lateinit var methodChannel: MethodChannel
         const val METHOD_CHANNEL_NAME = "org.nkn.mobile/native/nameservice/ethresolver"
