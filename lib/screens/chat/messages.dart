@@ -77,8 +77,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
   Stream<Map<String, String>> get _onInputChangeStream => _onInputChangeController.stream; // .distinct((prev, next) => prev == next);
 
-  StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _clientStatusSubscription;
+  StreamSubscription? _appLifeChangeSubscription;
 
   StreamSubscription? _onContactUpdateStreamSubscription;
 
@@ -140,7 +140,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     chatCommon.currentChatTargetId = this.targetId;
     _moreLoading = false;
 
-    // client
+    // clientStatus
     _clientStatusSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
       if (isClientOk != clientCommon.isClientOK) {
         setState(() {
@@ -298,8 +298,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     audioHelper.recordRelease(); // await
 
     _onInputChangeController.close();
-    _appLifeChangeSubscription?.cancel();
     _clientStatusSubscription?.cancel();
+    _appLifeChangeSubscription?.cancel();
 
     _onContactUpdateStreamSubscription?.cancel();
 

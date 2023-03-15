@@ -45,6 +45,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   late PageController _pageController;
 
   StreamSubscription? _clientStatusChangeSubscription;
+  StreamSubscription? _appLifeChangeSubscription;
 
   bool firstConnect = true;
   int lastTopicsCheckAt = 0;
@@ -63,32 +64,49 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     this._currentIndex = widget.arguments != null ? (widget.arguments?[AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
 
+    // settings
     SettingsStorage.getSettings(SettingsStorage.LAST_CHECK_TOPICS_AT).then((value) {
       lastTopicsCheckAt = int.tryParse(value?.toString() ?? "0") ?? 0;
     });
 
-    // client status
+    // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.isClientOK) {
-        // topic subscribe+permission
         if (firstConnect) {
           firstConnect = false;
           taskService.addTask10(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), delayMs: 3 * 1000);
           taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
           taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
         }
-        // send pings (5d+6h) TODO:GG 会重复触发吗？status.connected 还是说放进appLife里面?
-        chatCommon.sendPings2LatestSessions(); // await
-        // topics check (24h)
-        int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
-        logger.i("App - checkAllTopics - gap:$lastCheckTopicGap");
-        if (lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs) {
-          Future.delayed(Duration(milliseconds: 1000)).then((value) {
-            topicCommon.checkAllTopics(refreshSubscribers: false); // await
-            lastTopicsCheckAt = DateTime.now().millisecondsSinceEpoch;
-            SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastTopicsCheckAt);
-          });
+      } else if (clientCommon.isClientStop) {
+        taskService.removeTask1(TaskService.KEY_CLIENT_CONNECT);
+        taskService.removeTask30(TaskService.KEY_SUBSCRIBE_CHECK);
+        taskService.removeTask30(TaskService.KEY_PERMISSION_CHECK);
+        firstConnect = true;
+      }
+    });
+
+    // appLife
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
+      if (application.isFromBackground(states)) {
+        // send pings (5d+6h)
+        if (clientCommon.isClientOK) {
+          chatCommon.sendPings2LatestSessions(); // await
         }
+        // topics check (24h)
+        if (clientCommon.isClientOK) {
+          int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
+          logger.i("App - checkAllTopics - gap:$lastCheckTopicGap");
+          if (lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs) {
+            Future.delayed(Duration(milliseconds: 1000)).then((value) {
+              topicCommon.checkAllTopics(refreshSubscribers: false); // await
+              lastTopicsCheckAt = DateTime.now().millisecondsSinceEpoch;
+              SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastTopicsCheckAt);
+            });
+          }
+        }
+      } else if (application.isGoBackground(states)) {
+        // nothing
       }
     });
 
@@ -98,8 +116,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _pageController.dispose();
     _clientStatusChangeSubscription?.cancel();
+    _appLifeChangeSubscription?.cancel();
+    _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
