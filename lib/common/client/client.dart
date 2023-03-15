@@ -130,18 +130,18 @@ class ClientCommon with Tag {
   /// **********************************   Client   ****************************************** ///
   /// **************************************************************************************** ///
 
-  Future<Client?> signIn(WalletSchema? wallet, String? password, {Function(bool)? loading}) async {
+  Future<Client?> signIn(WalletSchema? wallet, String? password, {Function(bool, bool)? loading}) async {
     // status
     if (status == ClientConnectStatus.connecting) return null;
     status = ClientConnectStatus.connecting;
     _statusSink.add(ClientConnectStatus.connecting);
-    loading?.call(true);
+    loading?.call(true, false);
     // client
     Client? cc = await _lock.synchronized(() async {
       Client? c;
       int tryTimes = 0;
       while (true) {
-        Map<String, dynamic> result = await _signIn(wallet, password);
+        Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
         Client? client = result["client"];
         bool canTry = result["canTry"];
         if (client != null) {
@@ -150,7 +150,7 @@ class ClientCommon with Tag {
           break;
         } else if (!canTry) {
           logger.e("$TAG - signIn - try fail - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
-          await signOut(clearWallet: true, closeDB: true);
+          await signOut(clearWallet: true, closeDB: true, noLock: true);
           break;
         }
         logger.w("$TAG - signIn - try ing - tryTimes:$tryTimes - wallet:$wallet - password:$password");
@@ -162,11 +162,11 @@ class ClientCommon with Tag {
       return c;
     });
     // status (set in signOut)
-    loading?.call(false);
+    loading?.call(false, true);
     return cc;
   }
 
-  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {Function? onDatabaseOpen}) async {
     if ((wallet == null) || wallet.address.isEmpty) {
       logger.e("$TAG - _signIn - wallet is null");
       return {"client": null, "canTry": false};
@@ -215,6 +215,7 @@ class ClientCommon with Tag {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         return {"client": null, "canTry": false};
       }
+      onDatabaseOpen?.call();
       chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
@@ -226,7 +227,7 @@ class ClientCommon with Tag {
         List<String> seedRpcList = await RPC.getRpcServers(wallet.address, measure: true);
         ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList);
         while (client == null) {
-          client = await Client.create(hexDecode(seed), numSubClients: 4, config: config);
+          client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
         }
         // init
         chatInCommon.start(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
@@ -260,20 +261,34 @@ class ClientCommon with Tag {
         // no status update (updated by ping/pang)
       }
       connectCheck(); // TODO:GG 测试会不会丢?
-      return {"client": client};
+      return {"client": client, "canTry": true};
     } catch (e, st) {
       handleError(e, st);
       return {"client": null, "canTry": true};
     }
   }
 
-  Future signOut({bool clearWallet = false, bool closeDB = true}) async {
+  Future signOut({bool clearWallet = false, bool closeDB = true, bool noLock = false}) async {
     // status
     if (status == ClientConnectStatus.disconnecting) return;
     status = ClientConnectStatus.disconnecting;
     _statusSink.add(ClientConnectStatus.disconnecting);
     // client
-    await _lock.synchronized(() async {
+    if (!noLock) {
+      await _lock.synchronized(() async {
+        int tryTimes = 0;
+        while (true) {
+          bool success = await _signOut(clearWallet: clearWallet, closeDB: closeDB);
+          if (success) {
+            logger.i("$TAG - signOut - try over - tryTimes:$tryTimes");
+            break;
+          }
+          logger.e("$TAG - signOut - try ing - tryTimes:$tryTimes");
+          tryTimes++;
+          await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 1000 : (tryTimes * 250))); // TODO:GG 会delay吗
+        }
+      });
+    } else {
       int tryTimes = 0;
       while (true) {
         bool success = await _signOut(clearWallet: clearWallet, closeDB: closeDB);
@@ -285,7 +300,7 @@ class ClientCommon with Tag {
         tryTimes++;
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 1000 : (tryTimes * 250))); // TODO:GG 会delay吗
       }
-    });
+    }
     // status
     status = ClientConnectStatus.disconnected;
     _statusSink.add(ClientConnectStatus.disconnected);
