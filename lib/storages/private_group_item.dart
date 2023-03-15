@@ -12,7 +12,7 @@ class PrivateGroupItemStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_private_group_item", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_private_group_item", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (

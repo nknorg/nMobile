@@ -16,7 +16,7 @@ class ContactStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_contact", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_contact", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (

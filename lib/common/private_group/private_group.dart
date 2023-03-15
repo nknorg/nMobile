@@ -956,9 +956,11 @@ class PrivateGroupCommon with Tag {
     if (added == null) return null;
     if (notify) _addGroupItemSink.add(added);
     // session
+    String selfAddress = clientCommon.address ?? "";
+    if (selfAddress.isEmpty) return added;
     if (sessionNotify == null) {
       if (added.permission == PrivateGroupItemPerm.normal) {
-        PrivateGroupItemSchema? mine = await queryGroupItem(schema.groupId, clientCommon.address);
+        PrivateGroupItemSchema? mine = await queryGroupItem(schema.groupId, selfAddress);
         sessionNotify = (mine?.expiresAt ?? 1) < (added.expiresAt ?? 0);
       }
     }
@@ -968,7 +970,7 @@ class PrivateGroupCommon with Tag {
         from: schema.invitee ?? "",
         groupId: schema.groupId,
         status: MessageStatus.Read,
-        isOutbound: schema.invitee == clientCommon.address,
+        isOutbound: schema.invitee == selfAddress,
         contentType: MessageContentType.privateGroupSubscribe,
         content: schema.invitee,
       );
@@ -1053,9 +1055,11 @@ class PrivateGroupCommon with Tag {
     if (!success) return false;
     if (notify) queryAndNotifyGroupItem(item.groupId, item.invitee);
     // session
+    String selfAddress = clientCommon.address ?? "";
+    if (selfAddress.isEmpty) return true;
     if (sessionNotify == null) {
       if (item.permission == PrivateGroupItemPerm.normal) {
-        PrivateGroupItemSchema? mine = await queryGroupItem(item.groupId, clientCommon.address);
+        PrivateGroupItemSchema? mine = await queryGroupItem(item.groupId, selfAddress);
         sessionNotify = (mine?.expiresAt ?? 1) < (item.expiresAt ?? 0);
       }
     }
@@ -1066,7 +1070,7 @@ class PrivateGroupCommon with Tag {
         from: item.invitee ?? "",
         groupId: item.groupId,
         status: MessageStatus.Read,
-        isOutbound: item.invitee == clientCommon.address,
+        isOutbound: item.invitee == selfAddress,
         contentType: MessageContentType.privateGroupSubscribe,
         content: item.invitee,
       );

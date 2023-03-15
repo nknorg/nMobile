@@ -27,20 +27,26 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
-  void reset({bool reClient = false, bool netError = false}) {
-    if (!reClient) {
+  void start(String walletAddress, {bool reClient = false}) {
+    if (!reClient || _sendQueue.isCancelled) {
       _sendQueue.cancel();
-      _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
-      _resendQueue.cancel();
-      _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : null);
+      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+    }
+    _sendQueue.toggle(true);
+  }
+
+  void stop({bool clear = false, bool netError = false}) {
+    _sendQueue.toggle(false);
+    if (clear) {
+      _sendQueue.cancel();
+      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
     }
   }
 
   // queue
-  ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
-  ParallelQueue _resendQueue = ParallelQueue("chat_resend", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
 
-  Future<OnMessage?> sendMsg(String? selfAddress, List<String> destList, String data) async {
+  Future<OnMessage?> sendMsg(List<String> destList, String data) async {
     // dest
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
@@ -56,7 +62,7 @@ class ChatOutCommon with Tag {
     // client
     int tryTimes = 0;
     while (tryTimes < Settings.tryTimesSendMsgUntilClientOk) {
-      if (clientCommon.isClientOK && (selfAddress == clientCommon.address)) break;
+      if (clientCommon.isClientOK) break;
       logger.w("$TAG - sendMsg - client no ok - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
       tryTimes++;
       int waitMs = (10 * 1000) ~/ Settings.tryTimesSendMsgUntilClientOk; // 500ms
@@ -68,7 +74,7 @@ class ChatOutCommon with Tag {
       OnMessage? onMessage;
       int tryTimes = 0;
       while (tryTimes < Settings.tryTimesSendMsg) {
-        List<dynamic> result = await _sendData(selfAddress, destList, data);
+        List<dynamic> result = await _sendData(destList, data);
         bool canTry = result[0];
         onMessage = result[1];
         int delay = result[2];
@@ -84,7 +90,7 @@ class ChatOutCommon with Tag {
     });
   }
 
-  Future<List<dynamic>> _sendData(String? selfAddress, List<String> destList, String data) async {
+  Future<List<dynamic>> _sendData(List<String> destList, String data) async {
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
@@ -115,9 +121,28 @@ class ChatOutCommon with Tag {
     return [true, null, 250];
   }
 
+  Future<bool> _waitClientOk() async {
+    int tryTimes = 0;
+    while (tryTimes < 100) {
+      if (clientCommon.isClientOK) {
+        if (tryTimes > 0) logger.i("$TAG - _waitClientOk - client ok - tryTimes:$tryTimes");
+        break;
+      }
+      logger.w("$TAG - _waitClientOk - client waiting - tryTimes:$tryTimes");
+      tryTimes++;
+      await Future.delayed(Duration(milliseconds: 600));
+      if (tryTimes % 9 != 0) {
+        logger.e("$TAG - _waitClientOk - client reSign - tryTimes:$tryTimes");
+        await clientCommon.reLogin(false);
+      }
+    }
+    return tryTimes < 100;
+  }
+
   // NO DB NO display NO topic (1 to 1)
   Future sendPing(List<String> clientAddressList, bool isPing, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!(await _waitClientOk())) return;
+    String? selfAddress = clientCommon.address;
     if (clientAddressList.isEmpty) return;
     // destList
     List<String> destList = [];
@@ -127,7 +152,7 @@ class ChatOutCommon with Tag {
       if (gap <= 0) {
         destList.add(address);
       } else {
-        if (address == clientCommon.address) {
+        if (address == selfAddress) {
           destList.add(address);
         } else {
           DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(address);
@@ -142,7 +167,7 @@ class ChatOutCommon with Tag {
     }
     // data
     String? data;
-    if ((destList.length == 1) && (destList[0] != clientCommon.address)) {
+    if ((destList.length == 1) && (destList[0] != selfAddress)) {
       // just on other
       ContactSchema? _me = await contactCommon.getMe();
       ContactSchema? _other = await contactCommon.queryByClientAddress(destList[0]);
@@ -166,7 +191,7 @@ class ChatOutCommon with Tag {
       deviceInfoCommon.queryListLatest(destList).then((deviceInfoList) {
         for (int i = 0; i < deviceInfoList.length; i++) {
           DeviceInfoSchema deviceInfo = deviceInfoList[i];
-          if (deviceInfo.contactAddress == clientCommon.address) continue;
+          if (deviceInfo.contactAddress == selfAddress) continue;
           if (isPing) {
             deviceInfoCommon.setPingAt(deviceInfo.contactAddress, deviceInfo.deviceId, pingAt: mowAt);
           } else {
@@ -179,7 +204,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> sendReceipt(MessageSchema received) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
     received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId);
@@ -189,7 +214,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<bool> sendRead(String? clientAddress, List<String> msgIds) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return false; // topic no read, just like receipt
     String data = MessageData.getRead(msgIds);
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
@@ -198,7 +223,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   /*Future<bool> sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return false; // topic no read, just like receipt
     String data = MessageData.getMsgStatus(ask, msgIds);
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
@@ -207,7 +232,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> sendContactProfileRequest(String? clientAddress, String requestType, String? profileVersion) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getContactProfileRequest(requestType, profileVersion);
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
@@ -216,7 +241,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     ContactSchema? _me = me ?? await contactCommon.getMe();
     String data;
@@ -231,11 +256,12 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> sendContactOptionsBurn(String? clientAddress, int deleteSeconds, int updateAt) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
+    String selfAddress = clientCommon.address ?? "";
     if (clientAddress == null || clientAddress.isEmpty) return false;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: clientAddress,
       contentType: MessageContentType.contactOptions,
       extra: {
@@ -250,11 +276,12 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> sendContactOptionsToken(String? clientAddress, String? deviceToken) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!(await _waitClientOk())) return false;
+    String selfAddress = clientCommon.address ?? "";
     if (clientAddress == null || clientAddress.isEmpty) return false;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: clientAddress,
       contentType: MessageContentType.contactOptions,
       extra: {
@@ -268,7 +295,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> sendDeviceRequest(String? clientAddress) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getDeviceRequest();
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
@@ -277,7 +304,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> sendDeviceInfo(String? clientAddress, DeviceInfoSchema deviceInfo, bool withToken) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     if (!withToken) deviceInfo.deviceToken = null;
     String data = MessageData.getDeviceInfo(deviceInfo);
@@ -286,7 +313,8 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     if (content == null || content.trim().isEmpty) return null;
     // target
     String targetAddress = "";
@@ -311,7 +339,7 @@ class ChatOutCommon with Tag {
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
@@ -329,7 +357,8 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -359,7 +388,7 @@ class ChatOutCommon with Tag {
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
@@ -388,6 +417,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendIpfs(String? msgId) async {
+    if (!(await _waitClientOk())) return null;
     if (msgId == null || msgId.isEmpty) return null;
     // schema
     MessageSchema? message = await MessageStorage.instance.query(msgId);
@@ -398,7 +428,8 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetAddress = "";
@@ -423,7 +454,7 @@ class ChatOutCommon with Tag {
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
@@ -443,7 +474,8 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetAddress = "";
@@ -468,7 +500,7 @@ class ChatOutCommon with Tag {
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
       groupId: groupId,
@@ -490,11 +522,12 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicSubscribe(String? topic) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!(await _waitClientOk())) return;
+    String selfAddress = clientCommon.address ?? "";
     if (topic == null || topic.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       topic: topic,
       contentType: MessageContentType.topicSubscribe,
     );
@@ -504,11 +537,12 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicUnSubscribe(String? topic) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!(await _waitClientOk())) return;
+    String selfAddress = clientCommon.address ?? "";
     if (topic == null || topic.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       topic: topic,
       contentType: MessageContentType.topicUnsubscribe,
     );
@@ -519,11 +553,12 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: clientAddress,
       contentType: MessageContentType.topicInvitation,
       content: topic,
@@ -534,11 +569,12 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future sendTopicKickOut(String? topic, String? targetAddress) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return;
+    if (!(await _waitClientOk())) return;
+    String selfAddress = clientCommon.address ?? "";
     if (topic == null || topic.isEmpty || targetAddress == null || targetAddress.isEmpty) return;
     MessageSchema send = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       topic: topic,
       contentType: MessageContentType.topicKickOut,
       content: targetAddress,
@@ -550,12 +586,13 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<MessageSchema?> sendPrivateGroupInvitee(String? target, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
+    String selfAddress = clientCommon.address ?? "";
     if (target == null || target.isEmpty) return null;
     if (privateGroup == null || groupItem == null) return null;
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
-      from: clientCommon.address ?? "",
+      from: selfAddress,
       to: target,
       contentType: MessageContentType.privateGroupInvitation,
       content: {
@@ -580,7 +617,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupAccept(String? target, PrivateGroupItemSchema? groupItem) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupAccept(groupItem);
@@ -590,7 +627,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupQuit(String? target, PrivateGroupItemSchema? groupItem) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupQuit(groupItem);
@@ -600,7 +637,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId, {int? gap}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
@@ -622,7 +659,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupOptionResponse(List<String> clientAddressList, PrivateGroupSchema? group) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddressList.isEmpty || clientAddressList[0].isEmpty) return false;
     if (group == null) return false;
     String data = MessageData.getPrivateGroupOptionResponse(group);
@@ -632,7 +669,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<String?> sendPrivateGroupMemberRequest(String? target, String? groupId, {int? gap}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
     if (target == null || target.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
@@ -654,7 +691,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupMemberResponse(List<String> clientAddressList, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return false;
+    if (!(await _waitClientOk())) return false;
     if (clientAddressList.isEmpty || clientAddressList[0].isEmpty) return false;
     if (schema == null) return false;
     List<Map<String, dynamic>> membersData = privateGroupCommon.getMembersData(members);
@@ -747,7 +784,7 @@ class ChatOutCommon with Tag {
       // send
       return await _send(message, msgData, insert: false);
     };
-    return await _resendQueue.add(() async {
+    return await _sendQueue.add(() async {
       try {
         return await func();
       } catch (e, st) {
@@ -831,7 +868,7 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData) async {
     if (clientAddressList.isEmpty || msgData == null) return null;
     logger.d("$TAG - _sendWithAddress - clientAddressList:$clientAddressList - msgData:$msgData - msgData:$msgData");
-    return (await sendMsg(clientCommon.address, clientAddressList, msgData))?.messageId;
+    return (await sendMsg(clientAddressList, msgData))?.messageId;
   }
 
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
@@ -851,7 +888,7 @@ class ChatOutCommon with Tag {
       }
     }
     if (canTry && ((pid == null) || pid.isEmpty)) {
-      pid = (await sendMsg(clientCommon.address, [message.to], msgData))?.messageId;
+      pid = (await sendMsg([message.to], msgData))?.messageId;
     }
     if (pid == null || pid.isEmpty) return pid;
     // notification
@@ -875,8 +912,6 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (topic == null || message == null || msgData == null) return null;
-    String? selfAddress = clientCommon.address;
-    if (selfAddress == null || selfAddress.isEmpty) return null;
     // me
     SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.topic, message.from); // chatOutCommon.handleSubscribe();
     bool checkStatus = message.contentType == MessageContentType.topicUnsubscribe;
@@ -904,7 +939,7 @@ class ChatOutCommon with Tag {
     List<String> destList = [];
     for (var i = 0; i < _subscribers.length; i++) {
       String clientAddress = _subscribers[i].clientAddress;
-      if (clientAddress == selfAddress) {
+      if (clientAddress == message.from) {
         selfIsReceiver = true;
       } else {
         destList.add(clientAddress);
@@ -925,13 +960,13 @@ class ChatOutCommon with Tag {
         }
       }
       if (canTry && ((pid == null) || pid.isEmpty)) {
-        pid = (await sendMsg(selfAddress, destList, msgData))?.messageId;
+        pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId);
-      Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
+      Uint8List? _pid = (await sendMsg([message.from], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
     // do not forget delete (replace by setJoined)
@@ -958,10 +993,8 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (group == null || message == null || msgData == null) return null;
-    String? selfAddress = clientCommon.address;
-    if (selfAddress == null || selfAddress.isEmpty) return null;
     // me
-    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, selfAddress);
+    PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, message.from);
     if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
       logger.w("$TAG - _sendWithPrivateGroup - member me is null - me:$_me - group:$group - message:$message");
       return null;
@@ -973,7 +1006,7 @@ class ChatOutCommon with Tag {
     for (var i = 0; i < members.length; i++) {
       String? clientAddress = members[i].invitee;
       if (clientAddress == null || clientAddress.isEmpty) continue;
-      if (clientAddress == selfAddress) {
+      if (clientAddress == message.from) {
         selfIsReceiver = true;
       } else if ((members[i].permission ?? 0) > PrivateGroupItemPerm.none) {
         destList.add(clientAddress);
@@ -994,13 +1027,13 @@ class ChatOutCommon with Tag {
         }
       }
       if (canTry && ((pid == null) || pid.isEmpty)) {
-        pid = (await sendMsg(selfAddress, destList, msgData))?.messageId;
+        pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId);
-      Uint8List? _pid = (await sendMsg(selfAddress, [selfAddress], data))?.messageId;
+      Uint8List? _pid = (await sendMsg([message.from], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
     }
     if (pid == null || pid.isEmpty) return pid;
@@ -1080,7 +1113,7 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> _sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
     // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
     String data = MessageData.getPiece(message);
-    OnMessage? onResult = await sendMsg(clientCommon.address, clientAddressList, data);
+    OnMessage? onResult = await sendMsg(clientAddressList, data);
     if ((onResult == null) || onResult.messageId.isEmpty) return null;
     message.pid = onResult.messageId;
     // progress

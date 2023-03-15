@@ -25,8 +25,17 @@ class ChatInCommon with Tag {
   // receive queue
   Map<String, ParallelQueue> _receiveQueues = Map();
 
-  void reset({bool reClient = false, bool netError = false}) {
+  void start(String walletAddress, {bool reClient = false}) {
     if (!reClient) {
+      _receiveQueues.forEach((key, queue) => queue.cancel());
+      _receiveQueues.clear();
+    }
+    _receiveQueues.forEach((key, queue) => queue.toggle(true));
+  }
+
+  void stop({bool clear = false, bool netError = false}) {
+    _receiveQueues.forEach((key, queue) => queue.toggle(false));
+    if (clear) {
       _receiveQueues.forEach((key, queue) => queue.cancel());
       _receiveQueues.clear();
     }
@@ -55,7 +64,7 @@ class ChatInCommon with Tag {
     // status
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
-    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
+    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
     _receiveQueues[message.targetId]?.add(() async {
       try {
         return await _handleMessage(message);
