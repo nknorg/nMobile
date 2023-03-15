@@ -145,16 +145,18 @@ class ParallelQueue {
             await _runComplete?.future;
           }
         }
-        await _onQueueNext();
+        bool canLoop = await _onQueueNext();
+        if (!canLoop) break;
       }
     } else {
       this.onLog?.call("ParallelQueue - _process - on next full - tag:$tag - parallel:$parallel - actives:${activeItems.length}", false);
     }
   }
 
-  Future _onQueueNext() async {
+  Future<bool> _onQueueNext() async {
     if (isCancelled) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next cancel - tag:$tag - lastProcessId:$_lastProcessId", true);
+      return false;
     } else if (_queue.isNotEmpty && (activeItems.length < parallel)) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next ok - tag:$tag - lastProcessId:$_lastProcessId - actives:${activeItems.length} - parallel:$parallel", false);
       final item = _queue.first;
@@ -171,6 +173,7 @@ class ParallelQueue {
       };
       unawaited(item.execute());
       await c.future;
+      return true;
     } else if (activeItems.isEmpty && _queue.isEmpty) {
       this.onLog?.call("ParallelQueue - _onQueueNext - on next complete all - tag:$tag - _lastProcessId:$_lastProcessId", false);
       for (final completer in _completeListeners) {
@@ -179,7 +182,9 @@ class ParallelQueue {
         }
       }
       _completeListeners.clear();
+      return !(activeItems.isEmpty && _queue.isEmpty);
     }
+    return false;
   }
 }
 
