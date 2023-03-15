@@ -162,7 +162,7 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
 
 String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
-  if (Settings.debug) return error;
+  if (Settings.debug) return errStr;
 
   // release
   if (errStr.isEmpty) return "";
@@ -175,7 +175,7 @@ String? getErrorShow(dynamic error) {
 
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
-  if (errStr.contains("wrong password") == true) return error?.toString();
+  if (errStr.contains("wrong password") == true) return errStr;
   return Settings.locale((s) => s.something_went_wrong);
   // return "";
   // return error.toString();
