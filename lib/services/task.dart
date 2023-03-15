@@ -29,7 +29,7 @@ class TaskService {
 
   Map<String, Timer> _delayMap = Map<String, Timer>();
 
-  ParallelQueue _queue = ParallelQueue("service_task", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("task_service", onLog: (log, error) => error ? logger.w(log) : null);
 
   TaskService();
 
@@ -61,7 +61,7 @@ class TaskService {
     _timer10 = _timer10 ??
         Timer.periodic(Duration(seconds: 10), (timer) async {
           _tasks10.keys.forEach((String key) {
-            // logger.v("TaskService - tick_10 - key:$key");
+            logger.v("TaskService - tick_10 - key:$key");
             if (application.inBackGround) return;
             _tasks10[key]?.call(key);
           });
