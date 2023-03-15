@@ -223,7 +223,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
 
     // client
-    var client = await clientCommon.signIn(wallet, null, loading: (visible, dbOpen) {
+    var client = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, dbOpen) {
       if (dbOpen) _setConnected(true);
     });
     _setConnected(client != null);
@@ -305,7 +305,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
-        // wallet no loaded
+        // wallet loaded no
         if (!(state is WalletLoaded)) {
           return Container(
             child: SpinKitThreeBounce(
@@ -314,7 +314,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             ),
           );
         }
-
+        // wallet loaded yes
         if (state.isWalletsEmpty()) {
           return ChatNoWalletLayout();
         } else if (!dbOpen && (dbUpdateTip?.isNotEmpty == true)) {
@@ -322,7 +322,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         } else if (!connected || (state.defaultWallet() == null)) {
           return ChatNoConnectLayout((w) => _tryLogin(wallet: w));
         }
-
+        // client connected
         return Layout(
           headerColor: application.theme.primaryColor,
           bodyColor: application.theme.backgroundLightColor,
