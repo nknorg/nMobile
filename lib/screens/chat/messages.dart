@@ -399,7 +399,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _checkPrivateGroupVersion() async {
-    if (_privateGroup == null) return;
+    if ((_privateGroup == null) || !clientCommon.isClientOK) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
       if (version?.isNotEmpty == true) {
@@ -449,6 +449,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _tipNotificationOpen() async {
     if ((this._topic != null) || (this._privateGroup != null) || (this._contact == null)) return;
+    if (!clientCommon.isClientOK) return;
     if (chatCommon.currentChatTargetId == null) return; // maybe quit page out
     bool? isOpen = _topic?.options?.notificationOpen ?? _privateGroup?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
     if ((isOpen == null) || (isOpen == true)) return;
@@ -484,6 +485,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   _toggleNotificationOpen() async {
+    if (!clientCommon.isClientOK) return;
     if (this._topic != null) {
       // nothing
     } else if (this._privateGroup != null) {

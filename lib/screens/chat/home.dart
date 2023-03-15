@@ -109,7 +109,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // client status
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if ((clientCommon.client != null) && (status == ClientConnectStatus.connected)) {
+      if (clientCommon.isClientOK) {
         if (!(loginCompleter.isCompleted == true)) {
           loginCompleter.complete();
         }
@@ -220,15 +220,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
 
     // client
-    var client = await clientCommon.signIn(wallet, null, loading: (visible) {
+    await clientCommon.signIn(wallet, null, loading: (visible) {
       _setConnected(true); // TODO:GG 这是为啥?
     });
     _setConnected(true);
-    if (client == null) {
-      // TODO:GG 无网环境会关闭db吗?
-      logger.i("$TAG - _tryLogin - need sign out, close all");
-      await clientCommon.signOut(clearWallet: false, closeDB: true);
-    }
 
     isLoginProgress = false;
     firstLogin = false;

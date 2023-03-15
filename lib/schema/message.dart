@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
@@ -181,7 +180,7 @@ class MessageSchema {
   }
 
   /// from receive
-  static MessageSchema? fromReceive(OnMessage? raw) {
+  static MessageSchema? fromReceive(String myAddress, OnMessage? raw) {
     if (raw == null || raw.data == null || raw.src == null) return null;
     Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
@@ -190,7 +189,7 @@ class MessageSchema {
       pid: raw.messageId,
       msgId: data['id'] ?? "",
       from: raw.src ?? "",
-      to: clientCommon.address ?? "",
+      to: myAddress,
       topic: data['topic'] ?? "",
       groupId: data['groupId'] ?? "",
       // status
