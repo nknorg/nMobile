@@ -12,6 +12,7 @@ import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
@@ -130,7 +131,7 @@ class ClientCommon with Tag {
   /// **********************************   Client   ****************************************** ///
   /// **************************************************************************************** ///
 
-  Future<Client?> signIn(WalletSchema? wallet, String? password, {Function(bool, bool)? loading}) async {
+  Future<Client?> signIn(WalletSchema? wallet, String? password, {bool toast = false, Function(bool, bool)? loading}) async {
     // status
     if (status == ClientConnectStatus.connecting) return null;
     status = ClientConnectStatus.connecting;
@@ -144,6 +145,8 @@ class ClientCommon with Tag {
         Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
         Client? client = result["client"];
         bool canTry = result["canTry"];
+        String text = result["text"]?.toString() ?? "";
+        if (toast && text.isNotEmpty) Toast.show(text);
         if (client != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           c = client;
@@ -169,22 +172,22 @@ class ClientCommon with Tag {
   Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {Function? onDatabaseOpen}) async {
     if ((wallet == null) || wallet.address.isEmpty) {
       logger.e("$TAG - _signIn - wallet is null");
-      return {"client": null, "canTry": false};
+      return {"client": null, "canTry": false, "text": "wallet is no exists"};
     }
     // password
     try {
       password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
       if ((password == null) || password.isEmpty) {
         logger.w("$TAG - _signIn - password is null - wallet:$wallet");
-        return {"client": null, "canTry": false};
+        return {"client": null, "canTry": false}; // , "text": "password empty"
       }
       if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
         logger.w("$TAG - _signIn - password error - wallet:$wallet");
-        return {"client": null, "canTry": false};
+        return {"client": null, "canTry": false, "text": "password wrong"};
       }
     } catch (e, st) {
       handleError(e, st, upload: false);
-      return {"client": null, "canTry": false};
+      return {"client": null, "canTry": false, "text": "password error"};
     }
     // wallet
     String? pubKey = wallet.publicKey;
@@ -196,11 +199,11 @@ class ClientCommon with Tag {
       seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
     } catch (e, st) {
       handleError(e, st);
-      return {"client": null, "canTry": false};
+      return {"client": null, "canTry": false, "text": "wallet error"};
     }
     if ((pubKey == null) || pubKey.isEmpty || (seed == null) || seed.isEmpty) {
       logger.e("$TAG - _signIn - wallet restore error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-      return {"client": null, "canTry": false};
+      return {"client": null, "canTry": false, "text": "wallet info empty"};
     }
     // database
     try {
@@ -213,13 +216,13 @@ class ClientCommon with Tag {
       }
       if (!opened) {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-        return {"client": null, "canTry": false};
+        return {"client": null, "canTry": false, "text": "database open fail"};
       }
       onDatabaseOpen?.call();
       chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
-      return {"client": null, "canTry": false};
+      return {"client": null, "canTry": false, "text": "database error"};
     }
     // client
     try {
