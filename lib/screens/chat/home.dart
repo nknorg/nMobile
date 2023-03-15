@@ -207,12 +207,15 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (isLoginProgress) return;
     isLoginProgress = true;
 
+    // view
+    _setConnected(false);
+
     // wallet
     wallet = wallet ?? await walletCommon.getDefault();
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryLogin - wallet default is empty");
-      isLoginProgress = true;
+      isLoginProgress = false;
       return;
     }
 
@@ -220,10 +223,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
 
     // client
-    await clientCommon.signIn(wallet, null, loading: (visible) {
-      _setConnected(true); // TODO:GG 这是为啥?
+    var client = await clientCommon.signIn(wallet, null, loading: (visible, dbOpen) {
+      if (dbOpen) _setConnected(true);
     });
-    _setConnected(true);
+    _setConnected(client != null);
 
     isLoginProgress = false;
     firstLogin = false;
@@ -233,7 +236,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (isAuthProgress) return;
     isAuthProgress = true;
 
+    // view
     AppScreen.go(this.context);
+    _setConnected(false); // TODO:GG showSessionListed 后台返回？
 
     // client
     if (!clientCommon.isDisConnecting || clientCommon.isDisConnected) {
@@ -243,8 +248,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       isAuthProgress = false;
       return;
     }
-    // TODO:GG showSessionListed 后台返回？
-    _setConnected(false);
 
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();

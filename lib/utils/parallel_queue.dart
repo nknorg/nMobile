@@ -75,7 +75,7 @@ class ParallelQueue {
     } else {
       _runComplete = Completer();
     }
-    _isStopped = run;
+    _isStopped = !run;
   }
 
   void cancel() {
