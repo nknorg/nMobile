@@ -360,7 +360,7 @@ class ClientCommon with Tag {
     // client
     int tryTimes = 0;
     while (true) {
-      if (isConnecting && (tryTimes <= 20)) {
+      if (isConnecting && (tryTimes <= Settings.tryTimesClientConnectWait)) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReSign:$_isClientReSign - status:$status");
         ++tryTimes;
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 500 : (tryTimes * 100))); // TODO:GG 会delay吗

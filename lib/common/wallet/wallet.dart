@@ -77,6 +77,7 @@ class WalletCommon with Tag {
   }
 
   queryAllBalance({int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     if (Settings.appContext == null) return;
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     var state = _walletBloc.state;
@@ -85,18 +86,18 @@ class WalletCommon with Tag {
       for (var i = 0; i < state.wallets.length; i++) {
         WalletSchema wallet = state.wallets[i];
         if (wallet.type == WalletType.eth) {
-          await queryETHBalance(wallet, notifyIfNeed: true, delayMs: delayMs);
+          await queryETHBalance(wallet, notifyIfNeed: true);
         } else {
-          await queryNKNBalance(wallet, notifyIfNeed: true, delayMs: delayMs);
+          await queryNKNBalance(wallet, notifyIfNeed: true);
         }
       }
     }
   }
 
   Future<double?> queryNKNBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     if (Settings.appContext == null) return null;
     if (wallet.address.isEmpty || wallet.type == WalletType.eth) return null;
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     try {
       double balance = await Wallet.getBalanceByAddr(wallet.address);
@@ -113,9 +114,9 @@ class WalletCommon with Tag {
   }
 
   Future<List<double?>> queryETHBalance(WalletSchema wallet, {bool notifyIfNeed = false, int? delayMs}) async {
+    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     if (Settings.appContext == null) return [null, null];
     if (wallet.address.isEmpty || wallet.type == WalletType.nkn) return [null, null];
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     try {
       Web3.EtherAmount? ethAmount = await _erc20client.getBalanceEth(address: wallet.address);
