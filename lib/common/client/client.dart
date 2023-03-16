@@ -145,6 +145,7 @@ class ClientCommon with Tag {
         Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
         Client? client = result["client"];
         bool canTry = result["canTry"];
+        password = result["password"]?.toString();
         String text = result["text"]?.toString() ?? "";
         if (toast && text.isNotEmpty) Toast.show(text);
         if (client != null) {
@@ -199,11 +200,11 @@ class ClientCommon with Tag {
       seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
     } catch (e, st) {
       handleError(e, st);
-      return {"client": null, "canTry": false, "text": "wallet error"};
+      return {"client": null, "canTry": false, "password": password, "text": "wallet error"};
     }
     if ((pubKey == null) || pubKey.isEmpty || (seed == null) || seed.isEmpty) {
       logger.e("$TAG - _signIn - wallet restore error - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-      return {"client": null, "canTry": false, "text": "wallet info empty"};
+      return {"client": null, "canTry": false, "password": password, "text": "wallet info empty"};
     }
     // database
     try {
@@ -216,13 +217,13 @@ class ClientCommon with Tag {
       }
       if (!opened) {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
-        return {"client": null, "canTry": false, "text": "database open fail"};
+        return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
       onDatabaseOpen?.call();
       chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
-      return {"client": null, "canTry": false, "text": "database error"};
+      return {"client": null, "canTry": false, "password": password, "text": "database error"};
     }
     // client
     try {
@@ -264,10 +265,10 @@ class ClientCommon with Tag {
         // no status update (updated by ping/pang)
       }
       connectCheck(); // TODO:GG 测试会不会丢?
-      return {"client": client, "canTry": true};
+      return {"client": client, "canTry": true, "password": password};
     } catch (e, st) {
       handleError(e, st);
-      return {"client": null, "canTry": true};
+      return {"client": null, "canTry": true, "password": password};
     }
   }
 
