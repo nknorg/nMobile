@@ -142,7 +142,7 @@ class ClientCommon with Tag {
       Client? c;
       int tryTimes = 0;
       while (true) {
-        Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
+        Map<String, dynamic> result = await _signIn(wallet, password, isFirst: tryTimes <= 0, onDatabaseOpen: () => loading?.call(true, true));
         Client? client = result["client"];
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
@@ -169,7 +169,7 @@ class ClientCommon with Tag {
     return cc;
   }
 
-  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {Function? onDatabaseOpen}) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {bool isFirst = true, Function? onDatabaseOpen}) async {
     if ((wallet == null) || wallet.address.isEmpty) {
       logger.e("$TAG - _signIn - wallet is null");
       return {"client": null, "canTry": false, "text": "wallet is no exists"};
@@ -219,7 +219,7 @@ class ClientCommon with Tag {
         return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
       onDatabaseOpen?.call();
-      chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
+      if (isFirst) chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
       return {"client": null, "canTry": false, "password": password, "text": "database error"};
@@ -252,7 +252,7 @@ class ClientCommon with Tag {
         });
         // client receive (looper)
         _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-          logger.i("$TAG - _signIn - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+          logger.d("$TAG - _signIn - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
           if (status != ClientConnectStatus.connected) {
             status = ClientConnectStatus.connected;
             _statusSink.add(ClientConnectStatus.connected);
@@ -367,7 +367,7 @@ class ClientCommon with Tag {
         await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 1000 : (tryTimes * 250)));
         continue;
       } else if (isConnected) {
-        logger.i("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
+        logger.d("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
         await chatOutCommon.sendPing([address ?? ""], true);
         break;
       } else if (isDisConnecting) {

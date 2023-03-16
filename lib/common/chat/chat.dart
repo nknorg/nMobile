@@ -32,6 +32,7 @@ class ChatCommon with Tag {
   // ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : null);
 
   void reset(String walletAddress, {bool reClient = false}) {
+    logger.i("$TAG - reset - reClient:$reClient - walletAddress:$walletAddress");
     // currentChatTargetId = null; // can not be reset
     // _checkersParams.clear();
     // TODO:GG reClient和netError 是否会导致msg和ipfs的中断????
@@ -197,7 +198,11 @@ class ChatCommon with Tag {
     List fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
     List<String> fileIds = [];
     fileDownloadIds.forEach((element) => fileIds.add(element.toString()));
-    logger.i("$TAG - resetIpfsDownloadIng - file - fileIds:${fileIds.toString()}");
+    if (fileIds.isEmpty) {
+      logger.d("$TAG - resetIpfsDownloadIng - file - fileIds:${fileIds.toString()}");
+    } else {
+      logger.i("$TAG - resetIpfsDownloadIng - file - fileIds:${fileIds.toString()}");
+    }
     List<MessageSchema> fileResults = await MessageStorage.instance.queryListByIds(fileIds);
     for (var j = 0; j < fileResults.length; j++) {
       MessageSchema message = fileResults[j];
@@ -220,7 +225,11 @@ class ChatCommon with Tag {
     List thumbnailDownloadIds = (await SettingsStorage.getSettings(thumbnailDownloadKey)) ?? [];
     List<String> thumbnailIds = [];
     thumbnailDownloadIds.forEach((element) => thumbnailIds.add(element.toString()));
-    logger.i("$TAG - resetIpfsDownloadIng - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
+    if (thumbnailIds.isEmpty) {
+      logger.d("$TAG - resetIpfsDownloadIng - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
+    } else {
+      logger.i("$TAG - resetIpfsDownloadIng - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
+    }
     List<MessageSchema> thumbnailResults = await MessageStorage.instance.queryListByIds(thumbnailIds);
     for (var j = 0; j < thumbnailResults.length; j++) {
       MessageSchema message = thumbnailResults[j];
