@@ -254,12 +254,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return;
     }
 
-    // password
+    // password (android bug return null when fromBackground)
     String? password = await authorization.getWalletPassword(wallet.address);
-    if (password == null) {
-      isAuthProgress = false;
-      return; // android bug return null when fromBackground
-    }
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));

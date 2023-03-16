@@ -655,6 +655,46 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     double placeholderWidth = ratioWH[0] ?? minWidth;
     double placeholderHeight = ratioWH[1] ?? minHeight;
 
+    Widget child;
+    Color? color;
+    if (_thumbnailPath != null) {
+      child = Image.file(
+        File(_thumbnailPath!),
+        fit: BoxFit.cover,
+        cacheWidth: ratioWH[0]?.toInt(),
+        cacheHeight: ratioWH[1]?.toInt(),
+      );
+      color = Colors.black;
+    } else {
+      if (_message.content is File) {
+        File file = _message.content as File;
+        child = Image.file(
+          file,
+          fit: BoxFit.cover,
+          cacheWidth: ratioWH[0]?.toInt(),
+          cacheHeight: ratioWH[1]?.toInt(),
+        );
+      } else {
+        child = SizedBox(
+          width: placeholderWidth,
+          height: placeholderHeight,
+        );
+      }
+      color = Colors.black;
+    }
+    Widget body = Container(
+      width: ratioWH[0],
+      height: ratioWH[1],
+      constraints: BoxConstraints(
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+        minWidth: minWidth,
+        minHeight: minHeight,
+      ),
+      color: color,
+      child: child,
+    );
+
     if ((_message.isOutbound == false) && (_message.contentType == MessageContentType.ipfs)) {
       int _size = MessageOptions.getFileSize(_message.options) ?? 0;
       String? fileSize = _size > 0 ? Format.flowSize(_size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'], decimalDigits: 0) : null;
@@ -666,25 +706,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           Stack(
             alignment: Alignment.center,
             children: [
-              Container(
-                width: ratioWH[0],
-                height: ratioWH[1],
-                constraints: BoxConstraints(
-                  maxWidth: maxWidth,
-                  maxHeight: maxHeight,
-                  minWidth: minWidth,
-                  minHeight: minHeight,
-                ),
-                color: Colors.black,
-                child: (_thumbnailPath != null)
-                    ? Image.file(
-                        File(_thumbnailPath!),
-                        fit: BoxFit.cover,
-                        cacheWidth: ratioWH[0]?.toInt(),
-                        cacheHeight: ratioWH[1]?.toInt(),
-                      )
-                    : SizedBox(width: placeholderWidth, height: placeholderHeight),
-              ),
+              body,
               (fileSize != null && fileSize.isNotEmpty)
                   ? Positioned(
                       right: 5,
@@ -736,31 +758,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         // file is exits
       }
     }
-
-    // file
-    if (!(_message.content is File)) {
-      return [SizedBox.shrink()];
-    }
-    File file = _message.content as File;
-
-    return [
-      Container(
-        width: ratioWH[0],
-        height: ratioWH[1],
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: maxHeight,
-          minWidth: minWidth,
-          minHeight: minHeight,
-        ),
-        child: Image.file(
-          file,
-          fit: BoxFit.cover,
-          cacheWidth: ratioWH[0]?.toInt(),
-          cacheHeight: ratioWH[1]?.toInt(),
-        ),
-      )
-    ];
+    return [body];
   }
 
   List<Widget> _widgetBubbleAudio() {
