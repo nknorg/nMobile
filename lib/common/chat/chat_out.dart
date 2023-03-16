@@ -81,7 +81,7 @@ class ChatOutCommon with Tag {
         if (onMessage?.messageId.isNotEmpty == true) break;
         if (!canTry) break;
         tryTimes++;
-        await Future.delayed(Duration(milliseconds: delay)); // TODO:GG 会delay吗?
+        await Future.delayed(Duration(milliseconds: delay));
       }
       if (tryTimes >= Settings.tryTimesMsgSend) {
         logger.w("$TAG - sendMsg - try over - destList:$destList - data:$data");
@@ -112,8 +112,8 @@ class ChatOutCommon with Tag {
       if (NknError.isClientError(e)) {
         // if (clientCommon.isConnected) return [null, true, 100];
         if (clientCommon.isConnecting) return [null, true, 500];
-        logger.i("$TAG - _sendData - reSignIn - destList:$destList data:$data");
-        bool success = await clientCommon.reLogin();
+        logger.w("$TAG - _sendData - reConnect - destList:$destList data:$data");
+        bool success = await clientCommon.reConnect();
         return [null, true, success ? 500 : 1000];
       }
       logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
@@ -134,8 +134,8 @@ class ChatOutCommon with Tag {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: delayMs));
       if (tryTimes % 9 == 0) {
-        logger.e("$TAG - _waitClientOk - client reSign - tryTimes:$tryTimes");
-        await clientCommon.reLogin(logout: true);
+        logger.w("$TAG - _waitClientOk - client reConnect - tryTimes:$tryTimes");
+        await clientCommon.reConnect();
       }
     }
     return tryTimes < maxTryTimes;
