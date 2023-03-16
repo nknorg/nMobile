@@ -93,8 +93,8 @@ class ClientCommon with Tag {
   ClientCommon() {
     // client TODO:GG 要拆出来吗？ 有lock吗
     onErrorStream.listen((dynamic event) async {
-      handleError(event, null);
-      await reLogin(false); // TODO:GG 没问题吗？
+      handleError(event, null, text: "client error");
+      await reLogin(logout: true); // TODO:GG 没问题吗？
     });
     // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
     // TODO:GG chatOutCommon.stop()
@@ -264,7 +264,7 @@ class ClientCommon with Tag {
         await client?.reconnect(); // no onConnect callback // TODO:GG await???
         // no status update (updated by ping/pang)
       }
-      connectCheck(); // TODO:GG 测试会不会丢?
+      connectCheck(); // await // TODO:GG 测试会不会丢?
       return {"client": client, "canTry": true, "password": password};
     } catch (e, st) {
       handleError(e, st);
@@ -333,24 +333,24 @@ class ClientCommon with Tag {
   /// *********************************   Connect   ****************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> reLogin(bool needPwd) async {
+  Future<bool> reLogin({bool logout = false, bool needPwd = false}) async {
     if (_isClientReSign) return false;
     _isClientReSign = true;
-    // wallet
+    // signOut
+    if (logout && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected))) {
+      logger.i("$TAG - reLogin - unsubscribe stream when client no created");
+      await signOut(clearWallet: false, closeDB: false);
+    }
+    // password
     WalletSchema? wallet = await walletCommon.getDefault();
     if ((wallet == null) || wallet.address.isEmpty) {
       AppScreen.go(Settings.appContext);
       await signOut(clearWallet: true, closeDB: true);
       return false;
     }
-    // signOut
-    if ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected)) {
-      logger.i("$TAG - reLogin - unsubscribe stream when client no created - wallet:$wallet");
-      await signOut(clearWallet: false, closeDB: false);
-    }
+    String? password = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
     // signIn
-    String? walletPwd = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
-    Client? c = await signIn(wallet, walletPwd);
+    Client? c = await signIn(wallet, password);
     _isClientReSign = false;
     return c != null;
   }
@@ -377,7 +377,7 @@ class ClientCommon with Tag {
         continue;
       } else if (reconnect) {
         logger.w("$TAG - connectCheck - need reSign - tryTimes:$tryTimes");
-        bool success = await reLogin(false);
+        bool success = await reLogin();
         if (success) {
           tryTimes = 0;
           await Future.delayed(Duration(milliseconds: (tryTimes >= 5) ? 500 : (tryTimes * 100))); // TODO:GG 会delay吗

@@ -37,6 +37,7 @@ class ChatCommon with Tag {
     // TODO:GG reClient和netError 是否会导致msg和ipfs的中断????
     resetMessageSending(); // await
     if (!reClient) {
+      // TODO:GG 这个是不是跟net有关，跟client无关
       resetIpfsDownloadIng(walletAddress, thumbnailAutoDownload: true); // await
     }
   }
