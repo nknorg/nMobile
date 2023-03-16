@@ -83,6 +83,8 @@ class NknError {
     nilWebsocketConn,
     createClientFailed,
     nilClient,
+    "connect fail",
+    "client is closed",
   ];
 
   static List<String> nknErrors = [
@@ -162,11 +164,30 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
 
 String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
+  if (errStr.contains("platformexception(")) {
+    errStr = errStr.substring(18, errStr.length - 1);
+    List<String> splits = errStr.split(",");
+    if (splits.length == 4) {
+      if (splits[0].trim().isNotEmpty) {
+        errStr = splits[0] + ", ";
+      } else {
+        errStr = "";
+      }
+      if (splits[1].trim() == splits[2].trim()) {
+        errStr = errStr + splits[1];
+      } else {
+        errStr = errStr + splits[1] + ", " + splits[2];
+      }
+      if (splits[3].trim() != "null") {
+        errStr = errStr + ", " + splits[3];
+      }
+    }
+  }
   if (Settings.debug) return errStr;
 
   // release
   if (errStr.isEmpty) return "";
-  if (errStr.contains(NknError.rpcRequestFail)) return "";
+  // if (errStr.contains(NknError.rpcRequestFail)) return "";
   if (errStr.contains(NknError.writeBroken)) return "";
   if (errStr.contains(NknError.readBroken)) return "";
   if (errStr.contains("address = mainnet.infura.io")) return "";

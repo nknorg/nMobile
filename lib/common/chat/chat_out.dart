@@ -133,7 +133,7 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _waitClientOk - client waiting - tryTimes:$tryTimes");
       tryTimes++;
       await Future.delayed(Duration(milliseconds: delayMs));
-      if (tryTimes % 9 != 0) {
+      if (tryTimes % 9 == 0) {
         logger.e("$TAG - _waitClientOk - client reSign - tryTimes:$tryTimes");
         await clientCommon.reLogin(logout: true);
       }

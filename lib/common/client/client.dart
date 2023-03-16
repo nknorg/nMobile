@@ -385,7 +385,7 @@ class ClientCommon with Tag {
         }
         logger.e("$TAG - connectCheck - reSign fail - tryTimes:$tryTimes");
         break;
-      } else {
+      } else if (!clientCommon.isDisConnected) {
         logger.w("$TAG - connectCheck - connect check stop - tryTimes:$tryTimes - status:$status");
         break;
       }
