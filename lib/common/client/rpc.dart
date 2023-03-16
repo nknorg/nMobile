@@ -30,9 +30,7 @@ class RPC {
   /// ********************************************* SeedRpcServers **********************************************
   /// ***********************************************************************************************************
 
-  static Future<List<String>> getRpcServers(String? walletAddress, {bool measure = false, int? delayMs}) async {
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-
+  static Future<List<String>> getRpcServers(String? walletAddress, {bool measure = false}) async {
     // get
     List<String> list = await _getRpcServers(walletAddress: walletAddress);
     logger.d("PRC - getRpcServers - init - walletAddress:$walletAddress - length:${list.length} - list:$list");
@@ -48,7 +46,7 @@ class RPC {
     // measure
     if (measure || appendDefault) {
       try {
-        list = await Wallet.measureSeedRPCServer(list, Settings.timeoutMeasureSeedMs) ?? [];
+        list = await Wallet.measureSeedRPCServer(list, Settings.timeoutSeedMeasureMs) ?? [];
         await setRpcServers(walletAddress, list);
 
         if (walletAddress?.isNotEmpty == true) {

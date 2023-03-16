@@ -401,7 +401,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _checkPrivateGroupVersion() async {
     if ((_privateGroup == null) || !clientCommon.isClientOK) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
-    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
+    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) async {
       if (version?.isNotEmpty == true) {
         _privateGroup?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
         _privateGroup?.setOptionsRequestedVersion(version);

@@ -76,34 +76,36 @@ class Settings {
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
   // gap
-  static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
-  static const int gapTxPoolUpdateMs = 1 * 60 * 1000; // 1m
-  static const int gapMessagesGroupSec = 2 * 60; // 2m
-  static const int gapPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
+  static const int gapClientReAuthMs = 3 * 1000; // 1m
+  static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 3 * 60 * 1000; // 3m
-  static const int gapPongMs = 30 * 1000; // 30s
-  static const int gapRequestGroupOptionsMs = 5 * 60 * 1000; // 5m
-  static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
+  static const int gapPongPingMs = 30 * 1000; // 30s
+  static const int gapGroupRequestOptionsMs = 5 * 60 * 1000; // 5m
   static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
+  static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
+  static const int gapMessagesGroupSec = 2 * 60; // 2m
   // timeout
-  static const int timeoutMeasureSeedMs = 5 * 1000; // 5s
-  static const int timeoutPrivateGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
+  static const int timeoutSeedMeasureMs = 5 * 1000; // 5s
+  static const int timeoutMsgSendUntilClientOkMs = 20 * 1000; // 20s
+  static const int timeoutPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
+  static const int timeoutGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
   static const int timeoutDeviceTokensDay = 5; // 5d
   // tryTimes
-  static const int tryTimesSendMsgUntilClientOk = 20;
-  static const int tryTimesSendMsg = 10;
+  static const int tryTimesClientConnectWait = 20;
+  static const int tryTimesMsgSendUntilClientOk = 20;
+  static const int tryTimesMsgSend = 10;
   static const int tryTimesIpfsThumbnailUpload = 3;
-  static const int tryTimesIpfsThumbnailDownload = 3;
+  static const int tryTimesIpfsThumbnailDownload = 5;
   static const int tryTimesNotificationPush = 3;
   // maxCount
   static const int maxCountPingSessions = 10;
-  static const int maxCountDevicesPush = 3;
+  static const int maxCountPushDevices = 3;
+  // fee
+  static double feeTopicSubscribeDefault = 0.00010009; // fee
   // block_height
   static const int blockHeightTopicSubscribeDefault = 400000; // 93day
   static const int blockHeightTopicWarnBlockExpire = 100000; // 23day
-  // fee
-  static double feeTopicSubscribeDefault = 0.00010009; // fee
   // size
   static const int sizeMsgMax = 32 * 1000; // < 32K
   static const int sizeNknSendMax = 4 * 1000 * 1000; // < 4,000,000

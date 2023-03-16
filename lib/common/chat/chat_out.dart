@@ -61,29 +61,29 @@ class ChatOutCommon with Tag {
     }
     // client
     int tryTimes = 0;
-    while (tryTimes < Settings.tryTimesSendMsgUntilClientOk) {
+    while (tryTimes < Settings.tryTimesMsgSendUntilClientOk) {
       if (clientCommon.isClientOK) break;
       logger.w("$TAG - sendMsg - client no ok - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
       tryTimes++;
-      int waitMs = (10 * 1000) ~/ Settings.tryTimesSendMsgUntilClientOk; // 500ms
+      int waitMs = Settings.timeoutMsgSendUntilClientOkMs ~/ Settings.tryTimesMsgSendUntilClientOk; // 1s
       await Future.delayed(Duration(milliseconds: waitMs));
     }
-    if (tryTimes >= Settings.tryTimesSendMsgUntilClientOk) return null;
+    if (tryTimes >= Settings.tryTimesMsgSendUntilClientOk) return null;
     // send
     return await _sendQueue.add(() async {
       OnMessage? onMessage;
       int tryTimes = 0;
-      while (tryTimes < Settings.tryTimesSendMsg) {
+      while (tryTimes < Settings.tryTimesMsgSend) {
         List<dynamic> result = await _sendData(destList, data);
-        bool canTry = result[0];
-        onMessage = result[1];
+        onMessage = result[0];
+        bool canTry = result[1];
         int delay = result[2];
-        if (!canTry) break;
         if (onMessage?.messageId.isNotEmpty == true) break;
+        if (!canTry) break;
         tryTimes++;
         await Future.delayed(Duration(milliseconds: delay)); // TODO:GG 会delay吗?
       }
-      if (tryTimes >= Settings.tryTimesSendMsg) {
+      if (tryTimes >= Settings.tryTimesMsgSend) {
         logger.w("$TAG - sendMsg - try over - destList:$destList - data:$data");
       }
       return onMessage;
@@ -98,45 +98,47 @@ class ChatOutCommon with Tag {
       } else {
         logger.e("$TAG - _sendData - onMessage msgId is empty - - destList:$destList - data:$data");
       }
-      return [true, onMessage, 100];
+      return [onMessage, true, 100];
     } catch (e, st) {
       String errStr = e.toString().toLowerCase();
       if (errStr.contains(NknError.invalidDestination)) {
         logger.e("$TAG - _sendData - wrong clientAddress - destList:$destList");
-        return [false, null, 0];
+        return [null, false, 0];
       } else if (errStr.contains(NknError.messageOversize)) {
         logger.e("$TAG - _sendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
-        return [false, null, 0];
+        return [null, false, 0];
       }
       handleError(e, st);
       if (NknError.isClientError(e)) {
-        // if (clientCommon.isConnected) return [true, null, 100];
-        if (clientCommon.isConnecting) return [true, null, 500];
+        // if (clientCommon.isConnected) return [null, true, 100];
+        if (clientCommon.isConnecting) return [null, true, 500];
         logger.i("$TAG - _sendData - reSignIn - destList:$destList data:$data");
         bool success = await clientCommon.reLogin(false);
-        return [true, null, success ? 500 : 1000];
+        return [null, true, success ? 500 : 1000];
       }
       logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
     }
-    return [true, null, 250];
+    return [null, true, 250];
   }
 
   Future<bool> _waitClientOk() async {
+    int delayMs = 500;
+    int maxTryTimes = Settings.timeoutMsgSendUntilClientOkMs ~/ delayMs; // 40c
     int tryTimes = 0;
-    while (tryTimes < 100) {
+    while (tryTimes < maxTryTimes) {
       if (clientCommon.isClientOK) {
         if (tryTimes > 0) logger.i("$TAG - _waitClientOk - client ok - tryTimes:$tryTimes");
         break;
       }
       logger.w("$TAG - _waitClientOk - client waiting - tryTimes:$tryTimes");
       tryTimes++;
-      await Future.delayed(Duration(milliseconds: 600));
+      await Future.delayed(Duration(milliseconds: delayMs));
       if (tryTimes % 9 != 0) {
         logger.e("$TAG - _waitClientOk - client reSign - tryTimes:$tryTimes");
         await clientCommon.reLogin(false);
       }
     }
-    return tryTimes < 100;
+    return tryTimes < maxTryTimes;
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -894,7 +896,7 @@ class ChatOutCommon with Tag {
     // notification
     if (notification) {
       if ((contact != null) && !contact.isMe) {
-        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
+        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
@@ -980,7 +982,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
@@ -1043,7 +1045,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountDevicesPush, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });

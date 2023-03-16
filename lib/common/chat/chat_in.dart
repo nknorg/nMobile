@@ -233,7 +233,7 @@ class ChatInCommon with Tag {
     String content = received.content as String;
     if (content == "ping") {
       logger.i("$TAG - _receivePing - receive pang - received:$received");
-      chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongMs); // await
+      chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongPingMs); // await
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
       // nothing
@@ -593,7 +593,7 @@ class ChatInCommon with Tag {
     messageCommon.onSavedSink.add(inserted);
     // thumbnail
     if (ipfsThumbnailHash != null && ipfsThumbnailHash.isNotEmpty) {
-      chatCommon.startIpfsThumbnailDownload(inserted, maxTryTimes: Settings.tryTimesIpfsThumbnailDownload); // await
+      chatCommon.startIpfsThumbnailDownload(inserted); // await
     }
     return true;
   }
@@ -890,7 +890,7 @@ class ChatInCommon with Tag {
         logger.d('$TAG - _receivePrivateGroupOptionResponse - version same - version:$version');
       } else {
         logger.i('$TAG - _receivePrivateGroupOptionResponse - version diff - version1:${group.membersRequestedVersion} - version2:$version');
-        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
+        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) async {
           if (version?.isNotEmpty == true) {
             group.setMembersRequestAt(DateTime.now().millisecondsSinceEpoch);
             group.setMembersRequestedVersion(version);

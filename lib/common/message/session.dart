@@ -87,6 +87,7 @@ class SessionCommon with Tag {
     return added;
   }
 
+  // TODO:GG 还得看看并发问题
   Future<SessionSchema?> update(
     String? targetId,
     int? type, {
