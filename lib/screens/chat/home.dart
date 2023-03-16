@@ -59,9 +59,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   String? dbUpdateTip;
   bool dbOpen = false;
 
-  bool firstLogin = true;
-  int appBackgroundAt = 0;
   Completer loginCompleter = Completer();
+  int appBackgroundAt = 0;
 
   bool isLoginProgress = false;
   bool isAuthProgress = false;
@@ -107,7 +106,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
       if (application.isFromBackground(states)) {
-        if (!firstLogin) {
+        if (clientCommon.isClientOK) {
           int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (gap >= Settings.gapClientReAuthMs) {
             await _tryAuth();
@@ -229,7 +228,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _setConnected(client != null);
 
     isLoginProgress = false;
-    firstLogin = false;
   }
 
   Future _tryAuth() async {
@@ -241,10 +239,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _setConnected(false); // TODO:GG showSessionListed 后台返回？
 
     // client
-    if (!clientCommon.isDisConnecting || clientCommon.isDisConnected) {
-      // _setConnected(false);
-      // AppScreen.go(this.context);
-      await _tryLogin();
+    if (clientCommon.isDisConnecting || clientCommon.isDisConnected) {
       isAuthProgress = false;
       return;
     }
@@ -252,8 +247,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
-      // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryAuth - wallet default is empty");
+      // ui handle, ChatNoWalletLayout()
       await clientCommon.signOut(clearWallet: true, closeDB: true);
       isAuthProgress = false;
       return;
@@ -261,7 +256,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // password
     String? password = await authorization.getWalletPassword(wallet.address);
-    if (password == null) return; // android bug return null when fromBackground
+    if (password == null) {
+      isAuthProgress = false;
+      return; // android bug return null when fromBackground
+    }
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
