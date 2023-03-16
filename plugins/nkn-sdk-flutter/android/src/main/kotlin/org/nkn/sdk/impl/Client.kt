@@ -100,21 +100,22 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seed = call.argument<ByteArray>("seed")
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
         numSubClients = (call.argument<Int>("numSubClients") ?: 4).toLong()
-        val ethResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
-        val dnsResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
-
-        val config = ClientConfig()
-        // config.rpcConcurrency = 4
-        if (seedRpc != null) {
-            config.seedRPCServerAddr = StringArray(null)
-            for (addr in seedRpc) {
-                config.seedRPCServerAddr.append(addr)
-            }
-        }
+        //val ethResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
+        //val dnsResolverConfigArray = call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                // config
+                val config = ClientConfig()
+                if (seedRpc != null) {
+                    config.seedRPCServerAddr = StringArray(null)
+                    for (addr in seedRpc) {
+                        config.seedRPCServerAddr.append(addr)
+                    }
+                }
+                // account
                 val account = Nkn.newAccount(seed)
+                // client
                 client = try {
                     MultiClient(account, identifier, numSubClients, true, config)
                 } catch (e: Throwable) {
@@ -125,21 +126,21 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     client = MultiClient(account, identifier, numSubClients, true, config)
                 }
                 if (client == null) {
-                    eventSinkError(eventSink, "10", "connect fail", "in func create")
+                    resultError(result, "", "connect fail", "in func create")
                     return@launch
                 }
-
+                // result
                 val data = hashMapOf(
                     "address" to client?.address(),
                     "publicKey" to client?.pubKey(),
                     "seed" to client?.seed()
                 )
                 resultSuccess(result, data)
-
+                // onListen
                 onConnect()
                 async(Dispatchers.IO) { onMessage() }
             } catch (e: Throwable) {
-                eventSinkError(eventSink, "10", e.localizedMessage, e.message)
+                resultError(result, e)
             }
         }
     }
@@ -170,7 +171,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
-            eventSinkError(eventSink, "10", e.localizedMessage, e.message)
+            eventSinkError(eventSink, e)
         }
     }
 
@@ -197,7 +198,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
-            eventSinkError(eventSink, "20", e.localizedMessage, e.message)
+            eventSinkError(eventSink, e)
         }
     }
 
@@ -208,10 +209,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     client?.reconnect()
                     resultSuccess(result, null)
                 } else {
-                    eventSinkError(eventSink, "10", "client is closed", "in func reconnect")
+                    resultError(result, "", "client is closed", "in func reconnect")
                 }
             } catch (e: Throwable) {
-                eventSinkError(eventSink, "10", e.localizedMessage, e.message)
+                resultError(result, e)
             }
         }
     }
@@ -223,7 +224,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 client = null
                 resultSuccess(result, null)
             } catch (e: Throwable) {
-                eventSinkError(eventSink, "11", e.localizedMessage, e.message)
+                resultError(result, e)
             }
         }
     }

@@ -90,46 +90,45 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let seed = args["seed"] as? FlutterStandardTypedData
         let seedRpc = args["seedRpc"] as? [String]
         numSubClients = args["numSubClients"] as? Int ?? 4
-        let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
-        let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
-
-        let config: NknClientConfig = NknClientConfig()
-        // config.rpcConcurrency = 4
-        if(seedRpc != nil) {
-            config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
-            for (_, v) in seedRpc!.enumerated() {
-                config.seedRPCServerAddr?.append(v)
-            }
-        }
-
-        var error: NSError?
-        let account = NknNewAccount(seed?.data, &error)!
-        if (error != nil) {
-            self.eventSinkError(eventSink: self.eventSink,error: error, code: "10")
-            return
-        }
+        //let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
+        //let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
 
         clientWorkItem = DispatchWorkItem {
+            // config
+            let config: NknClientConfig = NknClientConfig()
+            if(seedRpc != nil) {
+                config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
+                for (_, v) in seedRpc!.enumerated() {
+                    config.seedRPCServerAddr?.append(v)
+                }
+            }
+            // account
             var error: NSError?
+            let account = NknNewAccount(seed?.data, &error)!
+            if (error != nil) {
+                self.resultError(result: result, error: error)
+                return
+            }
+            // client
             self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
             if ((error != nil) || (self.client == nil)) {
                 NkngolibAddClientConfigWithDialContext(config)
                 self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
             }
             if (error != nil) {
-                self.eventSinkError(eventSink: self.eventSink, error: error, code: "10")
+                self.resultError(result: result, error: error)
                 return
             } else if (self.client == nil) {
-                self.eventSinkError(eventSink: self.eventSink, code: "10", message: "connect fail", details: "in func create")
+                self.resultError(result: result, message: "connect fail", details: "in func create")
                 return
             }
-
+            // result
             var resp:[String:Any] = [String:Any]()
             resp["address"] = self.client?.address()
             resp["publicKey"] = self.client?.pubKey()
             resp["seed"] = self.client?.seed()
             self.resultSuccess(result: result, resp: resp)
-
+            // onListen
             self.onConnect()
             self.onMessage()
         }
@@ -195,7 +194,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.client?.reconnect()
                 self.resultSuccess(result: result, resp: nil)
             } else {
-                self.eventSinkError(eventSink: self.eventSink, code: "10", message: "client is closed", details: "in func create")
+                self.resultError(result: result, message: "client is closed", details: "in func reconnect")
             }
         }
         clientQueue.async(execute: clientWorkItem!)
@@ -208,7 +207,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.client = nil
                 self.resultSuccess(result: result, resp: nil)
             } catch let error {
-                self.eventSinkError(eventSink: self.eventSink, error: error, code: "11")
+                self.resultError(result: result, error: error)
             }
         }
         clientQueue.async(execute: clientWorkItem!)

@@ -64,7 +64,7 @@ class ClientCommon with Tag {
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
 
-  Lock _lock = Lock();
+  Lock _lock = new Lock();
 
   /// nkn-sdk-flutter
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
@@ -91,7 +91,7 @@ class ClientCommon with Tag {
   String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id
 
   ClientCommon() {
-    // client
+    // client TODO:GG 要拆出来吗？ 有lock吗
     onErrorStream.listen((dynamic event) async {
       handleError(event, null);
       await reLogin(false); // TODO:GG 没问题吗？
