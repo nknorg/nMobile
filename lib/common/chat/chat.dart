@@ -146,8 +146,8 @@ class ChatCommon with Tag {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       bool lastTimeOK = true;
       result.forEach((element) {
-        int gap = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
-        lastTimeOK = gap < Settings.gapPingSessionOnlineMs;
+        int between = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
+        lastTimeOK = between < Settings.timeoutPingSessionOnlineMs;
         if (element.isContact && lastTimeOK) {
           targetIds.add(element.targetId);
         }
@@ -159,8 +159,7 @@ class ChatCommon with Tag {
     await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
   }
 
-  Future<int> resetMessageSending({int? delayMs}) async {
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+  Future<int> resetMessageSending() async {
     // sending list
     List<MessageSchema> sendingList = [];
     int limit = 20;
@@ -191,8 +190,7 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  Future resetIpfsDownloadIng(String walletAddress, {bool thumbnailAutoDownload = false, int? delayMs}) async {
-    if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
+  Future resetIpfsDownloadIng(String walletAddress, {bool thumbnailAutoDownload = false}) async {
     // file
     String fileDownloadKey = "IPFS_FILE_DOWNLOAD_PROGRESS_IDS_$walletAddress";
     List fileDownloadIds = (await SettingsStorage.getSettings(fileDownloadKey)) ?? [];
@@ -242,8 +240,9 @@ class ChatCommon with Tag {
       int minGap = 3 * 24 * 60 * 60 * 1000; // 3d
       int gap = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
       if ((gap < minGap) && thumbnailAutoDownload) {
-        startIpfsThumbnailDownload(message, maxTryTimes: Settings.tryTimesIpfsThumbnailDownload); // await
+        startIpfsThumbnailDownload(message); // await
       } else {
+        // TODO:GG 需要消除吗？
         await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", true);
       }
     }
@@ -511,7 +510,7 @@ class ChatCommon with Tag {
         // request
         if (exists.optionsRequestedVersion != remoteVersion) {
           logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: Settings.gapRequestGroupOptionsMs).then((version) async {
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) async {
             if (version?.isNotEmpty == true) {
               exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
               exists?.setOptionsRequestedVersion(version);
@@ -637,7 +636,7 @@ class ChatCommon with Tag {
     bool optionOk = await messageCommon.updateMessageOptions(message, options, notify: true);
     if (optionOk) message.options = options;
     // thumbnail
-    MessageSchema? msg = await startIpfsThumbnailUpload(message, maxTryTimes: Settings.tryTimesIpfsThumbnailUpload);
+    MessageSchema? msg = await startIpfsThumbnailUpload(message);
     if (msg == null) {
       var options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       bool optionsOK = await messageCommon.updateMessageOptions(message, options, reQuery: true, notify: false);
@@ -742,7 +741,7 @@ class ChatCommon with Tag {
     return success ? message : null;
   }
 
-  Future<MessageSchema?> startIpfsThumbnailUpload(MessageSchema? message, {int maxTryTimes = 1}) async {
+  Future<MessageSchema?> startIpfsThumbnailUpload(MessageSchema? message, {int maxTryTimes = Settings.tryTimesIpfsThumbnailUpload}) async {
     int tryTimes = 0;
     MessageSchema? msg;
     while (tryTimes < maxTryTimes) {
@@ -816,7 +815,7 @@ class ChatCommon with Tag {
     return [success ? message : null, true];
   }
 
-  Future<MessageSchema?> startIpfsThumbnailDownload(MessageSchema? message, {int maxTryTimes = 1}) async {
+  Future<MessageSchema?> startIpfsThumbnailDownload(MessageSchema? message, {int maxTryTimes = Settings.tryTimesIpfsThumbnailDownload}) async {
     int tryTimes = 0;
     MessageSchema? msg;
     while (tryTimes < maxTryTimes) {
