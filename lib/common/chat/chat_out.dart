@@ -113,7 +113,7 @@ class ChatOutCommon with Tag {
         // if (clientCommon.isConnected) return [null, true, 100];
         if (clientCommon.isConnecting) return [null, true, 500];
         logger.i("$TAG - _sendData - reSignIn - destList:$destList data:$data");
-        bool success = await clientCommon.reLogin(false);
+        bool success = await clientCommon.reLogin();
         return [null, true, success ? 500 : 1000];
       }
       logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
@@ -135,7 +135,7 @@ class ChatOutCommon with Tag {
       await Future.delayed(Duration(milliseconds: delayMs));
       if (tryTimes % 9 != 0) {
         logger.e("$TAG - _waitClientOk - client reSign - tryTimes:$tryTimes");
-        await clientCommon.reLogin(false);
+        await clientCommon.reLogin(logout: true);
       }
     }
     return tryTimes < maxTryTimes;
