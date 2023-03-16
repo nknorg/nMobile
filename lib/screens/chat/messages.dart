@@ -346,7 +346,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     // state
     setState(() {
-      logger.i("$TAG - messages insert 0 - added:$added");
+      // logger.d("$TAG - messages insert 0 - added:$added");
       _messages.insert(0, added);
     });
     // tip

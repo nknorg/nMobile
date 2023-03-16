@@ -26,6 +26,7 @@ class ChatInCommon with Tag {
   Map<String, ParallelQueue> _receiveQueues = Map();
 
   void start(String walletAddress, {bool reClient = false}) {
+    logger.i("$TAG - start - reClient:$reClient - walletAddress:$walletAddress");
     if (!reClient) {
       _receiveQueues.forEach((key, queue) => queue.cancel());
       _receiveQueues.clear();
@@ -34,6 +35,7 @@ class ChatInCommon with Tag {
   }
 
   void stop({bool clear = false, bool netError = false}) {
+    logger.i("$TAG - stop - clear:$clear - netError:$netError");
     _receiveQueues.forEach((key, queue) => queue.toggle(false));
     if (clear) {
       _receiveQueues.forEach((key, queue) => queue.cancel());
@@ -222,7 +224,7 @@ class ChatInCommon with Tag {
   Future<bool> _receivePing(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out)
     if ((received.from == received.to) || (received.from == clientCommon.address)) {
-      logger.i("$TAG - _receivePing - ping self receive - received:$received");
+      logger.d("$TAG - _receivePing - ping self receive - received:$received");
       // clientCommon.connectSuccess(); handle in client onMessage
       return true;
     }

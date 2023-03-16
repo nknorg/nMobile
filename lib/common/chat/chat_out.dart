@@ -28,6 +28,7 @@ class ChatOutCommon with Tag {
   ChatOutCommon();
 
   void start(String walletAddress, {bool reClient = false}) {
+    logger.i("$TAG - start - reClient:$reClient - walletAddress:$walletAddress");
     if (!reClient || _sendQueue.isCancelled) {
       _sendQueue.cancel();
       _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
@@ -36,6 +37,7 @@ class ChatOutCommon with Tag {
   }
 
   void stop({bool clear = false, bool netError = false}) {
+    logger.i("$TAG - stop - clear:$clear - netError:$netError");
     _sendQueue.toggle(false);
     if (clear) {
       _sendQueue.cancel();
