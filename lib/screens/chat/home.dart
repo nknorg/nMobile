@@ -104,14 +104,26 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        if (clientCommon.isClientOK) {
+        if (dbCommon.isOpen()) {
           int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (gap >= Settings.gapClientReAuthMs) {
-            await _tryAuth();
+            _tryAuth().then((success) {
+              if (success) {
+                if (clientCommon.isClientOK) {
+                  if (!(loginCompleter.isCompleted == true)) {
+                    loginCompleter.complete();
+                  }
+                }
+              }
+            });
           } else {
-            loginCompleter.complete();
+            if (clientCommon.isClientOK) {
+              if (!(loginCompleter.isCompleted == true)) {
+                loginCompleter.complete();
+              }
+            }
           }
         }
       } else if (application.isGoBackground(states)) {
@@ -202,48 +214,42 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   bool get wantKeepAlive => true;
 
-  Future _tryLogin({WalletSchema? wallet, bool init = false}) async {
-    if (isLoginProgress) return;
+  Future<bool> _tryLogin({WalletSchema? wallet, bool init = false}) async {
+    if (isLoginProgress) return false;
     isLoginProgress = true;
-
     // view
     _setConnected(false);
-
     // wallet
     wallet = wallet ?? await walletCommon.getDefault();
     if (wallet == null) {
       // ui handle, ChatNoWalletLayout()
       logger.i("$TAG - _tryLogin - wallet default is empty");
       isLoginProgress = false;
-      return;
+      return false;
     }
-
     // fixed:GG ios_152_db
     if (init) await dbCommon.fixIOS_152();
-
     // client
     var client = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, dbOpen) {
       if (dbOpen) _setConnected(true);
     });
+    // view
     _setConnected(client != null);
-
     isLoginProgress = false;
+    return client != null;
   }
 
-  Future _tryAuth() async {
-    if (isAuthProgress) return;
+  Future<bool> _tryAuth() async {
+    if (isAuthProgress) return false;
     isAuthProgress = true;
-
     // view
     AppScreen.go(this.context);
-    _setConnected(false); // TODO:GG showSessionListed 后台返回？
-
+    _setConnected(false);
     // client
-    if (clientCommon.isDisConnecting || clientCommon.isDisConnected) {
+    if (clientCommon.isClientStop) {
       isAuthProgress = false;
-      return;
+      return false;
     }
-
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
@@ -251,9 +257,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       // ui handle, ChatNoWalletLayout()
       await clientCommon.signOut(clearWallet: true, closeDB: true);
       isAuthProgress = false;
-      return;
+      return false;
     }
-
     // password (android bug return null when fromBackground)
     String? password = await authorization.getWalletPassword(wallet.address);
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
@@ -261,11 +266,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
       await clientCommon.signOut(clearWallet: false, closeDB: true);
       isAuthProgress = false;
-      return;
+      return false;
     }
+    // view
     _setConnected(true);
-
     isAuthProgress = false;
+    return true;
   }
 
   _setConnected(bool show) {
