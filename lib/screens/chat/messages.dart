@@ -18,7 +18,6 @@ import 'package:nmobile/components/private_group/header.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/components/topic/header.dart';
-import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
@@ -829,7 +828,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   if (visible) {
                     String? savePath = await audioHelper.recordStart(
                       this.targetId ?? "",
-                      maxDurationS: AudioHelper.MessageRecordMaxDurationS,
+                      maxDurationS: Settings.durationAudioRecordMaxS,
                     );
                     if (savePath == null || savePath.isEmpty) {
                       Toast.show(Settings.locale((s) => s.failure, ctx: context));
@@ -838,7 +837,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     }
                     return true;
                   } else {
-                    if (durationMs < AudioHelper.MessageRecordMinDurationS * 1000) {
+                    if (durationMs < Settings.durationAudioRecordMinS * 1000) {
                       await audioHelper.recordStop();
                       return false;
                     }

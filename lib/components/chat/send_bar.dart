@@ -8,7 +8,6 @@ import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 
@@ -97,7 +96,7 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
         return;
       }
       if (duration.inMilliseconds == _audioRecordDurationMs) return;
-      if (_audioRecordDurationMs < AudioHelper.MessageRecordMaxDurationS * 1000 && duration.inMilliseconds >= AudioHelper.MessageRecordMaxDurationS * 1000) {
+      if ((_audioRecordDurationMs < Settings.durationAudioRecordMaxS * 1000) && (duration.inMilliseconds >= Settings.durationAudioRecordMaxS * 1000)) {
         _setAudioRecordVisible(false, true);
       }
       this.setState(() {
