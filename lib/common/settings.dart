@@ -76,7 +76,7 @@ class Settings {
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
   // gap
-  static const int gapClientReAuthMs = 3 * 1000; // 1m
+  static const int gapClientReAuthMs = 60 * 1000; // 1m
   static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 3 * 60 * 1000; // 3m
@@ -114,6 +114,9 @@ class Settings {
   static const int sizeAvatarBest = 10 * 1000; // 12K
   static const int sizeThumbnailMax = 100 * 1000; // 100K
   static const int sizeThumbnailBest = 20 * 1000; // 20K
+  // duration
+  static const double durationAudioRecordMaxS = 60;
+  static const double durationAudioRecordMinS = 0.5;
   // piece
   static const int piecesPreMinLen = 10 * 1000; // >= 10K
   static const int piecesPreMaxLen = 16 * 1000; // <= 16K < 32K(sizeMsgMax)

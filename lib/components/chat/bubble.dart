@@ -15,7 +15,6 @@ import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/components/text/markdown.dart';
 import 'package:nmobile/components/tip/popup_menu.dart' as PopMenu;
-import 'package:nmobile/helpers/audio.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/screens/common/media.dart';
@@ -770,7 +769,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     Color progressValueColor = _message.isOutbound ? application.theme.backgroundColor4.withAlpha(127) : application.theme.primaryColor.withAlpha(200);
 
     double? durationS = MessageOptions.getMediaDuration(_message.options);
-    double maxDurationS = AudioHelper.MessageRecordMaxDurationS;
+    double maxDurationS = Settings.durationAudioRecordMaxS;
     double durationRatio = ((durationS ?? (maxDurationS / 2)) > maxDurationS ? maxDurationS : (durationS ?? (maxDurationS / 2))) / maxDurationS;
     double minWidth = Settings.screenWidth() * 0.05;
     double maxWidth = Settings.screenWidth() * 0.35;
