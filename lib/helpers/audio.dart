@@ -14,9 +14,6 @@ import 'package:permission_handler/permission_handler.dart';
 // import 'package:audioplayers/audioplayers.dart' as Player;
 
 class AudioHelper with Tag {
-  static const double MessageRecordMaxDurationS = 60;
-  static const double MessageRecordMinDurationS = 0.5;
-
   // player
   Sound.FlutterSoundPlayer player = Sound.FlutterSoundPlayer();
   String? playerId;
@@ -127,12 +124,6 @@ class AudioHelper with Tag {
     } catch (e, st) {
       handleError(e, st);
     }
-    // _onPlayProgressSink.add({
-    //   "id": this.playerId,
-    //   "duration": this.playerDurationMs,
-    //   "position": 0.01,
-    //   "percent": 0.01,
-    // });
     return true;
   }
 
