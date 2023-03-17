@@ -55,11 +55,6 @@ class ClientCommon with Tag {
   StreamSink<int> get _statusSink => _statusController.sink;
   Stream<int> get statusStream => _statusController.stream;
 
-  // ignore: close_sinks
-  StreamController<dynamic> _onErrorController = StreamController<dynamic>.broadcast();
-  StreamSink<dynamic> get _onErrorSink => _onErrorController.sink;
-  Stream<dynamic> get onErrorStream => _onErrorController.stream;
-
   StreamSubscription? _onErrorStreamSubscription;
   StreamSubscription? _onConnectStreamSubscription;
   StreamSubscription? _onMessageStreamSubscription;
@@ -83,19 +78,14 @@ class ClientCommon with Tag {
   bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
   bool get isClientStop => (client == null) && !_isClientReConnect && (status == ClientConnectStatus.disconnected);
 
-  // bool isNetworkOk = true; // TODO:GG 应该有用吧
-
   String? _lastLoginWalletAddress;
   String? _lastLoginClientAddress;
 
   String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id
 
+  // bool isNetworkOk = true; // TODO:GG 应该有用吧
+
   ClientCommon() {
-    // client TODO:GG 要拆出来吗？ 有lock吗
-    onErrorStream.listen((dynamic event) async {
-      handleError(event, null, text: "client error");
-      await reConnect(); // TODO:GG 没问题吗？
-    });
     // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
     // TODO:GG chatOutCommon.stop()
     // network
@@ -219,7 +209,7 @@ class ClientCommon with Tag {
         return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
       onDatabaseOpen?.call();
-      if (isFirst) chatCommon.reset(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
+      if (isFirst) chatCommon.reset(wallet.address, sameClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st);
       return {"client": null, "canTry": false, "password": password, "text": "database error"};
@@ -231,39 +221,19 @@ class ClientCommon with Tag {
         ClientConfig config = ClientConfig(seedRPCServerAddr: seedRpcList);
         while (client == null) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
+          if (client == null) await Future.delayed(Duration(milliseconds: 100));
         }
-        // init
-        chatInCommon.start(wallet.address, reClient: _lastLoginWalletAddress == wallet.address);
-        chatOutCommon.start(wallet.address, reClient: _lastLoginClientAddress == client?.address);
+        chatInCommon.start(sameClient: _lastLoginClientAddress == client?.address);
+        chatOutCommon.start(sameClient: _lastLoginClientAddress == client?.address);
         _lastLoginWalletAddress = wallet.address;
         _lastLoginClientAddress = client?.address;
-        // TODO:GG 是不是这些listen失效了？test弱网下断掉再走下面的流程，看看reconnect会不会触发这些listen
-        // client error
-        _onErrorStreamSubscription = client?.onError.listen((dynamic event) {
-          logger.e("$TAG - _signIn - onError -> event:${event.toString()}");
-          _onErrorSink.add(event);
-        });
-        // client connect (just listen once)
-        _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
-          logger.i("$TAG - _signIn - onConnect -> node:${event.node} - rpcServers:${event.rpcServers}");
-          status = ClientConnectStatus.connected;
-          _statusSink.add(ClientConnectStatus.connected);
-          RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
-        });
-        // client receive (looper)
-        _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-          logger.d("$TAG - _signIn - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
-          if (status != ClientConnectStatus.connected) {
-            status = ClientConnectStatus.connected;
-            _statusSink.add(ClientConnectStatus.connected);
-          }
-          chatInCommon.onMessageReceive(MessageSchema.fromReceive(address ?? "", event)); // await
-        });
+        _startListen(wallet);
       } else {
         // maybe no go here, because closed too long, reconnect too long more
-        await client?.reconnect(); // no onConnect callback, no status update (updated by ping/pang)
+        await client?.reconnect(); // no onConnect callback,
         await Future.delayed(Duration(milliseconds: 1000)); // reconnect need time
       }
+      // no status update (updated by ping/pang)
       connectCheck(); // await
       return {"client": client, "canTry": true, "password": password};
     } catch (e, st) {
@@ -313,12 +283,10 @@ class ClientCommon with Tag {
 
   Future<bool> _signOut({bool clearWallet = true, bool closeDB = true}) async {
     try {
-      chatOutCommon.stop(clear: closeDB);
-      chatInCommon.stop(clear: closeDB);
+      chatOutCommon.stop(reset: closeDB);
+      chatInCommon.stop(reset: closeDB);
       await client?.close();
-      await _onErrorStreamSubscription?.cancel();
-      await _onConnectStreamSubscription?.cancel();
-      await _onMessageStreamSubscription?.cancel();
+      await _stopListen();
       if (clearWallet) BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(null));
       if (closeDB) await dbCommon.close();
       client = null;
@@ -327,6 +295,38 @@ class ClientCommon with Tag {
       return false;
     }
     return true;
+  }
+
+  void _startListen(WalletSchema wallet) {
+    // TODO:GG 看看原生层面，是不是可以改进？
+    // client error
+    _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
+      logger.e("$TAG - _startListen - onError -> event:${event.toString()}");
+      handleError(event, null, text: "client error");
+      await reConnect();
+    });
+    // client connect (just listen once)
+    _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
+      logger.i("$TAG - _startListen - onConnect -> node:${event.node} - rpcServers:${event.rpcServers}");
+      status = ClientConnectStatus.connected;
+      _statusSink.add(ClientConnectStatus.connected);
+      RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
+    });
+    // client receive (looper)
+    _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
+      logger.d("$TAG - _startListen - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      if (status != ClientConnectStatus.connected) {
+        status = ClientConnectStatus.connected;
+        _statusSink.add(ClientConnectStatus.connected);
+      }
+      chatInCommon.onMessageReceive(MessageSchema.fromReceive(address ?? "", event)); // await
+    });
+  }
+
+  Future _stopListen() async {
+    await _onErrorStreamSubscription?.cancel();
+    await _onConnectStreamSubscription?.cancel();
+    await _onMessageStreamSubscription?.cancel();
   }
 
   /// **************************************************************************************** ///

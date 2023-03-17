@@ -25,21 +25,25 @@ class ChatInCommon with Tag {
   // receive queue
   Map<String, ParallelQueue> _receiveQueues = Map();
 
-  void start(String walletAddress, {bool reClient = false}) {
-    logger.i("$TAG - start - reClient:$reClient - walletAddress:$walletAddress");
-    if (!reClient) {
+  void start({bool sameClient = false}) {
+    if (sameClient) {
+      logger.i("$TAG - start - run");
+      _receiveQueues.forEach((key, queue) => queue.toggle(true));
+    } else {
+      logger.i("$TAG - start - reset");
       _receiveQueues.forEach((key, queue) => queue.cancel());
       _receiveQueues.clear();
     }
-    _receiveQueues.forEach((key, queue) => queue.toggle(true));
   }
 
-  void stop({bool clear = false, bool netError = false}) {
-    logger.i("$TAG - stop - clear:$clear - netError:$netError");
-    _receiveQueues.forEach((key, queue) => queue.toggle(false));
-    if (clear) {
+  void stop({bool reset = false}) {
+    if (reset) {
+      logger.i("$TAG - stop - reset");
       _receiveQueues.forEach((key, queue) => queue.cancel());
       _receiveQueues.clear();
+    } else {
+      logger.i("$TAG - stop - pause");
+      _receiveQueues.forEach((key, queue) => queue.toggle(false));
     }
   }
 

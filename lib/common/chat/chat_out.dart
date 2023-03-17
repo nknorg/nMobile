@@ -27,21 +27,25 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
-  void start(String walletAddress, {bool reClient = false}) {
-    logger.i("$TAG - start - reClient:$reClient - walletAddress:$walletAddress");
-    if (!reClient || _sendQueue.isCancelled) {
+  void start({bool sameClient = false}) {
+    if (sameClient && !_sendQueue.isCancelled) {
+      logger.i("$TAG - start - run");
+      _sendQueue.toggle(true);
+    } else {
+      logger.i("$TAG - start - reset");
       _sendQueue.cancel();
       _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
     }
-    _sendQueue.toggle(true);
   }
 
-  void stop({bool clear = false, bool netError = false}) {
-    logger.i("$TAG - stop - clear:$clear - netError:$netError");
-    _sendQueue.toggle(false);
-    if (clear) {
+  void stop({bool reset = false}) {
+    if (reset) {
+      logger.i("$TAG - stop - reset");
       _sendQueue.cancel();
       _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+    } else {
+      logger.i("$TAG - stop - pause");
+      _sendQueue.toggle(false);
     }
   }
 
