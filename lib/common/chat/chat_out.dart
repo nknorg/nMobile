@@ -34,7 +34,7 @@ class ChatOutCommon with Tag {
     } else {
       logger.i("$TAG - start - reset");
       _sendQueue.cancel();
-      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
     }
   }
 
@@ -42,7 +42,7 @@ class ChatOutCommon with Tag {
     if (reset) {
       logger.i("$TAG - stop - reset");
       _sendQueue.cancel();
-      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
     } else {
       logger.i("$TAG - stop - pause");
       _sendQueue.toggle(false);
@@ -50,7 +50,7 @@ class ChatOutCommon with Tag {
   }
 
   // queue
-  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
 
   Future<OnMessage?> sendMsg(List<String> destList, String data) async {
     // dest
@@ -129,7 +129,7 @@ class ChatOutCommon with Tag {
 
   Future<bool> _waitClientOk() async {
     int delayMs = 500;
-    int maxTryTimes = Settings.timeoutMsgSendUntilClientOkMs ~/ delayMs; // 40c
+    int maxTryTimes = Settings.timeoutMsgSendUntilClientOkMs ~/ delayMs; // 60c
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       if (clientCommon.isClientOK) {
@@ -139,7 +139,7 @@ class ChatOutCommon with Tag {
       logger.w("$TAG - _waitClientOk - client waiting - tryTimes:$tryTimes");
       tryTimes++;
       await Future.delayed(Duration(milliseconds: delayMs));
-      if (tryTimes % 9 == 0) {
+      if ((tryTimes > 0) && (tryTimes % (maxTryTimes ~/ 3) == 0)) {
         logger.w("$TAG - _waitClientOk - client reConnect - tryTimes:$tryTimes");
         await clientCommon.reConnect();
       }

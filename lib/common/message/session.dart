@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 
 class SessionCommon with Tag {
   // ignore: close_sinks
@@ -25,6 +27,8 @@ class SessionCommon with Tag {
 
   SessionCommon();
 
+  Map<String, ParallelQueue> _queues = Map();
+
   Future<SessionSchema?> add(
     String? targetId,
     int? type, {
@@ -35,59 +39,70 @@ class SessionCommon with Tag {
     bool checkDuplicated = true,
   }) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    String topic = (type == SessionType.TOPIC) ? targetId : "";
-    String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-    // duplicated
-    if (checkDuplicated) {
-      SessionSchema? exist = await query(targetId, type);
-      if (exist != null) {
-        logger.i("$TAG - add - duplicated - schema:$exist");
-        return exist;
-      }
-    }
-    // lastMsg
-    if (lastMsg == null) {
-      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
-      lastMsg = history.isNotEmpty ? history[0] : null;
-    }
-    // lastMsgAt
-    if ((lastMsgAt == null) || (lastMsgAt == 0)) {
-      lastMsgAt = lastMsg?.sendAt;
-    }
-    // unReadCount
-    if ((unReadCount == null) || (unReadCount < 0)) {
-      if (lastMsg != null) {
-        unReadCount = (!lastMsg.isOutbound && lastMsg.canNotification) ? 1 : 0;
-      }
-    }
-    // senderName
-    String? groupSenderName;
-    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
-      if (lastMsg != null) {
-        ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg.from);
-        if (_sender?.displayName.isNotEmpty == true) {
-          groupSenderName = _sender?.displayName ?? " ";
+    Function func = () async {
+      String topic = (type == SessionType.TOPIC) ? targetId : "";
+      String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
+      // duplicated
+      if (checkDuplicated) {
+        SessionSchema? exist = await query(targetId, type);
+        if (exist != null) {
+          logger.i("$TAG - add - duplicated - schema:$exist");
+          return exist;
         }
       }
-    }
-    // schema
-    SessionSchema? added = SessionSchema(
-      targetId: targetId,
-      type: type,
-      lastMessageOptions: lastMsg?.toMap(),
-      lastMessageAt: lastMsgAt,
-      unReadCount: unReadCount ?? 0,
-    );
-    if (groupSenderName?.isNotEmpty == true) {
-      added.data = {"groupSenderName": groupSenderName};
-    }
-    // insert
-    added = await SessionStorage.instance.insert(added);
-    if ((added != null) && notify) _addSink.add(added);
-    return added;
+      // lastMsg
+      if (lastMsg == null) {
+        List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+        lastMsg = history.isNotEmpty ? history[0] : null;
+      }
+      // lastMsgAt
+      if ((lastMsgAt == null) || (lastMsgAt == 0)) {
+        lastMsgAt = lastMsg?.sendAt;
+      }
+      // unReadCount
+      if ((unReadCount == null) || ((unReadCount ?? -1) < 0)) {
+        if (lastMsg != null) {
+          unReadCount = (!(lastMsg?.isOutbound == true) && (lastMsg?.canNotification == true)) ? 1 : 0;
+        }
+      }
+      // senderName
+      String? groupSenderName;
+      if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+        if (lastMsg != null) {
+          ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg?.from);
+          if (_sender?.displayName.isNotEmpty == true) {
+            groupSenderName = _sender?.displayName ?? " ";
+          }
+        }
+      }
+      // schema
+      SessionSchema? added = SessionSchema(
+        targetId: targetId,
+        type: type,
+        lastMessageOptions: lastMsg?.toMap(),
+        lastMessageAt: lastMsgAt,
+        unReadCount: unReadCount ?? 0,
+      );
+      if (groupSenderName?.isNotEmpty == true) {
+        added.data = {"groupSenderName": groupSenderName};
+      }
+      // insert
+      added = await SessionStorage.instance.insert(added);
+      if ((added != null) && notify) _addSink.add(added);
+      return added;
+    };
+    // queue
+    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", timeout: Duration(seconds: 5), onLog: (log, error) => error ? logger.w(log) : null);
+    return await _queues[targetId]?.add(() async {
+      try {
+        return await func();
+      } catch (e, st) {
+        handleError(e, st);
+      }
+      return null;
+    });
   }
 
-  // TODO:GG 还得看看并发问题
   Future<SessionSchema?> update(
     String? targetId,
     int? type, {
@@ -98,68 +113,79 @@ class SessionCommon with Tag {
     bool notify = true,
   }) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
-    SessionSchema? exist = await query(targetId, type);
-    if (exist == null) {
-      logger.i("$TAG - update - empty - schema:$targetId - type:$type");
-      return null;
-    }
-    String topic = (type == SessionType.TOPIC) ? targetId : "";
-    String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-    // lastMsg
-    MessageSchema? newLastMsg;
-    MessageSchema? oldLastMsg;
-    Map<String, dynamic>? oldLastMessageOptions = exist.lastMessageOptions ?? Map();
-    if ((lastMsg != null) && oldLastMessageOptions.isNotEmpty) {
-      oldLastMsg = MessageSchema.fromMap(oldLastMessageOptions);
-    } else if (oldLastMsg == null) {
-      List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
-      oldLastMsg = history.isNotEmpty ? history[0] : null;
-    }
-    if (lastMsg == null) {
-      newLastMsg = oldLastMsg;
-    } else if (oldLastMsg == null) {
-      newLastMsg = lastMsg;
-    } else {
-      if ((lastMsg.sendAt ?? 0) >= (oldLastMsg.sendAt ?? 0)) {
+    Function func = () async {
+      SessionSchema? exist = await query(targetId, type);
+      if (exist == null) {
+        logger.i("$TAG - update - empty - schema:$targetId - type:$type");
+        return null;
+      }
+      String topic = (type == SessionType.TOPIC) ? targetId : "";
+      String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
+      // lastMsg
+      MessageSchema? newLastMsg;
+      MessageSchema? oldLastMsg;
+      Map<String, dynamic>? oldLastMessageOptions = exist.lastMessageOptions ?? Map();
+      if ((lastMsg != null) && oldLastMessageOptions.isNotEmpty) {
+        oldLastMsg = MessageSchema.fromMap(oldLastMessageOptions);
+      } else if (oldLastMsg == null) {
+        List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+        oldLastMsg = history.isNotEmpty ? history[0] : null;
+      }
+      if (lastMsg == null) {
+        newLastMsg = oldLastMsg;
+      } else if (oldLastMsg == null) {
         newLastMsg = lastMsg;
       } else {
-        newLastMsg = oldLastMsg;
-      }
-    }
-    // lastMsgAt
-    int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
-    // unReadCount
-    int newUnReadCount;
-    if (unreadChange != null) {
-      newUnReadCount = exist.unReadCount + unreadChange;
-    } else {
-      newUnReadCount = unReadCount ?? (await messageCommon.unReadCountByTargetId(targetId, topic, group));
-    }
-    newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
-    // senderName
-    String? newGroupSenderName;
-    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
-      if (newLastMsg != null) {
-        ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.from);
-        if (_sender?.displayName.isNotEmpty == true) {
-          newGroupSenderName = _sender?.displayName ?? " ";
+        if ((lastMsg.sendAt ?? 0) >= (oldLastMsg.sendAt ?? 0)) {
+          newLastMsg = lastMsg;
+        } else {
+          newLastMsg = oldLastMsg;
         }
       }
-    }
-    // update
-    if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
-      if (newGroupSenderName != exist.data?["groupSenderName"]?.toString()) {
-        Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
-        bool success = await SessionStorage.instance.setData(targetId, type, newData);
-        if (success) exist.data = newData;
+      // lastMsgAt
+      int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
+      // unReadCount
+      int newUnReadCount;
+      if (unreadChange != null) {
+        newUnReadCount = exist.unReadCount + unreadChange;
+      } else {
+        newUnReadCount = unReadCount ?? (await messageCommon.unReadCountByTargetId(targetId, topic, group));
       }
-    }
-    exist.lastMessageOptions = newLastMsg?.toMap();
-    exist.lastMessageAt = newLastMsgAt;
-    exist.unReadCount = newUnReadCount;
-    bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
-    if (success && notify) queryAndNotify(targetId, type);
-    return exist;
+      newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
+      // senderName
+      String? newGroupSenderName;
+      if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+        if (newLastMsg != null) {
+          ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.from);
+          if (_sender?.displayName.isNotEmpty == true) {
+            newGroupSenderName = _sender?.displayName ?? " ";
+          }
+        }
+      }
+      // update
+      if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+        if (newGroupSenderName != exist.data?["groupSenderName"]?.toString()) {
+          Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
+          bool success = await SessionStorage.instance.setData(targetId, type, newData);
+          if (success) exist.data = newData;
+        }
+      }
+      exist.lastMessageOptions = newLastMsg?.toMap();
+      exist.lastMessageAt = newLastMsgAt;
+      exist.unReadCount = newUnReadCount;
+      bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
+      if (success && notify) queryAndNotify(targetId, type);
+    };
+    // queue
+    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", timeout: Duration(seconds: 5), onLog: (log, error) => error ? logger.w(log) : null);
+    return await _queues[targetId]?.add(() async {
+      try {
+        return await func();
+      } catch (e, st) {
+        handleError(e, st);
+      }
+      return null;
+    });
   }
 
   Future<bool> delete(String? targetId, int? type, {bool notify = false}) async {
