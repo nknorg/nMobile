@@ -27,30 +27,18 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
+  // queue
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
+
   void start({bool sameClient = false}) {
-    if (sameClient && !_sendQueue.isCancelled) {
-      logger.i("$TAG - start - run");
-      _sendQueue.toggle(true);
-    } else {
-      logger.i("$TAG - start - reset");
-      _sendQueue.cancel();
-      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
-    }
+    logger.i("$TAG - start - ${sameClient ? "run" : "reset"}");
+    _sendQueue.restart(clear: !sameClient);
   }
 
   void stop({bool reset = false}) {
-    if (reset) {
-      logger.i("$TAG - stop - reset");
-      _sendQueue.cancel();
-      _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
-    } else {
-      logger.i("$TAG - stop - pause");
-      _sendQueue.toggle(false);
-    }
+    logger.i("$TAG - stop - ${reset ? "reset" : "pause"}");
+    _sendQueue.stop();
   }
-
-  // queue
-  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
 
   Future<OnMessage?> sendMsg(List<String> destList, String data) async {
     // dest
