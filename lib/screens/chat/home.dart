@@ -232,10 +232,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
     // client
     bool success = await clientCommon.signIn(wallet, null, force: !init, toast: true, loading: (visible, dbOpen) {
-      if (dbOpen) _setConnected(true);
+      if (dbOpen && !isAuthProgress) _setConnected(true);
     });
     // view
-    _setConnected(success);
+    if (!isAuthProgress) _setConnected(success);
     isLoginProgress = false;
     return success;
   }
