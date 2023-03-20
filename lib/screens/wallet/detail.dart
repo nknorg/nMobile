@@ -214,7 +214,7 @@ class _WalletDetailScreenState extends BaseStateFulWidgetState<WalletDetailScree
                 }
                 String? defaultAddress = await walletCommon.getDefaultAddress();
                 if (this._wallet?.address == connectAddress || this._wallet?.address == defaultAddress) {
-                  await clientCommon.signOut(clearWallet: true, closeDB: true);
+                  await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
                 }
               } catch (e, st) {
                 handleError(e, st);

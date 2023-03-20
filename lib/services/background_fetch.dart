@@ -81,7 +81,7 @@ class BackgroundFetchService with Tag {
     // signOut
     logger.i("$TAG - _onBackgroundFetch - run start - taskId:$taskId");
     try {
-      await clientCommon.signOut(clearWallet: false, closeDB: true);
+      // await clientCommon.signOut(clearWallet: false, closeDB: false, force: true);
       logger.i("$TAG - _onBackgroundFetch - run success - taskId:$taskId");
     } catch (e, st) {
       logger.w("$TAG - _onBackgroundFetch - run fail - taskId:$taskId");

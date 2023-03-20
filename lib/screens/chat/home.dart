@@ -227,16 +227,17 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       isLoginProgress = false;
       return false;
     }
+    // TODO:GG 是不是放到wallet前面？
     // fixed:GG ios_152_db
     if (init) await dbCommon.fixIOS_152();
     // client
-    var client = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, dbOpen) {
+    bool success = await clientCommon.signIn(wallet, null, force: !init, toast: true, loading: (visible, dbOpen) {
       if (dbOpen) _setConnected(true);
     });
     // view
-    _setConnected(client != null);
+    _setConnected(success);
     isLoginProgress = false;
-    return client != null;
+    return success;
   }
 
   Future<bool> _tryAuth() async {
@@ -255,7 +256,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (wallet == null) {
       logger.i("$TAG - _tryAuth - wallet default is empty");
       // ui handle, ChatNoWalletLayout()
-      await clientCommon.signOut(clearWallet: true, closeDB: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
       isAuthProgress = false;
       return false;
     }
@@ -264,7 +265,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("$TAG - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
-      await clientCommon.signOut(clearWallet: false, closeDB: true);
+      await clientCommon.signOut(clearWallet: false, closeDB: true, force: true);
       isAuthProgress = false;
       return false;
     }
@@ -384,31 +385,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
         Widget statusWidget;
         switch (snapshot.data) {
-          case ClientConnectStatus.disconnected:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.disconnect, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.strongColor,
-                ),
-              ],
-            );
-            break;
-          case ClientConnectStatus.connected:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.connected, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.successColor,
-                ),
-              ],
-            );
-            break;
-          default:
+          case ClientConnectStatus.connecting:
             statusWidget = Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
@@ -426,6 +403,52 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                 ),
               ],
             );
+            break;
+          case ClientConnectStatus.connected:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  Settings.locale((s) => s.connected, ctx: context),
+                  type: LabelType.h4,
+                  color: application.theme.successColor,
+                ),
+              ],
+            );
+            break;
+          case ClientConnectStatus.disconnecting:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  Settings.locale((s) => s.disconnect, ctx: context),
+                  type: LabelType.h4,
+                  color: application.theme.fontLightColor.withAlpha(200),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2, left: 4),
+                  child: SpinKitThreeBounce(
+                    color: application.theme.fontLightColor.withAlpha(200),
+                    size: 10,
+                  ),
+                ),
+              ],
+            );
+            break;
+          case ClientConnectStatus.disconnected:
+            statusWidget = Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                Label(
+                  Settings.locale((s) => s.disconnect, ctx: context),
+                  type: LabelType.h4,
+                  color: application.theme.strongColor,
+                ),
+              ],
+            );
+            break;
+          default:
+            statusWidget = SizedBox.shrink();
             break;
         }
         return statusWidget;
