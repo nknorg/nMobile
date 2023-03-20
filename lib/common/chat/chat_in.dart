@@ -22,29 +22,20 @@ import 'package:nmobile/utils/path.dart';
 class ChatInCommon with Tag {
   ChatInCommon();
 
-  // receive queue
   Map<String, ParallelQueue> _receiveQueues = Map();
 
   void start({bool sameClient = false}) {
+    logger.i("$TAG - start - ${sameClient ? "run" : "reset"}");
     if (sameClient) {
-      logger.i("$TAG - start - run");
-      _receiveQueues.forEach((key, queue) => queue.toggle(true));
+      _receiveQueues.forEach((key, queue) => queue.restart(clear: false));
     } else {
-      logger.i("$TAG - start - reset");
-      _receiveQueues.forEach((key, queue) => queue.cancel());
       _receiveQueues.clear();
     }
   }
 
   void stop({bool reset = false}) {
-    if (reset) {
-      logger.i("$TAG - stop - reset");
-      _receiveQueues.forEach((key, queue) => queue.cancel());
-      _receiveQueues.clear();
-    } else {
-      logger.i("$TAG - stop - pause");
-      _receiveQueues.forEach((key, queue) => queue.toggle(false));
-    }
+    logger.i("$TAG - stop - ${reset ? "reset" : "pause"}");
+    _receiveQueues.forEach((key, queue) => queue.stop());
   }
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
