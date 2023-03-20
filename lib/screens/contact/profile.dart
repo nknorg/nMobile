@@ -232,17 +232,17 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     Loading.show();
     try {
       // client signOut
-      await clientCommon.signOut(clearWallet: true, closeDB: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
       await Future.delayed(Duration(milliseconds: 500)); // wait client close
       Loading.dismiss();
 
       // client signIn
-      var client = await clientCommon.signIn(selected, null, toast: true, loading: (visible, _) {
+      bool success = await clientCommon.signIn(selected, null, force: true, toast: true, loading: (visible, _) {
         visible ? Loading.show() : Loading.dismiss();
       });
       await Future.delayed(Duration(milliseconds: 500)); // wait client create
 
-      if (client != null) {
+      if (success) {
         Toast.show(Settings.locale((s) => s.tip_switch_success, ctx: context)); // must global context
         // contact
         ContactSchema? _me = await contactCommon.getMe(canAdd: true, needWallet: true);
