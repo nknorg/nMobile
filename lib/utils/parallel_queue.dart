@@ -5,7 +5,7 @@ class _QueuedFuture<T> {
   final Future<T?> Function() func;
   final Completer completer;
   final Duration? timeout;
-  Function? onComplete;
+  Function(bool)? onComplete;
 
   _QueuedFuture(this.id, this.func, this.completer, {this.timeout, this.onComplete});
 
@@ -18,7 +18,7 @@ class _QueuedFuture<T> {
       if (timeout != null) {
         timeoutTimer = Timer(timeout!, () {
           _timedOut = true;
-          onComplete?.call();
+          onComplete?.call(true);
         });
       }
       result = await func();
@@ -28,7 +28,7 @@ class _QueuedFuture<T> {
     } catch (e) {
       completer.completeError(e);
     } finally {
-      if (!_timedOut) onComplete?.call();
+      if (!_timedOut) onComplete?.call(false);
     }
   }
 }
@@ -45,17 +45,13 @@ class ParallelQueue {
 
   int parallel;
   int _lastProcessId = 0;
-  Set<int> activeItems = {};
+  Set<int> _activeItems = {};
 
   final Duration? interval;
   final Duration? timeout;
 
-  Completer? _runComplete;
-  bool _isStopped = false;
-  bool get isStopped => _isStopped;
-
-  bool _isCancelled = false;
-  bool get isCancelled => _isCancelled;
+  bool _isStop = false;
+  bool get isStop => _isStop;
 
   ParallelQueue(this.tag, {this.parallel = 1, this.interval, this.timeout, this.onLog});
 
@@ -67,25 +63,28 @@ class ParallelQueue {
     return completer.future;
   }
 
-  void toggle(bool run) {
-    if (run) {
-      if ((_runComplete != null) && (_runComplete?.isCompleted != true)) {
-        _runComplete?.complete();
-      }
-    } else {
-      _runComplete = Completer();
+  void restart({bool clear = false}) {
+    this.onLog?.call("ParallelQueue - restart - clear:$clear - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
+    _isStop = false;
+    if (clear) {
+      _lastProcessId = 0;
+      _activeItems.clear();
+      _queue.clear();
+      _delays.clear();
+      _delaysDel.clear();
     }
-    _isStopped = !run;
+    unawaited(_process());
   }
 
-  void cancel() {
-    _isCancelled = true;
+  void stop() {
+    this.onLog?.call("ParallelQueue - stop - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
+    _isStop = true;
     _queue.removeWhere((item) => item.completer.isCompleted);
   }
 
   Future<T?> add<T>(Future<T?> Function() func, {String? id, Duration? delay, bool priority = false}) async {
-    if (isCancelled) {
-      this.onLog?.call("ParallelQueue - add - isCancelled - tag:$tag", true);
+    if (isStop) {
+      this.onLog?.call("ParallelQueue - add - isStop - tag:$tag", true);
       return null;
     }
     if (id != null && id.isNotEmpty && delay != null) {
@@ -137,52 +136,46 @@ class ParallelQueue {
   }
 
   Future<void> _process() async {
-    if (activeItems.length < parallel) {
-      while (true) {
-        if (isStopped) {
-          this.onLog?.call("ParallelQueue - _process - on progress stop - tag:$tag - _lastProcessId:$_lastProcessId", true);
-          if ((_runComplete != null) && (_runComplete?.isCompleted != true)) {
-            await _runComplete?.future;
-          }
-        }
-        bool canLoop = await _onQueueNext();
-        if (!canLoop) break;
-      }
+    if (_activeItems.length < parallel) {
+      while (true) if (!(await _onQueueNext())) break;
     } else {
-      this.onLog?.call("ParallelQueue - _process - on next full - tag:$tag - parallel:$parallel - actives:${activeItems.length}", false);
+      this.onLog?.call("ParallelQueue - _process - full - tag:$tag - parallel:$parallel - actives:${_activeItems.length}", false);
     }
   }
 
   Future<bool> _onQueueNext() async {
-    if (isCancelled) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - on next cancel - tag:$tag - lastProcessId:$_lastProcessId", true);
+    if (isStop) {
+      this.onLog?.call("ParallelQueue - _onQueueNext - isStop - tag:$tag - lastProcessId:$_lastProcessId", true);
       return false;
-    } else if (_queue.isNotEmpty && (activeItems.length < parallel)) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - on next ok - tag:$tag - lastProcessId:$_lastProcessId - actives:${activeItems.length} - parallel:$parallel", false);
+    } else if (_queue.isNotEmpty && (_activeItems.length < parallel)) {
+      this.onLog?.call("ParallelQueue - _onQueueNext - run - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
       final item = _queue.first;
       _queue.remove(item);
+      if (_lastProcessId > 2147483640) _lastProcessId = 0;
       final processId = _lastProcessId;
-      activeItems.add(processId);
+      _activeItems.add(processId);
       _lastProcessId++;
       Completer c = Completer();
-      item.onComplete = () async {
-        this.onLog?.call("ParallelQueue - _onQueueNext - on next complete - tag:$tag - _lastProcessId:$_lastProcessId - id:${item.id}", false);
-        activeItems.remove(processId);
+      item.onComplete = (timeout) async {
+        this.onLog?.call("ParallelQueue - _onQueueNext - ${timeout ? "timeout" : "complete"} - tag:$tag - _lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - id:${item.id}", timeout);
+        _activeItems.remove(processId);
         if (interval != null) await Future.delayed(interval!);
         c.complete();
       };
       unawaited(item.execute());
       await c.future;
       return true;
-    } else if (activeItems.isEmpty && _queue.isEmpty) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - on next complete all - tag:$tag - _lastProcessId:$_lastProcessId", false);
+    } else if (_activeItems.isEmpty && _queue.isEmpty) {
+      this.onLog?.call("ParallelQueue - _onQueueNext - over - tag:$tag - _lastProcessId:$_lastProcessId", false);
       for (final completer in _completeListeners) {
         if (completer.isCompleted != true) {
           completer.complete();
         }
       }
       _completeListeners.clear();
-      return !(activeItems.isEmpty && _queue.isEmpty);
+      return !(_activeItems.isEmpty && _queue.isEmpty);
+    } else {
+      this.onLog?.call("ParallelQueue - _onQueueNext - continue - tag:$tag - _lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length}", false);
     }
     return false;
   }
