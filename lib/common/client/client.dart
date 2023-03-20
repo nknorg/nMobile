@@ -260,7 +260,7 @@ class ClientCommon with Tag {
   }
 
   Future signOut({bool force = false, bool clearWallet = false, bool closeDB = true, bool lock = true}) async {
-    if (force && (_timeClosedForce == 0)) _timeClosedForce = DateTime.now().millisecondsSinceEpoch;
+    if (force) _timeClosedForce = DateTime.now().millisecondsSinceEpoch;
     // status (just updated(disconnecting/disconnected) in this func)
     if (status == ClientConnectStatus.disconnecting || status == ClientConnectStatus.disconnected) return;
     status = ClientConnectStatus.disconnecting;
@@ -354,6 +354,7 @@ class ClientCommon with Tag {
   /// **************************************************************************************** ///
 
   Future<bool> reConnect({bool logout = true, bool needPwd = false}) async {
+    if (clientCommon.isClientStop) return false;
     if (_isReConnecting) return false;
     _isReConnecting = true;
     // signOut

@@ -91,7 +91,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       if (application.isFromBackground(states)) {
         // connect check
         if (clientCommon.isClientOK) {
-          clientCommon.connectCheck(reconnect: true); // await
+          clientCommon.connectCheck(); // await
         }
         // send pings (5d+6h)
         if (clientCommon.isClientOK) {
