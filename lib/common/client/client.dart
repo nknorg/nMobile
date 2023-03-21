@@ -87,7 +87,7 @@ class ClientCommon with Tag {
     // TODO:GG client_status不对的时候，给queue发stop指令(需要吗？应该是触发重连？或者是signOut了之后暂停?)
     // TODO:GG net_status不对的时候，给queue发stop指令
     // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
-    // TODO:GGGG chatOutCommon.stop()?
+    // TODO:GG chatOutCommon.stop()?
     // network
     // Connectivity().onConnectivityChanged.listen((status) {
     //   if (status == ConnectivityResult.none) {
@@ -135,11 +135,13 @@ class ClientCommon with Tag {
       while (true) {
         if (force) {
           if (timeSignIn <= _timeClosedForce) {
+            logger.w("$TAG - signIn - try break by force before - tryTimes:$tryTimes - wallet:$wallet - password:$password");
             await signOut(clearWallet: true, closeDB: true, lock: false);
             break;
           }
         } else {
           if (_timeClosedForce > 0) {
+            logger.w("$TAG - signIn - try again by no force - tryTimes:$tryTimes - wallet:$wallet - password:$password");
             await signOut(clearWallet: true, closeDB: true, lock: false);
             break;
           }
@@ -149,7 +151,9 @@ class ClientCommon with Tag {
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
         String text = result["text"]?.toString() ?? "";
-        if (toast && text.isNotEmpty) Toast.show(text);
+        if (toast && text.isNotEmpty) {
+          if (tryTimes % 5 == 0) Toast.show(text);
+        }
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
@@ -190,7 +194,7 @@ class ClientCommon with Tag {
         return {"client": null, "canTry": false, "text": "password wrong"};
       }
     } catch (e, st) {
-      handleError(e, st, upload: false);
+      handleError(e, st, toast: false, upload: false);
       return {"client": null, "canTry": false, "text": "password error"};
     }
     // wallet
@@ -202,7 +206,7 @@ class ClientCommon with Tag {
       pubKey = nknWallet.publicKey.isEmpty ? null : hexEncode(nknWallet.publicKey);
       seed = nknWallet.seed.isEmpty ? null : hexEncode(nknWallet.seed);
     } catch (e, st) {
-      handleError(e, st);
+      handleError(e, st, toast: false);
       return {"client": null, "canTry": false, "password": password, "text": "wallet error"};
     }
     if ((pubKey == null) || pubKey.isEmpty || (seed == null) || seed.isEmpty) {
@@ -225,7 +229,7 @@ class ClientCommon with Tag {
       onDatabaseOpen?.call();
       if (isFirst) chatCommon.reset(wallet.address, sameClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
-      handleError(e, st);
+      handleError(e, st, toast: false);
       return {"client": null, "canTry": false, "password": password, "text": "database error"};
     }
     // client
@@ -250,8 +254,8 @@ class ClientCommon with Tag {
       connectCheck(); // await
       return {"client": client, "canTry": true, "password": password};
     } catch (e, st) {
-      handleError(e, st);
-      return {"client": null, "canTry": true, "password": password};
+      handleError(e, st, toast: false);
+      return {"client": null, "canTry": true, "password": password, "text": getErrorShow(e)};
     }
   }
 
