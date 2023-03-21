@@ -78,16 +78,16 @@ class Common : ChannelBase, FlutterStreamHandler {
             sendPushAPNS(call, result: result)
         case "updateBadgeCount":
             updateBadgeCount(call, result: result)
-        //case "encryptBytes":
-        //    encryptBytes(call, result: result)
-        //case "decryptBytes":
-        //    decryptBytes(call, result: result)
+            //case "encryptBytes":
+            //    encryptBytes(call, result: result)
+            //case "decryptBytes":
+            //    decryptBytes(call, result: result)
         case "splitPieces":
             splitPieces(call, result: result)
         case "combinePieces":
             combinePieces(call, result: result)
-//        case "resetSQLitePassword":
-//            resetSQLitePassword(call, result: result)
+            //        case "resetSQLitePassword":
+            //            resetSQLitePassword(call, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -218,52 +218,52 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     /*private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let algorithm = args["algorithm"] as? String ?? ""
-        let bits = args["bits"] as? Int ?? 1
-        let data = args["data"] as! FlutterStandardTypedData
-        
-        commonQueue.async {
-            var encrypted = Encrypt.encrypt(algorithm: algorithm, bits: bits, data: Data([UInt8](data.data)))
-            if(encrypted != nil){
-                if (encrypted!["key_bytes"] != nil) {
-                    encrypted!["key_bytes"] = FlutterStandardTypedData(bytes: encrypted!["key_bytes"] as! Data)
-                }
-                if (encrypted!["iv_bytes"] != nil) {
-                    encrypted!["iv_bytes"] = FlutterStandardTypedData(bytes: encrypted!["iv_bytes"] as! Data)
-                }
-                if (encrypted!["cipher_text_bytes"] != nil) {
-                    encrypted!["cipher_text_bytes"] = FlutterStandardTypedData(bytes: encrypted!["cipher_text_bytes"] as! Data)
-                }
-            }
-           
-            var resp: [String: Any] = [String: Any]()
-            resp["event"] = "encryptBytes"
-            resp["data"] = encrypted
-            self.resultSuccess(result: result, resp: resp)
-            return
-        }
-    }*/
+     let args = call.arguments as! [String: Any]
+     let algorithm = args["algorithm"] as? String ?? ""
+     let bits = args["bits"] as? Int ?? 1
+     let data = args["data"] as! FlutterStandardTypedData
+     
+     commonQueue.async {
+     var encrypted = Encrypt.encrypt(algorithm: algorithm, bits: bits, data: Data([UInt8](data.data)))
+     if(encrypted != nil){
+     if (encrypted!["key_bytes"] != nil) {
+     encrypted!["key_bytes"] = FlutterStandardTypedData(bytes: encrypted!["key_bytes"] as! Data)
+     }
+     if (encrypted!["iv_bytes"] != nil) {
+     encrypted!["iv_bytes"] = FlutterStandardTypedData(bytes: encrypted!["iv_bytes"] as! Data)
+     }
+     if (encrypted!["cipher_text_bytes"] != nil) {
+     encrypted!["cipher_text_bytes"] = FlutterStandardTypedData(bytes: encrypted!["cipher_text_bytes"] as! Data)
+     }
+     }
+     
+     var resp: [String: Any] = [String: Any]()
+     resp["event"] = "encryptBytes"
+     resp["data"] = encrypted
+     self.resultSuccess(result: result, resp: resp)
+     return
+     }
+     }*/
     
     /*private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let algorithm = args["algorithm"] as? String ?? ""
-        let bits = args["bits"] as? Int ?? 0
-        let keyBytes = args["key_bytes"] as! FlutterStandardTypedData
-        let ivBytes = args["iv_bytes"] as! FlutterStandardTypedData
-        let data = args["data"] as! FlutterStandardTypedData
-        
-        commonQueue.async {
-            let decrypted = Encrypt.decrypt(algorithm: algorithm, bits: bits, keyBytes: Data([UInt8](keyBytes.data)), ivBytes: Data([UInt8](ivBytes.data)), data: Data([UInt8](data.data)))
-            
-            var resp: [String: Any] = [String: Any]()
-            resp["event"] = "decryptBytes"
-            resp["data"] = (decrypted != nil) ? FlutterStandardTypedData(bytes: decrypted!) : nil
-            self.resultSuccess(result: result, resp: resp)
-            return
-            
-        }
-    }*/
+     let args = call.arguments as! [String: Any]
+     let algorithm = args["algorithm"] as? String ?? ""
+     let bits = args["bits"] as? Int ?? 0
+     let keyBytes = args["key_bytes"] as! FlutterStandardTypedData
+     let ivBytes = args["iv_bytes"] as! FlutterStandardTypedData
+     let data = args["data"] as! FlutterStandardTypedData
+     
+     commonQueue.async {
+     let decrypted = Encrypt.decrypt(algorithm: algorithm, bits: bits, keyBytes: Data([UInt8](keyBytes.data)), ivBytes: Data([UInt8](ivBytes.data)), data: Data([UInt8](data.data)))
+     
+     var resp: [String: Any] = [String: Any]()
+     resp["event"] = "decryptBytes"
+     resp["data"] = (decrypted != nil) ? FlutterStandardTypedData(bytes: decrypted!) : nil
+     self.resultSuccess(result: result, resp: resp)
+     return
+     
+     }
+     }*/
     
     private func combinePieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
@@ -333,19 +333,19 @@ class Common : ChannelBase, FlutterStreamHandler {
         }
     }
     
-//    private func resetSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-//        let args = call.arguments as! [String: Any]
-//        let path = args["path"] as! String
-//        let password = args["password"] as! String
-//        let readOnly = args["readOnly"] as? Bool ?? false
-//
-//        FMDatabaseQueue.init(path: path, flags: (readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)))?.inDatabase({ _db in
-//            let success = _db.rekey(password)
-//
-//            var resp: [String: Any] = [String: Any]()
-//            resp["event"] = "resetSQLitePassword"
-//            resp["success"] = success
-//            self.resultSuccess(result: result, resp: resp)
-//        })
-//    }
+    //    private func resetSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    //        let args = call.arguments as! [String: Any]
+    //        let path = args["path"] as! String
+    //        let password = args["password"] as! String
+    //        let readOnly = args["readOnly"] as? Bool ?? false
+    //
+    //        FMDatabaseQueue.init(path: path, flags: (readOnly ? SQLITE_OPEN_READONLY : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)))?.inDatabase({ _db in
+    //            let success = _db.rekey(password)
+    //
+    //            var resp: [String: Any] = [String: Any]()
+    //            resp["event"] = "resetSQLitePassword"
+    //            resp["success"] = success
+    //            self.resultSuccess(result: result, resp: resp)
+    //        })
+    //    }
 }
