@@ -97,7 +97,7 @@ class ChatOutCommon with Tag {
       if (NknError.isClientError(e)) {
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting) return [null, true, 500];
-        logger.w("$TAG - _sendData - reConnect - destList:$destList data:$data");
+        logger.w("$TAG - _sendData - reConnect - destList:$destList - data:$data");
         bool success = await clientCommon.reConnect();
         return [null, true, success ? 500 : 1000];
       }

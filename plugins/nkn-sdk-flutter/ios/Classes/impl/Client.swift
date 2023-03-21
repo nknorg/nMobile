@@ -96,6 +96,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         clientWorkItem = DispatchWorkItem {
             // config
             let config: NknClientConfig = NknClientConfig()
+            config.connectRetries = 1
+            config.maxReconnectInterval = 5 * 1000
             if(seedRpc != nil) {
                 config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
                 for (_, v) in seedRpc!.enumerated() {
