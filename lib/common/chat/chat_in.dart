@@ -24,17 +24,17 @@ class ChatInCommon with Tag {
 
   Map<String, ParallelQueue> _receiveQueues = Map();
 
-  void start({bool sameClient = false}) {
-    logger.i("$TAG - start - ${sameClient ? "run" : "reset"}");
-    if (sameClient) {
-      _receiveQueues.forEach((key, queue) => queue.restart(clear: false));
-    } else {
+  void start({bool reset = true}) {
+    logger.i("$TAG - start - reset:$reset");
+    if (reset) {
       _receiveQueues.clear();
+    } else {
+      _receiveQueues.forEach((key, queue) => queue.restart(clear: false));
     }
   }
 
-  void stop({bool reset = false}) {
-    logger.i("$TAG - stop - ${reset ? "reset" : "pause"}");
+  void stop({bool reset = true}) {
+    logger.i("$TAG - stop - reset:$reset");
     _receiveQueues.forEach((key, queue) => queue.stop());
   }
 
