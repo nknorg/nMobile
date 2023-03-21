@@ -30,13 +30,13 @@ class ChatOutCommon with Tag {
   // queue
   ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
 
-  void start({bool sameClient = false}) {
-    logger.i("$TAG - start - ${sameClient ? "run" : "reset"}");
-    _sendQueue.restart(clear: !sameClient);
+  void start({bool reset = true}) {
+    logger.i("$TAG - start - reset:$reset");
+    _sendQueue.restart(clear: reset);
   }
 
-  void stop({bool reset = false}) {
-    logger.i("$TAG - stop - ${reset ? "reset" : "pause"}");
+  void stop({bool reset = true}) {
+    logger.i("$TAG - stop - reset:$reset");
     _sendQueue.stop();
   }
 
@@ -53,16 +53,6 @@ class ChatOutCommon with Tag {
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;
     }
-    // client
-    int tryTimes = 0;
-    while (tryTimes < Settings.tryTimesMsgSendUntilClientOk) {
-      if (clientCommon.isClientOK) break;
-      logger.w("$TAG - sendMsg - client no ok - tryTimes:${tryTimes + 1} - destList:$destList - data:$data");
-      tryTimes++;
-      int waitMs = Settings.timeoutMsgSendUntilClientOkMs ~/ Settings.tryTimesMsgSendUntilClientOk; // 1s
-      await Future.delayed(Duration(milliseconds: waitMs));
-    }
-    if (tryTimes >= Settings.tryTimesMsgSendUntilClientOk) return null;
     // send
     return await _sendQueue.add(() async {
       OnMessage? onMessage;
@@ -85,6 +75,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<List<dynamic>> _sendData(List<String> destList, String data) async {
+    if (!(await _waitClientOk())) return [null, true, 100];
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
@@ -104,8 +95,8 @@ class ChatOutCommon with Tag {
       }
       handleError(e, st);
       if (NknError.isClientError(e)) {
-        // if (clientCommon.isConnected) return [null, true, 100];
-        if (clientCommon.isConnecting) return [null, true, 500];
+        // if (clientCommon.isClientOK) return [null, true, 100];
+        if (clientCommon.isClientConnecting) return [null, true, 500];
         logger.w("$TAG - _sendData - reConnect - destList:$destList data:$data");
         bool success = await clientCommon.reConnect();
         return [null, true, success ? 500 : 1000];
@@ -116,23 +107,19 @@ class ChatOutCommon with Tag {
   }
 
   Future<bool> _waitClientOk() async {
-    int delayMs = 500;
-    int maxTryTimes = Settings.timeoutMsgSendUntilClientOkMs ~/ delayMs; // 60c
     int tryTimes = 0;
-    while (tryTimes < maxTryTimes) {
-      if (clientCommon.isClientOK) {
-        if (tryTimes > 0) logger.i("$TAG - _waitClientOk - client ok - tryTimes:$tryTimes");
+    while (!clientCommon.isClientOK) {
+      if (clientCommon.isClientStop) {
+        logger.e("$TAG - _waitClientOk - client closed - tryTimes:$tryTimes");
         break;
       }
       logger.w("$TAG - _waitClientOk - client waiting - tryTimes:$tryTimes");
       tryTimes++;
-      await Future.delayed(Duration(milliseconds: delayMs));
-      if ((tryTimes > 0) && (tryTimes % (maxTryTimes ~/ 3) == 0)) {
-        logger.w("$TAG - _waitClientOk - client reConnect - tryTimes:$tryTimes");
-        await clientCommon.reConnect();
-      }
+      await Future.delayed(Duration(milliseconds: 500));
     }
-    return tryTimes < maxTryTimes;
+    if (!clientCommon.isClientOK) return false;
+    logger.i("$TAG - _waitClientOk - client ok - tryTimes:$tryTimes");
+    return true;
   }
 
   // NO DB NO display NO topic (1 to 1)

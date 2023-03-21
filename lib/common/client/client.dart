@@ -72,12 +72,8 @@ class ClientCommon with Tag {
 
   int status = ClientConnectStatus.disconnected;
 
-  bool get isConnecting => _isReConnecting || ((status == ClientConnectStatus.connecting) && (client == null));
-  bool get isConnected => (status == ClientConnectStatus.connected) || ((status == ClientConnectStatus.connecting) && (client != null));
-  bool get isDisConnecting => !_isReConnecting && (status == ClientConnectStatus.disconnecting);
-  bool get isDisConnected => !_isReConnecting && (status == ClientConnectStatus.disconnected);
-
   bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
+  bool get isClientConnecting => _isReConnecting || ((status == ClientConnectStatus.connecting) && (client == null));
   bool get isClientStop => !_isReConnecting && ((status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected));
 
   int _timeClosedForce = 0;
@@ -240,14 +236,14 @@ class ClientCommon with Tag {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
         }
-        chatInCommon.start(sameClient: _lastLoginClientAddress == client?.address);
-        chatOutCommon.start(sameClient: _lastLoginClientAddress == client?.address);
+        chatInCommon.start(reset: _lastLoginClientAddress != client?.address);
+        chatOutCommon.start(reset: _lastLoginClientAddress != client?.address);
         _lastLoginWalletAddress = wallet.address;
         _lastLoginClientAddress = client?.address;
         _startListen(wallet);
       } else {
         // maybe no go here, because closed too long, reconnect too long more
-        await client?.reconnect(); // no onConnect callback,
+        await client?.reconnect(); // no onConnect callback
         await Future.delayed(Duration(milliseconds: 1000)); // reconnect need more time
       }
       // no status update (updated by ping/pang)
@@ -318,7 +314,6 @@ class ClientCommon with Tag {
   }
 
   void _startListen(WalletSchema wallet) {
-    // TODO:GGGG 看看原生层面，是不是可以改进？?
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
       logger.e("$TAG - _startListen - onError -> event:${event.toString()}");
@@ -353,7 +348,7 @@ class ClientCommon with Tag {
   /// *********************************   Connect   ****************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> reConnect({bool logout = true, bool needPwd = false}) async {
+  Future<bool> reConnect({bool logout = true}) async {
     if (clientCommon.isClientStop) return false;
     if (_isReConnecting) return false;
     _isReConnecting = true;
@@ -369,7 +364,7 @@ class ClientCommon with Tag {
       await signOut(clearWallet: true, closeDB: true);
       return false;
     }
-    String? password = needPwd ? (await authorization.getWalletPassword(wallet.address)) : (await walletCommon.getPassword(wallet.address));
+    String? password = await walletCommon.getPassword(wallet.address);
     // signIn
     bool success = await signIn(wallet, password);
     _isReConnecting = false;
@@ -382,22 +377,20 @@ class ClientCommon with Tag {
     // client
     int tryTimes = 0;
     while (true) {
-      if (isConnecting && (tryTimes <= Settings.tryTimesClientConnectWait)) {
+      if (isClientStop) {
+        logger.i("$TAG - connectCheck - closed break - tryTimes:$tryTimes");
+        break;
+      } else if (isClientOK) {
+        logger.d("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
+        await chatOutCommon.sendPing([address ?? ""], true);
+        break;
+      } else if (tryTimes <= Settings.tryTimesClientConnectWait) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReConnect:$_isReConnecting - status:$status");
         ++tryTimes;
         await Future.delayed(Duration(milliseconds: 500));
         continue;
-      } else if (isConnected) {
-        logger.d("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
-        await chatOutCommon.sendPing([address ?? ""], true);
-        break;
-      } else if (isDisConnecting) {
-        logger.i("$TAG - connectCheck - wait disconnect - tryTimes:$tryTimes");
-        ++tryTimes;
-        await Future.delayed(Duration(milliseconds: 500));
-        continue;
-      } else if (!clientCommon.isClientStop) {
-        logger.w("$TAG - connectCheck - need reConnect - tryTimes:$tryTimes");
+      } else {
+        logger.w("$TAG - connectCheck - reConnect - tryTimes:$tryTimes");
         bool success = await reConnect();
         if (success) {
           tryTimes = 0;
@@ -405,9 +398,6 @@ class ClientCommon with Tag {
           continue;
         }
         logger.e("$TAG - connectCheck - reConnect fail - tryTimes:$tryTimes");
-        break;
-      } else {
-        logger.w("$TAG - connectCheck - connect check stop - tryTimes:$tryTimes - status:$status");
         break;
       }
     }

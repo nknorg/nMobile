@@ -168,7 +168,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 "client" to hashMapOf("address" to client?.address()),
                 "rpcServers" to rpcServers
             )
-            Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
+            //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
             eventSinkSuccess(eventSink, resp)
         } catch (e: Throwable) {
             eventSinkError(eventSink, e)
