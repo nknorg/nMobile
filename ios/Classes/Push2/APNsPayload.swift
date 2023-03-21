@@ -61,26 +61,26 @@ public struct APNsPayload {
         threadId: String? = nil,
         
         custom: [String: Any]? = nil) {
-        self.title = title
-        self.body = body
-        self.titleLocKey = titleLocKey
-        self.titleLocArgs = titleLocArgs
-        self.actionLocKey = actionLocKey
-        self.locKey = locKey
-        self.locArgs = locArgs
-        self.launchImage = launchImage
-        
-        self.badge = badge
-        self.sound = sound
-        self.contentAvailable = contentAvailable
-        self.mutableContent = mutableContent
-        self.category = category
-        self.threadId = threadId
-        
-        self.custom = custom
-        
-        self.str = nil
-    }
+            self.title = title
+            self.body = body
+            self.titleLocKey = titleLocKey
+            self.titleLocArgs = titleLocArgs
+            self.actionLocKey = actionLocKey
+            self.locKey = locKey
+            self.locArgs = locArgs
+            self.launchImage = launchImage
+            
+            self.badge = badge
+            self.sound = sound
+            self.contentAvailable = contentAvailable
+            self.mutableContent = mutableContent
+            self.category = category
+            self.threadId = threadId
+            
+            self.custom = custom
+            
+            self.str = nil
+        }
     
     public var dictionary: [String: Any] {
         // Alert

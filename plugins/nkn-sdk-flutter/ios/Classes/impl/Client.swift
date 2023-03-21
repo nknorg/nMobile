@@ -1,58 +1,58 @@
 import Nkn
 
 class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
-
+    
     let CHANNEL_NAME = "org.nkn.sdk/client"
     let EVENT_NAME = "org.nkn.sdk/client/event"
     var methodChannel: FlutterMethodChannel?
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
-
+    
     let clientQueue = DispatchQueue(label: "org.nkn.sdk/client/queue", qos: .default, attributes: .concurrent)
     private var clientWorkItem: DispatchWorkItem?
-
+    
     let clientSendQueue = DispatchQueue(label: "org.nkn.sdk/client/send/queue", qos: .default, attributes: .concurrent)
     private var clientSendWorkItem: DispatchWorkItem?
-
+    
     // let clientReceiveQueue = DispatchQueue(label: "org.nkn.sdk/client/receive/queue", qos: .default, attributes: .concurrent)
     // private var clientReceiveWorkItem: DispatchWorkItem?
-
+    
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     private var clientEventWorkItem: DispatchWorkItem?
-
+    
     var numSubClients = 4
     var client: NknMultiClient?
-
+    
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.methodChannel?.setMethodCallHandler(handle)
         self.eventChannel = FlutterEventChannel(name: EVENT_NAME, binaryMessenger: binaryMessenger)
         self.eventChannel?.setStreamHandler(self)
     }
-
+    
     func uninstall() {
         self.methodChannel?.setMethodCallHandler(nil)
         self.eventChannel?.setStreamHandler(nil)
     }
-
+    
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
         return nil
     }
-
+    
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
         // eventSink = nil
         return nil
     }
-
+    
     private func resultError(_ error: NSError?, code: String? = nil) -> FlutterError {
         return FlutterError(code: code ?? String(error?.code ?? 0), message: error?.localizedDescription, details: "")
     }
-
+    
     private func resultError(_ error: Error?, code: String? = "") -> FlutterError {
         return FlutterError(code: code ?? "", message: error?.localizedDescription, details: "")
     }
-
+    
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method{
         case "create":
@@ -83,7 +83,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             result(FlutterMethodNotImplemented)
         }
     }
-
+    
     private func create(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let identifier = args["identifier"] as? String ?? ""
@@ -92,7 +92,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         numSubClients = args["numSubClients"] as? Int ?? 4
         //let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         //let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
-
+        
         clientWorkItem = DispatchWorkItem {
             // config
             let config: NknClientConfig = NknClientConfig()
@@ -110,14 +110,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
             // client
-            var error: NSError?
-            self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
-            if ((error != nil) || (self.client == nil)) {
+            var error1: NSError?
+            self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error1)
+            if ((error1 != nil) || (self.client == nil)) {
                 NkngolibAddClientConfigWithDialContext(config)
-                var error: NSError?
-                self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
-                if (error != nil) {
-                    self.resultError(result: result, error: error)
+                var error2: NSError?
+                self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error2)
+                if (error2 != nil) {
+                    self.resultError(result: result, error: error2)
                     return
                 } else if (self.client == nil) {
                     self.resultError(result: result, message: "connect fail", details: "in func create")
@@ -136,12 +136,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientQueue.async(execute: clientWorkItem!)
     }
-
+    
     private func onConnect() {
         guard let node = client?.onConnect?.next() else {
             return
         }
-
+        
         var resp: [String: Any] = [String: Any]()
         resp["_id"] = client?.address()
         resp["event"] = "onConnect"
@@ -162,19 +162,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         resp["rpcServers"] = rpcServers
         self.eventSinkSuccess(eventSink: eventSink, resp: resp)
     }
-
+    
     private func onMessage() {
         while (true) {
             guard let msg = client?.onMessage?.next() else {
                 continue
             }
             // clientReceiveWorkItem = DispatchWorkItem {
-                self.onMessageHandle(msg: msg)
+            self.onMessageHandle(msg: msg)
             // }
             // clientReceiveQueue.async(execute: clientReceiveWorkItem!)
         }
     }
-
+    
     private func onMessageHandle(msg: NknMessage) {
         var resp: [String: Any] = [String: Any]()
         resp["_id"] = client?.address()
@@ -189,7 +189,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         //NSLog("onMessage - %@", String(data: msg.data!, encoding: String.Encoding.utf8)!)
         self.eventSinkSuccess(eventSink: eventSink, resp: resp)
     }
-
+    
     private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         clientWorkItem = DispatchWorkItem {
             if (self.client != nil) {
@@ -201,7 +201,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientQueue.async(execute: clientWorkItem!)
     }
-
+    
     private func close(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         clientWorkItem = DispatchWorkItem {
             do {
@@ -214,7 +214,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientQueue.async(execute: clientWorkItem!)
     }
-
+    
     private func sendText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let dests = args["dests"] as! [String]
@@ -222,33 +222,33 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let maxHoldingSeconds = args["maxHoldingSeconds"] as? Int32 ?? 0
         let noReply = args["noReply"] as? Bool ?? true
         let timeout = args["timeout"] as? Int32 ?? 10000
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func sendText"))
             return
         }
-
+        
         let nknDests: NkngomobileStringArray? = NkngomobileNewStringArrayFromString(nil)
         if(!dests.isEmpty) {
             for dest in dests {
                 nknDests?.append(dest)
             }
         }
-
+        
         clientSendWorkItem = DispatchWorkItem {
             do {
                 let config: NknMessageConfig = NknMessageConfig()
                 config.maxHoldingSeconds = maxHoldingSeconds < 0 ? 0 : maxHoldingSeconds
                 config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
                 config.noReply = noReply
-
+                
                 if (!noReply) {
                     let onMessage: NknOnMessage? = try self.client?.sendText(nknDests, data: data, config: config)
                     guard let msg = onMessage?.next(withTimeout: timeout) else {
                         self.resultSuccess(result: result, resp: nil)
                         return
                     }
-
+                    
                     var resp: [String: Any] = [String: Any]()
                     resp["src"] = msg.src
                     resp["data"] = String(data: msg.data!, encoding: String.Encoding.utf8)!
@@ -259,7 +259,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     return
                 } else {
                     try self.client?.sendText(nknDests, data: data, config: config)
-
+                    
                     var resp: [String: Any] = [String: Any]()
                     resp["messageId"] = config.messageID
                     self.resultSuccess(result: result, resp: resp)
@@ -271,7 +271,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientSendQueue.async(execute: clientSendWorkItem!)
     }
-
+    
     private func publishText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let topic = args["topic"] as! String
@@ -280,12 +280,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let txPool = args["txPool"] as? Bool ?? false
         let offset = args["offset"] as? Int32 ?? 0
         let limit = args["limit"] as? Int32 ?? 1000
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func publishText"))
             return
         }
-
+        
         clientSendWorkItem = DispatchWorkItem {
             do {
                 let config: NknMessageConfig = NknMessageConfig()
@@ -294,9 +294,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.txPool = txPool
                 config.offset = offset
                 config.limit = limit
-
+                
                 try self.client?.publishText(topic, data: data, config: config)
-
+                
                 var resp: [String: Any] = [String: Any]()
                 resp["messageId"] = config.messageID
                 self.resultSuccess(result: result, resp: resp)
@@ -307,7 +307,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientSendQueue.async(execute: clientSendWorkItem!)
     }
-
+    
     private func subscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let identifier = args["identifier"] as? String ?? ""
@@ -316,12 +316,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let meta = args["meta"] as? String
         let fee = args["fee"] as? String ?? "0"
         let nonce = args["nonce"] as? Int
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func subscribe"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
@@ -329,7 +329,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.nonce = Int64(nonce!)
                 config.fixNonce = true
             }
-
+            
             var error: NSError?
             let hash = self.client?.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: config, error: &error)
             if(error != nil) {
@@ -341,19 +341,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func unsubscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let identifier = args["identifier"] as? String ?? ""
         let topic = args["topic"] as! String
         let fee = args["fee"] as? String ?? "0"
         let nonce = args["nonce"] as? Int
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func unsubscribe"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
@@ -361,7 +361,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.nonce = Int64(nonce!)
                 config.fixNonce = true
             }
-
+            
             var error: NSError?
             let hash = self.client?.unsubscribe(identifier, topic: topic, config: config, error: &error)
             if(error != nil) {
@@ -373,7 +373,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func getSubscribers(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let topic = args["topic"] as! String
@@ -382,12 +382,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let meta = args["meta"] as? Bool ?? true
         let txPool = args["txPool"] as? Bool ?? true
         let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func getSubscribers"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             do {
                 let res: NknSubscribers? = try self.client?.getSubscribers(topic, offset: offset, limit: limit, meta: meta, txPool: txPool, subscriberHashPrefix: subscriberHashPrefix?.data)
@@ -405,17 +405,17 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func getSubscribersCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let topic = args["topic"] as! String
         let subscriberHashPrefix = args["subscriberHashPrefix"] as? FlutterStandardTypedData
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func getSubscribersCount"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var count: Int = 0
@@ -429,21 +429,21 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func getSubscription(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let topic = args["topic"] as! String
         let subscriber = args["subscriber"] as! String
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func getSubscription"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             do {
                 let res: NknSubscription? = try self.client?.getSubscription(topic, subscriber: subscriber)
-
+                
                 var resp: [String: Any] = [String: Any]()
                 resp["meta"] = res?.meta
                 resp["expiresAt"] = res?.expiresAt
@@ -456,13 +456,13 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func getHeight(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func getHeight"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var height: Int32 = 0
@@ -476,17 +476,17 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
         clientEventQueue.async(execute: clientEventWorkItem!)
     }
-
+    
     private func getNonce(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let args = call.arguments as! [String: Any]
         let address = args["address"] as! String
         let txPool = args["txPool"] as? Bool ?? true
-
+        
         if ((self.client == nil) || (self.client?.isClosed() == true)) {
             result(FlutterError(code: "", message: "client is closed", details: "in func getNonce"))
             return
         }
-
+        
         clientEventWorkItem = DispatchWorkItem {
             do {
                 var nonce: Int64 = 0
