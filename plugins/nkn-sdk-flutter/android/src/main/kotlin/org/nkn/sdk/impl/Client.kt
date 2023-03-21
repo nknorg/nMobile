@@ -1,6 +1,5 @@
 package org.nkn.sdk.impl
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.flutter.plugin.common.BinaryMessenger
@@ -16,7 +15,6 @@ import nkngolib.Nkngolib
 import nkngomobile.Nkngomobile.newStringArrayFromString
 import nkngomobile.StringArray
 import org.nkn.sdk.IChannelHandler
-import org.nkn.sdk.NknSdkFlutterPlugin
 
 class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ViewModel() {
     companion object {
@@ -107,6 +105,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             try {
                 // config
                 val config = ClientConfig()
+                config.connectRetries = 1
+                config.maxReconnectInterval = 5 * 1000
                 if (seedRpc != null) {
                     config.seedRPCServerAddr = StringArray(null)
                     for (addr in seedRpc) {
