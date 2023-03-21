@@ -14,7 +14,7 @@ let p12FilePasswordd = "password"
 public class APNSPusher {
     
     static var apnsClient: Connection? = nil
-
+    
     static func connect() -> Connection? {
         var _connection: Connection?
         do {
