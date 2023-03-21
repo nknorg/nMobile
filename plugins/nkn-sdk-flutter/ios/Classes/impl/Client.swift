@@ -110,17 +110,19 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
             // client
+            var error: NSError?
             self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
             if ((error != nil) || (self.client == nil)) {
                 NkngolibAddClientConfigWithDialContext(config)
+                var error: NSError?
                 self.client = NknNewMultiClient(account, identifier, self.numSubClients, true, config, &error)
-            }
-            if (error != nil) {
-                self.resultError(result: result, error: error)
-                return
-            } else if (self.client == nil) {
-                self.resultError(result: result, message: "connect fail", details: "in func create")
-                return
+                if (error != nil) {
+                    self.resultError(result: result, error: error)
+                    return
+                } else if (self.client == nil) {
+                    self.resultError(result: result, message: "connect fail", details: "in func create")
+                    return
+                }
             }
             // result
             var resp:[String:Any] = [String:Any]()
@@ -321,7 +323,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
 
         clientEventWorkItem = DispatchWorkItem {
-            var error: NSError?
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
             if (nonce != nil) {
@@ -329,6 +330,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.fixNonce = true
             }
 
+            var error: NSError?
             let hash = self.client?.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: config, error: &error)
             if(error != nil) {
                 self.resultError(result: result, error: error)
@@ -353,7 +355,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         }
 
         clientEventWorkItem = DispatchWorkItem {
-            var error: NSError?
             let config: NknTransactionConfig = NknTransactionConfig()
             config.fee = fee
             if (nonce != nil) {
@@ -361,6 +362,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 config.fixNonce = true
             }
 
+            var error: NSError?
             let hash = self.client?.unsubscribe(identifier, topic: topic, config: config, error: &error)
             if(error != nil) {
                 self.resultError(result: result, error: error)
