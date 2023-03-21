@@ -249,6 +249,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
 
+            var error: NSError?
             let wallet = NknNewWallet(account, config, &error)
             if (error != nil) {
                 self.resultError(result: result,error: error)
@@ -265,6 +266,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 transactionConfig.attributes = attributes?.data
             }
 
+            var error: NSError?
             let hash = wallet?.transfer(address, amount: amount, config: transactionConfig, error: &error)
             if (error != nil) {
                 self.resultError(result: result, error: error)
@@ -305,6 +307,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
 
+            var error: NSError?
             let wallet = NknNewWallet(account, config, &error)
             if (error != nil) {
                 self.resultError(result: result,error: error)
@@ -318,7 +321,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 transactionConfig.fixNonce = true
             }
 
-
+            var error: NSError?
             let hash = wallet?.subscribe(identifier, topic: topic, duration: duration, meta: meta, config: transactionConfig, error: &error)
             if (error != nil) {
                 self.resultError(result: result, error: error)
@@ -357,6 +360,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
 
+            var error: NSError?
             let wallet = NknNewWallet(account, config, &error)
             if (error != nil) {
                 self.resultError(result: result,error: error)
@@ -370,7 +374,7 @@ class Wallet : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 transactionConfig.fixNonce = true
             }
 
-
+            var error: NSError?
             let hash = wallet?.unsubscribe(identifier, topic: topic, config: transactionConfig, error: &error)
             if (error != nil) {
                 self.resultError(result: result, error: error)

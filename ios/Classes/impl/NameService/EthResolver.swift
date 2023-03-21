@@ -57,6 +57,7 @@ class EthResolver : ChannelBase, FlutterStreamHandler {
             self.resultError(result: result, error: error)
             return
         }
+        var error: NSError?
         let res = ethResolver!.resolve(address, error: &error)
         if (error != nil) {
             self.resultError(result: result, error: error)
