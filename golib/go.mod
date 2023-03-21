@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e
 	github.com/nknorg/eth-resolver-go v0.0.0-20220705093053-e6450052dee6
-	github.com/nknorg/ncp-go v1.0.3 // indirect
+	github.com/nknorg/ncp-go v1.0.5 // indirect
 	github.com/nknorg/nkn-sdk-go v1.4.2-0.20221031084322-db7de1412019
 	github.com/nknorg/nkn/v2 v2.1.9
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9
@@ -52,7 +52,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -61,4 +61,4 @@ require (
 	lukechampine.com/blake3 v1.1.7 // indirect
 )
 
-// replace github.com/nknorg/nkn-sdk-go => ../../nkn-sdk-go
+replace github.com/nknorg/nkn-sdk-go => ../../nkn-sdk-go
