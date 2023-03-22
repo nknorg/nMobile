@@ -153,8 +153,8 @@ class ClientCommon with Tag {
         logger.w("$TAG - signIn - try again - tryTimes:$tryTimes - wallet:$wallet - password:$password");
         tryTimes++;
         _statusSink.add(ClientConnectStatus.connecting); // need flush
-        if (tryTimes >= 3) await RPC.setRpcServers(wallet?.address, []);
-        await Future.delayed(Duration(milliseconds: 500));
+        if ((tryTimes >= 3) && isNetworkOk) await RPC.setRpcServers(wallet?.address, []);
+        await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
       }
       return success;
     });
@@ -201,11 +201,10 @@ class ClientCommon with Tag {
     }
     // database
     try {
-      bool opened = dbCommon.isOpen();
-      if (!opened) {
-        opened = await dbCommon.open(pubKey, seed);
+      if (!dbCommon.isOpen()) {
+        await dbCommon.open(pubKey, seed);
       }
-      if (!opened) {
+      if (!dbCommon.isOpen()) {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
@@ -271,7 +270,7 @@ class ClientCommon with Tag {
           logger.e("$TAG - signOut - try again - tryTimes:$tryTimes - force:$force - lock:$lock");
           tryTimes++;
           _statusSink.add(ClientConnectStatus.disconnecting); // need flush
-          await Future.delayed(Duration(milliseconds: 250));
+          await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
         }
       });
     } else {
@@ -285,7 +284,7 @@ class ClientCommon with Tag {
         logger.e("$TAG - signOut - try again - tryTimes:$tryTimes - force:$force - lock:$lock");
         tryTimes++;
         _statusSink.add(ClientConnectStatus.disconnecting); // need flush
-        await Future.delayed(Duration(milliseconds: 250));
+        await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
       }
     }
     // status
@@ -386,14 +385,14 @@ class ClientCommon with Tag {
       } else if (tryTimes <= waitTimes) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReConnect:$_isReConnecting - status:$status");
         ++tryTimes;
-        await Future.delayed(Duration(milliseconds: 500));
+        await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
         continue;
       } else {
         logger.w("$TAG - connectCheck - reConnect - tryTimes:$tryTimes");
         bool success = await reConnect();
         if (success) {
           tryTimes = 0;
-          await Future.delayed(Duration(milliseconds: 1000));
+          await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
           continue;
         }
         logger.e("$TAG - connectCheck - reConnect fail - tryTimes:$tryTimes");
