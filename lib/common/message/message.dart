@@ -12,7 +12,7 @@ class MessageCommon with Tag {
   // ignore: close_sinks
   StreamController<MessageSchema> _onSavedController = StreamController<MessageSchema>.broadcast();
   StreamSink<MessageSchema> get onSavedSink => _onSavedController.sink;
-  Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.pid == next.pid);
+  Stream<MessageSchema> get onSavedStream => _onSavedController.stream.distinct((prev, next) => prev.msgId == next.msgId);
 
   // ignore: close_sinks
   StreamController<MessageSchema> _onUpdateController = StreamController<MessageSchema>.broadcast();

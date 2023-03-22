@@ -80,8 +80,6 @@ class ClientCommon with Tag {
   bool isNetworkOk = true;
 
   ClientCommon() {
-    // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
-    // TODO:GG 网络不好的时候，ipfs有失败的callback吗？
     // network
     Connectivity().onConnectivityChanged.listen((status) {
       if (status == ConnectivityResult.none) {
@@ -373,10 +371,10 @@ class ClientCommon with Tag {
     return success;
   }
 
-  Future connectCheck({bool status = false}) async {
+  Future connectCheck({bool status = false, int waitTimes = Settings.tryTimesClientConnectWait}) async {
+    if (status) _statusSink.add(ClientConnectStatus.connecting);
     if (_isConnectChecking) return;
     _isConnectChecking = true;
-    if (status) _statusSink.add(ClientConnectStatus.connecting);
     int tryTimes = 0;
     while (true) {
       if (isClientStop) {
@@ -386,7 +384,7 @@ class ClientCommon with Tag {
         logger.d("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
         await chatOutCommon.sendPing([address ?? ""], true);
         break;
-      } else if (tryTimes <= Settings.tryTimesClientConnectWait) {
+      } else if (tryTimes <= waitTimes) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReConnect:$_isReConnecting - status:$status");
         ++tryTimes;
         await Future.delayed(Duration(milliseconds: 500));
