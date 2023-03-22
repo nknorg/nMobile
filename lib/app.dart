@@ -89,14 +89,6 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
       if (application.isFromBackground(states)) {
-        // connect check
-        if (clientCommon.isClientOK) {
-          clientCommon.connectCheck(); // await
-        }
-        // send pings (5d+6h)
-        if (clientCommon.isClientOK) {
-          chatCommon.sendPings2LatestSessions(); // await
-        }
         // topics check (24h)
         if (clientCommon.isClientOK) {
           int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;

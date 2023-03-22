@@ -269,6 +269,9 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       isAuthProgress = false;
       return false;
     }
+    // client
+    clientCommon.connectCheck(); // await
+    chatCommon.sendPings2LatestSessions(); // await
     // view
     _setConnected(true);
     isAuthProgress = false;
