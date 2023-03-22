@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-// import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -31,7 +31,7 @@ class ClientConnectStatus {
 // TODO:GG 所有的chatId都要检查？
 String? getPubKeyFromTopicOrChatId(String s) {
   final i = s.lastIndexOf('.');
-  final pubKey = i >= 0 ? s.substring(i + 1) : s;
+  final pubKey = (i >= 0) ? s.substring(i + 1) : s;
   return Validate.isNknPublicKey(pubKey) ? pubKey : null;
 }
 
@@ -66,7 +66,7 @@ class ClientCommon with Tag {
   Client? client;
 
   String? _lastLoginClientAddress;
-  String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id
+  String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id / wallet.publicKey
 
   int status = ClientConnectStatus.disconnected;
   bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
@@ -77,28 +77,21 @@ class ClientCommon with Tag {
   bool _isReConnecting = false;
   bool _isConnectChecking = false;
 
-  // bool isNetworkOk = true; // TODO:GG 应该有用吧
+  bool isNetworkOk = true;
 
   ClientCommon() {
-    // TODO:GG client_status不对的时候，给queue发stop指令(需要吗？应该是触发重连？或者是signOut了之后暂停?)
-    // TODO:GG net_status不对的时候，给queue发stop指令
     // TODO:GG 后台切换网络呢？除了client，ipfs要考虑吗？检测none的时候，ipfs会不会中断(除非有断线重连)
-    // TODO:GG chatOutCommon.stop()?
+    // TODO:GG 网络不好的时候，ipfs有失败的callback吗？
     // network
-    // Connectivity().onConnectivityChanged.listen((status) {
-    //   if (status == ConnectivityResult.none) {
-    //     logger.w("$TAG - onConnectivityChanged - status:$status");
-    //     isNetworkOk = false;
-    //     _statusSink.add(ClientConnectStatus.connecting);
-    //     chatCommon.reset(reClient: true, netError: true);
-    //     chatInCommon.reset(reClient: true, netError: true);
-    //     chatOutCommon.reset(reClient: true, netError: true);
-    //   } else {
-    //     logger.i("$TAG - onConnectivityChanged - status:$status");
-    //     isNetworkOk = true;
-    //     if (isClientCreated) connectCheck(force: true, reconnect: true);
-    //   }
-    // });
+    Connectivity().onConnectivityChanged.listen((status) {
+      if (status == ConnectivityResult.none) {
+        logger.w("$TAG - ClientCommon - onConnectivityChanged - status:$status");
+      } else {
+        logger.i("$TAG - ClientCommon - onConnectivityChanged - status:$status");
+      }
+      isNetworkOk = status != ConnectivityResult.none;
+      if (isClientOK) connectCheck(status: true);
+    });
   }
 
   String? getPublicKey() {
@@ -148,7 +141,7 @@ class ClientCommon with Tag {
         password = result["password"]?.toString();
         String text = result["text"]?.toString() ?? "";
         if (toast && text.isNotEmpty) {
-          if (tryTimes % 5 == 0) Toast.show(text);
+          if (tryTimes % 10 == 0) Toast.show(text);
         }
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
@@ -375,15 +368,15 @@ class ClientCommon with Tag {
     String? password = await walletCommon.getPassword(wallet.address);
     // signIn
     logger.i("$TAG - reConnect - signIn");
-    bool success = await signIn(wallet, password);
+    bool success = await signIn(wallet, password, toast: true);
     _isReConnecting = false;
     return success;
   }
 
-  Future connectCheck() async {
+  Future connectCheck({bool status = false}) async {
     if (_isConnectChecking) return;
     _isConnectChecking = true;
-    // client
+    if (status) _statusSink.add(ClientConnectStatus.connecting);
     int tryTimes = 0;
     while (true) {
       if (isClientStop) {

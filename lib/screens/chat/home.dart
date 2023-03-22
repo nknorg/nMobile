@@ -270,7 +270,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return false;
     }
     // client
-    clientCommon.connectCheck(); // await
+    clientCommon.connectCheck(status: true); // await
     chatCommon.sendPings2LatestSessions(); // await
     // view
     _setConnected(true);
