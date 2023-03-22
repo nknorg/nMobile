@@ -87,13 +87,11 @@ class Settings {
   static const int gapMessagesGroupSec = 2 * 60; // 2m
   // timeout
   static const int timeoutSeedMeasureMs = 5 * 1000; // 5s
-  static const int timeoutMsgSendUntilClientOkMs = 30 * 1000; // 30s
   static const int timeoutPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
   static const int timeoutGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
   static const int timeoutDeviceTokensDay = 5; // 5d
   // tryTimes
-  static const int tryTimesClientConnectWait = 20;
-  static const int tryTimesMsgSendUntilClientOk = 30;
+  static const int tryTimesClientConnectWait = 10;
   static const int tryTimesMsgSend = 10;
   static const int tryTimesIpfsThumbnailUpload = 3;
   static const int tryTimesIpfsThumbnailDownload = 5;
