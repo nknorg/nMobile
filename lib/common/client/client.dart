@@ -28,7 +28,6 @@ class ClientConnectStatus {
   static const int disconnected = 4;
 }
 
-// TODO:GG 所有的chatId都要检查？
 String? getPubKeyFromTopicOrChatId(String s) {
   final i = s.lastIndexOf('.');
   final pubKey = (i >= 0) ? s.substring(i + 1) : s;
