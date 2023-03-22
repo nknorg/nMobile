@@ -194,7 +194,8 @@ class PrivateGroupCommon with Tag {
       if (toast) Toast.show(Settings.locale((s) => s.invitation_information_error));
       return null;
     }
-    bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
+    String? inviterPubKey = getPubKeyFromTopicOrChatId(schema.inviter ?? "");
+    bool verifiedInviter = await verifiedSignature(inviterPubKey, schema.inviterRawData, schema.inviterSignature);
     if (!verifiedInviter) {
       logger.e('$TAG - acceptInvitation - signature verification failed.');
       if (toast) Toast.show(Settings.locale((s) => s.invitation_signature_error));
@@ -231,8 +232,10 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - onInviteeAccept - inviter incomplete raw_data - schema:$schema');
       return null;
     }
-    bool verifiedInviter = await verifiedSignature(schema.inviter, schema.inviterRawData, schema.inviterSignature);
-    bool verifiedInvitee = await verifiedSignature(schema.invitee, schema.inviteeRawData, schema.inviteeSignature);
+    String? inviterPubKey = getPubKeyFromTopicOrChatId(schema.inviter ?? "");
+    bool verifiedInviter = await verifiedSignature(inviterPubKey, schema.inviterRawData, schema.inviterSignature);
+    String? inviteePubKey = getPubKeyFromTopicOrChatId(schema.invitee ?? "");
+    bool verifiedInvitee = await verifiedSignature(inviteePubKey, schema.inviteeRawData, schema.inviteeSignature);
     if (!verifiedInviter || !verifiedInvitee) {
       logger.e('$TAG - onInviteeAccept - signature verification failed. - verifiedInviter:$verifiedInviter - verifiedInvitee:$verifiedInvitee');
       return null;
@@ -339,7 +342,8 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - onMemberQuit - invitee incomplete permission - schema:$schema');
       return false;
     }
-    bool verifiedInvitee = await verifiedSignature(schema.invitee, schema.inviteeRawData, schema.inviteeSignature);
+    String? inviteePubKey = getPubKeyFromTopicOrChatId(schema.invitee ?? "");
+    bool verifiedInvitee = await verifiedSignature(inviteePubKey, schema.inviteeRawData, schema.inviteeSignature);
     if (!verifiedInvitee) {
       logger.e('$TAG - onMemberQuit - signature verification failed. - verifiedInvitee:$verifiedInvitee');
       return false;
@@ -739,7 +743,8 @@ class PrivateGroupCommon with Tag {
         logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete inviter - i$i - member:$member');
         continue;
       }
-      bool verifiedInviter = await verifiedSignature(member.inviter, member.inviterRawData, member.inviterSignature);
+      String? inviterPubKey = getPubKeyFromTopicOrChatId(member.inviter ?? "");
+      bool verifiedInviter = await verifiedSignature(inviterPubKey, member.inviterRawData, member.inviterSignature);
       if (!verifiedInviter) {
         logger.e('$TAG - updatePrivateGroupMembers - signature verification inviter failed. - verifiedInviter:$verifiedInviter');
         continue;
@@ -749,7 +754,8 @@ class PrivateGroupCommon with Tag {
           logger.e('$TAG - updatePrivateGroupMembers - inviter incomplete invitee - i$i - member:$member');
           continue;
         }
-        bool verifiedInvitee = await verifiedSignature(member.invitee, member.inviteeRawData, member.inviteeSignature);
+        String? inviteePubKey = getPubKeyFromTopicOrChatId(member.invitee ?? "");
+        bool verifiedInvitee = await verifiedSignature(inviteePubKey, member.inviteeRawData, member.inviteeSignature);
         if (!verifiedInvitee) {
           logger.e('$TAG - updatePrivateGroupMembers - signature verification invitee failed. - verifiedInvitee:$verifiedInvitee');
           continue;
