@@ -24,7 +24,7 @@ class ChatInCommon with Tag {
 
   Map<String, ParallelQueue> _receiveQueues = Map();
 
-  void start({bool reset = true}) {
+  Future start({bool reset = true}) async {
     logger.i("$TAG - start - reset:$reset");
     if (reset) {
       _receiveQueues.clear();
@@ -33,7 +33,7 @@ class ChatInCommon with Tag {
     }
   }
 
-  void stop({bool reset = true}) {
+  Future stop({bool reset = true}) async {
     logger.i("$TAG - stop - reset:$reset");
     _receiveQueues.forEach((key, queue) => queue.stop());
   }
