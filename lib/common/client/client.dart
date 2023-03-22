@@ -65,19 +65,15 @@ class ClientCommon with Tag {
   /// doc: https://github.com/nknorg/nkn-sdk-flutter
   Client? client;
 
-  String? _lastLoginWalletAddress;
   String? _lastLoginClientAddress;
-
   String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id
 
   int status = ClientConnectStatus.disconnected;
-
   bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
   bool get isClientConnecting => _isReConnecting || ((status == ClientConnectStatus.connecting) && (client == null));
   bool get isClientStop => !_isReConnecting && ((status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected));
 
   int _timeClosedForce = 0;
-
   bool _isReConnecting = false;
   bool _isConnectChecking = false;
 
@@ -146,7 +142,7 @@ class ClientCommon with Tag {
             break;
           }
         }
-        Map<String, dynamic> result = await _signIn(wallet, password, isFirst: tryTimes <= 0, onDatabaseOpen: () => loading?.call(true, true));
+        Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
         Client? c = result["client"];
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
@@ -177,7 +173,7 @@ class ClientCommon with Tag {
     return success;
   }
 
-  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {bool isFirst = true, Function? onDatabaseOpen}) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema? wallet, String? password, {Function? onDatabaseOpen}) async {
     if ((wallet == null) || wallet.address.isEmpty) {
       logger.e("$TAG - _signIn - wallet is null");
       return {"client": null, "canTry": false, "text": "wallet is no exists"};
@@ -218,19 +214,29 @@ class ClientCommon with Tag {
       bool opened = dbCommon.isOpen();
       if (!opened) {
         opened = await dbCommon.open(pubKey, seed);
-        BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(wallet.address));
-        ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
-        contactCommon.meUpdateSink.add(me);
       }
       if (!opened) {
         logger.e("$TAG - _signIn - database opened fail - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
+      BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(wallet.address));
+      ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
+      contactCommon.meUpdateSink.add(me);
       onDatabaseOpen?.call();
-      if (isFirst) chatCommon.reset(wallet.address, sameClient: _lastLoginWalletAddress == wallet.address);
     } catch (e, st) {
       handleError(e, st, toast: false);
       return {"client": null, "canTry": false, "password": password, "text": "database error"};
+    }
+    // common
+    try {
+      bool reset = (_lastLoginClientAddress != null) && (_lastLoginClientAddress != wallet.publicKey);
+      await chatCommon.reset(wallet.address, reset: reset);
+      await chatInCommon.start(reset: reset);
+      await chatOutCommon.start(reset: reset);
+      _lastLoginClientAddress = client?.address;
+    } catch (e, st) {
+      handleError(e, st, toast: false);
+      return {"client": null, "canTry": false, "password": password, "text": "reset error"};
     }
     // client
     try {
@@ -240,10 +246,6 @@ class ClientCommon with Tag {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
         }
-        chatInCommon.start(reset: _lastLoginClientAddress != client?.address);
-        chatOutCommon.start(reset: _lastLoginClientAddress != client?.address);
-        _lastLoginWalletAddress = wallet.address;
-        _lastLoginClientAddress = client?.address;
         _startListen(wallet);
       } else {
         // reconnect will break in go-sdk, because connect closed when fail and no callback
@@ -251,13 +253,13 @@ class ClientCommon with Tag {
         await client?.reconnect(); // no onConnect callback
         await Future.delayed(Duration(milliseconds: 1000)); // reconnect need more time
       }
-      // no status update (updated by ping/pang)
-      connectCheck(); // await
-      return {"client": client, "canTry": true, "password": password};
     } catch (e, st) {
       handleError(e, st, toast: false);
       return {"client": null, "canTry": true, "password": password, "text": getErrorShow(e)};
     }
+    // status no update (updated by ping/pang)
+    connectCheck(); // await
+    return {"client": client, "canTry": true, "password": password};
   }
 
   Future signOut({bool force = false, bool clearWallet = false, bool closeDB = true, bool lock = true}) async {
@@ -304,10 +306,10 @@ class ClientCommon with Tag {
 
   Future<bool> _signOut({bool clearWallet = true, bool closeDB = true}) async {
     try {
-      chatOutCommon.stop(reset: closeDB);
+      await chatOutCommon.stop(reset: closeDB);
       await client?.close();
       await _stopListen();
-      chatInCommon.stop(reset: closeDB);
+      await chatInCommon.stop(reset: closeDB);
       client = null;
       if (clearWallet) BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(null));
       if (closeDB) await dbCommon.close();

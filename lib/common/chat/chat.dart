@@ -31,15 +31,15 @@ class ChatCommon with Tag {
   // Map<String, Map<String, dynamic>> _checkersParams = Map();
   // ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : null);
 
-  void reset(String walletAddress, {bool sameClient = false}) {
-    logger.i("$TAG - reset - sameClient:$sameClient - walletAddress:$walletAddress");
+  Future reset(String walletAddress, {bool reset = true}) async {
+    logger.i("$TAG - reset - reset:$reset - walletAddress:$walletAddress");
     // currentChatTargetId = null; // can not be reset
     // _checkersParams.clear();
     // TODO:GG reClient和netError 是否会导致msg和ipfs的中断????
-    resetMessageSending(); // await
-    if (!sameClient) {
+    await resetMessageSending(); // await
+    if (reset) {
       // TODO:GG 这个是不是跟net有关，跟client无关
-      resetIpfsDownloadIng(walletAddress, thumbnailAutoDownload: true); // await
+      await resetIpfsDownloadIng(walletAddress, thumbnailAutoDownload: true); // await
     }
   }
 

@@ -27,15 +27,14 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
-  // queue
   ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
 
-  void start({bool reset = true}) {
+  Future start({bool reset = true}) async {
     logger.i("$TAG - start - reset:$reset");
     _sendQueue.restart(clear: reset);
   }
 
-  void stop({bool reset = true}) {
+  Future stop({bool reset = true}) async {
     logger.i("$TAG - stop - reset:$reset");
     _sendQueue.stop();
   }
