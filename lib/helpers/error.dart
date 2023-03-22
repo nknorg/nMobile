@@ -36,6 +36,8 @@ catchGlobalError(Function? callback, {Function(Object error, StackTrace stack)? 
 
 class NknError {
   // sdk
+  static String writeTCP = "write tcp";
+  static String readTCP = "read tcp";
   static String writeBroken = "write: broken pipe";
   static String readBroken = "read: broken pipe";
   static String keystoreNotExits = "keystore not exits";
@@ -73,6 +75,9 @@ class NknError {
   static String unencryptedMessage = "message is unencrypted";
 
   static List<String> clientErrors = [
+    writeTCP,
+    readTCP,
+    writeBroken,
     writeBroken,
     readBroken,
     wrongNode,
@@ -190,6 +195,8 @@ String? getErrorShow(dynamic error) {
   // if (errStr.contains(NknError.rpcRequestFail)) return "";
   if (errStr.contains(NknError.writeBroken)) return "";
   if (errStr.contains(NknError.readBroken)) return "";
+  if (errStr.contains(NknError.writeTCP)) return "";
+  if (errStr.contains(NknError.readTCP)) return "";
   if (errStr.contains("address = mainnet.infura.io")) return "";
   if (errStr.contains("address = eth-mainnet.g.alchemy.com")) return "";
   if (errStr.contains("address = fcm.googleapis.com")) return "";
