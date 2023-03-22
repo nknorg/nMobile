@@ -333,7 +333,7 @@ class IpfsHelper with Tag {
         data: body,
         options: Options(headers: headers), // responseType: ResponseType.json,
         onSendProgress: (count, total) {
-          logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total");
+          // logger.v("$TAG - _uploadFile - onSendProgress - count:$count - total:$total");
           onProgress?.call(total, count);
         },
       );
@@ -395,7 +395,7 @@ class IpfsHelper with Tag {
         options: Options(headers: headers, responseType: ResponseType.bytes),
         onReceiveProgress: (count, total) {
           int totalCount = (total > 0) ? total : ipfsLength;
-          logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount");
+          // logger.v("$TAG - _downloadFile - onReceiveProgress - count:$count - total:$totalCount");
           onProgress?.call(totalCount, count);
         },
       );

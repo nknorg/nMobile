@@ -27,7 +27,7 @@ import 'package:uuid/uuid.dart';
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
-  ParallelQueue _sendQueue = ParallelQueue("chat_send", timeout: Duration(seconds: 60), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _sendQueue = ParallelQueue("chat_send", onLog: (log, error) => error ? logger.w(log) : null);
 
   Future start({bool reset = true}) async {
     logger.i("$TAG - start - reset:$reset");
@@ -40,6 +40,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<OnMessage?> sendMsg(List<String> destList, String data) async {
+    logger.v("$TAG - sendMsg - send start - destList:$destList - data:$data");
     // dest
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
@@ -75,6 +76,7 @@ class ChatOutCommon with Tag {
 
   Future<List<dynamic>> _sendData(List<String> destList, String data) async {
     if (!(await _waitClientOk())) return [null, true, 100];
+    logger.v("$TAG - _sendData - send start - destList:$destList - data:$data");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
@@ -92,15 +94,16 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _sendData - message over size - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
         return [null, false, 0];
       }
-      handleError(e, st);
       if (NknError.isClientError(e)) {
+        handleError(e, st, toast: false);
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting) return [null, true, 500];
         logger.w("$TAG - _sendData - reConnect - destList:$destList - data:$data");
         bool success = await clientCommon.reConnect();
         return [null, true, success ? 500 : 1000];
       }
-      logger.e("$TAG - _sendData - try by error - destList:$destList - data:$data");
+      handleError(e, st);
+      logger.e("$TAG - _sendData - try by unknown error - destList:$destList - data:$data");
     }
     return [null, true, 250];
   }
