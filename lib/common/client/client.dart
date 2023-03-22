@@ -246,6 +246,7 @@ class ClientCommon with Tag {
         _lastLoginClientAddress = client?.address;
         _startListen(wallet);
       } else {
+        // reconnect will break in go-sdk, because connect closed when fail and no callback
         // maybe no go here, because closed too long, reconnect too long more
         await client?.reconnect(); // no onConnect callback
         await Future.delayed(Duration(milliseconds: 1000)); // reconnect need more time
@@ -353,12 +354,12 @@ class ClientCommon with Tag {
   /// **************************************************************************************** ///
 
   Future<bool> reConnect({bool logout = true}) async {
-    if (clientCommon.isClientStop) return false;
+    if (isClientStop) return false;
     if (_isReConnecting) return false;
     _isReConnecting = true;
     // signOut
     if (logout && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected))) {
-      logger.i("$TAG - reConnect - unsubscribe stream when client no created");
+      logger.i("$TAG - reConnect - signOut");
       await signOut(clearWallet: false, closeDB: false);
     }
     // password
@@ -366,10 +367,12 @@ class ClientCommon with Tag {
     if ((wallet == null) || wallet.address.isEmpty) {
       AppScreen.go(Settings.appContext);
       await signOut(clearWallet: true, closeDB: true);
+      _isReConnecting = false;
       return false;
     }
     String? password = await walletCommon.getPassword(wallet.address);
     // signIn
+    logger.i("$TAG - reConnect - signIn");
     bool success = await signIn(wallet, password);
     _isReConnecting = false;
     return success;

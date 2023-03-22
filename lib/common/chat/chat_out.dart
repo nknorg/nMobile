@@ -117,8 +117,7 @@ class ChatOutCommon with Tag {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 500));
     }
-    if (!clientCommon.isClientOK) return false;
-    logger.i("$TAG - _waitClientOk - client ok - tryTimes:$tryTimes");
+    if (!clientCommon.isClientOK) logger.w("$TAG - _waitClientOk - client wrong - tryTimes:$tryTimes");
     return true;
   }
 
