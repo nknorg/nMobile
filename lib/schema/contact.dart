@@ -73,6 +73,8 @@ class ContactSchema {
 
   static Future<ContactSchema?> create(String? clientAddress, int? type, {String? profileVersion}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
+    ContactSchema? schema = createWithNoWalletAddress(clientAddress, type, profileVersion: profileVersion);
+    if (schema == null) return null;
     String? walletAddress;
     try {
       String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
@@ -82,17 +84,11 @@ class ContactSchema {
     } catch (e, st) {
       handleError(e, st);
     }
-    return ContactSchema(
-      createAt: DateTime.now().millisecondsSinceEpoch,
-      updateAt: DateTime.now().millisecondsSinceEpoch,
-      clientAddress: clientAddress,
-      type: type,
-      profileVersion: profileVersion ?? Uuid().v4(),
-      nknWalletAddress: walletAddress,
-    );
+    schema.nknWalletAddress = walletAddress;
+    return schema;
   }
 
-  static ContactSchema? createWithNoPublicKey(String? clientAddress, int? type, {String? profileVersion}) {
+  static ContactSchema? createWithNoWalletAddress(String? clientAddress, int? type, {String? profileVersion}) {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     return ContactSchema(
       createAt: DateTime.now().millisecondsSinceEpoch,
