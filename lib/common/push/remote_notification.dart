@@ -13,7 +13,7 @@ import 'package:uuid/uuid.dart';
 class RemoteNotification {
   static Future<String?> send(String? deviceToken, {String? uuid, String? title, String? content}) async {
     bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
-    if (close == true) return "closed";
+    if (close == true) return null;
 
     if (deviceToken == null || deviceToken.isEmpty == true) return "";
 
@@ -55,6 +55,7 @@ class RemoteNotification {
     if (fcm.isNotEmpty) {
       return sendFCM(Settings.getGooglePushToken(), uuid, fcm, title, content);
     }
+    logger.w("RemoteNotification - send - no platform find");
     return null;
   }
 
@@ -75,11 +76,11 @@ class RemoteNotification {
       if (result == null) {
         tryTimes++;
       } else if ((result["code"] != null) && (result["code"]?.toString() != "200")) {
-        logger.e("SendPush - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
+        logger.e("RemoteNotification - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
         if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
         tryTimes++;
       } else {
-        logger.i("SendPush - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
+        logger.i("RemoteNotification - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
         break;
       }
     }
@@ -121,7 +122,7 @@ class RemoteNotification {
         );
         // response
         if (response.statusCode == 200) {
-          logger.i("SendPush - sendFCM - success - body:${response.body}");
+          logger.i("RemoteNotification - sendFCM - success - body:${response.body}");
           Map<String, dynamic>? result = jsonDecode(response.body);
           if ((result != null) && (result["results"] is List) && (result["results"].length > 0)) {
             notificationId = result["results"][0]["message_id"]?.toString();
@@ -130,7 +131,7 @@ class RemoteNotification {
           }
           break;
         } else {
-          logger.e("SendPush - sendFCM - fail - code:${response.statusCode} - body:${response.reasonPhrase}");
+          logger.e("RemoteNotification - sendFCM - fail - code:${response.statusCode} - body:${response.reasonPhrase}");
           if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
           tryTimes++;
         }
