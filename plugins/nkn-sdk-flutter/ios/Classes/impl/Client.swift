@@ -230,22 +230,31 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             return
         }
         
-        let nknDests: NkngomobileStringArray? = NkngomobileNewStringArrayFromString(nil)
-        if(!dests.isEmpty) {
-            for dest in dests {
-                nknDests?.append(dest)
-            }
-        }
-        
         clientSendWorkItem = DispatchWorkItem {
             do {
+                let nknDests: NkngomobileStringArray? = NkngomobileNewStringArrayFromString(nil)
+                if(!dests.isEmpty) {
+                    for dest in dests {
+                        nknDests?.append(dest)
+                    }
+                }
+                
                 let config: NknMessageConfig = NknMessageConfig()
                 config.maxHoldingSeconds = maxHoldingSeconds < 0 ? 0 : maxHoldingSeconds
                 config.messageID = NknRandomBytes(Int(NknMessageIDSize), nil)
                 config.noReply = noReply
                 
-                if (!noReply) {
-                    let onMessage: NknOnMessage? = try self.client?.sendText(nknDests, data: data, config: config)
+                let onMessage: NknOnMessage? = try self.client?.sendText(nknDests, data: data, config: config)
+                if (onMessage == nil) {
+                    self.resultSuccess(result: result, resp: nil)
+                    return
+                }
+                if (noReply) {
+                    var resp: [String: Any] = [String: Any]()
+                    resp["messageId"] = config.messageID
+                    self.resultSuccess(result: result, resp: resp)
+                    return
+                } else {
                     guard let msg = onMessage?.next(withTimeout: timeout) else {
                         self.resultSuccess(result: result, resp: nil)
                         return
@@ -257,13 +266,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     resp["type"] = msg.type
                     resp["encrypted"] = msg.encrypted
                     resp["messageId"] = msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil
-                    self.resultSuccess(result: result, resp: resp)
-                    return
-                } else {
-                    try self.client?.sendText(nknDests, data: data, config: config)
-                    
-                    var resp: [String: Any] = [String: Any]()
-                    resp["messageId"] = config.messageID
                     self.resultSuccess(result: result, resp: resp)
                     return
                 }
