@@ -312,20 +312,20 @@ class ClientCommon with Tag {
   void _startListen(WalletSchema wallet) {
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
-      logger.e("$TAG - _startListen - onError -> event:${event.toString()}");
+      logger.e("$TAG - onError -> event:${event.toString()}");
       handleError(event, null, text: "client error");
       await reConnect();
     });
     // client connect (just listen once)
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
-      logger.i("$TAG - _startListen - onConnect -> node:${event.node} - rpcServers:${event.rpcServers}");
+      logger.i("$TAG - onConnect -> node:${event.node} - rpcServers:${event.rpcServers}");
       status = ClientConnectStatus.connected;
       _statusSink.add(ClientConnectStatus.connected);
       RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
     });
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-      logger.d("$TAG - _startListen - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      logger.d("$TAG - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
