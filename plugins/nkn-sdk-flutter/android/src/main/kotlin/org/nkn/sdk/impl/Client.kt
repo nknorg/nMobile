@@ -241,44 +241,45 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        var nknDests: StringArray? = null
-        for (d in dests) {
-            if (nknDests == null) {
-                nknDests = newStringArrayFromString(d)
-            } else {
-                nknDests.append(d)
-            }
-        }
-
-        val config = MessageConfig()
-        config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
-        config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
-        config.noReply = noReply
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (!noReply) {
-                    val onMessage = client?.sendText(nknDests, data, config)
-                    val msg = onMessage?.nextWithTimeout(timeout)
+                var nknDests: StringArray? = null
+                for (d in dests) {
+                    if (nknDests == null) {
+                        nknDests = newStringArrayFromString(d)
+                    } else {
+                        nknDests.append(d)
+                    }
+                }
+
+                val config = MessageConfig()
+                config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
+                config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
+                config.noReply = noReply
+
+                val onMessage = client?.sendText(nknDests, data, config)
+                if (onMessage == null) {
+                    resultSuccess(result, null)
+                    return@launch
+                }
+                if (noReply) {
+                    val resp = hashMapOf(
+                        "messageId" to config.messageID
+                    )
+                    resultSuccess(result, resp)
+                    return@launch
+                } else {
+                    val msg = onMessage.nextWithTimeout(timeout)
                     if (msg == null) {
                         resultSuccess(result, null)
                         return@launch
                     }
-
                     val resp = hashMapOf(
                         "src" to msg.src,
                         "data" to String(msg.data, Charsets.UTF_8),
                         "type" to msg.type,
                         "encrypted" to msg.encrypted,
                         "messageId" to msg.messageID
-                    )
-                    resultSuccess(result, resp)
-                    return@launch
-                } else {
-                    client?.sendText(nknDests, data, config)
-
-                    val resp = hashMapOf(
-                        "messageId" to config.messageID
                     )
                     resultSuccess(result, resp)
                     return@launch
@@ -303,15 +304,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val config = MessageConfig()
-        config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
-        config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
-        config.txPool = txPool
-        config.offset = offset
-        config.limit = limit
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val config = MessageConfig()
+                config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
+                config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
+                config.txPool = txPool
+                config.offset = offset
+                config.limit = limit
+
                 client?.publishText(topic, data, config)
                 val resp = hashMapOf(
                     "messageId" to config.messageID
@@ -338,15 +339,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val transactionConfig = TransactionConfig()
-        transactionConfig.fee = fee
-        if (nonce != null) {
-            transactionConfig.nonce = nonce.toLong()
-            transactionConfig.fixNonce = true
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val transactionConfig = TransactionConfig()
+                transactionConfig.fee = fee
+                if (nonce != null) {
+                    transactionConfig.nonce = nonce.toLong()
+                    transactionConfig.fixNonce = true
+                }
+
                 val hash = client?.subscribe(identifier, topic, duration.toLong(), meta, transactionConfig)
                 resultSuccess(result, hash)
                 return@launch
@@ -368,15 +369,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val transactionConfig = TransactionConfig()
-        transactionConfig.fee = fee
-        if (nonce != null) {
-            transactionConfig.nonce = nonce.toLong()
-            transactionConfig.fixNonce = true
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val transactionConfig = TransactionConfig()
+                transactionConfig.fee = fee
+                if (nonce != null) {
+                    transactionConfig.nonce = nonce.toLong()
+                    transactionConfig.fixNonce = true
+                }
+
                 val hash = client?.unsubscribe(identifier, topic, transactionConfig)
                 resultSuccess(result, hash)
                 return@launch
