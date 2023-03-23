@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
-import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
