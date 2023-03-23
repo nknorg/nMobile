@@ -99,11 +99,11 @@ class ContactCommon with Tag {
     List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : null;
     String myAddress = clientAddress ?? clientCommon.address ?? "";
-    if (contact == null && myAddress.isNotEmpty) {
-      contact = await ContactStorage.instance.queryByClientAddress(clientAddress ?? clientCommon.address);
+    if ((contact == null) && myAddress.isNotEmpty) {
+      contact = await ContactStorage.instance.queryByClientAddress(myAddress);
     }
     if ((contact == null) && myAddress.isNotEmpty && canAdd) {
-      contact = await addByType(clientAddress ?? clientCommon.address, ContactType.me, notify: true, checkDuplicated: false);
+      contact = await addByType(myAddress, ContactType.me, notify: true, checkDuplicated: false);
     }
     if (contact == null) return null;
     if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
