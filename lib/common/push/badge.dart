@@ -6,7 +6,7 @@ import 'package:nmobile/utils/parallel_queue.dart';
 
 class Badge {
   static bool? isEnable;
-  static int _currentCount = 0;
+  static int _count = 0;
 
   static ParallelQueue _queue = ParallelQueue("badge", onLog: (log, error) => error ? logger.w(log) : null);
 
@@ -20,9 +20,9 @@ class Badge {
   static Future refreshCount({int count = 0}) async {
     if (!(await checkEnable())) return;
     _queue.add(() async {
-      _currentCount = count;
-      logger.i("Badge - refreshCount - currentCount:$_currentCount");
-      await _updateCount(_currentCount);
+      _count = count;
+      logger.i("Badge - refreshCount - count:$_count");
+      await _updateCount();
     });
   }
 
@@ -30,9 +30,9 @@ class Badge {
     if (count == 0) return;
     if (!(await checkEnable())) return;
     _queue.add(() async {
-      _currentCount += count;
-      logger.i("Badge - onCountUp - up:$count - currentCount:$_currentCount");
-      await _updateCount(_currentCount);
+      _count += count;
+      logger.i("Badge - onCountUp - up:$count - count:$_count");
+      await _updateCount();
     });
   }
 
@@ -40,19 +40,15 @@ class Badge {
     if (count == 0) return;
     if (!(await checkEnable())) return;
     _queue.add(() async {
-      _currentCount -= count;
-      logger.i("Badge - onCountDown - down:$count currentCount:$_currentCount");
-      await _updateCount(_currentCount);
+      _count -= count;
+      logger.i("Badge - onCountDown - down:$count - count:$_count");
+      await _updateCount();
     });
   }
 
-  static Future _updateCount(int count) async {
+  static Future _updateCount() async {
     if (!(await checkEnable())) return;
-    logger.d("Badge - updateCount - count:$count");
-    if (count < 0) {
-      _currentCount = 0;
-      count = 0;
-    }
-    await Common.updateBadgeCount(count);
+    if (_count < 0) _count = 0;
+    await Common.updateBadgeCount(_count);
   }
 }
