@@ -74,14 +74,14 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       if (clientCommon.isClientOK) {
         if (firstConnect) {
           firstConnect = false;
-          taskService.addTask10(TaskService.KEY_CLIENT_CONNECT, (key) => clientCommon.connectCheck(), delayMs: 5 * 1000);
-          taskService.addTask30(TaskService.KEY_SUBSCRIBE_CHECK, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 1500);
-          taskService.addTask30(TaskService.KEY_PERMISSION_CHECK, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 2000);
+          taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 10, (key) => clientCommon.connectCheck(), delayMs: 5 * 1000);
+          taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
+          taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
       } else if (clientCommon.isClientStop) {
-        taskService.removeTask10(TaskService.KEY_CLIENT_CONNECT);
-        taskService.removeTask30(TaskService.KEY_SUBSCRIBE_CHECK);
-        taskService.removeTask30(TaskService.KEY_PERMISSION_CHECK);
+        taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 10);
+        taskService.removeTask(TaskService.KEY_SUBSCRIBE_CHECK, 50);
+        taskService.removeTask(TaskService.KEY_PERMISSION_CHECK, 50);
         firstConnect = true;
       }
     });
@@ -107,7 +107,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     });
 
     // wallet
-    taskService.addTask60(TaskService.KEY_WALLET_BALANCE, (key) => walletCommon.queryAllBalance(), delayMs: 1000);
+    taskService.addTask(TaskService.KEY_WALLET_BALANCE, 60, (key) => walletCommon.queryAllBalance(), delayMs: 1 * 1000);
   }
 
   @override
