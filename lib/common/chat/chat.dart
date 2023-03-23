@@ -586,11 +586,11 @@ class ChatCommon with Tag {
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
       String senderKey = message.isOutbound ? message.from : (message.isTopic ? message.topic : (message.isPrivateGroup ? message.groupId : message.to));
       if (senderKey.isEmpty) return message;
-      String taskKey = "${TaskService.KEY_MSG_BURNING + keyPrefix}:$senderKey:${message.msgId}";
-      taskService.addTask1(taskKey, (String key) {
+      String taskKey = "${TaskService.KEY_MSG_BURNING_ + keyPrefix}:$senderKey:${message.msgId}";
+      taskService.addTask(taskKey, 1, (String key) {
         if (key != taskKey) {
           // remove others client burning
-          taskService.removeTask1(key);
+          taskService.removeTask(key, 1);
           return;
         }
         if ((message.deleteAt == null) || ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch)) {
@@ -600,7 +600,7 @@ class ChatCommon with Tag {
           logger.v("$TAG - burningTick - delete(tick) - key:$key - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
           // onTick?.call();
           messageCommon.messageDelete(message, notify: true); // await
-          taskService.removeTask1(key);
+          taskService.removeTask(key, 1);
         }
       });
     } else {
