@@ -40,7 +40,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<OnMessage?> sendMsg(List<String> destList, String data) async {
-    logger.v("$TAG - sendMsg - send start - destList:$destList - data:$data");
+    // logger.v("$TAG - sendMsg - send start - destList:$destList - data:$data");
     // dest
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
@@ -76,7 +76,7 @@ class ChatOutCommon with Tag {
 
   Future<List<dynamic>> _sendData(List<String> destList, String data) async {
     if (!(await _waitClientOk())) return [null, true, 100];
-    logger.v("$TAG - _sendData - send start - destList:$destList - data:$data");
+    // logger.v("$TAG - _sendData - send start - destList:$destList - data:$data");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
@@ -124,7 +124,7 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future sendPing(List<String> clientAddressList, bool isPing, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
+  Future sendPing(List<String> clientAddressList, bool isPing, {int gap = 0}) async {
     if (!(await _waitClientOk())) return;
     String? selfAddress = clientCommon.address;
     if (clientAddressList.isEmpty) return;
@@ -133,26 +133,26 @@ class ChatOutCommon with Tag {
     for (int i = 0; i < clientAddressList.length; i++) {
       String address = clientAddressList[i];
       if (address.isEmpty) continue;
-      if (gap <= 0) {
+      if ((address == selfAddress) || (gap <= 0)) {
         destList.add(address);
       } else {
-        if (address == selfAddress) {
-          destList.add(address);
-        } else {
-          DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(address);
-          if (deviceInfo != null) {
-            int timeAt = isPing ? (deviceInfo.pingAt ?? 0) : (deviceInfo.pongAt ?? 0);
-            int interval = DateTime.now().millisecondsSinceEpoch - timeAt;
-            if (interval < gap) continue;
-          }
-          destList.add(address);
+        DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(address);
+        if (deviceInfo != null) {
+          int timeAt = isPing ? (deviceInfo.pingAt ?? 0) : (deviceInfo.pongAt ?? 0);
+          int interval = DateTime.now().millisecondsSinceEpoch - timeAt;
+          if (interval < gap) continue;
         }
+        destList.add(address);
       }
     }
+    if (destList.isEmpty) return;
     // data
     String? data;
-    if ((destList.length == 1) && (destList[0] != selfAddress)) {
-      // just on other
+    if ((destList.length == 1) && (destList[0] == selfAddress)) {
+      // self
+      data = MessageData.getPing(isPing);
+    } else if ((destList.length == 1) && (destList[0] != selfAddress)) {
+      // contact
       ContactSchema? _me = await contactCommon.getMe();
       ContactSchema? _other = await contactCommon.queryByClientAddress(destList[0]);
       bool notificationOpen = _other?.options?.notificationOpen == true;
@@ -164,8 +164,14 @@ class ChatOutCommon with Tag {
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
       );
     } else {
-      // self or group
-      data = MessageData.getPing(isPing);
+      // group
+      ContactSchema? _me = await contactCommon.getMe();
+      data = MessageData.getPing(
+        isPing,
+        profileVersion: _me?.profileVersion,
+        // deviceToken
+        deviceProfile: deviceInfoCommon.getDeviceProfile(),
+      );
     }
     // send
     Uint8List? pid = await _sendWithAddress(destList, data);
@@ -190,7 +196,7 @@ class ChatOutCommon with Tag {
   Future<bool> sendReceipt(MessageSchema received) async {
     if (!(await _waitClientOk())) return false;
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
-    received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
+    // received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId);
     Uint8List? pid = await _sendWithAddress([received.from], data);
     return pid?.isNotEmpty == true;
@@ -227,12 +233,12 @@ class ChatOutCommon with Tag {
   Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    ContactSchema? _me = me ?? await contactCommon.getMe();
+    me = me ?? (await contactCommon.getMe());
     String data;
     if (requestType == ContactRequestType.header) {
-      data = MessageData.getContactProfileResponseHeader(_me?.profileVersion);
+      data = MessageData.getContactProfileResponseHeader(me?.profileVersion);
     } else {
-      data = await MessageData.getContactProfileResponseFull(_me?.profileVersion, _me?.avatar, _me?.firstName, _me?.lastName);
+      data = await MessageData.getContactProfileResponseFull(me?.profileVersion, me?.avatar, me?.firstName, me?.lastName);
     }
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
@@ -684,14 +690,14 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
-  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false, int gapMute = 0}) async {
+  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false, int muteGap = 0}) async {
     if (message == null) return null;
     // sendAt
     if (mute) {
       int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
-      if ((gapMute > 0) && (resendMuteAt > 0)) {
+      if ((muteGap > 0) && (resendMuteAt > 0)) {
         int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
-        if (interval < gapMute) {
+        if (interval < muteGap) {
           logger.i("$TAG - resendMute - resend gap small - targetId:${message.targetId} - interval:$interval");
           return null;
         }
@@ -710,72 +716,62 @@ class ChatOutCommon with Tag {
       }
     }
     // send
-    Function func = () async {
-      if (message == null) return null;
-      String? msgData;
-      switch (message.contentType) {
-        case MessageContentType.text:
-        case MessageContentType.textExtension:
-          msgData = MessageData.getText(message);
-          logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        case MessageContentType.ipfs:
-          msgData = MessageData.getIpfs(message);
-          logger.i("$TAG - resendMute - resend ipfs - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        case MessageContentType.media:
-        case MessageContentType.image:
-          msgData = await MessageData.getImage(message);
-          logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        case MessageContentType.audio:
-          msgData = await MessageData.getAudio(message);
-          logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        case MessageContentType.topicInvitation:
-          msgData = MessageData.getTopicInvitee(message);
-          logger.i("$TAG - resendMute - resend topic invitee - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        case MessageContentType.privateGroupInvitation:
-          msgData = MessageData.getPrivateGroupInvitation(message);
-          logger.i("$TAG - resendMute - resend group invitee - targetId:${message.targetId} - msgData:$msgData");
-          break;
-        default:
-          //   logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
-          //   int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-          //   return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
-          return null;
+    String? msgData;
+    switch (message.contentType) {
+      case MessageContentType.text:
+      case MessageContentType.textExtension:
+        msgData = MessageData.getText(message);
+        logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.ipfs:
+        msgData = MessageData.getIpfs(message);
+        logger.i("$TAG - resendMute - resend ipfs - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.media:
+      case MessageContentType.image:
+        msgData = await MessageData.getImage(message);
+        logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.audio:
+        msgData = await MessageData.getAudio(message);
+        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.topicInvitation:
+        msgData = MessageData.getTopicInvitee(message);
+        logger.i("$TAG - resendMute - resend topic invitee - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      case MessageContentType.privateGroupInvitation:
+        msgData = MessageData.getPrivateGroupInvitation(message);
+        logger.i("$TAG - resendMute - resend group invitee - targetId:${message.targetId} - msgData:$msgData");
+        break;
+      default:
+        // wrong here
+        // logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
+        // int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
+        // return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
+        return null;
+    }
+    if (mute) {
+      // notification
+      bool notification;
+      if (message.isTopic || message.isPrivateGroup) {
+        notification = false;
+      } else {
+        bool noReceipt = message.status < MessageStatus.Receipt;
+        String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
+        notification = noReceipt && pushNotifyId.isEmpty;
       }
-      if (mute) {
-        // notification
-        bool notification;
-        if (message.isTopic || message.isPrivateGroup) {
-          notification = false;
-        } else {
-          bool sendNoReply = message.status < MessageStatus.Receipt;
-          String pushNotifyId = MessageOptions.getPushNotifyId(message.options) ?? "";
-          notification = sendNoReply && pushNotifyId.isEmpty;
-        }
-        // send_mute
-        MessageSchema? result = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
-        if (result != null) {
-          var options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
-          bool optionsOK = await messageCommon.updateMessageOptions(result, options, reQuery: true, notify: false);
-          if (optionsOK) result.options = options;
-        }
-        return result;
+      // send_mute
+      MessageSchema? result = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
+      if (result != null) {
+        var options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
+        bool optionsOK = await messageCommon.updateMessageOptions(result, options, reQuery: true, notify: false);
+        if (optionsOK) result.options = options;
       }
-      // send
-      return await _send(message, msgData, insert: false);
-    };
-    return await _sendQueue.add(() async {
-      try {
-        return await func();
-      } catch (e, st) {
-        handleError(e, st);
-      }
-      return null;
-    }, id: message.msgId);
+      return result;
+    }
+    // send
+    return await _send(message, msgData, insert: false);
   }
 
   Future<MessageSchema?> insertMessage(MessageSchema? message, {bool notify = true}) async {
@@ -835,13 +831,10 @@ class ChatOutCommon with Tag {
         logger.w("$TAG - _send - pid = null - message:$message");
         if (message.canResend) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
-        } else if (message.canDisplay) {
+        } else {
           // noResend just delete
           int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
           if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
-          return null;
-        } else {
-          // nothing
           return null;
         }
       }
@@ -1095,7 +1088,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> _sendPiece(List<String> clientAddressList, MessageSchema message, {double percent = -1}) async {
-    // if (!clientCommon.isClientCreated || clientCommon.clientClosing) return null;
+    if (!(await _waitClientOk())) return null;
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendMsg(clientAddressList, data);
     if ((onResult == null) || onResult.messageId.isEmpty) return null;
