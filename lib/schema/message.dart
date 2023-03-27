@@ -139,13 +139,13 @@ class MessageSchema {
 
   // ++ resend
   bool get canResend {
-    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
-    return canBurning || isEvent;
+    return canBurning;
   }
 
   // ++ receipt
   bool get canReceipt {
-    return canResend;
+    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
+    return canResend || isEvent;
   }
 
   // ++ unReadCount / notification
@@ -229,7 +229,7 @@ class MessageSchema {
     // options
     if (schema.options == null) schema.options = Map();
     String? deviceId = data["deviceId"];
-    if (deviceId != null && deviceId.isNotEmpty) {
+    if ((deviceId != null) && deviceId.isNotEmpty) {
       schema.options = MessageOptions.setDeviceId(schema.options, deviceId);
     }
     return schema;
@@ -345,6 +345,12 @@ class MessageSchema {
       this.options?[MessageOptions.KEY_PIECE_PARITY] = parity;
       this.options?[MessageOptions.KEY_PIECE_INDEX] = index;
     }
+    // SUPPORT:START
+    double? audioDurationS = extra?["audioDurationS"];
+    if (audioDurationS != null && audioDurationS >= 0) {
+      options?["audioDuration"] = audioDurationS;
+    }
+    // SUPPORT:END
   }
 
   /// to sqlite
@@ -586,8 +592,8 @@ class MessageSchema {
 }
 
 class MessageOptions {
-  static const KEY_SEND_SUCCESS_AT = "sendSuccessAt";
-  static const KEY_RESEND_MUTE_AT = "resendMuteAt";
+  static const KEY_SEND_SUCCESS_AT = "sendSuccessAt"; // native
+  static const KEY_RESEND_MUTE_AT = "resendMuteAt"; // native
 
   static const KEY_PROFILE_VERSION = "profileVersion";
   static const KEY_DEVICE_ID = "deviceId";
@@ -598,7 +604,7 @@ class MessageOptions {
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
 
-  static const KEY_PUSH_NOTIFY_ID = "pushNotifyId";
+  static const KEY_PUSH_NOTIFY_ID = "pushNotifyId"; // native
 
   static const KEY_FILE_TYPE = "fileType";
   static const fileTypeNormal = 0;
@@ -613,14 +619,14 @@ class MessageOptions {
   static const KEY_MEDIA_WIDTH = "mediaWidth";
   static const KEY_MEDIA_HEIGHT = "mediaHeight";
   static const KEY_MEDIA_DURATION = "mediaDuration";
-  static const KEY_MEDIA_THUMBNAIL = "mediaThumbnail";
+  static const KEY_MEDIA_THUMBNAIL = "mediaThumbnail"; // native
 
-  static const KEY_IPFS_STATE = "ipfsState";
+  static const KEY_IPFS_STATE = "ipfsState"; // native
   static const ipfsStateNo = 0;
   static const ipfsStateIng = 1;
   static const ipfsStateYes = 2;
 
-  static const KEY_IPFS_THUMBNAIL_STATE = "ipfsThumbnailState";
+  static const KEY_IPFS_THUMBNAIL_STATE = "ipfsThumbnailState"; // native
   static const ipfsThumbnailStateNo = 0;
   static const ipfsThumbnailStateIng = 1;
   static const ipfsThumbnailStateYes = 2;
@@ -1021,13 +1027,13 @@ class MessageData {
       'content': isPing ? "ping" : "pong",
     });
     if (data['options'] == null) data['options'] = Map();
-    if (profileVersion != null && profileVersion.isNotEmpty) {
+    if ((profileVersion != null) && profileVersion.isNotEmpty) {
       data['options'][MessageOptions.KEY_PROFILE_VERSION] = profileVersion;
     }
-    if (deviceToken != null && deviceToken.isNotEmpty) {
+    if ((deviceToken != null) && deviceToken.isNotEmpty) {
       data['options'][MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
     }
-    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+    if ((deviceProfile != null) && deviceProfile.isNotEmpty) {
       data['options'][MessageOptions.KEY_DEVICE_PROFILE] = deviceProfile;
     }
     return jsonEncode(data);
