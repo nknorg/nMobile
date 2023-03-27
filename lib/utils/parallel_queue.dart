@@ -157,8 +157,8 @@ class ParallelQueue {
       _lastProcessId++;
       Completer c = Completer();
       item.onComplete = (timeout) async {
-        this.onLog?.call("ParallelQueue - _onQueueNext - ${timeout ? "timeout" : "complete"} - tag:$tag - _lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - id:${item.id}", timeout);
         _activeItems.remove(processId);
+        this.onLog?.call("ParallelQueue - _onQueueNext - ${timeout ? "timeout" : "complete"} - tag:$tag - _lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - id:${item.id}", timeout);
         if (interval != null) await Future.delayed(interval!);
         c.complete();
       };
