@@ -327,6 +327,9 @@ class MessageSchema {
     double? duration = double.tryParse(extra?["duration"]?.toString() ?? "");
     if (duration != null && duration >= 0) {
       this.options = MessageOptions.setMediaDuration(this.options, duration);
+      // SUPPORT:START
+      options?["audioDuration"] = duration;
+      // SUPPORT:END
     }
     String? thumbnailPath = extra?["thumbnailPath"];
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
@@ -345,12 +348,6 @@ class MessageSchema {
       this.options?[MessageOptions.KEY_PIECE_PARITY] = parity;
       this.options?[MessageOptions.KEY_PIECE_INDEX] = index;
     }
-    // SUPPORT:START
-    double? audioDurationS = extra?["audioDurationS"];
-    if (audioDurationS != null && audioDurationS >= 0) {
-      options?["audioDuration"] = audioDurationS;
-    }
-    // SUPPORT:END
   }
 
   /// to sqlite
@@ -1142,7 +1139,7 @@ class MessageData {
       'appName': info.appName,
       'appVersion': info.appVersion,
       'platform': info.platform,
-      'platformVersion': info.platform,
+      'platformVersion': info.platformVersion,
       'deviceToken': info.deviceToken,
     });
     return jsonEncode(data);

@@ -140,7 +140,7 @@ class ChatInCommon with Tag {
         insertOk = await _receiveContactOptions(received, contact, deviceInfo);
         break;
       case MessageContentType.deviceRequest:
-        await _receiveDeviceRequest(received, contact, deviceInfo); // need interval
+        await _receiveDeviceRequest(received, contact);
         break;
       case MessageContentType.deviceInfo:
         await _receiveDeviceInfo(received, contact);
@@ -465,7 +465,8 @@ class ChatInCommon with Tag {
       String deviceToken = content['deviceToken']?.toString() ?? "";
       if (deviceInfo?.deviceToken != deviceToken) {
         logger.i("$TAG - _receiveContactOptions - setDeviceToken - deviceToken:$deviceToken - data:$data");
-        await deviceInfoCommon.setDeviceToken(deviceInfo?.contactAddress, deviceInfo?.deviceId, deviceToken);
+        bool success = await deviceInfoCommon.setDeviceToken(deviceInfo?.contactAddress, deviceInfo?.deviceId, deviceToken);
+        if (!success) return false;
       } else {
         logger.i("$TAG - _receiveContactOptions - deviceToken same - deviceToken:$deviceToken - data:$data");
       }
@@ -482,15 +483,13 @@ class ChatInCommon with Tag {
   }
 
   // NO DB NO display
-  Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? deviceInfo) async {
+  Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact) async {
     if (contact == null) {
       logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
       return false;
     }
     bool notificationOpen = contact.options?.notificationOpen ?? false;
-    if ((deviceInfo == null) || (notificationOpen && ((deviceInfo.deviceToken == null) || (deviceInfo.deviceToken?.isEmpty == true)))) {
-      deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
-    }
+    DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
     if (deviceInfo == null) return false;
     chatOutCommon.sendDeviceInfo(contact.clientAddress, deviceInfo, notificationOpen); // await
     return true;
@@ -505,10 +504,12 @@ class ChatInCommon with Tag {
     // data
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
-    String? appName = data["appName"];
-    String? appVersion = data["appVersion"];
-    String? platform = data["platform"];
-    String? platformVersion = data["platformVersion"];
+    String? deviceId = data["deviceId"]?.toString();
+    String? deviceToken = data["deviceToken"]?.toString();
+    String? appName = data["appName"]?.toString();
+    String? appVersion = data["appVersion"]?.toString();
+    String? platform = data["platform"]?.toString();
+    String? platformVersion = data["platformVersion"]?.toString();
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
     // exist
     DeviceInfoSchema? exists = await deviceInfoCommon.queryByDeviceId(contact.clientAddress, data["deviceId"]);
@@ -516,8 +517,8 @@ class ChatInCommon with Tag {
     if (exists == null) {
       DeviceInfoSchema deviceInfo = DeviceInfoSchema(
         contactAddress: contact.clientAddress,
-        deviceId: data["deviceId"] ?? "",
-        deviceToken: data["deviceToken"],
+        deviceId: deviceId ?? "",
+        deviceToken: deviceToken,
         onlineAt: DateTime.now().millisecondsSinceEpoch,
         data: newData,
       );
@@ -532,8 +533,7 @@ class ChatInCommon with Tag {
       if (success) exists.data = newData;
     }
     // update_token
-    String? deviceToken = data["deviceToken"];
-    if (exists.deviceToken != deviceToken) {
+    if ((exists.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
       bool success = await deviceInfoCommon.setDeviceToken(exists.contactAddress, exists.deviceId, deviceToken);
       if (success) exists.deviceToken = deviceToken;
     }
