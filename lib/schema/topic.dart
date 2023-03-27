@@ -234,11 +234,11 @@ class TopicSchema {
     return lastRefreshSubscribersAt ?? 0;
   }
 
-  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minBetween = 5 * 60 * 1000}) {
+  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minInterval = 5 * 60 * 1000}) {
     if (subscribersCount <= minRefreshCount) return false;
-    int needBetween = subscribersCount * (5 * 60 * 1000); // 300s * count
-    if (needBetween < minBetween) needBetween = minBetween;
-    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needBetween) return false;
+    int needInterval = subscribersCount * (5 * 60 * 1000); // 300s * count
+    if (needInterval < minInterval) needInterval = minInterval;
+    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needInterval) return false;
     return true;
   }
 
