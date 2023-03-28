@@ -765,7 +765,7 @@ class ChatOutCommon with Tag {
       MessageSchema? result = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
       if (result != null) {
         result.options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
-        await messageCommon.updateMessageOptions(result, result.options, reQuery: true, notify: false);
+        await messageCommon.updateMessageOptions(result, result.options, notify: false);
       }
       return result;
     }
@@ -820,7 +820,7 @@ class ChatOutCommon with Tag {
     if (statusSync) {
       if (pid?.isNotEmpty == true) {
         if (message.canReceipt) {
-          messageCommon.updateMessageStatus(message, MessageStatus.Success, reQuery: true); // await
+          messageCommon.updateMessageStatus(message, MessageStatus.Success); // await
         } else {
           // no received receipt/read
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
@@ -876,7 +876,7 @@ class ChatOutCommon with Tag {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
             if (!pushOk && (uuid != null) && uuid.isNotEmpty) {
               message.options = MessageOptions.setPushNotifyId(message.options, uuid);
-              bool optionsOK = await messageCommon.updateMessageOptions(message, message.options, reQuery: true, notify: false);
+              bool optionsOK = await messageCommon.updateMessageOptions(message, message.options, notify: false);
               if (optionsOK) pushOk = true;
             }
           }

@@ -90,7 +90,8 @@ class Settings {
   static const int timeoutPingSessionOnlineMs = 5 * 24 * 60 * 60 * 1000; // 5d
   static const int timeoutGroupInviteMs = 7 * 24 * 60 * 60 * 1000; // 7d
   static const int timeoutDeviceTokensDay = 5; // 5d
-  static const int timeoutIpfsThumbnailDownloadMs = 7 * 24 * 60 * 60 * 1000; // 7d
+  static const int timeoutIpfsResetTimeoutMs = 30 * 24 * 60 * 60 * 1000; // 30d
+  static const int timeoutIpfsThumbnailAutoDownloadMs = 7 * 24 * 60 * 60 * 1000; // 7d
   // tryTimes
   static const int tryTimesClientConnectWait = 10;
   static const int tryTimesMsgSend = 10;
