@@ -23,7 +23,7 @@ class MessageStatus {
   static const int Success = 120; // out
   static const int Receipt = 130; // out
   static const int Received = 200; // in
-  static const int Read = 310; // all
+  static const int Read = 310; // out+in
 }
 
 class MessageContentType {

@@ -77,11 +77,11 @@ class MessageCommon with Tag {
     return success;
   }
 
-  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool reQuery = false, int? receiveAt, bool force = false, bool notify = true}) async {
-    if (reQuery) {
-      MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
-      if (_latest != null) message = _latest;
-    }
+  Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool force = false, int? receiveAt, bool notify = true}) async {
+    // re_query
+    MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
+    if (_latest != null) message = _latest;
+    // check
     if ((status <= message.status) && !force) {
       if (status != message.status) {
         logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
@@ -93,9 +93,8 @@ class MessageCommon with Tag {
     if (success) {
       message.status = status;
       if (message.status == MessageStatus.Success) {
-        var options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
-        bool optionsOK = await updateMessageOptions(message, message.options, notify: false);
-        if (optionsOK) message.options = options;
+        message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
+        await updateMessageOptions(message, message.options, notify: false);
       }
       if (notify) onUpdateSink.add(message);
     }
@@ -111,12 +110,12 @@ class MessageCommon with Tag {
     return message;
   }
 
-  Future<bool> updateMessageOptions(MessageSchema? message, Map<String, dynamic>? options, {bool reQuery = false, bool notify = false}) async {
+  Future<bool> updateMessageOptions(MessageSchema? message, Map<String, dynamic>? options, {bool notify = true}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    if (reQuery) {
-      MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
-      if (_latest != null) message = _latest;
-    }
+    // re_query
+    MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
+    if (_latest != null) message = _latest;
+    // update
     bool success = await MessageStorage.instance.updateOptions(message.msgId, options);
     if (success) {
       message.options = options;
@@ -132,6 +131,7 @@ class MessageCommon with Tag {
     List<MessageSchema> unreadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, groupId, offset: offset, limit: limit);
+      // result.removeWhere((element) => element.isOutbound);
       unreadList.addAll(result);
       if (result.length < limit) break;
     }
