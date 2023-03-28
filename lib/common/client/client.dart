@@ -218,11 +218,10 @@ class ClientCommon with Tag {
     }
     // common
     try {
-      bool reset = (_lastLoginClientAddress != null) && (_lastLoginClientAddress != wallet.publicKey);
+      bool reset = (_lastLoginClientAddress == null) || (_lastLoginClientAddress != wallet.publicKey);
       await chatCommon.reset(wallet.address, reset: reset);
       await chatInCommon.start(reset: reset);
       await chatOutCommon.start(reset: reset);
-      _lastLoginClientAddress = client?.address;
     } catch (e, st) {
       handleError(e, st, toast: false);
       return {"client": null, "canTry": false, "password": password, "text": "reset error"};
@@ -246,6 +245,7 @@ class ClientCommon with Tag {
       handleError(e, st, toast: false);
       return {"client": null, "canTry": true, "password": password, "text": getErrorShow(e)};
     }
+    _lastLoginClientAddress = client?.address;
     // status no update (updated by ping/pang)
     connectCheck(); // await
     return {"client": client, "canTry": true, "password": password};

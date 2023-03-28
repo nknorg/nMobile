@@ -764,9 +764,8 @@ class ChatOutCommon with Tag {
       // send_mute
       MessageSchema? result = await _send(message, msgData, insert: false, sessionSync: false, statusSync: false, notification: notification);
       if (result != null) {
-        var options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
-        bool optionsOK = await messageCommon.updateMessageOptions(result, options, reQuery: true, notify: false);
-        if (optionsOK) result.options = options;
+        result.options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
+        await messageCommon.updateMessageOptions(result, result.options, reQuery: true, notify: false);
       }
       return result;
     }
@@ -876,8 +875,8 @@ class ChatOutCommon with Tag {
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
             if (!pushOk && (uuid != null) && uuid.isNotEmpty) {
-              var options = MessageOptions.setPushNotifyId(message.options, uuid);
-              bool optionsOK = await messageCommon.updateMessageOptions(message, options, reQuery: true, notify: false);
+              message.options = MessageOptions.setPushNotifyId(message.options, uuid);
+              bool optionsOK = await messageCommon.updateMessageOptions(message, message.options, reQuery: true, notify: false);
               if (optionsOK) pushOk = true;
             }
           }
