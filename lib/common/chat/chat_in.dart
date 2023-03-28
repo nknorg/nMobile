@@ -233,7 +233,7 @@ class ChatInCommon with Tag {
       chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongPingMs); // await
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - check resend - received:$received");
-      // nothing
+      // nothing TODO:GG deviceInfo+profileVersion+deviceToken????
     } else {
       logger.e("$TAG - _receivePing - content content error - received:$received");
       return false;
@@ -292,7 +292,7 @@ class ChatInCommon with Tag {
       int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
       await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
     }
-    // TODO:GG 会导致有的没发过去，但这里显示read，check时被遗漏，所以需要加吗？可以看看新版需要怎么做
+    // FUTURE:GG msgStatus 会导致有的没发过去，但这里显示read，check时被遗漏，所以需要加吗？可以看看新版需要怎么做
     // read history
     // msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
     // int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
