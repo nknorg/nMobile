@@ -113,19 +113,18 @@ class MessageCommon with Tag {
     return message;
   }
 
-  Future<bool> updateMessageOptions(MessageSchema? message, Map<String, dynamic>? options, {bool notify = true}) async {
+  Future<bool> updateMessageOptions(MessageSchema? message, Map<String, dynamic>? added, {bool notify = true}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    // re_query
-    MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
-    if (_latest != null) message = _latest;
-    // update
-    logger.d("$TAG - updateMessageOptions - new:$options - old:${message.options} - msgId:${message.msgId}");
-    bool success = await MessageStorage.instance.updateOptions(message.msgId, options);
-    if (success) {
+    logger.d("$TAG - updateMessageOptions - start - add:$added - old:${message.options} - msgId:${message.msgId}");
+    Map<String, dynamic>? options = await MessageStorage.instance.updateOptions(message.msgId, added);
+    if (options != null) {
+      logger.d("$TAG - updateMessageOptions - end success - new:$options - msgId:${message.msgId}");
       message.options = options;
       if (notify) onUpdateSink.add(message);
+    } else {
+      logger.w("$TAG - updateMessageOptions - end fail - add:$added - old:${message.options} - msgId:${message.msgId}");
     }
-    return success;
+    return options != null;
   }
 
   Future<int> readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {

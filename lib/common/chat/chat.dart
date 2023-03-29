@@ -498,7 +498,7 @@ class ChatCommon with Tag {
     } else {
       exist = await sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp);
     }
-    // badge TODO:GG test
+    // badge TODO:GG test?
     if ((exist != null) && !message.isOutbound && message.canNotification) {
       if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
         Badge.onCountUp(1); // await
@@ -872,7 +872,7 @@ class ChatCommon with Tag {
     List<String> fileIds = [];
     fileDownloadIds.forEach((element) => fileIds.add(element.toString()));
     if (fileIds.isEmpty) {
-      logger.d("$TAG - resetIpfsDownloading - file - fileIds:${fileIds.toString()}");
+      logger.v("$TAG - resetIpfsDownloading - file - fileIds:${fileIds.toString()}");
     } else {
       logger.i("$TAG - resetIpfsDownloading - file - fileIds:${fileIds.toString()}");
     }
@@ -900,7 +900,7 @@ class ChatCommon with Tag {
     List<String> thumbnailIds = [];
     thumbnailDownloadIds.forEach((element) => thumbnailIds.add(element.toString()));
     if (thumbnailIds.isEmpty) {
-      logger.d("$TAG - resetIpfsDownloading - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
+      logger.v("$TAG - resetIpfsDownloading - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
     } else {
       logger.i("$TAG - resetIpfsDownloading - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
     }
@@ -940,7 +940,7 @@ class ChatCommon with Tag {
     String key = "IPFS_${type}_DOWNLOAD_PROGRESS_IDS_$walletAddress";
     List ids = (await SettingsStorage.getSettings(key)) ?? [];
     List<String> idsStr = ids.map((e) => e.toString()).toList();
-    logger.d("$TAG - _onIpfsDownload - start - key:$key - ids:${idsStr.toString()}");
+    logger.v("$TAG - _onIpfsDownload - start - key:$key - ids:${idsStr.toString()}");
     if (completed) {
       idsStr.remove(msgId.trim());
     } else {
@@ -948,7 +948,7 @@ class ChatCommon with Tag {
       if (index < 0) idsStr.add(msgId.trim());
     }
     await SettingsStorage.setSettings(key, idsStr);
-    logger.d("$TAG - _onIpfsDownload - end - key:$key - ids:${idsStr.toString()}");
+    logger.v("$TAG - _onIpfsDownload - end - key:$key - ids:${idsStr.toString()}");
     return idsStr;
   }
 }

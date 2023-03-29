@@ -219,7 +219,7 @@ class ChatInCommon with Tag {
   Future<bool> _receivePing(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out)
     if ((received.from == received.to) || (received.from == clientCommon.address)) {
-      logger.d("$TAG - _receivePing - ping self receive - received:$received");
+      logger.v("$TAG - _receivePing - ping self receive - received:$received");
       // clientCommon.connectSuccess(); handle in client onMessage
       return true;
     }
@@ -233,7 +233,7 @@ class ChatInCommon with Tag {
       chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongPingMs); // await
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive pong - received:$received");
-      // nothing TODO:GG deviceInfo+profileVersion+deviceToken??
+      // nothing TODO:GG deviceInfo+profileVersion+deviceToken???
       // TODO:GG 需要吗？好好看看
       // TODO:GG 还有就是测消息收发，多场景+ios测(包括脚本)!!!
       // TODO:GG 顺便测session

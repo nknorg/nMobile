@@ -154,7 +154,7 @@ class MediaPicker {
         }
         pickedMaps.add(params);
       }
-      logger.i("MediaPicker - pickCommons - picked success - entity${entity.toString()}");
+      logger.i("MediaPicker - pickCommons - picked success - params:$pickedMaps");
     }
     return pickedMaps;
   }
