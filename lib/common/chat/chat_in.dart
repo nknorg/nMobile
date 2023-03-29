@@ -229,13 +229,16 @@ class ChatInCommon with Tag {
     }
     String content = received.content as String;
     if (content == "ping") {
-      logger.i("$TAG - _receivePing - receive pang - received:$received");
+      logger.i("$TAG - _receivePing - receive ping - received:$received");
       chatOutCommon.sendPing([received.from], false, gap: Settings.gapPongPingMs); // await
     } else if (content == "pong") {
-      logger.i("$TAG - _receivePing - check resend - received:$received");
-      // nothing TODO:GG deviceInfo+profileVersion+deviceToken????
+      logger.i("$TAG - _receivePing - receive pong - received:$received");
+      // nothing TODO:GG deviceInfo+profileVersion+deviceToken??
+      // TODO:GG 需要吗？好好看看
+      // TODO:GG 还有就是测消息收发，多场景+ios测(包括脚本)!!!
+      // TODO:GG 顺便测session
     } else {
-      logger.e("$TAG - _receivePing - content content error - received:$received");
+      logger.e("$TAG - _receivePing - content wrong - received:$received");
       return false;
     }
     return true;
@@ -286,6 +289,7 @@ class ChatInCommon with Tag {
     List<String> msgIds = readIds.map((e) => e?.toString() ?? "").toList();
     List<MessageSchema> msgList = await MessageStorage.instance.queryListByIdsNoContentType(msgIds, MessageContentType.piece);
     if (msgList.isEmpty) return true;
+    logger.i("$TAG - _receiveRead - count:${msgList.length} - received:$received");
     // update
     for (var i = 0; i < msgList.length; i++) {
       MessageSchema message = msgList[i];
@@ -381,7 +385,7 @@ class ChatInCommon with Tag {
   // NO DB NO display (1 to 1)
   Future<bool> _receiveContact(MessageSchema received, ContactSchema? contact) async {
     if (contact == null) {
-      logger.e("$TAG - receiveContact - contact is empty - received:$received");
+      logger.e("$TAG - _receiveContact - contact is empty - received:$received");
       return false;
     }
     // D-Chat NO RequestType.header
@@ -394,18 +398,21 @@ class ChatInCommon with Tag {
     if ((requestType?.isNotEmpty == true) || (requestType == null && responseType == null && version == null)) {
       // need reply
       if (requestType == ContactRequestType.header) {
+        logger.i("$TAG - _receiveContact - response head - message:$received");
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header); // await
       } else {
+        logger.i("$TAG - _receiveContact - response full - message:$received");
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full); // await
       }
     } else {
       // need request/save
       if (!contactCommon.isProfileVersionSame(contact.profileVersion, version)) {
         if (responseType != ContactRequestType.full && content == null) {
+          logger.i("$TAG - _receiveContact - request full - message:$received");
           chatOutCommon.sendContactProfileRequest(contact.clientAddress, ContactRequestType.full, contact.profileVersion); // await
         } else {
           if (content == null) {
-            logger.e("$TAG - receiveContact - content is empty - data:$data");
+            logger.e("$TAG - _receiveContact - content is empty - data:$data");
             return false;
           }
           String? firstName = content['first_name'] ?? content['name'];
@@ -427,11 +434,11 @@ class ChatInCommon with Tag {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
           await contactCommon.setOtherProfile(contact, version, Path.convert2Local(avatar?.path), firstName, lastName, notify: true);
-          logger.i("$TAG - receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
+          logger.i("$TAG - _receiveContact - setProfile - firstName:$firstName - avatar:${avatar?.path} - version:$version - data:$data");
           // }
         }
       } else {
-        logger.d("$TAG - receiveContact - profile version same - contact:$contact - data:$data");
+        logger.d("$TAG - _receiveContact - profile version same - contact:$contact - data:$data");
       }
     }
     return true;
@@ -523,17 +530,19 @@ class ChatInCommon with Tag {
         data: newData,
       );
       exists = await deviceInfoCommon.add(deviceInfo, checkDuplicated: false);
-      logger.i("$TAG - _receiveDeviceInfo - add - deviceInfo:$exists - data:$data");
+      logger.w("$TAG - _receiveDeviceInfo - add(wrong here) - deviceInfo:$exists - data:$data");
       return exists != null;
     }
     // update_data
     bool sameProfile = (appName == exists.appName) && (appVersion == exists.appVersion.toString()) && (platform == exists.platform) && (platformVersion == exists.platformVersion.toString());
     if (!sameProfile) {
+      logger.i("$TAG - _receiveDeviceInfo - profile update - newData:$newData - oldData:${exists.data}");
       bool success = await deviceInfoCommon.setData(exists.contactAddress, exists.deviceId, newData);
       if (success) exists.data = newData;
     }
     // update_token
     if ((exists.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
+      logger.i("$TAG - _receiveDeviceInfo - deviceToken update - new:$deviceToken - old${exists.deviceToken}");
       bool success = await deviceInfoCommon.setDeviceToken(exists.contactAddress, exists.deviceId, deviceToken);
       if (success) exists.deviceToken = deviceToken;
     }
@@ -541,19 +550,18 @@ class ChatInCommon with Tag {
     int nowAt = DateTime.now().millisecondsSinceEpoch;
     bool success = await deviceInfoCommon.setOnlineAt(exists.contactAddress, exists.deviceId, onlineAt: nowAt);
     if (success) exists.onlineAt = nowAt;
-    logger.i("$TAG - _receiveDeviceInfo - update - deviceInfo:$exists - data:$data");
     return true;
   }
 
   Future<bool> _receiveText(MessageSchema received) async {
     if (received.content == null) {
-      logger.e("$TAG - receiveText - content null - message:$received");
+      logger.e("$TAG - _receiveText - content null - message:$received");
       return false;
     }
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
-      logger.d("$TAG - receiveText - duplicated - message:$exists");
+      logger.d("$TAG - _receiveText - duplicated - message:$exists");
       return false;
     }
     // DB
@@ -603,7 +611,7 @@ class ChatInCommon with Tag {
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
-      logger.d("$TAG - receiveImage - duplicated - message:$exists");
+      logger.d("$TAG - _receiveImage - duplicated - message:$exists");
       return false;
     }
     // File
@@ -611,7 +619,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - receiveImage - content is null - message:$exists");
+      logger.e("$TAG - _receiveImage - content is null - message:$exists");
       return false;
     }
     // DB
@@ -632,7 +640,7 @@ class ChatInCommon with Tag {
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
-      logger.d("$TAG - receiveAudio - duplicated - message:$exists");
+      logger.d("$TAG - _receiveAudio - duplicated - message:$exists");
       return false;
     }
     // File
@@ -640,7 +648,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - receiveAudio - content is null - message:$exists");
+      logger.e("$TAG - _receiveAudio - content is null - message:$exists");
       return false;
     }
     // DB
@@ -663,7 +671,7 @@ class ChatInCommon with Tag {
     // combined duplicated
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByIdContentType(received.msgId, parentType, limit: 1);
     if (existsCombine.isNotEmpty) {
-      logger.d("$TAG - receivePiece - combine exists - index:$index - message:$existsCombine");
+      logger.d("$TAG - _receivePiece - combine exists - index:$index - message:$existsCombine");
       // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
@@ -679,7 +687,7 @@ class ChatInCommon with Tag {
     }
     // add
     if (piece != null) {
-      logger.d("$TAG - receivePiece - piece duplicated - receive:$received - exist:$piece");
+      logger.d("$TAG - _receivePiece - piece duplicated - receive:$received - exist:$piece");
     } else {
       // received.status = MessageStatus.Read; // modify in before
       received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.cache, fileExt: ext ?? parentType));
@@ -687,31 +695,31 @@ class ChatInCommon with Tag {
       if (piece != null) {
         pieces.add(piece);
       } else {
-        logger.w("$TAG - receivePiece - piece added null - message:$received");
+        logger.w("$TAG - _receivePiece - piece added null - message:$received");
       }
     }
-    logger.v("$TAG - receivePiece - progress:$total/${pieces.length}/${total + parity}");
+    logger.d("$TAG - _receivePiece - progress:$total/${pieces.length}/${total + parity}");
     if (pieces.length < total || bytesLength <= 0) return false;
-    logger.i("$TAG - receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
+    logger.i("$TAG - _receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     // combine
     String? base64String = await MessageSchema.combinePiecesData(pieces, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
-        logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty and delete pieces");
         await _deletePieces(received.msgId); // delete wrong pieces
       } else {
-        logger.e("$TAG - receivePiece - COMBINE:FAIL - base64String is empty");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty");
       }
       return false;
     }
     MessageSchema? combine = MessageSchema.combinePiecesMsg(pieces, base64String);
     if (combine == null) {
-      logger.e("$TAG - receivePiece - COMBINE:FAIL - message combine is empty");
+      logger.e("$TAG - _receivePiece - COMBINE:FAIL - message combine is empty");
       return false;
     }
     // combine.content - handle later
-    logger.i("$TAG - receivePiece - COMBINE:SUCCESS - combine:$combine");
+    logger.i("$TAG - _receivePiece - COMBINE:SUCCESS - combine:$combine");
     onMessageReceive(combine, needFast: true); // await
     return true;
   }
@@ -943,7 +951,7 @@ class ChatInCommon with Tag {
       pieces.addAll(result);
       if (result.length < limit) break;
     }
-    logger.i("$TAG - _deletePieces - delete pieces file - pieces_count:${pieces.length}");
+    logger.i("$TAG - _deletePieces - DELETE:START - pieces_count:${pieces.length}");
     int count = 0;
     int result = await MessageStorage.instance.deleteByIdContentType(msgId, MessageContentType.piece);
     if (result > 0) {
