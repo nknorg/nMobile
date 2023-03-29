@@ -93,18 +93,19 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId ?? "");
   }
 
-  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = 1, int days = 10}) async {
+  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = Settings.maxCountPushDevices, int days = Settings.timeoutDeviceTokensDay}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
-    int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
     List<DeviceInfoSchema> schemaList = await queryLatestList(contactAddress, limit: max);
+    int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
     for (int i = 0; i < schemaList.length; i++) {
       DeviceInfoSchema schema = schemaList[i];
+      String deviceToken = schema.deviceToken?.trim() ?? "";
+      if (deviceToken.isEmpty) continue;
       if (tokens.isNotEmpty) {
         if (schema.onlineAt < minOnlineAt) continue;
       }
-      String deviceToken = schema.deviceToken?.trim() ?? "";
-      if (deviceToken.isNotEmpty && !tokens.contains(deviceToken)) {
+      if (!tokens.contains(deviceToken)) {
         tokens.add(deviceToken);
       }
     }
@@ -140,9 +141,11 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.setPongAt(contactAddress, deviceId, pongAt: pongAt);
   }
 
-  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? newData) async {
+  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? added) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    return await DeviceInfoStorage.instance.setData(contactAddress, deviceId, newData);
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, added);
+    logger.d("$TAG - setData - add:$added - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    return data != null;
   }
 
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
