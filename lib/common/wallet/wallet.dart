@@ -82,7 +82,7 @@ class WalletCommon with Tag {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     var state = _walletBloc.state;
     if (state is WalletLoaded) {
-      logger.i("$TAG - queryAllBalance - start");
+      logger.d("$TAG - queryAllBalance - start");
       for (var i = 0; i < state.wallets.length; i++) {
         WalletSchema wallet = state.wallets[i];
         if (wallet.type == WalletType.eth) {
@@ -101,7 +101,7 @@ class WalletCommon with Tag {
     WalletBloc _walletBloc = BlocProvider.of<WalletBloc>(Settings.appContext);
     try {
       double balance = await Wallet.getBalanceByAddr(wallet.address);
-      logger.i("$TAG - queryNKNBalance - old:${wallet.balance} - new:$balance - wallet_address:${wallet.address}");
+      logger.d("$TAG - queryNKNBalance - old:${wallet.balance} - new:$balance - wallet_address:${wallet.address}");
       if (notifyIfNeed && (wallet.balance != balance)) {
         wallet.balance = balance;
         _walletBloc.add(UpdateWallet(wallet));
@@ -121,8 +121,8 @@ class WalletCommon with Tag {
     try {
       Web3.EtherAmount? ethAmount = await _erc20client.getBalanceEth(address: wallet.address);
       Web3.EtherAmount? nknAmount = await _erc20client.getBalanceNkn(address: wallet.address);
-      logger.i("$TAG - queryETHBalance - eth - old:${wallet.balanceEth} - new:${ethAmount?.ether} - wallet_address:${wallet.address}");
-      logger.i("$TAG - queryETHBalance - nkn - old:${wallet.balance} - new:${nknAmount?.ether} - wallet_address:${wallet.address}");
+      logger.d("$TAG - queryETHBalance - eth - old:${wallet.balanceEth} - new:${ethAmount?.ether} - wallet_address:${wallet.address}");
+      logger.d("$TAG - queryETHBalance - nkn - old:${wallet.balance} - new:${nknAmount?.ether} - wallet_address:${wallet.address}");
       bool ethDiff = (ethAmount != null) && (wallet.balanceEth != (ethAmount.ether as double?));
       bool nknDiff = (nknAmount != null) && (wallet.balance != (nknAmount.ether as double?));
       if (notifyIfNeed && (ethDiff || nknDiff)) {
