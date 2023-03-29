@@ -152,9 +152,9 @@ class ChatCommon with Tag {
           targetIds.add(element.targetId);
         }
       });
-      logger.d("$TAG - sendPings2LatestSessions - offset:$offset - current_len:${result.length} - total_len:${targetIds.length}");
       if (!lastTimeOK || (result.length < limit) || (targetIds.length >= Settings.maxCountPingSessions)) break;
     }
+    if (targetIds.length > 0) logger.i("$TAG - sendPings2LatestSessions - count:${targetIds.length} - targetIds:$targetIds");
     // send
     await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
   }
@@ -167,14 +167,13 @@ class ChatCommon with Tag {
       final result = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending, offset: offset, limit: limit);
       // result.removeWhere((element) => !element.isOutbound);
       sendingList.addAll(result);
-      logger.d("$TAG - resetMessageSending - offset:$offset - current_len:${result.length} - total_len:${sendingList.length}");
       if (result.length < limit) break;
     }
     // update status
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
-      logger.i("$TAG - resetMessageSending - sendFail add - targetId:${message.targetId} - message:$message");
       if (message.canResend) {
+        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:$message");
         if (message.contentType == MessageContentType.ipfs) {
           String? ipfsHash = MessageOptions.getIpfsHash(message.options);
           if ((ipfsHash == null) || ipfsHash.isEmpty) {
@@ -187,11 +186,12 @@ class ChatCommon with Tag {
         message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
       } else {
         // lost some msg, need resend
+        logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:$message");
         int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
         if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
       }
     }
-    logger.i("$TAG - resetMessageSending - checkCount:${sendingList.length}");
+    if (sendingList.length > 0) logger.i("$TAG - resetMessageSending - count:${sendingList.length}");
     return sendingList.length;
   }
 
@@ -225,6 +225,7 @@ class ChatCommon with Tag {
       String? profileVersion = MessageOptions.getProfileVersion(message.options);
       if (profileVersion != null && profileVersion.isNotEmpty) {
         if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
+          logger.i("$TAG - contactHandle - profile request - clientAddress:$clientAddress");
           chatOutCommon.sendContactProfileRequest(exist.clientAddress, ContactRequestType.full, exist.profileVersion); // await
         }
       }
@@ -238,6 +239,7 @@ class ChatCommon with Tag {
       if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
         // no same with self
         if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
+          logger.i("$TAG - contactHandle - burning be sync - sec:$burnAfterSeconds");
           // side updated latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
           exist.options?.updateBurnAfterAt = updateBurnAfterAt;
@@ -245,6 +247,7 @@ class ChatCommon with Tag {
         } else {
           // mine updated latest
           if ((message.sendAt ?? 0) > existUpdateAt) {
+            logger.i("$TAG - contactHandle - burning to sync - sec:$existSeconds");
             DeviceInfoSchema? deviceInfo;
             String? deviceId = MessageOptions.getDeviceId(message.options);
             if (deviceId?.isNotEmpty == true) {
@@ -304,16 +307,16 @@ class ChatCommon with Tag {
       Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
       String? deviceId = splits.length > 4 ? splits[4] : null;
       if (deviceId == null || deviceId.isEmpty) {
-        // nothing
+        logger.e("$TAG - deviceInfoHandle - deviceId is nil - newData:$newData");
       } else if (deviceId == latest.deviceId) {
-        // right here
         bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
         if (!sameProfile) {
+          logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${latest.data}");
           bool success = await deviceInfoCommon.setData(latest.contactAddress, latest.deviceId, newData);
           if (success) latest.data = newData;
         }
       } else {
-        // wrong here
+        logger.w("$TAG - deviceInfoHandle - wrong here - new:$deviceId - old${latest.deviceId}");
         DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
@@ -337,6 +340,7 @@ class ChatCommon with Tag {
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
     if ((deviceToken != null) && deviceToken.isNotEmpty) {
       if (latest?.deviceToken != deviceToken) {
+        logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken}");
         bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
         if (success) latest?.deviceToken = deviceToken;
       }
@@ -433,6 +437,7 @@ class ChatCommon with Tag {
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (message.from == message.to) return exists;
     if (exists == null) {
+      logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message");
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
       exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
     }
@@ -444,6 +449,7 @@ class ChatCommon with Tag {
       int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
       int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
       if (nativeCommits < remoteCommits) {
+        logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits');
         // burning
         if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
           int? existSeconds = exists.options?.deleteAfterSeconds;
@@ -541,7 +547,7 @@ class ChatCommon with Tag {
         }
       });
     } else {
-      logger.i("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
+      logger.d("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
       if (!message.isDelete) {
         message.isDelete = true;
         messageCommon.messageDelete(message, notify: true); // await
@@ -562,6 +568,7 @@ class ChatCommon with Tag {
     // file_result
     String? fileHash = MessageOptions.getIpfsHash(message.options);
     if (fileHash != null && fileHash.isNotEmpty) {
+      logger.i("$TAG - startIpfsUpload - history completed - hash:$fileHash - message:$message");
       if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateYes) {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await messageCommon.updateMessageOptions(message, message.options);
@@ -584,6 +591,7 @@ class ChatCommon with Tag {
     // thumbnail
     MessageSchema? msg = await startIpfsThumbnailUpload(message);
     if (msg == null) {
+      logger.w("$TAG - startIpfsUpload - thumbnail fail - message:$message");
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await messageCommon.updateMessageOptions(message, message.options, notify: false);
       message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
@@ -601,6 +609,7 @@ class ChatCommon with Tag {
         messageCommon.onProgressSink.add({"msg_id": message?.msgId, "percent": percent});
       },
       onSuccess: (result) async {
+        logger.i("$TAG - startIpfsUpload - success - result:$result - options${message?.options}");
         message?.options = MessageOptions.setIpfsResult(
           message?.options,
           result[IpfsHelper.KEY_IP],
@@ -617,6 +626,7 @@ class ChatCommon with Tag {
         // chatOutCommon.sendIpfs(message.msgId); // await
       },
       onError: (err) async {
+        logger.e("$TAG - startIpfsUpload - fail - err:$err - options${message?.options}");
         Toast.show(err);
         message?.options = MessageOptions.setIpfsState(message?.options, MessageOptions.ipfsStateNo);
         await messageCommon.updateMessageOptions(message, message?.options, notify: false);
@@ -654,6 +664,7 @@ class ChatCommon with Tag {
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
     if (thumbnailHash != null && thumbnailHash.isNotEmpty) {
       // success
+      logger.i("$TAG - _tryIpfsThumbnailUpload - history completed - hash:$thumbnailHash - options${message.options}");
       if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateYes) {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         await messageCommon.updateMessageOptions(message, message.options, notify: false);
@@ -661,6 +672,7 @@ class ChatCommon with Tag {
       return [message, true];
     } else if (thumbnailPath == null || thumbnailPath.isEmpty) {
       // no native thumbnail file
+      logger.e("$TAG - _tryIpfsThumbnailUpload - file is nil - options${message.options}");
       return [null, false];
     }
     // state
@@ -674,6 +686,7 @@ class ChatCommon with Tag {
       thumbnailPath,
       encrypt: true,
       onSuccess: (result) async {
+        logger.i("$TAG - _tryIpfsThumbnailUpload - success - result:$result - options${message.options}");
         message.options = MessageOptions.setIpfsResultThumbnail(
           message.options,
           result[IpfsHelper.KEY_IP],
@@ -689,6 +702,7 @@ class ChatCommon with Tag {
         if (!completer.isCompleted) completer.complete();
       },
       onError: (err) async {
+        logger.e("$TAG - _tryIpfsThumbnailUpload - fail - err:$err - options${message.options}");
         Toast.show(err);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
         await messageCommon.updateMessageOptions(message, message.options, notify: false);
@@ -736,6 +750,7 @@ class ChatCommon with Tag {
         messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
       },
       onSuccess: () async {
+        logger.i("$TAG - startIpfsDownload - success - options${message.options}");
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await messageCommon.updateMessageOptions(message, message.options);
         await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
@@ -743,6 +758,7 @@ class ChatCommon with Tag {
         if (!completer.isCompleted) completer.complete();
       },
       onError: (err) async {
+        logger.e("$TAG - startIpfsDownload - fail - err:$err - options${message.options}");
         Toast.show(err);
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
         await messageCommon.updateMessageOptions(message, message.options);
@@ -827,6 +843,7 @@ class ChatCommon with Tag {
         IpfsHelper.KEY_ENCRYPT_NONCE_SIZE: MessageOptions.getIpfsThumbnailEncryptNonceSize(message.options),
       },
       onSuccess: () async {
+        logger.i("$TAG - _tryIpfsThumbnailDownload - success - options${message.options}");
         message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
         bool optionsOK = await messageCommon.updateMessageOptions(message, message.options);
@@ -835,6 +852,7 @@ class ChatCommon with Tag {
         if (!completer.isCompleted) completer.complete();
       },
       onError: (err) async {
+        logger.e("$TAG - _tryIpfsThumbnailDownload - fail - err:$err - options${message.options}");
         Toast.show(err);
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
         await messageCommon.updateMessageOptions(message, message.options);
@@ -862,22 +880,19 @@ class ChatCommon with Tag {
     for (var j = 0; j < fileResults.length; j++) {
       MessageSchema message = fileResults[j];
       if (message.isOutbound || (message.contentType != MessageContentType.ipfs)) {
-        // wrong here
+        logger.w("$TAG - resetIpfsDownloading - file wrong message - message$message");
         await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
       } else {
-        if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateIng) {
-          bool isComplete = MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes;
-          await _onIpfsDownload(walletAddress, message.msgId, "FILE", isComplete);
-        } else {
+        if (MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateIng) {
+          logger.i("$TAG - resetIpfsDownloading - file is ing - message$message");
           message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
           await messageCommon.updateMessageOptions(message, message.options);
+        } else {
+          bool isComplete = MessageOptions.getIpfsState(message.options) == MessageOptions.ipfsStateYes;
+          logger.d("$TAG - resetIpfsDownloading - file no ing - complete:$isComplete - message$message");
         }
       }
-      // timeout
-      int gap = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
-      if (gap > Settings.timeoutIpfsResetTimeoutMs) {
-        await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
-      }
+      await _onIpfsDownload(walletAddress, message.msgId, "FILE", true);
     }
     // thumbnail
     String thumbnailDownloadKey = "IPFS_THUMBNAIL_DOWNLOAD_PROGRESS_IDS_$walletAddress";
@@ -893,23 +908,29 @@ class ChatCommon with Tag {
     for (var j = 0; j < thumbnailResults.length; j++) {
       MessageSchema message = thumbnailResults[j];
       if (message.isOutbound || (message.contentType != MessageContentType.ipfs)) {
-        // wrong here
+        logger.w("$TAG - resetIpfsDownloading - wrong thumbnail message - message$message");
         await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", true);
       } else {
-        if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateIng) {
-          bool isComplete = MessageOptions.getIpfsThumbnailState(message.options) == MessageOptions.ipfsThumbnailStateYes;
-          await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", isComplete);
-        } else {
+        if (MessageOptions.getIpfsThumbnailState(message.options) == MessageOptions.ipfsThumbnailStateIng) {
+          logger.i("$TAG - resetIpfsDownloading - thumbnail is ing - message$message");
           message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
           await messageCommon.updateMessageOptions(message, message.options);
+        } else {
+          bool isComplete = MessageOptions.getIpfsThumbnailState(message.options) == MessageOptions.ipfsThumbnailStateYes;
+          logger.d("$TAG - resetIpfsDownloading - thumbnail no ing - complete:$isComplete - message$message");
+          if (isComplete) await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", isComplete);
         }
       }
       // timeout + download
       int gap = DateTime.now().millisecondsSinceEpoch - (message.receiveAt ?? 0);
       if (gap > Settings.timeoutIpfsResetTimeoutMs) {
+        logger.i("$TAG - resetIpfsDownloading - thumbnail reset timeout - message$message");
         await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", true);
       } else if (thumbnailAutoDownload && (gap < Settings.timeoutIpfsThumbnailAutoDownloadMs)) {
+        logger.i("$TAG - resetIpfsDownloading - thumbnail auto download - message$message");
         startIpfsThumbnailDownload(message); // await
+      } else {
+        logger.i("$TAG - resetIpfsDownloading - thumbnail nothing - message$message");
       }
     }
   }
@@ -919,7 +940,7 @@ class ChatCommon with Tag {
     String key = "IPFS_${type}_DOWNLOAD_PROGRESS_IDS_$walletAddress";
     List ids = (await SettingsStorage.getSettings(key)) ?? [];
     List<String> idsStr = ids.map((e) => e.toString()).toList();
-    logger.i("$TAG - _onIpfsDownload - start - key:$key - ids:${idsStr.toString()}");
+    logger.d("$TAG - _onIpfsDownload - start - key:$key - ids:${idsStr.toString()}");
     if (completed) {
       idsStr.remove(msgId.trim());
     } else {
@@ -927,7 +948,7 @@ class ChatCommon with Tag {
       if (index < 0) idsStr.add(msgId.trim());
     }
     await SettingsStorage.setSettings(key, idsStr);
-    logger.i("$TAG - _onIpfsDownload - end - key:$key - ids:${idsStr.toString()}");
+    logger.d("$TAG - _onIpfsDownload - end - key:$key - ids:${idsStr.toString()}");
     return idsStr;
   }
 }

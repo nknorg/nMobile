@@ -163,6 +163,7 @@ class ChatOutCommon with Tag {
         deviceToken: deviceToken,
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
       );
+      logger.d("$TAG - sendPing - contact - dest:$destList - data:$data");
     } else {
       // group
       ContactSchema? _me = await contactCommon.getMe();
@@ -172,6 +173,7 @@ class ChatOutCommon with Tag {
         // deviceToken
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
       );
+      logger.d("$TAG - sendPing - group - dest:$destList - data:$data");
     }
     // send
     Uint8List? pid = await _sendWithAddress(destList, data);
@@ -198,6 +200,7 @@ class ChatOutCommon with Tag {
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
     // received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId);
+    logger.i("$TAG - sendReceipt - dest:${received.to} - data:$data");
     Uint8List? pid = await _sendWithAddress([received.from], data);
     return pid?.isNotEmpty == true;
   }
@@ -207,6 +210,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return false; // topic no read, just like receipt
     String data = MessageData.getRead(msgIds);
+    logger.i("$TAG - sendRead - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
@@ -225,6 +229,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getContactProfileRequest(requestType, profileVersion);
+    logger.i("$TAG - sendContactProfileRequest - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
@@ -240,6 +245,7 @@ class ChatOutCommon with Tag {
     } else {
       data = await MessageData.getContactProfileResponseFull(me?.profileVersion, me?.avatar, me?.firstName, me?.lastName);
     }
+    logger.i("$TAG - sendContactProfileResponse - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
@@ -260,6 +266,7 @@ class ChatOutCommon with Tag {
       },
     );
     send.content = MessageData.getContactOptionsBurn(send); // same with receive and old version
+    logger.i("$TAG - sendContactOptionsBurn - dest:$clientAddress - message:$send");
     var result = await _send(send, send.content);
     return result != null;
   }
@@ -279,6 +286,7 @@ class ChatOutCommon with Tag {
       },
     );
     send.content = MessageData.getContactOptionsToken(send); // same with receive and old version
+    logger.i("$TAG - sendContactOptionsToken - dest:$clientAddress - message:$send");
     var result = await _send(send, send.content);
     return result != null;
   }
@@ -288,6 +296,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getDeviceRequest();
+    logger.i("$TAG - sendDeviceRequest - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
@@ -298,6 +307,7 @@ class ChatOutCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     if (!withToken) deviceInfo.deviceToken = null;
     String data = MessageData.getDeviceInfo(deviceInfo);
+    logger.i("$TAG - sendDeviceInfo - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
@@ -309,7 +319,7 @@ class ChatOutCommon with Tag {
     // target
     String targetAddress = "";
     String targetTopic = "";
-    String groupId = "";
+    String targetGroupId = "";
     String? privateGroupVersion;
     int? deleteAfterSeconds;
     int? burningUpdateAt;
@@ -318,21 +328,21 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
-      groupId = target.groupId;
+      targetGroupId = target.groupId;
       privateGroupVersion = target.version;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
+    if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
-      groupId: groupId,
+      groupId: targetGroupId,
       contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
       content: content,
       extra: {
@@ -343,6 +353,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String data = MessageData.getText(message);
+    logger.i("$TAG - sendText - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - data:$data");
     return await _send(message, data);
   }
 
@@ -358,7 +369,7 @@ class ChatOutCommon with Tag {
     // target
     String targetAddress = "";
     String targetTopic = "";
-    String groupId = "";
+    String targetGroupId = "";
     String? privateGroupVersion;
     int? deleteAfterSeconds;
     int? burningUpdateAt;
@@ -367,21 +378,21 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
-      groupId = target.groupId;
+      targetGroupId = target.groupId;
       privateGroupVersion = target.version;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
+    if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
-      groupId: groupId,
+      groupId: targetGroupId,
       contentType: MessageContentType.ipfs,
       content: content,
       extra: data
@@ -397,11 +408,12 @@ class ChatOutCommon with Tag {
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
     }
+    logger.i("$TAG - saveIpfs - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - message:$message");
     MessageSchema? inserted = await insertMessage(message);
     if (inserted == null) return null;
     // ipfs
     chatCommon.startIpfsUpload(inserted.msgId).then((msg) {
-      if (msg != null) chatOutCommon.sendIpfs(msg.msgId);
+      if (msg != null) chatOutCommon.sendIpfs(msg.msgId); // await
     }); // await
     return inserted;
   }
@@ -414,6 +426,7 @@ class ChatOutCommon with Tag {
     if (message == null) return null;
     // data
     String? data = MessageData.getIpfs(message);
+    logger.i("$TAG - sendIpfs - contact:${message.to} - group:${message.groupId} - topic:${message.topic} - data:$data");
     return await _send(message, data, insert: false);
   }
 
@@ -424,7 +437,7 @@ class ChatOutCommon with Tag {
     // target
     String targetAddress = "";
     String targetTopic = "";
-    String groupId = "";
+    String targetGroupId = "";
     String? privateGroupVersion;
     int? deleteAfterSeconds;
     int? burningUpdateAt;
@@ -433,21 +446,21 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
-      groupId = target.groupId;
+      targetGroupId = target.groupId;
       privateGroupVersion = target.version;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
+    if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
-      groupId: groupId,
+      groupId: targetGroupId,
       contentType: MessageContentType.image,
       content: content,
       extra: {
@@ -460,6 +473,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getImage(message);
+    logger.i("$TAG - sendImage - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - data:$data");
     return await _send(message, data);
   }
 
@@ -469,7 +483,7 @@ class ChatOutCommon with Tag {
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetAddress = "";
-    String groupId = "";
+    String targetGroupId = "";
     String targetTopic = "";
     String? privateGroupVersion;
     int? deleteAfterSeconds;
@@ -479,21 +493,21 @@ class ChatOutCommon with Tag {
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is PrivateGroupSchema) {
-      groupId = target.groupId;
+      targetGroupId = target.groupId;
       privateGroupVersion = target.version;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetTopic = target.topic;
     }
-    if (targetAddress.isEmpty && groupId.isEmpty && targetTopic.isEmpty) return null;
+    if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
       to: targetAddress,
       topic: targetTopic,
-      groupId: groupId,
+      groupId: targetGroupId,
       contentType: MessageContentType.audio,
       content: content,
       extra: {
@@ -507,6 +521,7 @@ class ChatOutCommon with Tag {
     );
     // data
     String? data = await MessageData.getAudio(message);
+    logger.i("$TAG - sendAudio - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - data:$data");
     return await _send(message, data);
   }
 
@@ -522,6 +537,7 @@ class ChatOutCommon with Tag {
       contentType: MessageContentType.topicSubscribe,
     );
     String data = MessageData.getTopicSubscribe(send);
+    logger.i("$TAG - sendTopicSubscribe - dest:$topic - data:$data");
     await _send(send, data);
   }
 
@@ -538,6 +554,7 @@ class ChatOutCommon with Tag {
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicUnSubscribe(send);
+    logger.i("$TAG - sendTopicUnSubscribe - dest:$topic - data:$data");
     await _sendWithTopic(_schema, send, data, notification: false);
   }
 
@@ -554,6 +571,7 @@ class ChatOutCommon with Tag {
       content: topic,
     );
     String data = MessageData.getTopicInvitee(message);
+    logger.i("$TAG - sendTopicInvitee - dest:$topic - data:$data");
     return await _send(message, data);
   }
 
@@ -571,6 +589,7 @@ class ChatOutCommon with Tag {
     );
     TopicSchema? _schema = await chatCommon.topicHandle(send);
     String data = MessageData.getTopicKickOut(send);
+    logger.i("$TAG - sendTopicKickOut - dest:$topic - data:$data");
     await _sendWithTopic(_schema, send, data, notification: false);
   }
 
@@ -602,6 +621,7 @@ class ChatOutCommon with Tag {
       },
     );
     String data = MessageData.getPrivateGroupInvitation(message);
+    logger.i("$TAG - sendPrivateGroupInvitee - dest:$target - data:$data");
     return await _send(message, data);
   }
 
@@ -611,6 +631,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupAccept(groupItem);
+    logger.i("$TAG - sendPrivateGroupAccept - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
     return pid?.isNotEmpty == true;
   }
@@ -621,6 +642,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return false;
     if (groupItem == null) return false;
     String data = MessageData.getPrivateGroupQuit(groupItem);
+    logger.i("$TAG - sendPrivateGroupQuit - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
     return pid?.isNotEmpty == true;
   }
@@ -643,6 +665,7 @@ class ChatOutCommon with Tag {
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
+    logger.i("$TAG - sendPrivateGroupOptionRequest - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
     return (pid?.isNotEmpty == true) ? getVersion : null;
   }
@@ -653,6 +676,7 @@ class ChatOutCommon with Tag {
     if (clientAddressList.isEmpty || clientAddressList[0].isEmpty) return false;
     if (group == null) return false;
     String data = MessageData.getPrivateGroupOptionResponse(group);
+    logger.i("$TAG - sendPrivateGroupOptionResponse - dest:$clientAddressList - data:$data");
     Uint8List? pid = await _sendWithAddress(clientAddressList, data);
     return pid?.isNotEmpty == true;
   }
@@ -675,6 +699,7 @@ class ChatOutCommon with Tag {
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String getVersion = privateGroupCommon.genPrivateGroupVersion(commits, group.signature, members);
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
+    logger.i("$TAG - sendPrivateGroupMemberRequest - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
     return (pid?.isNotEmpty == true) ? getVersion : null;
   }
@@ -686,6 +711,7 @@ class ChatOutCommon with Tag {
     if (schema == null) return false;
     List<Map<String, dynamic>> membersData = privateGroupCommon.getMembersData(members);
     String data = MessageData.getPrivateGroupMemberResponse(schema, membersData);
+    logger.i("$TAG - sendPrivateGroupMemberResponse - dest:$clientAddressList - data:$data");
     Uint8List? pid = await _sendWithAddress(clientAddressList, data);
     return pid?.isNotEmpty == true;
   }
@@ -711,6 +737,7 @@ class ChatOutCommon with Tag {
     if (message.contentType == MessageContentType.ipfs) {
       String? fileHash = MessageOptions.getIpfsHash(message.options);
       if (fileHash == null || fileHash.isEmpty) {
+        logger.i("$TAG - resendMute - ipfs start - mute:$mute - targetId:${message.targetId} - options:${message.options}");
         message = await chatCommon.startIpfsUpload(message.msgId);
         if (message == null) return null;
       }
@@ -720,33 +747,32 @@ class ChatOutCommon with Tag {
     switch (message.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
+        logger.i("$TAG - resendMute - text - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getText(message);
-        logger.i("$TAG - resendMute - resend text - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.ipfs:
+        logger.i("$TAG - resendMute - ipfs - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getIpfs(message);
-        logger.i("$TAG - resendMute - resend ipfs - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.media:
       case MessageContentType.image:
+        logger.i("$TAG - resendMute - image - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = await MessageData.getImage(message);
-        logger.i("$TAG - resendMute - resend image - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.audio:
+        logger.i("$TAG - resendMute - audio - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = await MessageData.getAudio(message);
-        logger.i("$TAG - resendMute - resend audio - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.topicInvitation:
+        logger.i("$TAG - resendMute - topic invitee - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getTopicInvitee(message);
-        logger.i("$TAG - resendMute - resend topic invitee - targetId:${message.targetId} - msgData:$msgData");
         break;
       case MessageContentType.privateGroupInvitation:
+        logger.i("$TAG - resendMute - group invitee - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getPrivateGroupInvitation(message);
-        logger.i("$TAG - resendMute - resend group invitee - targetId:${message.targetId} - msgData:$msgData");
         break;
       default:
-        // wrong here
-        // logger.i("$TAG - resendMute - noReceipt not receipt/read - targetId:${message.targetId} - message:$message");
+        logger.w("$TAG - resendMute - wrong type - mute:$mute - targetId:${message.targetId} - message:$message");
         // int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
         // return await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         return null;
@@ -808,6 +834,9 @@ class ChatOutCommon with Tag {
       ContactSchema? contact = await chatCommon.contactHandle(message);
       pid = await _sendWithContact(contact, message, msgData, notification: notification ?? message.canNotification);
       logger.d("$TAG - _send - with_contact - to:${message.to} - pid:$pid");
+    } else {
+      logger.e("$TAG - _send - with_error - to:${message.to} - pid:$pid");
+      return null;
     }
     // pid
     if (pid?.isNotEmpty == true) {
@@ -827,7 +856,7 @@ class ChatOutCommon with Tag {
           messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
         }
       } else {
-        logger.w("$TAG - _send - pid = null - message:$message");
+        logger.w("$TAG - _send - pid is null - message:$message");
         if (message.canResend) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
         } else {
@@ -843,13 +872,13 @@ class ChatOutCommon with Tag {
 
   Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData) async {
     if (clientAddressList.isEmpty || msgData == null) return null;
-    logger.d("$TAG - _sendWithAddress - clientAddressList:$clientAddressList - msgData:$msgData - msgData:$msgData");
+    logger.d("$TAG - _sendWithAddress - address_count:${clientAddressList.length} - addressList:$clientAddressList - msgData:$msgData");
     return (await sendMsg(clientAddressList, msgData))?.messageId;
   }
 
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, String? msgData, {bool notification = false}) async {
     if (message == null || msgData == null) return null;
-    logger.d("$TAG - _sendWithContact - contact:$contact - message:$message - msgData:$msgData");
+    logger.d("$TAG - _sendWithContact - address:${contact?.clientAddress} - message:$message - data:$msgData");
     // send
     Uint8List? pid;
     bool canTry = true;
@@ -871,6 +900,7 @@ class ChatOutCommon with Tag {
     if (notification) {
       if ((contact != null) && !contact.isMe) {
         deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
+          logger.d("$TAG - _sendWithContact - push notification - address:${contact.clientAddress} - token_count:${tokens.length} - tokens:$tokens");
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
@@ -909,7 +939,6 @@ class ChatOutCommon with Tag {
       if (kicked != null) _subscribers.add(kicked);
     }
     if (_subscribers.isEmpty) return null;
-    logger.d("$TAG - _sendWithTopic - topic:${topic.topic} - message:$message - msgData:$msgData");
     // destList
     bool selfIsReceiver = false;
     List<String> destList = [];
@@ -921,6 +950,7 @@ class ChatOutCommon with Tag {
         destList.add(clientAddress);
       }
     }
+    logger.d("$TAG - _sendWithTopic - topic:${topic.topic} - self:$selfIsReceiver - dest_count:${destList.length} - topic:$topic - message:$message - data:$msgData");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -957,6 +987,7 @@ class ChatOutCommon with Tag {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+            logger.d("$TAG - _sendWithTopic - push notification - topic:${topic.topic} - token_count:${tokens.length} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
@@ -988,6 +1019,7 @@ class ChatOutCommon with Tag {
         destList.add(clientAddress);
       }
     }
+    logger.d("$TAG - _sendWithPrivateGroup - groupId:${group.groupId} - self:$selfIsReceiver - dest_count:${destList.length} - group:$group - message:$message - data:$msgData");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -1020,6 +1052,7 @@ class ChatOutCommon with Tag {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+            logger.d("$TAG - _sendWithPrivateGroup - push notification - groupId:${group.groupId} - token_count:${tokens.length} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });

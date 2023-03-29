@@ -83,12 +83,15 @@ class MessageCommon with Tag {
     if (_latest != null) message = _latest;
     // check
     if ((status <= message.status) && !force) {
-      if (status != message.status) {
+      if (status == message.status) {
+        logger.w("$TAG - updateMessageStatus - status is same - new:$status - old:${message.status} - msgId:${message.msgId}");
+      } else {
         logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
       }
       return message;
     }
     // update
+    logger.d("$TAG - updateMessageStatus - new:$status - old:${message.status} - msgId:${message.msgId}");
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
     if (success) {
       message.status = status;
@@ -116,6 +119,7 @@ class MessageCommon with Tag {
     MessageSchema? _latest = await MessageStorage.instance.query(message.msgId);
     if (_latest != null) message = _latest;
     // update
+    logger.d("$TAG - updateMessageOptions - new:$options - old:${message.options} - msgId:${message.msgId}");
     bool success = await MessageStorage.instance.updateOptions(message.msgId, options);
     if (success) {
       message.options = options;
@@ -146,8 +150,9 @@ class MessageCommon with Tag {
     }
     // send
     if ((clientAddress?.isNotEmpty == true) && msgIds.isNotEmpty) {
-      await chatOutCommon.sendRead(clientAddress, msgIds);
+      chatOutCommon.sendRead(clientAddress, msgIds); // await
     }
+    logger.d("$TAG - readMessagesBySelf - count:${msgIds.length} - targetId:$targetId");
     return msgIds.length;
   }
 
