@@ -498,7 +498,7 @@ class ChatCommon with Tag {
     } else {
       exist = await sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp);
     }
-    // badge TODO:GG test?
+    // badge
     if ((exist != null) && !message.isOutbound && message.canNotification) {
       if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
         Badge.onCountUp(1); // await
