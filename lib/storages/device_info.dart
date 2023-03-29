@@ -314,33 +314,53 @@ class DeviceInfoStorage with Tag {
         false;
   }
 
-  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? newData) async {
-    if (db?.isOpen != true) return false;
-    if (contactAddress == null || contactAddress.isEmpty) return false;
+  Future<Map<String, dynamic>?> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    if (added == null || added.isEmpty) return null;
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            Map<String, dynamic>? result = await db?.transaction((txn) async {
+              List<Map<String, dynamic>>? res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+                offset: 0,
+                limit: 1,
+                orderBy: 'online_at DESC',
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setData - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
+                return null;
+              }
+              DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              data.addAll(added);
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) {
+                  data.remove(element);
+                });
+              }
+              int count = await txn.update(
                 tableName,
                 {
-                  'data': newData != null ? jsonEncode(newData) : null,
+                  'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
               );
+              return (count > 0) ? data : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
-              return true;
-            }
-            logger.w("$TAG - setData - fail - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
+            // logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
+            return result;
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 }

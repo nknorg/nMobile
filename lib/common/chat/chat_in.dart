@@ -61,7 +61,7 @@ class ChatInCommon with Tag {
     // status
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
-    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
     _receiveQueues[message.targetId]?.add(() async {
       try {
         return await _handleMessage(message);
@@ -381,10 +381,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display (1 to 1)
   Future<bool> _receiveContact(MessageSchema received, ContactSchema? contact) async {
-    if (contact == null) {
-      logger.e("$TAG - _receiveContact - contact is empty - received:$received");
-      return false;
-    }
+    if (contact == null) return false;
     // D-Chat NO RequestType.header
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
@@ -443,10 +440,7 @@ class ChatInCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> _receiveContactOptions(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? deviceInfo) async {
-    if (contact == null) {
-      logger.w("$TAG - _receiveContactOptions - empty - received:$received");
-      return false;
-    }
+    if (contact == null) return false;
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
@@ -488,10 +482,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact) async {
-    if (contact == null) {
-      logger.w("$TAG - _receiveDeviceRequest - contact - empty - received:$received");
-      return false;
-    }
+    if (contact == null) return false;
     bool notificationOpen = contact.options?.notificationOpen ?? false;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
     if (deviceInfo == null) return false;
@@ -501,10 +492,7 @@ class ChatInCommon with Tag {
 
   // NO DB NO display
   Future<bool> _receiveDeviceInfo(MessageSchema received, ContactSchema? contact) async {
-    if (contact == null || contact.id == null) {
-      logger.w("$TAG - _receiveDeviceInfo - contact - empty - received:$received");
-      return false;
-    }
+    if (contact == null) return false;
     // data
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
@@ -551,10 +539,7 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveText(MessageSchema received) async {
-    if (received.content == null) {
-      logger.e("$TAG - _receiveText - content null - message:$received");
-      return false;
-    }
+    if (received.content == null) return false;
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
@@ -601,10 +586,7 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveImage(MessageSchema received) async {
-    if (received.content == null) {
-      logger.e("$TAG - _receiveImage - content null - message:$received");
-      return false;
-    }
+    if (received.content == null) return false;
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
@@ -630,10 +612,7 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveAudio(MessageSchema received) async {
-    if (received.content == null) {
-      logger.e("$TAG - _receiveAudio - content null - message:$received");
-      return false;
-    }
+    if (received.content == null) return false;
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {

@@ -31,7 +31,7 @@ class SessionStorage with Tag {
   SessionStorage();
 
   static create(Database db) async {
-    // TODO:GG data
+    // TODO:GG data_upgrade
     // create table
     await db.execute(createSQL);
 

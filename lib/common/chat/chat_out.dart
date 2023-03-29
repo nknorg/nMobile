@@ -896,7 +896,7 @@ class ChatOutCommon with Tag {
     // notification
     if (notification) {
       if ((contact != null) && !contact.isMe) {
-        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
+        deviceInfoCommon.queryDeviceTokenList(contact.clientAddress).then((tokens) async {
           logger.d("$TAG - _sendWithContact - push notification - token_count:${tokens.length} - address:${contact.clientAddress} - tokens:$tokens");
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
@@ -983,7 +983,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             logger.d("$TAG - _sendWithTopic - push notification - token_count:${tokens.length} - topic:${topic.topic} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
@@ -1048,7 +1048,7 @@ class ChatOutCommon with Tag {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
+          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             logger.d("$TAG - _sendWithPrivateGroup - push notification - token_count:${tokens.length} - groupId:${group.groupId} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
