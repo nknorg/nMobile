@@ -606,28 +606,50 @@ class MessageStorage with Tag {
         false;
   }
 
-  Future<bool> updateOptions(String? msgId, Map<String, dynamic>? options) async {
-    if (db?.isOpen != true) return false;
-    if (msgId == null || msgId.isEmpty) return false;
+  Future<Map<String, dynamic>?> updateOptions(String? msgId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (msgId == null || msgId.isEmpty) return null;
+    if (added == null || added.isEmpty) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            Map<String, dynamic>? result = await db?.transaction((txn) async {
+              List<Map<String, dynamic>>? res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'msg_id = ?',
+                whereArgs: [msgId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - updateOptions - no exists - msgId:$msgId");
+                return null;
+              }
+              MessageSchema schema = MessageSchema.fromMap(res.first);
+              Map<String, dynamic>? options = schema.options ?? Map<String, dynamic>();
+              options.addAll(added);
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) {
+                  options.remove(element);
+                });
+              }
+              int count = await txn.update(
                 tableName,
                 {
-                  'options': options != null ? jsonEncode(options) : null,
+                  'options': jsonEncode(options),
                 },
                 where: 'msg_id = ?',
                 whereArgs: [msgId],
               );
+              return (count > 0) ? options : null;
             });
             // logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
-            return (count ?? 0) > 0;
+            return result;
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 }
