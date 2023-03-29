@@ -67,7 +67,7 @@ class MessageStorage with Tag {
         });
         if (id != null && id > 0) {
           schema = MessageSchema.fromMap(map);
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         }
         logger.w("$TAG - insert - empty - schema:$schema");
@@ -91,10 +91,10 @@ class MessageStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - deleteByIdContentType - success - msgId:$msgId - contentType:$contentType");
+              // logger.v("$TAG - deleteByIdContentType - success - msgId:$msgId - contentType:$contentType");
               return count;
             }
-            logger.w("$TAG - deleteByIdContentType - empty - msgId:$msgId - contentType:$contentType");
+            // logger.v("$TAG - deleteByIdContentType - empty - msgId:$msgId - contentType:$contentType");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -116,10 +116,10 @@ class MessageStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - deleteByTargetIdContentType - success - targetId:$targetId - contentType:$contentType");
+              // logger.v("$TAG - deleteByTargetIdContentType - success - targetId:$targetId - contentType:$contentType");
               return count;
             }
-            logger.w("$TAG - deleteByTargetIdContentType - empty - targetId:$targetId - contentType:$contentType");
+            // logger.v("$TAG - deleteByTargetIdContentType - empty - targetId:$targetId - contentType:$contentType");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -144,10 +144,10 @@ class MessageStorage with Tag {
       });
       if (res != null && res.length > 0) {
         MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - msgId:$msgId - schema:$schema");
+        // logger.v("$TAG - query - success - msgId:$msgId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - query - success - msgId:$msgId");
+      // logger.v("$TAG - query - success - msgId:$msgId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -170,10 +170,10 @@ class MessageStorage with Tag {
       });
       if (res != null && res.length > 0) {
         MessageSchema schema = MessageSchema.fromMap(res.first);
-        logger.v("$TAG - queryByIdNoContentType - success - msgId:$msgId - schema:$schema");
+        // logger.v("$TAG - queryByIdNoContentType - success - msgId:$msgId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryByIdNoContentType - empty - msgId:$msgId");
+      // logger.v("$TAG - queryByIdNoContentType - empty - msgId:$msgId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -208,10 +208,10 @@ class MessageStorage with Tag {
           MessageSchema schema = MessageSchema.fromMap(map);
           schemaList.add(schema);
         }
-        logger.v("$TAG - queryListByIds - success - msgIds:$msgIds - schemaList:$schemaList");
+        // logger.v("$TAG - queryListByIds - success - msgIds:$msgIds - schemaList:$schemaList");
         return schemaList;
       }
-      logger.v("$TAG - queryListByIds - empty - msgIds:$msgIds");
+      // logger.v("$TAG - queryListByIds - empty - msgIds:$msgIds");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -246,10 +246,10 @@ class MessageStorage with Tag {
           MessageSchema schema = MessageSchema.fromMap(map);
           schemaList.add(schema);
         }
-        logger.v("$TAG - queryListByIdsNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
+        // logger.v("$TAG - queryListByIdsNoContentType - success - msgIds:$msgIds - schemaList:$schemaList");
         return schemaList;
       }
-      logger.v("$TAG - queryListByIdsNoContentType - empty - msgIds:$msgIds");
+      // logger.v("$TAG - queryListByIdsNoContentType - empty - msgIds:$msgIds");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -271,17 +271,17 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByIdContentType - empty - msgId:$msgId - contentType:$contentType");
+        // logger.v("$TAG - queryListByIdContentType - empty - msgId:$msgId - contentType:$contentType");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         MessageSchema item = MessageSchema.fromMap(map);
-        logText += "\n$item";
+        // logText += "\n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListByIdContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByIdContentType - success - msgId:$msgId - contentType:$contentType - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -304,17 +304,17 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
+        // logger.v("$TAG - queryListByTargetIdWithUnRead - empty - targetId:$targetId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
+        // logText += "    \n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListByTargetIdWithUnRead - success - targetId:$targetId - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByTargetIdWithUnRead - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -335,7 +335,7 @@ class MessageStorage with Tag {
         );
       });
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
+      // logger.v("$TAG - unReadCountByTargetId - targetId:$targetId - count:$count");
       return count ?? 0;
     } catch (e, st) {
       handleError(e, st);
@@ -359,17 +359,17 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
+        // logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
+        // logText += "    \n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -404,17 +404,17 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
+        // logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - empty - targetId:$targetId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
+        // logText += "    \n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByTargetIdWithNotDeleteAndPiece - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -437,17 +437,17 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId");
+        // logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         MessageSchema item = MessageSchema.fromMap(map);
-        logText += "    \n$item";
+        // logText += "    \n$item";
         result.add(item);
       });
-      logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -470,7 +470,7 @@ class MessageStorage with Tag {
                 whereArgs: [msgId],
               );
             });
-            logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid");
+            // logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -500,7 +500,7 @@ class MessageStorage with Tag {
                 whereArgs: (noType?.isNotEmpty == true) ? [msgId, noType] : [msgId],
               );
             });
-            logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
+            // logger.v("$TAG - updateStatus - count:$count - msgId:$msgId - status:$status");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -523,7 +523,7 @@ class MessageStorage with Tag {
                 whereArgs: [msgId],
               );
             });
-            logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
+            // logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -546,7 +546,7 @@ class MessageStorage with Tag {
                 whereArgs: [targetId, topic ?? "", groupId ?? ""],
               );
             });
-            logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");
+            // logger.v("$TAG - updateIsDeleteByTargetId - count:$count - targetId:$targetId - isDelete:$isDelete");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -571,7 +571,7 @@ class MessageStorage with Tag {
                 whereArgs: [msgId],
               );
             });
-            logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendAt:$sendAt");
+            // logger.v("$TAG - updateSendAt - count:$count - msgId:$msgId - sendAt:$sendAt");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -596,7 +596,7 @@ class MessageStorage with Tag {
                 whereArgs: [msgId],
               );
             });
-            logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteAt:$deleteAt");
+            // logger.v("$TAG - updateDeleteAt - count:$count - msgId:$msgId - deleteAt:$deleteAt");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -621,7 +621,7 @@ class MessageStorage with Tag {
                 whereArgs: [msgId],
               );
             });
-            logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
+            // logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);

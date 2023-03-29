@@ -73,7 +73,7 @@ class SessionStorage with Tag {
         if (id != null) {
           SessionSchema schema = SessionSchema.fromMap(entity);
           schema.id = id;
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
@@ -98,10 +98,10 @@ class SessionStorage with Tag {
               );
             });
             if (result != null && result > 0) {
-              logger.v("$TAG - delete - success - targetId:$targetId - type:$type");
+              // logger.v("$TAG - delete - success - targetId:$targetId - type:$type");
               return true;
             }
-            logger.w("$TAG - delete - empty - targetId:$targetId - type:$type");
+            // logger.v("$TAG - delete - empty - targetId:$targetId - type:$type");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -126,10 +126,10 @@ class SessionStorage with Tag {
       });
       if (res != null && res.length > 0) {
         SessionSchema schema = SessionSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - targetId:$targetId - type:$type - schema:$schema");
+        // logger.v("$TAG - query - success - targetId:$targetId - type:$type - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
+      // logger.v("$TAG - query - empty - targetId:$targetId - type:$type");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -149,17 +149,17 @@ class SessionStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryListRecent - empty");
+        // logger.v("$TAG - queryListRecent - empty");
         return [];
       }
       List<SessionSchema> result = <SessionSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
         SessionSchema item = SessionSchema.fromMap(map);
-        logText += "\n      $item";
+        // logText += "\n      $item";
         result.add(item);
       });
-      logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListRecent - success - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -177,7 +177,7 @@ class SessionStorage with Tag {
         );
       });
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      logger.v("$TAG - unReadCount - count:$count");
+      // logger.v("$TAG - unReadCount - count:$count");
       return count ?? 0;
     } catch (e, st) {
       handleError(e, st);
@@ -202,7 +202,7 @@ class SessionStorage with Tag {
                 whereArgs: [schema.targetId, schema.type],
               );
             });
-            logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
+            // logger.v("$TAG - updateLastMessageAndUnReadCount - count:$count - schema:$schema");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -227,7 +227,7 @@ class SessionStorage with Tag {
                 whereArgs: [targetId, type],
               );
             });
-            logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
+            // logger.v("$TAG - updateIsTop - targetId:$targetId - type:$type - isTop:$isTop");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -252,7 +252,7 @@ class SessionStorage with Tag {
                 whereArgs: [targetId, type],
               );
             });
-            logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
+            // logger.v("$TAG - updateUnReadCount - targetId:$targetId - type:$type - unread:$unread");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -272,14 +272,13 @@ class SessionStorage with Tag {
                 tableName,
                 {
                   'data': newData != null ? jsonEncode(newData) : null,
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'target_id = ? AND type = ?',
                 whereArgs: [targetId, type],
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setData - success - targetId:$targetId - type:$type - data:$newData");
+              // logger.v("$TAG - setData - success - targetId:$targetId - type:$type - data:$newData");
               return true;
             }
             logger.w("$TAG - setData - fail - targetId:$targetId - type:$type - data:$newData");

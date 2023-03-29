@@ -82,7 +82,7 @@ class ContactStorage with Tag {
         if (id != null) {
           ContactSchema schema = ContactSchema.fromMap(entity);
           schema.id = id;
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
@@ -110,10 +110,10 @@ class ContactStorage with Tag {
       });
       if (res != null && res.length > 0) {
         ContactSchema schema = ContactSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - contactId:$contactId - schema:$schema");
+        // logger.v("$TAG - query - success - contactId:$contactId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - query - empty - contactId:$contactId");
+      // logger.v("$TAG - query - empty - contactId:$contactId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -136,10 +136,10 @@ class ContactStorage with Tag {
       });
       if (res != null && res.length > 0) {
         ContactSchema schema = ContactSchema.fromMap(res.first);
-        logger.v("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
+        // logger.v("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryByClientAddress - empty - address:$clientAddress");
+      // logger.v("$TAG - queryByClientAddress - empty - address:$clientAddress");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -174,10 +174,10 @@ class ContactStorage with Tag {
           ContactSchema schema = ContactSchema.fromMap(map);
           schemaList.add(schema);
         }
-        logger.v("$TAG - queryListByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
+        // logger.v("$TAG - queryListByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
         return schemaList;
       }
-      logger.v("$TAG - queryListByClientAddress - empty - clientAddressList:$clientAddressList");
+      // logger.v("$TAG - queryListByClientAddress - empty - clientAddressList:$clientAddressList");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -200,16 +200,16 @@ class ContactStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryList - empty - contactType:$contactType");
+        // logger.v("$TAG - queryList - empty - contactType:$contactType");
         return [];
       }
       List<ContactSchema> results = <ContactSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
-        logText += "\n      $map";
+        // logText += "\n      $map";
         results.add(ContactSchema.fromMap(map));
       });
-      logger.v("$TAG - queryList - items:$logText");
+      // logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -234,7 +234,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
+              // logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
               return true;
             }
             logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
@@ -266,7 +266,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
+              // logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
               return true;
             }
             logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
@@ -295,7 +295,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
+              // logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
               return true;
             }
             logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
@@ -324,7 +324,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
+              // logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
               return true;
             }
             logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
@@ -355,7 +355,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
+              // logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
               return true;
             }
             logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
@@ -388,7 +388,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setBurning - success - contactId:$contactId - options:$options");
+              // logger.v("$TAG - setBurning - success - contactId:$contactId - options:$options");
               return true;
             }
             logger.w("$TAG - setBurning - fail - contactId:$contactId - options:$options");
@@ -420,7 +420,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              // logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
             logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
@@ -451,7 +451,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setNotes - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              // logger.v("$TAG - setNotes - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
             logger.w("$TAG - setNotes - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
@@ -483,7 +483,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setWalletAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              // logger.v("$TAG - setWalletAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
             logger.w("$TAG - setWalletAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
@@ -514,7 +514,7 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setMappedAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
+              // logger.v("$TAG - setMappedAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
               return true;
             }
             logger.w("$TAG - setMappedAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
