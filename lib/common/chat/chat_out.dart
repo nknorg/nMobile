@@ -80,7 +80,7 @@ class ChatOutCommon with Tag {
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId.isNotEmpty == true) {
-        logger.d("$TAG - _sendData - send success - destList:$destList - data:$data");
+        logger.v("$TAG - _sendData - send success - destList:$destList - data:$data");
       } else {
         logger.e("$TAG - _sendData - onMessage msgId is empty - - destList:$destList - data:$data");
       }
@@ -825,15 +825,12 @@ class ChatOutCommon with Tag {
     if (message.isTopic) {
       TopicSchema? topic = await chatCommon.topicHandle(message);
       pid = await _sendWithTopic(topic, message, msgData, notification: notification ?? message.canNotification);
-      logger.d("$TAG - _send - with_topic - to:${message.topic} - pid:$pid");
     } else if (message.isPrivateGroup) {
       PrivateGroupSchema? group = await chatCommon.privateGroupHandle(message);
       pid = await _sendWithPrivateGroup(group, message, msgData, notification: notification ?? message.canNotification);
-      logger.d("$TAG - _send - with_group - to:${message.topic} - pid:$pid");
     } else if (message.to.isNotEmpty == true) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
       pid = await _sendWithContact(contact, message, msgData, notification: notification ?? message.canNotification);
-      logger.d("$TAG - _send - with_contact - to:${message.to} - pid:$pid");
     } else {
       logger.e("$TAG - _send - with_error - to:${message.to} - pid:$pid");
       return null;
@@ -900,7 +897,7 @@ class ChatOutCommon with Tag {
     if (notification) {
       if ((contact != null) && !contact.isMe) {
         deviceInfoCommon.queryDeviceTokenList(contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) async {
-          logger.d("$TAG - _sendWithContact - push notification - address:${contact.clientAddress} - token_count:${tokens.length} - tokens:$tokens");
+          logger.d("$TAG - _sendWithContact - push notification - token_count:${tokens.length} - address:${contact.clientAddress} - tokens:$tokens");
           bool pushOk = false;
           for (int i = 0; i < tokens.length; i++) {
             String? uuid = await RemoteNotification.send(tokens[i]); // need result
@@ -987,7 +984,7 @@ class ChatOutCommon with Tag {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
-            logger.d("$TAG - _sendWithTopic - push notification - topic:${topic.topic} - token_count:${tokens.length} - tokens:$tokens");
+            logger.d("$TAG - _sendWithTopic - push notification - token_count:${tokens.length} - topic:${topic.topic} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
@@ -1052,7 +1049,7 @@ class ChatOutCommon with Tag {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress, max: Settings.maxCountPushDevices, days: Settings.timeoutDeviceTokensDay).then((tokens) {
-            logger.d("$TAG - _sendWithPrivateGroup - push notification - groupId:${group.groupId} - token_count:${tokens.length} - tokens:$tokens");
+            logger.d("$TAG - _sendWithPrivateGroup - push notification - token_count:${tokens.length} - groupId:${group.groupId} - tokens:$tokens");
             tokens.forEach((token) {
               RemoteNotification.send(token); // await // no need result
             });
