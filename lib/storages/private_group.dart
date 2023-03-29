@@ -80,7 +80,7 @@ class PrivateGroupStorage with Tag {
         if (id != null) {
           PrivateGroupSchema schema = PrivateGroupSchema.fromMap(entity);
           schema.id = id;
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
           logger.i("$TAG - insert - exists - schema:$schema");
@@ -108,10 +108,10 @@ class PrivateGroupStorage with Tag {
       });
       if (res != null && res.length > 0) {
         PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
-        logger.v("$TAG - query - success - groupId:$groupId - schema:$schema");
+        // logger.v("$TAG - query - success - groupId:$groupId - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - query - empty - groupId:$groupId");
+      // logger.v("$TAG - query - empty - groupId:$groupId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -133,17 +133,17 @@ class PrivateGroupStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryList - empty - type:$type");
+        // logger.v("$TAG - queryList - empty - type:$type");
         return [];
       }
       List<PrivateGroupSchema> results = <PrivateGroupSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
-        logText += "\n      $map";
+        // logText += "\n      $map";
         PrivateGroupSchema group = PrivateGroupSchema.fromMap(map);
         results.add(group);
       });
-      logger.v("$TAG - queryList - items:$logText");
+      // logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -171,7 +171,7 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateNameType - success - groupId:$groupId - name:$name - type:$type");
+              // logger.v("$TAG - updateNameType - success - groupId:$groupId - name:$name - type:$type");
               return true;
             }
             logger.w("$TAG - updateNameType - fail - groupId:$groupId - name:$name - type:$type");
@@ -200,7 +200,7 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateJoined - success - groupId:$groupId - joined:$joined");
+              // logger.v("$TAG - updateJoined - success - groupId:$groupId - joined:$joined");
               return true;
             }
             logger.w("$TAG - updateJoined - fail - groupId:$groupId - joined:$joined");
@@ -230,7 +230,7 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateVersionCount - success - groupId:$groupId - count:$count");
+              // logger.v("$TAG - updateVersionCount - success - groupId:$groupId - count:$count");
               return true;
             }
             logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - count:$count");
@@ -259,7 +259,7 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updateAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+              // logger.v("$TAG - updateAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
               return true;
             }
             logger.w("$TAG - updateAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
@@ -287,7 +287,7 @@ class PrivateGroupStorage with Tag {
                 whereArgs: [groupId],
               );
             });
-            logger.v("$TAG - updateOptions - count:$count - groupId:$groupId - options:$options");
+            // logger.v("$TAG - updateOptions - count:$count - groupId:$groupId - options:$options");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
@@ -313,7 +313,7 @@ class PrivateGroupStorage with Tag {
                 whereArgs: [groupId],
               );
             });
-            logger.v("$TAG - updateData - count:$count - groupId:$groupId - data:$data");
+            // logger.v("$TAG - updateData - count:$count - groupId:$groupId - data:$data");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);

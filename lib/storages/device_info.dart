@@ -55,7 +55,7 @@ class DeviceInfoStorage with Tag {
         if (id != null) {
           DeviceInfoSchema schema = DeviceInfoSchema.fromMap(entity);
           schema.id = id;
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         }
         logger.w("$TAG - insert - fail - schema:$schema");
@@ -83,10 +83,10 @@ class DeviceInfoStorage with Tag {
       });
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.v("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
+        // logger.v("$TAG - queryLatest - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
+      // logger.v("$TAG - queryLatest - empty - contactAddress:$contactAddress");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -109,16 +109,16 @@ class DeviceInfoStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryLatestList - empty - contactAddress:$contactAddress");
+        // logger.v("$TAG - queryLatestList - empty - contactAddress:$contactAddress");
         return [];
       }
       List<DeviceInfoSchema> results = <DeviceInfoSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
-        logText += "\n      $map";
+        // logText += "\n      $map";
         results.add(DeviceInfoSchema.fromMap(map));
       });
-      logger.v("$TAG - queryLatestList - items:$logText");
+      // logger.v("$TAG - queryLatestList - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -155,10 +155,10 @@ class DeviceInfoStorage with Tag {
           DeviceInfoSchema schema = DeviceInfoSchema.fromMap(map);
           schemaList.add(schema);
         }
-        logger.v("$TAG - queryListLatest - success - contactAddressList:$contactAddressList - schemaList:$schemaList");
+        // logger.v("$TAG - queryListLatest - success - contactAddressList:$contactAddressList - schemaList:$schemaList");
         return schemaList;
       }
-      logger.v("$TAG - queryListLatest - empty - contactAddressList:$contactAddressList");
+      // logger.v("$TAG - queryListLatest - empty - contactAddressList:$contactAddressList");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -183,10 +183,10 @@ class DeviceInfoStorage with Tag {
       });
       if (res != null && res.length > 0) {
         DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
+        // logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
+      // logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -211,7 +211,7 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setDeviceToken - success - contactAddress:$contactAddress - deviceId:$deviceId - deviceToken:$deviceToken");
+              // logger.v("$TAG - setDeviceToken - success - contactAddress:$contactAddress - deviceId:$deviceId - deviceToken:$deviceToken");
               return true;
             }
             logger.w("$TAG - setDeviceToken - fail - contactAddress:$contactAddress - deviceId:$deviceId - deviceToken:$deviceToken");
@@ -242,7 +242,7 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setOnlineAt - success - contactAddress:$contactAddress - deviceId:$deviceId - onlineAt:$onlineAt");
+              // logger.v("$TAG - setOnlineAt - success - contactAddress:$contactAddress - deviceId:$deviceId - onlineAt:$onlineAt");
               return true;
             }
             logger.w("$TAG - setOnlineAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - onlineAt:$onlineAt");
@@ -272,7 +272,7 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setPingAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pingAt:$pingAt");
+              // logger.v("$TAG - setPingAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pingAt:$pingAt");
               return true;
             }
             logger.w("$TAG - setPingAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pingAt:$pingAt");
@@ -302,7 +302,7 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setPongAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
+              // logger.v("$TAG - setPongAt - success - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
               return true;
             }
             logger.w("$TAG - setPongAt - fail - contactAddress:$contactAddress - deviceId:$deviceId - pongAt:$pongAt");
@@ -332,7 +332,7 @@ class DeviceInfoStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
+              // logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
               return true;
             }
             logger.w("$TAG - setData - fail - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
