@@ -51,7 +51,7 @@ class PrivateGroupItemStorage with Tag {
         if (id != null) {
           PrivateGroupItemSchema schema = PrivateGroupItemSchema.fromMap(entity);
           schema.id = id;
-          logger.v("$TAG - insert - success - schema:$schema");
+          // logger.v("$TAG - insert - success - schema:$schema");
           return schema;
         } else {
           logger.i("$TAG - insert - fail - schema:$schema");
@@ -77,7 +77,7 @@ class PrivateGroupItemStorage with Tag {
       );
       if (res != null && res.length > 0) {
         PrivateGroupItemSchema? schema = PrivateGroupItemSchema.fromMap(res.first);
-        logger.v("$TAG - queryByInvitee - success - invitee:$invitee - schema:$schema");
+        // logger.v("$TAG - queryByInvitee - success - invitee:$invitee - schema:$schema");
         return schema;
       }
     } catch (e, st) {
@@ -102,17 +102,17 @@ class PrivateGroupItemStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        logger.v("$TAG - queryList - empty - groupId:$groupId");
+        // logger.v("$TAG - queryList - empty - groupId:$groupId");
         return [];
       }
       List<PrivateGroupItemSchema> results = <PrivateGroupItemSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
-        logText += "\n      $map";
+        // logText += "\n      $map";
         PrivateGroupItemSchema pgItem = PrivateGroupItemSchema.fromMap(map);
         results.add(pgItem);
       });
-      logger.v("$TAG - queryList - items:$logText");
+      // logger.v("$TAG - queryList - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -151,7 +151,7 @@ class PrivateGroupItemStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              logger.v("$TAG - updatePermission - success - groupId:$groupId - invitee:$invitee - type:$permission");
+              // logger.v("$TAG - updatePermission - success - groupId:$groupId - invitee:$invitee - type:$permission");
               return true;
             }
             logger.w("$TAG - updatePermission - fail - groupId:$groupId - invitee:$invitee - type:$permission");
