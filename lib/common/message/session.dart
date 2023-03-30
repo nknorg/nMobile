@@ -86,13 +86,14 @@ class SessionCommon with Tag {
       if (groupSenderName?.isNotEmpty == true) {
         added.data = {"groupSenderName": groupSenderName};
       }
+      logger.d('$TAG - update - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - message:${added.lastMessageOptions}');
       // insert
       added = await SessionStorage.instance.insert(added);
       if ((added != null) && notify) _addSink.add(added);
       return added;
     };
     // queue
-    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", timeout: Duration(seconds: 5), onLog: (log, error) => error ? logger.w(log) : null);
+    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", onLog: (log, error) => error ? logger.w(log) : null);
     return await _queues[targetId]?.add(() async {
       try {
         return await func();
@@ -173,11 +174,12 @@ class SessionCommon with Tag {
       exist.lastMessageOptions = newLastMsg?.toMap();
       exist.lastMessageAt = newLastMsgAt;
       exist.unReadCount = newUnReadCount;
+      logger.d('$TAG - update - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
       bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
       if (success && notify) queryAndNotify(targetId, type);
     };
     // queue
-    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", timeout: Duration(seconds: 5), onLog: (log, error) => error ? logger.w(log) : null);
+    _queues[targetId] = _queues[targetId] ?? ParallelQueue("session_$targetId", onLog: (log, error) => error ? logger.w(log) : null);
     return await _queues[targetId]?.add(() async {
       try {
         return await func();

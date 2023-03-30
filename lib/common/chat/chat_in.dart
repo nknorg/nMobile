@@ -61,7 +61,7 @@ class ChatInCommon with Tag {
     // status
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
-    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", timeout: Duration(seconds: 30), onLog: (log, error) => error ? logger.w(log) : null);
+    _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
     _receiveQueues[message.targetId]?.add(() async {
       try {
         return await _handleMessage(message);

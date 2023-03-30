@@ -476,9 +476,9 @@ class ChatCommon with Tag {
     return exists;
   }
 
-  Future<SessionSchema?> sessionHandle(MessageSchema message) async {
-    if (!message.canDisplay) return null;
-    if (message.targetId.isEmpty) return null;
+  Future sessionHandle(MessageSchema message) async {
+    if (!message.canDisplay) return;
+    if (message.targetId.isEmpty) return;
     // if (message.from == message.to) return null;
     // type
     int type = SessionType.CONTACT;
@@ -491,20 +491,26 @@ class ChatCommon with Tag {
     bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
     int unreadCountUp = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
     unreadCountUp = inSessionPage ? 0 : unreadCountUp;
+    // badge
+    Function func = () async {
+      if (!message.isOutbound && message.canNotification) {
+        if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
+          Badge.onCountUp(1); // await
+        }
+      }
+    };
     // set
     SessionSchema? exist = await sessionCommon.query(message.targetId, type);
     if (exist == null) {
-      exist = await sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp, checkDuplicated: false);
+      sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp, checkDuplicated: false).then((value) {
+        if (value != null) func();
+      }); // await
     } else {
-      exist = await sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp);
+      sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp).then((value) {
+        if (value != null) func();
+      }); // await
     }
-    // badge
-    if ((exist != null) && !message.isOutbound && message.canNotification) {
-      if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
-        Badge.onCountUp(1); // await
-      }
-    }
-    return exist;
+    return;
   }
 
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
