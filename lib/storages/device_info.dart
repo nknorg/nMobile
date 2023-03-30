@@ -321,7 +321,7 @@ class DeviceInfoStorage with Tag {
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
-            Map<String, dynamic>? result = await db?.transaction((txn) async {
+            return await db?.transaction((txn) async {
               List<Map<String, dynamic>>? res = await txn.query(
                 tableName,
                 columns: ['*'],
@@ -352,10 +352,9 @@ class DeviceInfoStorage with Tag {
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
               );
+              if (count <= 0) logger.w("$TAG - setData - fail - contactAddress:$contactAddress - deviceId:$deviceId - newData:$data");
               return (count > 0) ? data : null;
             });
-            // logger.v("$TAG - setData - success - contactAddress:$contactAddress - deviceId:$deviceId - data:$newData");
-            return result;
           } catch (e, st) {
             handleError(e, st);
           }
