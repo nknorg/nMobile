@@ -21,7 +21,7 @@ class Badge {
     if (!(await checkEnable())) return;
     _queue.add(() async {
       _count = count;
-      logger.i("Badge - refreshCount - count:$_count");
+      logger.d("Badge - refreshCount - count:$_count");
       await _updateCount();
     });
   }
@@ -31,7 +31,7 @@ class Badge {
     if (!(await checkEnable())) return;
     _queue.add(() async {
       _count += count;
-      logger.i("Badge - onCountUp - up:$count - count:$_count");
+      logger.d("Badge - onCountUp - up:$count - count:$_count");
       await _updateCount();
     });
   }
@@ -41,7 +41,7 @@ class Badge {
     if (!(await checkEnable())) return;
     _queue.add(() async {
       _count -= count;
-      logger.i("Badge - onCountDown - down:$count - count:$_count");
+      logger.d("Badge - onCountDown - down:$count - count:$_count");
       await _updateCount();
     });
   }

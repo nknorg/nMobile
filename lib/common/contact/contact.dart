@@ -269,7 +269,9 @@ class ContactCommon with Tag {
   Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return false;
     logger.d("$TAG - setRemarkAvatar - start - new_avatar_path:$avatarLocalPath - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"remarkAvatar": avatarLocalPath});
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "remarkAvatar": avatarLocalPath,
+    });
     if (data != null) {
       logger.i("$TAG - setRemarkAvatar - end success - new:$data - contact:$schema");
       schema.data = data;
@@ -283,7 +285,9 @@ class ContactCommon with Tag {
   Future<bool> setRemarkName(ContactSchema? schema, String? remarkName, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return false;
     logger.d("$TAG - setRemarkName - start - new_name:$remarkName - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"remarkName": remarkName});
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "remarkName": remarkName,
+    });
     if (data != null) {
       logger.i("$TAG - setRemarkName - end success - new:$data - contact:$schema");
       schema.data = data;
@@ -297,7 +301,9 @@ class ContactCommon with Tag {
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     logger.d("$TAG - setNotes - start - notes:$notes - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"notes": notes});
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "notes": notes,
+    });
     if (data != null) {
       logger.i("$TAG - setNotes - end success - new:$data - contact:$schema");
       schema.data = data;
@@ -311,7 +317,9 @@ class ContactCommon with Tag {
   Future<bool> setWalletAddress(ContactSchema? schema, String? walletAddress, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     logger.d("$TAG - setWalletAddress - start - walletAddress:$walletAddress - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"nknWalletAddress": walletAddress});
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "nknWalletAddress": walletAddress,
+    });
     if (data != null) {
       logger.i("$TAG - setWalletAddress - end success - new:$data - contact:$schema");
       schema.data = data;
@@ -325,7 +333,9 @@ class ContactCommon with Tag {
   Future<bool> setMappedAddress(ContactSchema? schema, List<String>? mapped, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     logger.d("$TAG - setMappedAddress - start - mapped:$mapped - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"mappedAddress": mapped});
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "mappedAddress": mapped,
+    });
     if (data != null) {
       logger.i("$TAG - setMappedAddress - end success - new:$data - contact:$schema");
       schema.data = data;

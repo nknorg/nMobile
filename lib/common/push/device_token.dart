@@ -17,7 +17,11 @@ class DeviceToken {
     } else if (Platform.isAndroid) {
       token = await getFCM();
     }
-    logger.i("DeviceToken - getToken - $token");
+    if (token?.isNotEmpty == true) {
+      logger.i("DeviceToken - getToken - $token");
+    } else {
+      logger.w("DeviceToken - getToken null");
+    }
     return token;
   }
 

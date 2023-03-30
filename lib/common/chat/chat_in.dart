@@ -245,6 +245,7 @@ class ChatInCommon with Tag {
   Future<bool> _receiveReceipt(MessageSchema received, DeviceInfoSchema? deviceInfo) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
     if ((received.content == null) || !(received.content is String)) return false;
+    if (!received.canReceipt) return false;
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.content, MessageContentType.piece);
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
@@ -806,9 +807,13 @@ class ChatInCommon with Tag {
     chatOutCommon.sendPrivateGroupMemberResponse(addressList, groupSchema, [newGroupItem]).then((success) async {
       if (success) {
         success = await chatOutCommon.sendPrivateGroupOptionResponse(addressList, groupSchema);
-        if (!success) logger.e('$TAG - _receivePrivateGroupAccept - sync members member fail');
-      } else {
-        logger.e('$TAG - _receivePrivateGroupAccept - sync members options fail');
+        if (success) {
+          logger.i('$TAG - _receivePrivateGroupAccept - success - accept:$newGroupItem - group:$groupSchema');
+        } else {
+          logger.w('$TAG - _receivePrivateGroupAccept - sync members member fail - accept:$newGroupItem - group:$groupSchema');
+        }
+      } else if (addressList.isNotEmpty) {
+        logger.w('$TAG - _receivePrivateGroupAccept - sync members options fail - accept:$newGroupItem - group:$groupSchema');
       }
     }); // await
     return true;
@@ -871,11 +876,10 @@ class ChatInCommon with Tag {
         logger.d('$TAG - _receivePrivateGroupOptionResponse - version same - version:$version');
       } else {
         logger.i('$TAG - _receivePrivateGroupOptionResponse - version diff - version1:${group.membersRequestedVersion} - version2:$version');
-        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) async {
+        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId).then((version) {
           if (version?.isNotEmpty == true) {
-            group.setMembersRequestAt(DateTime.now().millisecondsSinceEpoch);
-            group.setMembersRequestedVersion(version);
-            await privateGroupCommon.updateGroupData(group.groupId, group.data);
+            int nowAt = DateTime.now().millisecondsSinceEpoch;
+            privateGroupCommon.setGroupMembersRequestInfo(group, nowAt, version, notify: true);
           }
         }); // await
       }
