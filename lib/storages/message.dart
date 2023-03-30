@@ -612,7 +612,7 @@ class MessageStorage with Tag {
     if (added == null || added.isEmpty) return null;
     return await _queue.add(() async {
           try {
-            Map<String, dynamic>? result = await db?.transaction((txn) async {
+            return await db?.transaction((txn) async {
               List<Map<String, dynamic>>? res = await txn.query(
                 tableName,
                 columns: ['*'],
@@ -641,10 +641,9 @@ class MessageStorage with Tag {
                 where: 'msg_id = ?',
                 whereArgs: [msgId],
               );
+              if (count <= 0) logger.w("$TAG - updateOptions - fail - count:$count - msgId:$msgId - options:$options");
               return (count > 0) ? options : null;
             });
-            // logger.v("$TAG - updateOptions - count:$count - msgId:$msgId - options:$options");
-            return result;
           } catch (e, st) {
             handleError(e, st);
           }

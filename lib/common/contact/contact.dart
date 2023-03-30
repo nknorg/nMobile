@@ -5,6 +5,7 @@ import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/contact.dart';
+import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -114,8 +115,7 @@ class ContactCommon with Tag {
     if (needWallet) {
       if ((contact.nknWalletAddress == null) || (contact.nknWalletAddress?.isEmpty == true)) {
         String? nknWalletAddress = await contact.tryNknWalletAddress();
-        bool success = await setWalletAddress(contact, nknWalletAddress);
-        if (success) contact.nknWalletAddress = nknWalletAddress;
+        setWalletAddress(contact, nknWalletAddress);
       }
     }
     return contact;
@@ -137,6 +137,7 @@ class ContactCommon with Tag {
       }
     }
     schema.nknWalletAddress = await schema.tryNknWalletAddress();
+    logger.d("$TAG - add - schema:$schema");
     ContactSchema? added = await ContactStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
@@ -162,8 +163,8 @@ class ContactCommon with Tag {
     ContactSchema? _schema = await ContactStorage.instance.queryByClientAddress(clientAddress);
     if ((_schema != null) && ((_schema.nknWalletAddress == null) || (_schema.nknWalletAddress?.isEmpty == true))) {
       String? nknWalletAddress = await _schema.tryNknWalletAddress();
-      bool success = await setWalletAddress(_schema, nknWalletAddress);
-      if (success) _schema.nknWalletAddress = nknWalletAddress;
+      logger.d("$TAG - queryByClientAddress - nknWalletAddress:$nknWalletAddress");
+      await setWalletAddress(_schema, nknWalletAddress);
     }
     return _schema;
   }
@@ -239,65 +240,100 @@ class ContactCommon with Tag {
 
   Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await ContactStorage.instance.setNotificationOpen(schema.id, open, old: schema.options);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setNotificationOpen - start - open:$open - old:${schema.options} - contact:$schema");
+    OptionsSchema? options = await ContactStorage.instance.setNotificationOpen(schema.id, open);
+    if (options != null) {
+      logger.i("$TAG - setNotificationOpen - end success - new:$options - contact:$schema");
+      schema.options = options;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setNotificationOpen - end fail - open:$open - old:${schema.options} - contact:$schema");
+    }
+    return options != null;
   }
 
   Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateAt, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await ContactStorage.instance.setBurning(schema.id, burningSeconds, updateAt, old: schema.options);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setOptionsBurn - start - burningSeconds:$burningSeconds - updateAt:$updateAt - old:${schema.options} - contact:$schema");
+    OptionsSchema? options = await ContactStorage.instance.setBurning(schema.id, burningSeconds, updateAt);
+    if (options != null) {
+      logger.i("$TAG - setOptionsBurn - end success - new:$options - contact:$schema");
+      schema.options = options;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setOptionsBurn - end fail - burningSeconds:$burningSeconds - updateAt:$updateAt - old:${schema.options} - contact:$schema");
+    }
+    return options != null;
   }
 
   Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
-    if (schema == null || schema.id == 0) return Future.value(false);
-    String? oldRemarkName = schema.data?['firstName'];
-    schema.data?['firstName'] = null; // clear history error
-    bool success = await ContactStorage.instance.setRemarkProfile(
-      schema.id,
-      avatarLocalPath,
-      schema.data?['remarkName'] ?? oldRemarkName,
-      oldExtraInfo: schema.data,
-    );
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    if (schema == null || schema.id == 0) return false;
+    logger.d("$TAG - setRemarkAvatar - start - new_avatar_path:$avatarLocalPath - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"remarkAvatar": avatarLocalPath});
+    if (data != null) {
+      logger.i("$TAG - setRemarkAvatar - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setRemarkAvatar - end fail - new_avatar_path:$avatarLocalPath - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
   }
 
   Future<bool> setRemarkName(ContactSchema? schema, String? remarkName, {bool notify = false}) async {
     if (schema == null || schema.id == 0) return false;
-    String? oldRemarkAvatar = schema.data?['avatar'];
-    schema.data?['avatar'] = null; // clear history error
-    bool success = await ContactStorage.instance.setRemarkProfile(
-      schema.id,
-      schema.data?['remarkAvatar'] ?? oldRemarkAvatar,
-      remarkName,
-      oldExtraInfo: schema.data,
-    );
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setRemarkName - start - new_name:$remarkName - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"remarkName": remarkName});
+    if (data != null) {
+      logger.i("$TAG - setRemarkName - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setRemarkName - end fail - new_name:$remarkName - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
   }
 
   Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await ContactStorage.instance.setNotes(schema.id, notes, oldExtraInfo: schema.data);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setNotes - start - notes:$notes - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"notes": notes});
+    if (data != null) {
+      logger.i("$TAG - setNotes - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setNotes - end fail - notes:$notes - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
   }
 
   Future<bool> setWalletAddress(ContactSchema? schema, String? walletAddress, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await ContactStorage.instance.setWalletAddress(schema.id, walletAddress, oldExtraInfo: schema.data);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setWalletAddress - start - walletAddress:$walletAddress - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"nknWalletAddress": walletAddress});
+    if (data != null) {
+      logger.i("$TAG - setWalletAddress - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setWalletAddress - end fail - walletAddress:$walletAddress - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
   }
 
   Future<bool> setMappedAddress(ContactSchema? schema, List<String>? mapped, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
-    bool success = await ContactStorage.instance.setMappedAddress(schema.id, mapped, oldExtraInfo: schema.data);
-    if (success && notify) queryAndNotify(schema.id);
-    return success;
+    logger.d("$TAG - setMappedAddress - start - mapped:$mapped - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {"mappedAddress": mapped});
+    if (data != null) {
+      logger.i("$TAG - setMappedAddress - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setMappedAddress - end fail - mapped:$mapped - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
   }
 
   Future queryAndNotify(int? contactId) async {

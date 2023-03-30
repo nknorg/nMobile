@@ -336,15 +336,28 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setNotificationOpen(int? contactId, bool open, {OptionsSchema? old}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    OptionsSchema options = old ?? OptionsSchema();
-    options.notificationOpen = open;
+  Future<OptionsSchema?> setNotificationOpen(int? contactId, bool open) async {
+    if (db?.isOpen != true) return null;
+    if (contactId == null || contactId == 0) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>>? res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [contactId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setNotificationOpen - no exists - contactId:$contactId");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              OptionsSchema options = schema.options ?? OptionsSchema();
+              options.notificationOpen = open;
+              int count = await txn.update(
                 tableName,
                 {
                   'options': jsonEncode(options.toMap()),
@@ -353,31 +366,40 @@ class ContactStorage with Tag {
                 where: 'id = ?',
                 whereArgs: [contactId],
               );
+              if (count <= 0) logger.v("$TAG - setNotificationOpen - fail - contactId:$contactId - options:$options");
+              return (count > 0) ? options : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setNotificationOpen - success - contactId:$contactId - open:$open");
-              return true;
-            }
-            logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - open:$open");
-            return false;
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 
-  Future<bool> setBurning(int? contactId, int? burningSeconds, int? updateAt, {OptionsSchema? old}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    OptionsSchema options = old ?? OptionsSchema();
-    options.deleteAfterSeconds = burningSeconds ?? 0;
-    options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
+  Future<OptionsSchema?> setBurning(int? contactId, int? burningSeconds, int? updateAt) async {
+    if (db?.isOpen != true) return null;
+    if (contactId == null || contactId == 0) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>>? res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [contactId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setBurning - no exists - contactId:$contactId");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              OptionsSchema options = schema.options ?? OptionsSchema();
+              options.deleteAfterSeconds = burningSeconds ?? 0;
+              options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
+              int count = await txn.update(
                 tableName,
                 {
                   'options': jsonEncode(options.toMap()),
@@ -386,30 +408,45 @@ class ContactStorage with Tag {
                 where: 'id = ?',
                 whereArgs: [contactId],
               );
+              if (count <= 0) logger.w("$TAG - setBurning - fail - contactId:$contactId - options:$options");
+              return (count > 0) ? options : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setBurning - success - contactId:$contactId - options:$options");
-              return true;
-            }
-            logger.w("$TAG - setBurning - fail - contactId:$contactId - options:$options");
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 
-  Future<bool> setRemarkProfile(int? contactId, String? avatarLocalPath, String? remarkName, {Map<String, dynamic>? oldExtraInfo}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
-    data['remarkAvatar'] = avatarLocalPath;
-    data['remarkName'] = remarkName;
+  Future<Map<String, dynamic>?> setData(int? contactId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (contactId == null || contactId == 0) return null;
+    if (added == null || added.isEmpty) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>>? res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [contactId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setData - no exists - contactId:$contactId");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              data.addAll(added);
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) {
+                  data.remove(element);
+                });
+              }
+              int count = await txn.update(
                 tableName,
                 {
                   'data': jsonEncode(data),
@@ -418,111 +455,14 @@ class ContactStorage with Tag {
                 where: 'id = ?',
                 whereArgs: [contactId],
               );
+              if (count <= 0) logger.w("$TAG - setData - fail - contactId:$contactId - newData:$data");
+              return (count > 0) ? data : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setRemarkProfile - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
-              return true;
-            }
-            logger.w("$TAG - setRemarkProfile - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
-  }
-
-  Future<bool> setNotes(int? contactId, String? notes, {Map<String, dynamic>? oldExtraInfo}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
-    data['notes'] = notes;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'data': jsonEncode(data),
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'id = ?',
-                whereArgs: [contactId],
-              );
-            });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setNotes - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
-              return true;
-            }
-            logger.w("$TAG - setNotes - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
-  }
-
-  Future<bool> setWalletAddress(int? contactId, String? walletAddress, {Map<String, dynamic>? oldExtraInfo}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    if (walletAddress == null || walletAddress.isEmpty) return false;
-    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
-    data['nknWalletAddress'] = walletAddress;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'data': jsonEncode(data),
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'id = ?',
-                whereArgs: [contactId],
-              );
-            });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setWalletAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
-              return true;
-            }
-            logger.w("$TAG - setWalletAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
-  }
-
-  Future<bool> setMappedAddress(int? contactId, List<String>? mapped, {Map<String, dynamic>? oldExtraInfo}) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
-    Map<String, dynamic> data = oldExtraInfo ?? Map<String, dynamic>();
-    data['mappedAddress'] = mapped;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'data': jsonEncode(data),
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'id = ?',
-                whereArgs: [contactId],
-              );
-            });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setMappedAddress - success - contactId:$contactId - new:$data - old:$oldExtraInfo");
-              return true;
-            }
-            logger.w("$TAG - setMappedAddress - fail - contactId:$contactId - new:$data - old:$oldExtraInfo");
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
+        null;
   }
 }

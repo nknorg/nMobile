@@ -41,6 +41,7 @@ class DeviceInfoCommon with Tag {
     } else {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
+        logger.d("$TAG - getMe - setData - newData:$newData - oldData:${deviceInfo.data}");
         bool success = await setData(deviceInfo.contactAddress, deviceInfo.deviceId, newData);
         if (success) deviceInfo.data = newData;
       }
