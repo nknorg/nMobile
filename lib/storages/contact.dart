@@ -63,7 +63,7 @@ class ContactStorage with Tag {
           });
         } else {
           id = await db?.transaction((txn) async {
-            List<Map<String, dynamic>>? res = await txn.query(
+            List<Map<String, dynamic>> res = await txn.query(
               tableName,
               columns: ['*'],
               where: 'address = ?',
@@ -342,7 +342,7 @@ class ContactStorage with Tag {
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
-              List<Map<String, dynamic>>? res = await txn.query(
+              List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
                 where: 'id = ?',
@@ -383,7 +383,7 @@ class ContactStorage with Tag {
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
-              List<Map<String, dynamic>>? res = await txn.query(
+              List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
                 where: 'id = ?',
@@ -426,7 +426,7 @@ class ContactStorage with Tag {
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
-              List<Map<String, dynamic>>? res = await txn.query(
+              List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
                 where: 'id = ?',
@@ -442,9 +442,7 @@ class ContactStorage with Tag {
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
               data.addAll(added);
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
-                removeKeys.forEach((element) {
-                  data.remove(element);
-                });
+                removeKeys.forEach((element) => data.remove(element));
               }
               int count = await txn.update(
                 tableName,

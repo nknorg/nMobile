@@ -129,12 +129,9 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       } else if (exist != null) {
         bool success1 = await contactCommon.setType(exist.id, ContactType.friend, notify: true);
         if (success1) exist.type = ContactType.friend;
-        bool success2 = await contactCommon.setRemarkName(exist, remarkName, notify: true);
-        if (success2) exist.data?['remarkName'] = remarkName;
-        bool success3 = await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
-        if (success3) exist.data?['remarkAvatar'] = remarkAvatar;
-        bool success4 = await contactCommon.setNotes(exist, note, notify: true);
-        if (success4) exist.data?['notes'] = note;
+        await contactCommon.setRemarkName(exist, remarkName, notify: true);
+        await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
+        await contactCommon.setNotes(exist, note, notify: true);
         Loading.dismiss();
       } else {
         ContactSchema? schema = await ContactSchema.create(clientAddress, ContactType.friend);

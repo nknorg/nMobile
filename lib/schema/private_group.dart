@@ -104,40 +104,24 @@ class PrivateGroupSchema {
     data?['signature'] = signature;
   }
 
-  int get optionsRequestAt {
-    return int.tryParse(data?['optionsRequestAt']?.toString() ?? "0") ?? 0;
+  int? get quitCommits {
+    return int.tryParse(data?["quit_at_version_commits"]?.toString() ?? "");
   }
 
-  void setOptionsRequestAt(int? timeAt) {
-    if (data == null) data = Map();
-    data?['optionsRequestAt'] = timeAt;
+  int get optionsRequestAt {
+    return int.tryParse(data?['optionsRequestAt']?.toString() ?? "0") ?? 0;
   }
 
   String get optionsRequestedVersion {
     return data?['optionsRequestedVersion']?.toString() ?? "";
   }
 
-  void setOptionsRequestedVersion(String? version) {
-    if (data == null) data = Map();
-    data?['optionsRequestedVersion'] = version;
-  }
-
   int get membersRequestAt {
     return int.tryParse(data?['membersRequestAt']?.toString() ?? "0") ?? 0;
   }
 
-  void setMembersRequestAt(int? timeAt) {
-    if (data == null) data = Map();
-    data?['membersRequestAt'] = timeAt;
-  }
-
   String get membersRequestedVersion {
     return data?['membersRequestedVersion']?.toString() ?? "";
-  }
-
-  void setMembersRequestedVersion(String? version) {
-    if (data == null) data = Map();
-    data?['membersRequestedVersion'] = version;
   }
 
   Map<String, dynamic> getRawDataMap() {
