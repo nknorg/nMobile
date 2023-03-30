@@ -4,18 +4,17 @@ import 'dart:io';
 import 'package:logger/logger.dart';
 import 'package:nmobile/common/settings.dart';
 
-Logger logger = Platform.isAndroid
-    ? Logger(
-        filter: CustomFilter(),
-        printer: ColorPrinter(),
-        output: null,
-        level: Level.verbose,
-      )
-    : Logger(printer: PrettyPrinter(), filter: CustomFilter());
+Logger logger = Logger(
+  filter: CustomFilter(),
+  printer: ColorPrinter(),
+  output: null,
+  level: Level.verbose,
+);
 
 class CustomFilter extends LogFilter {
   @override
   bool shouldLog(LogEvent event) {
+    if (!Settings.debug) return false;
     bool isVerbose = event.level == Level.verbose;
     bool isDebug = event.level == Level.debug;
     bool isInfo = event.level == Level.info;
@@ -23,7 +22,7 @@ class CustomFilter extends LogFilter {
     bool isError = event.level == Level.error;
     bool isWtf = event.level == Level.wtf;
     bool levelOk = isVerbose || isDebug || isInfo || isWarning || isError || isWtf;
-    return levelOk && Settings.debug;
+    return levelOk;
   }
 }
 
@@ -65,9 +64,10 @@ class ColorPrinter extends LogPrinter {
   @override
   List<String> log(LogEvent event) {
     var color = levelColors[event.level]!;
+    DateTime data = DateTime.now();
+    var timeStr = printTime ? color('TIME: ${data.minute}:${data.second}:${data.millisecond}') : '';
     var messageStr = color(_stringifyMessage(event.message));
     var errorStr = event.error != null ? '  ERROR: ${event.error}' : '';
-    var timeStr = printTime ? color('TIME: ${DateTime.now().toIso8601String()}') : '';
     return ['${_labelFor(event.level)}  $timeStr  $messageStr  $errorStr'];
   }
 
