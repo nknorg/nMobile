@@ -154,9 +154,9 @@ class ChatCommon with Tag {
       });
       if (!lastTimeOK || (result.length < limit) || (targetIds.length >= Settings.maxCountPingSessions)) break;
     }
-    if (targetIds.length > 0) logger.i("$TAG - sendPings2LatestSessions - count:${targetIds.length} - targetIds:$targetIds");
     // send
-    await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
+    int count = await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
+    logger.i("$TAG - sendPings2LatestSessions - enable_count:$count - total:${targetIds.length} - targetIds:$targetIds");
   }
 
   Future<int> resetMessageSending({bool ipfsReset = false}) async {
@@ -456,18 +456,16 @@ class ChatCommon with Tag {
           int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
           if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
             logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds');
-            exists.options?.deleteAfterSeconds = burnAfterSeconds;
             await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
           }
         }
         // request
         if (exists.optionsRequestedVersion != remoteVersion) {
           logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) async {
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId).then((version) {
             if (version?.isNotEmpty == true) {
-              exists?.setOptionsRequestAt(DateTime.now().millisecondsSinceEpoch);
-              exists?.setOptionsRequestedVersion(version);
-              await privateGroupCommon.updateGroupData(exists?.groupId, exists?.data, notify: true);
+              int nowAt = DateTime.now().millisecondsSinceEpoch;
+              privateGroupCommon.setGroupOptionsRequestInfo(exists, nowAt, version, notify: true);
             }
           }); // await
         }

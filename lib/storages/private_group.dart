@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
@@ -271,55 +272,89 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateOptions(String? groupId, Map<String, dynamic>? options) async {
-    if (db?.isOpen != true) return false;
-    if (groupId == null || groupId.isEmpty) return false;
+  Future<OptionsSchema?> setBurning(String? groupId, int? burningSeconds) async {
+    if (db?.isOpen != true) return null;
+    if (groupId == null || groupId.isEmpty) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setBurning - no exists - groupId:$groupId");
+                return null;
+              }
+              PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
+              OptionsSchema options = schema.options ?? OptionsSchema();
+              options.deleteAfterSeconds = burningSeconds ?? 0;
+              int count = await txn.update(
                 tableName,
                 {
-                  'options': options != null ? jsonEncode(options) : null,
+                  'options': jsonEncode(options.toMap()),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
+              if (count <= 0) logger.w("$TAG - setBurning - fail - groupId:$groupId - options:$options");
+              return (count > 0) ? options : null;
             });
-            // logger.v("$TAG - updateOptions - count:$count - groupId:$groupId - options:$options");
-            return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 
-  Future<bool> updateData(String? groupId, Map<String, dynamic>? data) async {
-    if (db?.isOpen != true) return false;
-    if (groupId == null || groupId.isEmpty) return false;
+  Future<Map<String, dynamic>?> setData(String? groupId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    if (added == null || added.isEmpty) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setData - no exists - groupId:$groupId");
+                return null;
+              }
+              PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              data.addAll(added);
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) => data.remove(element));
+              }
+              int count = await txn.update(
                 tableName,
                 {
-                  'data': data != null ? jsonEncode(data) : null,
+                  'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'group_id = ?',
                 whereArgs: [groupId],
               );
+              if (count <= 0) logger.w("$TAG - setData - fail - groupId:$groupId - newData:$data");
+              return (count > 0) ? data : null;
             });
-            // logger.v("$TAG - updateData - count:$count - groupId:$groupId - data:$data");
-            return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 }

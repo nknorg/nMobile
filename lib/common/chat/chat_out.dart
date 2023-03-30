@@ -124,10 +124,10 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future sendPing(List<String> clientAddressList, bool isPing, {int gap = 0}) async {
-    if (!(await _waitClientOk())) return;
+  Future<int> sendPing(List<String> clientAddressList, bool isPing, {int gap = 0}) async {
+    if (!(await _waitClientOk())) return 0;
     String? selfAddress = clientCommon.address;
-    if (clientAddressList.isEmpty) return;
+    if (clientAddressList.isEmpty) return 0;
     // destList
     List<String> destList = [];
     for (int i = 0; i < clientAddressList.length; i++) {
@@ -145,7 +145,7 @@ class ChatOutCommon with Tag {
         destList.add(address);
       }
     }
-    if (destList.isEmpty) return;
+    if (destList.isEmpty) return 0;
     // data
     String? data;
     if ((destList.length == 1) && (destList[0] == selfAddress)) {
@@ -192,6 +192,7 @@ class ChatOutCommon with Tag {
         }
       });
     }
+    return destList.length;
   }
 
   // NO DB NO display NO topic (1 to 1)
@@ -657,7 +658,7 @@ class ChatOutCommon with Tag {
     if (gap != null) {
       int timePast = DateTime.now().millisecondsSinceEpoch - group.optionsRequestAt;
       if (timePast < gap) {
-        logger.d('$TAG - sendPrivateGroupOptionRequest - time gap small - past:$timePast');
+        logger.d('$TAG - sendPrivateGroupOptionRequest - past <  gap - past:$timePast');
         return null;
       }
     }
@@ -691,7 +692,7 @@ class ChatOutCommon with Tag {
     if (gap != null) {
       int timePast = DateTime.now().millisecondsSinceEpoch - group.membersRequestAt;
       if (timePast < gap) {
-        logger.d('$TAG - sendPrivateGroupMemberRequest - time gap small - past:$timePast');
+        logger.d('$TAG - sendPrivateGroupMemberRequest - past <  gap - past:$timePast');
         return null;
       }
     }

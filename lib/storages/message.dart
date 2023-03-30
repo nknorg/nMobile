@@ -613,7 +613,7 @@ class MessageStorage with Tag {
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
-              List<Map<String, dynamic>>? res = await txn.query(
+              List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
                 where: 'msg_id = ?',
@@ -629,9 +629,7 @@ class MessageStorage with Tag {
               Map<String, dynamic>? options = schema.options ?? Map<String, dynamic>();
               options.addAll(added);
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
-                removeKeys.forEach((element) {
-                  options.remove(element);
-                });
+                removeKeys.forEach((element) => options.remove(element));
               }
               int count = await txn.update(
                 tableName,

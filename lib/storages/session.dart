@@ -54,7 +54,7 @@ class SessionStorage with Tag {
           });
         } else {
           id = await db?.transaction((txn) async {
-            List<Map<String, dynamic>>? res = await txn.query(
+            List<Map<String, dynamic>> res = await txn.query(
               tableName,
               columns: ['*'],
               where: 'target_id = ? AND type = ?',
