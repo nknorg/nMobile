@@ -1046,7 +1046,7 @@ class PrivateGroupCommon with Tag {
     if (sessionNotify == null) {
       if (added.permission == PrivateGroupItemPerm.normal) {
         PrivateGroupItemSchema? mine = await queryGroupItem(schema.groupId, selfAddress);
-        sessionNotify = (mine?.expiresAt ?? 1) < (added.expiresAt ?? 0);
+        sessionNotify = (added.invitee == selfAddress) || ((mine?.expiresAt ?? 1) < (added.expiresAt ?? 0));
       }
     }
     if (sessionNotify == true) {
@@ -1145,7 +1145,7 @@ class PrivateGroupCommon with Tag {
     if (sessionNotify == null) {
       if (item.permission == PrivateGroupItemPerm.normal) {
         PrivateGroupItemSchema? mine = await queryGroupItem(item.groupId, selfAddress);
-        sessionNotify = (mine?.expiresAt ?? 1) < (item.expiresAt ?? 0);
+        sessionNotify = (item.invitee == selfAddress) || ((mine?.expiresAt ?? 1) < (item.expiresAt ?? 0));
       }
     }
     // session
