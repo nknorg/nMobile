@@ -872,17 +872,18 @@ class ChatInCommon with Tag {
     String signature = data['signature'];
     PrivateGroupSchema? group = await privateGroupCommon.updatePrivateGroupOptions(groupId, rawData, version, count, signature); // await
     if (group != null) {
-      if (group.membersRequestedVersion == version) {
-        logger.d('$TAG - _receivePrivateGroupOptionResponse - version same - version:$version');
+      if (group.membersRequestedVersion != version) {
+        logger.i('$TAG - _receivePrivateGroupOptionResponse - version requested diff - requested:${group.membersRequestedVersion} - remote:$version');
       } else {
-        logger.i('$TAG - _receivePrivateGroupOptionResponse - version diff - version1:${group.membersRequestedVersion} - version2:$version');
-        chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId).then((version) {
-          if (version?.isNotEmpty == true) {
-            int nowAt = DateTime.now().millisecondsSinceEpoch;
-            privateGroupCommon.setGroupMembersRequestInfo(group, nowAt, version, notify: true);
-          }
-        }); // await
+        logger.d('$TAG - _receivePrivateGroupOptionResponse - version requested same - version:$version');
       }
+      int? gap = (group.membersRequestedVersion != version) ? null : Settings.gapGroupRequestMembersMs;
+      chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((version) {
+        if (version?.isNotEmpty == true) {
+          int nowAt = DateTime.now().millisecondsSinceEpoch;
+          privateGroupCommon.setGroupMembersRequestInfo(group, nowAt, version, notify: true);
+        }
+      }); // await
     }
   }
 

@@ -461,14 +461,17 @@ class ChatCommon with Tag {
         }
         // request
         if (exists.optionsRequestedVersion != remoteVersion) {
-          logger.i('$TAG - privateGroupHandle - version diff - native:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId).then((version) {
-            if (version?.isNotEmpty == true) {
-              int nowAt = DateTime.now().millisecondsSinceEpoch;
-              privateGroupCommon.setGroupOptionsRequestInfo(exists, nowAt, version, notify: true);
-            }
-          }); // await
+          logger.i('$TAG - privateGroupHandle - version requested diff - requested:${exists.optionsRequestedVersion} - remote:$remoteVersion');
+        } else {
+          logger.d('$TAG - privateGroupHandle - version requested same - version:$remoteVersion');
         }
+        int? gap = (exists.optionsRequestedVersion != remoteVersion) ? null : Settings.gapGroupRequestOptionsMs;
+        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) {
+          if (version?.isNotEmpty == true) {
+            int nowAt = DateTime.now().millisecondsSinceEpoch;
+            privateGroupCommon.setGroupOptionsRequestInfo(exists, nowAt, version, notify: true);
+          }
+        }); // await
       }
     }
     return exists;
