@@ -69,16 +69,15 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   void _refreshContact() {
-    if (widget.subscriber.temp == null) widget.subscriber.temp = Map();
-    Map? temp = widget.subscriber.temp;
-    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == temp?["contact"]?.clientAddress)) return;
-    if (temp?["contact"] == null) {
-      String? address = widget.subscriber.clientAddress;
+    String? address = widget.subscriber.clientAddress;
+    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == address)) return;
+    if (widget.subscriber.temp?["contact"] == null) {
       contactCommon.queryByClientAddress(address).then((result) async {
         if (result == null) {
           result = await contactCommon.addByType(address, ContactType.none, notify: true, checkDuplicated: false);
         }
         if ((address == result?.clientAddress) && (address == widget.subscriber.clientAddress)) {
+          if (widget.subscriber.temp == null) widget.subscriber.temp = Map();
           widget.subscriber.temp?["contact"] = result;
           setState(() {
             contact = result;
@@ -86,7 +85,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
         }
       }); // await
     } else {
-      contact = temp?["contact"];
+      contact = widget.subscriber.temp?["contact"];
     }
   }
 

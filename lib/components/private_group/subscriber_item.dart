@@ -68,16 +68,15 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   void _refreshContact() {
-    if (widget.privateGroupItem.temp == null) widget.privateGroupItem.temp = Map();
-    Map? temp = widget.privateGroupItem.temp;
-    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == temp?["contact"]?.clientAddress)) return;
-    if (temp?["contact"] == null) {
-      String? address = widget.privateGroupItem.invitee;
+    String? address = widget.privateGroupItem.invitee;
+    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == address)) return;
+    if (widget.privateGroupItem.temp?["contact"] == null) {
       contactCommon.queryByClientAddress(address).then((result) async {
         if (result == null) {
           result = await contactCommon.addByType(address, ContactType.none, notify: true, checkDuplicated: false);
         }
         if ((address == result?.clientAddress) && (address == widget.privateGroupItem.invitee)) {
+          if (widget.privateGroupItem.temp == null) widget.privateGroupItem.temp = Map();
           widget.privateGroupItem.temp?["contact"] = result;
           setState(() {
             contact = result;
@@ -85,7 +84,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
         }
       }); // await
     } else {
-      contact = temp?["contact"];
+      contact = widget.privateGroupItem.temp?["contact"];
     }
   }
 
