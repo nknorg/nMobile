@@ -227,13 +227,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       isLoginProgress = false;
       return false;
     }
-    // TODO:GG 是不是放到wallet前面？
     // fixed:GG ios_152_db
     if (init) await dbCommon.fixIOS_152();
     // client
     bool success = await clientCommon.signIn(wallet, null, force: !init, toast: true, loading: (visible, dbOpen) {
       if (dbOpen && !isAuthProgress) _setConnected(true);
     });
+    chatCommon.sendPings2LatestSessions(); // await
     // view
     if (!isAuthProgress) _setConnected(success);
     isLoginProgress = false;
