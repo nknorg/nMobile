@@ -49,6 +49,9 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   void onRefreshArguments() {
     loaded = false;
+    // _topic = null;
+    // _privateGroup = null;
+    // _contact = null;
     // target
     if (widget.session.isTopic) {
       _refreshTopic();
@@ -59,8 +62,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
     // message
     Map<String, dynamic>? msgOptions = widget.session.lastMessageOptions;
-    MessageSchema? lastMsg = (msgOptions != null) ? MessageSchema.fromMap(msgOptions) : null;
-    _lastMsg = lastMsg;
+    _lastMsg = (msgOptions != null) ? MessageSchema.fromMap(msgOptions) : null;
     // burning
     if ((_lastMsg?.deleteAt != null) && ((_lastMsg?.deleteAt ?? 0) > 0)) {
       _lastMsg = chatCommon.burningTick(_lastMsg!, "session");
@@ -98,15 +100,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   void _refreshTopic() {
-    if (widget.session.temp == null) widget.session.temp = Map();
-    Map? temp = widget.session.temp;
-    if ((_topic?.topic.isNotEmpty == true) && (_topic?.topic == temp?["topic"]?.topic)) {
+    if ((_topic?.topic.isNotEmpty == true) && (_topic?.topic == widget.session.targetId)) {
       loaded = true;
       return;
     }
-    if (temp?["topic"] == null) {
+    if (widget.session.temp?["topic"] == null) {
       topicCommon.queryByTopic(widget.session.targetId).then((topic) {
         if (widget.session.targetId == topic?.topic) {
+          if (widget.session.temp == null) widget.session.temp = Map();
           widget.session.temp?["topic"] = topic;
           setState(() {
             loaded = true;
@@ -126,22 +127,21 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       }); // await
     } else {
       loaded = true;
-      _topic = temp?["topic"];
+      _topic = widget.session.temp?["topic"];
       _privateGroup = null;
       _contact = null;
     }
   }
 
   void _refreshPrivateGroup() {
-    if (widget.session.temp == null) widget.session.temp = Map();
-    Map? temp = widget.session.temp;
-    if ((_privateGroup?.groupId.isNotEmpty == true) && (_privateGroup?.groupId == temp?["privateGroup"]?.groupId)) {
+    if ((_privateGroup?.groupId.isNotEmpty == true) && (_privateGroup?.groupId == widget.session.targetId)) {
       loaded = true;
       return;
     }
-    if (temp?["privateGroup"] == null) {
+    if (widget.session.temp?["privateGroup"] == null) {
       privateGroupCommon.queryGroup(widget.session.targetId).then((privateGroup) {
         if (widget.session.targetId == privateGroup?.groupId) {
+          if (widget.session.temp == null) widget.session.temp = Map();
           widget.session.temp?["privateGroup"] = privateGroup;
           setState(() {
             loaded = true;
@@ -162,21 +162,20 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     } else {
       loaded = true;
       _topic = null;
-      _privateGroup = temp?["privateGroup"];
+      _privateGroup = widget.session.temp?["privateGroup"];
       _contact = null;
     }
   }
 
   void _refreshContact() {
-    if (widget.session.temp == null) widget.session.temp = Map();
-    Map? temp = widget.session.temp;
-    if ((_contact?.clientAddress.isNotEmpty == true) && (_contact?.clientAddress == temp?["contact"]?.clientAddress)) {
+    if ((_contact?.clientAddress.isNotEmpty == true) && (_contact?.clientAddress == widget.session.targetId)) {
       loaded = true;
       return;
     }
-    if (temp?["contact"] == null) {
+    if (widget.session.temp?["contact"] == null) {
       contactCommon.queryByClientAddress(widget.session.targetId).then((contact) {
         if (widget.session.targetId == contact?.clientAddress) {
+          if (widget.session.temp == null) widget.session.temp = Map();
           widget.session.temp?["contact"] = contact;
           setState(() {
             loaded = true;
@@ -185,7 +184,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
             _contact = contact;
           });
         } else {
-          contact = ContactSchema.createWithNoPublicKey(widget.session.targetId, ContactType.none);
+          contact = ContactSchema.createWithNoWalletAddress(widget.session.targetId, ContactType.none);
           setState(() {
             loaded = true;
             _topic = null;
@@ -198,7 +197,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       loaded = true;
       _topic = null;
       _privateGroup = null;
-      _contact = temp?["contact"];
+      _contact = widget.session.temp?["contact"];
     }
   }
 

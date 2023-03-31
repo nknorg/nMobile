@@ -63,25 +63,25 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   void _refreshSender() {
-    if (widget.message.temp == null) widget.message.temp = Map();
-    Map? temp = widget.message.temp;
-    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == temp?["sender"]?.clientAddress)) return;
-    if (temp?["sender"] == null) {
+    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == widget.message.from)) return;
+    if (widget.message.temp?["sender"] == null) {
+      _sender = null;
       contactCommon.queryByClientAddress(widget.message.from).then((sender) {
         if (widget.message.from == sender?.clientAddress) {
+          if (widget.message.temp == null) widget.message.temp = Map();
           widget.message.temp?["sender"] = sender;
           setState(() {
             _sender = sender;
           });
         } else {
-          sender = ContactSchema.createWithNoPublicKey(widget.message.from, ContactType.none);
+          sender = ContactSchema.createWithNoWalletAddress(widget.message.from, ContactType.none);
           setState(() {
             _sender = sender;
           });
         }
       }); // await
     } else {
-      _sender = temp?["sender"];
+      _sender = widget.message.temp?["sender"];
     }
   }
 
