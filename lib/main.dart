@@ -52,7 +52,6 @@ void main() async {
     application.init();
     // await dbCommon.openByDefault();
     await localNotification.init();
-    await taskService.init();
     // await backgroundFetchService.install();
     if (Settings.appContext != null) BlocProvider.of<WalletBloc>(Settings.appContext).add(LoadWallet());
   });
