@@ -92,13 +92,15 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         // topics check (24h)
         if (clientCommon.isClientOK) {
           int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
-          logger.i("App - checkAllTopics - check:${lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs} - gap:$lastCheckTopicGap");
           if (lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs) {
+            logger.i("App - checkAllTopics - check go - gap:$lastCheckTopicGap");
             Future.delayed(Duration(milliseconds: 1000)).then((value) {
               topicCommon.checkAllTopics(refreshSubscribers: false); // await
               lastTopicsCheckAt = DateTime.now().millisecondsSinceEpoch;
               SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastTopicsCheckAt);
             });
+          } else {
+            logger.d("App - checkAllTopics - check no - gap:$lastCheckTopicGap");
           }
         }
       } else if (application.isGoBackground(states)) {
