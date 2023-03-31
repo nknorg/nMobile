@@ -9,16 +9,36 @@ abstract class BaseStateFulWidgetState<T extends StatefulWidget> extends State<T
   @protected
   void onRefreshArguments();
 
+  // @override
+  // State createState() {
+  //   return super.createState();
+  // }
+
   @override
   void initState() {
     super.initState();
     onRefreshArguments();
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return super.build(context);
+  // }
+
   @override
   void didUpdateWidget(covariant T oldWidget) {
     super.didUpdateWidget(oldWidget);
     onRefreshArguments();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
   }
 
   @override
