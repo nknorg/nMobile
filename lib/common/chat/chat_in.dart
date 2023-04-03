@@ -40,13 +40,13 @@ class ChatInCommon with Tag {
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
     if (message == null) {
-      logger.e("$TAG - onMessageReceive - message is null - received:$message");
+      logger.e("$TAG - onMessageReceive - message is null");
       return;
     } else if (message.targetId.isEmpty) {
-      logger.e("$TAG - onMessageReceive - targetId is empty - received:$message");
+      logger.e("$TAG - onMessageReceive - targetId is empty - received:${message.toStringNoContent()}");
       return;
     } else if (message.contentType.isEmpty) {
-      logger.e("$TAG - onMessageReceive - contentType is empty - received:$message");
+      logger.e("$TAG - onMessageReceive - contentType is empty - received:${message.toStringNoContent()}");
       return;
     }
     // topic/group msg published callback can be used receipt
@@ -569,7 +569,7 @@ class ChatInCommon with Tag {
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.query(received.msgId);
     if (exists != null) {
-      logger.d("$TAG - _receiveIpfs - duplicated - message:$exists");
+      logger.d("$TAG - _receiveIpfs - duplicated - message:${exists.toStringNoContent()}");
       return false;
     }
     // content
@@ -601,7 +601,7 @@ class ChatInCommon with Tag {
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
-      logger.d("$TAG - _receiveImage - duplicated - message:$exists");
+      logger.d("$TAG - _receiveImage - duplicated - message:${exists.toStringNoContent()}");
       return false;
     }
     // File
@@ -609,7 +609,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - _receiveImage - content is null - message:$exists");
+      logger.e("$TAG - _receiveImage - content is null - message:${received.toStringNoContent()}");
       return false;
     }
     // DB
@@ -627,7 +627,7 @@ class ChatInCommon with Tag {
     // duplicated
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece);
     if (exists != null) {
-      logger.d("$TAG - _receiveAudio - duplicated - message:$exists");
+      logger.d("$TAG - _receiveAudio - duplicated - message:${exists.toStringNoContent()}");
       return false;
     }
     // File
@@ -635,7 +635,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - _receiveAudio - content is null - message:$exists");
+      logger.e("$TAG - _receiveAudio - content is null - message:${received.toStringNoContent()}");
       return false;
     }
     // DB
@@ -658,7 +658,7 @@ class ChatInCommon with Tag {
     // combined duplicated
     List<MessageSchema> existsCombine = await MessageStorage.instance.queryListByIdContentType(received.msgId, parentType, limit: 1);
     if (existsCombine.isNotEmpty) {
-      logger.d("$TAG - _receivePiece - combine exists - index:$index - message:$existsCombine");
+      logger.d("$TAG - _receivePiece - combine exists - index:$index - message:${received.toStringNoContent()}");
       // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
       return false;
     }
@@ -682,7 +682,7 @@ class ChatInCommon with Tag {
       if (piece != null) {
         pieces.add(piece);
       } else {
-        logger.w("$TAG - _receivePiece - piece added null - message:$received");
+        logger.w("$TAG - _receivePiece - piece added null - message:${received.toStringNoContent()}");
       }
     }
     logger.d("$TAG - _receivePiece - progress:$total/${pieces.length}/${total + parity}");
@@ -693,16 +693,16 @@ class ChatInCommon with Tag {
     String? base64String = await MessageSchema.combinePiecesData(pieces, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
-        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty and delete pieces - message:$received");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty and delete pieces - message:${received.toStringNoContent()}");
         await _deletePieces(received.msgId); // delete wrong pieces
       } else {
-        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty - message:$received");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty - message:${received.toStringNoContent()}");
       }
       return false;
     }
     MessageSchema? combine = MessageSchema.combinePiecesMsg(pieces, base64String);
     if (combine == null) {
-      logger.e("$TAG - _receivePiece - COMBINE:FAIL - message combine is empty - message:$received");
+      logger.e("$TAG - _receivePiece - COMBINE:FAIL - message combine is empty - message:${received.toStringNoContent()}");
       return false;
     }
     // combine.content - handle later
@@ -889,7 +889,7 @@ class ChatInCommon with Tag {
       } else {
         logger.d('$TAG - _receivePrivateGroupOptionResponse - version requested same - from:${received.from} - version:$version');
       }
-      int? gap = (group.membersRequestedVersion != version) ? null : Settings.gapGroupRequestMembersMs;
+      int gap = (group.membersRequestedVersion != version) ? 0 : Settings.gapGroupRequestMembersMs;
       chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((version) {
         if (version?.isNotEmpty == true) {
           int nowAt = DateTime.now().millisecondsSinceEpoch;

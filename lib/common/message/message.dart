@@ -107,7 +107,7 @@ class MessageCommon with Tag {
       if (clearContent) {
         messageDelete(message, notify: false); // await
       } else {
-        logger.i("$TAG - updateMessageStatus - delete later no - message:$message");
+        logger.i("$TAG - updateMessageStatus - delete later no - message:${message.toStringNoContent()}");
       }
     }
     return message;

@@ -11,7 +11,6 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/settings/settings_bloc.dart';
 import 'package:nmobile/blocs/settings/settings_state.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
-import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/generated/l10n.dart';
@@ -46,15 +45,6 @@ void main() async {
     await Settings.init();
   });
   await application.initialize();
-
-  // mounted
-  application.registerMounted(() async {
-    application.init();
-    // await dbCommon.openByDefault();
-    await localNotification.init();
-    // await backgroundFetchService.install();
-    if (Settings.appContext != null) BlocProvider.of<WalletBloc>(Settings.appContext).add(LoadWallet());
-  });
 
   // error
   catchGlobalError(() async {
