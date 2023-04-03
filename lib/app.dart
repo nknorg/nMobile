@@ -3,6 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
+import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/layout/nav.dart';
@@ -58,6 +61,14 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     // init
     Settings.appContext = context; // before at mounted
+
+    // mounted
+    application.registerMounted(() async {
+      application.init();
+      await localNotification.init();
+      // await backgroundFetchService.install();
+      BlocProvider.of<WalletBloc>(Settings.appContext).add(LoadWallet());
+    });
     application.mounted(); // await
 
     // page_controller
