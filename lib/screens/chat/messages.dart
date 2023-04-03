@@ -419,8 +419,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) {
       if (version?.isNotEmpty == true) {
-        int nowAt = DateTime.now().millisecondsSinceEpoch;
-        privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, nowAt, version, notify: true);
+        privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, version, notify: true);
       }
     }); // await
   }

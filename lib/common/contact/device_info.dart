@@ -42,7 +42,7 @@ class DeviceInfoCommon with Tag {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
         logger.d("$TAG - getMe - setData - newData:$newData - oldData:${deviceInfo.data}");
-        bool success = await setData(deviceInfo.contactAddress, deviceInfo.deviceId, newData);
+        bool success = await setProfile(deviceInfo.contactAddress, deviceInfo.deviceId, newData);
         if (success) deviceInfo.data = newData;
       }
     }
@@ -132,20 +132,38 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.setOnlineAt(contactAddress, deviceId, onlineAt: onlineAt);
   }
 
+  Future<bool> setProfile(String? contactAddress, String? deviceId, Map<String, dynamic>? added) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, added);
+    logger.d("$TAG - setProfile - add:$added - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    return data != null;
+  }
+
   Future<bool> setPingAt(String? contactAddress, String? deviceId, {int? pingAt}) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    return await DeviceInfoStorage.instance.setPingAt(contactAddress, deviceId, pingAt: pingAt);
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
+      "pingAt": pingAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setPingAt - pingAt:$pingAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    return data != null;
   }
 
   Future<bool> setPongAt(String? contactAddress, String? deviceId, {int? pongAt}) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    return await DeviceInfoStorage.instance.setPongAt(contactAddress, deviceId, pongAt: pongAt);
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
+      "pongAt": pongAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setPongAt - pongAt:$pongAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    return data != null;
   }
 
-  Future<bool> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? added) async {
+  Future<bool> setContactProfileResponseInfo(String? contactAddress, String? deviceId, String? version, {int? timeAt}) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, added);
-    logger.d("$TAG - setData - add:$added - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
+      "contactProfileResponseVersion": version,
+      "contactProfileResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setContactProfileResponseInfo - version:$version - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
     return data != null;
   }
 
