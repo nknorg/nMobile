@@ -352,6 +352,7 @@ class ChatOutCommon with Tag {
       targetTopic = target.topic;
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
+    ContactSchema? me = await contactCommon.getMe();
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -362,6 +363,7 @@ class ChatOutCommon with Tag {
       contentType: ((deleteAfterSeconds ?? 0) > 0) ? MessageContentType.textExtension : MessageContentType.text,
       content: content,
       extra: {
+        "profileVersion": me?.profileVersion,
         "privateGroupVersion": privateGroupVersion,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
@@ -403,6 +405,7 @@ class ChatOutCommon with Tag {
       targetTopic = target.topic;
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
+    ContactSchema? me = await contactCommon.getMe();
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -414,6 +417,7 @@ class ChatOutCommon with Tag {
       content: content,
       extra: data
         ..addAll({
+          "profileVersion": me?.profileVersion,
           "privateGroupVersion": privateGroupVersion,
           "deleteAfterSeconds": deleteAfterSeconds,
           "burningUpdateAt": burningUpdateAt,
@@ -471,6 +475,7 @@ class ChatOutCommon with Tag {
       targetTopic = target.topic;
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
+    ContactSchema? me = await contactCommon.getMe();
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -481,6 +486,7 @@ class ChatOutCommon with Tag {
       contentType: MessageContentType.image,
       content: content,
       extra: {
+        "profileVersion": me?.profileVersion,
         "privateGroupVersion": privateGroupVersion,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
@@ -518,6 +524,7 @@ class ChatOutCommon with Tag {
       targetTopic = target.topic;
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
+    ContactSchema? me = await contactCommon.getMe();
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -528,6 +535,7 @@ class ChatOutCommon with Tag {
       contentType: MessageContentType.audio,
       content: content,
       extra: {
+        "profileVersion": me?.profileVersion,
         "privateGroupVersion": privateGroupVersion,
         "deleteAfterSeconds": deleteAfterSeconds,
         "burningUpdateAt": burningUpdateAt,
@@ -580,12 +588,16 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return null;
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
     String selfAddress = clientCommon.address ?? "";
+    ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
       to: clientAddress,
       contentType: MessageContentType.topicInvitation,
       content: topic,
+      extra: {
+        "profileVersion": me?.profileVersion,
+      },
     );
     String data = MessageData.getTopicInvitee(message);
     logger.i("$TAG - sendTopicInvitee - dest:$topic - data:$data");
@@ -616,6 +628,7 @@ class ChatOutCommon with Tag {
     if (target == null || target.isEmpty) return null;
     if (privateGroup == null || groupItem == null) return null;
     String selfAddress = clientCommon.address ?? "";
+    ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
@@ -635,6 +648,9 @@ class ChatOutCommon with Tag {
           'inviterRawData': groupItem.inviterRawData,
           'inviterSignature': groupItem.inviterSignature,
         },
+      },
+      extra: {
+        "profileVersion": me?.profileVersion,
       },
     );
     String data = MessageData.getPrivateGroupInvitation(message);
