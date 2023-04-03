@@ -138,9 +138,12 @@ class ChatOutCommon with Tag {
       } else {
         DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(address);
         if (deviceInfo != null) {
-          int lastAt = isPing ? (deviceInfo.pingAt ?? 0) : (deviceInfo.pongAt ?? 0);
+          int lastAt = isPing ? deviceInfo.pingAt : deviceInfo.pongAt;
           int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
-          if (interval < gap) continue;
+          if (interval < gap) {
+            logger.d('$TAG - sendPing - interval < gap - interval:${interval - gap} - target:$address');
+            continue;
+          }
         }
         destList.add(address);
       }
@@ -202,7 +205,7 @@ class ChatOutCommon with Tag {
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
     // received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId);
-    logger.i("$TAG - sendReceipt - dest:${received.to} - msgId:${received.msgId}");
+    logger.i("$TAG - sendReceipt - dest:${received.from} - msgId:${received.msgId}");
     Uint8List? pid = await _sendWithAddress([received.from], data);
     return pid?.isNotEmpty == true;
   }
@@ -227,7 +230,7 @@ class ChatOutCommon with Tag {
   }*/
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendContactProfileRequest(String? clientAddress, String requestType, String? profileVersion, {int gap = 0}) async {
+  Future<bool> sendContactProfileRequest(String? clientAddress, String requestType, String? profileVersion) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
     String data = MessageData.getContactProfileRequest(requestType, profileVersion);
@@ -237,10 +240,21 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {ContactSchema? me}) async {
+  Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    me = me ?? (await contactCommon.getMe());
+    if (gap > 0) {
+      deviceInfo = deviceInfo ?? (await deviceInfoCommon.queryLatest(clientAddress));
+      if (deviceInfo != null) {
+        int lastAt = deviceInfo.contactProfileResponseAt;
+        int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
+        if (interval < gap) {
+          logger.d('$TAG - sendContactProfileResponse - interval < gap - interval:${interval - gap} - target:$clientAddress');
+          return false;
+        }
+      }
+    }
+    ContactSchema? me = await contactCommon.getMe();
     String data;
     if (requestType == ContactRequestType.header) {
       data = MessageData.getContactProfileResponseHeader(me?.profileVersion);
@@ -660,7 +674,7 @@ class ChatOutCommon with Tag {
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.optionsRequestAt;
       if (interval < gap) {
-        logger.d('$TAG - sendPrivateGroupOptionRequest - interval < gap - interval:$interval');
+        logger.d('$TAG - sendPrivateGroupOptionRequest - interval < gap - interval:${interval - gap} - target:$target');
         return null;
       }
     }
@@ -694,7 +708,7 @@ class ChatOutCommon with Tag {
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.membersRequestAt;
       if (interval < gap) {
-        logger.d('$TAG - sendPrivateGroupMemberRequest - interval < gap - interval:$interval');
+        logger.d('$TAG - sendPrivateGroupMemberRequest - interval < gap - interval:${interval - gap} - target:$target');
         return null;
       }
     }

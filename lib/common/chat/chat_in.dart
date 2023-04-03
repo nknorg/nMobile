@@ -136,7 +136,7 @@ class ChatInCommon with Tag {
       //   await _receiveMsgStatus(received); // need interval
       //   break;
       case MessageContentType.contactProfile:
-        await _receiveContact(received, contact);
+        await _receiveContact(received, contact, deviceInfo);
         break;
       case MessageContentType.contactOptions:
         insertOk = await _receiveContactOptions(received, contact, deviceInfo);
@@ -385,7 +385,7 @@ class ChatInCommon with Tag {
   }*/
 
   // NO DB NO display (1 to 1)
-  Future<bool> _receiveContact(MessageSchema received, ContactSchema? contact) async {
+  Future<bool> _receiveContact(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? deviceInfo) async {
     if (contact == null) return false;
     // D-Chat NO RequestType.header
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -397,12 +397,24 @@ class ChatInCommon with Tag {
     bool isDChatRequest = (requestType == null) && (responseType == null) && (version == null);
     if ((requestType?.isNotEmpty == true) || isDChatRequest) {
       // need reply
+      int gap;
+      if ((version?.isNotEmpty == true) && (version != deviceInfo?.contactProfileResponseVersion)) {
+        logger.i('$TAG - _receiveContact - version diff - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
+        gap = 0;
+      } else {
+        logger.d('$TAG - _receiveContact - version same - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
+        gap = Settings.gapContactProfileSyncMs;
+      }
       if (requestType == ContactRequestType.header) {
         logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header); // await
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo, gap: gap).then((value) {
+          deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
+        }); // await
       } else {
         logger.i("$TAG - _receiveContact - response full - from:${received.from} - data:$data");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full); // await
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
+          deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
+        }); // await
       }
     } else {
       // need request/save
@@ -533,7 +545,7 @@ class ChatInCommon with Tag {
     bool sameProfile = (appName == exists.appName) && (appVersion == exists.appVersion.toString()) && (platform == exists.platform) && (platformVersion == exists.platformVersion.toString());
     if (!sameProfile) {
       logger.i("$TAG - _receiveDeviceInfo - profile update - newData:$newData - oldData:${exists.data} - from:${received.from}");
-      bool success = await deviceInfoCommon.setData(exists.contactAddress, exists.deviceId, newData);
+      bool success = await deviceInfoCommon.setProfile(exists.contactAddress, exists.deviceId, newData);
       if (success) exists.data = newData;
     }
     // update_token
@@ -892,8 +904,7 @@ class ChatInCommon with Tag {
       int gap = (group.membersRequestedVersion != version) ? 0 : Settings.gapGroupRequestMembersMs;
       chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((version) {
         if (version?.isNotEmpty == true) {
-          int nowAt = DateTime.now().millisecondsSinceEpoch;
-          privateGroupCommon.setGroupMembersRequestInfo(group, nowAt, version, notify: true);
+          privateGroupCommon.setGroupMembersRequestInfo(group, version, notify: true);
         }
       }); // await
     }

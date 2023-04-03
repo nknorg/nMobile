@@ -310,7 +310,7 @@ class ChatCommon with Tag {
         bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
         if (!sameProfile) {
           logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${latest.data} - from:${message.from}");
-          bool success = await deviceInfoCommon.setData(latest.contactAddress, latest.deviceId, newData);
+          bool success = await deviceInfoCommon.setProfile(latest.contactAddress, latest.deviceId, newData);
           if (success) latest.data = newData;
         }
       } else {
@@ -319,7 +319,7 @@ class ChatCommon with Tag {
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
           if (!sameProfile) {
-            bool success = await deviceInfoCommon.setData(_exist.contactAddress, _exist.deviceId, newData);
+            bool success = await deviceInfoCommon.setProfile(_exist.contactAddress, _exist.deviceId, newData);
             if (success) _exist.data = newData;
           }
           latest = _exist;
@@ -466,8 +466,7 @@ class ChatCommon with Tag {
         int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
         chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) {
           if (version?.isNotEmpty == true) {
-            int nowAt = DateTime.now().millisecondsSinceEpoch;
-            privateGroupCommon.setGroupOptionsRequestInfo(exists, nowAt, version, notify: true);
+            privateGroupCommon.setGroupOptionsRequestInfo(exists, version, notify: true);
           }
         }); // await
       }
