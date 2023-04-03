@@ -29,8 +29,6 @@ class DeviceInfoSchema {
   String? deviceToken; // <-> device_token
 
   int onlineAt; // <-> online_at
-  int? pingAt; // <-> ping_at
-  int? pongAt; // <-> pong_at
 
   Map<String, dynamic>? data; // [*]<-> data[*, appName, appVersion, platform, platformVersion, ...]
 
@@ -42,8 +40,6 @@ class DeviceInfoSchema {
     required this.deviceId,
     this.deviceToken,
     required this.onlineAt,
-    this.pingAt,
-    this.pongAt,
     this.data,
   }) {
     if (this.createAt == null) {
@@ -98,6 +94,22 @@ class DeviceInfoSchema {
     return platformVersion ?? 0;
   }
 
+  int get pingAt {
+    return int.tryParse(data?['pingAt']?.toString() ?? "0") ?? 0;
+  }
+
+  int get pongAt {
+    return int.tryParse(data?['pongAt']?.toString() ?? "0") ?? 0;
+  }
+
+  String get contactProfileResponseVersion {
+    return data?['contactProfileResponseVersion']?.toString() ?? "";
+  }
+
+  int get contactProfileResponseAt {
+    return int.tryParse(data?['contactProfileResponseAt']?.toString() ?? "0") ?? 0;
+  }
+
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
@@ -109,8 +121,6 @@ class DeviceInfoSchema {
       'device_id': deviceId,
       'device_token': deviceToken,
       'online_at': onlineAt,
-      'ping_at': pingAt,
-      'pong_at': pongAt,
       'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
     };
     return map;
@@ -125,8 +135,6 @@ class DeviceInfoSchema {
       deviceId: e['device_id'] ?? "",
       deviceToken: e['device_token'],
       onlineAt: e['online_at'],
-      pingAt: e['ping_at'],
-      pongAt: e['pong_at'],
     );
 
     if (e['data']?.toString().isNotEmpty == true) {
@@ -144,6 +152,6 @@ class DeviceInfoSchema {
 
   @override
   String toString() {
-    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactAddress: $contactAddress, deviceId: $deviceId, deviceToken: $deviceToken, onlineAt: $onlineAt, pingAt: $pingAt, pongAt: $pongAt, data: $data}';
+    return 'DeviceInfoSchema{id: $id, createAt: $createAt, updateAt: $updateAt, contactAddress: $contactAddress, deviceId: $deviceId, deviceToken: $deviceToken, onlineAt: $onlineAt, data: $data}';
   }
 }

@@ -986,11 +986,11 @@ class PrivateGroupCommon with Tag {
     return data != null;
   }
 
-  Future<bool> setGroupOptionsRequestInfo(PrivateGroupSchema? schema, int timeAt, String? version, {bool notify = false}) async {
+  Future<bool> setGroupOptionsRequestInfo(PrivateGroupSchema? schema, String? version, {int? timeAt, bool notify = false}) async {
     if (schema == null || schema.groupId.isEmpty) return false;
-    logger.d("$TAG - setGroupOptionsRequestInfo - start - timeAt:$timeAt - version:$version - old:${schema.data} - group:$schema");
+    logger.d("$TAG - setGroupOptionsRequestInfo - start - version:$version - timeAt:$timeAt - old:${schema.data} - group:$schema");
     Map<String, dynamic>? data = await PrivateGroupStorage.instance.setData(schema.groupId, {
-      "optionsRequestAt": timeAt,
+      "optionsRequestAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
       "optionsRequestedVersion": version,
     });
     if (data != null) {
@@ -1003,11 +1003,11 @@ class PrivateGroupCommon with Tag {
     return data != null;
   }
 
-  Future<bool> setGroupMembersRequestInfo(PrivateGroupSchema? schema, int timeAt, String? version, {bool notify = false}) async {
+  Future<bool> setGroupMembersRequestInfo(PrivateGroupSchema? schema, String? version, {int? timeAt, bool notify = false}) async {
     if (schema == null || schema.groupId.isEmpty) return false;
-    logger.d("$TAG - setGroupMembersRequestInfo - start - timeAt:$timeAt - version:$version - old:${schema.data} - group:$schema");
+    logger.d("$TAG - setGroupMembersRequestInfo - start - version:$version - timeAt:$timeAt - old:${schema.data} - group:$schema");
     Map<String, dynamic>? data = await PrivateGroupStorage.instance.setData(schema.groupId, {
-      "membersRequestAt": timeAt,
+      "membersRequestAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
       "membersRequestedVersion": version,
     });
     if (data != null) {
