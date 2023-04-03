@@ -221,13 +221,11 @@ class ChatCommon with Tag {
     }
     if (message.isOutbound) return exist;
     // profile
-    if (!message.isTopic && !message.isPrivateGroup) {
-      String? profileVersion = MessageOptions.getProfileVersion(message.options);
-      if (profileVersion != null && profileVersion.isNotEmpty) {
-        if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
-          logger.i("$TAG - contactHandle - profile request - clientAddress:$clientAddress");
-          chatOutCommon.sendContactProfileRequest(exist.clientAddress, ContactRequestType.full, exist.profileVersion); // await
-        }
+    String? profileVersion = MessageOptions.getProfileVersion(message.options);
+    if ((profileVersion != null) && profileVersion.isNotEmpty) {
+      if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
+        logger.i("$TAG - contactHandle - profile need request - native:${exist.profileVersion} - remote:$profileVersion - clientAddress:$clientAddress");
+        chatOutCommon.sendContactProfileRequest(exist.clientAddress, ContactRequestType.full, exist.profileVersion); // await
       }
     }
     // burning
@@ -239,7 +237,7 @@ class ChatCommon with Tag {
       if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
         // no same with self
         if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
-          logger.i("$TAG - contactHandle - burning be sync - sec:$burnAfterSeconds");
+          logger.i("$TAG - contactHandle - burning be sync - remote:$burnAfterSeconds - native:$existSeconds - from:${message.from}");
           // side updated latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
           exist.options?.updateBurnAfterAt = updateBurnAfterAt;
@@ -247,7 +245,7 @@ class ChatCommon with Tag {
         } else {
           // mine updated latest
           if ((message.sendAt ?? 0) > existUpdateAt) {
-            logger.i("$TAG - contactHandle - burning to sync - sec:$existSeconds");
+            logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - from:${message.from}");
             DeviceInfoSchema? deviceInfo;
             String? deviceId = MessageOptions.getDeviceId(message.options);
             if (deviceId?.isNotEmpty == true) {
@@ -279,7 +277,6 @@ class ChatCommon with Tag {
     if (message.from == message.to) return latest;
     // duplicated
     if (latest == null) {
-      logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress");
       // skip all messages need send contact request
       latest = await deviceInfoCommon.add(
         DeviceInfoSchema(
@@ -289,6 +286,7 @@ class ChatCommon with Tag {
         ),
         checkDuplicated: false,
       );
+      logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$latest");
       chatOutCommon.sendDeviceRequest(clientAddress); // await
     }
     if (latest == null) {
@@ -298,7 +296,7 @@ class ChatCommon with Tag {
     if (message.isOutbound) return latest;
     // data
     String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
-    if (deviceProfile != null && deviceProfile.isNotEmpty) {
+    if ((deviceProfile != null) && deviceProfile.isNotEmpty) {
       List<String> splits = deviceProfile.split(":");
       String? appName = splits.length > 0 ? splits[0] : null;
       String? appVersion = splits.length > 1 ? splits[1] : null;
@@ -307,16 +305,16 @@ class ChatCommon with Tag {
       Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
       String? deviceId = splits.length > 4 ? splits[4] : null;
       if (deviceId == null || deviceId.isEmpty) {
-        logger.e("$TAG - deviceInfoHandle - deviceId is nil - newData:$newData");
+        logger.e("$TAG - deviceInfoHandle - deviceId is nil - from:${message.from} - newData:$newData");
       } else if (deviceId == latest.deviceId) {
         bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
         if (!sameProfile) {
-          logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${latest.data}");
+          logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${latest.data} - from:${message.from}");
           bool success = await deviceInfoCommon.setData(latest.contactAddress, latest.deviceId, newData);
           if (success) latest.data = newData;
         }
       } else {
-        logger.w("$TAG - deviceInfoHandle - wrong here - new:$deviceId - old${latest.deviceId}");
+        logger.w("$TAG - deviceInfoHandle - wrong here - new:$deviceId - old${latest.deviceId} - from:${message.from}");
         DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
@@ -340,7 +338,7 @@ class ChatCommon with Tag {
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
     if ((deviceToken != null) && deviceToken.isNotEmpty) {
       if (latest?.deviceToken != deviceToken) {
-        logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken}");
+        logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken} - from:${message.from}");
         bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
         if (success) latest?.deviceToken = deviceToken;
       }
@@ -437,8 +435,8 @@ class ChatCommon with Tag {
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (message.from == message.to) return exists;
     if (exists == null) {
-      logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message");
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
+      logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message - group:$schema");
       exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
     }
     if (exists == null) return null;
@@ -449,21 +447,21 @@ class ChatCommon with Tag {
       int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
       int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
       if (nativeCommits < remoteCommits) {
-        logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits');
+        logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - from:${message.from}');
         // burning
         if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
           int? existSeconds = exists.options?.deleteAfterSeconds;
           int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
           if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
-            logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds');
+            logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds - from:${message.from}');
             await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
           }
         }
         // request
         if (exists.optionsRequestedVersion != remoteVersion) {
-          logger.i('$TAG - privateGroupHandle - version requested diff - requested:${exists.optionsRequestedVersion} - remote:$remoteVersion');
+          logger.i('$TAG - privateGroupHandle - version requested diff - from:${message.from} - requested:${exists.optionsRequestedVersion} - remote:$remoteVersion');
         } else {
-          logger.d('$TAG - privateGroupHandle - version requested same - version:$remoteVersion');
+          logger.d('$TAG - privateGroupHandle - version requested same - from:${message.from} - version:$remoteVersion');
         }
         int? gap = (exists.optionsRequestedVersion != remoteVersion) ? null : Settings.gapGroupRequestOptionsMs;
         chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) {
@@ -523,7 +521,7 @@ class ChatCommon with Tag {
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt}");
+    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:$message");
     MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
       if (success && notify) messageCommon.onUpdateSink.add(message);
       // if (success && tick) burningTick(message);
@@ -554,10 +552,12 @@ class ChatCommon with Tag {
         }
       });
     } else {
-      logger.d("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
       if (!message.isDelete) {
+        logger.d("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
         message.isDelete = true;
         messageCommon.messageDelete(message, notify: true); // await
+      } else {
+        logger.w("$TAG - burningTick - delete(wrong) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
       }
       // onTick?.call(); // will dead loop
     }
