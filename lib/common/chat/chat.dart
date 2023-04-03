@@ -173,7 +173,7 @@ class ChatCommon with Tag {
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
       if (message.canResend) {
-        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:$message");
+        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         if (message.contentType == MessageContentType.ipfs) {
           String? ipfsHash = MessageOptions.getIpfsHash(message.options);
           if ((ipfsHash == null) || ipfsHash.isEmpty) {
@@ -186,7 +186,7 @@ class ChatCommon with Tag {
         message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
       } else {
         // lost some msg, need resend
-        logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:$message");
+        logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
         if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
       }
@@ -463,7 +463,7 @@ class ChatCommon with Tag {
         } else {
           logger.d('$TAG - privateGroupHandle - version requested same - from:${message.from} - version:$remoteVersion');
         }
-        int? gap = (exists.optionsRequestedVersion != remoteVersion) ? null : Settings.gapGroupRequestOptionsMs;
+        int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
         chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) {
           if (version?.isNotEmpty == true) {
             int nowAt = DateTime.now().millisecondsSinceEpoch;
@@ -521,7 +521,7 @@ class ChatCommon with Tag {
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:$message");
+    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:${message.toStringNoContent()}");
     MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
       if (success && notify) messageCommon.onUpdateSink.add(message);
       // if (success && tick) burningTick(message);
@@ -575,7 +575,7 @@ class ChatCommon with Tag {
     // file_result
     String? fileHash = MessageOptions.getIpfsHash(message.options);
     if (fileHash != null && fileHash.isNotEmpty) {
-      logger.i("$TAG - startIpfsUpload - history completed - hash:$fileHash - message:$message");
+      logger.i("$TAG - startIpfsUpload - history completed - hash:$fileHash - message:${message.toStringNoContent()}");
       if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateYes) {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await messageCommon.updateMessageOptions(message, message.options);
@@ -584,12 +584,12 @@ class ChatCommon with Tag {
     }
     // file_exist
     if (!(message.content is File)) {
-      logger.e("$TAG - startIpfsUpload - content is no file - message:$message");
+      logger.e("$TAG - startIpfsUpload - content is no file - message:${message.toStringNoContent()}");
       return null;
     }
     File file = message.content as File;
     if (!file.existsSync()) {
-      logger.e("$TAG - startIpfsUpload - file is no exists - message:$message");
+      logger.e("$TAG - startIpfsUpload - file is no exists - message:${message.toStringNoContent()}");
       return null;
     }
     // file_state
@@ -598,7 +598,7 @@ class ChatCommon with Tag {
     // thumbnail
     MessageSchema? msg = await startIpfsThumbnailUpload(message);
     if (msg == null) {
-      logger.w("$TAG - startIpfsUpload - thumbnail fail - message:$message");
+      logger.w("$TAG - startIpfsUpload - thumbnail fail - message:${message.toStringNoContent()}");
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await messageCommon.updateMessageOptions(message, message.options, notify: false);
       message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
@@ -727,7 +727,7 @@ class ChatCommon with Tag {
     // file_result
     String? ipfsHash = MessageOptions.getIpfsHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:$message");
+      logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
       return null;
     }
     // file_path
@@ -784,7 +784,7 @@ class ChatCommon with Tag {
       File? file = message.content as File?;
       File thumbnail = File(savePath);
       if ((file != null) && file.existsSync() && !thumbnail.existsSync()) {
-        logger.i("$TAG - startIpfsDownload - create thumbnail when no exist - message:$message");
+        logger.i("$TAG - startIpfsDownload - create thumbnail when no exist - message:${message.toStringNoContent()}");
         Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(file.absolute.path, savePath);
         if (res != null && res.isNotEmpty) {
           message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
@@ -822,7 +822,7 @@ class ChatCommon with Tag {
     // result
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.e("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:$message");
+      logger.e("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
       return [null, false];
     }
     // path
