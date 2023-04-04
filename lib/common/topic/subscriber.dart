@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/common/topic/top_sub.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/subscriber.dart';
@@ -77,7 +77,7 @@ class SubscriberCommon with Tag {
     if (topic == null || topic.isEmpty) return 0;
     int count = 0;
     if (fetch) {
-      count = await TopSub.getSubscribersCount(topic);
+      count = await RPC.getSubscribersCount(topic);
     } else if (isPrivate) {
       // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
       count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
@@ -195,7 +195,7 @@ class SubscriberCommon with Tag {
   Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return [];
     // subscribers(permission)
-    Map<String, dynamic> metas = await TopSub.getSubscribers(topic, meta: meta, txPool: txPool);
+    Map<String, dynamic> metas = await RPC.getSubscribers(topic, meta: meta, txPool: txPool);
     // subscribers(subscribe)
     List<SubscriberSchema> subscribers = [];
     metas.forEach((key, value) {
@@ -297,7 +297,7 @@ class SubscriberCommon with Tag {
   Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? metas}) async {
     if (topic == null || topic.isEmpty) return [[], null];
     // permissions + subscribers
-    metas = metas ?? await TopSub.getSubscribers(topic, meta: true, txPool: txPool);
+    metas = metas ?? await RPC.getSubscribers(topic, meta: true, txPool: txPool);
     List<String> metaKeys = metas.keys.toList();
     // permissions
     bool _acceptAll = false;
