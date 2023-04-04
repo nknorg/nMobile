@@ -363,7 +363,7 @@ class SubscriberStorage with Tag {
                 tableName,
                 {
                   'data': jsonEncode(data),
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                  // 'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'id = ?',
                 whereArgs: [subscriberId],

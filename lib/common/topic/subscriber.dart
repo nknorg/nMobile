@@ -42,24 +42,32 @@ class SubscriberCommon with Tag {
       if (result.length < limit) break;
     }
     if (subscribers.isEmpty) return;
-    // fetch
-    for (var i = 0; i < subscribers.length; i++) {
-      SubscriberSchema sub = subscribers[i];
-      if (sub.clientAddress.isEmpty) continue;
-      // contact
-      ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
-      if (_contact == null) {
-        logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
-        _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
-        await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, ContactRequestType.header, null);
-        await Future.delayed(Duration(milliseconds: 10));
+    // contact
+    if (contact) {
+      for (var i = 0; i < subscribers.length; i++) {
+        SubscriberSchema sub = subscribers[i];
+        if (sub.clientAddress.isEmpty) continue;
+        ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
+        if (_contact == null) {
+          logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
+          _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+          await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, ContactRequestType.header, null);
+          await Future.delayed(Duration(milliseconds: 10));
+        }
       }
-      // deviceInfo
-      DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
-      if (_deviceInfo == null) {
-        logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
-        await chatOutCommon.sendDeviceRequest(sub.clientAddress);
-        await Future.delayed(Duration(milliseconds: 10));
+    }
+    // deviceInfo
+    if (deviceInfo) {
+      for (var i = 0; i < subscribers.length; i++) {
+        SubscriberSchema sub = subscribers[i];
+        if (sub.clientAddress.isEmpty) continue;
+        // deviceInfo
+        DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
+        if (_deviceInfo == null) {
+          logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
+          await chatOutCommon.sendDeviceRequest(sub.clientAddress);
+          await Future.delayed(Duration(milliseconds: 10));
+        }
       }
     }
   }
@@ -76,7 +84,7 @@ class SubscriberCommon with Tag {
     } else {
       count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
     }
-    logger.d("$TAG - getSubscribersCount - topic:$topic - isPrivate:$isPrivate - count:$count");
+    logger.d("$TAG - getSubscribersCount - count:$count - topic:$topic - isPrivate:$isPrivate");
     return count;
   }
 
@@ -85,29 +93,29 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
-  Future refreshSubscribers(String? topic, {String? ownerPubKey, bool meta = false, bool txPool = true}) async {
+  Future refreshSubscribers(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return [];
-
+    // db
     int limit = 20;
     List<SubscriberSchema> dbSubscribers = [];
-    // query
     for (int offset = 0; true; offset += limit) {
       List<SubscriberSchema> result = await queryListByTopic(topic, offset: offset, limit: limit);
       dbSubscribers.addAll(result);
       if (result.length < limit) break;
     }
-    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey: ownerPubKey, meta: meta, txPool: txPool);
-
+    // node
+    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey, meta: meta, txPool: txPool);
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
       SubscriberSchema dbItem = dbSubscribers[i];
       if (dbItem.isPermissionProgress() != null) {
-        logger.i("$TAG - refreshSubscribers - DB need try, skip - dbSub:$dbItem");
+        logger.i("$TAG - refreshSubscribers - DB is progress, skip - data:${dbItem.data} - dbSub:$dbItem");
         continue;
       }
       SubscriberSchema? findInNode;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
+          logger.d("$TAG - refreshSubscribers - start check db_item - status:${nodeItem.status} - perm:${nodeItem.permPage} - subscriber:$dbItem");
           findInNode = nodeItem;
           break;
         }
@@ -119,59 +127,52 @@ class SubscriberCommon with Tag {
       bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.gapTxPoolUpdateDelayMs;
       if (isCreateJustNow) {
         if (dbItem.status == SubscriberStatus.None) {
-          logger.i("$TAG - refreshSubscribers - DB created just now, next by status none - dbSub:$dbItem");
-        } else if (dbItem.status == SubscriberStatus.InvitedSend || dbItem.status == SubscriberStatus.InvitedReceipt) {
+          logger.d("$TAG - refreshSubscribers - DB created just now, next by status none - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+        } else if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt)) {
           if (findInNode?.status == SubscriberStatus.Subscribed) {
-            logger.i("$TAG - refreshSubscribers - DB created just now, next bu subscribed - dbSub:$dbItem");
+            logger.d("$TAG - refreshSubscribers - DB created just now, next bu subscribed - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           } else {
             var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
-            logger.d("$TAG - refreshSubscribers - DB created just now, skip by invited - between:${betweenS}s - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
             continue;
           }
         } else {
-          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - dbSub:$dbItem");
+          var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           continue;
         }
       } else if (isUpdateJustNow) {
-        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - dbSub:$dbItem");
+        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         continue;
       } else {
         var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
-        logger.d("$TAG - refreshSubscribers - DB updated to long, so can next - between:${betweenS}s");
+        logger.v("$TAG - refreshSubscribers - DB updated to long, so can next - between:${betweenS}s");
       }
       // different with node in DB
       if (findInNode == null) {
         if (dbItem.status != SubscriberStatus.None) {
-          logger.i("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
+          logger.w("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
           await setStatus(dbItem.id, SubscriberStatus.None, notify: true);
         }
       } else {
-        if (findInNode.status == SubscriberStatus.Unsubscribed) {
-          logger.i("$TAG - refreshSubscribers - DB find, but node is unsubscribe - DB:$dbItem - node:$findInNode");
-          if (dbItem.status != findInNode.status) {
+        if (dbItem.status == findInNode.status) {
+          logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
+        } else {
+          if ((findInNode.status == SubscriberStatus.InvitedSend) && (dbItem.status == SubscriberStatus.InvitedReceipt)) {
+            logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findInNode");
+          } else {
+            logger.w("$TAG - refreshSubscribers - DB update to sync node - status:${dbItem.status}!=${findInNode.status} - DB:$dbItem - node:$findInNode");
             await setStatus(dbItem.id, findInNode.status, notify: true);
           }
-        } else {
-          // status
-          if (dbItem.status != findInNode.status) {
-            if (findInNode.status == SubscriberStatus.InvitedSend && dbItem.status == SubscriberStatus.InvitedReceipt) {
-              logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findInNode");
-            } else {
-              logger.i("$TAG - refreshSubscribers - DB update to sync node - DB:$dbItem - node:$findInNode");
-              await setStatus(dbItem.id, findInNode.status, notify: true);
-            }
-          } else {
-            logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
-          }
-          // prmPage
-          if (dbItem.permPage != findInNode.permPage && findInNode.permPage != null) {
-            logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - DB:$dbItem - node:$findInNode");
-            await setPermPage(dbItem.id, findInNode.permPage, notify: true);
-          }
+        }
+        // prmPage
+        if ((dbItem.permPage != findInNode.permPage) && (findInNode.permPage != null)) {
+          logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - perm:${dbItem.permPage}!=${findInNode.permPage} - DB:$dbItem - node:$findInNode");
+          await setPermPage(dbItem.id, findInNode.permPage, notify: true);
         }
       }
     }
-
     // insert node data
     for (var i = 0; i < nodeSubscribers.length; i++) {
       SubscriberSchema nodeItem = nodeSubscribers[i];
@@ -184,18 +185,17 @@ class SubscriberCommon with Tag {
       }
       // different with DB in node
       if (!findInDB) {
-        logger.i("$TAG - refreshSubscribers - node add because DB no find - nodeSub:$nodeItem");
+        logger.i("$TAG - refreshSubscribers - node add because DB no find - status:${nodeItem.status} - perm:${nodeItem.permPage} - nodeSub:$nodeItem");
         await add(nodeItem, notify: true); // no need batch
       }
     }
   }
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topic, {String? ownerPubKey, bool meta = false, bool txPool = true}) async {
+  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return [];
     // subscribers(permission)
     Map<String, dynamic> metas = await TopSub.getSubscribers(topic, meta: meta, txPool: txPool);
-
     // subscribers(subscribe)
     List<SubscriberSchema> subscribers = [];
     metas.forEach((key, value) {
@@ -204,13 +204,11 @@ class SubscriberCommon with Tag {
         if (item != null) subscribers.add(item);
       }
     });
-
     // permissions
     List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
     if (meta) permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool, metas: metas);
-    List<SubscriberSchema> permissions = permissionsResult[0];
-    bool? _acceptAll = permissionsResult[1];
-
+    bool? _acceptAll = permissionsResult[0];
+    List<SubscriberSchema> permissions = permissionsResult[1];
     // merge
     List<SubscriberSchema> results = [];
     if (!meta || (_acceptAll == true)) {
@@ -222,6 +220,7 @@ class SubscriberCommon with Tag {
       for (int i = 0; i < subscribers.length; i++) {
         var subscriber = subscribers[i];
         if (ownerPubKey == subscriber.pubKey) {
+          logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - owner be find - subscriber:$subscriber");
           subscriber.status = SubscriberStatus.Subscribed;
           results.add(subscriber);
           continue;
@@ -230,35 +229,38 @@ class SubscriberCommon with Tag {
         for (int j = 0; j < permissions.length; j++) {
           SubscriberSchema permission = permissions[j];
           if (subscriber.clientAddress.isNotEmpty && (subscriber.clientAddress == permission.clientAddress)) {
-            logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - subscribers && permission - permission:$permission");
             if (permission.status == InitialAcceptStatus) {
               permission.status = SubscriberStatus.Subscribed;
             } else if (permission.status == InitialRejectStatus) {
               permission.status = SubscriberStatus.Unsubscribed;
             }
+            logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - subscribers && permission - status:${permission.status} - permission:$permission");
             results.add(permission);
             find = true;
             break;
           }
         }
         if (!find) {
-          logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no invited but in subscribe - subscriber:$subscriber");
-          results.add(subscriber);
+          logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - no permission but in subscribe - status:${subscriber.status} - subscriber:$subscriber");
+          results.add(subscriber); // status == None
         }
       }
       for (int i = 0; i < permissions.length; i++) {
         SubscriberSchema permission = permissions[i];
         if (subscribers.where((element) => element.clientAddress.isNotEmpty && (element.clientAddress == permission.clientAddress)).toList().isEmpty) {
           if (ownerPubKey != permission.pubKey) {
-            logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - permission:$permission");
-            results.add(permission);
+            logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - status:${permission.status} - permission:$permission");
+            results.add(permission); // status == InitialAcceptStatus/InitialRejectStatus
           } else {
-            logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission (owner) - permission:$permission");
+            logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - owner no subscribe but in permission - status:${permission.status} - permission:$permission");
           }
         }
       }
     }
-    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - results:$results");
+    List<int?> statusList = results.map((e) => e.status).toList();
+    List<int?> permList = results.map((e) => e.permPage).toList();
+    List<String?> addressList = results.map((e) => e.clientAddress).toList();
+    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - subscribers_count:${subscribers.length} - permission_check:${meta && (_acceptAll != true)} - permissions_count:${permissions.length} - result_status:$statusList - result_perm:$permList - result_address:$addressList");
     return results;
   }
 
@@ -266,18 +268,18 @@ class SubscriberCommon with Tag {
   /// ********************************************** permission *************************************************
   /// ***********************************************************************************************************
 
-  // caller = everyone result = [permPage, acceptAll, accept, reject]
+  // caller = everyone, result = [acceptAll, permPage, accept, reject]
   Future<List<dynamic>> findPermissionFromNode(String? topic, String? clientAddress, {bool txPool = true}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) {
       return [null, null, null, null];
     }
     // permissions
     List<dynamic> permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool);
-    List<SubscriberSchema> permissions = permissionsResult[0];
-    bool? _acceptAll = permissionsResult[1];
+    bool? _acceptAll = permissionsResult[0];
+    List<SubscriberSchema> permissions = permissionsResult[1];
     if (_acceptAll == true) {
-      logger.i("$TAG - findPermissionFromNode - acceptAll = true");
-      return [null, _acceptAll, true, false];
+      logger.d("$TAG - findPermissionFromNode - acceptAll = true");
+      return [_acceptAll, null, true, false];
     }
     // find
     List<SubscriberSchema> finds = permissions.where((element) => element.clientAddress == clientAddress).toList();
@@ -285,22 +287,24 @@ class SubscriberCommon with Tag {
       int? permPage = finds[0].permPage;
       bool isAccept = finds[0].status == InitialAcceptStatus;
       bool isReject = finds[0].status == InitialRejectStatus;
-      logger.d("$TAG - findPermissionFromNode - permPage:$permPage - isAccept:$isAccept");
-      return [permPage, false, isAccept, isReject];
+      logger.d("$TAG - findPermissionFromNode - permPage:$permPage - isAccept:$isAccept - isReject:$isReject");
+      return [false, permPage, isAccept, isReject];
     }
-    logger.i("$TAG - findPermissionFromNode - null");
-    return [null, _acceptAll, null, null];
+    logger.d("$TAG - findPermissionFromNode - no find");
+    return [_acceptAll, null, null, null];
   }
 
   Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? metas}) async {
     if (topic == null || topic.isEmpty) return [[], null];
     // permissions + subscribers
     metas = metas ?? await TopSub.getSubscribers(topic, meta: true, txPool: txPool);
-
+    List<String> metaKeys = metas.keys.toList();
     // permissions
-    List<SubscriberSchema> permissions = [];
     bool _acceptAll = false;
-    metas.forEach((key, value) {
+    List<SubscriberSchema> _permissions = [];
+    for (var i = 0; i < metas.length; i++) {
+      String key = metaKeys[i];
+      var value = metas[key];
       if (!_acceptAll && key.contains('.__permission__.')) {
         // permPage
         String prefix = key.split("__.__permission__.")[0];
@@ -315,36 +319,41 @@ class SubscriberCommon with Tag {
           if (element is Map) {
             String? address = element["addr"]?.toString();
             SubscriberSchema? item = SubscriberSchema.create(topic, address, InitialAcceptStatus, permPage);
-            if (item != null) permissions.add(item);
+            if (item != null) _permissions.add(item);
           } else if (element is String) {
             if (element.trim() == "*") {
-              logger.i("$TAG - _getPermissionsFromNode - accept all - accept:$element");
               _acceptAll = true;
-              break;
             } else {
               logger.w("$TAG - _getPermissionsFromNode - accept content error - accept:$element");
             }
           } else {
             logger.w("$TAG - _getPermissionsFromNode - accept type error - accept:$element");
           }
+          if (_acceptAll) break;
         }
+        if (_acceptAll) break;
         // reject
         List<dynamic> rejectList = meta?['reject'] ?? [];
-        if (!_acceptAll) {
-          rejectList.forEach((element) {
-            if (element is Map) {
-              String? address = element["addr"]?.toString();
-              SubscriberSchema? item = SubscriberSchema.create(topic, address, InitialRejectStatus, permPage);
-              if (item != null) permissions.add(item);
-            } else {
-              logger.w("$TAG - _getPermissionsFromNode - reject type error - accept:$element");
-            }
-          });
-        }
+        rejectList.forEach((element) {
+          if (element is Map) {
+            String? address = element["addr"]?.toString();
+            SubscriberSchema? item = SubscriberSchema.create(topic, address, InitialRejectStatus, permPage);
+            if (item != null) _permissions.add(item);
+          } else {
+            logger.w("$TAG - _getPermissionsFromNode - reject type error - accept:$element");
+          }
+        });
       }
-    });
-    logger.d("$TAG - _getPermissionsFromNode - acceptAll:$_acceptAll - permissions:$permissions");
-    return [permissions, _acceptAll];
+    }
+    if (!_acceptAll) {
+      List<int?> statusList = _permissions.map((e) => e.status).toList();
+      List<int?> permList = _permissions.map((e) => e.permPage).toList();
+      List<String?> addressList = _permissions.map((e) => e.clientAddress).toList();
+      logger.d("$TAG - _getPermissionsFromNode - count:${_permissions.length} - statusList:$statusList - permList:$permList - addressList:$addressList");
+    } else {
+      logger.d("$TAG - _getPermissionsFromNode - acceptAll == true");
+    }
+    return [_acceptAll, _permissions];
   }
 
   /// ***********************************************************************************************************
@@ -366,7 +375,7 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.InvitedSend;
     }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
+    if ((subscriber.permPage != permPage) && (permPage != null)) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
@@ -405,7 +414,7 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.Subscribed;
     }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
+    if ((subscriber.permPage != permPage) && (permPage != null)) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
@@ -427,7 +436,7 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
     }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
+    if ((subscriber.permPage != permPage) && (permPage != null)) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
@@ -452,7 +461,7 @@ class SubscriberCommon with Tag {
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
     }
     // permPage
-    if (subscriber.permPage != permPage && permPage != null) {
+    if ((subscriber.permPage != permPage) && (permPage != null)) {
       bool success = await setPermPage(subscriber.id, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
@@ -471,7 +480,7 @@ class SubscriberCommon with Tag {
     if (checkDuplicated) {
       SubscriberSchema? exist = await queryByTopicChatId(schema.topic, schema.clientAddress);
       if (exist != null) {
-        logger.i("$TAG - add - duplicated - schema:$exist");
+        logger.d("$TAG - add - duplicated - schema:$exist");
         return null;
       }
     }
@@ -520,7 +529,11 @@ class SubscriberCommon with Tag {
 
   Future<int> queryMaxPermPageByTopic(String? topic) async {
     int maxPermPage = await SubscriberStorage.instance.queryMaxPermPageByTopic(topic);
-    maxPermPage = maxPermPage < 0 ? 0 : maxPermPage;
+    return maxPermPage < 0 ? 0 : maxPermPage;
+  }
+
+  Future<int> queryNextPermPageByTopic(String? topic) async {
+    int maxPermPage = await queryMaxPermPageByTopic(topic);
     int maxPageCount = await queryCountByTopicPermPage(topic, maxPermPage);
     if (maxPageCount >= SubscriberSchema.PermPageSize) {
       maxPermPage++;
@@ -543,11 +556,28 @@ class SubscriberCommon with Tag {
     return success;
   }
 
-  Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData, {bool notify = false}) async {
+  Future<bool> setStatusProgressStart(int? subscriberId, int status, int? nonce, double fee, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await SubscriberStorage.instance.setData(subscriberId, newData);
-    if (success && notify) queryAndNotify(subscriberId);
-    return success;
+    var data = await SubscriberStorage.instance.setData(subscriberId, {
+      "permission_progress": status,
+      "progress_permission_nonce": nonce,
+      "progress_permission_fee": fee,
+    });
+    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - new:$data - subscriberId:$subscriberId");
+    if ((data != null) && notify) queryAndNotify(subscriberId);
+    return data != null;
+  }
+
+  Future<bool> setStatusProgressEnd(int? subscriberId, {bool notify = false}) async {
+    if (subscriberId == null || subscriberId == 0) return false;
+    var data = await SubscriberStorage.instance.setData(subscriberId, null, removeKeys: [
+      "permission_progress",
+      "progress_permission_nonce",
+      "progress_permission_fee",
+    ]);
+    logger.d("$TAG - setStatusProgressEnd - removeKeys:${["permission_progress", "progress_permission_nonce", "progress_permission_fee"]} - new:$data - subscriberId:$subscriberId");
+    if ((data != null) && notify) queryAndNotify(subscriberId);
+    return data != null;
   }
 
   Future queryAndNotify(int? subscriberId) async {
