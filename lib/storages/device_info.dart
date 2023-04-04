@@ -255,7 +255,7 @@ class DeviceInfoStorage with Tag {
   Future<Map<String, dynamic>?> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    if (added == null || added.isEmpty) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
@@ -275,7 +275,7 @@ class DeviceInfoStorage with Tag {
               }
               DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added);
+              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }

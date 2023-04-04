@@ -316,7 +316,7 @@ class PrivateGroupStorage with Tag {
   Future<Map<String, dynamic>?> setData(String? groupId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
     if (groupId == null || groupId.isEmpty) return null;
-    if (added == null || added.isEmpty) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -334,7 +334,7 @@ class PrivateGroupStorage with Tag {
               }
               PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added);
+              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
