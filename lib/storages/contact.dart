@@ -422,7 +422,7 @@ class ContactStorage with Tag {
   Future<Map<String, dynamic>?> setData(int? contactId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
     if (contactId == null || contactId == 0) return null;
-    if (added == null || added.isEmpty) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -440,7 +440,7 @@ class ContactStorage with Tag {
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added);
+              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }

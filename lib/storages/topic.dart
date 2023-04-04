@@ -164,9 +164,9 @@ class TopicStorage with Tag {
         return [];
       }
       List<TopicSchema> results = <TopicSchema>[];
-      String logText = '';
+      // String logText = '';
       res.forEach((map) {
-        logText += "\n      $map";
+        // logText += "\n      $map";
         TopicSchema topic = TopicSchema.fromMap(map);
         results.add(topic);
       });
@@ -335,32 +335,48 @@ class TopicStorage with Tag {
         false;
   }
 
-  Future<bool> setData(int? topicId, Map<String, dynamic>? newData) async {
-    if (db?.isOpen != true) return false;
-    if (topicId == null || topicId == 0) return false;
+  Future<Map<String, dynamic>?> setData(int? topicId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (topicId == null || topicId == 0) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [topicId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setData - no exists - topicId:$topicId");
+                return null;
+              }
+              TopicSchema schema = TopicSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              data.addAll(added ?? Map());
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) => data.remove(element));
+              }
+              int count = await txn.update(
                 tableName,
                 {
-                  'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+                  'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'id = ?',
                 whereArgs: [topicId],
               );
+              if (count <= 0) logger.w("$TAG - setData - fail - topic:${schema.topic} - newData:$data");
+              return (count > 0) ? data : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setData - success - topicId:$topicId - newData:$newData");
-              return true;
-            }
-            logger.w("$TAG - setData - fail - topicId:$topicId - newData:$newData");
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 }

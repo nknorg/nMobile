@@ -609,7 +609,7 @@ class MessageStorage with Tag {
   Future<Map<String, dynamic>?> updateOptions(String? msgId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
     if (msgId == null || msgId.isEmpty) return null;
-    if (added == null || added.isEmpty) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -627,7 +627,7 @@ class MessageStorage with Tag {
               }
               MessageSchema schema = MessageSchema.fromMap(res.first);
               Map<String, dynamic>? options = schema.options ?? Map<String, dynamic>();
-              options.addAll(added);
+              options.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => options.remove(element));
               }
