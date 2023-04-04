@@ -160,7 +160,7 @@ class TopicSchema {
     return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPubKey;
   }
 
-  Future<bool> shouldResubscribe({int? globalHeight}) async {
+  Future<bool> shouldResubscribe(int? globalHeight) async {
     if ((expireBlockHeight == null) || ((expireBlockHeight ?? 0) <= 0)) return true;
     globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
@@ -170,35 +170,14 @@ class TopicSchema {
     }
   }
 
-  Map<String, dynamic> newDataByAppendSubscribe(bool subscribe, bool isProgress, int? nonce, double fee) {
-    Map<String, dynamic> newData = data ?? Map();
-    if (subscribe) {
-      if (isProgress) {
-        newData['subscribe_progress'] = true;
-        newData['progress_subscribe_nonce'] = nonce;
-        newData['progress_subscribe_fee'] = fee;
-      } else {
-        newData.remove('subscribe_progress');
-        newData.remove('progress_subscribe_nonce');
-        newData.remove('progress_subscribe_fee');
-      }
-      newData.remove('unsubscribe_progress');
-    } else {
-      if (isProgress) {
-        newData['unsubscribe_progress'] = true;
-        newData['progress_subscribe_nonce'] = nonce;
-        newData['progress_subscribe_fee'] = fee;
-      } else {
-        newData.remove('unsubscribe_progress');
-        newData.remove('progress_subscribe_nonce');
-        newData.remove('progress_subscribe_fee');
-      }
-      newData.remove('subscribe_progress');
-    }
-    return newData;
+  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minInterval = 5 * 60 * 1000}) {
+    if (subscribersCount <= minRefreshCount) return false;
+    int needInterval = subscribersCount * (5 * 60 * 1000); // 300s * count
+    if (needInterval < minInterval) needInterval = minInterval;
+    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needInterval) return false;
+    return true;
   }
 
-  // FIXED:GG no clear in end
   bool isSubscribeProgress() {
     bool? isProgress = data?['subscribe_progress'];
     if (isProgress == null) return false;
@@ -223,23 +202,14 @@ class TopicSchema {
     return fee;
   }
 
-  Map<String, dynamic> newDataByLastRefreshSubscribersAt(int? lastRefreshSubscribersAt) {
-    Map<String, dynamic> newData = data ?? Map();
-    newData['last_refresh_subscribers_at'] = lastRefreshSubscribersAt;
-    return newData;
+  int lastCheckSubscribeAt() {
+    int? lastRefreshSubscribersAt = data?['last_check_subscribe_at'];
+    return lastRefreshSubscribersAt ?? 0;
   }
 
   int lastRefreshSubscribersAt() {
     int? lastRefreshSubscribersAt = data?['last_refresh_subscribers_at'];
     return lastRefreshSubscribersAt ?? 0;
-  }
-
-  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minInterval = 5 * 60 * 1000}) {
-    if (subscribersCount <= minRefreshCount) return false;
-    int needInterval = subscribersCount * (5 * 60 * 1000); // 300s * count
-    if (needInterval < minInterval) needInterval = minInterval;
-    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needInterval) return false;
-    return true;
   }
 
   Map<String, dynamic> toMap() {

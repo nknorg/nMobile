@@ -224,7 +224,7 @@ class RPC {
     if ((_schema != null) && (newStatus != null)) {
       if (!canTryTimer) {
         logger.w("PRC - subscribeWithPermission - cancel permission try - newStatus:$newStatus - oldStatus:$oldStatus - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
-        await subscriberCommon.setStatusProgressEnd(_schema.id, notify: true);
+        await subscriberCommon.setStatusProgressEnd(_schema.id);
         await subscriberCommon.setStatus(_schema.id, oldStatus, notify: true);
       } else {
         success = true; // will success by try timer
@@ -297,34 +297,30 @@ class RPC {
         }
       }
     } else if (!success) {
-      logger.w("PRC - subscribeWithJoin - action fail - results:$results - isJoin:$isJoin - topic:$topic - nonce:$nonce - fee:$fee - topic:$topic");
+      logger.w("PRC - subscribeWithJoin - action fail - results:$results - isJoin:$isJoin - nonce:$nonce - fee:$fee - topic:$topic");
     }
-    // try TODO:GG setData
+    // try
     TopicSchema? _schema = await topicCommon.queryByTopic(topic);
     if (_schema != null) {
       if (isJoin) {
         if (!canTry) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, false, null, 0);
-          logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic - newData:$newData");
-          await topicCommon.setData(_schema.id, newData); // await
+          logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          await topicCommon.setStatusProgressEnd(_schema.id);
           await topicCommon.setJoined(_schema.id, false, notify: true);
         } else {
           success = true; // will success by try timer
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(true, true, _nonce, fee);
-          logger.i("PRC - subscribeWithJoin - add subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic - newData:$newData");
-          await topicCommon.setData(_schema.id, newData); // await
+          logger.i("PRC - subscribeWithJoin - add subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          await topicCommon.setStatusProgressStart(_schema.id, true, _nonce, fee, notify: true); // await
         }
       } else {
         if (!canTry) {
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, false, null, 0);
-          logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic - newData:$newData");
-          await topicCommon.setData(_schema.id, newData); // await
+          logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          await topicCommon.setStatusProgressEnd(_schema.id);
           await topicCommon.setJoined(_schema.id, true, notify: true);
         } else {
           success = true; // will success by try timer
-          Map<String, dynamic> newData = _schema.newDataByAppendSubscribe(false, true, _nonce, fee);
-          logger.i("PRC - _unsubscribe - add unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic - newData:$newData");
-          await topicCommon.setData(_schema.id, newData); // await
+          logger.i("PRC - _unsubscribe - add unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          await topicCommon.setStatusProgressStart(_schema.id, false, _nonce, fee, notify: true); // await
         }
       }
     }
