@@ -12,6 +12,7 @@ import nkn.Nkn
 import nkn.RPCConfig
 import nkn.TransactionConfig
 import nkn.WalletConfig
+import nkngolib.Nkngolib
 import nkngomobile.StringArray
 import org.bouncycastle.util.encoders.Hex
 import org.nkn.sdk.IChannelHandler
@@ -99,7 +100,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, timeout)
+                seedRPCServerAddr = Nkngolib.measureSeedRPCServer(seedRPCServerAddr, timeout)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
                 val elements = seedRPCServerAddr.join(",").split(",")
