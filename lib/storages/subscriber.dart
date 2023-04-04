@@ -334,32 +334,48 @@ class SubscriberStorage with Tag {
         false;
   }
 
-  Future<bool> setData(int? subscriberId, Map<String, dynamic>? newData) async {
-    if (db?.isOpen != true) return false;
-    if (subscriberId == null || subscriberId == 0) return false;
+  Future<Map<String, dynamic>?> setData(int? subscriberId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+    if (db?.isOpen != true) return null;
+    if (subscriberId == null || subscriberId == 0) return null;
+    if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [subscriberId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setData - no exists - subscriberId:$subscriberId");
+                return null;
+              }
+              SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              data.addAll(added ?? Map());
+              if ((removeKeys != null) && removeKeys.isNotEmpty) {
+                removeKeys.forEach((element) => data.remove(element));
+              }
+              int count = await txn.update(
                 tableName,
                 {
-                  'data': (newData?.isNotEmpty == true) ? jsonEncode(newData) : null,
+                  'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'id = ?',
                 whereArgs: [subscriberId],
               );
+              if (count <= 0) logger.w("$TAG - setData - fail - topic:${schema.topic} - chatId:${schema.clientAddress} - newData:$data");
+              return (count > 0) ? data : null;
             });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setData - success - subscriberId:$subscriberId - newData:$newData");
-              return true;
-            }
-            logger.w("$TAG - setData - fail - subscriberId:$subscriberId - newData:$newData");
           } catch (e, st) {
             handleError(e, st);
           }
-          return false;
+          return null;
         }) ??
-        false;
+        null;
   }
 }
