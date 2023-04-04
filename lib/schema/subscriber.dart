@@ -9,12 +9,6 @@ class SubscriberStatus {
   static const int InvitedReceipt = 2;
   static const int Subscribed = 3;
   static const int Unsubscribed = 4;
-// static const int DefaultNotMember = 0;
-// static const int MemberInvited = 1;
-// static const int MemberPublished = 2;
-// static const int MemberSubscribed = 3;
-// static const int MemberPublishRejected = 4;
-// static const int MemberJoinedButNotInvited = 5;
 }
 
 class SubscriberSchema {
@@ -22,7 +16,6 @@ class SubscriberSchema {
 
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
-  // FIXED:GG check pubKey
   String clientAddress; // (required) <-> chat_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
@@ -44,7 +37,6 @@ class SubscriberSchema {
     this.data,
   });
 
-  // FIXED:GG check pubKey
   String get pubKey {
     return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
   }
@@ -54,21 +46,6 @@ class SubscriberSchema {
     return _status == SubscriberStatus.InvitedSend || _status == SubscriberStatus.InvitedReceipt || _status == SubscriberStatus.Subscribed;
   }
 
-  Map<String, dynamic> newDataByAppendStatus(int status, bool isProgress, int? nonce, double fee) {
-    Map<String, dynamic> newData = data ?? Map();
-    if (isProgress) {
-      newData['permission_progress'] = status;
-      newData['progress_permission_nonce'] = nonce;
-      newData['progress_permission_fee'] = fee;
-    } else {
-      newData.remove('permission_progress');
-      newData.remove('progress_permission_nonce');
-      newData.remove('progress_permission_fee');
-    }
-    return newData;
-  }
-
-  // FIXED:GG no clear in end
   int? isPermissionProgress() {
     int? status = data?['permission_progress'];
     return status;
