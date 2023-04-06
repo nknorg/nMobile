@@ -497,38 +497,37 @@ class RPC {
     return success;
   }
 
-  static Future<Map<String, dynamic>> getSubscription(
+  static Future<Map<String, dynamic>?> getSubscription(
     String? topic,
     String? subscriber, {
     int maxTryTimes = Settings.tryTimesTopicRpc,
   }) async {
-    if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return Map();
+    if (topic == null || topic.isEmpty || subscriber == null || subscriber.isEmpty) return null;
     // func
     Function() func = () async {
-      Map<String, dynamic>? result;
       try {
         if (clientCommon.isClientOK) {
-          result = await clientCommon.client?.getSubscription(
+          Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
             topic: genTopicHash(topic),
             subscriber: subscriber,
           );
+          return result ?? Map();
         }
       } catch (e, st) {
         handleError(e, st);
       }
       try {
-        if ((result == null) || result.isEmpty) {
-          List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
-          result = await Wallet.getSubscription(
-            genTopicHash(topic),
-            subscriber,
-            config: RpcConfig(seedRPCServerAddr: seedRpcList),
-          );
-        }
+        List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
+        Map<String, dynamic>? result = await Wallet.getSubscription(
+          genTopicHash(topic),
+          subscriber,
+          config: RpcConfig(seedRPCServerAddr: seedRpcList),
+        );
+        return result ?? Map();
       } catch (e, st) {
         handleError(e, st);
       }
-      return result;
+      return null;
     };
     // call
     Map<String, dynamic>? subscription;
@@ -540,23 +539,22 @@ class RPC {
       await Future.delayed(Duration(milliseconds: 100));
     }
     logger.d("PRC - getSubscription - count:${subscription?.keys.length} - tryTimes:$tryTimes - subscription:$subscription");
-    return subscription ?? Map();
+    return subscription;
   }
 
-  static Future<Map<String, dynamic>> getSubscribers(
+  static Future<Map<String, dynamic>?> getSubscribers(
     String? topic, {
     bool meta = false,
     bool txPool = true,
     // Uint8List? subscriberHashPrefix,
     int maxTryTimes = Settings.tryTimesTopicRpc,
   }) async {
-    if (topic == null || topic.isEmpty) return Map();
+    if (topic == null || topic.isEmpty) return null;
     // func
     Function(int, int) func = (int offset, int limit) async {
-      Map<String, dynamic>? result;
       try {
         if (clientCommon.isClientOK) {
-          result = await clientCommon.client?.getSubscribers(
+          Map<String, dynamic>? result = await clientCommon.client?.getSubscribers(
             topic: genTopicHash(topic),
             offset: offset,
             limit: limit,
@@ -564,36 +562,37 @@ class RPC {
             txPool: txPool,
             // subscriberHashPrefix: subscriberHashPrefix,
           );
+          return result ?? Map();
         }
       } catch (e, st) {
         handleError(e, st);
       }
       try {
-        if ((result == null) || result.isEmpty) {
-          List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
-          result = await Wallet.getSubscribers(
-            topic: genTopicHash(topic),
-            offset: offset,
-            limit: limit,
-            meta: meta,
-            txPool: txPool,
-            // subscriberHashPrefix: subscriberHashPrefix,
-            config: RpcConfig(seedRPCServerAddr: seedRpcList),
-          );
-        }
+        List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
+        Map<String, dynamic>? result = await Wallet.getSubscribers(
+          topic: genTopicHash(topic),
+          offset: offset,
+          limit: limit,
+          meta: meta,
+          txPool: txPool,
+          // subscriberHashPrefix: subscriberHashPrefix,
+          config: RpcConfig(seedRPCServerAddr: seedRpcList),
+        );
+        return result ?? Map();
       } catch (e, st) {
         handleError(e, st);
       }
-      return result;
+      return null;
     };
     // call
-    Map<String, dynamic> subscribers = Map();
+    Map<String, dynamic>? subscribers;
     int offset = 0;
     int limit = 1000;
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       Map<String, dynamic>? subs = await func(offset, limit);
       if ((subs != null) && subs.isNotEmpty) {
+        if (subscribers == null) subscribers = Map();
         subscribers.addAll(subs);
         if (subs.length < limit) break;
         offset += limit;
@@ -602,41 +601,40 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - getSubscribers - count:${subscribers.length} - tryTimes:$tryTimes - subscribers:$subscribers");
+    logger.d("PRC - getSubscribers - count:${subscribers?.length} - tryTimes:$tryTimes - subscribers:$subscribers");
     return subscribers;
   }
 
-  static Future<int> getSubscribersCount(
+  static Future<int?> getSubscribersCount(
     String? topic, {
     int maxTryTimes = Settings.tryTimesTopicRpc,
   }) async {
-    if (topic == null || topic.isEmpty) return 0;
+    if (topic == null || topic.isEmpty) return null;
     // func
     Function() func = () async {
-      int? result;
       try {
         if (clientCommon.isClientOK) {
-          result = await clientCommon.client?.getSubscribersCount(
+          int? result = await clientCommon.client?.getSubscribersCount(
             topic: genTopicHash(topic),
             // subscriberHashPrefix: subscriberHashPrefix,
           );
+          return result ?? 0;
         }
       } catch (e, st) {
         handleError(e, st);
       }
       try {
-        if ((result == null) || (result <= 0)) {
-          List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
-          result = await Wallet.getSubscribersCount(
-            genTopicHash(topic),
-            // subscriberHashPrefix: subscriberHashPrefix
-            config: RpcConfig(seedRPCServerAddr: seedRpcList),
-          );
-        }
+        List<String> seedRpcList = await RPC.getRpcServers(await walletCommon.getDefaultAddress());
+        int result = await Wallet.getSubscribersCount(
+          genTopicHash(topic),
+          // subscriberHashPrefix: subscriberHashPrefix
+          config: RpcConfig(seedRPCServerAddr: seedRpcList),
+        );
+        return result;
       } catch (e, st) {
         handleError(e, st);
       }
-      return result;
+      return null;
     };
     // call
     int? count;
@@ -648,7 +646,7 @@ class RPC {
       await Future.delayed(Duration(milliseconds: 100));
     }
     logger.d("PRC - getSubscribersCount - count:$count - tryTimes:$tryTimes");
-    return count ?? 0;
+    return count;
   }
 
   static String genTopicHash(String topic) {
