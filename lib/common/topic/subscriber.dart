@@ -77,7 +77,7 @@ class SubscriberCommon with Tag {
     if (topic == null || topic.isEmpty) return 0;
     int count = 0;
     if (fetch) {
-      count = await RPC.getSubscribersCount(topic);
+      count = (await RPC.getSubscribersCount(topic)) ?? (await queryCountByTopic(topic, status: SubscriberStatus.Subscribed));
     } else if (isPrivate) {
       // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
       count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
@@ -104,7 +104,11 @@ class SubscriberCommon with Tag {
       if (result.length < limit) break;
     }
     // node
-    List<SubscriberSchema> nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey, meta: meta, txPool: txPool);
+    List<SubscriberSchema>? nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey, meta: meta, txPool: txPool);
+    if (nodeSubscribers == null) {
+      logger.w("$TAG - refreshSubscribers - nodeSubscribers = null");
+      return;
+    }
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
       SubscriberSchema dbItem = dbSubscribers[i];
@@ -121,10 +125,8 @@ class SubscriberCommon with Tag {
         }
       }
       // filter in txPool
-      int createAt = dbItem.createAt ?? DateTime.now().millisecondsSinceEpoch;
-      int updateAt = dbItem.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.gapTxPoolUpdateDelayMs;
-      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - updateAt) < Settings.gapTxPoolUpdateDelayMs;
+      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
+      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
       if (isCreateJustNow) {
         if (dbItem.status == SubscriberStatus.None) {
           logger.d("$TAG - refreshSubscribers - DB created just now, next by status none - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
@@ -132,21 +134,21 @@ class SubscriberCommon with Tag {
           if (findInNode?.status == SubscriberStatus.Subscribed) {
             logger.d("$TAG - refreshSubscribers - DB created just now, next bu subscribed - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           } else {
-            var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+            var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
             logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
             continue;
           }
         } else {
-          var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+          var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
           logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           continue;
         }
       } else if (isUpdateJustNow) {
-        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+        var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
         logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         continue;
       } else {
-        var betweenS = (DateTime.now().millisecondsSinceEpoch - updateAt) / 1000;
+        var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
         logger.v("$TAG - refreshSubscribers - DB updated to long, so can next - between:${betweenS}s");
       }
       // different with node in DB
@@ -192,10 +194,14 @@ class SubscriberCommon with Tag {
   }
 
   // caller = everyone, meta = isPrivate
-  Future<List<SubscriberSchema>> _mergeSubscribersAndPermissionsFromNode(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
-    if (topic == null || topic.isEmpty) return [];
+  Future<List<SubscriberSchema>?> _mergeSubscribersAndPermissionsFromNode(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
+    if (topic == null || topic.isEmpty) return null;
     // subscribers(permission)
-    Map<String, dynamic> metas = await RPC.getSubscribers(topic, meta: meta, txPool: txPool);
+    Map<String, dynamic>? metas = await RPC.getSubscribers(topic, meta: meta, txPool: txPool);
+    if (metas == null) {
+      logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - metas = null");
+      return null;
+    }
     // subscribers(subscribe)
     List<SubscriberSchema> subscribers = [];
     metas.forEach((key, value) {
@@ -208,7 +214,11 @@ class SubscriberCommon with Tag {
     List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
     if (meta) permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool, metas: metas);
     bool? _acceptAll = permissionsResult[0];
-    List<SubscriberSchema> permissions = permissionsResult[1];
+    List<SubscriberSchema>? permissions = permissionsResult[1];
+    if (permissions == null) {
+      logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - permissions = null");
+      return null;
+    }
     // merge
     List<SubscriberSchema> results = [];
     if (!meta || (_acceptAll == true)) {
@@ -276,10 +286,13 @@ class SubscriberCommon with Tag {
     // permissions
     List<dynamic> permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool);
     bool? _acceptAll = permissionsResult[0];
-    List<SubscriberSchema> permissions = permissionsResult[1];
+    List<SubscriberSchema>? permissions = permissionsResult[1];
     if (_acceptAll == true) {
       logger.d("$TAG - findPermissionFromNode - acceptAll = true");
       return [_acceptAll, null, true, false];
+    } else if (permissions == null) {
+      logger.w("$TAG - findPermissionFromNode - permissions = null");
+      return [_acceptAll, null, null, null];
     }
     // find
     List<SubscriberSchema> finds = permissions.where((element) => element.clientAddress == clientAddress).toList();
@@ -295,14 +308,18 @@ class SubscriberCommon with Tag {
   }
 
   Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? metas}) async {
-    if (topic == null || topic.isEmpty) return [[], null];
+    if (topic == null || topic.isEmpty) return [null, null];
     // permissions + subscribers
     metas = metas ?? await RPC.getSubscribers(topic, meta: true, txPool: txPool);
+    if (metas == null) {
+      logger.w("$TAG - _getPermissionsFromNode - metas = null");
+      return [null, null];
+    }
     List<String> metaKeys = metas.keys.toList();
     // permissions
     bool _acceptAll = false;
     List<SubscriberSchema> _permissions = [];
-    for (var i = 0; i < metas.length; i++) {
+    for (var i = 0; i < metaKeys.length; i++) {
       String key = metaKeys[i];
       var value = metas[key];
       if (!_acceptAll && key.contains('.__permission__.')) {
