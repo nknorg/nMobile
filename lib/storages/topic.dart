@@ -49,14 +49,14 @@ class TopicStorage with Tag {
     await db.execute('CREATE INDEX `index_topic_joined_type_update_at` ON `$tableName` (`joined`, `type`, `update_at`)');
   }
 
-  Future<TopicSchema?> insert(TopicSchema? schema, {bool checkDuplicated = true}) async {
+  Future<TopicSchema?> insert(TopicSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
         int? id;
-        if (!checkDuplicated) {
+        if (!unique) {
           id = await db?.transaction((txn) {
             return txn.insert(tableName, entity);
           });
@@ -71,21 +71,18 @@ class TopicStorage with Tag {
               limit: 1,
             );
             if (res != null && res.length > 0) {
-              logger.w("$TAG - insert - duplicated - schema:$schema");
+              logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
+              entity = res.first;
               return null;
             } else {
               return await txn.insert(tableName, entity);
             }
           });
         }
-        if (id != null) {
-          TopicSchema schema = TopicSchema.fromMap(entity);
-          schema.id = id;
-          // logger.v("$TAG - insert - success - schema:$schema");
-          return schema;
-        } else {
-          logger.i("$TAG - insert - exists - schema:$schema");
-        }
+        TopicSchema added = TopicSchema.fromMap(entity);
+        if (id != null) schema.id = id;
+        // logger.v("$TAG - insert - success - schema:$schema");
+        return added;
       } catch (e, st) {
         handleError(e, st);
       }

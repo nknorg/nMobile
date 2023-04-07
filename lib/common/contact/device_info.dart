@@ -31,10 +31,12 @@ class DeviceInfoCommon with Tag {
     DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Settings.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
-        deviceInfo = await add(
-          DeviceInfoSchema(contactAddress: clientAddress, deviceId: Settings.deviceId, onlineAt: 0, data: newData),
-          checkDuplicated: false,
-        );
+        deviceInfo = await add(DeviceInfoSchema(
+          contactAddress: clientAddress,
+          deviceId: Settings.deviceId,
+          onlineAt: 0,
+          data: newData,
+        ));
       } else {
         return null;
       }
@@ -59,15 +61,8 @@ class DeviceInfoCommon with Tag {
     return deviceInfo;
   }
 
-  Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema, {bool checkDuplicated = true}) async {
+  Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema) async {
     if (schema == null || schema.contactAddress.isEmpty) return null;
-    if (checkDuplicated) {
-      DeviceInfoSchema? exist = await queryByDeviceId(schema.contactAddress, schema.deviceId);
-      if (exist != null) {
-        logger.d("$TAG - add - duplicated - schema:$exist");
-        return null;
-      }
-    }
     schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
     schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
     DeviceInfoSchema? added = await DeviceInfoStorage.instance.insert(schema);

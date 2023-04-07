@@ -169,7 +169,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // exist
     contactCommon.queryByClientAddress(this._contactSchema?.clientAddress).then((ContactSchema? exist) async {
       if (exist != null) return;
-      ContactSchema? added = await contactCommon.add(this._contactSchema, notify: true, checkDuplicated: false);
+      ContactSchema? added = await contactCommon.add(this._contactSchema, notify: true);
       if (added == null) return;
       setState(() {
         this._contactSchema = added;

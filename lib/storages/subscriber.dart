@@ -43,14 +43,14 @@ class SubscriberStorage with Tag {
     await db.execute('CREATE INDEX `index_subscriber_topic_perm_status` ON `$tableName` (`topic`, `perm_page`, `status`)');
   }
 
-  Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool checkDuplicated = true}) async {
+  Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.topic.isEmpty || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
         int? id;
-        if (!checkDuplicated) {
+        if (!unique) {
           id = await db?.transaction((txn) {
             return txn.insert(tableName, entity);
           });
@@ -65,21 +65,18 @@ class SubscriberStorage with Tag {
               limit: 1,
             );
             if (res != null && res.length > 0) {
-              logger.w("$TAG - insert - duplicated - schema:$schema");
+              logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
+              entity = res.first;
               return null;
             } else {
               return await txn.insert(tableName, entity);
             }
           });
         }
-        if (id != null) {
-          SubscriberSchema schema = SubscriberSchema.fromMap(entity);
-          schema.id = id;
-          // logger.v("$TAG - insert - success - schema:$schema");
-          return schema;
-        } else {
-          logger.i("$TAG - insert - exists - schema:$schema");
-        }
+        SubscriberSchema added = SubscriberSchema.fromMap(entity);
+        if (id != null) schema.id = id;
+        // logger.v("$TAG - insert - success - schema:$schema");
+        return added;
       } catch (e, st) {
         handleError(e, st);
       }

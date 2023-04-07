@@ -84,7 +84,7 @@ class ContactCommon with Tag {
           if (success) contact.type = ContactType.stranger;
         }
       } else {
-        contact = await addByType(clientAddress, ContactType.stranger, notify: true, checkDuplicated: false);
+        contact = await addByType(clientAddress, ContactType.stranger, notify: true);
       }
     }
     if ((contact != null) && resolveOk) {
@@ -104,7 +104,7 @@ class ContactCommon with Tag {
       contact = await ContactStorage.instance.queryByClientAddress(myAddress);
     }
     if ((contact == null) && myAddress.isNotEmpty && canAdd) {
-      contact = await addByType(myAddress, ContactType.me, notify: true, checkDuplicated: false);
+      contact = await addByType(myAddress, ContactType.me, notify: true);
     }
     if (contact == null) return null;
     if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
@@ -121,25 +121,18 @@ class ContactCommon with Tag {
     return contact;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, int contactType, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<ContactSchema?> addByType(String? clientAddress, int contactType, {bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? schema = await ContactSchema.create(clientAddress, contactType);
-    return add(schema, notify: notify, checkDuplicated: checkDuplicated);
+    return await add(schema, notify: notify);
   }
 
-  Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.clientAddress.isEmpty) return null;
-    if (checkDuplicated) {
-      ContactSchema? exist = await queryByClientAddress(schema.clientAddress);
-      if (exist != null) {
-        logger.d("$TAG - add - duplicated - schema:$exist");
-        return null;
-      }
-    }
     schema.nknWalletAddress = await schema.tryNknWalletAddress();
     logger.d("$TAG - add - schema:$schema");
     ContactSchema? added = await ContactStorage.instance.insert(schema);
-    if (added != null && notify) _addSink.add(added);
+    if ((added != null) && notify) _addSink.add(added);
     return added;
   }
 

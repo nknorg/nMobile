@@ -41,22 +41,40 @@ class DeviceInfoStorage with Tag {
     await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_online_at` ON `$tableName` (`contact_address`, `device_id`, `online_at`)');
   }
 
-  Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema) async {
+  Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
-        int? id = await db?.transaction((txn) {
-          return txn.insert(tableName, entity);
-        });
-        if (id != null) {
-          DeviceInfoSchema schema = DeviceInfoSchema.fromMap(entity);
-          schema.id = id;
-          // logger.v("$TAG - insert - success - schema:$schema");
-          return schema;
+        int? id;
+        if (!unique) {
+          id = await db?.transaction((txn) {
+            return txn.insert(tableName, entity);
+          });
+        } else {
+          id = await db?.transaction((txn) async {
+            List<Map<String, dynamic>> res = await txn.query(
+              tableName,
+              columns: ['*'],
+              where: 'contact_address = ? AND device_id = ?',
+              whereArgs: [schema.contactAddress, schema.deviceId],
+              offset: 0,
+              limit: 1,
+            );
+            if (res != null && res.length > 0) {
+              logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
+              entity = res.first;
+              return null;
+            } else {
+              return await txn.insert(tableName, entity);
+            }
+          });
         }
-        logger.w("$TAG - insert - fail - schema:$schema");
+        DeviceInfoSchema added = DeviceInfoSchema.fromMap(entity);
+        if (id != null) schema.id = id;
+        // logger.v("$TAG - insert - success - schema:$schema");
+        return added;
       } catch (e, st) {
         handleError(e, st);
       }

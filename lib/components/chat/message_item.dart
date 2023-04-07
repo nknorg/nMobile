@@ -560,7 +560,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                         if (await chatOutCommon.sendPrivateGroupAccept(inviter, groupItemSchema)) {
                           groupSchema = PrivateGroupSchema.create(groupId, groupName, type: type);
                           if (groupSchema != null) {
-                            groupSchema = await privateGroupCommon.addPrivateGroup(groupSchema, notify: true, checkDuplicated: false);
+                            groupSchema = await privateGroupCommon.addPrivateGroup(groupSchema, notify: true);
                           }
                           if (groupSchema != null) {
                             await sessionCommon.add(groupSchema.groupId, SessionType.PRIVATE_GROUP, lastMsgAt: DateTime.now().millisecondsSinceEpoch, unReadCount: 0);
