@@ -88,8 +88,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
     // subscriber listen
     _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
-      _subscriberList.add(schema);
-      _showSubscriberList();
+      if (_subscriberList.indexWhere((element) => (element.topic == schema.topic) && (element.clientAddress == schema.clientAddress)) < 0) {
+        _subscriberList.add(schema);
+        _showSubscriberList();
+      }
     });
     // _deleteSubscriberSubscription = subscriberCommon.deleteStream.listen((int subscriberId) {
     //   setState(() {
@@ -148,7 +150,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true, checkDuplicated: false);
+      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true);
       if (added == null) return;
       setState(() {
         this._topicSchema = added;
@@ -163,10 +165,11 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _refreshMembersCount(); // await
 
     // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, ownerPubKey: _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) {
-      _getDataSubscribers(true);
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) {
+      topicCommon.setLastRefreshSubscribersAt(this._topicSchema?.id, notify: true); // await
+      _getDataSubscribers(true); // await
     });
-    _getDataSubscribers(true);
+    _getDataSubscribers(true); // await
   }
 
   _refreshMembersCount() async {
