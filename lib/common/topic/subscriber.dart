@@ -31,6 +31,7 @@ class SubscriberCommon with Tag {
 
   SubscriberCommon();
 
+  // TODO:GG 还有必要吗? 只有第一次需要fetch
   Future fetchSubscribersInfo(String? topic, {bool contact = true, bool deviceInfo = true}) async {
     if (topic == null || topic.isEmpty) return;
     int limit = 20;
@@ -159,7 +160,7 @@ class SubscriberCommon with Tag {
         }
       } else {
         if (dbItem.status == findInNode.status) {
-          logger.d("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
+          logger.v("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
         } else {
           if ((findInNode.status == SubscriberStatus.InvitedSend) && (dbItem.status == SubscriberStatus.InvitedReceipt)) {
             logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findInNode");
@@ -196,7 +197,7 @@ class SubscriberCommon with Tag {
   // caller = everyone, meta = isPrivate
   Future<List<SubscriberSchema>?> _mergeSubscribersAndPermissionsFromNode(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topic == null || topic.isEmpty) return null;
-    // subscribers(permission)
+    // subscribers(subscribe + permission)
     Map<String, dynamic>? metas = await RPC.getSubscribers(topic, meta: meta, txPool: txPool);
     if (metas == null) {
       logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - metas = null");
@@ -211,13 +212,16 @@ class SubscriberCommon with Tag {
       }
     });
     // permissions
-    List<dynamic> permissionsResult = [<SubscriberSchema>[], true];
-    if (meta) permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool, metas: metas);
-    bool? _acceptAll = permissionsResult[0];
-    List<SubscriberSchema>? permissions = permissionsResult[1];
-    if (permissions == null) {
-      logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - permissions = null");
-      return null;
+    bool? _acceptAll = true;
+    List<SubscriberSchema>? permissions = [];
+    if (meta) {
+      List<dynamic> permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool, metas: metas);
+      _acceptAll = permissionsResult[0];
+      permissions = permissionsResult[1];
+      if ((_acceptAll == null) || (permissions == null)) {
+        logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - _acceptAll = null");
+        return null;
+      }
     }
     // merge
     List<SubscriberSchema> results = [];
@@ -288,12 +292,12 @@ class SubscriberCommon with Tag {
     List<dynamic> permissionsResult = await _getPermissionsFromNode(topic, txPool: txPool);
     bool? _acceptAll = permissionsResult[0];
     List<SubscriberSchema>? permissions = permissionsResult[1];
-    if (_acceptAll == true) {
+    if ((_acceptAll == null) || (permissions == null)) {
+      logger.w("$TAG - findPermissionFromNode - acceptAll is null");
+      return [null, null, true, false];
+    } else if (_acceptAll == true) {
       logger.d("$TAG - findPermissionFromNode - acceptAll = true");
       return [_acceptAll, null, true, false];
-    } else if (permissions == null) {
-      logger.w("$TAG - findPermissionFromNode - permissions = null");
-      return [_acceptAll, null, null, null];
     }
     // find
     List<SubscriberSchema> finds = permissions.where((element) => element.clientAddress == clientAddress).toList();
@@ -302,7 +306,7 @@ class SubscriberCommon with Tag {
       bool isAccept = finds[0].status == InitialAcceptStatus;
       bool isReject = finds[0].status == InitialRejectStatus;
       logger.d("$TAG - findPermissionFromNode - permPage:$permPage - isAccept:$isAccept - isReject:$isReject");
-      return [false, permPage, isAccept, isReject];
+      return [_acceptAll, permPage, isAccept, isReject];
     }
     logger.d("$TAG - findPermissionFromNode - no find");
     return [_acceptAll, null, null, null];
@@ -324,7 +328,7 @@ class SubscriberCommon with Tag {
     for (var i = 0; i < metaKeys.length; i++) {
       String key = metaKeys[i];
       var value = metas[key];
-      if (!_acceptAll && key.contains('.__permission__.')) {
+      if (key.contains('.__permission__.')) {
         // permPage
         String prefix = key.split("__.__permission__.")[0];
         String permIndex = prefix.split("__")[prefix.split("__").length - 1];
@@ -362,6 +366,8 @@ class SubscriberCommon with Tag {
             logger.w("$TAG - _getPermissionsFromNode - reject type error - accept:$element");
           }
         });
+      } else {
+        logger.v("$TAG - _getPermissionsFromNode - skip key no contains permission - key:$key - value:$value");
       }
     }
     if (!_acceptAll) {
@@ -497,7 +503,7 @@ class SubscriberCommon with Tag {
   Future<SubscriberSchema?> add(SubscriberSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.topic.isEmpty) return null;
     SubscriberSchema? added = await SubscriberStorage.instance.insert(schema);
-    if (added != null && notify) _addSink.add(added);
+    if ((added != null) && notify) _addSink.add(added);
     return added;
   }
 
@@ -568,6 +574,7 @@ class SubscriberCommon with Tag {
     return success;
   }
 
+  // TODO:GG test
   Future<bool> setStatusProgressStart(int? subscriberId, int status, int? nonce, double fee, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
     var data = await SubscriberStorage.instance.setData(subscriberId, {
@@ -580,6 +587,7 @@ class SubscriberCommon with Tag {
     return data != null;
   }
 
+  // TODO:GG test
   Future<bool> setStatusProgressEnd(int? subscriberId, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
     var data = await SubscriberStorage.instance.setData(subscriberId, null, removeKeys: [
