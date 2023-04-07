@@ -74,7 +74,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
     if (widget.subscriber.temp?["contact"] == null) {
       contactCommon.queryByClientAddress(address).then((result) async {
         if (result == null) {
-          result = await contactCommon.addByType(address, ContactType.none, notify: true, checkDuplicated: false);
+          result = await contactCommon.addByType(address, ContactType.none, notify: true);
         }
         if ((address == result?.clientAddress) && (address == widget.subscriber.clientAddress)) {
           if (widget.subscriber.temp == null) widget.subscriber.temp = Map();

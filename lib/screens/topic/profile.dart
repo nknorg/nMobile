@@ -83,19 +83,19 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _topicSchema = event;
       });
       _refreshJoined(); // await
-      _refreshMembersCount(); // await
+      // _refreshMembersCount(); // await
     });
     _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
       if (schema.clientAddress == clientCommon.address) {
         _refreshJoined();
       }
-      _refreshMembersCount();
+      // _refreshMembersCount();
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
         _refreshJoined();
       } else {
-        _refreshMembersCount();
+        // _refreshMembersCount();
       }
     });
 
@@ -132,7 +132,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     // exist
     topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true, checkDuplicated: false);
+      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true);
       if (added == null) return;
       setState(() {
         this._topicSchema = added;
