@@ -142,7 +142,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
             "notes": note,
           };
         }
-        ContactSchema? added = await contactCommon.add(schema, notify: true, checkDuplicated: false);
+        ContactSchema? added = await contactCommon.add(schema, notify: true);
         if (added == null) {
           Toast.show(Settings.locale((s) => s.failure, ctx: context));
           Loading.dismiss();

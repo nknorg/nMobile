@@ -41,14 +41,14 @@ class SessionStorage with Tag {
     await db.execute('CREATE INDEX `index_session_type_is_top_last_message_at` ON `$tableName` (`type`, `is_top`, `last_message_at`)');
   }
 
-  Future<SessionSchema?> insert(SessionSchema? schema, {bool checkDuplicated = true}) async {
+  Future<SessionSchema?> insert(SessionSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null) return null;
     Map<String, dynamic> entity = await schema.toMap();
     return await _queue.add(() async {
       try {
         int? id;
-        if (!checkDuplicated) {
+        if (!unique) {
           id = await db?.transaction((txn) {
             return txn.insert(tableName, entity);
           });
@@ -63,21 +63,18 @@ class SessionStorage with Tag {
               limit: 1,
             );
             if (res != null && res.length > 0) {
-              logger.w("$TAG - insert - duplicated - schema:$schema");
+              logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
+              entity = res.first;
               return null;
             } else {
               return await txn.insert(tableName, entity);
             }
           });
         }
-        if (id != null) {
-          SessionSchema schema = SessionSchema.fromMap(entity);
-          schema.id = id;
-          // logger.v("$TAG - insert - success - schema:$schema");
-          return schema;
-        } else {
-          logger.i("$TAG - insert - exists - schema:$schema");
-        }
+        SessionSchema added = SessionSchema.fromMap(entity);
+        if (id != null) schema.id = id;
+        // logger.v("$TAG - insert - success - schema:$schema");
+        return added;
       } catch (e, st) {
         handleError(e, st);
       }

@@ -50,7 +50,7 @@ class SubscriberCommon with Tag {
         ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
         if (_contact == null) {
           logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
-          _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true, checkDuplicated: false);
+          _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true);
           await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, ContactRequestType.header, null);
           await Future.delayed(Duration(milliseconds: 10));
         }
@@ -279,6 +279,7 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone, result = [acceptAll, permPage, accept, reject]
+  @Deprecated('Replace by PrivateGroup')
   Future<List<dynamic>> findPermissionFromNode(String? topic, String? clientAddress, {bool txPool = true}) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) {
       return [null, null, null, null];
@@ -307,6 +308,7 @@ class SubscriberCommon with Tag {
     return [_acceptAll, null, null, null];
   }
 
+  @Deprecated('Replace by PrivateGroup')
   Future<List<dynamic>> _getPermissionsFromNode(String? topic, {bool txPool = true, Map<String, dynamic>? metas}) async {
     if (topic == null || topic.isEmpty) return [null, null];
     // permissions + subscribers
@@ -492,15 +494,8 @@ class SubscriberCommon with Tag {
   /// ************************************************* common **************************************************
   /// ***********************************************************************************************************
 
-  Future<SubscriberSchema?> add(SubscriberSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<SubscriberSchema?> add(SubscriberSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.topic.isEmpty) return null;
-    if (checkDuplicated) {
-      SubscriberSchema? exist = await queryByTopicChatId(schema.topic, schema.clientAddress);
-      if (exist != null) {
-        logger.d("$TAG - add - duplicated - schema:$exist");
-        return null;
-      }
-    }
     SubscriberSchema? added = await SubscriberStorage.instance.insert(schema);
     if (added != null && notify) _addSink.add(added);
     return added;
