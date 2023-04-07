@@ -62,8 +62,6 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 }
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
-  static final Map<String, int> topicsCheck = Map();
-
   String? targetId;
   ContactSchema? _contact;
   TopicSchema? _topic;
@@ -171,7 +169,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _topic = event;
       });
       _refreshTopicJoined();
-      _refreshTopicSubscribers();
+      // _refreshTopicSubscribers();
     });
 
     // subscriber
@@ -179,13 +177,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if (schema.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       }
-      _refreshTopicSubscribers();
+      // _refreshTopicSubscribers();
     });
     _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       if (event.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       } else {
-        _refreshTopicSubscribers();
+        //_refreshTopicSubscribers();
       }
     });
 
@@ -383,34 +381,27 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _refreshTopicSubscribers({bool fetch = false}) async {
+  _refreshTopicSubscribers({bool forceFetch = false}) async {
+    if (!clientCommon.isClientOK) return;
     String? topic = _topic?.topic;
     if ((topic == null) || topic.isEmpty) return;
+    int lastRefreshAt = _topic?.lastRefreshSubscribersAt() ?? 0;
+    int interval = DateTime.now().millisecondsSinceEpoch - lastRefreshAt;
+    if (lastRefreshAt == 0) {
+      logger.i("$TAG - _refreshTopicSubscribers - wait sync members - topic:$_topic");
+      return;
+    } else if ((interval < Settings.gapTopicSubscribersRefreshMs) && !forceFetch) {
+      logger.i("$TAG - _refreshTopicSubscribers - interval small - interval:$interval");
+      return;
+    } else {
+      logger.i("$TAG - _refreshTopicSubscribers - enable - interval:$interval");
+    }
+    await subscriberCommon.refreshSubscribers(topic, _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
+    await topicCommon.setLastRefreshSubscribersAt(_topic?.id, notify: true);
+    // refresh again
     int count = await subscriberCommon.getSubscribersCount(topic, _topic?.isPrivate == true);
     if (_topic?.count != count) {
       await topicCommon.setCount(_topic?.id, count, notify: true);
-    }
-    // fetch
-    if (!clientCommon.isClientOK) return;
-    bool topicCountEmpty = (_topic?.count ?? 0) <= 2;
-    bool topicCountSmall = (_topic?.count ?? 0) <= TopicSchema.minRefreshCount;
-    if (fetch || topicCountEmpty || topicCountSmall) {
-      int lastRefreshAt = topicsCheck[topic] ?? 0;
-      if (topicCountEmpty) {
-        logger.d("$TAG - _refreshTopicSubscribers - continue by topicCountEmpty");
-      } else if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) < Settings.gapTopicSubscribersRefreshMs) {
-        logger.d("$TAG - _refreshTopicSubscribers - between:${DateTime.now().millisecondsSinceEpoch - lastRefreshAt}");
-        return;
-      }
-      topicsCheck[topic] = DateTime.now().millisecondsSinceEpoch;
-      await Future.delayed(Duration(milliseconds: 500));
-      logger.i("$TAG - _refreshTopicSubscribers - start");
-      await subscriberCommon.refreshSubscribers(topic, ownerPubKey: _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
-      // refresh again
-      int count2 = await subscriberCommon.getSubscribersCount(topic, _topic?.isPrivate == true);
-      if (count != count2) {
-        await topicCommon.setCount(_topic?.id, count2, notify: true);
-      }
     }
   }
 

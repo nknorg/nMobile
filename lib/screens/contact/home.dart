@@ -96,7 +96,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     // contact listen
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
       if (schema.type == ContactType.friend) {
-        _allFriends.insert(0, schema);
+        if (_allFriends.indexWhere((element) => element.clientAddress == schema.clientAddress) < 0) {
+          _allFriends.insert(0, schema);
+        }
       }
       /* else if (schema.type == ContactType.stranger) {
         _allStrangers.insert(0, schema);
@@ -151,8 +153,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
     // topic listen
     _addTopicSubscription = topicCommon.addStream.listen((TopicSchema schema) {
-      _allTopics.insert(0, schema);
-      _searchAction(_searchController.text);
+      if (_allTopics.indexWhere((element) => element.topic == schema.topic) < 0) {
+        _allTopics.insert(0, schema);
+        _searchAction(_searchController.text);
+      }
     });
     // _deleteTopicSubscription = topicCommon.deleteStream.listen((String topic) {
     //   _allTopics = _allTopics.where((element) => element.topic != topic).toList();
@@ -168,8 +172,10 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
     // group listen
     _addGroupSubscription = privateGroupCommon.addGroupStream.listen((PrivateGroupSchema schema) {
-      _allGroups.insert(0, schema);
-      _searchAction(_searchController.text);
+      if (_allGroups.indexWhere((element) => element.groupId == schema.groupId) < 0) {
+        _allGroups.insert(0, schema);
+        _searchAction(_searchController.text);
+      }
     });
     _updateGroupSubscription = privateGroupCommon.updateGroupStream.listen((PrivateGroupSchema event) {
       _allGroups = _allGroups.map((e) => e.id == event.id ? event : e).toList();
