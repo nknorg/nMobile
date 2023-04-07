@@ -54,6 +54,7 @@ class DeviceInfoCommon with Tag {
       String? deviceToken = (await DeviceToken.get()) ?? ((await contactCommon.getMe())?.deviceToken);
       // SUPPORT:END
       if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
+        logger.i("$TAG - getMe - self deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
         bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
         if (success) deviceInfo.deviceToken = deviceToken;
       }

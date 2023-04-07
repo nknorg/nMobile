@@ -67,8 +67,10 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
       });
     });
     _addPrivateGroupItemStreamSubscription = privateGroupCommon.addGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema schema) {
-      _members.add(schema);
-      setState(() {});
+      if (_members.indexWhere((element) => (element.groupId == schema.groupId) && (element.invitee == schema.invitee)) < 0) {
+        _members.add(schema);
+        setState(() {});
+      }
     });
     _updatePrivateGroupItemStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => _privateGroup?.groupId == event.groupId).listen((PrivateGroupItemSchema event) {
       int index = _members.indexWhere((element) => element.id == event.id);
