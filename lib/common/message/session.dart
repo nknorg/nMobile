@@ -36,20 +36,11 @@ class SessionCommon with Tag {
     int? lastMsgAt,
     int? unReadCount,
     bool notify = true,
-    bool checkDuplicated = true,
   }) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
     Function func = () async {
       String topic = (type == SessionType.TOPIC) ? targetId : "";
       String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-      // duplicated
-      if (checkDuplicated) {
-        SessionSchema? exist = await query(targetId, type);
-        if (exist != null) {
-          logger.i("$TAG - add - duplicated - schema:$exist");
-          return exist;
-        }
-      }
       // lastMsg
       if (lastMsg == null) {
         List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);

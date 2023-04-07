@@ -50,14 +50,14 @@ class ContactStorage with Tag {
     await db.execute('CREATE INDEX `index_contact_type_update_at` ON `$tableName` (`type`, `update_at`)');
   }
 
-  Future<ContactSchema?> insert(ContactSchema? schema, {bool checkDuplicated = true}) async {
+  Future<ContactSchema?> insert(ContactSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
     if (schema == null || schema.clientAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
         int? id;
-        if (!checkDuplicated) {
+        if (!unique) {
           id = await db?.transaction((txn) {
             return txn.insert(tableName, entity);
           });
@@ -72,21 +72,18 @@ class ContactStorage with Tag {
               limit: 1,
             );
             if (res != null && res.length > 0) {
-              logger.w("$TAG - insert - duplicated - schema:$schema");
+              logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
+              entity = res.first;
               return null;
             } else {
               return await txn.insert(tableName, entity);
             }
           });
         }
-        if (id != null) {
-          ContactSchema schema = ContactSchema.fromMap(entity);
-          schema.id = id;
-          // logger.v("$TAG - insert - success - schema:$schema");
-          return schema;
-        } else {
-          logger.i("$TAG - insert - exists - schema:$schema");
-        }
+        ContactSchema added = ContactSchema.fromMap(entity);
+        if (id != null) schema.id = id;
+        // logger.v("$TAG - insert - success - schema:$schema");
+        return added;
       } catch (e, st) {
         handleError(e, st);
       }

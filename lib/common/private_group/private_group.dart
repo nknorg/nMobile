@@ -98,7 +98,7 @@ class PrivateGroupCommon with Tag {
     schemaGroup.version = genPrivateGroupVersion(1, schemaGroup.signature, [schemaItem]);
     schemaGroup.joined = true;
     schemaGroup.count = 1;
-    schemaGroup = await addPrivateGroup(schemaGroup, notify: true, checkDuplicated: false);
+    schemaGroup = await addPrivateGroup(schemaGroup, notify: true);
     logger.i('$TAG - createPrivateGroup - success - group:$schemaGroup - owner:$schemaItem');
     return schemaGroup;
   }
@@ -266,7 +266,7 @@ class PrivateGroupCommon with Tag {
     }
     // member
     if (itemExist == null) {
-      schema = await addPrivateGroupItem(schema, true, notify: true, checkDuplicated: false);
+      schema = await addPrivateGroupItem(schema, true, notify: true);
       logger.i('$TAG - onInviteeAccept - new - invitee:$schema - group:$schemaGroup');
     } else {
       bool success = await updateGroupItemPermission(schema, true, notify: true);
@@ -621,7 +621,7 @@ class PrivateGroupCommon with Tag {
       _newGroup.count = count;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
       _newGroup.setSignature(signature);
-      exists = await addPrivateGroup(_newGroup, notify: true, checkDuplicated: false);
+      exists = await addPrivateGroup(_newGroup, notify: true);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
       int nativeVersionCommits = getPrivateGroupVersionCommits(exists.version) ?? 0;
@@ -776,7 +776,7 @@ class PrivateGroupCommon with Tag {
       // sync
       PrivateGroupItemSchema? exists = await queryGroupItem(groupId, member.invitee);
       if (exists == null) {
-        exists = await addPrivateGroupItem(member, null, notify: true, checkDuplicated: false);
+        exists = await addPrivateGroupItem(member, null, notify: true);
         logger.i('$TAG - updatePrivateGroupMembers - add item - i$i - member:$exists');
       } else if (exists.permission != member.permission) {
         bool success = await updateGroupItemPermission(member, null, notify: true);
@@ -898,15 +898,8 @@ class PrivateGroupCommon with Tag {
 
   ///****************************************** Storage *******************************************
 
-  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema? schema, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<PrivateGroupSchema?> addPrivateGroup(PrivateGroupSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
-    if (checkDuplicated) {
-      PrivateGroupSchema? exist = await queryGroup(schema.groupId);
-      if (exist != null) {
-        logger.i("$TAG - addPrivateGroup - duplicated - schema:$exist");
-        return null;
-      }
-    }
     PrivateGroupSchema? added = await PrivateGroupStorage.instance.insert(schema);
     if ((added != null) && notify) _addGroupSink.add(added);
     return added;
@@ -1028,15 +1021,8 @@ class PrivateGroupCommon with Tag {
     return PrivateGroupStorage.instance.queryListJoined(type: type, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, bool? sessionNotify, {bool notify = false, bool checkDuplicated = true}) async {
+  Future<PrivateGroupItemSchema?> addPrivateGroupItem(PrivateGroupItemSchema? schema, bool? sessionNotify, {bool notify = false}) async {
     if (schema == null || schema.groupId.isEmpty) return null;
-    if (checkDuplicated) {
-      PrivateGroupItemSchema? exist = await queryGroupItem(schema.groupId, schema.invitee);
-      if (exist != null) {
-        logger.i("$TAG - addPrivateGroupItem - duplicated - schema:$exist");
-        return null;
-      }
-    }
     PrivateGroupItemSchema? added = await PrivateGroupItemStorage.instance.insert(schema);
     if (added == null) return null;
     if (notify) _addGroupItemSink.add(added);
