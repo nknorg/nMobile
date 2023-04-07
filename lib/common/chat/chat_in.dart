@@ -445,7 +445,7 @@ class ChatInCommon with Tag {
               logger.w("$TAG - _receiveContact - avatar_data is empty - data:$data - from:${received.from}");
             }
           } else {
-            logger.w("$TAG - _receiveContact - avatar_type is empty - data:$data - from:${received.from}");
+            logger.i("$TAG - _receiveContact - avatar_type is empty - data:$data - from:${received.from}");
           }
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
@@ -537,7 +537,7 @@ class ChatInCommon with Tag {
         onlineAt: DateTime.now().millisecondsSinceEpoch,
         data: newData,
       );
-      exists = await deviceInfoCommon.add(deviceInfo, checkDuplicated: false);
+      exists = await deviceInfoCommon.add(deviceInfo);
       logger.w("$TAG - _receiveDeviceInfo - add(wrong here) - new:$exists - data:$data");
       return exists != null;
     }
@@ -734,19 +734,30 @@ class ChatInCommon with Tag {
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
-    topicCommon.onSubscribe(received.topic, received.from, maxTryTimes: 5).then((value) async {
-      // DB
-      if (!historySubscribed && value != null) {
-        MessageSchema? inserted = await MessageStorage.instance.insert(received);
-        if (inserted != null) messageCommon.onSavedSink.add(inserted);
+    Function() syncSubscribe = () async {
+      int tryTimes = 0;
+      while (tryTimes < 10) {
+        SubscriberSchema? _subscriber = await topicCommon.onSubscribe(received.topic, received.from);
+        if (!historySubscribed && (_subscriber != null)) {
+          MessageSchema? inserted = await MessageStorage.instance.insert(received);
+          if (inserted != null) messageCommon.onSavedSink.add(inserted);
+        }
+        if (_subscriber != null) {
+          logger.i("$TAG - _receiveTopicSubscribe - check subscribe success - tryTimes:$tryTimes - topic:${received.topic} - address:${received.from}");
+          break;
+        }
+        logger.w("$TAG - _receiveTopicSubscribe - check subscribe continue(txPool) - tryTimes:$tryTimes - topic:${received.topic} - address:${received.from}");
+        tryTimes++;
+        await Future.delayed(Duration(seconds: 5));
       }
-    });
+    };
+    syncSubscribe(); // await
     return !historySubscribed;
   }
 
   // NO single
   Future<bool> _receiveTopicUnsubscribe(MessageSchema received) async {
-    topicCommon.onUnsubscribe(received.topic, received.from, maxTryTimes: 5); // await
+    topicCommon.onUnsubscribe(received.topic, received.from); // await
     return true;
   }
 
@@ -770,7 +781,7 @@ class ChatInCommon with Tag {
   // NO single
   Future<bool> _receiveTopicKickOut(MessageSchema received) async {
     if ((received.content == null) || !(received.content is String)) return false;
-    topicCommon.onKickOut(received.topic, received.from, received.content, maxTryTimes: 5); // await
+    topicCommon.onKickOut(received.topic, received.from, received.content); // await
     return true;
   }
 

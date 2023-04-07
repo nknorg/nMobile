@@ -305,7 +305,7 @@ class RPC {
       if (isJoin) {
         if (!canTry) {
           logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
-          await topicCommon.setStatusProgressEnd(_schema.id);
+          await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, false, notify: true);
         } else {
           success = true; // will success by try timer
@@ -315,7 +315,7 @@ class RPC {
       } else {
         if (!canTry) {
           logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
-          await topicCommon.setStatusProgressEnd(_schema.id);
+          await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, true, notify: true);
         } else {
           success = true; // will success by try timer
