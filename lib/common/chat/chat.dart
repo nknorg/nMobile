@@ -208,7 +208,7 @@ class ChatCommon with Tag {
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
       int type = (message.isTopic || message.isPrivateGroup) ? ContactType.none : (message.canDisplay ? ContactType.stranger : ContactType.none);
-      exist = await contactCommon.addByType(clientAddress, type, notify: true, checkDuplicated: false);
+      exist = await contactCommon.addByType(clientAddress, type, notify: true);
     } else {
       if (message.canDisplay && (exist.type == ContactType.none) && !((message.isTopic || message.isPrivateGroup))) {
         bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
@@ -284,7 +284,6 @@ class ChatCommon with Tag {
           deviceId: deviceId ?? "",
           onlineAt: DateTime.now().millisecondsSinceEpoch,
         ),
-        checkDuplicated: false,
       );
       logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$latest");
       chatOutCommon.sendDeviceRequest(clientAddress); // await
@@ -356,8 +355,8 @@ class ChatCommon with Tag {
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
-      int expireHeight = await topicCommon.getSubscribeExpireAtByNode(message.topic, clientCommon.address);
-      exists = await topicCommon.add(TopicSchema.create(message.topic, expireHeight: expireHeight), notify: true, checkDuplicated: false);
+      int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(message.topic, clientCommon.address);
+      exists = await topicCommon.add(TopicSchema.create(message.topic, expireHeight: expireHeight), notify: true);
       // expire + permission + subscribers
       if (exists != null) {
         logger.i("$TAG - topicHandle - new - expireHeight:$expireHeight - topic:$exists ");
@@ -384,42 +383,47 @@ class ChatCommon with Tag {
         logger.i("$TAG - subscriberHandle - private: add Owner - subscriber:$exist");
       } else {
         // will go here when duration(TxPoolDelay) gone in new version
-        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, message.from);
-        int? permPage = permission[0];
-        bool? acceptAll = permission[1];
-        bool? isAccept = permission[2];
-        bool? isReject = permission[3];
-        if (acceptAll == true) {
-          exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-          logger.i("$TAG - subscriberHandle - acceptAll: add Subscribed - subscriber:$exist");
-        } else {
-          if (isReject == true) {
-            exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
-            logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-          } else if (isAccept == true) {
-            int expireHeight = await topicCommon.getSubscribeExpireAtByNode(topic.topic, message.from);
-            if (expireHeight <= 0) {
-              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
-              logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-            } else {
-              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-              logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-            }
-            // some subscriber status wrong in new version need refresh
-            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
-          } else {
-            int expireHeight = await topicCommon.getSubscribeExpireAtByNode(topic.topic, message.from);
-            if (expireHeight <= 0) {
-              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
-              logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-            } else {
-              exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
-              logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-            }
-            // some subscriber status wrong in new version need refresh
-            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+        subscriberCommon.findPermissionFromNode(topic.topic, message.from).then((List<dynamic> permission) async {
+          bool? acceptAll = permission[0];
+          int? permPage = permission[1];
+          bool? isAccept = permission[2];
+          bool? isReject = permission[3];
+          if (acceptAll == null) {
+            logger.w("$TAG - subscriberHandle - error when findPermissionFromNode - subscriber:$exist");
+            return;
           }
-        }
+          if (acceptAll == true) {
+            logger.i("$TAG - subscriberHandle - acceptAll: add Subscribed - subscriber:$exist");
+            await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
+          } else {
+            if (isReject == true) {
+              logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+              await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
+            } else if (isAccept == true) {
+              int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(topic.topic, message.from);
+              if (expireHeight <= 0) {
+                logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
+              } else {
+                logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
+              }
+              // some subscriber status wrong in new version need refresh
+              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+            } else {
+              int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(topic.topic, message.from);
+              if (expireHeight <= 0) {
+                logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
+              } else {
+                logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+                SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
+              }
+              // some subscriber status wrong in new version need refresh
+              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+            }
+          }
+        }); // await
       }
     } else if (exist.status != SubscriberStatus.Subscribed) {
       logger.w("$TAG - subscriberHandle - some subscriber status wrong in new version - from:${message.from} - status:${exist.status} - topic:$topic");
@@ -437,7 +441,7 @@ class ChatCommon with Tag {
     if (exists == null) {
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
       logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message - group:$schema");
-      exists = await privateGroupCommon.addPrivateGroup(schema, notify: true, checkDuplicated: false);
+      exists = await privateGroupCommon.addPrivateGroup(schema, notify: true);
     }
     if (exists == null) return null;
     if (message.isOutbound) return exists;
@@ -500,7 +504,7 @@ class ChatCommon with Tag {
     // set
     SessionSchema? exist = await sessionCommon.query(message.targetId, type);
     if (exist == null) {
-      sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp, checkDuplicated: false).then((value) {
+      sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp).then((value) {
         if (value != null) func();
       }); // await
     } else {

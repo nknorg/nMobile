@@ -1003,7 +1003,6 @@ class ChatOutCommon with Tag {
         pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
-    if (pid == null || pid.isEmpty) return null;
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId);
@@ -1073,7 +1072,6 @@ class ChatOutCommon with Tag {
         pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
-    if (pid == null || pid.isEmpty) return null;
     // self
     if (selfIsReceiver) {
       String data = MessageData.getReceipt(message.msgId);
