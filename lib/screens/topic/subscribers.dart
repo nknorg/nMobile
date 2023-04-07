@@ -80,7 +80,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
       setState(() {
         _topicSchema = event;
       });
-      _refreshMembersCount(); // await
+      // _refreshMembersCount(); // await
     });
     // _deleteTopicSubscription = topicCommon.deleteStream.where((event) => event == _topicSchema?.topic).listen((String topic) {
     //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
@@ -99,7 +99,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     //   });
     // });
     _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema event) {
-      int index = _subscriberList.indexWhere((element) => element.id == event.id);
+      int index = _subscriberList.indexWhere((element) => (element.topic == event.topic) && (element.clientAddress == event.clientAddress));
       if ((index >= 0) && (index < _subscriberList.length)) {
         _subscriberList[index] = event;
       } else {
@@ -165,8 +165,9 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _refreshMembersCount(); // await
 
     // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) {
-      topicCommon.setLastRefreshSubscribersAt(this._topicSchema?.id, notify: true); // await
+    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) async {
+      await topicCommon.setLastRefreshSubscribersAt(this._topicSchema?.id, notify: true); // await
+      await _refreshMembersCount(); // await
       _getDataSubscribers(true); // await
     });
     _getDataSubscribers(true); // await
