@@ -597,7 +597,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                   double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
                   if (fee == null) return;
                   Loading.show();
-                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee);
+                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee, toast: true);
                   Loading.dismiss();
                   if (deleted != null) {
                     Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));

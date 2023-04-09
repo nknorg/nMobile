@@ -16,8 +16,6 @@ class TopicType {
 }
 
 class TopicSchema {
-  static final minRefreshCount = 30;
-
   int? id; // (required) <-> id
   String topic; // (required) <-> topic
   int? type; // (required) <-> type
@@ -170,14 +168,6 @@ class TopicSchema {
     }
   }
 
-  bool shouldRefreshSubscribers(int lastRefreshAt, int subscribersCount, {int minInterval = 5 * 60 * 1000}) {
-    if (subscribersCount <= minRefreshCount) return false;
-    int needInterval = subscribersCount * (5 * 60 * 1000); // 300s * count
-    if (needInterval < minInterval) needInterval = minInterval;
-    if ((DateTime.now().millisecondsSinceEpoch - lastRefreshAt) <= needInterval) return false;
-    return true;
-  }
-
   bool isSubscribeProgress() {
     bool? isProgress = data?['subscribe_progress'];
     if (isProgress == null) return false;
@@ -205,6 +195,11 @@ class TopicSchema {
   int lastCheckSubscribeAt() {
     int? lastRefreshSubscribersAt = data?['last_check_subscribe_at'];
     return lastRefreshSubscribersAt ?? 0;
+  }
+
+  int lastCheckPermissionsAt() {
+    int? lastRefreshPermissionsAt = data?['last_check_permissions_at'];
+    return lastRefreshPermissionsAt ?? 0;
   }
 
   int lastRefreshSubscribersAt() {

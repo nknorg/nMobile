@@ -76,7 +76,7 @@ class Settings {
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
   // gap
-  static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000; // 1m
+  static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000;
   static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 5 * 60 * 1000; // 5m
@@ -84,7 +84,8 @@ class Settings {
   static const int gapContactProfileSyncMs = 30 * 1000; // 30s
   static const int gapGroupRequestOptionsMs = 5 * 60 * 1000; // 5m
   static const int gapGroupRequestMembersMs = 5 * 60 * 1000; // 5m
-  static const int gapTopicSubscribeCheckMs = 24 * 60 * 60 * 1000; // 24h
+  static const int gapTopicSubscribeCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d
+  static const int gapTopicPermissionCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d
   static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
   static const int gapMessagesGroupSec = 2 * 60; // 2m
   // timeout

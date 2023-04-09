@@ -31,7 +31,6 @@ class SubscriberCommon with Tag {
 
   SubscriberCommon();
 
-  // TODO:GG 还有必要吗? 只有第一次需要fetch
   Future fetchSubscribersInfo(String? topic, {bool contact = true, bool deviceInfo = true}) async {
     if (topic == null || topic.isEmpty) return;
     int limit = 20;
@@ -107,21 +106,22 @@ class SubscriberCommon with Tag {
     // node
     List<SubscriberSchema>? nodeSubscribers = await _mergeSubscribersAndPermissionsFromNode(topic, ownerPubKey, meta: meta, txPool: txPool);
     if (nodeSubscribers == null) {
-      logger.w("$TAG - refreshSubscribers - nodeSubscribers = null");
+      logger.w("$TAG - refreshSubscribers - nodeSubscribers = null - topic:$topic");
       return;
     }
+    logger.d("$TAG - refreshSubscribers - topic:$topic - mete:${!meta} - txPool:$txPool - db_count:${dbSubscribers.length} - node_count:${nodeSubscribers.length}");
     // delete/update DB data
     for (var i = 0; i < dbSubscribers.length; i++) {
       SubscriberSchema dbItem = dbSubscribers[i];
       if (dbItem.isPermissionProgress() != null) {
-        logger.i("$TAG - refreshSubscribers - DB is progress, skip - data:${dbItem.data} - dbSub:$dbItem");
+        logger.i("$TAG - refreshSubscribers - DB is progress, skip - status:${dbItem.isPermissionProgress()} - data:${dbItem.data} - dbSub:$dbItem");
         continue;
       }
-      SubscriberSchema? findInNode;
+      SubscriberSchema? nodeItem;
       for (SubscriberSchema nodeItem in nodeSubscribers) {
         if (dbItem.clientAddress == nodeItem.clientAddress) {
           logger.d("$TAG - refreshSubscribers - start check db_item - status:${nodeItem.status} - perm:${nodeItem.permPage} - subscriber:$dbItem");
-          findInNode = nodeItem;
+          nodeItem = nodeItem;
           break;
         }
       }
@@ -129,50 +129,48 @@ class SubscriberCommon with Tag {
       bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
       bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
       if (isCreateJustNow) {
+        var createInterval = (DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0)) / 1000;
         if (dbItem.status == SubscriberStatus.None) {
           logger.d("$TAG - refreshSubscribers - DB created just now, next by status none - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         } else if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt)) {
-          if (findInNode?.status == SubscriberStatus.Subscribed) {
+          if (nodeItem?.status == SubscriberStatus.Subscribed) {
             logger.d("$TAG - refreshSubscribers - DB created just now, next bu subscribed - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           } else {
-            var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
-            logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - interval:${createInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
             continue;
           }
         } else {
-          var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
-          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - interval:${createInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           continue;
         }
       } else if (isUpdateJustNow) {
-        var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
-        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - between:${betweenS}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+        var updateInterval = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
+        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - interval:${updateInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         continue;
       } else {
-        var betweenS = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
-        logger.v("$TAG - refreshSubscribers - DB updated to long, so can next - between:${betweenS}s");
+        logger.v("$TAG - refreshSubscribers - DB updated to long, so can next");
       }
       // different with node in DB
-      if (findInNode == null) {
+      if (nodeItem == null) {
         if (dbItem.status != SubscriberStatus.None) {
           logger.w("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
           await setStatus(dbItem.id, SubscriberStatus.None, notify: true);
         }
       } else {
-        if (dbItem.status == findInNode.status) {
-          logger.v("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$findInNode");
+        if (dbItem.status == nodeItem.status) {
+          logger.v("$TAG - refreshSubscribers - DB same node - DB:$dbItem - node:$nodeItem");
         } else {
-          if ((findInNode.status == SubscriberStatus.InvitedSend) && (dbItem.status == SubscriberStatus.InvitedReceipt)) {
-            logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$findInNode");
+          if ((nodeItem.status == SubscriberStatus.InvitedSend) && (dbItem.status == SubscriberStatus.InvitedReceipt)) {
+            logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$nodeItem");
           } else {
-            logger.w("$TAG - refreshSubscribers - DB update to sync node - status:${dbItem.status}!=${findInNode.status} - DB:$dbItem - node:$findInNode");
-            await setStatus(dbItem.id, findInNode.status, notify: true);
+            logger.w("$TAG - refreshSubscribers - DB update to sync node - status:${dbItem.status}!=${nodeItem.status} - DB:$dbItem - node:$nodeItem");
+            await setStatus(dbItem.id, nodeItem.status, notify: true);
           }
         }
         // prmPage
-        if ((dbItem.permPage != findInNode.permPage) && (findInNode.permPage != null)) {
-          logger.i("$TAG - refreshSubscribers - DB set permPage to sync node - perm:${dbItem.permPage}!=${findInNode.permPage} - DB:$dbItem - node:$findInNode");
-          await setPermPage(dbItem.id, findInNode.permPage, notify: true);
+        if ((dbItem.permPage != nodeItem.permPage) && (nodeItem.permPage != null)) {
+          logger.w("$TAG - refreshSubscribers - DB set permPage to sync node - perm:${dbItem.permPage}!=${nodeItem.permPage} - DB:$dbItem - node:$nodeItem");
+          await setPermPage(dbItem.id, nodeItem.permPage, notify: true);
         }
       }
     }
@@ -188,7 +186,7 @@ class SubscriberCommon with Tag {
       }
       // different with DB in node
       if (!findInDB) {
-        logger.i("$TAG - refreshSubscribers - node add because DB no find - status:${nodeItem.status} - perm:${nodeItem.permPage} - nodeSub:$nodeItem");
+        logger.w("$TAG - refreshSubscribers - node add because DB no find - status:${nodeItem.status} - perm:${nodeItem.permPage} - nodeSub:$nodeItem");
         await add(nodeItem, notify: true); // no need batch
       }
     }
@@ -200,7 +198,7 @@ class SubscriberCommon with Tag {
     // subscribers(subscribe + permission)
     Map<String, dynamic>? metas = await RPC.getSubscribers(topic, meta: meta, txPool: txPool);
     if (metas == null) {
-      logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - metas = null");
+      logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - metas = null - topic:$topic");
       return null;
     }
     // subscribers(subscribe)
@@ -219,10 +217,11 @@ class SubscriberCommon with Tag {
       _acceptAll = permissionsResult[0];
       permissions = permissionsResult[1];
       if ((_acceptAll == null) || (permissions == null)) {
-        logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - _acceptAll = null");
+        logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - _acceptAll = null - topic:$topic");
         return null;
       }
     }
+    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - topic:$topic - mete:${!meta} - acceptAll:$_acceptAll - subscribers_count:${subscribers.length} - permissions_count:${permissions.length}");
     // merge
     List<SubscriberSchema> results = [];
     if (!meta || (_acceptAll == true)) {
@@ -274,7 +273,7 @@ class SubscriberCommon with Tag {
     List<int?> statusList = results.map((e) => e.status).toList();
     List<int?> permList = results.map((e) => e.permPage).toList();
     List<String?> addressList = results.map((e) => e.clientAddress).toList();
-    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - subscribers_count:${subscribers.length} - permission_check:${meta && (_acceptAll != true)} - permissions_count:${permissions.length} - result_status:$statusList - result_perm:$permList - result_address:$addressList");
+    logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - topic:$topic - mete:${!meta} - acceptAll:$_acceptAll - subscribers_count:${subscribers.length} - permissions_count:${permissions.length} - result_status:$statusList - result_perm:$permList - result_address:$addressList");
     return results;
   }
 
@@ -293,10 +292,10 @@ class SubscriberCommon with Tag {
     bool? _acceptAll = permissionsResult[0];
     List<SubscriberSchema>? permissions = permissionsResult[1];
     if ((_acceptAll == null) || (permissions == null)) {
-      logger.w("$TAG - findPermissionFromNode - acceptAll is null");
+      logger.w("$TAG - findPermissionFromNode - acceptAll is null - topic:$topic");
       return [null, null, true, false];
     } else if (_acceptAll == true) {
-      logger.d("$TAG - findPermissionFromNode - acceptAll = true");
+      logger.d("$TAG - findPermissionFromNode - acceptAll = true - topic:$topic");
       return [_acceptAll, null, true, false];
     }
     // find
@@ -305,10 +304,10 @@ class SubscriberCommon with Tag {
       int? permPage = finds[0].permPage;
       bool isAccept = finds[0].status == InitialAcceptStatus;
       bool isReject = finds[0].status == InitialRejectStatus;
-      logger.d("$TAG - findPermissionFromNode - permPage:$permPage - isAccept:$isAccept - isReject:$isReject");
+      logger.d("$TAG - findPermissionFromNode - topic:$topic - permPage:$permPage - isAccept:$isAccept - isReject:$isReject");
       return [_acceptAll, permPage, isAccept, isReject];
     }
-    logger.d("$TAG - findPermissionFromNode - no find");
+    logger.d("$TAG - findPermissionFromNode - no find - topic:$topic");
     return [_acceptAll, null, null, null];
   }
 
@@ -318,7 +317,7 @@ class SubscriberCommon with Tag {
     // permissions + subscribers
     metas = metas ?? await RPC.getSubscribers(topic, meta: true, txPool: txPool);
     if (metas == null) {
-      logger.w("$TAG - _getPermissionsFromNode - metas = null");
+      logger.w("$TAG - _getPermissionsFromNode - metas = null - topic:$topic - txPool:$txPool - metas:$metas");
       return [null, null];
     }
     List<String> metaKeys = metas.keys.toList();
@@ -370,13 +369,14 @@ class SubscriberCommon with Tag {
         logger.v("$TAG - _getPermissionsFromNode - skip key no contains permission - key:$key - value:$value");
       }
     }
-    if (!_acceptAll) {
+    if (_acceptAll) {
+      logger.d("$TAG - _getPermissionsFromNode - acceptAll - topic:$topic");
+      _permissions = [];
+    } else {
       List<int?> statusList = _permissions.map((e) => e.status).toList();
       List<int?> permList = _permissions.map((e) => e.permPage).toList();
       List<String?> addressList = _permissions.map((e) => e.clientAddress).toList();
-      logger.d("$TAG - _getPermissionsFromNode - count:${_permissions.length} - statusList:$statusList - permList:$permList - addressList:$addressList");
-    } else {
-      logger.d("$TAG - _getPermissionsFromNode - acceptAll == true");
+      logger.d("$TAG - _getPermissionsFromNode - topic:$topic - count:${_permissions.length} - statusList:$statusList - permList:$permList - addressList:$addressList");
     }
     return [_acceptAll, _permissions];
   }
@@ -574,7 +574,6 @@ class SubscriberCommon with Tag {
     return success;
   }
 
-  // TODO:GG test
   Future<bool> setStatusProgressStart(int? subscriberId, int status, int? nonce, double fee, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
     var data = await SubscriberStorage.instance.setData(subscriberId, {
@@ -587,7 +586,6 @@ class SubscriberCommon with Tag {
     return data != null;
   }
 
-  // TODO:GG test
   Future<bool> setStatusProgressEnd(int? subscriberId, {bool notify = false}) async {
     if (subscriberId == null || subscriberId == 0) return false;
     var data = await SubscriberStorage.instance.setData(subscriberId, null, removeKeys: [
@@ -595,7 +593,7 @@ class SubscriberCommon with Tag {
       "progress_permission_nonce",
       "progress_permission_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - removeKeys:${["permission_progress", "progress_permission_nonce", "progress_permission_fee"]} - new:$data - subscriberId:$subscriberId");
+    logger.d("$TAG - setStatusProgressEnd - new:$data - subscriberId:$subscriberId");
     if ((data != null) && notify) queryAndNotify(subscriberId);
     return data != null;
   }

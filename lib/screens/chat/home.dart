@@ -233,7 +233,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     bool success = await clientCommon.signIn(wallet, null, force: !init, toast: true, loading: (visible, dbOpen) {
       if (dbOpen && !isAuthProgress) _setConnected(true);
     });
-    chatCommon.sendPings2LatestSessions(); // await
+    // check
+    _startChecks(delay: 1000); // await
     // view
     if (!isAuthProgress) _setConnected(success);
     isLoginProgress = false;
@@ -271,7 +272,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     }
     // client
     clientCommon.connectCheck(status: true, waitTimes: 1); // await
-    chatCommon.sendPings2LatestSessions(); // await
+    // check
+    _startChecks(delay: 500); // await
     // view
     _setConnected(true);
     isAuthProgress = false;
@@ -285,6 +287,13 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         connected = show;
       });
     }
+  }
+
+  Future _startChecks({int? delay}) async {
+    if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
+    chatCommon.sendPings2LatestSessions(); // await
+    topicCommon.checkAndTryAllSubscribe(); // await
+    topicCommon.checkAndTryAllPermission(); // await
   }
 
   _refreshContactMe({bool deviceInfo = false}) async {
