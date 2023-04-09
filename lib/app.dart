@@ -14,7 +14,6 @@ import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/settings/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/services/task.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class AppScreen extends StatefulWidget {
@@ -51,7 +50,6 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   StreamSubscription? _appLifeChangeSubscription;
 
   bool firstConnect = true;
-  int lastTopicsCheckAt = 0;
 
   @override
   void initState() {
@@ -75,24 +73,15 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     this._currentIndex = widget.arguments != null ? (widget.arguments?[AppScreen.argIndex] ?? 0) : 0;
     _pageController = PageController(initialPage: this._currentIndex);
 
-    // settings
-    SettingsStorage.getSettings(SettingsStorage.LAST_CHECK_TOPICS_AT).then((value) {
-      lastTopicsCheckAt = int.tryParse(value?.toString() ?? "0") ?? 0;
-    });
-
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       if (clientCommon.isClientOK) {
         if (firstConnect) {
           firstConnect = false;
           taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 10, (key) => clientCommon.connectCheck(), delayMs: 5 * 1000);
-          taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
-          taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
       } else if (clientCommon.isClientStop) {
         taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 10);
-        taskService.removeTask(TaskService.KEY_SUBSCRIBE_CHECK, 50);
-        taskService.removeTask(TaskService.KEY_PERMISSION_CHECK, 50);
         firstConnect = true;
       }
     });
@@ -100,20 +89,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
       if (application.isFromBackground(states)) {
-        // topics check (24h)
-        if (clientCommon.isClientOK) {
-          int lastCheckTopicGap = DateTime.now().millisecondsSinceEpoch - lastTopicsCheckAt;
-          if (lastCheckTopicGap > Settings.gapTopicSubscribeCheckMs) {
-            logger.i("App - checkAllTopics - check go - gap:$lastCheckTopicGap");
-            Future.delayed(Duration(milliseconds: 1000)).then((value) {
-              topicCommon.checkAllTopics(refreshSubscribers: false); // await
-              lastTopicsCheckAt = DateTime.now().millisecondsSinceEpoch;
-              SettingsStorage.setSettings(SettingsStorage.LAST_CHECK_TOPICS_AT, lastTopicsCheckAt);
-            });
-          } else {
-            logger.d("App - checkAllTopics - check no - gap:$lastCheckTopicGap");
-          }
-        }
+        // nothing
       } else if (application.isGoBackground(states)) {
         // nothing
       }
