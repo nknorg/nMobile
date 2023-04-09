@@ -229,7 +229,7 @@ class RPC {
       } else {
         success = true; // will success by try timer
         logger.i("PRC - subscribeWithPermission - add permission try - newStatus:$newStatus - oldStatus:$oldStatus - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
-        await subscriberCommon.setStatusProgressStart(_schema.id, newStatus, _nonce, fee, notify: true);
+        await subscriberCommon.setStatusProgressStart(_schema.id, newStatus, _nonce, fee);
       }
     }
     return success;
