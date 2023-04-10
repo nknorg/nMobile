@@ -292,8 +292,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   Future _startChecks({int? delay}) async {
     if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
     chatCommon.sendPings2LatestSessions(); // await
-    topicCommon.checkAndTryAllSubscribe(); // await
-    topicCommon.checkAndTryAllPermission(); // await
   }
 
   _refreshContactMe({bool deviceInfo = false}) async {
