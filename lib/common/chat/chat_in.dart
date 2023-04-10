@@ -408,12 +408,12 @@ class ChatInCommon with Tag {
       if (requestType == ContactRequestType.header) {
         logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo, gap: gap).then((value) {
-          deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
+          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
         }); // await
       } else {
         logger.i("$TAG - _receiveContact - response full - from:${received.from} - data:$data");
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
-          deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
+          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
         }); // await
       }
     } else {

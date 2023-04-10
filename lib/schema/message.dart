@@ -328,7 +328,7 @@ class MessageSchema {
     if (duration != null && duration >= 0) {
       this.options = MessageOptions.setMediaDuration(this.options, duration);
       // SUPPORT:START
-      options?["audioDuration"] = duration;
+      this.options?["audioDuration"] = duration;
       // SUPPORT:END
     }
     String? thumbnailPath = extra?["thumbnailPath"];
@@ -645,13 +645,13 @@ class MessageOptions {
   static const KEY_IPFS_THUMBNAIL_ENCRYPT_KEY_BYTES = "ipfsThumbnailEncryptKeyBytes";
   static const KEY_IPFS_THUMBNAIL_ENCRYPT_NONCE_SIZE = "ipfsThumbnailEncryptNonceSize";
 
-  static const KEY_FROM_PIECE = "from_piece"; // TODO:GG rename to 'fromPiece'
+  static const KEY_FROM_PIECE = "from_piece";
 
-  static const KEY_PIECE_PARENT_TYPE = "piece_parent_type"; // TODO:GG rename to 'pieceParentType'
-  static const KEY_PIECE_BYTES_LENGTH = "piece_bytes_length"; // TODO:GG rename to 'pieceBytesLength'
-  static const KEY_PIECE_PARITY = "piece_parity"; // TODO:GG rename to 'pieceParity'
-  static const KEY_PIECE_TOTAL = "piece_total"; // TODO:GG rename to 'pieceTotal'
-  static const KEY_PIECE_INDEX = "piece_index"; // TODO:GG rename to 'pieceIndex'
+  static const KEY_PIECE_PARENT_TYPE = "piece_parent_type";
+  static const KEY_PIECE_BYTES_LENGTH = "piece_bytes_length";
+  static const KEY_PIECE_PARITY = "piece_parity";
+  static const KEY_PIECE_TOTAL = "piece_total";
+  static const KEY_PIECE_INDEX = "piece_index";
 
   static Map<String, dynamic>? setSendSuccessAt(Map<String, dynamic>? options, int sendAt) {
     if (options == null) options = Map<String, dynamic>();

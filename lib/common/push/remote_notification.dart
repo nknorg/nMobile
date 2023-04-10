@@ -11,52 +11,35 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class RemoteNotification {
-  static Future<String?> send(String? deviceToken, {String? uuid, String? title, String? content}) async {
+  static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content}) async {
     bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
-    if (close == true) return null;
-
-    if (deviceToken == null || deviceToken.isEmpty == true) return "";
-
-    uuid = uuid ?? Uuid().v4();
-
-    title = title ?? Settings.locale((s) => s.new_message);
-    // if (topic != null) {
-    //   title = '[${topic.topicShort}] ${contact?.displayName}';
-    // } else if (contact != null) {
-    //   title = contact.displayName;
-    // }
-
-    content = content ?? Settings.locale((s) => s.you_have_new_message);
-    // switch (message.contentType) {
-    //   case MessageContentType.text:
-    //   case MessageContentType.textExtension:
-    //     content = message.content;
-    //     break;
-    //   case MessageContentType.ipfs:
-    //   case MessageContentType.media:
-    //   case MessageContentType.image:
-    //     content = '[${localizations.image}]';
-    //     break;
-    //   case MessageContentType.audio:
-    //     content = '[${localizations.audio}]';
-    //     break;
-    //   case MessageContentType.topicSubscribe:
-    //   case MessageContentType.topicUnsubscribe:
-    //   case MessageContentType.topicInvitation:
-    //   case MessageContentType.topicKickOut:
-    //     break;
-    // }
-
-    String apns = DeviceToken.splitAPNS(deviceToken);
-    if (apns.isNotEmpty) {
-      return sendAPNS(uuid, apns, Settings.apnsTopic, title, content);
+    if (close == true) return [];
+    List<String> results = [];
+    for (int i = 0; i < tokens.length; i++) {
+      String deviceToken = tokens[i];
+      if (deviceToken.isEmpty) continue;
+      // params
+      String uuid = ((uuids != null) && (uuids.length > i)) ? uuids[i] : Uuid().v4();
+      title = title ?? Settings.locale((s) => s.new_message);
+      content = content ?? Settings.locale((s) => s.you_have_new_message);
+      String apns = DeviceToken.splitAPNS(deviceToken);
+      String fcm = DeviceToken.splitFCM(deviceToken);
+      // send
+      String? result;
+      if (apns.isNotEmpty) {
+        result = await sendAPNS(uuid, apns, Settings.apnsTopic, title, content);
+        logger.d("RemoteNotification - send - APNS success - deviceToken:$deviceToken");
+      } else if (fcm.isNotEmpty) {
+        result = await sendFCM(Settings.getGooglePushToken(), uuid, fcm, title, content);
+        logger.d("RemoteNotification - send - FCM success - deviceToken:$deviceToken");
+      } else {
+        logger.w("RemoteNotification - send - no platform find - deviceToken:$deviceToken");
+      }
+      if ((result != null) && result.isNotEmpty) {
+        results.add(result);
+      }
     }
-    String fcm = DeviceToken.splitFCM(deviceToken);
-    if (fcm.isNotEmpty) {
-      return sendFCM(Settings.getGooglePushToken(), uuid, fcm, title, content);
-    }
-    logger.w("RemoteNotification - send - no platform find");
-    return null;
+    return results;
   }
 
   static Future<String?> sendAPNS(String uuid, String deviceToken, String topic, String title, String content) async {

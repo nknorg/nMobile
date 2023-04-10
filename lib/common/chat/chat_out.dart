@@ -331,7 +331,6 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
     if (!(await _waitClientOk())) return null;
     if (content == null || content.trim().isEmpty) return null;
-    String selfAddress = clientCommon.address ?? "";
     // target
     String targetAddress = "";
     String targetTopic = "";
@@ -353,6 +352,7 @@ class ChatOutCommon with Tag {
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -377,7 +377,6 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
     if (!(await _waitClientOk())) return null;
-    String selfAddress = clientCommon.address ?? "";
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -406,6 +405,7 @@ class ChatOutCommon with Tag {
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -454,7 +454,6 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
     if (!(await _waitClientOk())) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    String selfAddress = clientCommon.address ?? "";
     // target
     String targetAddress = "";
     String targetTopic = "";
@@ -476,6 +475,7 @@ class ChatOutCommon with Tag {
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -503,7 +503,6 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
     if (!(await _waitClientOk())) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
-    String selfAddress = clientCommon.address ?? "";
     // target
     String targetAddress = "";
     String targetGroupId = "";
@@ -525,6 +524,7 @@ class ChatOutCommon with Tag {
     }
     if (targetAddress.isEmpty && targetGroupId.isEmpty && targetTopic.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     // schema
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
@@ -587,8 +587,8 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendTopicInvitee(String? clientAddress, String? topic) async {
     if (!(await _waitClientOk())) return null;
     if (clientAddress == null || clientAddress.isEmpty || topic == null || topic.isEmpty) return null;
-    String selfAddress = clientCommon.address ?? "";
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
@@ -627,8 +627,8 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return null;
     if (target == null || target.isEmpty) return null;
     if (privateGroup == null || groupItem == null) return null;
-    String selfAddress = clientCommon.address ?? "";
     ContactSchema? me = await contactCommon.getMe();
+    String selfAddress = clientCommon.address ?? me?.clientAddress ?? "";
     MessageSchema message = MessageSchema.fromSend(
       msgId: Uuid().v4(),
       from: selfAddress,
@@ -936,14 +936,10 @@ class ChatOutCommon with Tag {
     if (notification && (contact != null) && !contact.isMe) {
       deviceInfoCommon.queryDeviceTokenList(contact.clientAddress).then((tokens) async {
         logger.d("$TAG - _sendWithContact - push notification - count:${tokens.length} - target:${contact.clientAddress} - tokens:$tokens");
-        bool pushOk = false;
-        for (int i = 0; i < tokens.length; i++) {
-          String? uuid = await RemoteNotification.send(tokens[i]); // need result
-          if (!pushOk && (uuid != null) && uuid.isNotEmpty) {
-            message.options = MessageOptions.setPushNotifyId(message.options, uuid);
-            bool optionsOK = await messageCommon.updateMessageOptions(message, message.options, notify: false);
-            if (optionsOK) pushOk = true;
-          }
+        List<String> results = await RemoteNotification.send(tokens);
+        if (results.isNotEmpty) {
+          message.options = MessageOptions.setPushNotifyId(message.options, results[0]);
+          await messageCommon.updateMessageOptions(message, message.options, notify: false);
         }
       });
     }
@@ -1022,9 +1018,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             logger.d("$TAG - _sendWithTopic - push notification - count:${tokens.length} - target:${_contact.clientAddress} - topic:${topic.topic} - tokens:$tokens");
-            tokens.forEach((token) {
-              RemoteNotification.send(token); // await // no need result
-            });
+            RemoteNotification.send(tokens); // await // no need result
           });
         }
       });
@@ -1087,9 +1081,7 @@ class ChatOutCommon with Tag {
           if (_contact.isMe) continue;
           deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
             logger.d("$TAG - _sendWithPrivateGroup - push notification - count:${tokens.length} - target:${_contact.clientAddress} - groupId:${group.groupId} - tokens:$tokens");
-            tokens.forEach((token) {
-              RemoteNotification.send(token); // await // no need result
-            });
+            RemoteNotification.send(tokens); // await // no need result
           });
         }
       });
