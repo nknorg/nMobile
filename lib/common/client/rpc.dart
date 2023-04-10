@@ -182,7 +182,7 @@ class RPC {
     String metaString = (meta?.isNotEmpty == true) ? jsonEncode(meta) : "";
     List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: nonce, toast: toast);
     bool success = results[0];
-    bool canTryTimer = results[1];
+    bool canTry = results[1];
     bool isBlock = results[2];
     int? _nonce = results[3];
     // block
@@ -222,7 +222,7 @@ class RPC {
     // try
     SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if ((_schema != null) && (newStatus != null)) {
-      if (!canTryTimer) {
+      if (!canTry && !isBlock) {
         logger.w("PRC - subscribeWithPermission - cancel permission try - newStatus:$newStatus - oldStatus:$oldStatus - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
         await subscriberCommon.setStatusProgressEnd(_schema.id);
         await subscriberCommon.setStatus(_schema.id, oldStatus, notify: true);
@@ -303,7 +303,7 @@ class RPC {
     TopicSchema? _schema = await topicCommon.queryByTopic(topic);
     if (_schema != null) {
       if (isJoin) {
-        if (!canTry) {
+        if (!canTry && !isBlock) {
           logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, false, notify: true);
@@ -313,7 +313,7 @@ class RPC {
           await topicCommon.setStatusProgressStart(_schema.id, true, _nonce, fee, notify: true); // await
         }
       } else {
-        if (!canTry) {
+        if (!canTry && !isBlock) {
           logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, true, notify: true);
@@ -369,7 +369,6 @@ class RPC {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.w("PRC - _subscribe - block duplicated - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier - meta:$meta");
           if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.request_processed));
-          canTry = false;
           isBlock = true;
         } else if (e.toString().contains("doesn't exist")) {
           logger.w("PRC - _subscribe - topic doesn't exist - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier - meta:$meta");
@@ -378,7 +377,6 @@ class RPC {
           // txpool full, rejecting transaction with low priority
           logger.w("PRC - _subscribe - txpool full - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier - meta:$meta");
           if (toast && identifier.isEmpty) Toast.show(Settings.locale((s) => s.something_went_wrong));
-          canTry = false;
         } else if (e.toString().contains('not sufficient funds')) {
           // can not append tx to txpool: not sufficient funds
           logger.w("PRC - _subscribe - not sufficient funds - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier - meta:$meta");
@@ -396,7 +394,7 @@ class RPC {
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       result = await func(result[3]);
-      if (result[1] != true) break;
+      if ((result[1] == false) || (result[2] == true)) break;
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
@@ -442,16 +440,14 @@ class RPC {
           // can not append tx to txpool: duplicate subscription exist in block
           logger.w("PRC - _unsubscribe - block duplicated - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
           if (toast) Toast.show(Settings.locale((s) => s.request_processed));
-          canTry = false;
           isBlock = true;
         } else if (e.toString().contains("doesn't exist")) {
-          logger.e("PRC - _unsubscribe - topic doesn't exist - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
+          logger.w("PRC - _unsubscribe - topic doesn't exist - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
           canTry = false;
         } else if (e.toString().contains("txpool full")) {
           // txpool full, rejecting transaction with low priority
           logger.w("PRC - _unsubscribe - txpool full - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
           if (toast) Toast.show(Settings.locale((s) => s.something_went_wrong));
-          canTry = false;
         } else if (e.toString().contains('not sufficient funds')) {
           // can not append tx to txpool: not sufficient funds
           logger.w("PRC - _unsubscribe - not sufficient funds - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
@@ -469,7 +465,7 @@ class RPC {
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       result = await func(result[3]);
-      if (result[1] != true) break;
+      if ((result[1] == false) || (result[2] == true)) break;
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }

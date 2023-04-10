@@ -1,10 +1,7 @@
 import 'dart:async';
 
 import 'package:nmobile/common/client/rpc.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/schema/contact.dart';
-import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -31,66 +28,26 @@ class SubscriberCommon with Tag {
 
   SubscriberCommon();
 
-  Future fetchSubscribersInfo(String? topic, {bool contact = true, bool deviceInfo = true}) async {
-    if (topic == null || topic.isEmpty) return;
-    int limit = 20;
-    List<SubscriberSchema> subscribers = [];
-    // query
-    for (int offset = 0; true; offset += limit) {
-      List<SubscriberSchema> result = await queryListByTopic(topic, offset: offset, limit: limit);
-      subscribers.addAll(result);
-      if (result.length < limit) break;
-    }
-    if (subscribers.isEmpty) return;
-    // contact
-    if (contact) {
-      for (var i = 0; i < subscribers.length; i++) {
-        SubscriberSchema sub = subscribers[i];
-        if (sub.clientAddress.isEmpty) continue;
-        ContactSchema? _contact = await contactCommon.queryByClientAddress(sub.clientAddress);
-        if (_contact == null) {
-          logger.d("$TAG - fetchSubscribersInfo - contact fetch ($i/${subscribers.length})- clientAddress:${sub.clientAddress}");
-          _contact = await contactCommon.addByType(sub.clientAddress, ContactType.none, notify: true);
-          await chatOutCommon.sendContactProfileRequest(_contact?.clientAddress, ContactRequestType.header, null);
-          await Future.delayed(Duration(milliseconds: 10));
-        }
-      }
-    }
-    // deviceInfo
-    if (deviceInfo) {
-      for (var i = 0; i < subscribers.length; i++) {
-        SubscriberSchema sub = subscribers[i];
-        if (sub.clientAddress.isEmpty) continue;
-        // deviceInfo
-        DeviceInfoSchema? _deviceInfo = await deviceInfoCommon.queryLatest(sub.clientAddress);
-        if (_deviceInfo == null) {
-          logger.d("$TAG - refreshSubscribers - deviceInfo fetch ($i/${subscribers.length}) - clientAddress:${sub.clientAddress}");
-          await chatOutCommon.sendDeviceRequest(sub.clientAddress);
-          await Future.delayed(Duration(milliseconds: 10));
-        }
-      }
-    }
-  }
+  /// ***********************************************************************************************************
+  /// ********************************************** subscribers ************************************************
+  /// ***********************************************************************************************************
 
   // caller = everyone
   Future<int> getSubscribersCount(String? topic, bool isPrivate, {bool fetch = false}) async {
     if (topic == null || topic.isEmpty) return 0;
-    int count = 0;
-    if (fetch) {
-      count = (await RPC.getSubscribersCount(topic)) ?? (await queryCountByTopic(topic, status: SubscriberStatus.Subscribed));
-    } else if (isPrivate) {
-      // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
-      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
-    } else {
-      count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+    int? count;
+    if (fetch) count = await RPC.getSubscribersCount(topic);
+    if ((count == null) || (count <= 0)) {
+      if (isPrivate) {
+        // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;
+        count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+      } else {
+        count = await queryCountByTopic(topic, status: SubscriberStatus.Subscribed); // maybe wrong but subscribers screen will check it
+      }
     }
     logger.d("$TAG - getSubscribersCount - count:$count - topic:$topic - isPrivate:$isPrivate");
     return count;
   }
-
-  /// ***********************************************************************************************************
-  /// ********************************************** subscribers ************************************************
-  /// ***********************************************************************************************************
 
   // caller = everyone, meta = isPrivate
   Future refreshSubscribers(String? topic, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
@@ -118,10 +75,10 @@ class SubscriberCommon with Tag {
         continue;
       }
       SubscriberSchema? nodeItem;
-      for (SubscriberSchema nodeItem in nodeSubscribers) {
-        if (dbItem.clientAddress == nodeItem.clientAddress) {
-          logger.d("$TAG - refreshSubscribers - start check db_item - status:${nodeItem.status} - perm:${nodeItem.permPage} - subscriber:$dbItem");
-          nodeItem = nodeItem;
+      for (SubscriberSchema item in nodeSubscribers) {
+        if (dbItem.clientAddress == item.clientAddress) {
+          logger.d("$TAG - refreshSubscribers - start check db_item - status:${item.status} - perm:${item.permPage} - subscriber:$dbItem");
+          nodeItem = item;
           break;
         }
       }

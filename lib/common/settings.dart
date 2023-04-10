@@ -76,7 +76,7 @@ class Settings {
   static double screenHeight({BuildContext? context}) => MediaQuery.of(context ?? appContext).size.height;
 
   // gap
-  static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000;
+  static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000; // 1m
   static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 5 * 60 * 1000; // 5m

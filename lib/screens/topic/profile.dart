@@ -147,8 +147,8 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _refreshJoined() async {
     if (_topicSchema == null || !clientCommon.isClientOK) return;
-    bool isJoined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
-    if (isJoined && (_topicSchema?.isPrivate == true)) {
+    bool? isJoined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
+    if ((isJoined == true) && (_topicSchema?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
       isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
@@ -157,6 +157,9 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       setState(() {
         _isJoined = isJoined;
       });
+    }
+    if ((isJoined != null) && (isJoined != _topicSchema?.joined)) {
+      await topicCommon.setJoined(_topicSchema?.id, isJoined, notify: true);
     }
   }
 

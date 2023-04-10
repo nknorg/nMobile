@@ -66,7 +66,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   ContactSchema? _contact;
   TopicSchema? _topic;
   PrivateGroupSchema? _privateGroup;
-  bool? _isJoined;
 
   bool isClientOk = clientCommon.isClientOK;
 
@@ -113,19 +112,16 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (who is TopicSchema) {
       this._privateGroup = null;
       this._topic = widget.arguments?[ChatMessagesScreen.argWho] ?? _topic;
-      this._isJoined = this._topic?.joined == true;
       this._contact = null;
       this.targetId = this._topic?.topic;
     } else if (who is PrivateGroupSchema) {
       this._privateGroup = widget.arguments?[ChatMessagesScreen.argWho] ?? _privateGroup;
       this._topic = null;
-      this._isJoined = this._privateGroup?.joined == true;
       this._contact = null;
       this.targetId = this._privateGroup?.groupId;
     } else if (who is ContactSchema) {
       this._privateGroup = null;
       this._topic = null;
-      this._isJoined = null;
       this._contact = widget.arguments?[ChatMessagesScreen.argWho] ?? _contact;
       this.targetId = this._contact?.clientAddress;
     }
@@ -191,7 +187,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
       setState(() {
         _privateGroup = event;
-        _isJoined = event.joined;
       });
     });
     _onPrivateGroupItemUpdateStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
@@ -369,15 +364,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   _refreshTopicJoined() async {
     if ((_topic == null) || !clientCommon.isClientOK) return;
-    bool isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
-    if (isJoined && (_topic?.isPrivate == true)) {
+    bool? isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
+    if ((isJoined == true) && (_topic?.isPrivate == true)) {
       SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
       isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
-    if (_isJoined != isJoined) {
-      setState(() {
-        _isJoined = isJoined;
-      });
+    if ((isJoined != null) && (isJoined != _topic?.joined)) {
+      await topicCommon.setJoined(_topic?.id, isJoined, notify: true);
     }
   }
 
@@ -596,8 +589,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     int deleteAfterSeconds = (_topic != null ? _topic?.options?.deleteAfterSeconds : (_privateGroup != null ? _privateGroup?.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
     Color notifyBellColor = ((_topic != null ? _topic?.options?.notificationOpen : (_privateGroup != null ? _privateGroup?.options?.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
 
+    bool isJoined = (_topic != null) ? (_topic?.joined == true) : ((_privateGroup != null) ? (_privateGroup?.joined == true) : true);
+
     String? disableTip;
-    if (_topic != null && _isJoined == false) {
+    if ((_topic != null) && !isJoined) {
       if (_topic?.isSubscribeProgress() == true) {
         disableTip = Settings.locale((s) => s.subscribing, ctx: context);
       } else if (_topic?.isPrivate == true) {
@@ -608,7 +603,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else if (_privateGroup != null) {
       if ((_privateGroup?.version == null) || (_privateGroup?.version?.isEmpty == true)) {
         disableTip = Settings.locale((s) => s.data_synchronization, ctx: context);
-      } else if (!(_isJoined == true)) {
+      } else if (!isJoined) {
         disableTip = Settings.locale((s) => s.contact_invite_group_tip, ctx: context);
       }
     }
@@ -890,7 +885,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 },
                 onChangeStream: _onInputChangeStream,
               ),
-              isClientOk && (_isJoined != false)
+              isClientOk && isJoined
                   ? ChatBottomMenu(
                       target: targetId,
                       show: _showBottomMenu,

@@ -79,9 +79,13 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         if (firstConnect) {
           firstConnect = false;
           taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 10, (key) => clientCommon.connectCheck(), delayMs: 5 * 1000);
+          taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
+          taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
       } else if (clientCommon.isClientStop) {
         taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 10);
+        taskService.removeTask(TaskService.KEY_SUBSCRIBE_CHECK, 50);
+        taskService.removeTask(TaskService.KEY_PERMISSION_CHECK, 50);
         firstConnect = true;
       }
     });
