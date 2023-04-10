@@ -335,12 +335,10 @@ class ChatCommon with Tag {
     }
     // device_token (empty updated on receiveDeviceInfo)
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
-    if ((deviceToken != null) && deviceToken.isNotEmpty) {
-      if (latest?.deviceToken != deviceToken) {
-        logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken} - from:${message.from}");
-        bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
-        if (success) latest?.deviceToken = deviceToken;
-      }
+    if ((latest?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
+      logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken} - from:${message.from}");
+      bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
+      if (success) latest?.deviceToken = deviceToken;
     }
     // online_at
     int nowAt = DateTime.now().millisecondsSinceEpoch;
@@ -506,11 +504,11 @@ class ChatCommon with Tag {
     if (exist == null) {
       sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp).then((value) {
         if (value != null) func();
-      }); // await
+      }); // await + queue
     } else {
       sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp).then((value) {
         if (value != null) func();
-      }); // await
+      }); // await + queue
     }
     return;
   }
