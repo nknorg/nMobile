@@ -55,10 +55,12 @@ class MessageCommon with Tag {
     if (clearContent && (message.content is File)) {
       (message.content as File).exists().then((exist) {
         if (exist) {
-          (message.content as File).delete(); // await
+          try {
+            (message.content as File).delete(); // await
+          } catch (e) {}
           logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
         } else {
-          logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
+          logger.d("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
         }
       });
     }
@@ -67,10 +69,12 @@ class MessageCommon with Tag {
     if (clearContent && (mediaThumbnail != null) && mediaThumbnail.isNotEmpty) {
       File(mediaThumbnail).exists().then((exist) {
         if (exist) {
-          File(mediaThumbnail).delete(); // await
+          try {
+            File(mediaThumbnail).delete(); // await
+          } catch (e) {}
           logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
         } else {
-          logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
+          logger.d("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
         }
       });
     }
