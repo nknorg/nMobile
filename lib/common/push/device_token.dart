@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:nmobile/native/common.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class DeviceToken {
@@ -9,8 +8,6 @@ class DeviceToken {
   static const PREFIX_FCM = "[FCM]:";
 
   static Future<String?> get() async {
-    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
-    if (close == true) return null;
     String? token;
     if (Platform.isIOS) {
       token = await getAPNS();

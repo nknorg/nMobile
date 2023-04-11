@@ -5,15 +5,13 @@ import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class RemoteNotification {
   static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content}) async {
-    bool? close = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
-    if (close == true) return [];
+    if (!Settings.notificationPushEnable) return [];
     List<String> results = [];
     for (int i = 0; i < tokens.length; i++) {
       String deviceToken = tokens[i];
