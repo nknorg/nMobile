@@ -60,7 +60,9 @@ class RemoteNotification {
         tryTimes++;
       } else if ((result["code"] != null) && (result["code"]?.toString() != "200")) {
         logger.e("RemoteNotification - sendAPNS - fail - code:${result["code"]} - error:${result["error"]}");
-        if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
+        if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) {
+          if (Settings.sentryEnable) Sentry.captureMessage("APNS ERROR ${result["code"]}\n${result["error"]}");
+        }
         tryTimes++;
       } else {
         logger.i("RemoteNotification - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
@@ -115,7 +117,9 @@ class RemoteNotification {
           break;
         } else {
           logger.e("RemoteNotification - sendFCM - fail - code:${response.statusCode} - body:${response.reasonPhrase}");
-          if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
+          if (tryTimes >= (Settings.tryTimesNotificationPush - 1)) {
+            if (Settings.sentryEnable) Sentry.captureMessage("FCM ERROR - ${response.statusCode}\n${response.reasonPhrase}");
+          }
           tryTimes++;
         }
       } catch (e, st) {

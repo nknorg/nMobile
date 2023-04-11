@@ -18,7 +18,6 @@ import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/native/common.dart';
 import 'package:nmobile/native/crypto.dart';
 import 'package:nmobile/routes/routes.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -48,8 +47,7 @@ void main() async {
 
   // error
   catchGlobalError(() async {
-    bool? close = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API));
-    if (close != true) {
+    if (Settings.sentryEnable) {
       await SentryFlutter.init(
         (options) {
           options.debug = !Settings.isRelease;
@@ -63,7 +61,7 @@ void main() async {
     runApp(Main());
   }, onZoneError: (Object error, StackTrace stack) {
     if (Settings.debug) logger.e(error);
-    Sentry.captureException(error, stackTrace: stack);
+    if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stack);
   });
 }
 
