@@ -25,11 +25,22 @@ class Settings {
 
   // sentry
   static bool sentryEnable = true;
-  static const String sentryDSN = '';
+  static const String sentryDSN = ''; // TODO:GG pro+dev
 
-  // infura TODO:GG pro+dev
-  static const String infuraProjectId = '';
-  static const String infuraApiKeySecret = '';
+  // infura
+  static const String infuraProjectId = ''; // TODO:GG pro+dev
+  static const String infuraApiKeySecret = ''; // TODO:GG pro+dev
+
+  // notification
+  static bool notificationPushEnable = true;
+  static int notificationType = NotificationType.only_name;
+  static const String apnsTopic = ""; // TODO:GG pro+dev
+
+  // authentication
+  static bool biometricsAuthentication = true;
+
+  // language
+  static String language = "auto";
 
   // app_info
   static const String appName = "nMobile";
@@ -46,16 +57,6 @@ class Settings {
   static String deviceVersionName = "";
   static String deviceVersion = "";
   static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
-
-  // language
-  static late String language;
-
-  // notification
-  static const String apnsTopic = "";
-  static late int notificationType;
-
-  // authentication
-  static late bool biometricsAuthentication;
 
   // locale
   static S? _s;
@@ -138,6 +139,7 @@ class Settings {
   static init() async {
     // settings
     sentryEnable = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API)) != false;
+    notificationPushEnable = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API)) != false;
     IpfsHelper.init(infuraProjectId, infuraApiKeySecret);
     // app_info
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
