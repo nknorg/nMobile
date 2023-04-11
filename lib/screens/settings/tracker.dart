@@ -79,6 +79,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                                   activeColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_NOTIFICATION_PUSH_API}', !value);
+                                    Settings.notificationPushEnable = value;
                                     setState(() {
                                       _pushEnable = value;
                                     });
@@ -132,6 +133,7 @@ class _SettingsTrackerScreenState extends BaseStateFulWidgetState<SettingsTracke
                                   activeColor: application.theme.primaryColor,
                                   onChanged: (bool value) async {
                                     SettingsStorage.setSettings('${SettingsStorage.CLOSE_BUG_UPLOAD_API}', !value);
+                                    Settings.sentryEnable = value;
                                     setState(() {
                                       _bugEnable = value;
                                     });

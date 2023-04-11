@@ -138,8 +138,10 @@ class Settings {
 
   static init() async {
     // settings
-    sentryEnable = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API)) != false;
-    notificationPushEnable = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API)) != false;
+    var bug = await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API);
+    sentryEnable = !((bug?.toString() == "true") || (bug == true));
+    var push = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
+    notificationPushEnable = !((push?.toString() == "true") || (push == true));
     IpfsHelper.init(infuraProjectId, infuraApiKeySecret);
     // app_info
     PackageInfo packageInfo = await PackageInfo.fromPlatform();

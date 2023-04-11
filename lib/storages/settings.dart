@@ -7,24 +7,22 @@ class SettingsStorage {
   static const String NOTIFICATION_TYPE_KEY = 'notification_type'; // not support 'local_notification_type'
   static const String BIOMETRICS_AUTHENTICATION = 'auth';
 
-  // TODO:GG 再修改?
-  static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
-  static const String CLOSE_BUG_UPLOAD_API = 'close_bug_upload_api';
+  static const String DATABASE_VERSION = "database_version";
+  static const String DATABASE_VERSION_TIME = "database_version_time";
 
   static const String CHAT_TIP_STATUS = 'chat_tip_status'; // not support 'WALLET_TIP_STATUS'
-  // TODO:GG 放进contact里
-  static const String CHAT_TIP_NOTIFICATION = 'chat_tip_notification'; // not support 'NKN_MESSAGE_NOTIFICATION_ALERT'
 
-  // static const String LAST_SEND_PANGS_AT = 'last_send_pangs_at';
-  static const String LAST_CHECK_TOPICS_AT = 'last_check_topic_at'; // TODO:GG 可以放进topic.options里
+  static const String DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE = "default_topic_subscribe_speed_enable";
+  static const String DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE = "default_topic_resubscribe_speed_enable";
+  static const String DEFAULT_FEE = "default_fee";
 
-  static const String DATABASE_VERSION = "database_version";
+  static const String CLOSE_BUG_UPLOAD_API = 'close_bug_upload_api';
+  static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
+
+  // FIXED:GG ios_db_error
   static const String DATABASE_FIXED_IOS_152 = "database_fixed_ios_152";
   static const String DATABASE_CLEAN_PWD_ON_IOS_14 = "database_clean_pwd_on_ios_14";
   static const String DATABASE_RESET_PWD_ON_IOS_16 = "database_reset_pwd_on_ios_16";
-
-  static const String DEFAULT_FEE = "default_fee";
-  static const String DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE = "default_topic_resubscribe_speed_enable";
 
   static Future getSettings(String key) async {
     return await LocalStorage.instance.get('$SETTINGS_KEY:$key');
@@ -32,16 +30,5 @@ class SettingsStorage {
 
   static Future setSettings(String key, val) async {
     return await LocalStorage.instance.set('$SETTINGS_KEY:$key', val);
-  }
-
-  static Future<bool> isNeedTipNotificationOpen(String prefix, String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return false;
-    var result = await LocalStorage.instance.get('$CHAT_TIP_NOTIFICATION:$prefix:$targetId');
-    return result?.toString() != "1";
-  }
-
-  static Future setNeedTipNotificationOpen(String prefix, String? targetId) async {
-    if (targetId == null || targetId.isEmpty) return;
-    await LocalStorage.instance.set('$CHAT_TIP_NOTIFICATION:$prefix:$targetId', "1");
   }
 }
