@@ -7,7 +7,6 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/contact/item.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/header.dart';
@@ -594,7 +593,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+                  double? fee = await topicCommon.getTopicSubscribeFee(this.context);
                   if (fee == null) return;
                   Loading.show();
                   TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee, toast: true);

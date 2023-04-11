@@ -4,7 +4,6 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
@@ -51,7 +50,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       }
     }
 
-    double? fee = await BottomDialog.of(Settings.appContext).showTransactionSpeedUp();
+    double? fee = await topicCommon.getTopicSubscribeFee(Settings.appContext);
     if (fee == null) return false;
     Loading.show();
     TopicSchema? _topic = await topicCommon.subscribe(topicName, fetchSubscribers: true, fee: fee);

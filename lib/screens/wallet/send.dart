@@ -11,7 +11,6 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/wallet/erc20.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/dialog/modal.dart';
 import 'package:nmobile/components/layout/expansion_layout.dart';
@@ -311,7 +310,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
       if ((blockNonce != null) && (nonce != null) && (blockNonce != nonce)) {
         if (replaceFee == null || replaceFee <= 0) {
           Loading.dismiss();
-          replaceFee = await BottomDialog.of(Settings.appContext).showTransactionSpeedUp(fee: _fee);
+          replaceFee = await topicCommon.getTopicSubscribeFee(Settings.appContext);
           Loading.show();
         }
         if (replaceFee != null && replaceFee > 0) {

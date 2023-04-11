@@ -339,9 +339,9 @@ class MessageLookup extends MessageLookupByLibrary {
         "my_wallets": MessageLookupByLibrary.simpleMessage("我的賬戶"),
         "name": MessageLookupByLibrary.simpleMessage("名字"),
         "need_re_subscribe": MessageLookupByLibrary.simpleMessage("需要重新訂閱"),
-        "new_group": MessageLookupByLibrary.simpleMessage("新建群聊"),
         "new_message": MessageLookupByLibrary.simpleMessage("新消息"),
         "new_private_group": MessageLookupByLibrary.simpleMessage("新建私有群"),
+        "new_public_group": MessageLookupByLibrary.simpleMessage("新建公有群"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("新建私聊"),
         "news_from": MessageLookupByLibrary.simpleMessage("by"),
         "nickname": MessageLookupByLibrary.simpleMessage("昵稱"),
@@ -472,12 +472,17 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("置頂"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("取消置頂"),
         "topic": MessageLookupByLibrary.simpleMessage("群組"),
+        "topic_new_speed_up_auto":
+            MessageLookupByLibrary.simpleMessage("已開啟公有群訂閱時自動加速。"),
+        "topic_new_speed_up_auto_no":
+            MessageLookupByLibrary.simpleMessage("已關閉公有群訂閱時自動加速。"),
         "topic_renewal_speed_up_auto":
-            MessageLookupByLibrary.simpleMessage("已開啟群聊續訂時自動加速。"),
+            MessageLookupByLibrary.simpleMessage("已開啟公有群續訂時自動加速。"),
         "topic_renewal_speed_up_auto_no":
-            MessageLookupByLibrary.simpleMessage("已關閉群聊續訂時自動加速。"),
+            MessageLookupByLibrary.simpleMessage("已關閉公有群續訂時自動加速。"),
         "topic_resubscribe_enable":
-            MessageLookupByLibrary.simpleMessage("群聊續訂"),
+            MessageLookupByLibrary.simpleMessage("公有群續訂"),
+        "topic_subscribe_enable": MessageLookupByLibrary.simpleMessage("公有群訂閱"),
         "total_balance": MessageLookupByLibrary.simpleMessage("余額"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "tracker": MessageLookupByLibrary.simpleMessage("跟踪器"),

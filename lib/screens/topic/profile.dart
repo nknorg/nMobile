@@ -204,7 +204,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
       if (_topicSchema?.isPrivate == true) {
-        fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+        fee = await topicCommon.getTopicSubscribeFee(this.context);
         if (fee == null) return;
       }
       await topicCommon.invitee(
@@ -221,7 +221,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _statusAction(bool nextSubscribe) async {
     if (nextSubscribe) {
-      double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+      double? fee = await topicCommon.getTopicSubscribeFee(this.context);
       if (fee == null) return;
       Loading.show();
       TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic, fee: fee);
@@ -237,7 +237,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           backgroundColor: application.theme.strongColor,
           onPressed: () async {
             if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-            double? fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+            double? fee = await topicCommon.getTopicSubscribeFee(this.context);
             if (fee == null) return;
             Loading.show();
             TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, fee: fee, toast: true);
