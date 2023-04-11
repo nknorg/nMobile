@@ -47,18 +47,17 @@ class SubscriberSchema {
   }
 
   int? isPermissionProgress() {
-    int? status = data?['permission_progress'];
-    return status;
+    return int.tryParse(data?['permission_progress']?.toString() ?? "");
   }
 
   int? getProgressPermissionNonce() {
-    int? nonce = data?['progress_permission_nonce'];
+    int? nonce = int.tryParse(data?['progress_permission_nonce']?.toString() ?? "");
     if (nonce == null || nonce < 0) return null;
     return nonce;
   }
 
   double getProgressPermissionFee() {
-    double? fee = data?['progress_permission_fee'];
+    double? fee = double.tryParse(data?['progress_permission_fee']?.toString() ?? "");
     if (fee == null || fee < 0) return 0;
     return fee;
   }

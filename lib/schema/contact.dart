@@ -209,6 +209,10 @@ class ContactSchema {
     return (data?['mappedAddress'] ?? []).cast<String>();
   }
 
+  bool get tipNotification {
+    return (int.tryParse(data?['tipNotification']?.toString() ?? "0") ?? 0) > 0;
+  }
+
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {

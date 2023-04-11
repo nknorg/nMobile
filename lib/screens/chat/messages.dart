@@ -32,7 +32,6 @@ import 'package:nmobile/screens/private_group/profile.dart';
 import 'package:nmobile/screens/private_group/subscribers.dart';
 import 'package:nmobile/screens/topic/profile.dart';
 import 'package:nmobile/screens/topic/subscribers.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/theme/theme.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/format.dart';
@@ -359,7 +358,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _messages.insert(0, added);
     });
     // tip
-    Future.delayed(Duration(milliseconds: 100), () => _tipNotificationOpen()); // await
+    if ((_contact?.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
+      if ((_contact != null) && (_contact?.options?.notificationOpen != true) && (_contact?.tipNotification != true)) {
+        Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
+      }
+    }
   }
 
   _refreshTopicJoined() async {
@@ -445,14 +448,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
   }
 
-  _tipNotificationOpen() async {
+  _checkNotificationTip() async {
     if ((this._topic != null) || (this._privateGroup != null) || (this._contact == null)) return;
     if (!clientCommon.isClientOK) return;
-    if (chatCommon.currentChatTargetId == null) return; // maybe quit page out
-    bool? isOpen = _topic?.options?.notificationOpen ?? _privateGroup?.options?.notificationOpen ?? _contact?.options?.notificationOpen;
-    if ((isOpen == null) || (isOpen == true)) return;
-    bool need = await SettingsStorage.isNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId);
-    if (!need) return;
+    if (_contact?.options?.notificationOpen == true) return;
+    if (_contact?.tipNotification == true) return;
     // check
     int sendCount = 0, receiveCount = 0;
     for (var i = 0; i < _messages.length; i++) {
@@ -464,7 +464,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       if ((sendCount >= 3) && (receiveCount >= 3)) break;
     }
     logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
-    if ((sendCount < 3) || (receiveCount < 3) || !mounted) return;
+    if ((sendCount < 3) || (receiveCount < 3)) return;
+    if (chatCommon.currentChatTargetId == null) return; // maybe quit page out
+    if (!mounted) return; // maybe quit page out
     // tip dialog
     ModalDialog.of(Settings.appContext).confirm(
       title: Settings.locale((s) => s.tip_open_send_device_token),
@@ -479,7 +481,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId);
+    await contactCommon.setTipNotification(this._contact, notify: true);
   }
 
   _toggleNotificationOpen() async {
@@ -489,6 +491,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else if (this._privateGroup != null) {
       // nothing
     } else {
+      await contactCommon.setTipNotification(this._contact, notify: true);
       bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: nextOpen);
       String? deviceToken = nextOpen ? deviceInfo?.deviceToken : null;
@@ -504,11 +507,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       bool success = await contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
       if (!success) return;
       success = await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken);
-      if (success) {
-        await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", this.targetId); // await
-      } else {
-        await contactCommon.setNotificationOpen(_contact, !nextOpen, notify: true);
-      }
+      if (!success) await contactCommon.setNotificationOpen(_contact, !nextOpen, notify: true);
     }
   }
 

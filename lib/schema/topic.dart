@@ -181,30 +181,27 @@ class TopicSchema {
   }
 
   int? getProgressSubscribeNonce() {
-    int? nonce = data?['progress_subscribe_nonce'];
+    int? nonce = int.tryParse(data?['progress_subscribe_nonce']?.toString() ?? "");
     if (nonce == null || nonce < 0) return null;
     return nonce;
   }
 
   double getProgressSubscribeFee() {
-    double? fee = data?['progress_subscribe_fee'];
+    double? fee = double.tryParse(data?['progress_subscribe_fee']?.toString() ?? "");
     if (fee == null || fee < 0) return 0;
     return fee;
   }
 
   int lastCheckSubscribeAt() {
-    int? lastRefreshSubscribersAt = data?['last_check_subscribe_at'];
-    return lastRefreshSubscribersAt ?? 0;
+    return int.tryParse(data?['last_check_subscribe_at']?.toString() ?? "0") ?? 0;
   }
 
   int lastCheckPermissionsAt() {
-    int? lastRefreshPermissionsAt = data?['last_check_permissions_at'];
-    return lastRefreshPermissionsAt ?? 0;
+    return int.tryParse(data?['last_check_permissions_at']?.toString() ?? "0") ?? 0;
   }
 
   int lastRefreshSubscribersAt() {
-    int? lastRefreshSubscribersAt = data?['last_refresh_subscribers_at'];
-    return lastRefreshSubscribersAt ?? 0;
+    return int.tryParse(data?['last_refresh_subscribers_at']?.toString() ?? "0") ?? 0;
   }
 
   Map<String, dynamic> toMap() {
