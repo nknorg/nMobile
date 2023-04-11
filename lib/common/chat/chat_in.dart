@@ -246,11 +246,12 @@ class ChatInCommon with Tag {
   Future<bool> _receiveReceipt(MessageSchema received, DeviceInfoSchema? deviceInfo) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
     if ((received.content == null) || !(received.content is String)) return false;
-    if (!received.canReceipt) return false;
     MessageSchema? exists = await MessageStorage.instance.queryByIdNoContentType(received.content, MessageContentType.piece);
     if (exists == null || exists.targetId.isEmpty) {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
+    } else if (!exists.canReceipt) {
+      logger.d("$TAG - _receiveReceipt - contentType is error - received:$received");
     } else if (!exists.isOutbound || (exists.status == MessageStatus.Received)) {
       logger.w("$TAG - receiveReceipt - outbound error - exists:$exists");
       return false;
@@ -261,6 +262,7 @@ class ChatInCommon with Tag {
       logger.w("$TAG - receiveReceipt - group skip others - exists:$exists");
       return false;
     }
+    logger.i("$TAG - receiveReceipt - from:${received.from} - msgId:${received.content}");
     // status
     bool readSupport = DeviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
     if (exists.isTopic || exists.isPrivateGroup || !readSupport) {
@@ -397,21 +399,18 @@ class ChatInCommon with Tag {
     bool isDChatRequest = (requestType == null) && (responseType == null) && (version == null);
     if ((requestType?.isNotEmpty == true) || isDChatRequest) {
       // need reply
-      int gap;
-      if ((version?.isNotEmpty == true) && (version != deviceInfo?.contactProfileResponseVersion)) {
-        logger.i('$TAG - _receiveContact - version diff - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
-        gap = 0;
-      } else {
-        logger.d('$TAG - _receiveContact - version same - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
-        gap = Settings.gapContactProfileSyncMs;
-      }
       if (requestType == ContactRequestType.header) {
         logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo, gap: gap).then((value) {
-          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
-        }); // await
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo); // await
       } else {
-        logger.i("$TAG - _receiveContact - response full - from:${received.from} - data:$data");
+        int gap;
+        if ((version?.isNotEmpty == true) && (version != deviceInfo?.contactProfileResponseVersion)) {
+          logger.i('$TAG - _receiveContact - response full - version diff - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
+          gap = 0;
+        } else {
+          logger.d('$TAG - _receiveContact - response full - version same - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
+          gap = Settings.gapContactProfileSyncMs;
+        }
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
           if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
         }); // await
@@ -743,10 +742,10 @@ class ChatInCommon with Tag {
           if (inserted != null) messageCommon.onSavedSink.add(inserted);
         }
         if (_subscriber != null) {
-          logger.i("$TAG - _receiveTopicSubscribe - check subscribe success - tryTimes:$tryTimes - topic:${received.topic} - address:${received.from}");
+          logger.i("$TAG - _receiveTopicSubscribe - check subscribe success - tryTimes:$tryTimes - historySubscribed:$historySubscribed - topic:${received.topic} - address:${received.from}");
           break;
         }
-        logger.w("$TAG - _receiveTopicSubscribe - check subscribe continue(txPool) - tryTimes:$tryTimes - topic:${received.topic} - address:${received.from}");
+        logger.w("$TAG - _receiveTopicSubscribe - check subscribe continue(txPool) - tryTimes:$tryTimes - historySubscribed:$historySubscribed - topic:${received.topic} - address:${received.from}");
         tryTimes++;
         await Future.delayed(Duration(seconds: 5));
       }

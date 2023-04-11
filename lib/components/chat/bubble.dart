@@ -665,7 +665,23 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       );
       color = Colors.black;
     } else {
-      if (_message.content is File) {
+      if ((_message.isOutbound == false) && (_message.contentType == MessageContentType.ipfs)) {
+        int state = MessageOptions.getIpfsState(_message.options);
+        if ((state == MessageOptions.ipfsStateYes) && (_message.content is File)) {
+          File file = _message.content as File;
+          child = Image.file(
+            file,
+            fit: BoxFit.cover,
+            cacheWidth: ratioWH[0]?.toInt(),
+            cacheHeight: ratioWH[1]?.toInt(),
+          );
+        } else {
+          child = SizedBox(
+            width: placeholderWidth,
+            height: placeholderHeight,
+          );
+        }
+      } else if (_message.content is File) {
         File file = _message.content as File;
         child = Image.file(
           file,
