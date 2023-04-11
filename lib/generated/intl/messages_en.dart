@@ -404,10 +404,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "name": MessageLookupByLibrary.simpleMessage("Name"),
         "need_re_subscribe":
             MessageLookupByLibrary.simpleMessage("Need to re-subscribe"),
-        "new_group": MessageLookupByLibrary.simpleMessage("New Group"),
         "new_message": MessageLookupByLibrary.simpleMessage("New Message"),
         "new_private_group":
             MessageLookupByLibrary.simpleMessage("New Private Group"),
+        "new_public_group":
+            MessageLookupByLibrary.simpleMessage("New Public Group"),
         "new_whisper": MessageLookupByLibrary.simpleMessage("Direct Message"),
         "news_from": MessageLookupByLibrary.simpleMessage("by"),
         "nickname": MessageLookupByLibrary.simpleMessage("Nickname"),
@@ -558,12 +559,18 @@ class MessageLookup extends MessageLookupByLibrary {
         "top": MessageLookupByLibrary.simpleMessage("Top"),
         "top_cancel": MessageLookupByLibrary.simpleMessage("Cancel Top"),
         "topic": MessageLookupByLibrary.simpleMessage("Topic"),
+        "topic_new_speed_up_auto": MessageLookupByLibrary.simpleMessage(
+            "Public group chat subscription is turned on and auto-accelerate."),
+        "topic_new_speed_up_auto_no": MessageLookupByLibrary.simpleMessage(
+            "Public group chat subscription is turned on and does not auto-accelerate."),
         "topic_renewal_speed_up_auto": MessageLookupByLibrary.simpleMessage(
-            "Group chat renewal is turned on and auto-accelerate."),
+            "Public group chat renewal is turned on and auto-accelerate."),
         "topic_renewal_speed_up_auto_no": MessageLookupByLibrary.simpleMessage(
-            "Group chat renewal is turned on and does not auto-accelerate."),
+            "Public group chat renewal is turned on and does not auto-accelerate."),
         "topic_resubscribe_enable":
-            MessageLookupByLibrary.simpleMessage("Topic renewal"),
+            MessageLookupByLibrary.simpleMessage("Public group renewal"),
+        "topic_subscribe_enable":
+            MessageLookupByLibrary.simpleMessage("Public group subscription"),
         "total_balance": MessageLookupByLibrary.simpleMessage("TOTAL BALANCE"),
         "touch_id": MessageLookupByLibrary.simpleMessage("Touch ID"),
         "tracker": MessageLookupByLibrary.simpleMessage("Tracker"),

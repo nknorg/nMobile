@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/message.dart';
@@ -35,6 +37,17 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
   /// ************************************************* check ***************************************************
   /// ***********************************************************************************************************
+
+  Future getTopicSubscribeFee(BuildContext context) async {
+    double? fee = 0.0;
+    var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE);
+    if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
+      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+      if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
+      fee = await BottomDialog.of(context).showTransactionSpeedUp();
+    }
+    return fee;
+  }
 
   Future checkAndTryAllSubscribe() async {
     if (!clientCommon.isClientOK) return;
@@ -79,10 +92,18 @@ class TopicCommon with Tag {
       TopicSchema topic = topicsWithReUnSubscribe[i];
       await _checkAndTrySubscribe(topic, false);
     }
-    for (var i = 0; i < topicsWithSubscribeExpire.length; i++) {
-      TopicSchema topic = topicsWithSubscribeExpire[i];
-      var result = await checkExpireAndSubscribe(topic.topic);
-      if (result != null) await setLastCheckSubscribeAt(topic.id);
+    if (topicsWithSubscribeExpire.isNotEmpty) {
+      double fee = 0;
+      var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+      if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
+        fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+        if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
+      }
+      for (var i = 0; i < topicsWithSubscribeExpire.length; i++) {
+        TopicSchema topic = topicsWithSubscribeExpire[i];
+        var result = await checkExpireAndSubscribe(topic.topic, fee: fee);
+        if (result != null) await setLastCheckSubscribeAt(topic.id);
+      }
     }
   }
 
@@ -146,18 +167,20 @@ class TopicCommon with Tag {
     } else {
       logger.d("$TAG - checkAndTryAllPermission - topic permission resubscribe - count == 0");
     }
-    int? globalHeight = await RPC.getBlockHeight();
-    if ((globalHeight != null) && (globalHeight > 0)) {
-      double fee = 0;
-      var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-      if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-        fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-        if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-      }
-      for (var i = 0; i < permissionTopics.length; i++) {
-        TopicSchema topic = permissionTopics[i];
-        bool success = await _checkAndTryPermissionExpire(topic, globalHeight, fee);
-        if (success) await setLastCheckPermissionAt(topic.id);
+    if (permissionTopics.isNotEmpty) {
+      int? globalHeight = await RPC.getBlockHeight();
+      if ((globalHeight != null) && (globalHeight > 0)) {
+        double fee = 0;
+        var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+        if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
+          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+          if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
+        }
+        for (var i = 0; i < permissionTopics.length; i++) {
+          TopicSchema topic = permissionTopics[i];
+          bool success = await _checkAndTryPermissionExpire(topic, globalHeight, fee);
+          if (success) await setLastCheckPermissionAt(topic.id);
+        }
       }
     }
     // subscribers permission upload
@@ -416,13 +439,13 @@ class TopicCommon with Tag {
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
       // subscribe fee
-      if ((exists.joined && shouldResubscribe) && (fee <= 0)) {
-        var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-        if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-          if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-        }
-      }
+      // if ((exists.joined && shouldResubscribe) && (fee <= 0)) {
+      //   var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+      //   if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
+      //     fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+      //     if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
+      //   }
+      // }
       // client subscribe
       bool subscribeSuccess = await RPC.subscribeWithJoin(topic, true, nonce: nonce, fee: fee, toast: toast);
       if (!subscribeSuccess) {

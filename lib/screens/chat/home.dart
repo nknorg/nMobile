@@ -561,7 +561,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
                               color: Colors.black26,
                             ),
                             child: Label(
-                              Settings.locale((s) => s.new_group, ctx: context),
+                              Settings.locale((s) => s.new_public_group, ctx: context),
                               height: 1.2,
                               type: LabelType.h4,
                               dark: true,

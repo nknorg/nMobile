@@ -338,12 +338,12 @@ class DB {
         if (upgradeTip) _upgradeTipSink.add(null);
         if (publicKey.isNotEmpty) {
           await SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
-          int? value = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey:$VERSION_DB_NOW");
+          int? value = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$VERSION_DB_NOW");
           dbUpgradeAt = int.tryParse(value?.toString() ?? "0") ?? 0;
           if (dbUpgradeAt <= 0) {
             dbUpgradeAt = DateTime.now().millisecondsSinceEpoch;
             logger.i("DB - onOpen - set_version_time - time:$dbUpgradeAt - version:$version - path:${db.path}");
-            SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey:$VERSION_DB_NOW", dbUpgradeAt); // await
+            SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$VERSION_DB_NOW", dbUpgradeAt); // await
           }
         }
       },

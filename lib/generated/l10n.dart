@@ -1490,20 +1490,40 @@ class S {
     );
   }
 
-  /// `Group chat renewal is turned on and auto-accelerate.`
+  /// `Public group chat subscription is turned on and auto-accelerate.`
+  String get topic_new_speed_up_auto {
+    return Intl.message(
+      'Public group chat subscription is turned on and auto-accelerate.',
+      name: 'topic_new_speed_up_auto',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public group chat subscription is turned on and does not auto-accelerate.`
+  String get topic_new_speed_up_auto_no {
+    return Intl.message(
+      'Public group chat subscription is turned on and does not auto-accelerate.',
+      name: 'topic_new_speed_up_auto_no',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public group chat renewal is turned on and auto-accelerate.`
   String get topic_renewal_speed_up_auto {
     return Intl.message(
-      'Group chat renewal is turned on and auto-accelerate.',
+      'Public group chat renewal is turned on and auto-accelerate.',
       name: 'topic_renewal_speed_up_auto',
       desc: '',
       args: [],
     );
   }
 
-  /// `Group chat renewal is turned on and does not auto-accelerate.`
+  /// `Public group chat renewal is turned on and does not auto-accelerate.`
   String get topic_renewal_speed_up_auto_no {
     return Intl.message(
-      'Group chat renewal is turned on and does not auto-accelerate.',
+      'Public group chat renewal is turned on and does not auto-accelerate.',
       name: 'topic_renewal_speed_up_auto_no',
       desc: '',
       args: [],
@@ -1570,10 +1590,20 @@ class S {
     );
   }
 
-  /// `Topic renewal`
+  /// `Public group subscription`
+  String get topic_subscribe_enable {
+    return Intl.message(
+      'Public group subscription',
+      name: 'topic_subscribe_enable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public group renewal`
   String get topic_resubscribe_enable {
     return Intl.message(
-      'Topic renewal',
+      'Public group renewal',
       name: 'topic_resubscribe_enable',
       desc: '',
       args: [],
@@ -2530,11 +2560,11 @@ class S {
     );
   }
 
-  /// `New Group`
-  String get new_group {
+  /// `New Public Group`
+  String get new_public_group {
     return Intl.message(
-      'New Group',
-      name: 'new_group',
+      'New Public Group',
+      name: 'new_public_group',
       desc: '',
       args: [],
     );

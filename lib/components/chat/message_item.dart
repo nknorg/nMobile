@@ -481,7 +481,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
                       enable: false,
                     );
                     if (topic?.isNotEmpty == true) {
-                      double? fee = await BottomDialog.of(Settings.appContext).showTransactionSpeedUp();
+                      double? fee = await topicCommon.getTopicSubscribeFee(Settings.appContext);
                       if (fee == null) return;
                       Loading.show();
                       int sendAt = widget.message.sendAt ?? 0;

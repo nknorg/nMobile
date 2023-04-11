@@ -222,7 +222,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
       if (_topicSchema?.isPrivate == true) {
-        fee = await BottomDialog.of(this.context).showTransactionSpeedUp();
+        fee = await topicCommon.getTopicSubscribeFee(this.context);
         if (fee == null) return;
       }
       await topicCommon.invitee(
