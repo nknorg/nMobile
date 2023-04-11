@@ -38,6 +38,7 @@ class Settings {
 
   // device_info
   static String deviceId = "";
+  static String deviceName = "";
   static String deviceVersionName = "";
   static String deviceVersion = "";
   static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
@@ -143,11 +144,13 @@ class Settings {
     if (Platform.isAndroid) {
       Settings.deviceId = (await AndroidId().getId()) ?? "";
       AndroidDeviceInfo _info = await deviceInfo.androidInfo;
+      Settings.deviceName = _info.display;
       Settings.deviceVersionName = _info.version.release;
       Settings.deviceVersion = Settings.deviceVersionName.split(".")[0];
     } else if (Platform.isIOS) {
       IosDeviceInfo _info = await deviceInfo.iosInfo;
       Settings.deviceId = _info.identifierForVendor ?? "";
+      Settings.deviceName = _info.name ?? '';
       Settings.deviceVersionName = _info.systemVersion ?? "";
       Settings.deviceVersion = Settings.deviceVersionName.split(".")[0];
     }

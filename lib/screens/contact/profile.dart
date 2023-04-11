@@ -36,6 +36,8 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 
+import '../../storages/sync_message.dart';
+
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
@@ -109,6 +111,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
   }
 
+  late SyncMessageStorage _syncMessageStorage;
+
   ContactSchema? _contactSchema;
   WalletSchema? _walletDefault;
 
@@ -122,6 +126,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   bool _notificationOpen = false;
 
   bool _profileFetched = false;
+  List<Map> _syncDevices = [];
 
   @override
   void onRefreshArguments() {
@@ -139,7 +144,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         _contactSchema = event;
       });
     });
-
     // init
     _refreshDefaultWallet();
   }
@@ -219,7 +223,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       AppScreen.go(this.context);
       return false;
     }
+    _syncMessageStorage = SyncMessageStorage(key: clientCommon.getPublicKey()!);
+    var devices = await _syncMessageStorage.getDevicesArray();
+
     setState(() {
+      _syncDevices = devices;
       _walletDefault = wallet;
     });
     return true;
@@ -488,6 +496,43 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         ],
       ));
     }
+
+    List<Widget> syncDevicesWidget = [];
+    for (int i = 0; i < _syncDevices.length; i++) {
+      syncDevicesWidget.add(TextButton(
+        style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
+        onPressed: () {},
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: SizedBox(
+                // height: 32,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Label(
+                      _syncDevices[i]['name'],
+                      overflow: TextOverflow.ellipsis,
+                      // type: LabelType.bodyRegular,
+                      color: application.theme.fontColor2,
+                      fontSize: 12,
+                    ),
+                    Label(
+                      _syncDevices[i]['id'],
+                      overflow: TextOverflow.ellipsis,
+                      type: LabelType.bodyRegular,
+                      color: application.theme.fontColor2,
+                      fontSize: 12,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+    }
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
@@ -661,13 +706,32 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                         ),
                       ],
                     ),
-                    SizedBox(height: 24),
                     PhysicalModel(
                       elevation: 0,
                       clipBehavior: Clip.antiAlias,
                       color: application.theme.backgroundColor,
                       borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
                       child: Column(children: mappedWidget),
+                    ),
+                    SizedBox(height: 24),
+
+                    /// sync devices
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Label(
+                          Settings.locale((s) => s.sync_devices, ctx: context),
+                          type: LabelType.h3,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 24),
+                    PhysicalModel(
+                      elevation: 0,
+                      clipBehavior: Clip.antiAlias,
+                      color: application.theme.backgroundColor,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
+                      child: Column(children: syncDevicesWidget),
                     ),
                   ],
                 ),

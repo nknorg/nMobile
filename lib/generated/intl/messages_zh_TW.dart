@@ -455,6 +455,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribed": MessageLookupByLibrary.simpleMessage("已加入"),
         "subscribing": MessageLookupByLibrary.simpleMessage("訂閱中"),
         "success": MessageLookupByLibrary.simpleMessage("成功"),
+        "sync_devices": MessageLookupByLibrary.simpleMessage("關聯設備"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
         "terms": MessageLookupByLibrary.simpleMessage("條款"),

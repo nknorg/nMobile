@@ -3920,6 +3920,16 @@ class S {
     );
   }
 
+  /// `Sync Devices`
+  String get sync_devices {
+    return Intl.message(
+      'Sync Devices',
+      name: 'sync_devices',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Only the group owner can modify this item`
   String get only_owner_can_modify {
     return Intl.message(

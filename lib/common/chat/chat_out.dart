@@ -49,7 +49,12 @@ class ChatOutCommon with Tag {
     }
     // size
     if (data.length >= Settings.sizeMsgMax) {
-      logger.w("$TAG - sendMsg - size over - count:${destList.length} - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+      logger.w("$TAG - sendMsg - size over - count:${destList.length} - size:${Format.flowSize(data.length.toDouble(), unitArr: [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+          ])} - destList:$destList - data:$data");
       // Sentry.captureMessage("$TAG - sendData - size over - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
       // return null;
     }
@@ -91,7 +96,12 @@ class ChatOutCommon with Tag {
         logger.e("$TAG - _sendData - wrong clientAddress - count:${destList.length} - destList:$destList");
         return [null, false, 0];
       } else if (errStr.contains(NknError.messageOversize)) {
-        logger.e("$TAG - _sendData - message over size - count:${destList.length} - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - data:$data");
+        logger.e("$TAG - _sendData - message over size - count:${destList.length} - size:${Format.flowSize(data.length.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - destList:$destList - data:$data");
         return [null, false, 0];
       }
       if (NknError.isClientError(e)) {
@@ -854,6 +864,9 @@ class ChatOutCommon with Tag {
     if (message == null || msgData == null) return null;
     if (insert) message = await insertMessage(message);
     if (message == null) return null;
+    if (message.canDisplay) {
+      syncClientCommon.syncAllDevicesMessage(message.from, message.to, jsonDecode(msgData));
+    }
     // session
     if (sessionSync) await chatCommon.sessionHandle(message);
     // sdk
@@ -984,7 +997,8 @@ class ChatOutCommon with Tag {
         destList.add(clientAddress);
       }
     }
-    logger.d("$TAG - _sendWithTopic - type:${message.contentType} - topic:${topic.topic} - self:$selfIsReceiver - dest_count:${destList.length} - topic:$topic - message:${message.toStringNoContent()} - data:$msgData");
+    logger.d(
+        "$TAG - _sendWithTopic - type:${message.contentType} - topic:${topic.topic} - self:$selfIsReceiver - dest_count:${destList.length} - topic:$topic - message:${message.toStringNoContent()} - data:$msgData");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -1053,7 +1067,8 @@ class ChatOutCommon with Tag {
         destList.add(clientAddress);
       }
     }
-    logger.d("$TAG - _sendWithPrivateGroup - type:${message.contentType} - groupId:${group.groupId} - self:$selfIsReceiver - dest_count:${destList.length} - group:$group - message:${message.toStringNoContent()} - data:$msgData");
+    logger.d(
+        "$TAG - _sendWithPrivateGroup - type:${message.contentType} - groupId:${group.groupId} - self:$selfIsReceiver - dest_count:${destList.length} - group:$group - message:${message.toStringNoContent()} - data:$msgData");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -1108,10 +1123,20 @@ class ChatOutCommon with Tag {
     // dataList.size = (total + parity) <= 255
     List<Object?> dataList = await Common.splitPieces(dataBytesString, total, parity);
     if (dataList.isEmpty) {
-      logger.e("$TAG - _sendWithPieces:ERROR - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType}");
+      logger.e("$TAG - _sendWithPieces:ERROR - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+          ])} - parentType:${message.contentType}");
       return [null, false];
     }
-    logger.i("$TAG - _sendWithPieces:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType}");
+    logger.i("$TAG - _sendWithPieces:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])} - parentType:${message.contentType}");
 
     List<MessageSchema> resultList = [];
     for (var index = 0; index < dataList.length; index++) {
@@ -1144,10 +1169,20 @@ class ChatOutCommon with Tag {
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
     finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     if (finds.length >= total) {
-      logger.i("$TAG - _sendWithPieces:SUCCESS - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
+      logger.i("$TAG - _sendWithPieces:SUCCESS - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+          ])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
       if (finds.isNotEmpty) return [finds.firstWhere((element) => element.pid != null).pid, true];
     }
-    logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
+    logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
     return [null, false];
   }
 
@@ -1156,10 +1191,12 @@ class ChatOutCommon with Tag {
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendMsg(clientAddressList, data);
     if ((onResult == null) || onResult.messageId.isEmpty) {
-      logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
+      logger.w(
+          "$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
       return null;
     }
-    logger.d("$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
+    logger.d(
+        "$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
     message.pid = onResult.messageId;
     // progress
     if ((percent > 0) && (percent <= 1)) {

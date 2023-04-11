@@ -62,6 +62,11 @@ class MessageContentType {
   static const String privateGroupOptionResponse = 'privateGroup:optionResponse';
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest';
   static const String privateGroupMemberResponse = 'privateGroup:memberResponse';
+
+  static const String syncPing = 'sync:ping';
+  static const String syncRequestInstance = 'sync:requestInstance';
+  static const String syncResponseInstance = 'sync:responseInstance';
+  static const String syncMessage = 'sync:message';
 }
 
 class MessageSchema {

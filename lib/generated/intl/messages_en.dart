@@ -539,6 +539,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "subscribed": MessageLookupByLibrary.simpleMessage("Subscribed"),
         "subscribing": MessageLookupByLibrary.simpleMessage("subscribing"),
         "success": MessageLookupByLibrary.simpleMessage("Success"),
+        "sync_devices": MessageLookupByLibrary.simpleMessage("Sync Devices"),
         "tab_keystore": MessageLookupByLibrary.simpleMessage("Keystore"),
         "tab_seed": MessageLookupByLibrary.simpleMessage("Seed"),
         "terms": MessageLookupByLibrary.simpleMessage("Terms"),

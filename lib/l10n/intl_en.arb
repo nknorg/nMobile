@@ -405,6 +405,7 @@
   "share": "Share",
   "mapped_address_does_not_match": "Mapped address does not match",
   "mapped_address": "Mapped address",
+  "sync_devices": "Sync Devices",
   "only_owner_can_modify": "Only the group owner can modify this item",
   "confirm_delete_remark_avatar": "Are you sure you want to delete the note avatar?",
   "tracker": "Tracker",

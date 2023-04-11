@@ -10,6 +10,7 @@ import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/client/rpc.dart';
+import 'package:nmobile/common/client/sync_client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -51,7 +52,9 @@ Future<String?> getPubKeyFromWallet(String? walletAddress, String? walletPwd) as
 class ClientCommon with Tag {
   // ignore: close_sinks
   StreamController<int> _statusController = StreamController<int>.broadcast();
+
   StreamSink<int> get _statusSink => _statusController.sink;
+
   Stream<int> get statusStream => _statusController.stream;
 
   StreamSubscription? _onErrorStreamSubscription;
@@ -65,11 +68,15 @@ class ClientCommon with Tag {
   Client? client;
 
   String? _lastLoginClientAddress;
+
   String? get address => client?.address ?? _lastLoginClientAddress; // == chat_id / wallet.publicKey
 
   int status = ClientConnectStatus.disconnected;
+
   bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
+
   bool get isClientConnecting => _isReConnecting || ((status == ClientConnectStatus.connecting) && (client == null));
+
   bool get isClientStop => !_isReConnecting && ((status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected));
 
   int _timeClosedForce = 0;
@@ -234,6 +241,8 @@ class ClientCommon with Tag {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
         }
+
+        syncClientCommon.connect(wallet, password, seedRpcList);
         _startListen(wallet);
       } else {
         // reconnect will break in go-sdk, because connect closed when fail and no callback
@@ -325,11 +334,14 @@ class ClientCommon with Tag {
     });
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-      logger.v("$TAG - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      logger.v(
+          "$TAG - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
       }
+      syncClientCommon.onSyncMessage(event, address!);
+      syncClientCommon.onMessageReceive(event);
       chatInCommon.onMessageReceive(MessageSchema.fromReceive(address ?? "", event)); // await
     });
   }

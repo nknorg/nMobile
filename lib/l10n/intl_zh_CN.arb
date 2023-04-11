@@ -405,6 +405,7 @@
   "share": "分享",
   "mapped_address_does_not_match": "映射地址不匹配",
   "mapped_address": "关联地址",
+  "sync_devices": "关联设备",
   "only_owner_can_modify": "仅群主可修改此项",
   "confirm_delete_remark_avatar": "确定要删除备注头像吗?",
   "tracker": "跟踪器",
