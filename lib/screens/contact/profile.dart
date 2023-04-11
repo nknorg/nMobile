@@ -30,7 +30,6 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -310,7 +309,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateBurnIfNeed() {
-    if (_burnOpen == _initBurnOpen && _burnProgress == _initBurnProgress) return;
+    if (!clientCommon.isClientOK) return;
+    if ((_burnOpen == _initBurnOpen) && (_burnProgress == _initBurnProgress)) return;
     int _burnValue;
     if (!_burnOpen || _burnProgress < 0) {
       _burnValue = 0;
@@ -328,6 +328,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
+    if (!clientCommon.isClientOK) return;
+    await contactCommon.setTipNotification(this._contactSchema, notify: true);
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: notificationOpen);
     String? deviceToken = notificationOpen ? deviceInfo?.deviceToken : null;
     bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
@@ -343,11 +345,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     bool success = await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
     if (!success) return;
     success = await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
-    if (success) {
-      await SettingsStorage.setNeedTipNotificationOpen(clientCommon.address ?? "", _contactSchema?.clientAddress);
-    } else {
-      await contactCommon.setNotificationOpen(_contactSchema, !notificationOpen, notify: true);
-    }
+    if (!success) await contactCommon.setNotificationOpen(_contactSchema, !notificationOpen, notify: true);
   }
 
   _addFriend() {

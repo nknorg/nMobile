@@ -31,7 +31,7 @@ import 'package:synchronized/synchronized.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static int currentDatabaseVersion = 6;
+  static const int VERSION_DB_NOW = 6;
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -46,6 +46,8 @@ class DB {
   Lock _lock = new Lock();
 
   Database? database;
+
+  int dbUpgradeAt = 0;
 
   DB();
 
@@ -258,7 +260,7 @@ class DB {
     var db = await openDatabase(
       path,
       password: password,
-      version: currentDatabaseVersion,
+      version: VERSION_DB_NOW,
       singleInstance: true,
       onConfigure: (Database db) {
         logger.i("DB - onConfigure - path:${db.path}");
@@ -334,8 +336,16 @@ class DB {
         logger.i("DB - onOpen - version:$version - path:${db.path}");
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
         if (upgradeTip) _upgradeTipSink.add(null);
-
-        if (publicKey.isNotEmpty) SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
+        if (publicKey.isNotEmpty) {
+          await SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
+          int? value = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey:$VERSION_DB_NOW");
+          dbUpgradeAt = int.tryParse(value?.toString() ?? "0") ?? 0;
+          if (dbUpgradeAt <= 0) {
+            dbUpgradeAt = DateTime.now().millisecondsSinceEpoch;
+            logger.i("DB - onOpen - set_version_time - time:$dbUpgradeAt - version:$version - path:${db.path}");
+            SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey:$VERSION_DB_NOW", dbUpgradeAt); // await
+          }
+        }
       },
     );
     return db;
@@ -365,7 +375,7 @@ class DB {
   Future<bool> needUpgrade(String publicKey) async {
     if (publicKey.isEmpty) return false;
     int? savedVersion = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey");
-    return savedVersion != currentDatabaseVersion;
+    return savedVersion != VERSION_DB_NOW;
   }
 
   Future<bool> _deleteDBFile(String? filePath) async {

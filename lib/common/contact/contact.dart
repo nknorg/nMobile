@@ -339,6 +339,22 @@ class ContactCommon with Tag {
     return data != null;
   }
 
+  Future<bool> setTipNotification(ContactSchema? schema, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    logger.d("$TAG - setTipNotification - start - old:${schema.data} - contact:$schema");
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+      "tipNotification": DateTime.now().millisecondsSinceEpoch,
+    });
+    if (data != null) {
+      logger.i("$TAG - setTipNotification - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setTipNotification - end fail - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
+  }
+
   Future queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await ContactStorage.instance.query(contactId);
