@@ -18,11 +18,16 @@ class NotificationType {
 class Settings {
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
+  static const bool debug = true;
+
+  // global-context
   static late BuildContext appContext;
 
-  // settings
-  static const bool debug = true;
+  // sentry
+  static bool sentryEnable = true;
   static const String sentryDSN = '';
+
+  // infura TODO:GG pro+dev
   static const String infuraProjectId = '';
   static const String infuraApiKeySecret = '';
 
@@ -131,8 +136,9 @@ class Settings {
   static const int piecesMaxSize = piecesMaxTotal * piecesPreMaxLen; // <= 160K
 
   static init() async {
-    // settings TODO:GG pro+dev
-    IpfsHelper.init("infuraProjectId", "infuraApiKeySecret");
+    // settings
+    sentryEnable = (await SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API)) != false;
+    IpfsHelper.init(infuraProjectId, infuraApiKeySecret);
     // app_info
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Settings.packageName = packageInfo.packageName;

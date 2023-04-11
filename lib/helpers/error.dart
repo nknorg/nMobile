@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -143,17 +142,13 @@ class NknError {
 void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, String? text, bool upload = true}) {
   if (Settings.isRelease) {
     String errStr = error?.toString().toLowerCase() ?? "";
-    bool no0 = errStr.contains("wrong password");
-    bool no1 = errStr.contains(NknError.rpcRequestFail);
-    bool no2 = errStr.contains("address = fcm.googleapis.com");
-    bool no3 = errStr.contains("address = mainnet.infura.io");
-    bool no4 = errStr.contains("address = eth-mainnet.g.alchemy.com");
-    if (upload && !no0 && !no1 && !no2 && !no3 && !no4) {
-      SettingsStorage.getSettings(SettingsStorage.CLOSE_BUG_UPLOAD_API).then((close) {
-        if (close != true) {
-          Sentry.captureException(error, stackTrace: stackTrace);
-        }
-      });
+    bool skip0 = errStr.contains("wrong password");
+    bool skip1 = errStr.contains(NknError.rpcRequestFail);
+    bool skip2 = errStr.contains("address = fcm.googleapis.com");
+    bool skip3 = errStr.contains("address = mainnet.infura.io");
+    bool skip4 = errStr.contains("address = eth-mainnet.g.alchemy.com");
+    if (upload && !skip0 && !skip1 && !skip2 && !skip3 && !skip4) {
+      if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace);
     }
   } else if (Settings.debug) {
     logger.e(error);
