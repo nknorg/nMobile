@@ -82,9 +82,9 @@ class ClientCommon with Tag {
     // network
     Connectivity().onConnectivityChanged.listen((status) {
       if (status == ConnectivityResult.none) {
-        logger.w("$TAG - ClientCommon - onConnectivityChanged - status:$status");
+        logger.w("$TAG - ClientCommon - onConnectivityChanged - none - status:$status");
       } else {
-        logger.i("$TAG - ClientCommon - onConnectivityChanged - status:$status");
+        logger.i("$TAG - ClientCommon - onConnectivityChanged - okay - status:$status");
       }
       isNetworkOk = status != ConnectivityResult.none;
       if (isClientOK) connectCheck(status: true);
@@ -146,7 +146,7 @@ class ClientCommon with Tag {
           if ((timeSignIn > _timeClosedForce) && force) _timeClosedForce = 0;
           break;
         } else if (!canTry) {
-          logger.e("$TAG - signIn - try break - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
+          logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
           await signOut(clearWallet: true, closeDB: true, lock: false);
           break;
         }
@@ -264,10 +264,10 @@ class ClientCommon with Tag {
         while (true) {
           bool success = await _signOut(clearWallet: clearWallet, closeDB: closeDB);
           if (success) {
-            logger.i("$TAG - signOut - try success - tryTimes:$tryTimes - force:$force - lock:$lock");
+            logger.i("$TAG - signOut - try success - lock_on - tryTimes:$tryTimes - force:$force");
             break;
           }
-          logger.e("$TAG - signOut - try again - tryTimes:$tryTimes - force:$force - lock:$lock");
+          logger.e("$TAG - signOut - try again - lock_on - tryTimes:$tryTimes - force:$force");
           tryTimes++;
           _statusSink.add(ClientConnectStatus.disconnecting); // need flush
           await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
@@ -278,10 +278,10 @@ class ClientCommon with Tag {
       while (true) {
         bool success = await _signOut(clearWallet: clearWallet, closeDB: closeDB);
         if (success) {
-          logger.i("$TAG - signOut - try success - tryTimes:$tryTimes - force:$force - lock:$lock");
+          logger.i("$TAG - signOut - try success - lock_off - tryTimes:$tryTimes - force:$force");
           break;
         }
-        logger.e("$TAG - signOut - try again - tryTimes:$tryTimes - force:$force - lock:$lock");
+        logger.e("$TAG - signOut - try again - lock_off - tryTimes:$tryTimes - force:$force");
         tryTimes++;
         _statusSink.add(ClientConnectStatus.disconnecting); // need flush
         await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
@@ -325,7 +325,7 @@ class ClientCommon with Tag {
     });
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-      logger.v("$TAG - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      logger.d("$TAG - onMessage -> src:${event.src} - type:${event.type} - encrypted:${event.encrypted} - messageId:${event.messageId} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);

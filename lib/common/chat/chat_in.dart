@@ -403,14 +403,13 @@ class ChatInCommon with Tag {
         logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo); // await
       } else {
-        int gap;
-        if ((version?.isNotEmpty == true) && (version != deviceInfo?.contactProfileResponseVersion)) {
-          logger.i('$TAG - _receiveContact - response full - version diff - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
-          gap = 0;
+        String? lastResponseVersion = deviceInfo?.contactProfileResponseVersion;
+        if ((version?.isNotEmpty == true) && (version != lastResponseVersion)) {
+          logger.i('$TAG - _receiveContact - response full - version diff - from:${received.from} - requested:$lastResponseVersion - remote:$version');
         } else {
-          logger.d('$TAG - _receiveContact - response full - version same - from:${received.from} - requested:${deviceInfo?.contactProfileResponseVersion} - remote:$version');
-          gap = Settings.gapContactProfileSyncMs;
+          logger.d('$TAG - _receiveContact - response full - version same - from:${received.from} - requested:$lastResponseVersion - remote:$version');
         }
+        int gap = ((version?.isNotEmpty == true) && (version != lastResponseVersion)) ? 0 : Settings.gapContactProfileSyncMs;
         chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
           if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
         }); // await
@@ -737,11 +736,11 @@ class ChatInCommon with Tag {
       int tryTimes = 0;
       while (tryTimes < 10) {
         SubscriberSchema? _subscriber = await topicCommon.onSubscribe(received.topic, received.from);
-        if (!historySubscribed && (_subscriber != null)) {
-          MessageSchema? inserted = await MessageStorage.instance.insert(received);
-          if (inserted != null) messageCommon.onSavedSink.add(inserted);
-        }
         if (_subscriber != null) {
+          if (!historySubscribed) {
+            MessageSchema? inserted = await MessageStorage.instance.insert(received);
+            if (inserted != null) messageCommon.onSavedSink.add(inserted);
+          }
           logger.i("$TAG - _receiveTopicSubscribe - check subscribe success - tryTimes:$tryTimes - historySubscribed:$historySubscribed - topic:${received.topic} - address:${received.from}");
           break;
         }
@@ -912,10 +911,8 @@ class ChatInCommon with Tag {
         logger.d('$TAG - _receivePrivateGroupOptionResponse - version requested same - from:${received.from} - version:$version');
       }
       int gap = (group.membersRequestedVersion != version) ? 0 : Settings.gapGroupRequestMembersMs;
-      chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((version) {
-        if (version?.isNotEmpty == true) {
-          privateGroupCommon.setGroupMembersRequestInfo(group, version, notify: true);
-        }
+      chatOutCommon.sendPrivateGroupMemberRequest(received.from, groupId, gap: gap).then((value) {
+        if (value) privateGroupCommon.setGroupMembersRequestInfo(group, version, notify: true);
       }); // await
     }
   }

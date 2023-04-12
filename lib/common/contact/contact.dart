@@ -115,9 +115,10 @@ class ContactCommon with Tag {
     if (needWallet) {
       if ((contact.nknWalletAddress == null) || (contact.nknWalletAddress?.isEmpty == true)) {
         String? nknWalletAddress = await contact.tryNknWalletAddress();
-        setWalletAddress(contact, nknWalletAddress);
+        await setWalletAddress(contact, nknWalletAddress);
       }
     }
+    logger.d("$TAG - getMe - canAdd:$canAdd - fetchWallet:$needWallet - contact:$contact");
     return contact;
   }
 

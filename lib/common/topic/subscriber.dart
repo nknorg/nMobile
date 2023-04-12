@@ -36,7 +36,7 @@ class SubscriberCommon with Tag {
   Future<int> getSubscribersCount(String? topic, bool isPrivate, {bool fetch = false}) async {
     if (topic == null || topic.isEmpty) return 0;
     int? count;
-    if (fetch) count = await RPC.getSubscribersCount(topic);
+    if (fetch) count = await RPC.getSubscribersCount(topic); // just subscribe and no permission
     if ((count == null) || (count <= 0)) {
       if (isPrivate) {
         // count = (await _mergePermissionsAndSubscribers(topic, meta: true, txPool: true)).length;

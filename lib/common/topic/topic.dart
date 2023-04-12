@@ -101,7 +101,7 @@ class TopicCommon with Tag {
       }
       for (var i = 0; i < topicsWithSubscribeExpire.length; i++) {
         TopicSchema topic = topicsWithSubscribeExpire[i];
-        var result = await checkExpireAndSubscribe(topic.topic, fee: fee);
+        var result = await checkExpireAndSubscribe(topic.topic, fee: fee); // no nonce
         if (result != null) await setLastCheckSubscribeAt(topic.id);
       }
     }
@@ -110,7 +110,7 @@ class TopicCommon with Tag {
   Future<bool> _checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
     if (topic == null || !clientCommon.isClientOK) return false;
     // expireHeight
-    int expireHeight = await getSubscribeExpireAtByPageFromNode(topic.topic, clientCommon.address);
+    int expireHeight = await getSubscribeExpireAtFromNode(topic.topic, clientCommon.address);
     // fee
     topic = await query(topic.id);
     if (topic == null) return false;
@@ -225,7 +225,7 @@ class TopicCommon with Tag {
       // subscribe
       if ((expireHeight > 0) && ((expireHeight - globalHeight) < Settings.blockHeightTopicWarnBlockExpire)) {
         logger.i("$TAG - _checkAndTryPermissionExpire - resubscribe permission - topic:${topic.topic} - fee:$fee - expireHeight:$expireHeight - meta:$result");
-        return await RPC.subscribeWithPermission(topic.topic, fee: fee, permPage: i, meta: meta, toast: false);
+        return await RPC.subscribeWithPermission(topic.topic, fee: fee, permPage: i, meta: meta, toast: false); // no nonce
       } else {
         logger.d("$TAG - _checkAndTryPermissionExpire - permission OK - topic:${topic.topic} - fee:$fee - expireHeight:$expireHeight - meta:$result");
       }
@@ -278,7 +278,7 @@ class TopicCommon with Tag {
         await subscriberCommon.setStatusProgressEnd(subscriber.id);
       } else {
         logger.i("$TAG - _checkAndTryPermissionSet - subscriber try unsubscribe - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await onUnsubscribe(subscriber.topic, subscriber.clientAddress);
+        await onUnsubscribe(subscriber.topic, subscriber.clientAddress); // no nonce
       }
     } else {
       logger.w("$TAG - _checkAndTryPermissionSet - subscriber permission none - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
@@ -297,9 +297,9 @@ class TopicCommon with Tag {
     // topic exist
     TopicSchema? exists = await queryByTopic(topic);
     if (exists == null) {
-      int expireHeight = await getSubscribeExpireAtByPageFromNode(topic, clientCommon.address);
+      int expireHeight = await getSubscribeExpireAtFromNode(topic, clientCommon.address);
       exists = await add(TopicSchema.create(topic, expireHeight: expireHeight), notify: true);
-      logger.i("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
+      logger.i("$TAG - subscribe - new add - expireHeight:$expireHeight - schema:$exists");
       // refreshSubscribers later
     }
     if (exists == null) {
@@ -373,7 +373,7 @@ class TopicCommon with Tag {
     }
     // check expire
     bool noSubscribed;
-    int expireHeight = await getSubscribeExpireAtByPageFromNode(exists.topic, clientCommon.address);
+    int expireHeight = await getSubscribeExpireAtFromNode(exists.topic, clientCommon.address);
     if (!exists.joined || (exists.subscribeAt ?? 0) <= 0 || (exists.expireBlockHeight ?? 0) <= 0) {
       // DB no joined
       if (expireHeight > 0) {
@@ -865,7 +865,7 @@ class TopicCommon with Tag {
       logger.i("$TAG - isSubscribed - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
-    int expireHeight = await getSubscribeExpireAtByPageFromNode(exists?.topic, clientAddress);
+    int expireHeight = await getSubscribeExpireAtFromNode(exists?.topic, clientAddress);
     if (expireHeight <= 0) {
       logger.i("$TAG - isSubscribed - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
       return false;
@@ -879,17 +879,16 @@ class TopicCommon with Tag {
     return expireHeight >= globalHeight;
   }
 
-  Future<int> getSubscribeExpireAtByPageFromNode(String? topic, String? clientAddress) async {
+  Future<int> getSubscribeExpireAtFromNode(String? topic, String? clientAddress) async {
     if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
     String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
     Map<String, dynamic>? result = await RPC.getSubscription(topic, pubKey);
     if (result == null) {
-      logger.w("$TAG - getSubscribeExpireAtByPageFromNode - meta is null - topic:$topic - address:$clientAddress");
+      logger.w("$TAG - getSubscribeExpireAtFromNode - meta is null - topic:$topic - address:$clientAddress");
       return 0;
     }
-    String? expiresAt = result['expiresAt']?.toString() ?? "0";
-    int expireSec = int.tryParse(expiresAt) ?? 0;
-    logger.d("$TAG - getSubscribeExpireAtByPageFromNode - topic:$topic - clientAddress:$clientAddress - expireSec:$expireSec");
+    int expireSec = int.tryParse(result['expiresAt']?.toString() ?? "0") ?? 0;
+    logger.d("$TAG - getSubscribeExpireAtFromNode - topic:$topic - clientAddress:$clientAddress - expireSec:$expireSec");
     return expireSec;
   }
 
@@ -907,8 +906,7 @@ class TopicCommon with Tag {
     if (result['meta']?.toString().isNotEmpty == true) {
       meta = Util.jsonFormatMap(result['meta']) ?? Map();
     }
-    String? expiresAt = result['expiresAt']?.toString() ?? "0";
-    int expireSec = int.tryParse(expiresAt) ?? 0;
+    int expireSec = int.tryParse(result['expiresAt']?.toString() ?? "0") ?? 0;
     logger.d("$TAG - _getPermissionExpireAtByPageFromNode - topic:$topic - permPage:$permPage - expireSec:$expireSec - meta:$meta");
     return [meta, expireSec];
   }
@@ -923,7 +921,7 @@ class TopicCommon with Tag {
       logger.w("$TAG - _getMetaByPageFromNode - meta is null - topic:$topic - permPage:$permPage");
       return null;
     }
-    Map<String, dynamic>? meta = Map();
+    Map<String, dynamic> meta = Map();
     if (result['meta']?.toString().isNotEmpty == true) {
       meta = Util.jsonFormatMap(result['meta']) ?? Map();
     }

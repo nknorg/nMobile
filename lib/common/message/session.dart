@@ -53,7 +53,7 @@ class SessionCommon with Tag {
       // unReadCount
       if ((unReadCount == null) || ((unReadCount ?? -1) < 0)) {
         if (lastMsg != null) {
-          unReadCount = (!(lastMsg?.isOutbound == true) && (lastMsg?.canNotification == true)) ? 1 : 0;
+          unReadCount = ((lastMsg?.isOutbound == false) && (lastMsg?.canNotification == true)) ? 1 : 0;
         }
       }
       // senderName
@@ -108,21 +108,22 @@ class SessionCommon with Tag {
     Function func = () async {
       SessionSchema? exist = await query(targetId, type);
       if (exist == null) {
-        logger.i("$TAG - update - empty - schema:$targetId - type:$type");
+        logger.w("$TAG - update - empty - schema:$targetId - type:$type");
         return null;
       }
       String topic = (type == SessionType.TOPIC) ? targetId : "";
       String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
-      MessageSchema? newLastMsg;
       MessageSchema? oldLastMsg;
-      Map<String, dynamic>? oldLastMessageOptions = exist.lastMessageOptions ?? Map();
+      Map<String, dynamic> oldLastMessageOptions = exist.lastMessageOptions ?? Map();
       if ((lastMsg != null) && oldLastMessageOptions.isNotEmpty) {
         oldLastMsg = MessageSchema.fromMap(oldLastMessageOptions);
-      } else if (oldLastMsg == null) {
+      }
+      if (oldLastMsg == null) {
         List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
         oldLastMsg = history.isNotEmpty ? history[0] : null;
       }
+      MessageSchema? newLastMsg;
       if (lastMsg == null) {
         newLastMsg = oldLastMsg;
       } else if (oldLastMsg == null) {
@@ -145,17 +146,14 @@ class SessionCommon with Tag {
       }
       newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
       // senderName
-      String? newGroupSenderName;
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
+        String? newGroupSenderName;
         if (newLastMsg != null) {
           ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.from);
           if (_sender?.displayName.isNotEmpty == true) {
             newGroupSenderName = _sender?.displayName ?? " ";
           }
         }
-      }
-      // update
-      if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         if (newGroupSenderName != exist.data?["groupSenderName"]?.toString()) {
           Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
           bool success = await SessionStorage.instance.setData(targetId, type, newData);

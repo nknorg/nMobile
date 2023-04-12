@@ -59,6 +59,7 @@ class DeviceInfoCommon with Tag {
         if (success) deviceInfo.deviceToken = deviceToken;
       }
     }
+    logger.d("$TAG - getMe - canAdd:$canAdd - fetchToken:$fetchDeviceToken - deviceInfo:$deviceInfo");
     return deviceInfo;
   }
 

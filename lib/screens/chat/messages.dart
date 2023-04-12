@@ -404,10 +404,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   _checkPrivateGroupVersion() async {
     if ((_privateGroup == null) || !clientCommon.isClientOK) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
-    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((version) {
-      if (version?.isNotEmpty == true) {
-        privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, version, notify: true);
-      }
+    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
+      if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, _privateGroup?.optionsRequestedVersion, notify: true);
     }); // await
   }
 

@@ -57,7 +57,7 @@ class RPC {
         if (walletAddress?.isNotEmpty == true) {
           List<String> saved = await _getRpcServers(walletAddress: walletAddress);
           if (saved.isEmpty) {
-            logger.w("PRC - getRpcServers - saved empty - walletAddress:$walletAddress");
+            logger.i("PRC - getRpcServers - saved empty - walletAddress:$walletAddress");
           } else {
             logger.i("PRC - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
           }
@@ -136,6 +136,7 @@ class RPC {
       handleError(e, st);
     }
     if ((newBlockHeight != null) && (newBlockHeight > 0)) blockHeight = newBlockHeight;
+    logger.d("PRC - getBlockHeight - height:$blockHeight");
     return blockHeight;
   }
 
@@ -202,7 +203,7 @@ class RPC {
         int? poolNonce = await RPC.getNonce(null, txPool: true);
         if ((blockNonce != null) && (blockNonce >= 0) && (poolNonce != null) && (poolNonce >= blockNonce)) {
           for (var i = blockNonce; i <= poolNonce; i++) {
-            List results = await _subscribe(topic, fee: fee, identifier: identifier, meta: metaString, nonce: i);
+            List results = await _subscribe(topic, nonce: i, fee: fee, identifier: identifier, meta: metaString);
             if (results[0] != true) {
               logger.w("PRC - subscribeWithPermission - fail with reset before trans - nonce:$i/$poolNonce - fee:${fee.toStringAsFixed(8)} - identifier:$identifier - meta:$metaString - topic:$topic");
               _resetSubscribe(i, fee); // await
@@ -215,20 +216,22 @@ class RPC {
         } else {
           logger.w("PRC - subscribeWithPermission - fail with nonce ok - blockNonce:$blockNonce - successNonce:$poolNonce - fee:${fee.toStringAsFixed(8)} - identifier:$identifier - meta:$metaString - topic:$topic");
         }
+      } else {
+        logger.w("PRC - subscribeWithPermission - action fail - fee_has - results:$results - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
       }
     } else if (!success) {
-      logger.w("PRC - subscribeWithPermission - action fail - results:$results - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
+      logger.w("PRC - subscribeWithPermission - action fail - fee_no - results:$results - topic:$topic - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
     }
     // try
     SubscriberSchema? _schema = await subscriberCommon.queryByTopicChatId(topic, clientAddress);
     if ((_schema != null) && (newStatus != null)) {
       if (!canTry && !isBlock) {
-        logger.w("PRC - subscribeWithPermission - cancel permission try - newStatus:$newStatus - oldStatus:$oldStatus - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
+        logger.w("PRC - subscribeWithPermission - cancel permission try - newStatus:$newStatus - oldStatus:$oldStatus - result:$results - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
         await subscriberCommon.setStatusProgressEnd(_schema.id);
         await subscriberCommon.setStatus(_schema.id, oldStatus, notify: true);
       } else {
         success = true; // will success by try timer
-        logger.i("PRC - subscribeWithPermission - add permission try - newStatus:$newStatus - oldStatus:$oldStatus - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
+        logger.i("PRC - subscribeWithPermission - add permission try - newStatus:$newStatus - oldStatus:$oldStatus - result:$results - clientAddress:$clientAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topic:$topic");
         await subscriberCommon.setStatusProgressStart(_schema.id, newStatus, _nonce, fee);
       }
     }
@@ -295,31 +298,33 @@ class RPC {
         } else {
           logger.w("PRC - subscribeWithJoin - fail with nonce ok - isJoin:$isJoin - blockNonce:$blockNonce - successNonce:$poolNonce - fee:${fee.toStringAsFixed(8)} - topic:$topic");
         }
+      } else {
+        logger.w("PRC - subscribeWithJoin - action fail - fee_has - results:$results - isJoin:$isJoin - nonce:$nonce - fee:$fee - topic:$topic");
       }
     } else if (!success) {
-      logger.w("PRC - subscribeWithJoin - action fail - results:$results - isJoin:$isJoin - nonce:$nonce - fee:$fee - topic:$topic");
+      logger.w("PRC - subscribeWithJoin - action fail - fee_no - results:$results - isJoin:$isJoin - nonce:$nonce - fee:$fee - topic:$topic");
     }
     // try
     TopicSchema? _schema = await topicCommon.queryByTopic(topic);
     if (_schema != null) {
       if (isJoin) {
         if (!canTry && !isBlock) {
-          logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, false, notify: true);
         } else {
           success = true; // will success by try timer
-          logger.i("PRC - subscribeWithJoin - add subscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          logger.i("PRC - subscribeWithJoin - add subscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressStart(_schema.id, true, _nonce, fee, notify: true); // await
         }
       } else {
         if (!canTry && !isBlock) {
-          logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
           await topicCommon.setJoined(_schema.id, true, notify: true);
         } else {
           success = true; // will success by try timer
-          logger.i("PRC - _unsubscribe - add unsubscribe try - isJoin:$isJoin - nonce:$_nonce - fee:$fee - topic:$topic");
+          logger.i("PRC - _unsubscribe - add unsubscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressStart(_schema.id, false, _nonce, fee, notify: true); // await
         }
       }
@@ -398,7 +403,7 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - _subscribe - success:${result[0]} - canTry:${result[1]} - isBlock:${result[2]} - nonce:${result[3]} - tryTimes:$tryTimes");
+    logger.d("PRC - _subscribe - success:${result[0]} - canTry:${result[1]} - isBlock:${result[2]} - nonce:${result[3]} - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier - meta:$meta");
     return result;
   }
 
@@ -469,7 +474,7 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - _unsubscribe - success:${result[0]} - canTry:${result[1]} - isBlock:${result[2]} - nonce:${result[3]} - tryTimes:$tryTimes");
+    logger.d("PRC - _unsubscribe - success:${result[0]} - canTry:${result[1]} - isBlock:${result[2]} - nonce:${result[3]} - tryTimes:$tryTimes - topic:$topic - nonce:$nonce - fee:$fee - identifier:$identifier");
     return result;
   }
 
@@ -534,7 +539,7 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - getSubscription - count:${subscription?.keys.length} - tryTimes:$tryTimes - subscription:$subscription");
+    logger.d("PRC - getSubscription - count:${subscription?.keys.length} - tryTimes:$tryTimes - topic:$topic - subscription:$subscription");
     return subscription;
   }
 
@@ -597,7 +602,7 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - getSubscribers - count:${subscribers?.length} - tryTimes:$tryTimes - subscribers:$subscribers");
+    logger.d("PRC - getSubscribers - count:${subscribers?.length} - tryTimes:$tryTimes - topic:$topic - meta:$meta - txPool:$txPool - subscribers:$subscribers");
     return subscribers;
   }
 
@@ -641,7 +646,7 @@ class RPC {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
     }
-    logger.d("PRC - getSubscribersCount - count:$count - tryTimes:$tryTimes");
+    logger.d("PRC - getSubscribersCount - tryTimes:$tryTimes - topic:$topic - count:$count");
     return count;
   }
 
