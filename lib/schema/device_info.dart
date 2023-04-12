@@ -110,6 +110,10 @@ class DeviceInfoSchema {
     return int.tryParse(data?['contactProfileResponseAt']?.toString() ?? "0") ?? 0;
   }
 
+  int get deviceInfoResponseAt {
+    return int.tryParse(data?['deviceInfoResponseAt']?.toString() ?? "0") ?? 0;
+  }
+
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();

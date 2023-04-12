@@ -69,13 +69,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
-      if (_sessionList.indexWhere((element) => element.targetId == event.targetId) < 0) {
+      if (_sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList().isEmpty) {
         if (chatCommon.currentChatTargetId == event.targetId) {
           event.unReadCount = 0;
         }
-        if (_sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList().isEmpty) {
-          _sessionList.insert(0, event);
-        }
+        _sessionList.insert(0, event);
         _sortMessages();
       }
     });
@@ -126,7 +124,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // unread
-    _refreshBadge(delayMs: 500);
+    _refreshBadge(delayMs: 1000);
   }
 
   @override

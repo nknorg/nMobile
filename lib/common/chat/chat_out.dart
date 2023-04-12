@@ -318,11 +318,19 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendDeviceInfo(String? clientAddress, DeviceInfoSchema deviceInfo, bool withToken) async {
+  Future<bool> sendDeviceInfo(String? clientAddress, DeviceInfoSchema selfDeviceInfo, bool withToken, {DeviceInfoSchema? targetDeviceInfo, int gap = 0}) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    if (!withToken) deviceInfo.deviceToken = null;
-    String data = MessageData.getDeviceInfo(deviceInfo);
+    if ((targetDeviceInfo != null) && (gap > 0)) {
+      int lastAt = targetDeviceInfo.deviceInfoResponseAt;
+      int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
+      if (interval < gap) {
+        logger.d('$TAG - sendDeviceInfo - interval < gap - interval:${interval - gap} - target:$clientAddress');
+        return false;
+      }
+    }
+    if (!withToken) selfDeviceInfo.deviceToken = null;
+    String data = MessageData.getDeviceInfo(selfDeviceInfo);
     logger.i("$TAG - sendDeviceInfo - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;

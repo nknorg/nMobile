@@ -63,9 +63,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // mounted
     application.registerMounted(() async {
       application.init();
-      await localNotification.init();
-      // await backgroundFetchService.install();
       BlocProvider.of<WalletBloc>(Settings.appContext).add(LoadWallet());
+      // await backgroundFetchService.install();
+      await localNotification.init();
     });
     application.mounted(); // await
 

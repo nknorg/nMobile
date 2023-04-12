@@ -164,6 +164,15 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
+  Future<bool> setDeviceInfoResponse(String? contactAddress, String? deviceId, {int? timeAt}) async {
+    if (contactAddress == null || contactAddress.isEmpty) return false;
+    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
+      "deviceInfoResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setDeviceInfoResponse - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    return data != null;
+  }
+
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
     deviceVersion = deviceVersion.isEmpty ? Settings.deviceVersionName : deviceVersion;
     List<String> vList = deviceVersion.split(".");

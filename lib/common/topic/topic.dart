@@ -299,7 +299,7 @@ class TopicCommon with Tag {
     if (exists == null) {
       int expireHeight = await getSubscribeExpireAtFromNode(topic, clientCommon.address);
       exists = await add(TopicSchema.create(topic, expireHeight: expireHeight), notify: true);
-      logger.i("$TAG - subscribe - new add - expireHeight:$expireHeight - schema:$exists");
+      logger.i("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
       // refreshSubscribers later
     }
     if (exists == null) {
