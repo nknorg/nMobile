@@ -363,7 +363,7 @@ class ContactStorage with Tag {
                 where: 'id = ?',
                 whereArgs: [contactId],
               );
-              if (count <= 0) logger.v("$TAG - setNotificationOpen - fail - contactId:$contactId - options:$options");
+              if (count <= 0) logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - options:$options");
               return (count > 0) ? options : null;
             });
           } catch (e, st) {

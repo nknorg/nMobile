@@ -353,7 +353,7 @@ class ChatCommon with Tag {
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
-      int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(message.topic, clientCommon.address);
+      int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(message.topic, clientCommon.address);
       exists = await topicCommon.add(TopicSchema.create(message.topic, expireHeight: expireHeight), notify: true);
       // expire + permission + subscribers
       if (exists != null) {
@@ -398,7 +398,7 @@ class ChatCommon with Tag {
               logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
               await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
             } else if (isAccept == true) {
-              int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(topic.topic, message.from);
+              int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
               if (expireHeight <= 0) {
                 logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
                 await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
@@ -409,7 +409,7 @@ class ChatCommon with Tag {
               // some subscriber status wrong in new version need refresh
               // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
             } else {
-              int expireHeight = await topicCommon.getSubscribeExpireAtByPageFromNode(topic.topic, message.from);
+              int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
               if (expireHeight <= 0) {
                 logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
                 await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
@@ -466,10 +466,8 @@ class ChatCommon with Tag {
           logger.d('$TAG - privateGroupHandle - version requested same - from:${message.from} - version:$remoteVersion');
         }
         int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
-        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((version) {
-          if (version?.isNotEmpty == true) {
-            privateGroupCommon.setGroupOptionsRequestInfo(exists, version, notify: true);
-          }
+        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((value) {
+          if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists, remoteVersion, notify: true);
         }); // await
       }
     }

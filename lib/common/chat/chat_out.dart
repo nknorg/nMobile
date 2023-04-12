@@ -681,17 +681,17 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<String?> sendPrivateGroupOptionRequest(String? target, String? groupId, {int gap = 0}) async {
-    if (!(await _waitClientOk())) return null;
-    if (target == null || target.isEmpty) return null;
-    if (groupId == null || groupId.isEmpty) return null;
+  Future<bool> sendPrivateGroupOptionRequest(String? target, String? groupId, {int gap = 0}) async {
+    if (!(await _waitClientOk())) return false;
+    if (target == null || target.isEmpty) return false;
+    if (groupId == null || groupId.isEmpty) return false;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
-    if (group == null) return null;
+    if (group == null) return false;
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.optionsRequestAt;
       if (interval < gap) {
         logger.d('$TAG - sendPrivateGroupOptionRequest - interval < gap - interval:${interval - gap} - target:$target');
-        return null;
+        return false;
       }
     }
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
@@ -700,7 +700,7 @@ class ChatOutCommon with Tag {
     String data = MessageData.getPrivateGroupOptionRequest(groupId, getVersion);
     logger.i("$TAG - sendPrivateGroupOptionRequest - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
-    return (pid?.isNotEmpty == true) ? getVersion : null;
+    return pid?.isNotEmpty == true;
   }
 
   // NO group (1 to 1)
@@ -715,17 +715,17 @@ class ChatOutCommon with Tag {
   }
 
   // NO group (1 to 1)
-  Future<String?> sendPrivateGroupMemberRequest(String? target, String? groupId, {int gap = 0}) async {
-    if (!(await _waitClientOk())) return null;
-    if (target == null || target.isEmpty) return null;
-    if (groupId == null || groupId.isEmpty) return null;
+  Future<bool> sendPrivateGroupMemberRequest(String? target, String? groupId, {int gap = 0}) async {
+    if (!(await _waitClientOk())) return false;
+    if (target == null || target.isEmpty) return false;
+    if (groupId == null || groupId.isEmpty) return false;
     PrivateGroupSchema? group = await privateGroupCommon.queryGroup(groupId);
-    if (group == null) return null;
+    if (group == null) return false;
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.membersRequestAt;
       if (interval < gap) {
         logger.d('$TAG - sendPrivateGroupMemberRequest - interval < gap - interval:${interval - gap} - target:$target');
-        return null;
+        return false;
       }
     }
     int commits = privateGroupCommon.getPrivateGroupVersionCommits(group.version) ?? 0;
@@ -734,7 +734,7 @@ class ChatOutCommon with Tag {
     String data = MessageData.getPrivateGroupMemberRequest(groupId, getVersion);
     logger.i("$TAG - sendPrivateGroupMemberRequest - dest:$target - data:$data");
     Uint8List? pid = await _sendWithAddress([target], data);
-    return (pid?.isNotEmpty == true) ? getVersion : null;
+    return pid?.isNotEmpty == true;
   }
 
   // NO group (1 to 1)
