@@ -313,7 +313,7 @@ class ChatCommon with Tag {
           if (success) latest.data = newData;
         }
       } else {
-        logger.w("$TAG - deviceInfoHandle - wrong here - new:$deviceId - old${latest.deviceId} - from:${message.from}");
+        logger.i("$TAG - deviceInfoHandle - new add - new:$deviceId - old${latest.deviceId} - from:${message.from}");
         DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
@@ -434,7 +434,7 @@ class ChatCommon with Tag {
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (exists == null) {
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
-      logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message - group:$schema");
+      logger.w("$TAG - privateGroupHandle - add(wrong here) - message$message - group:$schema");
       exists = await privateGroupCommon.addPrivateGroup(schema, notify: true);
     }
     if (exists == null) return null;
@@ -772,7 +772,8 @@ class ChatCommon with Tag {
     );
     await completer.future;
     // thumbnail
-    if (success) {
+    int? fileType = MessageOptions.getFileType(message.options);
+    if (success && (fileType == MessageOptions.fileTypeImage || fileType == MessageOptions.fileTypeVideo)) {
       String? savePath = MessageOptions.getMediaThumbnailPath(message.options);
       if (savePath == null || savePath.isEmpty) {
         savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: message.targetId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);

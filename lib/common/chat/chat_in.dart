@@ -538,7 +538,7 @@ class ChatInCommon with Tag {
         data: newData,
       );
       exists = await deviceInfoCommon.add(deviceInfo);
-      logger.w("$TAG - _receiveDeviceInfo - add(wrong here) - new:$exists - data:$data");
+      logger.i("$TAG - _receiveDeviceInfo - new add - new:$exists - data:$data");
       return exists != null;
     }
     // update_data

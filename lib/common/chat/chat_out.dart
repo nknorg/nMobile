@@ -141,7 +141,7 @@ class ChatOutCommon with Tag {
           int lastAt = isPing ? deviceInfo.pingAt : deviceInfo.pongAt;
           int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
           if (interval < gap) {
-            logger.d('$TAG - sendPing - interval < gap - interval:${interval - gap} - target:$address');
+            logger.d('$TAG - sendPing - ${isPing ? "ping" : "pong"} - interval < gap - interval:${interval - gap} - target:$address');
             continue;
           }
         }
