@@ -242,16 +242,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   Future<bool> _tryAuth() async {
+    if (clientCommon.isClientStop) return false;
     if (isAuthProgress) return false;
     isAuthProgress = true;
     // view
     AppScreen.go(this.context);
     _setConnected(false);
-    // client
-    if (clientCommon.isClientStop) {
-      isAuthProgress = false;
-      return false;
-    }
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {

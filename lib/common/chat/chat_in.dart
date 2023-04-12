@@ -142,7 +142,7 @@ class ChatInCommon with Tag {
         insertOk = await _receiveContactOptions(received, contact, deviceInfo);
         break;
       case MessageContentType.deviceRequest:
-        await _receiveDeviceRequest(received, contact);
+        await _receiveDeviceRequest(received, contact, deviceInfo);
         break;
       case MessageContentType.deviceInfo:
         await _receiveDeviceInfo(received, contact);
@@ -502,12 +502,14 @@ class ChatInCommon with Tag {
   }
 
   // NO DB NO display
-  Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact) async {
+  Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? targetDeviceInfo) async {
     if (contact == null) return false;
     bool notificationOpen = contact.options?.notificationOpen ?? false;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
     if (deviceInfo == null) return false;
-    chatOutCommon.sendDeviceInfo(contact.clientAddress, deviceInfo, notificationOpen); // await
+    chatOutCommon.sendDeviceInfo(contact.clientAddress, deviceInfo, notificationOpen, targetDeviceInfo: targetDeviceInfo, gap: Settings.gapDeviceInfoSyncMs).then((value) {
+      if (value) deviceInfoCommon.setDeviceInfoResponse(targetDeviceInfo?.contactAddress, targetDeviceInfo?.deviceId);
+    }); // await
     return true;
   }
 

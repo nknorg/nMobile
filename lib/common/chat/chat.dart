@@ -381,47 +381,44 @@ class ChatCommon with Tag {
         logger.i("$TAG - subscriberHandle - private: add Owner - subscriber:$exist");
       } else {
         // will go here when duration(TxPoolDelay) gone in new version
-        subscriberCommon.findPermissionFromNode(topic.topic, message.from).then((List<dynamic> permission) async {
-          bool? acceptAll = permission[0];
-          int? permPage = permission[1];
-          bool? isAccept = permission[2];
-          bool? isReject = permission[3];
-          if (acceptAll == null) {
-            logger.w("$TAG - subscriberHandle - error when findPermissionFromNode - subscriber:$exist");
-            return;
-          }
-          if (acceptAll == true) {
-            logger.i("$TAG - subscriberHandle - acceptAll: add Subscribed - subscriber:$exist");
-            await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-          } else {
-            if (isReject == true) {
-              logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-              await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
-            } else if (isAccept == true) {
-              int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
-              if (expireHeight <= 0) {
-                logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
-              } else {
-                logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
-              }
-              // some subscriber status wrong in new version need refresh
-              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, message.from);
+        bool? acceptAll = permission[0];
+        int? permPage = permission[1];
+        bool? isAccept = permission[2];
+        bool? isReject = permission[3];
+        if (acceptAll == null) {
+          logger.w("$TAG - subscriberHandle - error when findPermissionFromNode - subscriber:$exist");
+        } else if (acceptAll == true) {
+          logger.i("$TAG - subscriberHandle - acceptAll: add Subscribed - subscriber:$exist");
+          exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
+        } else {
+          if (isReject == true) {
+            logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+            exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
+          } else if (isAccept == true) {
+            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
+            if (expireHeight <= 0) {
+              logger.w("$TAG - subscriberHandle - accept: add invited - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.InvitedSend, permPage));
             } else {
-              int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
-              if (expireHeight <= 0) {
-                logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-                await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
-              } else {
-                logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
-                SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
-              }
-              // some subscriber status wrong in new version need refresh
-              // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+              logger.w("$TAG - subscriberHandle - accept: add Subscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Subscribed, permPage));
             }
+            // some subscriber status wrong in new version need refresh
+            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
+          } else {
+            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.from);
+            if (expireHeight <= 0) {
+              logger.w("$TAG - subscriberHandle - none: add Unsubscribed - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+              exist = await subscriberCommon.add(SubscriberSchema.create(message.topic, message.from, SubscriberStatus.Unsubscribed, permPage));
+            } else {
+              logger.w("$TAG - subscriberHandle - none: just none - from:${message.from} - permission:$permission - topic:$topic - subscriber:$exist");
+              exist = SubscriberSchema.create(message.topic, message.from, SubscriberStatus.None, permPage);
+            }
+            // some subscriber status wrong in new version need refresh
+            // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
           }
-        }); // await
+        }
       }
     } else if (exist.status != SubscriberStatus.Subscribed) {
       logger.w("$TAG - subscriberHandle - some subscriber status wrong in new version - from:${message.from} - status:${exist.status} - topic:$topic");
@@ -435,40 +432,40 @@ class ChatCommon with Tag {
     if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
     // duplicated
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
-    if (message.from == message.to) return exists;
     if (exists == null) {
       PrivateGroupSchema? schema = PrivateGroupSchema.create(message.groupId, message.groupId);
       logger.w("$TAG - deviceInfoHandle - add(wrong here) - message$message - group:$schema");
       exists = await privateGroupCommon.addPrivateGroup(schema, notify: true);
     }
     if (exists == null) return null;
-    if (message.isOutbound) return exists;
     // sync
-    if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
-      String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
-      int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
-      int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-      if (nativeCommits < remoteCommits) {
-        logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - from:${message.from}');
-        // burning
-        if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
-          int? existSeconds = exists.options?.deleteAfterSeconds;
-          int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
-          if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
-            logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds - from:${message.from}');
-            await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
+    if (!message.isOutbound && (message.from != message.to)) {
+      if ((clientCommon.address != null) && !privateGroupCommon.isOwner(exists.ownerPublicKey, clientCommon.address)) {
+        String? remoteVersion = MessageOptions.getPrivateGroupVersion(message.options) ?? "";
+        int nativeCommits = privateGroupCommon.getPrivateGroupVersionCommits(exists.version) ?? 0;
+        int remoteCommits = privateGroupCommon.getPrivateGroupVersionCommits(remoteVersion) ?? 0;
+        if (nativeCommits < remoteCommits) {
+          logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - from:${message.from}');
+          // burning
+          if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.from) && message.canBurning) {
+            int? existSeconds = exists.options?.deleteAfterSeconds;
+            int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
+            if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
+              logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds - from:${message.from}');
+              await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
+            }
           }
+          // request
+          if (exists.optionsRequestedVersion != remoteVersion) {
+            logger.i('$TAG - privateGroupHandle - version requested diff - from:${message.from} - requested:${exists.optionsRequestedVersion} - remote:$remoteVersion');
+          } else {
+            logger.d('$TAG - privateGroupHandle - version requested same - from:${message.from} - version:$remoteVersion');
+          }
+          int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
+          chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((value) {
+            if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists, remoteVersion, notify: true);
+          }); // await
         }
-        // request
-        if (exists.optionsRequestedVersion != remoteVersion) {
-          logger.i('$TAG - privateGroupHandle - version requested diff - from:${message.from} - requested:${exists.optionsRequestedVersion} - remote:$remoteVersion');
-        } else {
-          logger.d('$TAG - privateGroupHandle - version requested same - from:${message.from} - version:$remoteVersion');
-        }
-        int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
-        chatOutCommon.sendPrivateGroupOptionRequest(message.from, message.groupId, gap: gap).then((value) {
-          if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists, remoteVersion, notify: true);
-        }); // await
       }
     }
     return exists;
