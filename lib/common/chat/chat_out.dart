@@ -243,15 +243,12 @@ class ChatOutCommon with Tag {
   Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    if (gap > 0) {
-      deviceInfo = deviceInfo ?? (await deviceInfoCommon.queryLatest(clientAddress));
-      if (deviceInfo != null) {
-        int lastAt = deviceInfo.contactProfileResponseAt;
-        int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
-        if (interval < gap) {
-          logger.d('$TAG - sendContactProfileResponse - interval < gap - interval:${interval - gap} - target:$clientAddress');
-          return false;
-        }
+    if ((deviceInfo != null) && (gap > 0)) {
+      int lastAt = deviceInfo.contactProfileResponseAt;
+      int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
+      if (interval < gap) {
+        logger.d('$TAG - sendContactProfileResponse - interval < gap - interval:${interval - gap} - target:$clientAddress');
+        return false;
       }
     }
     ContactSchema? me = await contactCommon.getMe();

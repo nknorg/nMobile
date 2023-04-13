@@ -725,13 +725,16 @@ class TopicCommon with Tag {
       logger.e("$TAG - onUnsubscribe - topic is null - topic:$topic");
       return null;
     }
+    // subscriber exist
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, unSubAddress);
+    if (_subscriber == null) return null;
+    int? oldStatus = _subscriber.status;
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onUnsubscribe(topic, unSubAddress);
+    _subscriber = await subscriberCommon.onUnsubscribe(topic, unSubAddress);
     if (_subscriber == null) {
       logger.w("$TAG - onUnsubscribe - subscriber is null - topic:$topic - unSubAddress:$unSubAddress");
       return null;
     }
-    int? oldStatus = _subscriber.status;
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && (clientCommon.address != unSubAddress)) {
       logger.i("$TAG - onUnsubscribe - sync permission by me(==owner) - topic:$topic - subscriber:$_subscriber - topic:$_topic");
@@ -780,8 +783,10 @@ class TopicCommon with Tag {
       // do nothing now
     }
     // DB update (just node sync can delete)
-    bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
-    if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+    if (oldStatus != SubscriberStatus.Subscribed) {
+      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
+      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+    }
     // await subscriberCommon.delete(_subscriber.id, notify: true);
     // subscribers sync
     // if (_topic.isPrivate) {

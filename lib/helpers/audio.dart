@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:logger/logger.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
@@ -15,7 +16,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 class AudioHelper with Tag {
   // player
-  Sound.FlutterSoundPlayer player = Sound.FlutterSoundPlayer();
+  Sound.FlutterSoundPlayer player = Sound.FlutterSoundPlayer(logLevel: Level.nothing);
   String? playerId;
   int? playerDurationMs;
   StreamSubscription? _onPlayProgressSubscription;
@@ -27,7 +28,7 @@ class AudioHelper with Tag {
   Stream<Map<String, dynamic>> get onPlayProgressStream => _onPlayProgressController.stream; // .distinct((prev, next) => (prev['player_id'] == next['player_id']) && (next['percent'] < prev['percent']));
 
   // record
-  Sound.FlutterSoundRecorder record = Sound.FlutterSoundRecorder();
+  Sound.FlutterSoundRecorder record = Sound.FlutterSoundRecorder(logLevel: Level.nothing);
   String? recordId;
   String? recordPath;
   double? recordMaxDurationS;
