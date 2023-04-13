@@ -399,19 +399,26 @@ class ChatInCommon with Tag {
     bool isDChatRequest = (requestType == null) && (responseType == null) && (version == null);
     if ((requestType?.isNotEmpty == true) || isDChatRequest) {
       // need reply
+      ContactSchema? contactMe = await contactCommon.getMe();
+      String? selfNativeVersion = contactMe?.profileVersion;
+      String? lastResponseVersion = deviceInfo?.contactProfileResponseVersion;
       if (requestType == ContactRequestType.header) {
-        logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header); // await
+        logger.i("$TAG - _receiveContact - response head - from:${received.from} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version");
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, contactMe, ContactRequestType.header); // await
       } else {
-        String? lastResponseVersion = deviceInfo?.contactProfileResponseVersion;
-        if ((version?.isNotEmpty == true) && (version != lastResponseVersion)) {
-          logger.i('$TAG - _receiveContact - response full - version diff - from:${received.from} - requested:$lastResponseVersion - remote:$version');
+        int gap;
+        if ((selfNativeVersion?.isNotEmpty == true) && (selfNativeVersion != lastResponseVersion)) {
+          logger.i('$TAG - _receiveContact - response full - version diff (native != response ?? remote) - from:${received.from} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          gap = 0;
+        } else if ((selfNativeVersion?.isNotEmpty == true) && (selfNativeVersion != version)) {
+          logger.i('$TAG - _receiveContact - response full - version diff (native == response != remote) - from:${received.from} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          gap = Settings.gapContactProfileSyncMs;
         } else {
-          logger.d('$TAG - _receiveContact - response full - version same - from:${received.from} - requested:$lastResponseVersion - remote:$version');
+          logger.d('$TAG - _receiveContact - response full - version same (native == remote == response) - from:${received.from} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          gap = Settings.gapContactProfileSyncMs;
         }
-        int gap = ((version?.isNotEmpty == true) && (version != lastResponseVersion)) ? 0 : Settings.gapContactProfileSyncMs;
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
-          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, version);
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, contactMe, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
+          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, selfNativeVersion);
         }); // await
       }
     } else {

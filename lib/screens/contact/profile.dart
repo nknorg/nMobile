@@ -680,9 +680,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   _getPersonView() {
     bool remarkNameExists = _contactSchema?.remarkName?.isNotEmpty == true;
     bool originalNameExists = _contactSchema?.fullName.isNotEmpty == true;
-    String clientAddress = _contactSchema?.clientAddress ?? "";
-    bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
-    bool showOriginalName = remarkNameExists && originalNameExists && !isDefaultName;
+    // String clientAddress = _contactSchema?.clientAddress ?? "";
+    // bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
+    bool showOriginalName = remarkNameExists && originalNameExists; // && !isDefaultName
 
     List<String> mappeds = _contactSchema?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];

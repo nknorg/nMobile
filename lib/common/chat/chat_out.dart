@@ -240,9 +240,9 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendContactProfileResponse(String? clientAddress, String requestType, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
+  Future<bool> sendContactProfileResponse(String? clientAddress, ContactSchema? contactMe, String requestType, {DeviceInfoSchema? deviceInfo, int gap = 0}) async {
     if (!(await _waitClientOk())) return false;
-    if (clientAddress == null || clientAddress.isEmpty) return false;
+    if (clientAddress == null || clientAddress.isEmpty || contactMe == null) return false;
     if ((deviceInfo != null) && (gap > 0)) {
       int lastAt = deviceInfo.contactProfileResponseAt;
       int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
@@ -251,12 +251,11 @@ class ChatOutCommon with Tag {
         return false;
       }
     }
-    ContactSchema? me = await contactCommon.getMe();
     String data;
     if (requestType == ContactRequestType.header) {
-      data = MessageData.getContactProfileResponseHeader(me?.profileVersion);
+      data = MessageData.getContactProfileResponseHeader(contactMe.profileVersion);
     } else {
-      data = await MessageData.getContactProfileResponseFull(me?.profileVersion, me?.avatar, me?.firstName, me?.lastName);
+      data = await MessageData.getContactProfileResponseFull(contactMe.profileVersion, contactMe.avatar, contactMe.firstName, contactMe.lastName);
     }
     logger.i("$TAG - sendContactProfileResponse - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
