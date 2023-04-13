@@ -482,27 +482,28 @@ class ChatCommon with Tag {
     } else if (message.isPrivateGroup) {
       type = SessionType.PRIVATE_GROUP;
     }
-    // unreadCount
-    bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
-    int unreadCountUp = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
-    unreadCountUp = inSessionPage ? 0 : unreadCountUp;
     // badge
-    Function func = () async {
+    Function badgeChange = () async {
       if (!message.isOutbound && message.canNotification) {
+        bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
         if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
-          Badge.onCountUp(1); // await
+          await Badge.onCountUp(1);
         }
       }
     };
+    // unreadCount
+    int unreadCountUp = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
+    bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
+    unreadCountUp = inSessionPage ? 0 : unreadCountUp;
     // set
     SessionSchema? exist = await sessionCommon.query(message.targetId, type);
     if (exist == null) {
       sessionCommon.add(message.targetId, type, lastMsg: message, unReadCount: unreadCountUp).then((value) {
-        if (value != null) func();
+        if (value != null) badgeChange(); // await
       }); // await + queue
     } else {
       sessionCommon.update(message.targetId, type, lastMsg: message, unreadChange: unreadCountUp).then((value) {
-        if (value != null) func();
+        if (value != null) badgeChange(); // await
       }); // await + queue
     }
     return;

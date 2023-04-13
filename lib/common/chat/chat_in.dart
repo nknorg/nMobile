@@ -401,7 +401,7 @@ class ChatInCommon with Tag {
       // need reply
       if (requestType == ContactRequestType.header) {
         logger.i("$TAG - _receiveContact - response head - from:${received.from} - data:$data");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header, deviceInfo: deviceInfo); // await
+        chatOutCommon.sendContactProfileResponse(contact.clientAddress, ContactRequestType.header); // await
       } else {
         String? lastResponseVersion = deviceInfo?.contactProfileResponseVersion;
         if ((version?.isNotEmpty == true) && (version != lastResponseVersion)) {
