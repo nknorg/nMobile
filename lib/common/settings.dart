@@ -86,7 +86,7 @@ class Settings {
   static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 6 * 60 * 60 * 1000; // 6h
   static const int gapPingContactMs = 5 * 60 * 1000; // 5m
-  static const int gapPongPingMs = 10 * 1000; // 10s
+  static const int gapPongPingMs = 1 * 60 * 1000; // 1m
   static const int gapContactProfileSyncMs = 30 * 1000; // 30s
   static const int gapDeviceInfoSyncMs = 30 * 1000; // 30s
   static const int gapGroupRequestOptionsMs = 1 * 60 * 1000; // 1m
