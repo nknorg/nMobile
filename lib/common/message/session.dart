@@ -139,10 +139,13 @@ class SessionCommon with Tag {
       int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
       // unReadCount
       int newUnReadCount;
-      if (unreadChange != null) {
-        newUnReadCount = exist.unReadCount + unreadChange;
+      bool inSessionPage = chatCommon.currentChatTargetId == exist.targetId;
+      if (unReadCount != null) {
+        newUnReadCount = unReadCount;
+      } else if (unreadChange != null) {
+        newUnReadCount = inSessionPage ? 0 : (exist.unReadCount + unreadChange);
       } else {
-        newUnReadCount = unReadCount ?? (await messageCommon.unReadCountByTargetId(targetId, topic, group));
+        newUnReadCount = inSessionPage ? 0 : exist.unReadCount;
       }
       newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
       // senderName

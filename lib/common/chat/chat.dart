@@ -493,8 +493,6 @@ class ChatCommon with Tag {
     };
     // unreadCount
     int unreadCountUp = message.isOutbound ? 0 : (message.canNotification ? 1 : 0);
-    bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
-    unreadCountUp = inSessionPage ? 0 : unreadCountUp;
     // set
     SessionSchema? exist = await sessionCommon.query(message.targetId, type);
     if (exist == null) {
@@ -676,8 +674,13 @@ class ChatCommon with Tag {
       return [message, true];
     } else if (thumbnailPath == null || thumbnailPath.isEmpty) {
       // no native thumbnail file
-      logger.e("$TAG - _tryIpfsThumbnailUpload - file is nil - options${message.options}");
-      return [null, false];
+      if (MessageOptions.getFileMimeType(message.options)?.contains("gif") == true) {
+        logger.d("$TAG - _tryIpfsThumbnailUpload - gif no thumbnail - options${message.options}");
+        return [message, false];
+      } else {
+        logger.e("$TAG - _tryIpfsThumbnailUpload - file is nil - options${message.options}");
+        return [null, false];
+      }
     }
     // state
     message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
