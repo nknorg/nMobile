@@ -356,28 +356,48 @@ class ContactCommon with Tag {
     return data != null;
   }
 
+  Future<String?> joinQueueIdsByClientAddress(String? clientAddress) async {
+    if (clientAddress == null || clientAddress.isEmpty) return null;
+    ContactSchema? contact = await queryByClientAddress(clientAddress);
+    return joinQueueIdsByContact(contact);
+  }
+
+  String? joinQueueIdsByContact(ContactSchema? contact) {
+    if (contact == null) return null;
+    int latestSendMessageQueueId = contact.latestSendMessageQueueId;
+    int latestReceivedMessageQueueId = contact.latestReceivedMessageQueueId;
+    List<int> lostReceiveMessageQueueIds = contact.lostReceiveMessageQueueIds;
+    return joinQueueIds(latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds);
+  }
+
+  String? joinQueueIds(int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds) {
+    if ((latestSendMessageQueueId <= 0) && (latestReceivedMessageQueueId <= 0) && lostReceiveMessageQueueIds.isEmpty) return null;
+    return "${latestSendMessageQueueId}_::_${latestReceivedMessageQueueId}_::_${lostReceiveMessageQueueIds.join(".")}";
+  }
+
+  List<dynamic> splitQueueIds(String? queueIds) {
+    if (queueIds == null || queueIds.isEmpty) return [0, 0, []];
+    List<String> splits = queueIds.split("_::_");
+    if (splits.length < 3) return [0, 0, []];
+    int latestSendMessageQueueId = int.tryParse(splits[0].toString()) ?? 0;
+    int latestReceivedMessageQueueId = int.tryParse(splits[1].toString()) ?? 0;
+    List<int> lostReceiveMessageQueueIds = splits[2].split(".").map((e) => int.tryParse(e.toString()) ?? 0).toList()..removeWhere((element) => element == 0);
+    return [latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds];
+  }
+
+  Future<bool> setLatestSendMessageQueueId(ContactSchema? schema, int queueId) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    var data = await ContactStorage.instance.setData(schema.id, {
+      "latestSendMessageQueueId": queueId,
+    });
+    logger.d("$TAG - setLatestSendMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
+    return data != null;
+  }
+
   Future<bool> setSendingMessageQueueIds(String? clientAddress, Map addPairs, List<int> delQueueIds) async {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     var data = await ContactStorage.instance.setDataItemMapChange(clientAddress, "sendingMessageQueueIds", addPairs, delQueueIds);
     logger.d("$TAG - setSendingMessageQueueIds - addPairs:$addPairs - delQueueIds:$delQueueIds - new:$data - clientAddress:$clientAddress");
-    return data != null;
-  }
-
-  Future<bool> setLatestSendSuccessMessageQueueId(ContactSchema? schema, int queueId) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    var data = await ContactStorage.instance.setData(schema.id, {
-      "latestSendSuccessMessageQueueId": queueId,
-    });
-    logger.d("$TAG - setLatestSendSuccessMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
-    return data != null;
-  }
-
-  Future<bool> setRemoteLatestReceivedMessageQueueId(ContactSchema? schema, int queueId) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    var data = await ContactStorage.instance.setData(schema.id, {
-      "remoteLatestReceivedMessageQueueId": queueId,
-    });
-    logger.d("$TAG - setRemoteLatestReceivedMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
     return data != null;
   }
 
@@ -394,6 +414,15 @@ class ContactCommon with Tag {
     if (clientAddress == null || clientAddress.isEmpty) return false;
     var data = await ContactStorage.instance.setDataItemListChange(clientAddress, "lostReceiveMessageQueueIds", adds, dels);
     logger.d("$TAG - setLostReceiveMessageQueueIds - adds:$adds - dels:$dels - new:$data - clientAddress:$clientAddress");
+    return data != null;
+  }
+
+  Future<bool> setRemoteLatestReceivedMessageQueueId(ContactSchema? schema, int queueId) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    var data = await ContactStorage.instance.setData(schema.id, {
+      "remoteLatestReceivedMessageQueueId": queueId,
+    });
+    logger.d("$TAG - setRemoteLatestReceivedMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
     return data != null;
   }
 
