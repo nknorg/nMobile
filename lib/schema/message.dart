@@ -29,9 +29,10 @@ class MessageStatus {
 class MessageContentType {
   static const String ping = 'ping'; // .
   // static const String system = 'system';
+
   static const String receipt = 'receipt'; // status
   static const String read = 'read'; // status
-  // static const String msgStatus = 'msgStatus'; // status + resend
+  static const String queue = 'queue'; // queue
 
   static const String contactProfile = 'contact'; // . TODO:GG rename to 'contact:profile'
   static const String contactOptions = 'event:contactOptions'; // db + visible TODO:GG rename to 'contact:options'
@@ -54,19 +55,20 @@ class MessageContentType {
   static const String topicInvitation = 'event:channelInvitation'; // db + visible
   static const String topicKickOut = 'event:channelKickOut'; // .
 
-  static const String privateGroupInvitation = 'privateGroup:invitation';
-  static const String privateGroupAccept = 'privateGroup:accept';
-  static const String privateGroupSubscribe = 'privateGroup:subscribe';
-  static const String privateGroupQuit = 'privateGroup:quit';
-  static const String privateGroupOptionRequest = 'privateGroup:optionRequest';
-  static const String privateGroupOptionResponse = 'privateGroup:optionResponse';
-  static const String privateGroupMemberRequest = 'privateGroup:memberRequest';
-  static const String privateGroupMemberResponse = 'privateGroup:memberResponse';
+  static const String privateGroupInvitation = 'privateGroup:invitation'; // db + visible
+  static const String privateGroupAccept = 'privateGroup:accept'; // .
+  static const String privateGroupSubscribe = 'privateGroup:subscribe'; // db + visible
+  static const String privateGroupQuit = 'privateGroup:quit'; // .
+  static const String privateGroupOptionRequest = 'privateGroup:optionRequest'; // .
+  static const String privateGroupOptionResponse = 'privateGroup:optionResponse'; // .
+  static const String privateGroupMemberRequest = 'privateGroup:memberRequest'; // .
+  static const String privateGroupMemberResponse = 'privateGroup:memberResponse'; // .
 }
 
 class MessageSchema {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
+  int queueId; // (required) <-> queue_id
   String from; // (required) <-> sender / -> target_id(session_id)
   String to; // <-> receiver / -> target_id(session_id)
   String topic; // <-> topic / -> target_id(session_id)
@@ -92,6 +94,7 @@ class MessageSchema {
     this.pid,
     required this.msgId,
     required this.from,
+    this.queueId = 0,
     this.to = "",
     this.topic = "",
     this.groupId = "",
@@ -175,6 +178,10 @@ class MessageSchema {
     return isImage || isAudio;
   }
 
+  bool get canQueue {
+    return canResend && !isTopic && !isPrivateGroup;
+  }
+
   int? get reallySendAt {
     return isOutbound ? (sendAt ?? MessageOptions.getSendSuccessAt(options)) : (sendAt ?? receiveAt);
   }
@@ -188,6 +195,7 @@ class MessageSchema {
     MessageSchema schema = MessageSchema(
       pid: raw.messageId,
       msgId: data['id'] ?? "",
+      queueId: data['queueId'] ?? 0,
       from: raw.src ?? "",
       to: myAddress,
       topic: data['topic'] ?? "",
@@ -212,6 +220,9 @@ class MessageSchema {
         break;
       case MessageContentType.read:
         schema.content = data['readIds'];
+        break;
+      case MessageContentType.queue:
+        schema.content = data['queueIds'];
         break;
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
@@ -240,6 +251,7 @@ class MessageSchema {
     // this.pid, // SDK create
     required this.msgId,
     required this.from,
+    this.queueId = 0,
     this.to = "",
     this.topic = "",
     this.groupId = "",
@@ -287,6 +299,10 @@ class MessageSchema {
     int? burningUpdateAt = extra?["burningUpdateAt"];
     if (burningUpdateAt != null && burningUpdateAt > 0) {
       this.options = MessageOptions.setOptionsBurningUpdateAt(this.options, burningUpdateAt);
+    }
+    String? queueIds = extra?["queueIds"];
+    if (queueIds != null && queueIds.isNotEmpty) {
+      this.options = MessageOptions.setMessageQueueIds(this.options, queueIds);
     }
     int? size = int.tryParse(extra?["size"]?.toString() ?? "");
     if (size != null && size != 0) {
@@ -355,6 +371,7 @@ class MessageSchema {
     Map<String, dynamic> map = {
       'pid': pid != null ? hexEncode(pid!) : null,
       'msg_id': msgId,
+      'queue_id': queueId,
       'sender': from,
       'receiver': to,
       'topic': topic,
@@ -412,6 +429,7 @@ class MessageSchema {
     MessageSchema schema = MessageSchema(
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       msgId: e['msg_id'] ?? "",
+      queueId: e['queue_id'] ?? 0,
       from: e['sender'] ?? "",
       to: e['receiver'] ?? "",
       topic: e['topic'] ?? "",
@@ -551,6 +569,7 @@ class MessageSchema {
     // schema(same with fromReceive)
     MessageSchema schema = MessageSchema(
       pid: piece.pid,
+      queueId: MessageOptions.getMessageQueueId(piece.options),
       msgId: piece.msgId,
       from: piece.from,
       to: piece.to,
@@ -584,11 +603,11 @@ class MessageSchema {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, queueId: $queueId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, temp: $temp}';
   }
 
   String toStringNoContent() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, queueId: $queueId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
   }
 }
 
@@ -604,6 +623,9 @@ class MessageOptions {
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
+
+  static const KEY_MESSAGE_QUEUE_ID = "messageQueueId";
+  static const KEY_MESSAGE_QUEUE_IDS = "messageQueueIds";
 
   static const KEY_PUSH_NOTIFY_ID = "pushNotifyId"; // native
 
@@ -752,6 +774,29 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     return int.tryParse(update ?? "");
+  }
+
+  static Map<String, dynamic>? setMessageQueueId(Map<String, dynamic>? options, int queueId) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_MESSAGE_QUEUE_ID] = queueId;
+    return options;
+  }
+
+  static int getMessageQueueId(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return 0;
+    var queueId = options[MessageOptions.KEY_MESSAGE_QUEUE_ID]?.toString();
+    return int.tryParse(queueId ?? "0") ?? 0;
+  }
+
+  static Map<String, dynamic>? setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_MESSAGE_QUEUE_IDS] = queueIds;
+    return options;
+  }
+
+  static String? getMessageQueueIds(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_MESSAGE_QUEUE_IDS]?.toString();
   }
 
   static Map<String, dynamic>? setPushNotifyId(Map<String, dynamic>? options, String uuid) {
@@ -1001,13 +1046,14 @@ class MessageOptions {
 }
 
 class MessageData {
-  static Map _base(String contentType, {String? id, int? timestamp}) {
+  static Map _base(String contentType, {String? id, int? timestamp, int? queueId}) {
     Map map = {
       'id': id ?? Uuid().v4(),
       'timestamp': timestamp ?? DateTime.now().millisecondsSinceEpoch,
       'deviceId': Settings.deviceId,
       'contentType': contentType,
     };
+    if ((queueId != null) && (queueId > 0)) map.addAll({"queueId": queueId});
     return map;
   }
 
@@ -1022,7 +1068,13 @@ class MessageData {
     return map;
   }
 
-  static String getPing(bool isPing, {String? profileVersion, String? deviceToken, String? deviceProfile}) {
+  static String getPing(
+    bool isPing, {
+    String? profileVersion,
+    String? deviceToken,
+    String? deviceProfile,
+    String? queueIds,
+  }) {
     Map data = _base(MessageContentType.ping);
     data.addAll({
       'content': isPing ? "ping" : "pong",
@@ -1036,6 +1088,9 @@ class MessageData {
     }
     if ((deviceProfile != null) && deviceProfile.isNotEmpty) {
       data['options'][MessageOptions.KEY_DEVICE_PROFILE] = deviceProfile;
+    }
+    if ((queueIds != null) && queueIds.isNotEmpty) {
+      data['options'][MessageOptions.KEY_MESSAGE_QUEUE_IDS] = deviceProfile;
     }
     return jsonEncode(data);
   }
@@ -1056,14 +1111,13 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  /*static String getMsgStatus(bool ask, List<String>? msgIdList) {
-    Map data = _base(MessageContentType.msgStatus);
+  static String getQueue(String queueIds) {
+    Map data = _base(MessageContentType.queue);
     data.addAll({
-      'requestType': ask ? "ask" : "reply",
-      'messageIds': msgIdList,
+      'queueIds': queueIds,
     });
     return jsonEncode(data);
-  }*/
+  }
 
   static String getContactProfileRequest(String requestType, String? profileVersion) {
     Map data = _base(MessageContentType.contactProfile);
@@ -1150,7 +1204,7 @@ class MessageData {
   }
 
   static String getText(MessageSchema message) {
-    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt);
+    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': message.content,
       'options': _simpleOptions(message.options),
@@ -1166,7 +1220,7 @@ class MessageData {
   static String? getIpfs(MessageSchema message) {
     String? content = MessageOptions.getIpfsHash(message.options);
     if (content == null || content.isEmpty) return null;
-    Map data = _base(MessageContentType.ipfs, id: message.msgId, timestamp: message.sendAt);
+    Map data = _base(MessageContentType.ipfs, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': content,
       'options': _simpleOptions(message.options),
@@ -1184,7 +1238,7 @@ class MessageData {
     if (file == null) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt);
+    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': content,
       'options': _simpleOptions(message.options),
@@ -1204,7 +1258,7 @@ class MessageData {
     if (mimeType.split(FileHelper.DEFAULT_AUDIO_EXT).length <= 0) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "audio");
     if (content == null) return null;
-    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt);
+    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': content,
       'options': _simpleOptions(message.options),
