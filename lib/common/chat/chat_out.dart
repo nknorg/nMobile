@@ -17,7 +17,6 @@ import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
-import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
@@ -161,13 +160,15 @@ class ChatOutCommon with Tag {
       ContactSchema? _other = await contactCommon.queryByClientAddress(destList[0]);
       bool notificationOpen = _other?.options?.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
+      String? queueIds = contactCommon.joinQueueIdsByContact(_other);
       data = MessageData.getPing(
         isPing,
         profileVersion: _me?.profileVersion,
         deviceToken: deviceToken,
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
+        queueIds: queueIds,
       );
-      logger.d("$TAG - sendPing - contact - dest:$destList - data:$data");
+      logger.d("$TAG - sendPing - contact - dest:${destList[0]} - data:$data");
     } else {
       // group
       ContactSchema? _me = await contactCommon.getMe();
@@ -203,7 +204,6 @@ class ChatOutCommon with Tag {
   Future<bool> sendReceipt(MessageSchema received) async {
     if (!(await _waitClientOk())) return false;
     if (received.from.isEmpty || (received.isTopic || received.isPrivateGroup)) return false; // topic/group no receipt, just send message to myself
-    // received = (await MessageStorage.instance.queryByIdNoContentType(received.msgId, MessageContentType.piece)) ?? received; // get receiveAt
     String data = MessageData.getReceipt(received.msgId);
     logger.i("$TAG - sendReceipt - dest:${received.from} - msgId:${received.msgId}");
     Uint8List? pid = await _sendWithAddress([received.from], data);
@@ -221,13 +221,16 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  /*Future<bool> sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds) async {
+  Future<bool> sendQueue(String? clientAddress) async {
     if (!(await _waitClientOk())) return false;
-    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return false; // topic no read, just like receipt
-    String data = MessageData.getMsgStatus(ask, msgIds);
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    String? queueIds = await contactCommon.joinQueueIdsByClientAddress(clientAddress);
+    if (queueIds == null) return false;
+    String data = MessageData.getQueue(queueIds);
+    logger.i("$TAG - sendQueue - dest:$clientAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
-  }*/
+  }
 
   // NO DB NO display (1 to 1)
   Future<bool> sendContactProfileRequest(String? clientAddress, String requestType, String? profileVersion) async {
@@ -373,6 +376,12 @@ class ChatOutCommon with Tag {
         "burningUpdateAt": burningUpdateAt,
       },
     );
+    // queue
+    if (message.canQueue) {
+      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
+      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
+      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+    }
     // data
     String data = MessageData.getText(message);
     logger.i("$TAG - sendText - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - message:${message.toStringNoContent()}");
@@ -427,6 +436,12 @@ class ChatOutCommon with Tag {
           "burningUpdateAt": burningUpdateAt,
         }),
     );
+    // queue
+    if (message.canQueue) {
+      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
+      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
+      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+    }
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
@@ -447,7 +462,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return null;
     if (msgId == null || msgId.isEmpty) return null;
     // schema
-    MessageSchema? message = await MessageStorage.instance.query(msgId);
+    MessageSchema? message = await messageCommon.query(msgId);
     if (message == null) return null;
     // data
     String? data = MessageData.getIpfs(message);
@@ -498,6 +513,12 @@ class ChatOutCommon with Tag {
         "fileExt": Path.getFileExt(content, FileHelper.DEFAULT_IMAGE_EXT),
       },
     );
+    // queue
+    if (message.canQueue) {
+      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
+      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
+      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+    }
     // data
     String? data = await MessageData.getImage(message);
     logger.i("$TAG - sendImage - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - message:${message.toStringNoContent()}");
@@ -548,6 +569,12 @@ class ChatOutCommon with Tag {
         "duration": durationS,
       },
     );
+    // queue
+    if (message.canQueue) {
+      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
+      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
+      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+    }
     // data
     String? data = await MessageData.getAudio(message);
     logger.i("$TAG - sendAudio - contact:$targetAddress - group:$targetGroupId - topic:$targetTopic - message:${message.toStringNoContent()}");
@@ -766,7 +793,7 @@ class ChatOutCommon with Tag {
         }
       }
     } else {
-      bool success = await MessageStorage.instance.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      bool success = await messageCommon.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
       if (success) message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true);
     }
@@ -778,6 +805,12 @@ class ChatOutCommon with Tag {
         message = await chatCommon.startIpfsUpload(message.msgId);
         if (message == null) return null;
       }
+    }
+    // queue
+    if (message.canQueue) {
+      message.queueId = await messageCommon.newQueueId(message.targetId, message.msgId);
+      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(message.targetId);
+      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
     }
     // send
     String? msgData;
@@ -841,7 +874,7 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> insertMessage(MessageSchema? message, {bool notify = true}) async {
     if (message == null) return null;
-    message = await MessageStorage.instance.insert(message); // DB
+    message = await messageCommon.insert(message); // DB
     if (message == null) return null;
     if (notify) messageCommon.onSavedSink.add(message); // display, resend just update sendTime
     return message;
@@ -879,35 +912,39 @@ class ChatOutCommon with Tag {
       logger.e("$TAG - _send - with_error - type:${message.contentType} - message:${message.toStringNoContent()}");
       return null;
     }
+    bool sendSuccess = pid?.isNotEmpty == true;
     // pid
-    if (pid?.isNotEmpty == true) {
-      message.pid = pid;
-      MessageStorage.instance.updatePid(message.msgId, message.pid); // await
+    if (sendSuccess) {
+      bool success = await messageCommon.updatePid(message.msgId, message.pid);
+      if (success) message.pid = pid;
     } else {
       logger.w("$TAG - _send - pid is null - type:${message.contentType} - message:${message.toStringNoContent()}");
     }
     // status
     if (statusSync) {
-      if (pid?.isNotEmpty == true) {
+      if (sendSuccess) {
         if (message.canReceipt) {
-          messageCommon.updateMessageStatus(message, MessageStatus.Success); // await
+          message = await messageCommon.updateMessageStatus(message, MessageStatus.Success);
         } else {
           // no received receipt/read
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
-          messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt); // await
+          message = await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         }
       } else {
         if (message.canResend) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
         } else {
           // noResend just delete
-          int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
+          int count = await messageCommon.deleteByIdContentType(message.msgId, message.contentType);
           if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
-          return null;
         }
       }
     }
-    return message;
+    // queue_id
+    if (message.canQueue && sendSuccess) {
+      messageCommon.onMessageQueueSendSuccess(message.to, message.queueId); // await
+    }
+    return sendSuccess ? message : null;
   }
 
   Future<Uint8List?> _sendWithAddress(List<String> clientAddressList, String? msgData) async {
@@ -1113,6 +1150,7 @@ class ChatOutCommon with Tag {
     for (var index = 0; index < dataList.length; index++) {
       Uint8List? data = dataList[index] as Uint8List?;
       if (data == null || data.isEmpty) continue;
+      message.options = MessageOptions.setMessageQueueId(message.options, message.queueId);
       Map<String, dynamic> options = Map();
       options.addAll(message.options ?? Map()); // new *
       MessageSchema piece = MessageSchema.fromSend(

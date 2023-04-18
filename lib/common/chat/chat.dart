@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
@@ -18,7 +19,6 @@ import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/services/task.dart';
-import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
@@ -40,103 +40,6 @@ class ChatCommon with Tag {
     await resetMessageSending(ipfsReset: reset);
     if (reset) await resetIpfsDownloading(walletAddress, thumbnailAutoDownload: true);
   }
-
-  // FUTURE:GG msgStatus
-  /*Future checkMsgStatus(String? targetId, bool isTopic, bool isGroup, {bool refresh = false, int filterSec = 10}) async {
-    if (targetId == null || targetId.isEmpty) return;
-    // delay
-    if (_checkersParams[targetId] == null) _checkersParams[targetId] = Map();
-    int initDelay = 2; // 2s
-    int maxDelay = 10; // 10s
-    int? delay = _checkersParams[targetId]?["delay"];
-    if (refresh || (delay == null) || (delay == 0)) {
-      _checkersParams[targetId]?["delay"] = initDelay;
-      logger.v("$TAG - checkMsgStatus - delay init - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-    } else if (!_checkQueue.contains(targetId)) {
-      _checkersParams[targetId]?["delay"] = ((delay * 2) >= maxDelay) ? maxDelay : (delay * 2);
-      logger.v("$TAG - checkMsgStatus - delay * 2 - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-    } else {
-      logger.v("$TAG - checkMsgStatus - delay same - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-    }
-    // queue
-    if (_checkQueue.contains(targetId)) {
-      logger.d("$TAG - checkMsgStatus - cancel old - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-      _checkQueue.deleteDelays(targetId);
-    }
-    await _checkQueue.add(() async {
-      try {
-        logger.i("$TAG - checkMsgStatus - start - delay:${_checkersParams[targetId]?["delay"]} - targetId:$targetId");
-        final count = await _checkMsgStatus(targetId, isTopic, isGroup, filterSec: filterSec);
-        logger.i("$TAG - checkMsgStatus - end - count:$count - targetId:$targetId");
-        _checkersParams[targetId]?["delay"] = 0;
-      } catch (e, st) {
-        handleError(e, st);
-      }
-    }, id: targetId, delay: Duration(seconds: _checkersParams[targetId]?["delay"] ?? initDelay));
-  }
-
-  Future<int> _checkMsgStatus(String? targetId, bool isTopic, bool isGroup, {bool forceResend = false, int filterSec = 10}) async {
-    if (!clientCommon.isClientCreated || clientCommon.clientClosing) return 0;
-    if (targetId == null || targetId.isEmpty) return 0;
-
-    int limit = 20;
-    int maxCount = 20;
-    List<MessageSchema> checkList = [];
-
-    // noAck
-    for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendSuccess, targetId: targetId, topic: isTopic ? targetId : "", groupId: isGroup ? targetId : "", offset: offset, limit: limit);
-      final canReceipts = result.where((element) => element.canReceipt).toList();
-      checkList.addAll(canReceipts);
-      logger.d("$TAG - _checkMsgStatus - noAck - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
-      if (result.length < limit) break;
-      if ((offset + limit) >= maxCount) break;
-    }
-
-    // noRead
-    // for (int offset = 0; true; offset += limit) {
-    //   final result = await MessageStorage.instance.queryListByStatus(MessageStatus.SendReceipt, targetId: targetId, topic: isTopic ? targetId : "", offset: offset, limit: limit);
-    //   final canReceipts = result.where((element) => element.canReceipt).toList();
-    //   checkList.addAll(canReceipts);
-    //   logger.d("$TAG - _checkMsgStatus - noRead - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
-    //   if (result.length < limit) break;
-    //   if ((offset + limit) >= maxCount) break;
-    // }
-
-    // filter
-    checkList = checkList.where((element) {
-      int msgSendAt = MessageOptions.getOutAt(element.options) ?? 0;
-      int gap = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      int filter = element.canTryPiece ? (filterSec + 10) : filterSec;
-      if (gap < (filter * 1000)) {
-        logger.d("$TAG - _checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
-        return false;
-      }
-      return true;
-    }).toList();
-
-    if (checkList.isEmpty) {
-      logger.d("$TAG - _checkMsgStatus - OK OK OK - targetId:$targetId - isTopic:$isTopic - isGroup:$isGroup");
-      return 0;
-    }
-
-    // resend
-    if (isTopic || isGroup || forceResend) {
-      for (var i = 0; i < checkList.length; i++) {
-        MessageSchema element = checkList[i];
-        chatOutCommon.resendMute(element);
-      }
-    } else {
-      List<String> msgIds = [];
-      checkList.forEach((element) {
-        if (element.msgId.isNotEmpty) {
-          msgIds.add(element.msgId);
-        }
-      });
-      chatOutCommon.sendMsgStatus(targetId, true, msgIds); // await
-    }
-    return checkList.length;
-  }*/
 
   Future sendPings2LatestSessions() async {
     // sessions
@@ -164,7 +67,7 @@ class ChatCommon with Tag {
     List<MessageSchema> sendingList = [];
     int limit = 20;
     for (int offset = 0; true; offset += limit) {
-      final result = await MessageStorage.instance.queryListByStatus(MessageStatus.Sending, offset: offset, limit: limit);
+      final result = await messageCommon.queryListByStatus(MessageStatus.Sending, offset: offset, limit: limit);
       // result.removeWhere((element) => !element.isOutbound);
       sendingList.addAll(result);
       if (result.length < limit) break;
@@ -187,12 +90,52 @@ class ChatCommon with Tag {
       } else {
         // lost some msg, need resend
         logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:${message.toStringNoContent()}");
-        int count = await MessageStorage.instance.deleteByIdContentType(message.msgId, message.contentType);
+        int count = await messageCommon.deleteByIdContentType(message.msgId, message.contentType);
         if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
       }
     }
     if (sendingList.length > 0) logger.i("$TAG - resetMessageSending - count:${sendingList.length}");
     return sendingList.length;
+  }
+
+  Future<int> syncContactMessageQueueAndResend(ContactSchema? contact, int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds) async {
+    if (contact == null) return 0;
+    var receiveQueue = chatInCommon.getReceiveQueue(contact.clientAddress);
+    if (receiveQueue != null) {
+      if (receiveQueue.onCompleteCount("syncContactMessageQueueAndResend") > 0) return 0;
+      await receiveQueue.onComplete("syncContactMessageQueueAndResend");
+    }
+    // sync request
+    if (latestSendMessageQueueId > contact.latestReceivedMessageQueueId) {
+      chatOutCommon.sendQueue(contact.clientAddress); // await
+    }
+    // queueIds
+    List<int> resendQueueIds = List.generate(contact.latestSendMessageQueueId - latestReceivedMessageQueueId, (index) => latestReceivedMessageQueueId + index + 1);
+    resendQueueIds.addAll(lostReceiveMessageQueueIds);
+    if (resendQueueIds.isEmpty) return 0;
+    // messages
+    List<MessageSchema> messages = [];
+    for (var i = 0; i < resendQueueIds.length; i++) {
+      int queueId = resendQueueIds[i];
+      MessageSchema? message = await messageCommon.queryByTargetIdWithQueueId(contact.clientAddress, "", "", queueId);
+      if ((message == null) || !message.canResend) {
+        logger.w("$TAG - syncContactMessageQueueAndResend - message type wrong - message:$message");
+        continue;
+      } else if (message.status == MessageStatus.Error) {
+        logger.i("$TAG - syncContactMessageQueueAndResend - message status error - message:$message");
+        continue;
+      }
+      messages.add(message);
+    }
+    if (messages.isEmpty) return 0;
+    int successCount = 0;
+    for (var i = 0; i < messages.length; i++) {
+      MessageSchema message = messages[i];
+      int gap = Settings.gapMessageQueueResendMs * ((message.content is File) ? 2 : 1);
+      var data = await chatOutCommon.resend(message, mute: true, muteGap: gap);
+      if (data != null) successCount++;
+    }
+    return successCount;
   }
 
   ///*********************************************************************************///
@@ -258,6 +201,18 @@ class ChatCommon with Tag {
             }
           }
         }
+      }
+    }
+    // queue
+    if (message.canQueue) {
+      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+      List splits = contactCommon.splitQueueIds(queueIds);
+      int latestSendMessageQueueId = splits[0];
+      int latestReceivedMessageQueueId = max(splits[1], exist.remoteLatestReceivedMessageQueueId);
+      List<int> lostReceiveMessageQueueIds = splits[2];
+      if ((latestSendMessageQueueId > 0) || (latestReceivedMessageQueueId > 0) || (lostReceiveMessageQueueIds.isNotEmpty)) {
+        await messageCommon.checkRemoteMessageReceiveQueueId(clientAddress, latestReceivedMessageQueueId);
+        syncContactMessageQueueAndResend(exist, latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds); // await
       }
     }
     return exist;
@@ -517,7 +472,7 @@ class ChatCommon with Tag {
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
     logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:${message.toStringNoContent()}");
-    MessageStorage.instance.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
+    messageCommon.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
       if (success && notify) messageCommon.onUpdateSink.add(message);
       // if (success && tick) burningTick(message);
     });
@@ -565,7 +520,7 @@ class ChatCommon with Tag {
 
   Future<MessageSchema?> startIpfsUpload(String? msgId) async {
     if (msgId == null || msgId.isEmpty) return null;
-    MessageSchema? message = await MessageStorage.instance.query(msgId);
+    MessageSchema? message = await messageCommon.query(msgId);
     if (message == null) return null;
     // file_result
     String? fileHash = MessageOptions.getIpfsHash(message.options);
@@ -823,7 +778,7 @@ class ChatCommon with Tag {
     // result
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.e("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
+      logger.w("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
       return [null, false];
     }
     // path
@@ -860,8 +815,7 @@ class ChatCommon with Tag {
         if (!completer.isCompleted) completer.complete();
       },
       onError: (err) async {
-        logger.e("$TAG - _tryIpfsThumbnailDownload - fail - err:$err - options${message.options}");
-        Toast.show(err);
+        logger.w("$TAG - _tryIpfsThumbnailDownload - fail - err:$err - options${message.options}");
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
         await messageCommon.updateMessageOptions(message, message.options);
         await _onIpfsDownload(walletAddress, message.msgId, "THUMBNAIL", false);
@@ -884,7 +838,7 @@ class ChatCommon with Tag {
     } else {
       logger.i("$TAG - resetIpfsDownloading - file - fileIds:${fileIds.toString()}");
     }
-    List<MessageSchema> fileResults = await MessageStorage.instance.queryListByIds(fileIds);
+    List<MessageSchema> fileResults = await messageCommon.queryListByIds(fileIds);
     for (var j = 0; j < fileResults.length; j++) {
       MessageSchema message = fileResults[j];
       if (message.isOutbound || (message.contentType != MessageContentType.ipfs)) {
@@ -912,7 +866,7 @@ class ChatCommon with Tag {
     } else {
       logger.i("$TAG - resetIpfsDownloading - thumbnail - thumbnailIds:${thumbnailIds.toString()}");
     }
-    List<MessageSchema> thumbnailResults = await MessageStorage.instance.queryListByIds(thumbnailIds);
+    List<MessageSchema> thumbnailResults = await messageCommon.queryListByIds(thumbnailIds);
     for (var j = 0; j < thumbnailResults.length; j++) {
       MessageSchema message = thumbnailResults[j];
       if (message.isOutbound || (message.contentType != MessageContentType.ipfs)) {
