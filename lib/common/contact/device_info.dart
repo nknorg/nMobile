@@ -132,7 +132,7 @@ class DeviceInfoCommon with Tag {
   Future<bool> setProfile(String? contactAddress, String? deviceId, Map<String, dynamic>? added) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, added);
-    logger.d("$TAG - setProfile - add:$added - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    logger.d("$TAG - setProfile - add:$added - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -141,7 +141,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "pingAt": pingAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setPingAt - pingAt:$pingAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    logger.d("$TAG - setPingAt - pingAt:$pingAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -150,7 +150,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "pongAt": pongAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setPongAt - pongAt:$pongAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    logger.d("$TAG - setPongAt - pongAt:$pongAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -160,7 +160,7 @@ class DeviceInfoCommon with Tag {
       "contactProfileResponseVersion": version,
       "contactProfileResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setContactProfileResponseInfo - version:$version - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    logger.d("$TAG - setContactProfileResponseInfo - version:$version - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -169,7 +169,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "deviceInfoResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setDeviceInfoResponse - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - msgId:$deviceId");
+    logger.d("$TAG - setDeviceInfoResponse - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 

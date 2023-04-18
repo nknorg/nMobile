@@ -356,6 +356,47 @@ class ContactCommon with Tag {
     return data != null;
   }
 
+  Future<bool> setSendingMessageQueueIds(String? clientAddress, Map addPairs, List<int> delQueueIds) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    var data = await ContactStorage.instance.setDataItemMapChange(clientAddress, "sendingMessageQueueIds", addPairs, delQueueIds);
+    logger.d("$TAG - setSendingMessageQueueIds - addPairs:$addPairs - delQueueIds:$delQueueIds - new:$data - clientAddress:$clientAddress");
+    return data != null;
+  }
+
+  Future<bool> setLatestSendSuccessMessageQueueId(ContactSchema? schema, int queueId) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    var data = await ContactStorage.instance.setData(schema.id, {
+      "latestSendSuccessMessageQueueId": queueId,
+    });
+    logger.d("$TAG - setLatestSendSuccessMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
+    return data != null;
+  }
+
+  Future<bool> setRemoteLatestReceivedMessageQueueId(ContactSchema? schema, int queueId) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    var data = await ContactStorage.instance.setData(schema.id, {
+      "remoteLatestReceivedMessageQueueId": queueId,
+    });
+    logger.d("$TAG - setRemoteLatestReceivedMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
+    return data != null;
+  }
+
+  Future<bool> setLatestReceivedMessageQueueId(ContactSchema? schema, int queueId) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    var data = await ContactStorage.instance.setData(schema.id, {
+      "latestReceivedMessageQueueId": queueId,
+    });
+    logger.d("$TAG - setLatestReceivedMessageQueueId - queueId:$queueId - new:$data - contactAddress:${schema.clientAddress}");
+    return data != null;
+  }
+
+  Future<bool> setLostReceiveMessageQueueIds(String? clientAddress, List<int> adds, List<int> dels) async {
+    if (clientAddress == null || clientAddress.isEmpty) return false;
+    var data = await ContactStorage.instance.setDataItemListChange(clientAddress, "lostReceiveMessageQueueIds", adds, dels);
+    logger.d("$TAG - setLostReceiveMessageQueueIds - adds:$adds - dels:$dels - new:$data - clientAddress:$clientAddress");
+    return data != null;
+  }
+
   Future queryAndNotify(int? contactId) async {
     if (contactId == null || contactId == 0) return;
     ContactSchema? updated = await ContactStorage.instance.query(contactId);
