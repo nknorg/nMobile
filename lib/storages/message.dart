@@ -25,6 +25,7 @@ class MessageStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `pid` VARCHAR(300),
         `msg_id` VARCHAR(300),
+        `queue_id` BIGINT,
         `sender` VARCHAR(200),
         `receiver` VARCHAR(200),
         `topic` VARCHAR(200),
@@ -44,16 +45,17 @@ class MessageStorage with Tag {
   MessageStorage();
 
   static create(Database db) async {
-    // create table
+    // create table TODO:GG upgrade queue_id
     await db.execute(createSQL);
 
-    // index
+    // index TODO:GG index_messages_target_id_topic_group_queue_id
     await db.execute('CREATE INDEX `index_messages_pid` ON `$tableName` (`pid`)');
     await db.execute('CREATE INDEX `index_messages_msg_id_type` ON `$tableName` (`msg_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_target_id_topic_group_type` ON `$tableName` (`target_id`, `topic`, `group_id`, `type`)');
     await db.execute('CREATE INDEX `index_messages_status_target_id_topic_group` ON `$tableName` (`status`, `target_id`, `topic`, `group_id`)');
     await db.execute('CREATE INDEX `index_messages_status_is_delete_target_id_topic_group` ON `$tableName` (`status`, `is_delete`, `target_id`, `topic`, `group_id`)');
     await db.execute('CREATE INDEX `index_messages_target_id_topic_group_is_delete_type_send_at` ON `$tableName` (`target_id`, `topic`, `group_id`, `is_delete`, `type`, `send_at`)');
+    await db.execute('CREATE INDEX `index_messages_target_id_topic_group_queue_id` ON `$tableName` (`target_id`, `topic`, `group_id`, `queue_id`)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -174,6 +176,32 @@ class MessageStorage with Tag {
         return schema;
       }
       // logger.v("$TAG - queryByIdNoContentType - empty - msgId:$msgId");
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return null;
+  }
+
+  Future<MessageSchema?> queryByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId) async {
+    if (db?.isOpen != true) return null;
+    if (targetId == null || targetId.isEmpty) return null;
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND topic = ? AND group_id = ? AND queue_id = ?',
+          whereArgs: [targetId, topic ?? "", groupId ?? "", queueId],
+          offset: 0,
+          limit: 1,
+        );
+      });
+      if (res != null && res.length > 0) {
+        MessageSchema schema = MessageSchema.fromMap(res.first);
+        // logger.v("$TAG - queryByTargetIdWithQueueId - success - queueId:queueId - schema:$schema");
+        return schema;
+      }
+      // logger.v("$TAG - queryByTargetIdWithQueueId - empty - queueId:queueId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -471,6 +499,31 @@ class MessageStorage with Tag {
               );
             });
             // logger.v("$TAG - updatePid - count:$count - msgId:$msgId - pid:$pid");
+            return (count ?? 0) > 0;
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> updateQueueId(String? msgId, int queueId) async {
+    if (db?.isOpen != true) return false;
+    if (msgId == null || msgId.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'queue_id': queueId,
+                },
+                where: 'msg_id = ?',
+                whereArgs: [msgId],
+              );
+            });
+            // logger.v("$TAG - updateQueueId - count:$count - msgId:$msgId - queueId:queueId");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);

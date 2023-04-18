@@ -35,7 +35,7 @@ class _QueuedFuture<T> {
 
 class ParallelQueue {
   final List<_QueuedFuture> _queue = [];
-  final List<Completer<void>> _completeListeners = [];
+  final List<Map<String, Completer<void>>> _completeListeners = [];
 
   final List<String> _delays = [];
   final List<String> _delaysDel = [];
@@ -57,10 +57,20 @@ class ParallelQueue {
 
   int get length => _delays.length + _queue.length;
 
-  Future get onComplete {
+  Future onComplete(String key) {
     final completer = Completer();
-    _completeListeners.add(completer);
+    _completeListeners.add({key: completer});
     return completer.future;
+  }
+
+  int onCompleteCount(String key) {
+    int count = 0;
+    _completeListeners.forEach((element) {
+      if (element.keys.toList()[0] == key) {
+        count++;
+      }
+    });
+    return count;
   }
 
   void restart({bool clear = false}) {
@@ -167,7 +177,8 @@ class ParallelQueue {
       return true;
     } else if (_activeItems.isEmpty && _queue.isEmpty) {
       this.onLog?.call("ParallelQueue - _onQueueNext - over - tag:$tag - _lastProcessId:$_lastProcessId", false);
-      for (final completer in _completeListeners) {
+      for (final pairs in _completeListeners) {
+        Completer completer = pairs.values.toList()[0];
         if (completer.isCompleted != true) {
           completer.complete();
         }

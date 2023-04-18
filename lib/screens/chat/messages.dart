@@ -276,11 +276,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // ping
     if ((this._contact != null) && (this._topic == null) && (this._privateGroup == null)) {
       chatOutCommon.sendPing([this.targetId ?? ""], true, gap: Settings.gapPingContactMs); // await
-      // chatOutCommon.sendPing([this.targetId ?? ""], false, gap: gap); // await
+      // chatOutCommon.sendPing([this.targetId ?? ""], false, gap: Settings.gapPingContactMs); // await
     } else if ((this._topic != null) && (this._contact == null) && (this._privateGroup == null)) {
-      // chatCommon.setMsgStatusCheckTimer(this.targetId, true, filterSec: 5 * 60); // await
+      // nothing
     } else if ((this._privateGroup != null) && (this._contact == null) && (this._topic == null)) {
-      // chatCommon.setMsgStatusCheckTimer(this.targetId, true, filterSec: 5 * 60); // await
+      // nothing
     }
 
     // test
