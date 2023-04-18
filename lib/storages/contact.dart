@@ -460,4 +460,94 @@ class ContactStorage with Tag {
         }) ??
         null;
   }
+
+  Future<Map<String, dynamic>?> setDataItemListChange(String? clientAddress, String key, List adds, List dels) async {
+    if (db?.isOpen != true) return null;
+    if (clientAddress == null || clientAddress.isEmpty || key.isEmpty) return null;
+    if (adds.isEmpty && dels.isNotEmpty) return null;
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemListChange - no exists - clientAddress:$clientAddress");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              List values = data[key] ?? [];
+              if (dels.isNotEmpty) values.removeWhere((value) => dels.indexWhere((item) => value == item) >= 0);
+              if (adds.isNotEmpty) values.addAll(adds);
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemListChange - fail - clientAddress:$clientAddress - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
+
+  Future<Map<String, dynamic>?> setDataItemMapChange(String? clientAddress, String key, Map addPairs, List delKeys) async {
+    if (db?.isOpen != true) return null;
+    if (clientAddress == null || clientAddress.isEmpty || key.isEmpty) return null;
+    if (addPairs.isEmpty && delKeys.isNotEmpty) return null;
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemMapChange - no exists - clientAddress:$clientAddress");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map values = data[key] ?? [];
+              if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key == item) >= 0);
+              if (addPairs.isNotEmpty) values.addAll(addPairs);
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [clientAddress],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - clientAddress:$clientAddress - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
 }
