@@ -1090,7 +1090,7 @@ class MessageData {
       data['options'][MessageOptions.KEY_DEVICE_PROFILE] = deviceProfile;
     }
     if ((queueIds != null) && queueIds.isNotEmpty) {
-      data['options'][MessageOptions.KEY_MESSAGE_QUEUE_IDS] = deviceProfile;
+      data['options'][MessageOptions.KEY_MESSAGE_QUEUE_IDS] = queueIds;
     }
     return jsonEncode(data);
   }
