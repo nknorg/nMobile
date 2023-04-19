@@ -132,10 +132,6 @@ class DeviceInfoSchema {
     return values.map((e) => int.tryParse(e.toString()) ?? 0).toList()..removeWhere((element) => element == 0);
   }
 
-  int get remoteLatestReceivedMessageQueueId {
-    return int.tryParse(data?['remoteLatestReceivedMessageQueueId']?.toString() ?? "0") ?? 0;
-  }
-
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
