@@ -321,7 +321,7 @@ class MessageCommon with Tag {
       if (device == null) return false;
       String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
       String? remoteQueueIds = MessageOptions.getMessageQueueIds(message.options);
-      String? targetDeviceId = MessageOptions.getMessageQueueDevice(message.options);
+      String? targetDeviceId = deviceInfoCommon.splitQueueIds(remoteQueueIds)[3];
       if (targetDeviceId?.trim() != Settings.deviceId.trim()) {
         logger.w("$TAG - onMessageQueueReceive - no target device - targetDeviceId:$targetDeviceId - nativeDeviceId:${Settings.deviceId} - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
         return false;
@@ -344,22 +344,6 @@ class MessageCommon with Tag {
         // nothing
       }
       return true;
-    };
-    // queue
-    _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
-    return success ?? false;
-  }
-
-  Future<bool> checkRemoteMessageReceiveQueueId(String? targetClientAddress, String? deviceId, int latestQueueId) async {
-    if ((targetClientAddress == null) || targetClientAddress.isEmpty) return false;
-    if (deviceId == null || deviceId.isEmpty) return false;
-    if (latestQueueId <= 0) return false;
-    Function func = () async {
-      DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
-      if (device == null) return false;
-      if (device.remoteLatestReceivedMessageQueueId >= latestQueueId) return true;
-      return await deviceInfoCommon.setRemoteLatestReceivedMessageQueueId(targetClientAddress, device.deviceId, latestQueueId);
     };
     // queue
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
