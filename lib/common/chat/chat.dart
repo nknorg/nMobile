@@ -117,21 +117,28 @@ class ChatCommon with Tag {
     // contact refresh
     DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
     if (device == null) return 0;
-    if (sideReceiveQueueId > device.latestSendMessageQueueId) {
-      // TODO:GG self clear database
-    } else if (sideSendQueueId < device.latestReceivedMessageQueueId) {
-      // TODO:GG side clear database
-    }
     // sync request
-    if ((sideSendQueueId != null) && (sideSendQueueId > device.latestReceivedMessageQueueId)) {
-      logger.d("$TAG - syncContactMessages - need sendQueue - remoteSendQueueId:$sideSendQueueId - nativeSendQueueId:${device.latestReceivedMessageQueueId} - from:$clientAddress - deviceId:$deviceId");
+    int nativeReceiveQueueId = device.latestReceivedMessageQueueId;
+    if (sideSendQueueId > nativeReceiveQueueId) {
+      logger.d("$TAG - syncContactMessages - need sendQueue - remoteSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - deviceId:$deviceId");
       chatOutCommon.sendQueue(clientAddress, deviceId); // await
+    } else if (sideSendQueueId < nativeReceiveQueueId) {
+      // TODO:GG side clear database??
     } else {
-      logger.d("$TAG - syncContactMessages - no need sendQueue - remoteSendQueueId:$sideSendQueueId - nativeSendQueueId:${device.latestReceivedMessageQueueId} - from:$clientAddress - deviceId:$deviceId");
+      logger.d("$TAG - syncContactMessages - no need sendQueue - remoteSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - deviceId:$deviceId");
     }
     // queueIds
-    List<int> resendQueueIds = List.generate(device.latestSendMessageQueueId - sideReceiveQueueId, (index) => sideReceiveQueueId + index + 1);
-    resendQueueIds.addAll(sideLostQueueIds);
+    List<int> resendQueueIds = sideLostQueueIds;
+    int nativeSendQueueId = device.latestSendMessageQueueId;
+    if (sideReceiveQueueId < nativeSendQueueId) {
+      logger.d("$TAG - syncContactMessages - has new lost - remoteReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - deviceId:$deviceId");
+      List<int> newLost = List.generate(nativeSendQueueId - sideReceiveQueueId, (index) => sideReceiveQueueId + index + 1);
+      resendQueueIds.addAll(newLost);
+    } else if (sideReceiveQueueId > nativeSendQueueId) {
+      // TODO:GG self clear database??
+    } else {
+      logger.d("$TAG - syncContactMessages - no new lost - remoteReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - deviceId:$deviceId");
+    }
     if (resendQueueIds.isEmpty) {
       logger.i("$TAG - syncContactMessages - resend queueIds count === 0000 - from:$clientAddress - deviceId:$deviceId");
       return 0;
