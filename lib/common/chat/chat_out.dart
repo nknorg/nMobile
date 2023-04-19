@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/remote_notification.dart';
 import 'package:nmobile/common/settings.dart';
@@ -380,10 +381,10 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
-      if ((deviceInfo != null) && (queueIds != null)) {
-        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
         message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
       }
     }
@@ -443,10 +444,10 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
-      if ((deviceInfo != null) && (queueIds != null)) {
-        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
         message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
       }
     }
@@ -523,10 +524,10 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
-      if ((deviceInfo != null) && (queueIds != null)) {
-        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
         message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
       }
     }
@@ -582,10 +583,10 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
-      if ((deviceInfo != null) && (queueIds != null)) {
-        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
         message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
       }
     }
@@ -828,10 +829,10 @@ class ChatOutCommon with Tag {
     }
     // queue
     if (message.canQueue && (message.status < MessageStatus.Success)) {
-      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
-      if ((deviceInfo != null) && (queueIds != null)) {
-        message.queueId = await messageCommon.newMessageQueueId(message.targetId, deviceInfo.deviceId, message.msgId);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
         message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
       }
     }

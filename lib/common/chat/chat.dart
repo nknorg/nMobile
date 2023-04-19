@@ -97,7 +97,7 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  Future<int> syncContactMessages(String? clientAddress, String? deviceId, int sideReceiveQueueId, List<int> sideLostQueueIds, {int? sideSendQueueId}) async {
+  Future<int> syncContactMessages(String? clientAddress, String? deviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
     if (clientAddress == null || clientAddress.isEmpty) return 0;
     if (deviceId == null || deviceId.isEmpty) return 0;
     // wait receive queue complete
@@ -117,14 +117,11 @@ class ChatCommon with Tag {
     // contact refresh
     DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
     if (device == null) return 0;
-    // TODO:GG split just app version upgrade / clear database
-    // if ((sideReceiveQueueId <= 0) && sideLostQueueIds.isEmpty) {
-    //   if ((device.latestReceivedMessageQueueId <= 0)) {
-    //     logger.i("$TAG - syncContactMessages - return by side app just upgrade (refuse resend all msg) - from:$clientAddress - sendQueueId:$sideSendQueueId - receivedQueueId:$sideReceiveQueueId - lostQueueIds:$sideLostQueueIds - deviceId:$deviceId");
-    //     return 0;
-    //   }
-    //   logger.d("$TAG - syncContactMessages - continue by side device login first - from:$clientAddress - sendQueueId:$sideSendQueueId - receivedQueueId:$sideReceiveQueueId - lostQueueIds:$sideLostQueueIds - deviceId:$deviceId");
-    // }
+    if (sideReceiveQueueId > device.latestSendMessageQueueId) {
+      // TODO:GG self clear database
+    } else if (sideSendQueueId < device.latestReceivedMessageQueueId) {
+      // TODO:GG side clear database
+    }
     // sync request
     if ((sideSendQueueId != null) && (sideSendQueueId > device.latestReceivedMessageQueueId)) {
       logger.d("$TAG - syncContactMessages - need sendQueue - remoteSendQueueId:$sideSendQueueId - nativeSendQueueId:${device.latestReceivedMessageQueueId} - from:$clientAddress - deviceId:$deviceId");
@@ -242,7 +239,7 @@ class ChatCommon with Tag {
     if ((queueIds != null) && queueIds.isNotEmpty) {
       logger.d("$TAG - contactHandle - from:${message.from} - queueIds:$queueIds");
       List splits = deviceInfoCommon.splitQueueIds(queueIds);
-      syncContactMessages(clientAddress, splits[3], splits[1], splits[2], sideSendQueueId: splits[0]); // await
+      syncContactMessages(clientAddress, splits[3], splits[0], splits[1], splits[2]); // await
     }
     return exist;
   }
