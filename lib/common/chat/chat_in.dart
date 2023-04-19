@@ -333,6 +333,7 @@ class ChatInCommon with Tag {
       logger.e("$TAG - _receiveQueue - targetId or content type error - received:$received");
       return false;
     }
+    logger.i("$TAG - _receiveQueue - from:${received.from} - queueIds:$queueIds");
     // queueIds
     List splits = contactCommon.splitQueueIds(queueIds);
     int? latestSendMessageQueueId; // splits[0]; // no loop
@@ -340,7 +341,7 @@ class ChatInCommon with Tag {
     List<int> lostReceiveMessageQueueIds = splits[2];
     // sync_queue
     await messageCommon.checkRemoteMessageReceiveQueueId(targetAddress, latestReceivedMessageQueueId);
-    chatCommon.syncContactMessageQueueAndResend(
+    chatCommon.syncContactMessages(
       contact,
       latestReceivedMessageQueueId,
       lostReceiveMessageQueueIds,
