@@ -464,7 +464,7 @@ class ContactStorage with Tag {
   Future<Map<String, dynamic>?> setDataItemListChange(String? clientAddress, String key, List adds, List dels) async {
     if (db?.isOpen != true) return null;
     if (clientAddress == null || clientAddress.isEmpty || key.isEmpty) return null;
-    if (adds.isEmpty && dels.isNotEmpty) return null;
+    if (adds.isEmpty && dels.isEmpty) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -509,7 +509,7 @@ class ContactStorage with Tag {
   Future<Map<String, dynamic>?> setDataItemMapChange(String? clientAddress, String key, Map addPairs, List delKeys) async {
     if (db?.isOpen != true) return null;
     if (clientAddress == null || clientAddress.isEmpty || key.isEmpty) return null;
-    if (addPairs.isEmpty && delKeys.isNotEmpty) return null;
+    if (addPairs.isEmpty && delKeys.isEmpty) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -527,9 +527,14 @@ class ContactStorage with Tag {
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              Map values = data[key] ?? [];
-              if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key == item) >= 0);
-              if (addPairs.isNotEmpty) values.addAll(addPairs);
+              Map<String, dynamic> values = data[key] ?? Map();
+              if (delKeys.isNotEmpty) {
+                values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              }
+              if (addPairs.isNotEmpty) {
+                Map<String, dynamic> convert = addPairs.map((key, value) => MapEntry(key.toString(), value));
+                values.addAll(convert);
+              }
               data[key] = values;
               int count = await txn.update(
                 tableName,

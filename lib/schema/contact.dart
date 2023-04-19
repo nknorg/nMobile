@@ -218,7 +218,8 @@ class ContactSchema {
   }
 
   Map<int, String> get sendingMessageQueueIds {
-    return data?['sendingMessageQueueIds'] ?? Map();
+    Map<String, dynamic> values = data?['sendingMessageQueueIds'] ?? Map();
+    return values.map((key, value) => MapEntry(int.tryParse(key.toString()) ?? 0, value))..removeWhere((key, value) => key == 0);
   }
 
   int get latestReceivedMessageQueueId {

@@ -342,7 +342,7 @@ class ChatInCommon with Tag {
     // sync_queue
     await messageCommon.checkRemoteMessageReceiveQueueId(targetAddress, latestReceivedMessageQueueId);
     chatCommon.syncContactMessages(
-      contact,
+      targetAddress,
       latestReceivedMessageQueueId,
       lostReceiveMessageQueueIds,
       latestSendMessageQueueId: latestSendMessageQueueId,

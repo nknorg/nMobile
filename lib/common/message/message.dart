@@ -243,7 +243,7 @@ class MessageCommon with Tag {
     Function func = () async {
       ContactSchema? contact = await contactCommon.queryByClientAddress(targetClientAddress);
       if (contact == null) return 0;
-      logger.d("$TAG - newQueueId - start - queueIds:${contactCommon.joinQueueIdsByContact(contact)} - target:$targetClientAddress - messageId:$messageId");
+      logger.i("$TAG - newQueueId - START - queueIds:${contactCommon.joinQueueIdsByContact(contact)} - target:$targetClientAddress - messageId:$messageId");
       int nextQueueId = 0;
       // oldExists
       Map<int, String> sendingMessageQueueIds = contact.sendingMessageQueueIds;
@@ -252,7 +252,7 @@ class MessageCommon with Tag {
         if (sendingMessageQueueIds.containsValue(messageId)) {
           sendingMessageQueueIds.forEach((key, value) {
             if (value == messageId) {
-              logger.i("$TAG - newQueueId - find in exists - target:$targetClientAddress - newMsgId:$messageId - nextQueueId:$key");
+              logger.d("$TAG - newQueueId - find in exists - target:$targetClientAddress - newMsgId:$messageId - nextQueueId:$key");
               nextQueueId = key;
             }
           });
@@ -267,7 +267,7 @@ class MessageCommon with Tag {
               nextQueueId = queueId;
               break;
             } else if (msg.status != MessageStatus.Sending) {
-              logger.i("$TAG - newQueueId - replace no sending - target:$targetClientAddress - newMsgId:$messageId - msg:${msg.toStringNoContent()}");
+              logger.d("$TAG - newQueueId - replace no sending - target:$targetClientAddress - newMsgId:$messageId - msg:${msg.toStringNoContent()}");
               nextQueueId = queueId;
               break;
             }
@@ -276,7 +276,7 @@ class MessageCommon with Tag {
       }
       // newCreate
       if (nextQueueId <= 0) {
-        logger.i("$TAG - newQueueId - increase by no exists - target:$targetClientAddress - newMsgId:$messageId - nextQueueId:${latestSendMessageQueueId + 1}");
+        logger.d("$TAG - newQueueId - increase by no old queue_id - target:$targetClientAddress - newMsgId:$messageId - nextQueueId:${latestSendMessageQueueId + 1}");
         nextQueueId = latestSendMessageQueueId + 1;
       }
       // update
@@ -284,12 +284,13 @@ class MessageCommon with Tag {
       if (nextQueueId > latestSendMessageQueueId) {
         await contactCommon.setLatestSendMessageQueueId(contact, nextQueueId);
       }
-      logger.d("$TAG - newQueueId - end - nextQueueId:$nextQueueId - target:$targetClientAddress - messageId:$messageId");
+      logger.i("$TAG - newQueueId - END - nextQueueId:$nextQueueId - target:$targetClientAddress - messageId:$messageId");
       return nextQueueId;
     };
     // queue
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    return await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    int? queueId = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    return queueId ?? 0;
   }
 
   Future<bool> onMessageQueueSendSuccess(String? targetClientAddress, int queueId) async {
@@ -302,7 +303,8 @@ class MessageCommon with Tag {
     };
     // queue
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    return await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    return success ?? false;
   }
 
   Future<bool> onMessageQueueReceive(MessageSchema message) async {
@@ -315,25 +317,26 @@ class MessageCommon with Tag {
       int newQueueId = message.queueId;
       int existQueueId = contact.latestReceivedMessageQueueId;
       if (newQueueId > existQueueId) {
-        logger.d("$TAG - onMessageQueueReceive - upper - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
+        logger.d("$TAG - onMessageQueueReceive - new higher - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
         bool success = await contactCommon.setLatestReceivedMessageQueueId(contact, newQueueId);
         if (success && ((newQueueId - existQueueId) > 1)) {
           List<int> lostPairs = List.generate(newQueueId - existQueueId - 1, (index) => existQueueId + index + 1);
-          logger.d("$TAG - onMessageQueueReceive - no continue and add lostIds - lostPairs:$lostPairs - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
+          logger.i("$TAG - onMessageQueueReceive - new higher and add lostIds - lostPairs:$lostPairs - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
           await contactCommon.setLostReceiveMessageQueueIds(targetClientAddress, lostPairs, []);
         }
       } else if (newQueueId < existQueueId) {
-        logger.d("$TAG - onMessageQueueReceive - lower and delete lostIds - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
+        logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
         await contactCommon.setLostReceiveMessageQueueIds(targetClientAddress, [], [newQueueId]);
       } else {
-        logger.d("$TAG - onMessageQueueReceive - equal and no action - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
+        logger.d("$TAG - onMessageQueueReceive - new equal old - newQueueId:$newQueueId - existsQueueId:$existQueueId - queueIds:${contactCommon.joinQueueIdsByContact(contact)}");
         // nothing
       }
       return true;
     };
     // queue
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    return await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    return success ?? false;
   }
 
   Future<bool> checkRemoteMessageReceiveQueueId(String? targetClientAddress, int latestQueueId) async {
@@ -347,6 +350,7 @@ class MessageCommon with Tag {
     };
     // queue
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    return await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    return success ?? false;
   }
 }
