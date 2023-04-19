@@ -98,7 +98,12 @@ class ChatCommon with Tag {
     return sendingList.length;
   }
 
-  Future<int> syncContactMessageQueueAndResend(ContactSchema? contact, int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds) async {
+  Future<int> syncContactMessageQueueAndResend(
+    ContactSchema? contact,
+    int latestReceivedMessageQueueId,
+    List<int> lostReceiveMessageQueueIds, {
+    int? latestSendMessageQueueId,
+  }) async {
     if (contact == null) return 0;
     var receiveQueue = chatInCommon.getReceiveQueue(contact.clientAddress);
     if (receiveQueue != null) {
@@ -106,7 +111,7 @@ class ChatCommon with Tag {
       await receiveQueue.onComplete("syncContactMessageQueueAndResend");
     }
     // sync request
-    if (latestSendMessageQueueId > contact.latestReceivedMessageQueueId) {
+    if ((latestSendMessageQueueId != null) && (latestSendMessageQueueId > contact.latestReceivedMessageQueueId)) {
       chatOutCommon.sendQueue(contact.clientAddress); // await
     }
     // queueIds
@@ -124,6 +129,8 @@ class ChatCommon with Tag {
       } else if (message.status == MessageStatus.Error) {
         logger.i("$TAG - syncContactMessageQueueAndResend - message status error - message:$message");
         continue;
+      } else {
+        // can resend duplicated
       }
       messages.add(message);
     }
@@ -204,16 +211,19 @@ class ChatCommon with Tag {
       }
     }
     // queue
-    if (message.canQueue) {
-      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+    String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+    if ((queueIds != null) && queueIds.isNotEmpty) {
       List splits = contactCommon.splitQueueIds(queueIds);
-      int latestSendMessageQueueId = splits[0];
+      int latestSendMessageQueueId = message.canQueue ? splits[0] : null; // no loop
       int latestReceivedMessageQueueId = max(splits[1], exist.remoteLatestReceivedMessageQueueId);
       List<int> lostReceiveMessageQueueIds = splits[2];
-      if ((latestSendMessageQueueId > 0) || (latestReceivedMessageQueueId > 0) || (lostReceiveMessageQueueIds.isNotEmpty)) {
-        await messageCommon.checkRemoteMessageReceiveQueueId(clientAddress, latestReceivedMessageQueueId);
-        syncContactMessageQueueAndResend(exist, latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds); // await
-      }
+      await messageCommon.checkRemoteMessageReceiveQueueId(clientAddress, latestReceivedMessageQueueId);
+      syncContactMessageQueueAndResend(
+        exist,
+        latestReceivedMessageQueueId,
+        lostReceiveMessageQueueIds,
+        latestSendMessageQueueId: latestSendMessageQueueId,
+      ); // await
     }
     return exist;
   }
