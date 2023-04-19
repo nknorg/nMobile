@@ -316,4 +316,101 @@ class DeviceInfoStorage with Tag {
         }) ??
         null;
   }
+
+  Future<Map<String, dynamic>?> setDataItemListChange(String? contactAddress, String? deviceId, String key, List adds, List dels) async {
+    if (db?.isOpen != true) return null;
+    if (contactAddress == null || contactAddress.isEmpty || key.isEmpty) return null;
+    if (adds.isEmpty && dels.isEmpty) return null;
+    deviceId = deviceId ?? "";
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemListChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
+                return null;
+              }
+              DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              List values = data[key] ?? [];
+              if (dels.isNotEmpty) values.removeWhere((value) => dels.indexWhere((item) => value == item) >= 0);
+              if (adds.isNotEmpty) values.addAll(adds);
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemListChange - fail - contactAddress:$contactAddress - deviceId:$deviceId - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
+
+  Future<Map<String, dynamic>?> setDataItemMapChange(String? contactAddress, String? deviceId, String key, Map addPairs, List delKeys) async {
+    if (db?.isOpen != true) return null;
+    if (contactAddress == null || contactAddress.isEmpty || key.isEmpty) return null;
+    if (addPairs.isEmpty && delKeys.isEmpty) return null;
+    deviceId = deviceId ?? "";
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemMapChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
+                return null;
+              }
+              DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> values = data[key] ?? Map();
+              if (delKeys.isNotEmpty) {
+                values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              }
+              if (addPairs.isNotEmpty) {
+                Map<String, dynamic> convert = addPairs.map((key, value) => MapEntry(key.toString(), value));
+                values.addAll(convert);
+              }
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'contact_address = ? AND device_id = ?',
+                whereArgs: [contactAddress, deviceId],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - contactAddress:$contactAddress - deviceId:$deviceId - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
 }
