@@ -342,7 +342,7 @@ class ChatInCommon with Tag {
       return false;
     }
     // sync_queue
-    chatCommon.syncContactMessages(targetAddress, deviceId, splits[1], splits[2], sideSendQueueId: splits[0]); // await
+    chatCommon.syncContactMessages(targetAddress, deviceId, splits[0], splits[1], splits[2]); // await
     return true;
   }
 

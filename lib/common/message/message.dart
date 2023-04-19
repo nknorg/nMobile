@@ -298,7 +298,7 @@ class MessageCommon with Tag {
 
   Future<bool> onMessageQueueSendSuccess(String? targetClientAddress, String? deviceId, int queueId) async {
     if ((targetClientAddress == null) || targetClientAddress.isEmpty) return false;
-    // if (deviceId == null || deviceId.isEmpty) return 0;
+    if (deviceId == null || deviceId.isEmpty) return false;
     if (queueId <= 0) return false;
     Function func = () async {
       DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);

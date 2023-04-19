@@ -266,4 +266,14 @@ class DeviceInfoCommon with Tag {
     return platformOK && versionOk;
   }
 //  SUPPORT:END
+
+//  SUPPORT:START
+  static bool isMessageQueueEnable(String? platform, int? appVersion) {
+    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
+    bool platformOK = false, versionOk = false;
+    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
+    versionOk = appVersion >= 282;
+    return platformOK && versionOk;
+  }
+//  SUPPORT:END
 }
