@@ -213,28 +213,6 @@ class ContactSchema {
     return (int.tryParse(data?['tipNotification']?.toString() ?? "0") ?? 0) > 0;
   }
 
-  int get latestSendMessageQueueId {
-    return int.tryParse(data?['latestSendMessageQueueId']?.toString() ?? "0") ?? 0;
-  }
-
-  Map<int, String> get sendingMessageQueueIds {
-    Map<String, dynamic> values = data?['sendingMessageQueueIds'] ?? Map();
-    return values.map((key, value) => MapEntry(int.tryParse(key.toString()) ?? 0, value))..removeWhere((key, value) => key == 0);
-  }
-
-  int get latestReceivedMessageQueueId {
-    return int.tryParse(data?['latestReceivedMessageQueueId']?.toString() ?? "0") ?? 0;
-  }
-
-  List<int> get lostReceiveMessageQueueIds {
-    List<dynamic> values = data?['lostReceiveMessageQueueIds'] ?? [];
-    return values.map((e) => int.tryParse(e.toString()) ?? 0).toList()..removeWhere((element) => element == 0);
-  }
-
-  int get remoteLatestReceivedMessageQueueId {
-    return int.tryParse(data?['remoteLatestReceivedMessageQueueId']?.toString() ?? "0") ?? 0;
-  }
-
   Future<String?> tryNknWalletAddress({bool force = false}) async {
     if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
     try {

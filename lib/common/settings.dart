@@ -92,8 +92,8 @@ class Settings {
   static const int gapDeviceInfoSyncMs = 30 * 1000; // 30s
   static const int gapGroupRequestOptionsMs = 1 * 60 * 1000; // 1m
   static const int gapGroupRequestMembersMs = 1 * 60 * 1000; // 1m
-  static const int gapTopicSubscribeCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d
-  static const int gapTopicPermissionCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d
+  static const int gapTopicSubscribeCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d < 23d
+  static const int gapTopicPermissionCheckMs = 10 * 24 * 60 * 60 * 1000; // 10d < 23d
   static const int gapTopicSubscribersRefreshMs = 1 * 60 * 60 * 1000; // 1h
   static const int gapMessagesGroupSec = 2 * 60; // 2m
   // timeout
@@ -109,7 +109,7 @@ class Settings {
   static const int tryTimesTopicRpc = 3;
   static const int tryTimesIpfsThumbnailUpload = 3;
   static const int tryTimesIpfsThumbnailDownload = 5;
-  static const int tryTimesNotificationPush = 3;
+  static const int tryTimesNotificationPush = 5;
   // maxCount
   static const int maxCountPingSessions = 10;
   static const int maxCountPushDevices = 3;
