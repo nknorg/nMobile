@@ -173,7 +173,7 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
-  Future<String?> joinQueueIdsByClientAddress(String? contactAddress, String? deviceId) async {
+  Future<String?> joinQueueIdsByAddressDeviceId(String? contactAddress, String? deviceId) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
     DeviceInfoSchema? device = await queryByDeviceId(contactAddress, deviceId);
     return joinQueueIdsByDevice(device);
@@ -184,22 +184,23 @@ class DeviceInfoCommon with Tag {
     int latestSendMessageQueueId = device.latestSendMessageQueueId;
     int latestReceivedMessageQueueId = device.latestReceivedMessageQueueId;
     List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
-    return joinQueueIds(latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds);
+    return joinQueueIds(latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds, device.deviceId);
   }
 
-  String? joinQueueIds(int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds) {
+  String? joinQueueIds(int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds, String deviceId) {
     if ((latestSendMessageQueueId <= 0) && (latestReceivedMessageQueueId <= 0) && lostReceiveMessageQueueIds.isEmpty) return null;
-    return "${latestSendMessageQueueId}_::_${latestReceivedMessageQueueId}_::_${lostReceiveMessageQueueIds.join(".")}";
+    return "${latestSendMessageQueueId}_::_${latestReceivedMessageQueueId}_::_${lostReceiveMessageQueueIds.join(".")}_::_$deviceId";
   }
 
   List<dynamic> splitQueueIds(String? queueIds) {
-    if (queueIds == null || queueIds.isEmpty) return [0, 0, []];
+    if (queueIds == null || queueIds.isEmpty) return [0, 0, [], ""];
     List<String> splits = queueIds.split("_::_");
-    if (splits.length < 3) return [0, 0, []];
+    if (splits.length < 4) return [0, 0, [], ""];
     int latestSendMessageQueueId = int.tryParse(splits[0].toString()) ?? 0;
     int latestReceivedMessageQueueId = int.tryParse(splits[1].toString()) ?? 0;
     List<int> lostReceiveMessageQueueIds = splits[2].split(".").map((e) => int.tryParse(e.toString()) ?? 0).toList()..removeWhere((element) => element == 0);
-    return [latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds];
+    String deviceId = splits[3].toString();
+    return [latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds, deviceId];
   }
 
   Future<bool> setLatestSendMessageQueueId(String? contactAddress, String? deviceId, int queueId) async {
@@ -231,15 +232,6 @@ class DeviceInfoCommon with Tag {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setDataItemListChange(contactAddress, deviceId, "lostReceiveMessageQueueIds", adds, dels);
     logger.d("$TAG - setLostReceiveMessageQueueIds - adds:$adds - dels:$dels - new:$data - clientAddress:$contactAddress - deviceId:$deviceId");
-    return data != null;
-  }
-
-  Future<bool> setRemoteLatestReceivedMessageQueueId(String? contactAddress, String? deviceId, int queueId) async {
-    if (contactAddress == null || contactAddress.isEmpty) return false;
-    var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
-      "remoteLatestReceivedMessageQueueId": queueId,
-    });
-    logger.d("$TAG - setRemoteLatestReceivedMessageQueueId - queueId:$queueId - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 

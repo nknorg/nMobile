@@ -304,10 +304,6 @@ class MessageSchema {
     if (queueIds != null && queueIds.isNotEmpty) {
       this.options = MessageOptions.setMessageQueueIds(this.options, queueIds);
     }
-    String? queueDevice = extra?["queueDevice"];
-    if (queueDevice != null && queueDevice.isNotEmpty) {
-      this.options = MessageOptions.setMessageQueueDevice(this.options, queueDevice);
-    }
     int? size = int.tryParse(extra?["size"]?.toString() ?? "");
     if (size != null && size != 0) {
       this.options = MessageOptions.setFileSize(this.options, size);
@@ -630,7 +626,6 @@ class MessageOptions {
 
   static const KEY_MESSAGE_QUEUE_ID = "messageQueueId";
   static const KEY_MESSAGE_QUEUE_IDS = "messageQueueIds";
-  static const KEY_MESSAGE_QUEUE_DEVICE = "messageQueueDevice";
 
   static const KEY_PUSH_NOTIFY_ID = "pushNotifyId"; // native
 
@@ -802,17 +797,6 @@ class MessageOptions {
   static String? getMessageQueueIds(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_MESSAGE_QUEUE_IDS]?.toString();
-  }
-
-  static Map<String, dynamic>? setMessageQueueDevice(Map<String, dynamic>? options, String device) {
-    if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_MESSAGE_QUEUE_DEVICE] = device;
-    return options;
-  }
-
-  static String? getMessageQueueDevice(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_MESSAGE_QUEUE_DEVICE]?.toString();
   }
 
   static Map<String, dynamic>? setPushNotifyId(Map<String, dynamic>? options, String uuid) {

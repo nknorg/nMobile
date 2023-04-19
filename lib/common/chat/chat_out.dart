@@ -160,7 +160,8 @@ class ChatOutCommon with Tag {
       ContactSchema? _other = await contactCommon.queryByClientAddress(destList[0]);
       bool notificationOpen = _other?.options?.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
-      String? queueIds = contactCommon.joinQueueIdsByContact(_other);
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.clientAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
       data = MessageData.getPing(
         isPing,
         profileVersion: _me?.profileVersion,
@@ -221,10 +222,11 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future<bool> sendQueue(String? clientAddress) async {
+  Future<bool> sendQueue(String? clientAddress, String? deviceId) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    String? queueIds = await contactCommon.joinQueueIdsByClientAddress(clientAddress);
+    if (deviceId == null || deviceId.isEmpty) return false;
+    String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(clientAddress, deviceId);
     if (queueIds == null) return false;
     String data = MessageData.getQueue(queueIds);
     logger.i("$TAG - sendQueue - dest:$clientAddress - data:$data");
@@ -378,9 +380,12 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
-      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
-      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
+      if ((deviceInfo != null) && (queueIds != null)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      }
     }
     // data
     String data = MessageData.getText(message);
@@ -438,9 +443,12 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
-      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
-      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
+      if ((deviceInfo != null) && (queueIds != null)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      }
     }
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
@@ -515,9 +523,12 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
-      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
-      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
+      if ((deviceInfo != null) && (queueIds != null)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      }
     }
     // data
     String? data = await MessageData.getImage(message);
@@ -571,9 +582,12 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      message.queueId = await messageCommon.newQueueId(targetAddress, message.msgId);
-      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(targetAddress);
-      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
+      if ((deviceInfo != null) && (queueIds != null)) {
+        message.queueId = await messageCommon.newMessageQueueId(targetAddress, deviceInfo.deviceId, message.msgId);
+        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      }
     }
     // data
     String? data = await MessageData.getAudio(message);
@@ -814,9 +828,12 @@ class ChatOutCommon with Tag {
     }
     // queue
     if (message.canQueue && (message.status < MessageStatus.Success)) {
-      message.queueId = await messageCommon.newQueueId(message.targetId, message.msgId);
-      String? queueIds = await contactCommon.joinQueueIdsByClientAddress(message.targetId);
-      if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      DeviceInfoSchema? deviceInfo = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(deviceInfo);
+      if ((deviceInfo != null) && (queueIds != null)) {
+        message.queueId = await messageCommon.newMessageQueueId(message.targetId, deviceInfo.deviceId, message.msgId);
+        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+      }
     }
     // send
     String? msgData;
@@ -948,7 +965,9 @@ class ChatOutCommon with Tag {
     }
     // queue_id
     if (message.canQueue && sendSuccess) {
-      messageCommon.onMessageQueueSendSuccess(message.to, message.queueId); // await
+      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+      String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
+      messageCommon.onMessageQueueSendSuccess(message.targetId, deviceId, message.queueId); // await
     }
     return sendSuccess ? message : null;
   }

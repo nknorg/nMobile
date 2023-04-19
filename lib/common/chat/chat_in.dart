@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
@@ -147,7 +146,7 @@ class ChatInCommon with Tag {
           await _receiveRead(received);
           break;
         case MessageContentType.queue:
-          await _receiveQueue(received, contact);
+          await _receiveQueue(received);
           break;
         case MessageContentType.contactProfile:
           await _receiveContact(received, contact, deviceInfo);
@@ -326,27 +325,24 @@ class ChatInCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future<bool> _receiveQueue(MessageSchema received, ContactSchema? contact) async {
-    String targetAddress = contact?.clientAddress ?? received.from;
+  Future<bool> _receiveQueue(MessageSchema received) async {
+    String targetAddress = received.from;
     String? queueIds = (received.content as String?);
     if (targetAddress.isEmpty || queueIds == null || queueIds.isEmpty) {
       logger.e("$TAG - _receiveQueue - targetId or content type error - received:$received");
       return false;
     }
-    logger.i("$TAG - _receiveQueue - from:${received.from} - queueIds:$queueIds");
+    logger.i("$TAG - _receiveQueue - from:$targetAddress - queueIds:$queueIds");
     // queueIds
-    List splits = contactCommon.splitQueueIds(queueIds);
-    int? latestSendMessageQueueId; // splits[0]; // no loop
-    int latestReceivedMessageQueueId = max(splits[1], contact?.remoteLatestReceivedMessageQueueId ?? 0);
-    List<int> lostReceiveMessageQueueIds = splits[2];
+    List splits = deviceInfoCommon.splitQueueIds(queueIds);
+    String deviceId = splits[3];
+    DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetAddress, deviceId);
+    if (device == null) {
+      logger.w("$TAG - _receiveQueue - device nil - from:$targetAddress - queueIds:$queueIds");
+      return false;
+    }
     // sync_queue
-    await messageCommon.checkRemoteMessageReceiveQueueId(targetAddress, latestReceivedMessageQueueId);
-    chatCommon.syncContactMessages(
-      targetAddress,
-      latestReceivedMessageQueueId,
-      lostReceiveMessageQueueIds,
-      latestSendMessageQueueId: latestSendMessageQueueId,
-    ); // await
+    chatCommon.syncContactMessages(targetAddress, deviceId, splits[1], splits[2], sideSendQueueId: splits[0]); // await
     return true;
   }
 
