@@ -262,12 +262,12 @@ class MessageCommon with Tag {
             int queueId = keys[i];
             String msgId = sendingMessageQueueIds[queueId]?.toString() ?? "";
             MessageSchema? msg = await queryByIdNoContentType(msgId, MessageContentType.piece);
-            if ((msg == null) || !msg.canQueue) {
-              logger.w("$TAG - newQueueId - msg nil (wrong here) - target:$targetClientAddress - newMsgId:$messageId - msg:${msg?.toStringNoContent() ?? msgId}");
+            if ((msg == null) || !msg.canQueue || !msg.isOutbound) {
+              logger.w("$TAG - newQueueId - msg wrong (wrong here) - target:$targetClientAddress - newMsgId:$messageId - msg:${msg?.toStringNoContent() ?? msgId}");
               nextQueueId = queueId;
               break;
-            } else if (msg.status == MessageStatus.Error) {
-              logger.i("$TAG - newQueueId - replace send error - target:$targetClientAddress - newMsgId:$messageId - msg:${msg.toStringNoContent()}");
+            } else if (msg.status != MessageStatus.Sending) {
+              logger.i("$TAG - newQueueId - replace no sending - target:$targetClientAddress - newMsgId:$messageId - msg:${msg.toStringNoContent()}");
               nextQueueId = queueId;
               break;
             }

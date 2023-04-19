@@ -124,104 +124,113 @@ class ChatInCommon with Tag {
         }
       }
     }
-    // message
+    // duplicated
+    bool duplicated = false;
+    if (received.canDisplay) {
+      MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
+      if (exists != null) {
+        logger.d("$TAG - _handleMessage - duplicated - type:${exists.contentType} - targetId:${exists.targetId} - message:$exists");
+        duplicated = true;
+      }
+    }
+    // receive
     bool insertOk = false;
-    switch (received.contentType) {
-      case MessageContentType.ping:
-        await _receivePing(received);
-        break;
-      case MessageContentType.receipt:
-        await _receiveReceipt(received, deviceInfo);
-        break;
-      case MessageContentType.read:
-        await _receiveRead(received);
-        break;
-      case MessageContentType.queue:
-        await _receiveQueue(received, contact);
-        break;
-      case MessageContentType.contactProfile:
-        await _receiveContact(received, contact, deviceInfo);
-        break;
-      case MessageContentType.contactOptions:
-        insertOk = await _receiveContactOptions(received, contact, deviceInfo);
-        break;
-      case MessageContentType.deviceRequest:
-        await _receiveDeviceRequest(received, contact, deviceInfo);
-        break;
-      case MessageContentType.deviceInfo:
-        await _receiveDeviceInfo(received, contact);
-        break;
-      case MessageContentType.text:
-      case MessageContentType.textExtension:
-        insertOk = await _receiveText(received);
-        break;
-      case MessageContentType.ipfs:
-        insertOk = await _receiveIpfs(received);
-        break;
-      case MessageContentType.media:
-      case MessageContentType.image:
-        insertOk = await _receiveImage(received);
-        break;
-      case MessageContentType.audio:
-        insertOk = await _receiveAudio(received);
-        break;
-      case MessageContentType.piece:
-        insertOk = await _receivePiece(received);
-        break;
-      case MessageContentType.topicInvitation:
-        insertOk = await _receiveTopicInvitation(received);
-        break;
-      case MessageContentType.topicSubscribe:
-        insertOk = await _receiveTopicSubscribe(received);
-        break;
-      case MessageContentType.topicUnsubscribe:
-        await _receiveTopicUnsubscribe(received);
-        break;
-      case MessageContentType.topicKickOut:
-        await _receiveTopicKickOut(received);
-        break;
-      case MessageContentType.privateGroupInvitation:
-        insertOk = await _receivePrivateGroupInvitation(received);
-        break;
-      case MessageContentType.privateGroupAccept:
-        await _receivePrivateGroupAccept(received);
-        break;
-      case MessageContentType.privateGroupSubscribe:
-        insertOk = await _receivePrivateGroupSubscribe(received);
-        break;
-      case MessageContentType.privateGroupQuit:
-        await _receivePrivateGroupQuit(received);
-        break;
-      case MessageContentType.privateGroupOptionRequest:
-        await _receivePrivateGroupOptionRequest(received);
-        break;
-      case MessageContentType.privateGroupOptionResponse:
-        await _receivePrivateGroupOptionResponse(received);
-        break;
-      case MessageContentType.privateGroupMemberRequest:
-        await _receivePrivateGroupMemberRequest(received);
-        break;
-      case MessageContentType.privateGroupMemberResponse:
-        await _receivePrivateGroupMemberResponse(received);
-        break;
+    if (!duplicated) {
+      switch (received.contentType) {
+        case MessageContentType.ping:
+          await _receivePing(received);
+          break;
+        case MessageContentType.receipt:
+          await _receiveReceipt(received, deviceInfo);
+          break;
+        case MessageContentType.read:
+          await _receiveRead(received);
+          break;
+        case MessageContentType.queue:
+          await _receiveQueue(received, contact);
+          break;
+        case MessageContentType.contactProfile:
+          await _receiveContact(received, contact, deviceInfo);
+          break;
+        case MessageContentType.contactOptions:
+          insertOk = await _receiveContactOptions(received, contact, deviceInfo);
+          break;
+        case MessageContentType.deviceRequest:
+          await _receiveDeviceRequest(received, contact, deviceInfo);
+          break;
+        case MessageContentType.deviceInfo:
+          await _receiveDeviceInfo(received, contact);
+          break;
+        case MessageContentType.text:
+        case MessageContentType.textExtension:
+          insertOk = await _receiveText(received);
+          break;
+        case MessageContentType.ipfs:
+          insertOk = await _receiveIpfs(received);
+          break;
+        case MessageContentType.media:
+        case MessageContentType.image:
+          insertOk = await _receiveImage(received);
+          break;
+        case MessageContentType.audio:
+          insertOk = await _receiveAudio(received);
+          break;
+        case MessageContentType.piece:
+          insertOk = await _receivePiece(received);
+          break;
+        case MessageContentType.topicInvitation:
+          insertOk = await _receiveTopicInvitation(received);
+          break;
+        case MessageContentType.topicSubscribe:
+          insertOk = await _receiveTopicSubscribe(received);
+          break;
+        case MessageContentType.topicUnsubscribe:
+          await _receiveTopicUnsubscribe(received);
+          break;
+        case MessageContentType.topicKickOut:
+          await _receiveTopicKickOut(received);
+          break;
+        case MessageContentType.privateGroupInvitation:
+          insertOk = await _receivePrivateGroupInvitation(received);
+          break;
+        case MessageContentType.privateGroupAccept:
+          await _receivePrivateGroupAccept(received);
+          break;
+        case MessageContentType.privateGroupSubscribe:
+          insertOk = await _receivePrivateGroupSubscribe(received);
+          break;
+        case MessageContentType.privateGroupQuit:
+          await _receivePrivateGroupQuit(received);
+          break;
+        case MessageContentType.privateGroupOptionRequest:
+          await _receivePrivateGroupOptionRequest(received);
+          break;
+        case MessageContentType.privateGroupOptionResponse:
+          await _receivePrivateGroupOptionResponse(received);
+          break;
+        case MessageContentType.privateGroupMemberRequest:
+          await _receivePrivateGroupMemberRequest(received);
+          break;
+        case MessageContentType.privateGroupMemberResponse:
+          await _receivePrivateGroupMemberResponse(received);
+          break;
+      }
+    }
+    // queue
+    if (received.canQueue && (insertOk || duplicated)) {
+      await messageCommon.onMessageQueueReceive(received); // await receiveQueue onComplete
     }
     // receipt
-    if (insertOk && received.canReceipt) {
-      if (received.isTopic) {
-        // handle in send topic with self receipt
-      } else if (received.isPrivateGroup) {
-        // handle in send group with self receipt
+    if (received.canReceipt && (insertOk || duplicated)) {
+      if (received.isTopic || received.isPrivateGroup) {
+        // handle in send topic/group with self receipt
       } else {
         chatOutCommon.sendReceipt(received); // await
       }
     }
-    // queue
-    if (insertOk && received.canQueue) {
-      await messageCommon.onMessageQueueReceive(received);
-    }
     // session
-    if (insertOk && received.canDisplay) {
-      await chatCommon.sessionHandle(received);
+    if (received.canDisplay && insertOk) {
+      chatCommon.sessionHandle(received); // await
     }
   }
 
@@ -326,12 +335,17 @@ class ChatInCommon with Tag {
     }
     // queueIds
     List splits = contactCommon.splitQueueIds(queueIds);
-    int latestSendMessageQueueId = splits[0];
+    int? latestSendMessageQueueId; // splits[0]; // no loop
     int latestReceivedMessageQueueId = max(splits[1], contact?.remoteLatestReceivedMessageQueueId ?? 0);
     List<int> lostReceiveMessageQueueIds = splits[2];
     // sync_queue
     await messageCommon.checkRemoteMessageReceiveQueueId(targetAddress, latestReceivedMessageQueueId);
-    chatCommon.syncContactMessageQueueAndResend(contact, latestSendMessageQueueId, latestReceivedMessageQueueId, lostReceiveMessageQueueIds); // await
+    chatCommon.syncContactMessageQueueAndResend(
+      contact,
+      latestReceivedMessageQueueId,
+      lostReceiveMessageQueueIds,
+      latestSendMessageQueueId: latestSendMessageQueueId,
+    ); // await
     return true;
   }
 
@@ -418,13 +432,6 @@ class ChatInCommon with Tag {
   // NO topic (1 to 1)
   Future<bool> _receiveContactOptions(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? deviceInfo) async {
     if (contact == null) return false;
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveContactOptions - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // options type / received.isTopic (limit in out)
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
     Map<String, dynamic> data = received.content; // == data
@@ -520,13 +527,6 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveText(MessageSchema received) async {
     if (received.content == null) return false;
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveText - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
     if (inserted == null) return false;
@@ -536,13 +536,6 @@ class ChatInCommon with Tag {
   }
 
   Future<bool> _receiveIpfs(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveIpfs - duplicated - message:${exists.toStringNoContent()}");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // content
     String? fileExt = MessageOptions.getFileExt(received.options);
     String subPath = Uri.encodeComponent(received.targetId);
@@ -569,13 +562,6 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveImage(MessageSchema received) async {
     if (received.content == null) return false;
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveImage - duplicated - message:${exists.toStringNoContent()}");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // File
     String fileExt = MessageOptions.getFileExt(received.options) ?? FileHelper.DEFAULT_IMAGE_EXT;
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
@@ -596,13 +582,6 @@ class ChatInCommon with Tag {
 
   Future<bool> _receiveAudio(MessageSchema received) async {
     if (received.content == null) return false;
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveAudio - duplicated - message:${exists.toStringNoContent()}");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // File
     String fileExt = MessageOptions.getFileExt(received.options) ?? FileHelper.DEFAULT_AUDIO_EXT;
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
@@ -686,13 +665,6 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicSubscribe(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveTopicSubscribe - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // subscriber
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.topic, received.from);
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
@@ -725,13 +697,6 @@ class ChatInCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> _receiveTopicInvitation(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receiveTopicInvitation - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // permission checked in message click
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
@@ -750,13 +715,6 @@ class ChatInCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupInvitation(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receivePrivateGroupInvitation - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
     if (inserted == null) return false;
@@ -820,13 +778,6 @@ class ChatInCommon with Tag {
 
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupSubscribe(MessageSchema received) async {
-    // duplicated
-    MessageSchema? exists = await messageCommon.queryByIdNoContentType(received.msgId, MessageContentType.piece);
-    if (exists != null) {
-      logger.d("$TAG - _receivePrivateGroupSubscribe - duplicated - message:$exists");
-      if (received.canReceipt) chatOutCommon.sendReceipt(received); // await
-      return false;
-    }
     // DB
     MessageSchema? inserted = await messageCommon.insert(received);
     if (inserted == null) return false;
