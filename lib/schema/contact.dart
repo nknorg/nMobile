@@ -227,7 +227,8 @@ class ContactSchema {
   }
 
   List<int> get lostReceiveMessageQueueIds {
-    return data?['lostReceiveMessageQueueIds'] ?? [];
+    List<dynamic> values = data?['lostReceiveMessageQueueIds'] ?? [];
+    return values.map((e) => int.tryParse(e.toString()) ?? 0).toList()..removeWhere((element) => element == 0);
   }
 
   int get remoteLatestReceivedMessageQueueId {

@@ -230,7 +230,7 @@ class ChatCommon with Tag {
     if ((queueIds != null) && queueIds.isNotEmpty) {
       logger.d("$TAG - contactHandle - from:${message.from} - queueIds:$queueIds");
       List splits = contactCommon.splitQueueIds(queueIds);
-      int latestSendMessageQueueId = message.canQueue ? splits[0] : null; // no loop
+      int? latestSendMessageQueueId = message.canQueue ? splits[0] : null; // no loop
       int latestReceivedMessageQueueId = max(splits[1], exist.remoteLatestReceivedMessageQueueId);
       List<int> lostReceiveMessageQueueIds = splits[2];
       await messageCommon.checkRemoteMessageReceiveQueueId(clientAddress, latestReceivedMessageQueueId);
