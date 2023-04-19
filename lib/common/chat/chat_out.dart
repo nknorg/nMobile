@@ -784,12 +784,18 @@ class ChatOutCommon with Tag {
     if (message == null) return null;
     // sendAt
     if (mute) {
-      int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
-      if ((muteGap > 0) && (resendMuteAt > 0)) {
-        int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
-        if (interval < muteGap) {
-          logger.i("$TAG - resendMute - resend gap small - targetId:${message.targetId} - interval:$interval");
-          return null;
+      if (muteGap > 0) {
+        int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
+        if (resendMuteAt <= 0) {
+          logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        } else {
+          int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
+          if (interval < muteGap) {
+            logger.i("$TAG - resendMute - resend gap small - targetId:${message.targetId} - interval:$interval");
+            return null;
+          } else {
+            logger.d("$TAG - resendMute - resend gap ok - targetId:${message.targetId} - interval:$interval");
+          }
         }
       }
     } else {
@@ -807,7 +813,7 @@ class ChatOutCommon with Tag {
       }
     }
     // queue
-    if (message.canQueue) {
+    if (message.canQueue && (message.status < MessageStatus.Success)) {
       message.queueId = await messageCommon.newQueueId(message.targetId, message.msgId);
       String? queueIds = await contactCommon.joinQueueIdsByClientAddress(message.targetId);
       if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
@@ -817,28 +823,28 @@ class ChatOutCommon with Tag {
     switch (message.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        logger.i("$TAG - resendMute - text - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.d("$TAG - resendMute - text - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         msgData = MessageData.getText(message);
         break;
       case MessageContentType.ipfs:
-        logger.i("$TAG - resendMute - ipfs - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.d("$TAG - resendMute - ipfs - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         msgData = MessageData.getIpfs(message);
         break;
       case MessageContentType.media:
       case MessageContentType.image:
-        logger.i("$TAG - resendMute - image - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.d("$TAG - resendMute - image - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         msgData = await MessageData.getImage(message);
         break;
       case MessageContentType.audio:
-        logger.i("$TAG - resendMute - audio - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.d("$TAG - resendMute - audio - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         msgData = await MessageData.getAudio(message);
         break;
       case MessageContentType.topicInvitation:
-        logger.i("$TAG - resendMute - topic invitee - mute:$mute - targetId:${message.targetId} - message:$message");
+        logger.d("$TAG - resendMute - topic invitee - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getTopicInvitee(message);
         break;
       case MessageContentType.privateGroupInvitation:
-        logger.i("$TAG - resendMute - group invitee - mute:$mute - targetId:${message.targetId} - message:$message");
+        logger.d("$TAG - resendMute - group invitee - mute:$mute - targetId:${message.targetId} - message:$message");
         msgData = MessageData.getPrivateGroupInvitation(message);
         break;
       default:

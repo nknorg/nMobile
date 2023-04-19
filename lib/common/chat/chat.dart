@@ -100,19 +100,22 @@ class ChatCommon with Tag {
 
   Future<int> syncContactMessages(String? clientAddress, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds, {int? latestSendMessageQueueId}) async {
     if (clientAddress == null || clientAddress.isEmpty) return 0;
-    ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
-    if (contact == null) return 0;
     var receiveQueue = chatInCommon.getReceiveQueue(clientAddress);
     if (receiveQueue != null) {
-      if (receiveQueue.onCompleteCount("syncContactMessages") > 0) {
-        logger.d("$TAG - syncContactMessages - receive_queue progress - from:$clientAddress - sendQueueId:$latestSendMessageQueueId - receivedQueueId:$latestReceivedMessageQueueId - lostQueueIds:$lostReceiveMessageQueueIds");
+      int receiveCounts = receiveQueue.onCompleteCount("syncContactMessages");
+      if (receiveCounts > 0) {
+        logger.d("$TAG - syncContactMessages - receive_queue progress - receiveCounts:$receiveCounts - from:$clientAddress - sendQueueId:$latestSendMessageQueueId - receivedQueueId:$latestReceivedMessageQueueId - lostQueueIds:$lostReceiveMessageQueueIds");
         return 0;
       }
+      logger.d("$TAG - syncContactMessages - receive_queue waiting - from:$clientAddress - sendQueueId:$latestSendMessageQueueId - receivedQueueId:$latestReceivedMessageQueueId - lostQueueIds:$lostReceiveMessageQueueIds");
       await receiveQueue.onComplete("syncContactMessages");
     } else {
       logger.w("$TAG - syncContactMessages - receive queue nil - from:$clientAddress - sendQueueId:$latestSendMessageQueueId - receivedQueueId:$latestReceivedMessageQueueId - lostQueueIds:$lostReceiveMessageQueueIds");
     }
     logger.i("$TAG - syncContactMessages - START - sendQueueId:$latestSendMessageQueueId - receivedQueueId:$latestReceivedMessageQueueId - lostQueueIds:$lostReceiveMessageQueueIds - from:$clientAddress");
+    // contact refresh
+    ContactSchema? contact = await contactCommon.queryByClientAddress(clientAddress);
+    if (contact == null) return 0;
     // sync request
     if ((latestSendMessageQueueId != null) && (latestSendMessageQueueId > contact.latestReceivedMessageQueueId)) {
       logger.d("$TAG - syncContactMessages - need sendQueue - remoteSendQueueId:$latestSendMessageQueueId - nativeSendQueueId:${contact.latestReceivedMessageQueueId} - from:$clientAddress");
