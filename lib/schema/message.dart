@@ -140,20 +140,15 @@ class MessageSchema {
     return isText || isIpfs || isImage || isAudio;
   }
 
-  // ++ resend
-  bool get canResend {
-    return canBurning;
-  }
-
   // ++ receipt
   bool get canReceipt {
-    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
-    return canResend || isEvent;
+    return canBurning;
   }
 
   // ++ unReadCount / notification
   bool get canNotification {
-    return canReceipt;
+    bool isEvent = contentType == MessageContentType.topicInvitation || contentType == MessageContentType.privateGroupInvitation;
+    return canReceipt || isEvent;
   }
 
   // ++ session
@@ -179,7 +174,7 @@ class MessageSchema {
   }
 
   bool get canQueue {
-    return canResend && !isTopic && !isPrivateGroup;
+    return canReceipt && !isTopic && !isPrivateGroup;
   }
 
   int? get reallySendAt {
