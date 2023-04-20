@@ -821,19 +821,6 @@ class ChatOutCommon with Tag {
           }
         }
       }
-    } else {
-      bool success = await messageCommon.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
-      if (success) message.sendAt = DateTime.now().millisecondsSinceEpoch;
-      message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true);
-    }
-    // ipfs
-    if (message.contentType == MessageContentType.ipfs) {
-      String? fileHash = MessageOptions.getIpfsHash(message.options);
-      if (fileHash == null || fileHash.isEmpty) {
-        logger.i("$TAG - resendMute - ipfs start - mute:$mute - targetId:${message.targetId} - options:${message.options}");
-        message = await chatCommon.startIpfsUpload(message.msgId);
-        if (message == null) return null;
-      }
     }
     // queue
     if (message.canQueue) {
@@ -856,6 +843,20 @@ class ChatOutCommon with Tag {
       } else {
         String? queueIds = MessageOptions.getMessageQueueIds(message.options);
         logger.d("$TAG - resendMute - exist queueIds - queueId:${message.queueId} - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
+      }
+    }
+    if (!mute) {
+      bool success = await messageCommon.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
+      if (success) message.sendAt = DateTime.now().millisecondsSinceEpoch;
+      message = await messageCommon.updateMessageStatus(message, MessageStatus.Sending, force: true);
+    }
+    // ipfs
+    if (message.contentType == MessageContentType.ipfs) {
+      String? fileHash = MessageOptions.getIpfsHash(message.options);
+      if (fileHash == null || fileHash.isEmpty) {
+        logger.i("$TAG - resendMute - ipfs start - mute:$mute - targetId:${message.targetId} - options:${message.options}");
+        message = await chatCommon.startIpfsUpload(message.msgId);
+        if (message == null) return null;
       }
     }
     // send
