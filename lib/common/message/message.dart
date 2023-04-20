@@ -218,26 +218,32 @@ class MessageCommon with Tag {
     return msgIds.length;
   }
 
-  // TODO:GG read 最新read之后，凡是已经ack的，并且时间线早的，都可以setRead
-  /*Future<int> readMessageBySide(String? targetId, String? topic, String? groupId, int? sendAt) async {
+  Future<int> correctMessageRead(String? targetId, String? topic, String? groupId, int? sendAt) async {
     if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
     int limit = 20;
+    int readMinGap = 10 * 60 * 1000; // 10m
     // query
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
-      List<MessageSchema> needReads = result.where((element) => (element.sendAt ?? 0) <= sendAt).toList();
+      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (sendAt + readMinGap))).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
+    }
+    if (unReadList.isNotEmpty) {
+      logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - topic:$topic - groupId:$groupId");
+    } else {
+      logger.d("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - topic:$topic - groupId:$groupId");
     }
     // update
     for (var i = 0; i < unReadList.length; i++) {
       MessageSchema element = unReadList[i];
       int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
+      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringNoContent()} - targetId:$targetId - topic:$topic - groupId:$groupId");
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     return unReadList.length;
-  }*/
+  }
 
   Future<int> newMessageQueueId(String? targetClientAddress, String? deviceId, String? messageId) async {
     if ((targetClientAddress == null) || targetClientAddress.isEmpty) return 0;
@@ -475,8 +481,8 @@ class MessageCommon with Tag {
     List<MessageSchema> noAckList = [];
     limit = 20;
     for (int offset = 0; true; offset += limit) {
-      final result = await messageCommon.queryListByStatus(MessageStatus.Success, offset: offset, limit: limit);
-      result.removeWhere((element) => !element.isOutbound || !element.canQueue || (element.targetId != clientAddress));
+      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: clientAddress, topic: "", groupId: "", offset: offset, limit: limit);
+      result.removeWhere((element) => !element.isOutbound || !element.canQueue);
       noAckList.addAll(result);
       if (result.length < limit) break;
     }
