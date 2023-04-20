@@ -103,6 +103,7 @@ class ChatCommon with Tag {
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
+    if (message.contentType == MessageContentType.piece) return null;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (message.from == message.to) return exist;
@@ -131,7 +132,6 @@ class ChatCommon with Tag {
       }
     }
     // burning
-    String? deviceId = MessageOptions.getDeviceId(message.options);
     if (!message.isTopic && !message.isPrivateGroup && message.canBurning) {
       int? existSeconds = exist.options?.deleteAfterSeconds;
       int? existUpdateAt = exist.options?.updateBurnAfterAt;
@@ -150,6 +150,7 @@ class ChatCommon with Tag {
           if ((message.sendAt ?? 0) > existUpdateAt) {
             logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - from:${message.from}");
             DeviceInfoSchema? deviceInfo;
+            String? deviceId = MessageOptions.getDeviceId(message.options);
             if (deviceId?.isNotEmpty == true) {
               deviceInfo = await deviceInfoCommon.queryByDeviceId(clientAddress, deviceId);
             } else {
@@ -162,19 +163,13 @@ class ChatCommon with Tag {
         }
       }
     }
-    // queue
-    String? queueIds = MessageOptions.getMessageQueueIds(message.options);
-    if ((deviceId != null) && deviceId.isNotEmpty && (queueIds != null) && queueIds.isNotEmpty) {
-      logger.d("$TAG - contactHandle - message queue check - from:${message.from} - queueIds:$queueIds");
-      List splits = deviceInfoCommon.splitQueueIds(queueIds);
-      messageCommon.syncContactMessages(clientAddress, deviceId, splits[0], splits[1], splits[2]); // await
-    }
     return exist;
   }
 
   Future<DeviceInfoSchema?> deviceInfoHandle(MessageSchema message) async {
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
     if (clientAddress == null || clientAddress.isEmpty) return null;
+    if (message.contentType == MessageContentType.piece) return null;
     // latest
     DeviceInfoSchema? latest;
     String? deviceId = MessageOptions.getDeviceId(message.options);
@@ -253,6 +248,13 @@ class ChatCommon with Tag {
     int nowAt = DateTime.now().millisecondsSinceEpoch;
     bool success = await deviceInfoCommon.setOnlineAt(latest?.contactAddress, latest?.deviceId, onlineAt: nowAt);
     if (success) latest?.onlineAt = nowAt;
+    // queue
+    String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+    if ((deviceId != null) && deviceId.isNotEmpty && (queueIds != null) && queueIds.isNotEmpty) {
+      logger.d("$TAG - deviceInfoHandle - message queue check - from:${message.from} - queueIds:$queueIds");
+      List splits = deviceInfoCommon.splitQueueIds(queueIds);
+      messageCommon.syncContactMessages(clientAddress, deviceId, splits[0], splits[1], splits[2]); // await
+    }
     return latest;
   }
 
@@ -279,6 +281,7 @@ class ChatCommon with Tag {
     if (topic == null || topic.id == null || topic.id == 0) return null;
     if (!message.isTopic) return null;
     if (message.isTopicAction) return null; // action users will handle in later
+    if (message.contentType == MessageContentType.piece) return null;
     // duplicated
     SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.topic, message.from);
     if (exist == null) {
