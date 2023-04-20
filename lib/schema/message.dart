@@ -670,7 +670,7 @@ class MessageOptions {
   static const KEY_PIECE_TOTAL = "piece_total";
   static const KEY_PIECE_INDEX = "piece_index";
 
-  static Map<String, dynamic>? setSendSuccessAt(Map<String, dynamic>? options, int sendAt) {
+  static Map<String, dynamic> setSendSuccessAt(Map<String, dynamic>? options, int sendAt) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_SEND_SUCCESS_AT] = sendAt;
     return options;
@@ -681,7 +681,7 @@ class MessageOptions {
     return int.tryParse(options[MessageOptions.KEY_SEND_SUCCESS_AT]?.toString() ?? "");
   }
 
-  static Map<String, dynamic>? setResendMuteAt(Map<String, dynamic>? options, int resendAt) {
+  static Map<String, dynamic> setResendMuteAt(Map<String, dynamic>? options, int resendAt) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_RESEND_MUTE_AT] = resendAt;
     return options;
@@ -692,7 +692,7 @@ class MessageOptions {
     return int.tryParse(options[MessageOptions.KEY_RESEND_MUTE_AT]?.toString() ?? "");
   }
 
-  static Map<String, dynamic>? setProfileVersion(Map<String, dynamic>? options, String profileVersion) {
+  static Map<String, dynamic> setProfileVersion(Map<String, dynamic>? options, String profileVersion) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_PROFILE_VERSION] = profileVersion;
     return options;
@@ -703,7 +703,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_PROFILE_VERSION]?.toString();
   }
 
-  static Map<String, dynamic>? setDeviceId(Map<String, dynamic>? options, String deviceId) {
+  static Map<String, dynamic> setDeviceId(Map<String, dynamic>? options, String deviceId) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DEVICE_ID] = deviceId;
     return options;
@@ -714,7 +714,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_DEVICE_ID]?.toString();
   }
 
-  static Map<String, dynamic>? setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
+  static Map<String, dynamic> setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
     return options;
@@ -725,7 +725,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_DEVICE_TOKEN]?.toString();
   }
 
-  static Map<String, dynamic>? setDeviceProfile(Map<String, dynamic>? options, String deviceProfile) {
+  static Map<String, dynamic> setDeviceProfile(Map<String, dynamic>? options, String deviceProfile) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DEVICE_PROFILE] = deviceProfile;
     return options;
@@ -736,7 +736,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_DEVICE_PROFILE]?.toString();
   }
 
-  static Map<String, dynamic>? setPrivateGroupVersion(Map<String, dynamic>? options, String peivateGroupVersion) {
+  static Map<String, dynamic> setPrivateGroupVersion(Map<String, dynamic>? options, String peivateGroupVersion) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_PRIVATE_GROUP_VERSION] = peivateGroupVersion;
     return options;
@@ -747,7 +747,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_PRIVATE_GROUP_VERSION]?.toString();
   }
 
-  static Map<String, dynamic>? setOptionsBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
+  static Map<String, dynamic> setOptionsBurningDeleteSec(Map<String, dynamic>? options, int deleteTimeSec) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DELETE_AFTER_SECONDS] = deleteTimeSec;
     return options;
@@ -759,7 +759,7 @@ class MessageOptions {
     return int.tryParse(seconds ?? "");
   }
 
-  static Map<String, dynamic>? setOptionsBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
+  static Map<String, dynamic> setOptionsBurningUpdateAt(Map<String, dynamic>? options, int? updateAt) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT] = updateAt;
     return options;
@@ -771,7 +771,7 @@ class MessageOptions {
     return int.tryParse(update ?? "");
   }
 
-  static Map<String, dynamic>? setMessageQueueId(Map<String, dynamic>? options, int queueId) {
+  static Map<String, dynamic> setMessageQueueId(Map<String, dynamic>? options, int queueId) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_MESSAGE_QUEUE_ID] = queueId;
     return options;
@@ -783,7 +783,7 @@ class MessageOptions {
     return int.tryParse(queueId ?? "0") ?? 0;
   }
 
-  static Map<String, dynamic>? setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
+  static Map<String, dynamic> setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_MESSAGE_QUEUE_IDS] = queueIds;
     return options;
@@ -794,7 +794,7 @@ class MessageOptions {
     return options[MessageOptions.KEY_MESSAGE_QUEUE_IDS]?.toString();
   }
 
-  static Map<String, dynamic>? setPushNotifyId(Map<String, dynamic>? options, String uuid) {
+  static Map<String, dynamic> setPushNotifyId(Map<String, dynamic>? options, String uuid) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_PUSH_NOTIFY_ID] = uuid;
     return options;
