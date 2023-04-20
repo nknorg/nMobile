@@ -824,25 +824,28 @@ class ChatOutCommon with Tag {
     }
     // queue
     if (message.canQueue) {
-      if (message.status == MessageStatus.Error) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
-          if (message.queueId > 0) {
-            String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-            logger.i("$TAG - resendMute - queueIds new success - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
-            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-            bool success = await messageCommon.updateQueueId(message.msgId, message.queueId);
-            if (!success) return null;
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        String? newQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+        String? oldQueueIds = MessageOptions.getMessageQueueIds(message.options);
+        if ((newQueueIds != null) && newQueueIds.isNotEmpty) {
+          if (message.status == MessageStatus.Error) {
+            message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
+            if (message.queueId > 0) {
+              logger.i("$TAG - resendMute - queueIds new success - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - targetId:${message.targetId}");
+              bool success = await messageCommon.updateQueueId(message.msgId, message.queueId);
+              if (!success) return null;
+              message.options = MessageOptions.setMessageQueueIds(message.options, newQueueIds);
+              await messageCommon.updateMessageOptions(message, message.options, notify: true);
+            } else {
+              logger.w("$TAG - resendMute - queueIds new fail - device:$device - targetId:${message.targetId}");
+            }
           } else {
-            logger.w("$TAG - resendMute - queueIds new fail - device:$device - targetId:${message.targetId}");
+            logger.d("$TAG - resendMute - replace old queueIds - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - options:${message.options} - targetId:${message.targetId}");
+            message.options = MessageOptions.setMessageQueueIds(message.options, newQueueIds);
+            await messageCommon.updateMessageOptions(message, message.options, notify: true);
           }
-        } else {
-          logger.d("$TAG - resendMute - queueIds new deny - device:$device - targetId:${message.targetId}");
         }
-      } else {
-        String? queueIds = MessageOptions.getMessageQueueIds(message.options);
-        logger.d("$TAG - resendMute - exist queueIds - queueId:${message.queueId} - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
       }
     }
     if (!mute) {
