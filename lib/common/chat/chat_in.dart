@@ -316,10 +316,10 @@ class ChatInCommon with Tag {
       int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
       await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
     }
-    // TODO:GG read history?
-    // msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
-    // int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    // await messageCommon.readMessageBySide(received.targetId, received.topic, received.groupId, reallySendAt);
+    // correct no read
+    msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
+    int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
+    messageCommon.correctMessageRead(received.targetId, received.topic, received.groupId, reallySendAt); // await
     return true;
   }
 
