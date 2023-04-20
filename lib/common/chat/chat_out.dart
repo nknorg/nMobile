@@ -382,10 +382,12 @@ class ChatOutCommon with Tag {
     // queue
     if (message.canQueue) {
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
-        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        if (message.queueId > 0) {
+          String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetAddress, device.deviceId);
+          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        }
       }
     }
     // data
@@ -445,10 +447,12 @@ class ChatOutCommon with Tag {
     // queue
     if (message.canQueue) {
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
-        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        if (message.queueId > 0) {
+          String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetAddress, device.deviceId);
+          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        }
       }
     }
     // insert
@@ -525,10 +529,12 @@ class ChatOutCommon with Tag {
     // queue
     if (message.canQueue) {
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
-        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        if (message.queueId > 0) {
+          String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetAddress, device.deviceId);
+          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        }
       }
     }
     // data
@@ -584,10 +590,12 @@ class ChatOutCommon with Tag {
     // queue
     if (message.canQueue) {
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetAddress); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await messageCommon.newMessageQueueId(targetAddress, device.deviceId, message.msgId);
-        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        if (message.queueId > 0) {
+          String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetAddress, device.deviceId);
+          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        }
       }
     }
     // data
@@ -831,15 +839,19 @@ class ChatOutCommon with Tag {
     if (message.canQueue) {
       if (message.status == MessageStatus.Error) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
-        String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-        if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          logger.i("$TAG - resendMute - queueIds new success - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
+        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
-          message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-          bool success = await messageCommon.updateQueueId(message.msgId, message.queueId);
-          if (!success) return null;
+          if (message.queueId > 0) {
+            String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+            logger.i("$TAG - resendMute - queueIds new success - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
+            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+            bool success = await messageCommon.updateQueueId(message.msgId, message.queueId);
+            if (!success) return null;
+          } else {
+            logger.w("$TAG - resendMute - queueIds new fail - device:$device - targetId:${message.targetId}");
+          }
         } else {
-          logger.d("$TAG - resendMute - queueIds new fail - queueIds:$queueIds - device:$device - targetId:${message.targetId}");
+          logger.d("$TAG - resendMute - queueIds new deny - device:$device - targetId:${message.targetId}");
         }
       } else {
         String? queueIds = MessageOptions.getMessageQueueIds(message.options);
