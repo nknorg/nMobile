@@ -215,10 +215,6 @@ class ChatInCommon with Tag {
           break;
       }
     }
-    // queue
-    if (received.canQueue && (insertOk || duplicated)) {
-      await messageCommon.onMessageQueueReceive(received); // await receiveQueue onComplete
-    }
     // receipt
     if (received.canReceipt && (insertOk || duplicated)) {
       if (received.isTopic || received.isPrivateGroup) {
@@ -230,6 +226,10 @@ class ChatInCommon with Tag {
     // session
     if (received.canDisplay && insertOk) {
       chatCommon.sessionHandle(received); // await
+    }
+    // queue
+    if (received.canQueue && (insertOk || duplicated)) {
+      await messageCommon.onMessageQueueReceive(received); // await receiveQueue onComplete
     }
   }
 
@@ -335,14 +335,14 @@ class ChatInCommon with Tag {
     logger.i("$TAG - _receiveQueue - from:$targetAddress - queueIds:$queueIds");
     // queueIds
     List splits = deviceInfoCommon.splitQueueIds(queueIds);
-    String deviceId = splits[3];
-    DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetAddress, deviceId);
-    if (device == null) {
-      logger.w("$TAG - _receiveQueue - device nil - from:$targetAddress - queueIds:$queueIds");
+    String selfDeviceId = splits[3];
+    if (selfDeviceId.trim() != Settings.deviceId.trim()) {
+      logger.i("$TAG - _receiveQueue - target device diff - from:$targetAddress - self:${Settings.deviceId} - queueIds:$queueIds");
       return false;
     }
     // sync_queue
-    chatCommon.syncContactMessages(targetAddress, deviceId, splits[0], splits[1], splits[2]); // await
+    String? targetDeviceId = MessageOptions.getDeviceId(received.options);
+    messageCommon.syncContactMessages(targetAddress, targetDeviceId, splits[0], splits[1], splits[2]); // await
     return true;
   }
 

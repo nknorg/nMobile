@@ -83,8 +83,8 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByIdsNoContentType(msgIds, contentType);
   }
 
-  Future<MessageSchema?> queryByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId) {
-    return MessageStorage.instance.queryByTargetIdWithQueueId(targetId, topic, groupId, queueId);
+  Future<List<MessageSchema>> queryListByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetIdWithQueueId(targetId, topic, groupId, queueId, offset: offset, limit: limit);
   }
 
   Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) {
@@ -265,13 +265,19 @@ class MessageCommon with Tag {
             String msgId = sendingMessageQueueIds[queueId]?.toString() ?? "";
             MessageSchema? msg = await queryByIdNoContentType(msgId, MessageContentType.piece);
             if ((msg == null) || !msg.canQueue || !msg.isOutbound) {
-              logger.w("$TAG - newMessageQueueId - msg wrong (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg?.toStringNoContent() ?? msgId}");
+              logger.w("$TAG - newMessageQueueId - replace wrong msg (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg?.toStringNoContent() ?? msgId}");
               nextQueueId = queueId;
               break;
-            } else if (msg.status != MessageStatus.Sending) {
-              logger.d("$TAG - newMessageQueueId - replace no sending - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg.toStringNoContent()}");
+            } else if (msg.status == MessageStatus.Error) {
+              logger.d("$TAG - newMessageQueueId - replace status error - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg.toStringNoContent()}");
               nextQueueId = queueId;
               break;
+            } else if (msg.status >= MessageStatus.Success) {
+              logger.w("$TAG - newMessageQueueId - replace wrong status(wrong here) - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg.toStringNoContent()}");
+              nextQueueId = queueId;
+              break;
+            } else {
+              logger.i("$TAG - newMessageQueueId - replace refuse - msg:${msg.toStringNoContent()} - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId}");
             }
           }
         }
@@ -303,6 +309,7 @@ class MessageCommon with Tag {
     Function func = () async {
       DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
       if (device == null) return false;
+      logger.i("$TAG - onMessageQueueSendSuccess - delete queueId from cache - queueId:$queueId - caches:${device.sendingMessageQueueIds} - target:$targetClientAddress - deviceId:${device.deviceId}");
       return await deviceInfoCommon.setSendingMessageQueueIds(targetClientAddress, device.deviceId, {}, [queueId]);
     };
     // queue
@@ -320,28 +327,27 @@ class MessageCommon with Tag {
       DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
       if (device == null) return false;
       String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      String? remoteQueueIds = MessageOptions.getMessageQueueIds(message.options);
-      String? targetDeviceId = deviceInfoCommon.splitQueueIds(remoteQueueIds)[3];
-      if (targetDeviceId?.trim() != Settings.deviceId.trim()) {
-        logger.w("$TAG - onMessageQueueReceive - no target device - targetDeviceId:$targetDeviceId - nativeDeviceId:${Settings.deviceId} - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
+      String? sideQueueIds = MessageOptions.getMessageQueueIds(message.options);
+      String? selfDeviceId = deviceInfoCommon.splitQueueIds(sideQueueIds)[3];
+      if (selfDeviceId?.trim() != Settings.deviceId.trim()) {
+        logger.w("$TAG - onMessageQueueReceive - no target device - selfDeviceId:$selfDeviceId - nativeDeviceId:${Settings.deviceId} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         return false;
       }
       int receiveQueueId = message.queueId;
       int nativeQueueId = device.latestReceivedMessageQueueId;
       if (receiveQueueId > nativeQueueId) {
-        logger.d("$TAG - onMessageQueueReceive - new higher - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
+        logger.i("$TAG - onMessageQueueReceive - new higher - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         bool success = await deviceInfoCommon.setLatestReceivedMessageQueueId(targetClientAddress, device.deviceId, receiveQueueId);
         if (success && ((receiveQueueId - nativeQueueId) > 1)) {
           List<int> lostPairs = List.generate(receiveQueueId - nativeQueueId - 1, (index) => nativeQueueId + index + 1);
-          logger.i("$TAG - onMessageQueueReceive - new higher and add lostIds - lostPairs:$lostPairs - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
+          logger.i("$TAG - onMessageQueueReceive - new higher and add lostIds - lostPairs:$lostPairs - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
           await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, lostPairs, []);
         }
       } else if (receiveQueueId < nativeQueueId) {
-        logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
+        logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], [receiveQueueId]);
       } else {
-        logger.d("$TAG - onMessageQueueReceive - new equal old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - remoteQueueIds:$remoteQueueIds - nativeQueueIds:$nativeQueueIds");
-        // nothing
+        logger.i("$TAG - onMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
       }
       return true;
     };
@@ -349,5 +355,133 @@ class MessageCommon with Tag {
     _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
     bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
     return success ?? false;
+  }
+
+  // TODO:GG 后面触发的，才是最新的！
+  Future<int> syncContactMessages(String? clientAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
+    if (clientAddress == null || clientAddress.isEmpty) return 0;
+    if (targetDeviceId == null || targetDeviceId.isEmpty) return 0;
+    // wait receive queue complete
+    var receiveQueue = chatInCommon.getReceiveQueue(clientAddress);
+    if (receiveQueue != null) {
+      int receiveCounts = receiveQueue.onCompleteCount("syncContactMessages_$targetDeviceId");
+      if (receiveCounts > 0) {
+        logger.d("$TAG - syncContactMessages - receive_queue progress - receiveCounts:$receiveCounts - from:$clientAddress - targetDeviceId:$targetDeviceId - sendQueueId:$sideSendQueueId - receivedQueueId:$sideReceiveQueueId - lostQueueIds:$sideLostQueueIds");
+        return 0;
+      }
+      logger.d("$TAG - syncContactMessages - receive_queue waiting - from:$clientAddress - targetDeviceId:$targetDeviceId - sendQueueId:$sideSendQueueId - receivedQueueId:$sideReceiveQueueId - lostQueueIds:$sideLostQueueIds");
+      await receiveQueue.onComplete("syncContactMessages_$targetDeviceId");
+    } else {
+      logger.w("$TAG - syncContactMessages - receive queue nil - from:$clientAddress - sendQueueId:$sideSendQueueId - receivedQueueId:$sideReceiveQueueId - lostQueueIds:$sideLostQueueIds - targetDeviceId:$targetDeviceId");
+    }
+    // contact refresh
+    DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(clientAddress, targetDeviceId);
+    if (device == null) return 0;
+    String? sideQueueIds = deviceInfoCommon.joinQueueIds(sideSendQueueId, sideReceiveQueueId, sideLostQueueIds, targetDeviceId);
+    String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+    logger.i("$TAG - syncContactMessages - START - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    // sync update
+    int nativeSendQueueId = device.latestSendMessageQueueId;
+    if (sideReceiveQueueId > nativeSendQueueId) {
+      logger.w("$TAG - syncContactMessages - need self sync queueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      await deviceInfoCommon.setLatestSendMessageQueueId(clientAddress, targetDeviceId, sideReceiveQueueId);
+      await deviceInfoCommon.setLatestReceivedMessageQueueId(clientAddress, targetDeviceId, sideSendQueueId);
+      chatOutCommon.sendQueue(clientAddress, targetDeviceId); // await
+      return 0; // wait sendQueue reply
+    }
+    // sync request
+    int nativeReceiveQueueId = device.latestReceivedMessageQueueId;
+    if (sideSendQueueId > nativeReceiveQueueId) {
+      logger.i("$TAG - syncContactMessages - need side to resend lost - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      chatOutCommon.sendQueue(clientAddress, targetDeviceId); // await
+    } else if (sideSendQueueId < nativeReceiveQueueId) {
+      logger.w("$TAG - syncContactMessages - need side to sync queue - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      chatOutCommon.sendQueue(clientAddress, targetDeviceId); // await
+      return 0; // wait sendQueue reply
+    } else {
+      logger.d("$TAG - syncContactMessages - queueIds equal (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    }
+    // queueIds
+    List<int> resendQueueIds = sideLostQueueIds;
+    if (sideReceiveQueueId < nativeSendQueueId) {
+      logger.i("$TAG - syncContactMessages - need resend latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      List<int> newLost = List.generate(nativeSendQueueId - sideReceiveQueueId, (index) => sideReceiveQueueId + index + 1);
+      resendQueueIds.addAll(newLost);
+    } else {
+      logger.d("$TAG - syncContactMessages - no resend latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    }
+    if (resendQueueIds.isEmpty) {
+      logger.i("$TAG - syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      return 0;
+    }
+    logger.d("$TAG - syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    // messages
+    List<MessageSchema> resendMsgList = [];
+    int limit = 10;
+    for (var i = 0; i < resendQueueIds.length; i++) {
+      int queueId = resendQueueIds[i];
+      for (int offset = 0; true; offset += limit) {
+        List<MessageSchema> result = await queryListByTargetIdWithQueueId(clientAddress, "", "", queueId);
+        MessageSchema? resendMsg;
+        for (var j = 0; j < result.length; j++) {
+          MessageSchema message = result[j];
+          String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+          if ((queueIds == null) || (queueIds[3].toString().trim() != targetDeviceId.trim())) {
+            logger.d("$TAG - syncContactMessages - resend message device diff - queueId:$queueId - message:$message - from:$clientAddress - targetDeviceId:$targetDeviceId");
+            continue;
+          } else if (!message.canReceipt || !message.isOutbound) {
+            logger.w("$TAG - syncContactMessages - resend message type wrong - queueId:$queueId - message:$message - from:$clientAddress - targetDeviceId:$targetDeviceId");
+            continue;
+          } else if (message.status == MessageStatus.Error) {
+            logger.d("$TAG - syncContactMessages - resend message status error - queueId:$queueId - message:$message - from:$clientAddress - targetDeviceId:$targetDeviceId");
+            continue;
+          }
+          logger.i("$TAG - syncContactMessages - resend messages add - queueId:$queueId - message:$message - from:$clientAddress - targetDeviceId:$targetDeviceId");
+          resendMsg = message;
+          break;
+        }
+        if (resendMsg != null) {
+          resendMsgList.add(resendMsg);
+          break;
+        }
+        if (result.length < limit) {
+          logger.w("$TAG - syncContactMessages - resend message no find wrong - queueId:$queueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+          break;
+        }
+      }
+    }
+    if (resendMsgList.isEmpty) {
+      logger.i("$TAG - syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      return 0;
+    }
+    logger.d("$TAG - syncContactMessages - resendMessages no empty - count:${resendMsgList.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    // ack check (maybe other device queue)
+    List<MessageSchema> noAckList = [];
+    for (int offset = 0; true; offset += limit) {
+      final result = await messageCommon.queryListByStatus(MessageStatus.Success, offset: offset, limit: limit);
+      result.removeWhere((element) => !element.isOutbound);
+      noAckList.addAll(result);
+      if (result.length < limit) break;
+    }
+    bool noAckAdded = false;
+    for (var i = 0; i < noAckList.length; i++) {
+      MessageSchema noAck = noAckList[i];
+      if (resendMsgList.indexWhere((element) => noAck.msgId == element.msgId) < 0) {
+        logger.i("$TAG - syncContactMessages - resend messages add - message:$noAck - from:$clientAddress - targetDeviceId:$targetDeviceId");
+        noAckAdded = true;
+        resendMsgList.add(noAck);
+      }
+    }
+    if (noAckAdded) logger.d("$TAG - syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    // resend
+    int successCount = 0;
+    for (var i = 0; i < resendMsgList.length; i++) {
+      MessageSchema message = resendMsgList[i];
+      int gap = Settings.gapMessageQueueResendMs * ((message.content is File) ? 2 : 1);
+      var data = await chatOutCommon.resend(message, mute: true, muteGap: gap);
+      if (data != null) successCount++;
+    }
+    logger.i("$TAG - syncContactMessages - END - count:$successCount/${resendMsgList.length} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    return successCount;
   }
 }
