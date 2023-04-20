@@ -55,7 +55,7 @@ class ParallelQueue {
 
   ParallelQueue(this.tag, {this.parallel = 1, this.interval, this.timeout, this.onLog});
 
-  int get length => _delays.length + _queue.length;
+  int get length => _delays.length + _queue.length + _activeItems.length;
 
   Future onComplete(String key) {
     final completer = Completer();
