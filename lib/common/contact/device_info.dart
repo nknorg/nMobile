@@ -188,7 +188,7 @@ class DeviceInfoCommon with Tag {
   }
 
   String? joinQueueIds(int latestSendMessageQueueId, int latestReceivedMessageQueueId, List<int> lostReceiveMessageQueueIds, String deviceId) {
-    if ((latestSendMessageQueueId <= 0) && (latestReceivedMessageQueueId <= 0) && lostReceiveMessageQueueIds.isEmpty) return null;
+    if (deviceId.isEmpty) return null;
     return "${latestSendMessageQueueId}_::_${latestReceivedMessageQueueId}_::_${lostReceiveMessageQueueIds.join(".")}_::_$deviceId";
   }
 
