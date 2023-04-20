@@ -223,11 +223,11 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future<bool> sendQueue(String? clientAddress, String? deviceId) async {
+  Future<bool> sendQueue(String? clientAddress, String? targetDeviceId) async {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty) return false;
-    if (deviceId == null || deviceId.isEmpty) return false;
-    String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(clientAddress, deviceId);
+    if (targetDeviceId == null || targetDeviceId.isEmpty) return false;
+    String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(clientAddress, targetDeviceId);
     if (queueIds == null) return false;
     String data = MessageData.getQueue(queueIds);
     logger.i("$TAG - sendQueue - dest:$clientAddress - data:$data");
@@ -828,12 +828,22 @@ class ChatOutCommon with Tag {
       }
     }
     // queue
-    if (message.canQueue && (message.status < MessageStatus.Success)) {
-      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-        message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
-        message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+    if (message.canQueue) {
+      if (message.status == MessageStatus.Error) {
+        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
+        String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+        if ((device != null) && (queueIds != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+          logger.i("$TAG - resendMute - queueIds new success - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
+          message.queueId = await messageCommon.newMessageQueueId(message.targetId, device.deviceId, message.msgId);
+          message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+          bool success = await messageCommon.updateQueueId(message.msgId, message.queueId);
+          if (!success) return null;
+        } else {
+          logger.d("$TAG - resendMute - queueIds new fail - queueIds:$queueIds - device:$device - targetId:${message.targetId}");
+        }
+      } else {
+        String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+        logger.d("$TAG - resendMute - exist queueIds - queueId:${message.queueId} - queueIds:$queueIds - options:${message.options} - targetId:${message.targetId}");
       }
     }
     // send
@@ -944,6 +954,12 @@ class ChatOutCommon with Tag {
     } else {
       logger.w("$TAG - _send - pid is null - type:${message.contentType} - message:${message.toStringNoContent()}");
     }
+    // queue_id (before set status success)
+    if (message.canQueue && sendSuccess) {
+      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+      String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
+      await messageCommon.onMessageQueueSendSuccess(message.targetId, deviceId, message.queueId);
+    }
     // status
     if (statusSync) {
       if (sendSuccess) {
@@ -955,7 +971,7 @@ class ChatOutCommon with Tag {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         }
       } else {
-        if (message.canResend) {
+        if (message.canReceipt) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
         } else {
           // noResend just delete
@@ -963,12 +979,6 @@ class ChatOutCommon with Tag {
           if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
         }
       }
-    }
-    // queue_id
-    if (message.canQueue && sendSuccess) {
-      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
-      String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
-      messageCommon.onMessageQueueSendSuccess(message.targetId, deviceId, message.queueId); // await
     }
     return sendSuccess ? message : null;
   }

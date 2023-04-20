@@ -182,32 +182,6 @@ class MessageStorage with Tag {
     return null;
   }
 
-  Future<MessageSchema?> queryByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId) async {
-    if (db?.isOpen != true) return null;
-    if (targetId == null || targetId.isEmpty) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['*'],
-          where: 'target_id = ? AND topic = ? AND group_id = ? AND queue_id = ?',
-          whereArgs: [targetId, topic ?? "", groupId ?? "", queueId],
-          offset: 0,
-          limit: 1,
-        );
-      });
-      if (res != null && res.length > 0) {
-        MessageSchema schema = MessageSchema.fromMap(res.first);
-        // logger.v("$TAG - queryByTargetIdWithQueueId - success - queueId:queueId - schema:$schema");
-        return schema;
-      }
-      // logger.v("$TAG - queryByTargetIdWithQueueId - empty - queueId:queueId");
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return null;
-  }
-
   Future<List<MessageSchema>> queryListByIds(List<String>? msgIds) async {
     if (db?.isOpen != true) return [];
     if (msgIds == null || msgIds.isEmpty) return [];
@@ -476,6 +450,39 @@ class MessageStorage with Tag {
         result.add(item);
       });
       // logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - length:${result.length} - items:$logText");
+      return result;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
+  }
+
+  Future<List<MessageSchema>> queryListByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId, {int offset = 0, int limit = 20}) async {
+    if (db?.isOpen != true) return [];
+    if (targetId == null || targetId.isEmpty) return [];
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND topic = ? AND group_id = ? AND queue_id = ?',
+          whereArgs: [targetId, topic ?? "", groupId ?? "", queueId],
+          offset: offset,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        // logger.v("$TAG - queryByTargetIdWithQueueId - empty - targetId:$targetId");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      // String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        // logText += "    \n$item";
+        result.add(item);
+      });
+      // logger.v("$TAG - queryByTargetIdWithQueueId - success - targetId:$targetId - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
