@@ -103,8 +103,8 @@ class ChatCommon with Tag {
 
   Future<ContactSchema?> contactHandle(MessageSchema message) async {
     String? clientAddress = message.isOutbound ? ((message.isTopic || message.isPrivateGroup) ? null : message.to) : message.from;
-    if (message.contentType == MessageContentType.piece) return null;
     if (clientAddress == null || clientAddress.isEmpty) return null;
+    if (message.contentType == MessageContentType.piece) return null;
     ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
     if (message.from == message.to) return exist;
     // duplicated
@@ -261,6 +261,7 @@ class ChatCommon with Tag {
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
     if (!message.isTopic) return null;
     if (!message.canDisplay && !message.isTopicAction) return null; // topic action need topic
+    if (message.contentType == MessageContentType.piece) return null;
     // duplicated
     TopicSchema? exists = await topicCommon.queryByTopic(message.topic);
     if (exists == null) {
@@ -342,6 +343,7 @@ class ChatCommon with Tag {
   Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
     if (!message.isPrivateGroup) return null;
     if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
+    if (message.contentType == MessageContentType.piece) return null;
     // duplicated
     PrivateGroupSchema? exists = await privateGroupCommon.queryGroup(message.groupId);
     if (exists == null) {
