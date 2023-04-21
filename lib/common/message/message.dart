@@ -226,7 +226,7 @@ class MessageCommon with Tag {
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
-      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (sendAt + readMinGap))).toList();
+      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (sendAt - readMinGap))).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
     }
@@ -356,6 +356,13 @@ class MessageCommon with Tag {
       } else {
         logger.i("$TAG - onMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
       }
+      // clear too low queueId
+      List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
+      List<int> deleteQueueIds = lostReceiveMessageQueueIds.where((element) => element < (receiveQueueId - 100)).toList();
+      if (deleteQueueIds.isNotEmpty) {
+        logger.w("$TAG - onMessageQueueReceive - clear too low queueId - deleteIds:$deleteQueueIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+        await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], deleteQueueIds);
+      }
       return true;
     };
     // queue
@@ -401,7 +408,7 @@ class MessageCommon with Tag {
     }
     // check start
     List splits = deviceInfoCommon.splitQueueIds(queueIds);
-    _syncContactMessages(clientAddress, targetDeviceId, splits[0], splits[1], splits[2]); // await
+    await _syncContactMessages(clientAddress, targetDeviceId, splits[0], splits[1], splits[2]);
   }
 
   Future<int> _syncContactMessages(String? clientAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
@@ -416,6 +423,7 @@ class MessageCommon with Tag {
     // sync update
     int nativeSendQueueId = device.latestSendMessageQueueId;
     int nativeReceiveQueueId = device.latestReceivedMessageQueueId;
+    List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
     if (sideReceiveQueueId > nativeSendQueueId) {
       logger.w("$TAG - _syncContactMessages - need self to sync queue (update native send/receive_queueId) - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
       await chatOutCommon.sendQueue(clientAddress, targetDeviceId); // mast wait and before update
@@ -427,16 +435,11 @@ class MessageCommon with Tag {
       return 0; // wait sendQueue reply
     }
     // sync request
-    if (sideSendQueueId > nativeReceiveQueueId) {
-      logger.i("$TAG - _syncContactMessages - need side to resend lost (and goto resend) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    if ((sideSendQueueId > nativeReceiveQueueId) || lostReceiveMessageQueueIds.isNotEmpty) {
+      logger.i("$TAG - _syncContactMessages - need side to resend lost - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
       await chatOutCommon.sendQueue(clientAddress, targetDeviceId);
     } else if (sideSendQueueId < nativeReceiveQueueId) {
-      if ((nativeReceiveQueueId - sideSendQueueId > 10) && (sideSendQueueId < 20)) {
-        logger.w("$TAG - _syncContactMessages - need side to sync queue (clear native lost) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
-        await deviceInfoCommon.setLostReceiveMessageQueueIds(clientAddress, targetDeviceId, [], device.lostReceiveMessageQueueIds);
-      } else {
-        logger.w("$TAG - _syncContactMessages - need side to sync queue (hold native lost) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
-      }
+      logger.w("$TAG - _syncContactMessages - need side to sync queue - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
       await chatOutCommon.sendQueue(clientAddress, targetDeviceId);
       return 0; // wait sendQueue reply
     } else {
