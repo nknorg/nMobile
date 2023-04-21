@@ -318,8 +318,8 @@ class ChatInCommon with Tag {
     }
     // correct no read
     msgList.sort((prev, next) => (prev.sendAt ?? 0).compareTo(next.sendAt ?? 0));
-    int reallySendAt = msgList[msgList.length - 1].sendAt ?? 0;
-    messageCommon.correctMessageRead(received.targetId, received.topic, received.groupId, reallySendAt); // await
+    int lastSendAt = msgList[msgList.length - 1].sendAt ?? 0;
+    messageCommon.correctMessageRead(received.targetId, received.topic, received.groupId, lastSendAt); // await
     return true;
   }
 
