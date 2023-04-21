@@ -218,15 +218,15 @@ class MessageCommon with Tag {
     return msgIds.length;
   }
 
-  Future<int> correctMessageRead(String? targetId, String? topic, String? groupId, int? sendAt) async {
-    if (targetId == null || targetId.isEmpty || sendAt == null || sendAt == 0) return 0;
+  Future<int> correctMessageRead(String? targetId, String? topic, String? groupId, int? lastSendAt) async {
+    if (targetId == null || targetId.isEmpty || lastSendAt == null || lastSendAt == 0) return 0;
     int limit = 20;
-    int readMinGap = 10 * 60 * 1000; // 10m
+    int readMinGap = 10 * 1000; // 10s
     // query
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
-      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (sendAt - readMinGap))).toList();
+      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (lastSendAt - readMinGap))).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
     }
