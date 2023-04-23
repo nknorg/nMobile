@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/file.dart';
@@ -401,7 +401,7 @@ class ChatCommon with Tag {
       if (!message.isOutbound && message.canNotification) {
         bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
         if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
-          await Badge.onCountUp(1);
+          await Badge.Badge.onCountUp(1);
         }
       }
     };
