@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -142,7 +142,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   _refreshBadge({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
     int unread = await sessionCommon.unreadCount();
-    Badge.refreshCount(count: unread);
+    Badge.Badge.refreshCount(count: unread);
   }
 
   _getDataSessions(bool refresh) async {
