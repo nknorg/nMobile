@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/push/badge.dart';
+import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
@@ -428,7 +428,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // badge
     if (badgeRefresh) {
       SessionSchema? session = await sessionCommon.query(targetId, type);
-      Badge.onCountDown(session?.unReadCount ?? 0); // await
+      Badge.Badge.onCountDown(session?.unReadCount ?? 0); // await
     }
   }
 
