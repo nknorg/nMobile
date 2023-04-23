@@ -342,6 +342,7 @@ class MessageCommon with Tag {
       }
       int receiveQueueId = message.queueId;
       int nativeQueueId = device.latestReceivedMessageQueueId;
+      List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
       if (receiveQueueId > nativeQueueId) {
         logger.i("$TAG - onMessageQueueReceive - new higher - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         bool success = await deviceInfoCommon.setLatestReceivedMessageQueueId(targetClientAddress, device.deviceId, receiveQueueId);
@@ -351,13 +352,16 @@ class MessageCommon with Tag {
           await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, lostPairs, []);
         }
       } else if (receiveQueueId < nativeQueueId) {
-        logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
-        await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], [receiveQueueId]);
+        if (lostReceiveMessageQueueIds.contains(receiveQueueId)) {
+          logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+          await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], [receiveQueueId]);
+        } else {
+          logger.d("$TAG - onMessageQueueReceive - new lower and duplicated received - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+        }
       } else {
         logger.i("$TAG - onMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
       }
       // clear too low queueId
-      List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
       List<int> deleteQueueIds = lostReceiveMessageQueueIds.where((element) => element < (receiveQueueId - 100)).toList();
       if (deleteQueueIds.isNotEmpty) {
         logger.w("$TAG - onMessageQueueReceive - clear too low queueId - deleteIds:$deleteQueueIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
