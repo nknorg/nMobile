@@ -247,13 +247,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         ContactSchema? _me = await contactCommon.getMe(canAdd: true, needWallet: true);
         await _refreshContactSchema(schema: _me);
         // wallet
-        Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
-      } else {
-        AppScreen.go(this.context);
+        // Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
       }
+      if (mounted) AppScreen.go(this.context);
     } catch (e, st) {
       handleError(e, st);
-      AppScreen.go(this.context);
     } finally {
       Loading.dismiss();
     }
