@@ -39,6 +39,7 @@ class SessionCommon with Tag {
   }) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
     Function func = () async {
+      logger.d('$TAG - add - START - targetId:$targetId - type:$type - unread:$unReadCount - timeAt:$lastMsgAt - message:$lastMsg');
       String topic = (type == SessionType.TOPIC) ? targetId : "";
       String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
@@ -77,7 +78,7 @@ class SessionCommon with Tag {
       if (groupSenderName?.isNotEmpty == true) {
         added.data = {"groupSenderName": groupSenderName};
       }
-      logger.d('$TAG - update - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - message:${added.lastMessageOptions}');
+      logger.d('$TAG - add - END - targetId:${added.targetId} - type${added.type} - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - data:${added.data} - message:${added.lastMessageOptions}');
       // insert
       added = await SessionStorage.instance.insert(added);
       if ((added != null) && notify) _addSink.add(added);
@@ -111,6 +112,7 @@ class SessionCommon with Tag {
         logger.w("$TAG - update - empty - schema:$targetId - type:$type");
         return null;
       }
+      logger.d('$TAG - update - START - targetId:$targetId - type:$type - unread:$unReadCount - change:$unreadChange - timeAt:$lastMsgAt - message:$lastMsg');
       String topic = (type == SessionType.TOPIC) ? targetId : "";
       String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
@@ -166,7 +168,7 @@ class SessionCommon with Tag {
       exist.lastMessageOptions = newLastMsg?.toMap();
       exist.lastMessageAt = newLastMsgAt;
       exist.unReadCount = newUnReadCount;
-      logger.d('$TAG - update - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
+      logger.d('$TAG - update - END - targetId:$targetId - type:$type - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
       bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
       if (success && notify) queryAndNotify(targetId, type);
     };
