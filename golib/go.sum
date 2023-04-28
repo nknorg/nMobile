@@ -376,6 +376,7 @@ github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23/go.mod h1:J+Gs4SYgM6
 github.com/klauspost/compress v1.4.0/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0guNDohfE1A=
 github.com/klauspost/cpuid v0.0.0-20170728055534-ae7887de9fa5/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
 github.com/klauspost/cpuid v1.2.1/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
+github.com/klauspost/cpuid/v2 v2.0.2/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.0.4/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.0.11 h1:i2lw1Pm7Yi/4O6XCSyJWqEHI2MDw2FzUK6o/D21xn2A=
@@ -483,6 +484,8 @@ github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9 h1:Gr37j7Ttvcn8
 github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9/go.mod h1:zNY9NCyBcJCCDrXhwOjKarkW5cngPs/Z82xVNy/wvEA=
 github.com/nknorg/nnet v0.0.0-20220621093239-b22b80b04216/go.mod h1:rB1dMWGEjNncJjcmLVuXDXawGiD1gD/hwSR+vrr8Wp8=
 github.com/nknorg/portmapper v0.0.0-20200114081049-1c03cdccc283/go.mod h1:dL4PQJ4670oTO6LqvkjrBQEkD+iMiOYjlKRBBw55Csg=
+github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4 h1:Ug3GGTsny4ZcPsDeqOqoiBMts/yA8PBX1TJmMOeyc9Q=
+github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4/go.mod h1:+1q8J9XjxoaTznvlnfAkOlYfWwxfONSZj1aP2A/49MI=
 github.com/nrdcg/auroradns v1.0.1/go.mod h1:y4pc0i9QXYlFCWrhWrUSIETnZgrf4KuwjDIWmmXo3JI=
 github.com/nrdcg/dnspod-go v0.4.0/go.mod h1:vZSoFSFeQVm2gWLMkyX61LZ8HI3BaqtHZWgPTGKr6KQ=
 github.com/nrdcg/goinwx v0.7.0/go.mod h1:4tKJOCi/1lTxuw9/yB2Ez0aojwtUCSkckjc22eALpqE=
