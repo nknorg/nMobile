@@ -1,10 +1,22 @@
+## 0.3.5
+
+Add reply
+
+## 0.3.4
+
+Add dial context in client configure
+
+## 0.3.3
+
+Modify Resolver config
+
 ## 0.3.2
 
 * Add reconnect
 
 ## 0.3.1
 
-* Modify Resolver config
+* Modify Resolver config 
 
 ## 0.3.1
 
@@ -104,7 +116,7 @@
 
 ## 0.0.13
 
-* Create client, on connect add rpcServers
+* Create client, on connect add rpcServers 
 
 ## 0.0.12
 
@@ -128,7 +140,7 @@
 
 ## 0.0.7
 
-* Fix client create failure handling
+* Fix client create failure handling 
 
 ## 0.0.6
 

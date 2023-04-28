@@ -12,6 +12,7 @@ import nkn.Nkn
 import nkn.RPCConfig
 import nkn.TransactionConfig
 import nkn.WalletConfig
+import nkngolib.Nkngolib
 import nkngomobile.StringArray
 import org.bouncycastle.util.encoders.Hex
 import org.nkn.sdk.IChannelHandler
@@ -99,7 +100,7 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                seedRPCServerAddr = Nkn.measureSeedRPCServer(seedRPCServerAddr, timeout)
+                seedRPCServerAddr = Nkngolib.measureSeedRPCServer(seedRPCServerAddr, timeout)
 
                 val seedRPCServerAddrs = arrayListOf<String>()
                 val elements = seedRPCServerAddr.join(",").split(",")
@@ -127,7 +128,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
         val config = WalletConfig()
-        // config.rpcConcurrency = 4
         config.password = password
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
@@ -167,7 +167,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
 
         val config = WalletConfig()
-        // config.rpcConcurrency = 4
         config.password = password
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
@@ -211,7 +210,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val account = Nkn.newAccount(Nkn.randomBytes(32))
 
         val config = WalletConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -243,7 +241,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
         val config = WalletConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -295,7 +292,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val config = WalletConfig()
-                // config.rpcConcurrency = 4
                 if (seedRpc != null) {
                     config.seedRPCServerAddr = StringArray(null)
                     for (addr in seedRpc) {
@@ -333,7 +329,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val config = WalletConfig()
-                // config.rpcConcurrency = 4
                 if (seedRpc != null) {
                     config.seedRPCServerAddr = StringArray(null)
                     for (addr in seedRpc) {
@@ -363,7 +358,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         val config = RPCConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -395,7 +389,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
         val config = RPCConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -426,7 +419,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
         val config = RPCConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -451,7 +443,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
         val config = RPCConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
@@ -478,7 +469,6 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
 
         val config = RPCConfig()
-        // config.rpcConcurrency = 4
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
