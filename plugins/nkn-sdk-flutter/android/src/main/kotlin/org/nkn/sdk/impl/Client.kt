@@ -24,7 +24,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val EVENT_NAME = "org.nkn.sdk/client/event"
     }
 
-    private var clientMap: HashMap<String, MultiClient?> = hashMapOf()
+    private var clientMap: HashMap<String, MultiClient> = hashMapOf()
 
     lateinit var methodChannel: MethodChannel
     lateinit var eventChannel: EventChannel
@@ -58,16 +58,27 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     ): MultiClient = withContext(Dispatchers.IO) {
         val pubKey = Hex.toHexString(account.pubKey())
         val id = if (identifier.isEmpty()) pubKey else "${identifier}.${pubKey}"
-        if (clientMap.containsKey(id)) {
-            if ((clientMap[id] != null) && (clientMap[id]?.isClosed != true)) {
-                clientMap[id]?.close()
-            }
-            clientMap.remove(id)
-        }
+
+        closeClient(id)
 
         val client = MultiClient(account, identifier, numSubClients, true, config)
         clientMap[client.address()] = client
         client
+    }
+
+    private suspend fun closeClient(id: String) = withContext(Dispatchers.IO) {
+        if (!clientMap.containsKey(id) || (clientMap[id] == null)) {
+            return@withContext
+        }
+
+        try {
+            if (clientMap[id]?.isClosed != true) {
+                clientMap[id]?.close()
+            }
+            clientMap.remove(id)
+        } catch (e: Throwable) {
+            throw e
+        }
     }
 
     private suspend fun onConnect(client: MultiClient, numSubClients: Long) =
@@ -104,7 +115,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private suspend fun onMessage(client: MultiClient) {
         while (!client.isClosed) {
             try {
-                val msg = client.onMessage.next() ?: return
+                val msg = client.onMessage.next() ?: continue
 
                 val resp = hashMapOf(
                     "_id" to client.address(),
@@ -121,7 +132,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
                 eventSinkSuccess(eventSink, resp)
             } catch (e: Throwable) {
-                eventSinkError(eventSink, e)
+                eventSinkError(eventSink, client.address(), e.localizedMessage)
             }
         }
     }
@@ -291,9 +302,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                clientMap[_id]?.close()
-                clientMap.remove(_id)
-
+                closeClient(_id)
                 resultSuccess(result, null)
             } catch (e: Throwable) {
                 resultError(result, e)
@@ -560,6 +569,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 subscribers?.subscribers?.range { addr, value ->
                     resp[addr] = value?.trim() ?: ""
                     true
+                }
+                if (txPool) {
+                    subscribers?.subscribersInTxPool?.range { addr, value ->
+                        resp[addr] = value?.trim() ?: ""
+                        true
+                    }
                 }
                 resultSuccess(result, resp)
                 return@launch
