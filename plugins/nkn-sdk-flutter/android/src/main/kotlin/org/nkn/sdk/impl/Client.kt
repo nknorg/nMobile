@@ -23,11 +23,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val EVENT_NAME = "org.nkn.sdk/client/event"
     }
 
-    private var clientMap: HashMap<String, MultiClient> = hashMapOf()
-
     lateinit var methodChannel: MethodChannel
     lateinit var eventChannel: EventChannel
     var eventSink: EventChannel.EventSink? = null
+
+    private var clientMap: HashMap<String, MultiClient> = hashMapOf()
 
     override fun install(binaryMessenger: BinaryMessenger) {
         methodChannel = MethodChannel(binaryMessenger, CHANNEL_NAME)
@@ -82,6 +82,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         withContext(Dispatchers.IO) {
             try {
                 val node = client.onConnect.next() ?: return@withContext
+
                 val rpcServers = ArrayList<String>()
                 for (i in 0..numSubClients) {
                     val c = client.getClient(i)
@@ -186,10 +187,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun create(call: MethodCall, result: MethodChannel.Result) {
         val identifier = call.argument<String>("identifier") ?: ""
         val seed = call.argument<ByteArray>("seed")
-        val connectRetries = call.argument<Int>("connectRetries") ?: -1
-        val maxReconnectInterval = call.argument<Int>("maxReconnectInterval") ?: 5000
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
         val numSubClients = (call.argument<Int>("numSubClients") ?: 3).toLong()
+        val connectRetries = call.argument<Int>("connectRetries") ?: -1
+        val maxReconnectInterval = call.argument<Int>("maxReconnectInterval") ?: 5000
         val ethResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
         val dnsResolverConfigArray =
@@ -197,15 +198,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         val config = ClientConfig()
 
-        config.connectRetries = connectRetries
-        config.maxReconnectInterval = maxReconnectInterval
-
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
             for (addr in seedRpc) {
                 config.seedRPCServerAddr.append(addr)
             }
         }
+
+        config.connectRetries = connectRetries
+        config.maxReconnectInterval = maxReconnectInterval
 
         if (ethResolverConfigArray != null) {
             for (cfg in ethResolverConfigArray) {
@@ -370,7 +371,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             }
         }
         if (nknDests == null) {
-            result.error("", "dests null", "sendText")
+            result.error("", "dests is empty", "sendText")
             return
         }
 

@@ -8,9 +8,6 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
     
-    let qryptoQueue = DispatchQueue(label: "org.nkn.sdk/wallet/queue", qos: .default, attributes: .concurrent)
-    private var qryptoWorkItem: DispatchWorkItem?
-    
     func install(binaryMessenger: FlutterBinaryMessenger) {
         self.methodChannel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: binaryMessenger)
         self.methodChannel?.setMethodCallHandler(handle)
@@ -93,7 +90,7 @@ class Crypto : ChannelBase, IChannelHandler, FlutterStreamHandler {
         var error: NSError?
         CryptoVerify(publicKey?.data, data?.data, signature?.data, &error)
         if (error != nil) {
-            NSLog("%@", error!)
+            //NSLog("%@", error!)
             result(false)
             return
         }
