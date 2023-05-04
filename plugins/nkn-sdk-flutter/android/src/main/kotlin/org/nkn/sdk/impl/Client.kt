@@ -7,7 +7,6 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nkn.*
@@ -67,13 +66,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private suspend fun closeClient(id: String) = withContext(Dispatchers.IO) {
-        if (!clientMap.containsKey(id) || (clientMap[id] == null)) {
-            return@withContext
-        }
+        val client = (if (clientMap.containsKey(id)) clientMap[id] else null) ?: return@withContext
 
         try {
-            if (clientMap[id]?.isClosed != true) {
-                clientMap[id]?.close()
+            if (client.isClosed) {
+                client.close()
             }
             clientMap.remove(id)
         } catch (e: Throwable) {
@@ -113,26 +110,28 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
 
     private suspend fun onMessage(client: MultiClient) {
-        while (!client.isClosed) {
-            try {
-                val msg = client.onMessage.next() ?: continue
+        withContext(Dispatchers.IO) {
+            while (!client.isClosed) {
+                try {
+                    val msg = client.onMessage.next() ?: continue
 
-                val resp = hashMapOf(
-                    "_id" to client.address(),
-                    "event" to "onMessage",
-                    "data" to hashMapOf(
-                        "src" to msg.src,
-                        "data" to String(msg.data, Charsets.UTF_8),
-                        "type" to msg.type,
-                        "encrypted" to msg.encrypted,
-                        "messageId" to msg.messageID,
-                        "noReply" to msg.noReply
+                    val resp = hashMapOf(
+                        "_id" to client.address(),
+                        "event" to "onMessage",
+                        "data" to hashMapOf(
+                            "src" to msg.src,
+                            "data" to String(msg.data, Charsets.UTF_8),
+                            "type" to msg.type,
+                            "encrypted" to msg.encrypted,
+                            "messageId" to msg.messageID,
+                            "noReply" to msg.noReply
+                        )
                     )
-                )
-                //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
-                eventSinkSuccess(eventSink, resp)
-            } catch (e: Throwable) {
-                eventSinkError(eventSink, client.address(), e.localizedMessage)
+                    //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
+                    eventSinkSuccess(eventSink, resp)
+                } catch (e: Throwable) {
+                    eventSinkError(eventSink, client.address(), e.localizedMessage)
+                }
             }
         }
     }
@@ -187,6 +186,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun create(call: MethodCall, result: MethodChannel.Result) {
         val identifier = call.argument<String>("identifier") ?: ""
         val seed = call.argument<ByteArray>("seed")
+        val connectRetries = call.argument<Int>("connectRetries") ?: -1
+        val maxReconnectInterval = call.argument<Int>("maxReconnectInterval") ?: 5000
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
         val numSubClients = (call.argument<Int>("numSubClients") ?: 3).toLong()
         val ethResolverConfigArray =
@@ -195,8 +196,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
 
         val config = ClientConfig()
-        config.connectRetries = -1
-        config.maxReconnectInterval = 5 * 1000
+
+        config.connectRetries = connectRetries
+        config.maxReconnectInterval = maxReconnectInterval
 
         if (seedRpc != null) {
             config.seedRPCServerAddr = StringArray(null)
@@ -259,7 +261,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
                 onConnect(client, numSubClients)
 
-                async(Dispatchers.IO) { onMessage(client) }
+                onMessage(client)
             } catch (e: Throwable) {
                 resultError(result, e)
             }
@@ -269,18 +271,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun reconnect(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "reconnect")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "reconnect")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                client?.reconnect()
+                client.reconnect()
 
                 resultSuccess(result, null)
             } catch (e: Throwable) {
@@ -292,10 +294,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun close(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "close")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.success(null)
             return
         }
@@ -318,15 +321,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val encrypted = call.argument<Boolean>("encrypted") ?: true
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "replyText")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "replyText")
             return
         }
 
-        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         val msg = Message()
         msg.messageID = messageId
         msg.src = dest
@@ -349,10 +352,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val noReply = call.argument<Boolean>("noReply") ?: true
         val timeout = call.argument<Int>("timeout") ?: 10000
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "sendText")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "sendText")
             return
         }
@@ -377,9 +381,8 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
                 if (!noReply) {
-                    val onMessage = client?.sendText(nknDests, data, config)
+                    val onMessage = client.sendText(nknDests, data, config)
                     if (onMessage == null) {
                         resultError(result, "", "onMessage is null", "sendText")
                         return@launch
@@ -400,7 +403,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     resultSuccess(result, resp)
                     return@launch
                 } else {
-                    client?.sendText(nknDests, data, config)
+                    client.sendText(nknDests, data, config)
 
                     val resp = hashMapOf(
                         "messageId" to config.messageID
@@ -424,10 +427,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 1000
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "publishText")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "publishText")
             return
         }
@@ -441,8 +445,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                client?.publishText(topic, data, config)
+                client.publishText(topic, data, config)
 
                 val resp = hashMapOf(
                     "messageId" to config.messageID
@@ -465,10 +468,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "subscribe")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "subscribe")
             return
         }
@@ -482,8 +486,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val hash = client?.subscribe(
+                val hash = client.subscribe(
                     identifier,
                     topic,
                     duration.toLong(),
@@ -507,10 +510,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "unsubscribe")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "unsubscribe")
             return
         }
@@ -524,8 +528,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val hash = client?.unsubscribe(identifier, topic, transactionConfig)
+                val hash = client.unsubscribe(identifier, topic, transactionConfig)
 
                 resultSuccess(result, hash)
                 return@launch
@@ -545,18 +548,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val txPool = call.argument<Boolean>("txPool") ?: true
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "getSubscribers")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "getSubscribers")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val subscribers = client?.getSubscribers(
+                val subscribers = client.getSubscribers(
                     topic,
                     offset.toLong(),
                     limit.toLong(),
@@ -590,18 +593,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val topic = call.argument<String>("topic")!!
         val subscriber = call.argument<String>("subscriber")!!
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "getSubscription")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "getSubscription")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val subscription = client?.getSubscription(topic, subscriber)
+                val subscription = client.getSubscription(topic, subscriber)
 
                 val resp = hashMapOf(
                     "meta" to subscription?.meta,
@@ -621,18 +624,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val topic = call.argument<String>("topic")!!
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "getSubscribersCount")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "getSubscribersCount")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val count = client?.getSubscribersCount(topic, subscriberHashPrefix)
+                val count = client.getSubscribersCount(topic, subscriberHashPrefix)
 
                 resultSuccess(result, count)
                 return@launch
@@ -646,18 +649,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private fun getHeight(call: MethodCall, result: MethodChannel.Result) {
         val _id = call.argument<String>("_id")!!
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "getHeight")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "getHeight")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val height = client?.height
+                val height = client.height
 
                 resultSuccess(result, height)
                 return@launch
@@ -673,18 +676,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val address = call.argument<String>("address")
         val txPool = call.argument<Boolean>("txPool") ?: true
 
-        if (!clientMap.containsKey(_id) || (clientMap[_id] == null)) {
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
             result.error("", "client is null", "getNonce")
             return
-        } else if (clientMap[_id]?.isClosed == true) {
+        } else if (client.isClosed) {
             result.error("", "client is closed", "getNonce")
             return
         }
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                val nonce = client?.getNonceByAddress(address, txPool)
+                val nonce = client.getNonceByAddress(address, txPool)
 
                 resultSuccess(result, nonce)
                 return@launch
