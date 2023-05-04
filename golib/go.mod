@@ -5,12 +5,12 @@ go 1.18
 require (
 	github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e
 	github.com/nknorg/eth-resolver-go v0.0.0-20220705093053-e6450052dee6
-	github.com/nknorg/ncp-go v1.0.3 // indirect
-	github.com/nknorg/nkn-sdk-go v1.4.2-0.20221222105519-997da8a8acc8
+	github.com/nknorg/ncp-go v1.0.5 // indirect
+	github.com/nknorg/nkn-sdk-go v1.4.5
 	github.com/nknorg/nkn/v2 v2.1.9
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9
 	github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4
-	golang.org/x/mobile v0.0.0-20220325161704-447654d348e3
+	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c
 )
 
 require (
