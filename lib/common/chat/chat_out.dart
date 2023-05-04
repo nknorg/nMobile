@@ -62,7 +62,7 @@ class ChatOutCommon with Tag {
         onMessage = result[0];
         bool canTry = result[1];
         int delay = result[2];
-        if (onMessage?.messageId.isNotEmpty == true) break;
+        if (onMessage?.messageId?.isNotEmpty == true) break;
         if (!canTry) break;
         tryTimes++;
         await Future.delayed(Duration(milliseconds: delay));
@@ -79,7 +79,7 @@ class ChatOutCommon with Tag {
     // logger.v("$TAG - _sendData - send start - destList:$destList - data:$data");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
-      if (onMessage?.messageId.isNotEmpty == true) {
+      if (onMessage?.messageId?.isNotEmpty == true) {
         logger.v("$TAG - _sendData - send success - count:${destList.length} - destList:$destList - data:$data");
       } else {
         logger.e("$TAG - _sendData - pid is empty - count:${destList.length} - destList:$destList - data:$data");
@@ -1241,7 +1241,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return null;
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendMsg(clientAddressList, data);
-    if ((onResult == null) || onResult.messageId.isEmpty) {
+    if ((onResult == null) || (onResult.messageId?.isEmpty == true)) {
       logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
       return null;
     }
