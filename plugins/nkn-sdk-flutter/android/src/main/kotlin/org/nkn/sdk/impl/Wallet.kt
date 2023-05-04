@@ -373,6 +373,12 @@ class Wallet : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     resp[addr] = value?.trim() ?: ""
                     true
                 }
+                if (txPool) {
+                    subscribers?.subscribersInTxPool?.range { addr, value ->
+                        resp[addr] = value?.trim() ?: ""
+                        true
+                    }
+                }
 
                 resultSuccess(result, resp)
                 return@launch
