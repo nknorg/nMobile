@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
@@ -29,20 +28,26 @@ class OnConnect {
 
 /// Event emitting channel when client receives a message (not including reply or ACK).
 class OnMessage {
+  /// Client ID
+  String? _id;
+
   /// Message ID.
   Uint8List messageId;
 
   /// Sender's NKN client address
-  String? src;
+  String src;
 
   /// Message data.
-  String? data;
+  String data;
 
   /// Message data type.
-  int? type;
+  int type;
 
   /// Whether message is encrypted.
-  bool? encrypted;
+  bool encrypted;
+
+  /// Indicating no reply or ACK should be sent
+  bool noReply;
 
   OnMessage({
     required this.messageId,
@@ -50,7 +55,23 @@ class OnMessage {
     required this.src,
     required this.type,
     required this.encrypted,
+    required this.noReply,
   });
+
+  Future<void> reply(String data, {int maxHoldingSeconds = 0}) async {
+    try {
+      await Client._methodChannel.invokeMethod('replyText', {
+        '_id': this._id,
+        'messageId': this.messageId,
+        'dest': this.src,
+        'data': data,
+        'encrypted': this.encrypted,
+        'maxHoldingSeconds': maxHoldingSeconds,
+      });
+    } catch (e) {
+      throw e;
+    }
+  }
 }
 
 /// EthResolver Config
@@ -140,7 +161,14 @@ class Client {
   /// clients created. For any zero value field in config, the default client
   /// config value will be used. If config is nil, the default client config will
   /// be used.
-  static Future<Client> create(Uint8List seed, {String identifier = '', int? numSubClients, ClientConfig? config}) async {
+  static Future<Client> create(
+    Uint8List seed, {
+    String identifier = '',
+    int? numSubClients,
+    int connectRetries = -1,
+    int maxReconnectInterval = 5 * 1000,
+    ClientConfig? config,
+  }) async {
     List<Map>? ethResolverConfigArray;
     if (config?.ethResolverConfig != null) {
       ethResolverConfigArray = <Map>[];
@@ -166,6 +194,8 @@ class Client {
         'seed': seed,
         'numSubClients': numSubClients,
         'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'connectRetries': connectRetries,
+        'maxReconnectInterval': maxReconnectInterval,
         'ethResolverConfigArray': ethResolverConfigArray,
         'dnsResolverConfigArray': dnsResolverConfigArray,
       });
@@ -183,18 +213,17 @@ class Client {
             break;
           case 'onMessage':
             Map data = res['data'];
-            client._onMessageStreamSink.add(OnMessage(
-              src: data['src'],
-              type: data['type'],
-              messageId: data['messageId'],
-              data: data['data'],
-              encrypted: data['encrypted'],
-            ));
+            var onMsg = OnMessage(src: data['src'], type: data['type'], messageId: data['messageId'], data: data['data'], encrypted: data['encrypted'], noReply: data['noReply']);
+            onMsg._id = res['_id'];
+            client._onMessageStreamSink.add(onMsg);
             break;
           default:
             break;
         }
       }, onError: (err) {
+        if (err.code != client.address) {
+          return;
+        }
         client._onErrorStreamSink.add(err);
       });
       return client;
@@ -243,6 +272,7 @@ class Client {
         type: resp['type'],
         encrypted: resp['encrypted'],
         src: resp['src'],
+        noReply: resp['noReply'],
       );
       return message;
     } catch (e) {
@@ -269,6 +299,7 @@ class Client {
         type: resp['type'],
         encrypted: resp['encrypted'],
         src: resp['src'],
+        noReply: resp['noReply'],
       );
       return message;
     } catch (e) {
@@ -412,7 +443,6 @@ class Client {
   /// false, result only counts transactions in ledger; if txPool is true,
   /// transactions in txPool are also counted.
   Future<int?> getNonce({bool txPool = true}) async {
-    if (this.publicKey == null || this.publicKey.isEmpty) return null;
     try {
       String? walletAddr = await Wallet.pubKeyToWalletAddr(hexEncode(this.publicKey));
       int? resp = await _methodChannel.invokeMethod('getNonce', {
