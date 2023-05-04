@@ -32,22 +32,22 @@ class OnMessage {
   String? _id;
 
   /// Message ID.
-  Uint8List messageId;
+  Uint8List? messageId;
 
   /// Sender's NKN client address
-  String src;
+  String? src;
 
   /// Message data.
-  String data;
+  String? data;
 
   /// Message data type.
-  int type;
+  int? type;
 
   /// Whether message is encrypted.
-  bool encrypted;
+  bool? encrypted;
 
   /// Indicating no reply or ACK should be sent
-  bool noReply;
+  bool? noReply;
 
   OnMessage({
     required this.messageId,
