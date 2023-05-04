@@ -101,7 +101,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             resp["client"] = ["address": client.address()]
             resp["rpcServers"] = rpcServers
             //NSLog("%@", resp)
-            self.eventSinkSuccess(eventSink: eventSink, resp: resp)
+            self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
             return
         } catch let error {
             self.eventSinkError(eventSink: self.eventSink, error: error)

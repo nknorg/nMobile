@@ -239,6 +239,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val account = Nkn.newAccount(seed)
+                if (account == null) {
+                    resultError(result, "", "new account fail", "create")
+                    return@launch
+                }
+
                 var client: MultiClient? = null
                 try {
                     client = createClient(account, identifier, numSubClients, config)
