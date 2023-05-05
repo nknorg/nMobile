@@ -161,7 +161,7 @@ class ParallelQueue {
       this.onLog?.call("ParallelQueue - _onQueueNext - run - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
       final item = _queue.first;
       _queue.remove(item);
-      if (_lastProcessId > 2147483640) _lastProcessId = 0;
+      if (_lastProcessId >= 2147483640) _lastProcessId = 0;
       final processId = _lastProcessId;
       _activeItems.add(processId);
       _lastProcessId++;

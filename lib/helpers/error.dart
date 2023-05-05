@@ -77,7 +77,6 @@ class NknError {
     writeTCP,
     readTCP,
     writeBroken,
-    writeBroken,
     readBroken,
     wrongNode,
     rpcRequestFail,
@@ -87,8 +86,10 @@ class NknError {
     nilWebsocketConn,
     createClientFailed,
     nilClient,
-    "connect fail",
-    "client is closed",
+    "new account fail", // same with native
+    "client create fail", // same with native
+    "client is null", // same with native
+    "client is closed", // same with native
   ];
 
   static List<String> nknErrors = [
@@ -142,19 +143,21 @@ class NknError {
 void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, String? text, bool upload = true}) {
   if (Settings.isRelease) {
     String errStr = error?.toString().toLowerCase() ?? "";
-    bool skip0 = errStr.contains("wrong password");
-    bool skip1 = errStr.contains(NknError.rpcRequestFail);
-    bool skip2 = errStr.contains("address = fcm.googleapis.com");
-    bool skip3 = errStr.contains("address = mainnet.infura.io");
-    bool skip4 = errStr.contains("address = eth-mainnet.g.alchemy.com");
-    if (upload && !skip0 && !skip1 && !skip2 && !skip3 && !skip4) {
+    bool contains = _containsStrings(errStr, [
+      "wrong password",
+      NknError.rpcRequestFail,
+      "address = fcm.googleapis.com",
+      "address = mainnet.infura.io",
+      "address = eth-mainnet.g.alchemy.com",
+    ]);
+    if (upload && !contains) {
       if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace);
     }
   } else if (Settings.debug) {
     logger.e(error);
     debugPrintStack(maxFrames: 100);
   }
-  if (!toast) return null;
+  if (!toast) return;
   text = text ?? getErrorShow(error);
   if ((text != null) && text.isNotEmpty) {
     Toast.show(text);
@@ -187,14 +190,17 @@ String? getErrorShow(dynamic error) {
 
   // release
   if (errStr.isEmpty) return "";
-  // if (errStr.contains(NknError.rpcRequestFail)) return "";
-  if (errStr.contains(NknError.writeBroken)) return "";
-  if (errStr.contains(NknError.readBroken)) return "";
-  if (errStr.contains(NknError.writeTCP)) return "";
-  if (errStr.contains(NknError.readTCP)) return "";
-  if (errStr.contains("address = mainnet.infura.io")) return "";
-  if (errStr.contains("address = eth-mainnet.g.alchemy.com")) return "";
-  if (errStr.contains("address = fcm.googleapis.com")) return "";
+  bool contains = _containsStrings(errStr, [
+    //NknError.rpcRequestFail
+    NknError.writeBroken,
+    NknError.readBroken,
+    NknError.writeTCP,
+    NknError.readTCP,
+    "address = mainnet.infura.io",
+    "address = eth-mainnet.g.alchemy.com",
+    "address = fcm.googleapis.com",
+  ]);
+  if (contains) return "";
 
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
@@ -202,4 +208,13 @@ String? getErrorShow(dynamic error) {
   return Settings.locale((s) => s.something_went_wrong);
   // return "";
   // return error.toString();
+}
+
+bool _containsStrings(String parent, List<String> subs) {
+  bool contains = false;
+  for (var i = 0; i < subs.length; i++) {
+    contains = parent.contains(subs[i]);
+    if (contains) break;
+  }
+  return contains;
 }
