@@ -70,8 +70,8 @@ class PrivateGroupItemStorage with Tag {
           });
         }
         PrivateGroupItemSchema added = PrivateGroupItemSchema.fromMap(entity);
-        if (id != null) schema.id = id;
-        // logger.v("$TAG - insert - success - schema:$schema");
+        if (id != null) added.id = id;
+        logger.i("$TAG - insert - success - schema:$added");
         return added;
       } catch (e, st) {
         handleError(e, st);
