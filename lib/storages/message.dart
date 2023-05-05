@@ -45,7 +45,7 @@ class MessageStorage with Tag {
   MessageStorage();
 
   static create(Database db) async {
-    // create table TODO:GG upgrade queue_id
+    // create table TODO:GG upgrade queue_id 需要把所有的ack_no换成true，有sendAt过滤？
     await db.execute(createSQL);
 
     // index TODO:GG index_messages_target_id_topic_group_queue_id

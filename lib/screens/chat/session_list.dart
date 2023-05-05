@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
@@ -28,6 +30,7 @@ class ChatSessionListLayout extends BaseStateFulWidget {
 }
 
 class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionListLayout> {
+  StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _appLifeChangeSubscription;
   StreamSubscription? _contactCurrentUpdateSubscription;
   StreamSubscription? _sessionAddSubscription;
@@ -41,6 +44,9 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   bool _moreLoading = false;
   ScrollController _scrollController = ScrollController();
   List<SessionSchema> _sessionList = [];
+
+  int clientConnectStatus = ClientConnectStatus.connecting;
+  bool clientConnectingVisible = false;
 
   bool _isLoaded = false;
   bool _isShowTip = false;
@@ -57,6 +63,22 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   @override
   void initState() {
     super.initState();
+
+    // clientStatus
+    _clientStatusChangeSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
+      clientConnectStatus = status;
+      if (clientConnectStatus == ClientConnectStatus.connecting) {
+        Future.delayed(Duration(seconds: 5)).then((value) {
+          setState(() {
+            clientConnectingVisible = clientConnectStatus == ClientConnectStatus.connecting;
+          });
+        });
+      } else {
+        setState(() {
+          clientConnectingVisible = false;
+        });
+      }
+    });
 
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
@@ -129,6 +151,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   @override
   void dispose() {
+    _clientStatusChangeSubscription?.cancel();
     _appLifeChangeSubscription?.cancel();
     _contactCurrentUpdateSubscription?.cancel();
     _sessionAddSubscription?.cancel();
@@ -263,7 +286,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     }
     return Column(
       children: [
-        //_getClientStatusView(),
+        _getClientStatusView(),
         _isShowTip ? _getTipView() : SizedBox.shrink(),
         Expanded(
           child: _sessionListView(),
@@ -272,27 +295,19 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     );
   }
 
-  /*_getClientStatusView() {
-    return StreamBuilder<bool>(
-      stream: clientCommon.connectingVisibleStream,
-      initialData: false,
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-        if (snapshot.data == false) {
-          return SizedBox.shrink();
-        }
-        return Container(
-          width: double.infinity,
-          height: Settings.screenWidth() / 25 + 20,
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: application.theme.backgroundColor6.withAlpha(150), width: 0.5))),
-          // color: application.theme.backgroundColor6,
-          child: SpinKitThreeBounce(
-            color: application.theme.backgroundColor5.withAlpha(100),
-            size: Settings.screenWidth() / 25,
-          ),
-        );
-      },
+  _getClientStatusView() {
+    if (!clientConnectingVisible) return SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      height: Settings.screenWidth() / 25 + 20,
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: application.theme.backgroundColor6.withAlpha(150), width: 0.5))),
+      // color: application.theme.backgroundColor6,
+      child: SpinKitThreeBounce(
+        color: application.theme.backgroundColor5.withAlpha(100),
+        size: Settings.screenWidth() / 25,
+      ),
     );
-  }*/
+  }
 
   _getTipView() {
     return Container(
