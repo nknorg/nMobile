@@ -325,7 +325,7 @@ class PrivateGroupCommon with Tag {
     if (owners.length <= 0) return false;
     bool success = await chatOutCommon.sendPrivateGroupQuit(owners[0].inviter, myself);
     if (!success) {
-      logger.e('$TAG - quit - quit group join rpc fail.');
+      logger.e('$TAG - quit - quit group join msg fail.');
       return false;
     }
     // native (no item modify to avoid be sync members by different group_version)

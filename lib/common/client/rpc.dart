@@ -311,7 +311,7 @@ class RPC {
         if (!canTry && !isBlock) {
           logger.w("PRC - subscribeWithJoin - cancel subscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
-          await topicCommon.setJoined(_schema.id, false, notify: true);
+          //await topicCommon.setJoined(_schema.id, false, notify: true);
         } else {
           success = true; // will success by try timer
           logger.i("PRC - subscribeWithJoin - add subscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
@@ -321,7 +321,7 @@ class RPC {
         if (!canTry && !isBlock) {
           logger.i("PRC - _unsubscribe - cancel unsubscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
           await topicCommon.setStatusProgressEnd(_schema.id, notify: true);
-          await topicCommon.setJoined(_schema.id, true, notify: true);
+          //await topicCommon.setJoined(_schema.id, true, notify: true);
         } else {
           success = true; // will success by try timer
           logger.i("PRC - _unsubscribe - add unsubscribe try - isJoin:$isJoin - result:$results - nonce:$_nonce - fee:$fee - topic:$topic");
@@ -395,7 +395,7 @@ class RPC {
       return [success, canTry, isBlock, nonce];
     };
     // call
-    List result = [false, true, false, null];
+    List result = [false, true, false, nonce];
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       result = await func(result[3]);
@@ -466,7 +466,7 @@ class RPC {
       return [success, canTry, isBlock, nonce];
     };
     // call
-    List result = [false, true, false, null];
+    List result = [false, true, false, nonce];
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       result = await func(result[3]);

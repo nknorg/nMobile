@@ -43,6 +43,7 @@ class DeviceToken {
     if (token.startsWith(PREFIX_APNS)) {
       return token.replaceAll(PREFIX_APNS, "");
     }
+    logger.w("DeviceToken - splitAPNS - no prefix - $token");
     return "";
   }
 
@@ -51,6 +52,7 @@ class DeviceToken {
     if (token.startsWith(PREFIX_FCM)) {
       return token.replaceAll(PREFIX_FCM, "");
     }
+    logger.w("DeviceToken - splitFCM - no prefix - $token");
     return "";
   }
 }
