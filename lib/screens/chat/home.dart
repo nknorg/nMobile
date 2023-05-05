@@ -76,6 +76,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   void initState() {
     super.initState();
 
+    Function completeLogin = () {
+      if (clientCommon.isClientOK) {
+        if (!(loginCompleter.isCompleted == true)) {
+          loginCompleter.complete();
+        }
+      }
+    };
+
     // db
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
       setState(() {
@@ -96,11 +104,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      if (clientCommon.isClientOK) {
-        if (!(loginCompleter.isCompleted == true)) {
-          loginCompleter.complete();
-        }
-      }
+      completeLogin();
     });
 
     // appLife
@@ -110,20 +114,10 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
           int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
           if (gap >= Settings.gapClientReAuthMs) {
             _tryAuth().then((success) {
-              if (success) {
-                if (clientCommon.isClientOK) {
-                  if (!(loginCompleter.isCompleted == true)) {
-                    loginCompleter.complete();
-                  }
-                }
-              }
+              if (success) completeLogin();
             });
           } else {
-            if (clientCommon.isClientOK) {
-              if (!(loginCompleter.isCompleted == true)) {
-                loginCompleter.complete();
-              }
-            }
+            completeLogin();
           }
         }
       } else if (application.isGoBackground(states)) {
