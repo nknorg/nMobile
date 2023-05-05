@@ -87,7 +87,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - ClientCommon - onConnectivityChanged - okay - status:$status");
       }
       isNetworkOk = status != ConnectivityResult.none;
-      if (isClientOK) connectCheck(status: true);
+      if (isClientOK) connectCheck(status: true, waitTimes: 1);
     });
   }
 
@@ -326,11 +326,17 @@ class ClientCommon with Tag {
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
       logger.d("$TAG - onMessage -> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      MessageSchema? receive = MessageSchema.fromReceive(address ?? "", event);
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
+      } else if ((receive?.from == address) && (receive?.from == receive?.to) && (receive?.contentType == MessageContentType.ping)) {
+        int nowAt = DateTime.now().millisecondsSinceEpoch;
+        if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
+          _statusSink.add(ClientConnectStatus.connected);
+        }
       }
-      chatInCommon.onMessageReceive(MessageSchema.fromReceive(address ?? "", event)); // await
+      chatInCommon.onMessageReceive(receive); // await
     });
   }
 
@@ -370,7 +376,6 @@ class ClientCommon with Tag {
   }
 
   Future connectCheck({bool status = false, int waitTimes = Settings.tryTimesClientConnectWait}) async {
-    // if (status) _statusSink.add(ClientConnectStatus.connecting);
     if (_isConnectChecking) return;
     _isConnectChecking = true;
     int tryTimes = 0;
@@ -380,11 +385,13 @@ class ClientCommon with Tag {
         break;
       } else if (isClientOK) {
         logger.v("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
+        if (status) _statusSink.add(ClientConnectStatus.connecting);
         await chatOutCommon.sendPing([address ?? ""], true);
         break;
-      } else if (tryTimes <= waitTimes) {
+      } else if (tryTimes < waitTimes) {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReConnect:$_isReConnecting - status:$status");
         ++tryTimes;
+        if (status) _statusSink.add(ClientConnectStatus.connecting);
         await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
         continue;
       } else {

@@ -67,6 +67,8 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
   bool connected = false;
 
+  int clientConnectStatus = ClientConnectStatus.connecting;
+
   ContactSchema? _contactMe;
 
   @override
@@ -105,6 +107,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
       completeLogin();
+      if (clientConnectStatus != status) {
+        setState(() {
+          clientConnectStatus = status;
+        });
+      }
     });
 
     // appLife
@@ -379,81 +386,75 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   Widget _headerBody() {
-    return StreamBuilder<int>(
-      stream: clientCommon.statusStream.distinct((prev, next) => prev == next),
-      initialData: clientCommon.status,
-      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-        Widget statusWidget;
-        switch (snapshot.data) {
-          case ClientConnectStatus.connecting:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.connecting, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.fontLightColor.withAlpha(200),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2, left: 4),
-                  child: SpinKitThreeBounce(
-                    color: application.theme.fontLightColor.withAlpha(200),
-                    size: 10,
-                  ),
-                ),
-              ],
-            );
-            break;
-          case ClientConnectStatus.connected:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.connected, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.successColor,
-                ),
-              ],
-            );
-            break;
-          case ClientConnectStatus.disconnecting:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.disconnect, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.fontLightColor.withAlpha(200),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2, left: 4),
-                  child: SpinKitThreeBounce(
-                    color: application.theme.fontLightColor.withAlpha(200),
-                    size: 10,
-                  ),
-                ),
-              ],
-            );
-            break;
-          case ClientConnectStatus.disconnected:
-            statusWidget = Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Label(
-                  Settings.locale((s) => s.disconnect, ctx: context),
-                  type: LabelType.h4,
-                  color: application.theme.strongColor,
-                ),
-              ],
-            );
-            break;
-          default:
-            statusWidget = SizedBox.shrink();
-            break;
-        }
-        return statusWidget;
-      },
-    );
+    Widget statusWidget;
+    switch (clientConnectStatus) {
+      case ClientConnectStatus.connecting:
+        statusWidget = Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Label(
+              Settings.locale((s) => s.connecting, ctx: context),
+              type: LabelType.h4,
+              color: application.theme.fontLightColor.withAlpha(200),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2, left: 4),
+              child: SpinKitThreeBounce(
+                color: application.theme.fontLightColor.withAlpha(200),
+                size: 10,
+              ),
+            ),
+          ],
+        );
+        break;
+      case ClientConnectStatus.connected:
+        statusWidget = Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Label(
+              Settings.locale((s) => s.connected, ctx: context),
+              type: LabelType.h4,
+              color: application.theme.successColor,
+            ),
+          ],
+        );
+        break;
+      case ClientConnectStatus.disconnecting:
+        statusWidget = Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Label(
+              Settings.locale((s) => s.disconnect, ctx: context),
+              type: LabelType.h4,
+              color: application.theme.fontLightColor.withAlpha(200),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2, left: 4),
+              child: SpinKitThreeBounce(
+                color: application.theme.fontLightColor.withAlpha(200),
+                size: 10,
+              ),
+            ),
+          ],
+        );
+        break;
+      case ClientConnectStatus.disconnected:
+        statusWidget = Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Label(
+              Settings.locale((s) => s.disconnect, ctx: context),
+              type: LabelType.h4,
+              color: application.theme.strongColor,
+            ),
+          ],
+        );
+        break;
+      default:
+        statusWidget = SizedBox.shrink();
+        break;
+    }
+    return statusWidget;
   }
 
   _dbUpgradeTip() {
