@@ -121,13 +121,13 @@ class ClientCommon with Tag {
       while (true) {
         if (force) {
           if (timeSignIn <= _timeClosedForce) {
-            logger.w("$TAG - signIn - try break by force before - tryTimes:$tryTimes - wallet:$wallet - password:$password");
+            logger.w("$TAG - signIn - try break by force signOut before - tryTimes:$tryTimes - wallet:$wallet - password:$password");
             await signOut(clearWallet: true, closeDB: true, lock: false);
             break;
           }
         } else {
           if (_timeClosedForce > 0) {
-            logger.w("$TAG - signIn - try again by no force - tryTimes:$tryTimes - wallet:$wallet - password:$password");
+            logger.w("$TAG - signIn - try break by no force login - tryTimes:$tryTimes - wallet:$wallet - password:$password");
             await signOut(clearWallet: true, closeDB: true, lock: false);
             break;
           }
@@ -138,7 +138,9 @@ class ClientCommon with Tag {
         password = result["password"]?.toString();
         String text = result["text"]?.toString() ?? "";
         if (toast && text.isNotEmpty) {
-          if (tryTimes % 10 == 0) Toast.show(text);
+          if (!canTry || (tryTimes % 10 == 0)) {
+            Toast.show(text);
+          }
         }
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
