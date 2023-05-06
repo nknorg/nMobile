@@ -387,10 +387,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       logger.i("$TAG - _refreshTopicSubscribers - wait sync members - topic:$_topic");
       return;
     } else if ((interval < Settings.gapTopicSubscribersRefreshMs) && !forceFetch) {
-      logger.i("$TAG - _refreshTopicSubscribers - interval small - interval:$interval");
+      logger.i("$TAG - _refreshTopicSubscribers - gap small - gap:$interval<${Settings.gapTopicSubscribersRefreshMs}");
       return;
     } else {
-      logger.i("$TAG - _refreshTopicSubscribers - enable - interval:$interval");
+      logger.i("$TAG - _refreshTopicSubscribers - enable - gap:$interval>${Settings.gapTopicSubscribersRefreshMs}");
     }
     await subscriberCommon.refreshSubscribers(topic, _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
     await topicCommon.setLastRefreshSubscribersAt(_topic?.id, notify: true);

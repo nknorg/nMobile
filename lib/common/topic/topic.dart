@@ -49,6 +49,16 @@ class TopicCommon with Tag {
     return fee;
   }
 
+  Future getTopicReSubscribeFee() async {
+    double fee = 0;
+    var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
+    if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
+      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+      if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
+    }
+    return fee;
+  }
+
   Future checkAndTryAllSubscribe() async {
     if (!clientCommon.isClientOK) return;
     int limit = 20;
@@ -69,10 +79,12 @@ class TopicCommon with Tag {
           int lastCheckAt = element.lastCheckSubscribeAt();
           int interval = DateTime.now().millisecondsSinceEpoch - lastCheckAt;
           if (element.joined && (interval > Settings.gapTopicSubscribeCheckMs)) {
-            logger.i("$TAG - checkAndTryAllSubscribe - topic subscribe expire - interval ok - interval:$interval - topic:${element.topic} - topic:$element");
+            logger.i("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap ok - gap:$interval>${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
             topicsWithSubscribeExpire.add(element);
+          } else if (interval <= Settings.gapTopicSubscribeCheckMs) {
+            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap small - gap:$interval<${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
           } else {
-            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - no_joined/interval_small - interval:$interval - joined:${element.joined} - topic:${element.topic} - topic:$element");
+            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - no_joined - joined:${element.joined} - topic:${element.topic} - topic:$element");
           }
         }
       });
@@ -93,12 +105,7 @@ class TopicCommon with Tag {
       await _checkAndTrySubscribe(topic, false);
     }
     if (topicsWithSubscribeExpire.isNotEmpty) {
-      double fee = 0;
-      var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-      if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-        fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-        if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-      }
+      double fee = await getTopicReSubscribeFee();
       for (var i = 0; i < topicsWithSubscribeExpire.length; i++) {
         TopicSchema topic = topicsWithSubscribeExpire[i];
         var result = await checkExpireAndSubscribe(topic.topic, fee: fee); // no nonce
@@ -153,10 +160,10 @@ class TopicCommon with Tag {
           int lastCheckAt = element.lastCheckPermissionsAt();
           int interval = DateTime.now().millisecondsSinceEpoch - lastCheckAt;
           if (interval > Settings.gapTopicPermissionCheckMs) {
-            logger.i("$TAG - checkAndTryAllPermission - topic permission resubscribe - interval ok - interval:$interval - topic:${element.topic}");
+            logger.i("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap ok - gap:$interval>${Settings.gapTopicPermissionCheckMs} - topic:${element.topic}");
             permissionTopics.add(element);
           } else {
-            logger.d("$TAG - checkAndTryAllPermission - topic permission resubscribe - interval small - interval:$interval - topic:${element.topic}");
+            logger.d("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap small - gap:$interval<${Settings.gapTopicPermissionCheckMs} - topic:${element.topic}");
           }
         }
       });
@@ -170,12 +177,7 @@ class TopicCommon with Tag {
     if (permissionTopics.isNotEmpty) {
       int? globalHeight = await RPC.getBlockHeight();
       if ((globalHeight != null) && (globalHeight > 0)) {
-        double fee = 0;
-        var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-        if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-          fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-          if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-        }
+        double fee = await getTopicReSubscribeFee();
         for (var i = 0; i < permissionTopics.length; i++) {
           TopicSchema topic = permissionTopics[i];
           bool success = await _checkAndTryPermissionExpire(topic, globalHeight, fee);
@@ -379,9 +381,9 @@ class TopicCommon with Tag {
       if (expireHeight > 0) {
         // node is joined
         noSubscribed = false;
-        int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if ((DateTime.now().millisecondsSinceEpoch - createAt) > Settings.gapTxPoolUpdateDelayMs) {
-          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - topic:$exists");
+        int gap = DateTime.now().millisecondsSinceEpoch - (exists.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        if (gap > Settings.gapTxPoolUpdateDelayMs) {
+          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
           int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(
             exists.id,
@@ -396,8 +398,7 @@ class TopicCommon with Tag {
             exists.expireBlockHeight = expireHeight;
           }
         } else {
-          var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - interval:${betweenS}s - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
         }
       } else {
         // node no joined
@@ -409,9 +410,9 @@ class TopicCommon with Tag {
       if (expireHeight <= 0) {
         // node no joined
         noSubscribed = true;
-        int createAt = exists.createAt ?? DateTime.now().millisecondsSinceEpoch;
-        if (exists.joined && (DateTime.now().millisecondsSinceEpoch - createAt) > Settings.gapTxPoolUpdateDelayMs) {
-          logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - topic:$exists");
+        int gap = DateTime.now().millisecondsSinceEpoch - (exists.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        if (exists.joined && (gap > Settings.gapTxPoolUpdateDelayMs)) {
+          logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
           bool success = await setJoined(
             exists.id,
             false,
@@ -425,8 +426,7 @@ class TopicCommon with Tag {
             exists.expireBlockHeight = 0;
           }
         } else {
-          var betweenS = (DateTime.now().millisecondsSinceEpoch - createAt) / 1000;
-          logger.i("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - interval:${betweenS}s - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
         }
       } else {
         // node is joined
@@ -438,14 +438,6 @@ class TopicCommon with Tag {
     int? globalHeight = await RPC.getBlockHeight();
     bool shouldResubscribe = await exists.shouldResubscribe(globalHeight);
     if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
-      // subscribe fee
-      // if ((exists.joined && shouldResubscribe) && (fee <= 0)) {
-      //   var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
-      //   if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-      //     fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
-      //     if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-      //   }
-      // }
       // client subscribe
       bool subscribeSuccess = await RPC.subscribeWithJoin(topic, true, nonce: nonce, fee: fee, toast: toast);
       if (!subscribeSuccess) {
@@ -617,6 +609,12 @@ class TopicCommon with Tag {
     if (!clientCommon.isClientOK) return null;
     if (kickAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
+    // topic exist
+    TopicSchema? _topic = await queryByTopic(topic);
+    if (_topic == null) {
+      logger.e("$TAG - kick - topic is null - topic:$topic");
+      return null;
+    }
     // check status
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, kickAddress);
     if (_subscriber == null) return null;
@@ -654,6 +652,10 @@ class TopicCommon with Tag {
       return null;
     }
     logger.i("$TAG - kick - rpc success - topic:$topic - nonce:$nonce - fee:$fee - permission:$permission - meta:$meta - subscriber:$_subscriber");
+    if (oldStatus == SubscriberStatus.Subscribed) {
+      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
+      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+    }
     // send message
     await chatOutCommon.sendTopicKickOut(topic, kickAddress);
     if (toast) Toast.show(Settings.locale((s) => s.rejected));
@@ -674,6 +676,10 @@ class TopicCommon with Tag {
       logger.e("$TAG - onSubscribe - topic is null - topic:$topic");
       return null;
     }
+    // subscriber exist
+    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, subAddress);
+    if (_subscriber == null) return null;
+    int? oldStatus = _subscriber.status;
     // permission check
     int? permPage;
     if (_topic.isPrivate && !_topic.isOwner(subAddress)) {
@@ -699,13 +705,15 @@ class TopicCommon with Tag {
     }
     // permission modify in invitee action by owner
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onSubscribe(topic, subAddress, permPage);
+    _subscriber = await subscriberCommon.onSubscribe(topic, subAddress, permPage);
     if (_subscriber == null) {
       logger.w("$TAG - onSubscribe - subscriber is null - topic:$topic - subAddress:$subAddress - permPage:$permPage");
       return null;
     }
-    bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) + 1, notify: true);
-    if (setSuccess) _topic.count = (_topic.count ?? 1) + 1;
+    if (oldStatus != SubscriberStatus.Subscribed) {
+      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) + 1, notify: true);
+      if (setSuccess) _topic.count = (_topic.count ?? 1) + 1;
+    }
     // subscribers sync
     // if (_topic.isPrivate) {
     //   Future.delayed(Duration(seconds: 1), () {
@@ -783,7 +791,7 @@ class TopicCommon with Tag {
       // do nothing now
     }
     // DB update (just node sync can delete)
-    if (oldStatus != SubscriberStatus.Subscribed) {
+    if (oldStatus == SubscriberStatus.Subscribed) {
       bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
       if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
     }
@@ -865,9 +873,9 @@ class TopicCommon with Tag {
   Future<bool?> isSubscribed(String? topic, String? clientAddress, {int? globalHeight}) async {
     if (topic == null || topic.isEmpty) return null;
     TopicSchema? exists = await queryByTopic(topic);
-    int createAt = exists?.createAt ?? DateTime.now().millisecondsSinceEpoch;
-    if ((exists != null) && (DateTime.now().millisecondsSinceEpoch - createAt) < Settings.gapTxPoolUpdateDelayMs) {
-      logger.i("$TAG - isSubscribed - createAt just now, maybe in txPool - topic:$topic - clientAddress:$clientAddress");
+    int gap = DateTime.now().millisecondsSinceEpoch - (exists?.createAt ?? DateTime.now().millisecondsSinceEpoch);
+    if ((exists != null) && (gap < Settings.gapTxPoolUpdateDelayMs)) {
+      logger.i("$TAG - isSubscribed - createAt just now, maybe in txPool - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$topic - clientAddress:$clientAddress");
       return exists.joined; // maybe in txPool
     }
     int expireHeight = await getSubscribeExpireAtFromNode(exists?.topic, clientAddress);
@@ -980,25 +988,25 @@ class TopicCommon with Tag {
     List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage, SubscriberSchema.PermPageSize * 2);
     subscribers.forEach((SubscriberSchema dbItem) {
       if ((dbItem.clientAddress.isNotEmpty == true) && (dbItem.clientAddress != append.clientAddress)) {
-        int interval = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
-        if (interval < Settings.gapTxPoolUpdateDelayMs) {
+        int gap = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
+        if (gap < Settings.gapTxPoolUpdateDelayMs) {
           if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.Subscribed)) {
             // add to accepts
-            logger.i("$TAG - _buildPageMetaByAppend - add to accepts (txPool) - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - gap:$interval - topic:$topic - address:${append.clientAddress}");
+            logger.i("$TAG - _buildPageMetaByAppend - add to accepts (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
             rejectList = whereList(false, rejectList, dbItem.clientAddress);
             if (whereList(true, acceptList, dbItem.clientAddress).isEmpty) {
               acceptList.add({'addr': dbItem.clientAddress});
             }
           } else if (dbItem.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
-            logger.i("$TAG - _buildPageMetaByAppend - add to rejects (txPool) - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - gap:$interval - topic:$topic - address:${append.clientAddress}");
+            logger.i("$TAG - _buildPageMetaByAppend - add to rejects (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
             acceptList = whereList(false, acceptList, dbItem.clientAddress);
             if (whereList(true, rejectList, dbItem.clientAddress).isEmpty) {
               rejectList.add({'addr': dbItem.clientAddress});
             }
           } else {
             // remove from all
-            logger.d("$TAG - _buildPageMetaByAppend - remove from all (txPool) - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - gap:$interval - topic:$topic - address:${append.clientAddress}");
+            logger.d("$TAG - _buildPageMetaByAppend - remove from all (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
             acceptList = whereList(false, acceptList, dbItem.clientAddress);
             rejectList = whereList(false, rejectList, dbItem.clientAddress);
           }

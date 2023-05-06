@@ -12,11 +12,11 @@ class DeviceInfoCommon with Tag {
   DeviceInfoCommon();
 
   String getDeviceProfile({DeviceInfoSchema? deviceInfo}) {
-    String appName = (deviceInfo != null) ? deviceInfo.appName : Settings.appName;
-    String appVersion = (deviceInfo != null) ? deviceInfo.appVersion.toString() : Settings.build;
-    String platform = (deviceInfo != null) ? deviceInfo.platform : DevicePlatformName.get();
-    String platformVersion = (deviceInfo != null) ? deviceInfo.platformVersion.toString() : Settings.deviceVersion;
-    String deviceId = (deviceInfo != null) ? deviceInfo.deviceId : Settings.deviceId;
+    String appName = ((deviceInfo != null) && deviceInfo.appName.isNotEmpty) ? deviceInfo.appName : Settings.appName;
+    String appVersion = ((deviceInfo != null) && deviceInfo.appVersion.toString().isNotEmpty) ? deviceInfo.appVersion.toString() : Settings.build;
+    String platform = ((deviceInfo != null) && deviceInfo.platform.isNotEmpty) ? deviceInfo.platform : DevicePlatformName.get();
+    String platformVersion = ((deviceInfo != null) && deviceInfo.platformVersion.toString().isNotEmpty) ? deviceInfo.platformVersion.toString() : Settings.deviceVersion;
+    String deviceId = ((deviceInfo != null) && deviceInfo.deviceId.isNotEmpty) ? deviceInfo.deviceId : Settings.deviceId;
     return "$appName:$appVersion:$platform:$platformVersion:$deviceId";
   }
 

@@ -83,26 +83,24 @@ class SubscriberCommon with Tag {
         }
       }
       // filter in txPool
-      bool isCreateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
-      bool isUpdateJustNow = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) < Settings.gapTxPoolUpdateDelayMs;
-      if (isCreateJustNow) {
-        var createInterval = (DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0)) / 1000;
+      var createGap = DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0);
+      var updateGap = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
+      if (createGap < Settings.gapTxPoolUpdateDelayMs) {
         if (dbItem.status == SubscriberStatus.None) {
           logger.d("$TAG - refreshSubscribers - DB created just now, next by status none - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         } else if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt)) {
           if (nodeItem?.status == SubscriberStatus.Subscribed) {
             logger.d("$TAG - refreshSubscribers - DB created just now, next bu subscribed - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           } else {
-            logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - interval:${createInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+            logger.i("$TAG - refreshSubscribers - DB created just now, skip by invited - gap:$createGap<${Settings.gapTxPoolUpdateDelayMs} - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
             continue;
           }
         } else {
-          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - interval:${createInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+          logger.i("$TAG - refreshSubscribers - DB created just now, maybe in tx pool - gap:$createGap<${Settings.gapTxPoolUpdateDelayMs} - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
           continue;
         }
-      } else if (isUpdateJustNow) {
-        var updateInterval = (DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0)) / 1000;
-        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - interval:${updateInterval}s - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
+      } else if (updateGap < Settings.gapTxPoolUpdateDelayMs) {
+        logger.i("$TAG - refreshSubscribers - DB updated just now, maybe in tx pool - gap:$updateGap<${Settings.gapTxPoolUpdateDelayMs} - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
         continue;
       } else {
         logger.v("$TAG - refreshSubscribers - DB updated to long, so can next");
