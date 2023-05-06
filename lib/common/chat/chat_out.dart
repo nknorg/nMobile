@@ -141,7 +141,7 @@ class ChatOutCommon with Tag {
           int lastAt = isPing ? deviceInfo.pingAt : deviceInfo.pongAt;
           int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
           if (interval < gap) {
-            logger.d('$TAG - sendPing - ${isPing ? "ping" : "pong"} - interval < gap - interval:${interval - gap} - target:$address');
+            logger.d('$TAG - sendPing - ${isPing ? "ping" : "pong"} - gap small - gap:$interval<$gap - target:$address');
             continue;
           }
         }
@@ -253,7 +253,7 @@ class ChatOutCommon with Tag {
       int lastAt = deviceInfo.contactProfileResponseAt;
       int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
       if (interval < gap) {
-        logger.d('$TAG - sendContactProfileResponse - interval < gap - interval:${interval - gap} - target:$clientAddress');
+        logger.d('$TAG - sendContactProfileResponse - gap small - gap:$interval<$gap - target:$clientAddress');
         return false;
       }
     }
@@ -327,7 +327,7 @@ class ChatOutCommon with Tag {
       int lastAt = targetDeviceInfo.deviceInfoResponseAt;
       int interval = DateTime.now().millisecondsSinceEpoch - lastAt;
       if (interval < gap) {
-        logger.d('$TAG - sendDeviceInfo - interval < gap - interval:${interval - gap} - target:$clientAddress');
+        logger.d('$TAG - sendDeviceInfo - gap small - gap:$interval<$gap - target:$clientAddress');
         return false;
       }
     }
@@ -744,7 +744,7 @@ class ChatOutCommon with Tag {
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.optionsRequestAt;
       if (interval < gap) {
-        logger.d('$TAG - sendPrivateGroupOptionRequest - interval < gap - interval:${interval - gap} - target:$target');
+        logger.d('$TAG - sendPrivateGroupOptionRequest - gap small - gap:$interval<$gap - target:$target');
         return false;
       }
     }
@@ -778,7 +778,7 @@ class ChatOutCommon with Tag {
     if (gap > 0) {
       int interval = DateTime.now().millisecondsSinceEpoch - group.membersRequestAt;
       if (interval < gap) {
-        logger.d('$TAG - sendPrivateGroupMemberRequest - interval < gap - interval:${interval - gap} - target:$target');
+        logger.d('$TAG - sendPrivateGroupMemberRequest - gap small - gap:$interval<$gap - target:$target');
         return false;
       }
     }
@@ -805,20 +805,18 @@ class ChatOutCommon with Tag {
 
   Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false, int muteGap = 0}) async {
     if (message == null) return null;
-    // sendAt
-    if (mute) {
-      if (muteGap > 0) {
-        int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
-        if (resendMuteAt <= 0) {
-          logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+    // reSendAt
+    if (mute && (muteGap > 0)) {
+      int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
+      if (resendMuteAt <= 0) {
+        logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+      } else {
+        int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
+        if (interval < muteGap) {
+          logger.i("$TAG - resendMute - resend gap small - gap:$interval<$muteGap - targetId:${message.targetId} - interval:$interval");
+          return null;
         } else {
-          int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
-          if (interval < muteGap) {
-            logger.i("$TAG - resendMute - resend gap small - targetId:${message.targetId} - interval:$interval");
-            return null;
-          } else {
-            logger.d("$TAG - resendMute - resend gap ok - targetId:${message.targetId} - interval:$interval");
-          }
+          logger.d("$TAG - resendMute - resend gap ok - gap:$interval>$muteGap - targetId:${message.targetId}");
         }
       }
     }
@@ -1010,18 +1008,18 @@ class ChatOutCommon with Tag {
     logger.d("$TAG - _sendWithContact - type:${message.contentType} - target:${contact?.clientAddress} - message:${message.toStringNoContent()} - data:$msgData");
     // send
     Uint8List? pid;
-    bool canTry = true;
+    bool tryNoPiece = true;
     if (message.canTryPiece) {
       try {
         List result = await _sendWithPieces([message.to], message);
         pid = result[0];
-        canTry = result[1];
+        tryNoPiece = result[1];
       } catch (e, st) {
         handleError(e, st);
         return null;
       }
     }
-    if (canTry && ((pid == null) || pid.isEmpty)) {
+    if (tryNoPiece && ((pid == null) || pid.isEmpty)) {
       pid = (await sendMsg([message.to], msgData))?.messageId;
     }
     if (pid == null || pid.isEmpty) return pid;
@@ -1077,18 +1075,18 @@ class ChatOutCommon with Tag {
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
-      bool canTry = true;
+      bool tryNoPiece = true;
       if (message.canTryPiece) {
         try {
           List result = await _sendWithPieces(destList, message);
           pid = result[0];
-          canTry = result[1];
+          tryNoPiece = result[1];
         } catch (e, st) {
           handleError(e, st);
           return null;
         }
       }
-      if (canTry && ((pid == null) || pid.isEmpty)) {
+      if (tryNoPiece && ((pid == null) || pid.isEmpty)) {
         pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
@@ -1144,18 +1142,18 @@ class ChatOutCommon with Tag {
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
-      bool canTry = true;
+      bool tryNoPiece = true;
       if (message.canTryPiece) {
         try {
           List result = await _sendWithPieces(destList, message);
           pid = result[0];
-          canTry = result[1];
+          tryNoPiece = result[1];
         } catch (e, st) {
           handleError(e, st);
           return null;
         }
       }
-      if (canTry && ((pid == null) || pid.isEmpty)) {
+      if (tryNoPiece && ((pid == null) || pid.isEmpty)) {
         pid = (await sendMsg(destList, msgData))?.messageId;
       }
     }
