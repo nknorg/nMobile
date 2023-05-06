@@ -54,11 +54,11 @@ class ChatCommon with Tag {
           targetIds.add(element.targetId);
         }
       });
-      if (!lastTimeOK || (result.length < limit) || (targetIds.length >= Settings.maxCountPingSessions)) break;
+      if (!lastTimeOK || (result.length < limit) || (targetIds.length >= limit)) break;
     }
     // send
     int count = await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
-    logger.i("$TAG - sendPings2LatestSessions - enable_count:$count - total:${targetIds.length} - targetIds:$targetIds");
+    logger.i("$TAG - sendPings2LatestSessions - count:$count/${targetIds.length} - targetIds:$targetIds");
   }
 
   Future<int> resetMessageSending({bool ipfsReset = false}) async {
@@ -77,9 +77,9 @@ class ChatCommon with Tag {
       if (message.canReceipt) {
         logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         if (message.contentType == MessageContentType.ipfs) {
+          if (!ipfsReset) continue;
           String? ipfsHash = MessageOptions.getIpfsHash(message.options);
           if ((ipfsHash == null) || ipfsHash.isEmpty) {
-            if (!ipfsReset) continue;
             message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
             message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
             await messageCommon.updateMessageOptions(message, message.options, notify: false);

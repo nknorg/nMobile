@@ -447,7 +447,7 @@ class ChatInCommon with Tag {
         bool success = await deviceInfoCommon.setDeviceToken(deviceInfo?.contactAddress, deviceInfo?.deviceId, deviceToken);
         if (!success) return false;
       } else {
-        logger.w("$TAG - _receiveContactOptions - deviceToken same - from:${received.from} - data:$data");
+        logger.i("$TAG - _receiveContactOptions - deviceToken same - from:${received.from} - data:$data");
       }
     } else {
       logger.e("$TAG - _receiveContactOptions - setNothing - data:$data - from:${received.from}");
@@ -666,7 +666,7 @@ class ChatInCommon with Tag {
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
     Function() syncSubscribe = () async {
       int tryTimes = 0;
-      while (tryTimes < 10) {
+      while (tryTimes < 30) {
         SubscriberSchema? _subscriber = await topicCommon.onSubscribe(received.topic, received.from);
         if (_subscriber != null) {
           if (!historySubscribed) {
@@ -678,7 +678,7 @@ class ChatInCommon with Tag {
         }
         logger.w("$TAG - _receiveTopicSubscribe - check subscribe continue(txPool) - tryTimes:$tryTimes - historySubscribed:$historySubscribed - topic:${received.topic} - address:${received.from}");
         tryTimes++;
-        await Future.delayed(Duration(seconds: 5));
+        await Future.delayed(Duration(seconds: 2));
       }
     };
     syncSubscribe(); // await
