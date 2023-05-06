@@ -44,7 +44,7 @@ class TopicCommon with Tag {
     if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
       fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
       if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
-      fee = await BottomDialog.of(context).showTransactionSpeedUp();
+      fee = await BottomDialog.of(context).showTransactionSpeedUp(fee: fee);
     }
     return fee;
   }
