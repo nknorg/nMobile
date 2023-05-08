@@ -111,6 +111,7 @@ class TaskService {
             temp[k] = v;
           } else {
             logger.d("TaskService - removeTask - timers find - sec:$sec - key:$key");
+            v.cancel();
           }
         });
         _timers = temp;
