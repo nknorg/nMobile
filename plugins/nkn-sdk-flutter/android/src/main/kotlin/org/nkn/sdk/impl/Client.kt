@@ -78,9 +78,13 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
-    private suspend fun onConnect(client: MultiClient, numSubClients: Long) =
+    private suspend fun onConnect(_id: String, numSubClients: Long) =
         withContext(Dispatchers.IO) {
             try {
+                val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                if (client == null || client.isClosed) {
+                    return@withContext
+                }
                 val node = client.onConnect.next() ?: return@withContext
 
                 val rpcServers = ArrayList<String>()
@@ -106,15 +110,19 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
                 eventSinkSuccess(eventSink, resp)
             } catch (e: Throwable) {
-                eventSinkError(eventSink, client.address(), e.localizedMessage)
+                eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
 
-    private suspend fun onMessage(client: MultiClient) {
+    private suspend fun onMessage(_id: String) {
         withContext(Dispatchers.IO) {
-            while (!client.isClosed) {
+            while (true) {
                 try {
-                    val msg = client.onMessage.next() ?: continue
+                    val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                    if (client == null || client.isClosed) {
+                        break
+                    }
+                    val msg = client.onMessage.nextWithTimeout(5 * 1000) ?: continue
 
                     val resp = hashMapOf(
                         "_id" to client.address(),
@@ -131,7 +139,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
                     eventSinkSuccess(eventSink, resp)
                 } catch (e: Throwable) {
-                    eventSinkError(eventSink, client.address(), e.localizedMessage)
+                    eventSinkError(eventSink, _id, e.localizedMessage)
                 }
             }
         }
@@ -265,9 +273,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 )
                 resultSuccess(result, data)
 
-                onConnect(client, numSubClients)
+                onConnect(client.address(), numSubClients)
 
-                onMessage(client)
+                onMessage(client.address())
             } catch (e: Throwable) {
                 resultError(result, e)
             }
