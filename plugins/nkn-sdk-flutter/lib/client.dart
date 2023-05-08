@@ -248,10 +248,10 @@ class Client {
       return;
     }
     await _methodChannel.invokeMethod('close', {'_id': this.address});
-    _onConnectStreamController.close();
-    _onMessageStreamController.close();
-    _onErrorStreamController.close();
-    eventChannelStreamSubscription.cancel();
+    await eventChannelStreamSubscription.cancel();
+    await _onConnectStreamController.close();
+    await _onMessageStreamController.close();
+    await _onErrorStreamController.close();
   }
 
   /// [sendText] sends bytes or string data to one or multiple destinations with an
