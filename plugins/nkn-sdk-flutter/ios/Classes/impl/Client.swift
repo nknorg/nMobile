@@ -75,8 +75,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         clientMap.removeValue(forKey: id)
     }
     
-    private func onConnect(client: NknMultiClient, numSubClients: Int) {
+    private func onConnect(_id: String, numSubClients: Int) {
         do {
+            guard let client = clientMap.keys.contains(_id) ? clientMap[_id] : nil else {
+                return
+            }
+            guard (!client.isClosed()) else{
+                return
+            }
             guard let node = try client.onConnect?.next() else {
                 return
             }
@@ -104,15 +110,21 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
             return
         } catch let error {
-            self.eventSinkError(eventSink: self.eventSink, error: error)
+            self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
             return
         }
     }
     
-    private func onMessage(client: NknMultiClient) {
-        while(!client.isClosed()) {
+    private func onMessage(_id: String) {
+        while(true) {
             do {
-                guard let msg = try client.onMessage?.next() else {
+                guard let client = clientMap.keys.contains(_id) ? clientMap[_id] : nil else {
+                    break
+                }
+                guard (!client.isClosed()) else{
+                    break
+                }
+                guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
                     continue
                 }
                 
@@ -131,7 +143,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
                 //return
             } catch let error {
-                self.eventSinkError(eventSink: self.eventSink, error: error)
+                self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                 //return
             }
         }
@@ -251,8 +263,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 resp["seed"] = client!.seed()
                 self.resultSuccess(result: result, resp: resp)
                 
-                self.onConnect(client: client!, numSubClients: numSubClients)
-                self.onMessage(client: client!)
+                self.onConnect(_id: client!.address(), numSubClients: numSubClients)
+                self.onMessage(_id: client!.address())
                 return
             } catch let error {
                 self.resultError(result: result, error: error)
