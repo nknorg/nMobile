@@ -343,9 +343,13 @@ class ClientCommon with Tag {
   }
 
   Future _stopListen() async {
-    await _onErrorStreamSubscription?.cancel();
-    await _onConnectStreamSubscription?.cancel();
-    await _onMessageStreamSubscription?.cancel();
+    try {
+      await _onErrorStreamSubscription?.cancel();
+      await _onConnectStreamSubscription?.cancel();
+      await _onMessageStreamSubscription?.cancel();
+    } catch (e, st) {
+      handleError(e, st);
+    }
   }
 
   /// **************************************************************************************** ///
