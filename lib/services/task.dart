@@ -23,13 +23,13 @@ class TaskService {
     _queue.add(() async {
       // timer
       if (_timers[sec] == null) {
-        logger.i("TaskService - timer create - sec:$sec - key:$key - delayMs:$delayMs");
+        logger.i("TaskService - addTask - timer create - sec:$sec - key:$key - delayMs:$delayMs");
         _timers[sec] = Timer.periodic(Duration(seconds: sec), (timer) async {
           _tasks[sec]?.keys.forEach((String key) {
             if (!background && application.inBackGround) return;
             Function? _func = _tasks[sec]?[key];
             if (_func == null) {
-              logger.w("TaskService - timer tick nil - sec:$sec - key:$key - delayMs:$delayMs");
+              logger.w("TaskService - addTask - timer tick nil - sec:$sec - key:$key - delayMs:$delayMs");
               return;
             }
             // logger.v("TaskService - timer tick - sec:$sec - key:$key - delayMs:$delayMs");
@@ -40,7 +40,7 @@ class TaskService {
       // task
       Function toTask = () {
         if (_tasks[sec] == null) {
-          logger.i("TaskService - task create - sec:$sec - key:$key - delayMs:$delayMs");
+          logger.i("TaskService - addTask - task create - sec:$sec - key:$key - delayMs:$delayMs");
           _tasks[sec] = Map<String, Function(String)>();
         }
         _tasks[sec]?[key] = func;
@@ -48,7 +48,7 @@ class TaskService {
       // delay
       if ((delayMs ?? 0) > 0) {
         if (_delays[sec] == null) {
-          logger.i("TaskService - delay create - sec:$sec - key:$key - delayMs:$delayMs");
+          logger.i("TaskService - addTask - delay create - sec:$sec - key:$key - delayMs:$delayMs");
           _delays[sec] = Map<String, Function(String)>();
         }
         _delays[sec]?[key] = func;
@@ -57,10 +57,10 @@ class TaskService {
           if (_delays[sec]?.keys.contains(key) != true) return;
           Function? _func = _delays[sec]?[key];
           if (_func == null) {
-            logger.w("TaskService - delay tick nil - sec:$sec - key:$key - delayMs:$delayMs");
+            logger.w("TaskService - addTask - delay tick nil - sec:$sec - key:$key - delayMs:$delayMs");
             return;
           }
-          logger.i("TaskService - delay tick - sec:$sec - key:$key - delayMs:$delayMs");
+          logger.i("TaskService - addTask - delay tick - sec:$sec - key:$key - delayMs:$delayMs");
           _func.call(key); // await
           _delays[sec]?.remove(key);
           toTask();
@@ -77,34 +77,40 @@ class TaskService {
   void removeTask(String key, int sec) {
     _queue.add(() async {
       if (_delays[sec]?.keys.contains(key) == true) {
-        logger.d("TaskService - delay remove - sec:$sec - key:$key");
+        logger.d("TaskService - removeTask - delays start - sec:$sec - key:$key");
         // _delays[sec]?.removeWhere((k, v) => k == key);
         Map<String, Function(String)> temp = Map();
         _delays[sec]?.forEach((k, v) {
           if (k != key) {
             temp[k] = v;
+          } else {
+            logger.d("TaskService - removeTask - delays find - sec:$sec - key:$key");
           }
         });
         _delays[sec] = temp;
       }
       if (_tasks[sec]?.keys.contains(key) == true) {
-        logger.d("TaskService - task remove - sec:$sec - key:$key");
+        logger.d("TaskService - removeTask - tasks start - sec:$sec - key:$key");
         // _tasks[sec]?.removeWhere((k, v) => k == key);
         Map<String, Function(String)> temp = Map();
         _tasks[sec]?.forEach((k, v) {
           if (k != key) {
             temp[k] = v;
+          } else {
+            logger.d("TaskService - removeTask - tasks find - sec:$sec - key:$key");
           }
         });
         _tasks[sec] = temp;
       }
       if (((_tasks[sec]?.length ?? 0) <= 0) && (_delays[sec]?.length ?? 0) <= 0) {
-        logger.i("TaskService - timer remove - sec:$sec - key:$key");
+        logger.d("TaskService - removeTask - timers start - sec:$sec - key:$key");
         // _timers.removeWhere((k, v) => k == sec);
         Map<int, Timer> temp = Map();
         _timers.forEach((k, v) {
           if (k != sec) {
             temp[k] = v;
+          } else {
+            logger.d("TaskService - removeTask - timers find - sec:$sec - key:$key");
           }
         });
         _timers = temp;

@@ -307,6 +307,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, clientAddress: $clientAddress, type: $type, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data, nknWalletAddress: $nknWalletAddress}';
+    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, clientAddress: $clientAddress, type: $type, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data}';
   }
 }
