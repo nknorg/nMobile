@@ -92,7 +92,7 @@ class AudioHelper with Tag {
     this.playerDurationMs = durationMs;
     // progress
     if (_onPlayProgressSubscription != null) {
-      _onPlayProgressSubscription?.cancel();
+      await _onPlayProgressSubscription?.cancel();
     }
     _onPlayProgressSubscription = player.onProgress?.listen((PlaybackDisposition event) async {
       // logger.v("$TAG - playStart - onProgress - recordId:${this.playerId} - duration:${event.duration} - position:${event.position}");
@@ -137,7 +137,7 @@ class AudioHelper with Tag {
       "position": 0,
       "percent": 0,
     });
-    _onPlayProgressSubscription?.cancel();
+    await _onPlayProgressSubscription?.cancel();
     _onPlayProgressSubscription = null;
     try {
       await player.stopPlayer();
@@ -205,7 +205,7 @@ class AudioHelper with Tag {
     this.recordMaxDurationS = maxDurationS;
     // progress
     if (_onRecordProgressSubscription != null) {
-      _onRecordProgressSubscription?.cancel();
+      await _onRecordProgressSubscription?.cancel();
     }
     _onRecordProgressSubscription = record.onProgress?.listen((RecordingDisposition event) async {
       // logger.v("$TAG - recordStart - onProgress - recordId:${this.recordId} - duration:${event.duration} - volume:${event.decibels}");
@@ -235,7 +235,7 @@ class AudioHelper with Tag {
   Future<String?> recordStop() async {
     logger.i("$TAG - recordStop - recordId:$recordId");
     isRecordReleasing = true;
-    _onRecordProgressSubscription?.cancel();
+    await _onRecordProgressSubscription?.cancel();
     _onRecordProgressSubscription = null;
     try {
       await record.stopRecorder();
