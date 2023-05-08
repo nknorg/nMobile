@@ -678,8 +678,7 @@ class TopicCommon with Tag {
     }
     // subscriber exist
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, subAddress);
-    if (_subscriber == null) return null;
-    int? oldStatus = _subscriber.status;
+    int? oldStatus = _subscriber?.status ?? SubscriberStatus.None;
     // permission check
     int? permPage;
     if (_topic.isPrivate && !_topic.isOwner(subAddress)) {
@@ -735,8 +734,7 @@ class TopicCommon with Tag {
     }
     // subscriber exist
     SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, unSubAddress);
-    if (_subscriber == null) return null;
-    int? oldStatus = _subscriber.status;
+    int? oldStatus = _subscriber?.status ?? SubscriberStatus.None;
     // subscriber update
     _subscriber = await subscriberCommon.onUnsubscribe(topic, unSubAddress);
     if (_subscriber == null) {

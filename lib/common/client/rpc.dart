@@ -592,12 +592,14 @@ class RPC {
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       Map<String, dynamic>? subs = await func(offset, limit);
-      if ((subs != null) && subs.isNotEmpty) {
+      if (subs != null) {
         if (subscribers == null) subscribers = Map();
-        subscribers.addAll(subs);
-        if (subs.length < limit) break;
-        offset += limit;
-        continue;
+        if (subs.isNotEmpty) {
+          subscribers.addAll(subs);
+          if (subs.length < limit) break;
+          offset += limit;
+          continue;
+        }
       }
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 100));
