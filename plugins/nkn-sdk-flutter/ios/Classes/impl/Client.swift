@@ -257,14 +257,27 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     return
                 }
                 
+                guard let clientAddress = client?.address() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "create_address")
+                    return
+                }
+                guard let clientPubKey = client?.pubKey() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "create_pubkey")
+                    return
+                }
+                guard let clientSeed = client?.seed() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "create_seed")
+                    return
+                }
+                
                 var resp:[String:Any] = [String:Any]()
-                resp["address"] = client!.address()
-                resp["publicKey"] = client!.pubKey()
-                resp["seed"] = client!.seed()
+                resp["address"] = clientAddress
+                resp["publicKey"] = clientPubKey
+                resp["seed"] = clientSeed
                 self.resultSuccess(result: result, resp: resp)
                 
-                self.onConnect(_id: client!.address(), numSubClients: numSubClients)
-                self.onMessage(_id: client!.address())
+                self.onConnect(_id: clientAddress, numSubClients: numSubClients)
+                self.onMessage(_id: clientAddress)
                 return
             } catch let error {
                 self.resultError(result: result, error: error)
