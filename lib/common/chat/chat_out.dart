@@ -58,7 +58,7 @@ class ChatOutCommon with Tag {
       OnMessage? onMessage;
       int tryTimes = 0;
       while (tryTimes < Settings.tryTimesMsgSend) {
-        List<dynamic> result = await _sendData(destList, data);
+        List<dynamic> result = await _sendData(destList, data, lastTime: tryTimes >= (Settings.tryTimesMsgSend - 1));
         onMessage = result[0];
         bool canTry = result[1];
         int delay = result[2];
@@ -74,7 +74,7 @@ class ChatOutCommon with Tag {
     });
   }
 
-  Future<List<dynamic>> _sendData(List<String> destList, String data) async {
+  Future<List<dynamic>> _sendData(List<String> destList, String data, {bool lastTime = false}) async {
     if (!(await _waitClientOk())) return [null, true, 100];
     // logger.v("$TAG - _sendData - send start - destList:$destList - data:$data");
     try {
@@ -99,7 +99,7 @@ class ChatOutCommon with Tag {
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting) return [null, true, 500];
         logger.w("$TAG - _sendData - reConnect - count:${destList.length} - destList:$destList - data:$data");
-        bool success = await clientCommon.reConnect();
+        bool success = await clientCommon.reConnect(reSignIn: lastTime);
         return [null, true, success ? 500 : 1000];
       }
       handleError(e, st);
@@ -217,7 +217,7 @@ class ChatOutCommon with Tag {
     if (!(await _waitClientOk())) return false;
     if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return false; // topic no read, just like receipt
     String data = MessageData.getRead(msgIds);
-    logger.i("$TAG - sendRead - dest:$clientAddress - msgIds:$msgIds");
+    logger.i("$TAG - sendRead - dest:$clientAddress - count:${msgIds.length} - msgIds:$msgIds");
     Uint8List? pid = await _sendWithAddress([clientAddress], data);
     return pid?.isNotEmpty == true;
   }
