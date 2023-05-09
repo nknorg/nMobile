@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -7,7 +6,6 @@ import 'package:nmobile/components/button/button.dart';
 import 'package:nmobile/components/dialog/loading.dart';
 import 'package:nmobile/components/text/form_text.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/popular_channel.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -25,7 +23,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
   bool _formValid = false;
 
   TextEditingController _topicController = TextEditingController();
-  bool _privateSelected = false;
+  // bool _privateSelected = false;
 
   @override
   void onRefreshArguments() {}
@@ -39,7 +37,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
     if (topicName == null || topicName.isEmpty) return false;
     if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
 
-    if (_privateSelected) {
+    /*if (_privateSelected) {
       if (clientCommon.getPublicKey() == null) return false;
       if (Validate.isPrivateTopicOk(topicName)) {
         int index = topicName.lastIndexOf('.');
@@ -48,7 +46,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
       } else {
         topicName = '$topicName.${clientCommon.getPublicKey()}';
       }
-    }
+    }*/
 
     double? fee = await topicCommon.getTopicSubscribeFee(Settings.appContext);
     if (fee == null) return false;
@@ -91,7 +89,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                     textAlign: TextAlign.start,
                   ),
                   Spacer(),
-                  Row(
+                  /*Row(
                     children: <Widget>[
                       Label(
                         Settings.locale((s) => s.private_channel),
@@ -108,7 +106,7 @@ class _CreateGroupDialogState extends BaseStateFulWidgetState<ChatTopicSearchLay
                         },
                       ),
                     ],
-                  ),
+                  ),*/
                   SizedBox(width: 20),
                 ],
               ),
