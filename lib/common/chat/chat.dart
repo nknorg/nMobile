@@ -40,6 +40,11 @@ class ChatCommon with Tag {
     if (reset) await resetIpfsDownloading(walletAddress, thumbnailAutoDownload: true);
   }
 
+  Future startInitChecks({int? delay}) async {
+    if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
+    await sendPings2LatestSessions();
+  }
+
   Future sendPings2LatestSessions() async {
     // sessions
     List<String> targetIds = [];
