@@ -216,6 +216,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future<bool> _tryLogin({WalletSchema? wallet, bool init = false}) async {
+    if (clientCommon.isClientConnecting || clientCommon.isClientOK) return false;
     if (isLoginProgress) return false;
     isLoginProgress = true;
     // view
@@ -268,7 +269,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return false;
     }
     // client
-    clientCommon.connectCheck(status: true, waitTimes: 1); // await
+    clientCommon.connectCheck(status: true, maxWaitTimes: 1); // await
     // check
     _startChecks(delay: 500); // await
     // view
