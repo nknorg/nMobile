@@ -6,9 +6,9 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/path.dart';
 
 class OptionsSchema {
-  bool receiveOpen; // FUTURE:GG options unread + notification TODO:GG 拉黑?
-  int? muteExpireAt; // FUTURE:GG options  chat TODO:GG 需要把deviceToken传进去的时候，顺便在后面跟上过期时间，不跟随deviceInfo
-  bool notificationOpen; // FUTURE:GG options  topic TODO:GG 和muteExpireAt功能重合了，可以根据muteExpireAt来做成get属性
+  bool receiveOpen; // FUTURE:GG options unread + notification TODO:GG black?
+  int? muteExpireAt; // FUTURE:GG options  chat TODO:GG like deviceToken:expireTimeAt?
+  bool notificationOpen; // FUTURE:GG options  topic TODO:GG duplicated to field muteExpireAt, maybe can convert to a params notificationOpen(only get)?
   String? soundResource; // FUTURE:GG options  chat
 
   // burning
