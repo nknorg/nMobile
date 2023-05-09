@@ -9,12 +9,18 @@ import 'package:nmobile/blocs/wallet/wallet_event.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/layout/nav.dart';
+import 'package:nmobile/components/tip/toast.dart';
+import 'package:nmobile/helpers/error.dart';
+import 'package:nmobile/helpers/share.dart';
 import 'package:nmobile/native/common.dart';
+import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/home.dart';
 import 'package:nmobile/screens/settings/home.dart';
 import 'package:nmobile/screens/wallet/home.dart';
 import 'package:nmobile/services/task.dart';
+import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class AppScreen extends StatefulWidget {
   static const String routeName = '/';
@@ -49,7 +55,16 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   StreamSubscription? _clientStatusChangeSubscription;
   StreamSubscription? _appLifeChangeSubscription;
 
+  StreamSubscription? _intentDataTextStreamSubscription;
+  StreamSubscription? _intentDataMediaStreamSubscription;
+
   bool firstConnect = true;
+
+  Completer loginCompleter = Completer();
+
+  int appBackgroundAt = 0;
+
+  bool isAuthProgress = false;
 
   @override
   void initState() {
@@ -75,7 +90,9 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
+      _completeLogin();
       if (clientCommon.isClientOK) {
+        // task add
         if (firstConnect) {
           firstConnect = false;
           taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 8, (key) => clientCommon.connectCheck(status: true), delayMs: 5 * 1000);
@@ -83,6 +100,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
           taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
       } else if (clientCommon.isClientStop) {
+        // task remove
         taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 8);
         taskService.removeTask(TaskService.KEY_SUBSCRIBE_CHECK, 50);
         taskService.removeTask(TaskService.KEY_PERMISSION_CHECK, 50);
@@ -91,12 +109,54 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) async {
+    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        // nothing
+        if (dbCommon.isOpen()) {
+          int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
+          if (gap >= Settings.gapClientReAuthMs) {
+            _tryAuth().then((success) {
+              if (success) _completeLogin();
+            });
+          } else {
+            _completeLogin();
+          }
+        }
       } else if (application.isGoBackground(states)) {
-        // nothing
+        loginCompleter = Completer();
+        appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
+    });
+
+    // For sharing images coming from outside the app while the app is in the memory
+    _intentDataMediaStreamSubscription = ReceiveSharingIntent.getMediaStream().listen((List<SharedMediaFile>? values) async {
+      if (values == null || values.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithFiles(this.context, values);
+    }, onError: (err, stack) {
+      handleError(err, stack);
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is in the memory
+    _intentDataTextStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String? value) async {
+      if (value == null || value.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithTexts(this.context, [value]);
+    }, onError: (err, stack) {
+      handleError(err, stack);
+    });
+
+    // For sharing images coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile>? values) async {
+      if (values == null || values.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithFiles(this.context, values);
+    });
+
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String? value) async {
+      if (value == null || value.isEmpty) return;
+      await loginCompleter.future;
+      ShareHelper.showWithTexts(this.context, [value]);
     });
 
     // wallet
@@ -107,6 +167,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   void dispose() {
     _clientStatusChangeSubscription?.cancel();
     _appLifeChangeSubscription?.cancel();
+    _intentDataTextStreamSubscription?.cancel();
+    _intentDataMediaStreamSubscription?.cancel();
     _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -119,6 +181,57 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     application.appLifecycleState = state;
     super.didChangeAppLifecycleState(state);
     application.appLifeSink.add([old, state]);
+  }
+
+  Future<bool> _tryAuth() async {
+    if (clientCommon.isClientStop) return false;
+    if (isAuthProgress) return false;
+    // view
+    _setAuthProgress(true);
+    // wallet
+    WalletSchema? wallet = await walletCommon.getDefault();
+    if (wallet == null) {
+      logger.i("AppScreen - _tryAuth - wallet default is empty");
+      // ui handle, ChatNoWalletLayout()
+      AppScreen.go(this.context);
+      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
+      _setAuthProgress(false);
+      return false;
+    }
+    // password (android bug return null when fromBackground)
+    String? password = await authorization.getWalletPassword(wallet.address);
+    if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
+      logger.i("AppScreen - _tryAuth - password error, close all");
+      Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
+      AppScreen.go(this.context);
+      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
+      _setAuthProgress(false);
+      return false;
+    }
+    // client
+    clientCommon.connectCheck(status: true, maxWaitTimes: 1); // await
+    // check
+    chatCommon.startInitChecks(delay: 500); // await
+    // view
+    _setAuthProgress(false);
+    return true;
+  }
+
+  _setAuthProgress(bool progress) {
+    if (isAuthProgress != progress) {
+      isAuthProgress = progress; // no check mounted
+      setState(() {
+        isAuthProgress = progress;
+      });
+    }
+  }
+
+  void _completeLogin() {
+    if (clientCommon.isClientOK) {
+      if (!(loginCompleter.isCompleted == true)) {
+        loginCompleter.complete();
+      }
+    }
   }
 
   @override
@@ -160,6 +273,21 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
                 ),
               ),
             ),
+            isAuthProgress
+                ? Positioned(
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      color: Colors.white,
+                      child: Asset.image(
+                        "splash/splash@3x.png",
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                : SizedBox.shrink(),
           ],
         ),
       ),
