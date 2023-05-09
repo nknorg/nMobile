@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:nmobile/app.dart';
 import 'package:nmobile/blocs/wallet/wallet_bloc.dart';
 import 'package:nmobile/blocs/wallet/wallet_state.dart';
 import 'package:nmobile/common/client/client.dart';
@@ -19,9 +18,6 @@ import 'package:nmobile/components/layout/chat_topic_search.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
 import 'package:nmobile/components/text/label.dart';
-import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/helpers/share.dart';
 import 'package:nmobile/routes/routes.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/wallet.dart';
@@ -33,7 +29,6 @@ import 'package:nmobile/screens/contact/home.dart';
 import 'package:nmobile/screens/contact/profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class ChatHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/home';
@@ -51,25 +46,16 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   StreamSubscription? _contactMeUpdateSubscription;
 
   StreamSubscription? _clientStatusChangeSubscription;
-  StreamSubscription? _appLifeChangeSubscription;
-
-  StreamSubscription? _intentDataTextStreamSubscription;
-  StreamSubscription? _intentDataMediaStreamSubscription;
 
   String? dbUpdateTip;
   bool dbOpen = false;
 
-  Completer loginCompleter = Completer();
-  int appBackgroundAt = 0;
-
-  bool isLoginProgress = false;
-  bool isAuthProgress = false;
-
-  bool connected = false;
+  ContactSchema? _contactMe;
 
   int clientConnectStatus = ClientConnectStatus.connecting;
 
-  ContactSchema? _contactMe;
+  bool isLoginProgress = false;
+  bool connected = false;
 
   @override
   void onRefreshArguments() {}
@@ -77,14 +63,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   @override
   void initState() {
     super.initState();
-
-    Function completeLogin = () {
-      if (clientCommon.isClientOK) {
-        if (!(loginCompleter.isCompleted == true)) {
-          loginCompleter.complete();
-        }
-      }
-    };
 
     // db
     _upgradeTipListen = dbCommon.upgradeTipStream.listen((String? tip) {
@@ -106,63 +84,11 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
 
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      completeLogin();
       if (clientConnectStatus != status) {
         setState(() {
           clientConnectStatus = status;
         });
       }
-    });
-
-    // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states)) {
-        if (dbCommon.isOpen()) {
-          int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
-          if (gap >= Settings.gapClientReAuthMs) {
-            _tryAuth().then((success) {
-              if (success) completeLogin();
-            });
-          } else {
-            completeLogin();
-          }
-        }
-      } else if (application.isGoBackground(states)) {
-        loginCompleter = Completer();
-        appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
-      }
-    });
-
-    // For sharing images coming from outside the app while the app is in the memory
-    _intentDataMediaStreamSubscription = ReceiveSharingIntent.getMediaStream().listen((List<SharedMediaFile>? values) async {
-      if (values == null || values.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithFiles(this.context, values);
-    }, onError: (err, stack) {
-      handleError(err, stack);
-    });
-
-    // For sharing or opening urls/text coming from outside the app while the app is in the memory
-    _intentDataTextStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String? value) async {
-      if (value == null || value.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithTexts(this.context, [value]);
-    }, onError: (err, stack) {
-      handleError(err, stack);
-    });
-
-    // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile>? values) async {
-      if (values == null || values.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithFiles(this.context, values);
-    });
-
-    // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String? value) async {
-      if (value == null || value.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithTexts(this.context, [value]);
     });
 
     // login
@@ -205,9 +131,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     _dbOpenedSubscription?.cancel();
     _contactMeUpdateSubscription?.cancel();
     _clientStatusChangeSubscription?.cancel();
-    _appLifeChangeSubscription?.cancel();
-    _intentDataTextStreamSubscription?.cancel();
-    _intentDataMediaStreamSubscription?.cancel();
     Routes.routeObserver.unsubscribe(this);
     super.dispose();
   }
@@ -216,7 +139,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   bool get wantKeepAlive => true;
 
   Future<bool> _tryLogin({WalletSchema? wallet, bool init = false}) async {
-    if (clientCommon.isClientConnecting || clientCommon.isClientOK) return false;
+    if (clientCommon.isClientConnecting || clientCommon.isClientOK) return true;
     if (isLoginProgress) return false;
     isLoginProgress = true;
     // view
@@ -233,49 +156,14 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     if (init) await dbCommon.fixIOS_152();
     // client
     bool success = await clientCommon.signIn(wallet, null, force: true, toast: true, loading: (visible, dbOpen) {
-      if (dbOpen && !isAuthProgress) _setConnected(true);
+      if (dbOpen) _setConnected(true);
     });
     // check
-    if (success) _startChecks(delay: 1000); // await
+    if (success) chatCommon.startInitChecks(delay: 1000); // await
     // view
-    if (!isAuthProgress) _setConnected(success);
+    _setConnected(success);
     isLoginProgress = false;
     return success;
-  }
-
-  Future<bool> _tryAuth() async {
-    if (clientCommon.isClientStop) return false;
-    if (isAuthProgress) return false;
-    isAuthProgress = true;
-    // view
-    AppScreen.go(this.context);
-    _setConnected(false);
-    // wallet
-    WalletSchema? wallet = await walletCommon.getDefault();
-    if (wallet == null) {
-      logger.i("$TAG - _tryAuth - wallet default is empty");
-      // ui handle, ChatNoWalletLayout()
-      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
-      isAuthProgress = false;
-      return false;
-    }
-    // password (android bug return null when fromBackground)
-    String? password = await authorization.getWalletPassword(wallet.address);
-    if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
-      logger.i("$TAG - _tryAuth - password error, close all");
-      Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
-      await clientCommon.signOut(clearWallet: false, closeDB: true, force: true);
-      isAuthProgress = false;
-      return false;
-    }
-    // client
-    clientCommon.connectCheck(status: true, maxWaitTimes: 1); // await
-    // check
-    _startChecks(delay: 500); // await
-    // view
-    _setConnected(true);
-    isAuthProgress = false;
-    return true;
   }
 
   _setConnected(bool show) {
@@ -285,11 +173,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         connected = show;
       });
     }
-  }
-
-  Future _startChecks({int? delay}) async {
-    if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
-    chatCommon.sendPings2LatestSessions(); // await
   }
 
   _refreshContactMe({bool deviceInfo = false}) async {
