@@ -82,7 +82,7 @@ class TopicCommon with Tag {
             logger.i("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap ok - gap:$interval>${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
             topicsWithSubscribeExpire.add(element);
           } else if (interval <= Settings.gapTopicSubscribeCheckMs) {
-            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap small - gap:$interval<${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
+            logger.d("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap small - gap:$interval<${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
           } else {
             logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - no_joined - joined:${element.joined} - topic:${element.topic} - topic:$element");
           }
