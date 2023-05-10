@@ -204,16 +204,17 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       _setAuthProgress(false);
       return false;
     }
+    // view
+    _setAuthProgress(false);
     // client
     clientCommon.connectCheck(status: true, maxWaitTimes: 1); // await
     // check
     chatCommon.startInitChecks(delay: 500); // await
-    // view
-    _setAuthProgress(false);
     return true;
   }
 
   _setAuthProgress(bool progress) {
+    application.isAuthProgress = progress;
     if (isAuthProgress != progress) {
       isAuthProgress = progress; // no check mounted
       setState(() {
