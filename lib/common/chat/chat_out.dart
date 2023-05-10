@@ -97,19 +97,27 @@ class ChatOutCommon with Tag {
       if (NknError.isClientError(e)) {
         handleError(e, st, toast: false);
         // if (clientCommon.isClientOK) return [null, true, 100];
-        if (clientCommon.isClientConnecting) return [null, true, 500];
+        if (clientCommon.isClientConnecting) return [null, true, 2000];
         logger.w("$TAG - _sendData - reConnect - count:${destList.length} - destList:$destList - data:$data");
         bool success = await clientCommon.reConnect(reSignIn: lastTime);
-        return [null, true, success ? 500 : 1000];
+        return [null, true, success ? 2000 : 1000];
       }
       handleError(e, st);
       logger.e("$TAG - _sendData - try by unknown error - count:${destList.length} - destList:$destList - data:$data");
     }
-    return [null, true, 250];
+    return [null, true, 500];
   }
 
   Future<bool> _waitClientOk() async {
     int tryTimes = 0;
+    // wait ios tcp pipe ok
+    if (Platform.isIOS) {
+      int gapForeground = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+      if (gapForeground < 500) {
+        await Future.delayed(Duration(milliseconds: 500 - gapForeground));
+      }
+    }
+    // check client status
     while (!clientCommon.isClientOK) {
       if (clientCommon.isClientStop) {
         logger.e("$TAG - _waitClientOk - client closed - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");

@@ -156,7 +156,7 @@ class ClientCommon with Tag {
         if ((tryTimes > 0) && isNetworkOk) await RPC.setRpcServers(wallet?.address, []);
         _statusSink.add(ClientConnectStatus.connecting); // need flush
         tryTimes++;
-        await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
+        await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
       }
       return success;
     });
@@ -241,7 +241,7 @@ class ClientCommon with Tag {
         // reconnect will break in go-sdk, because connect closed when fail and no callback
         // maybe no go here, because closed too long, reconnect too long more
         await client?.reconnect(); // no onConnect callback
-        await Future.delayed(Duration(milliseconds: 1000)); // reconnect need more time
+        await Future.delayed(Duration(milliseconds: 2 * 1000)); // reconnect need more time
       }
     } catch (e, st) {
       handleError(e, st, toast: false);
@@ -272,7 +272,7 @@ class ClientCommon with Tag {
           logger.e("$TAG - signOut - try again - lock_on - tryTimes:$tryTimes - force:$force");
           tryTimes++;
           _statusSink.add(ClientConnectStatus.disconnecting); // need flush
-          await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
+          await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
         }
       });
     } else {
@@ -286,7 +286,7 @@ class ClientCommon with Tag {
         logger.e("$TAG - signOut - try again - lock_off - tryTimes:$tryTimes - force:$force");
         tryTimes++;
         _statusSink.add(ClientConnectStatus.disconnecting); // need flush
-        await Future.delayed(Duration(milliseconds: isNetworkOk ? 250 : 500));
+        await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
       }
     }
     // status
@@ -370,7 +370,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - reConnect - with reConnect");
         // reconnect will break in go-sdk, because connect closed when fail and no callback
         await client?.reconnect(); // no onConnect callback
-        await Future.delayed(Duration(milliseconds: 1000)); // reconnect need more time
+        await Future.delayed(Duration(milliseconds: 2 * 1000)); // reconnect need more time
         success = true;
       } catch (e, st) {
         handleError(e, st);
@@ -410,7 +410,7 @@ class ClientCommon with Tag {
       } else if (!isNetworkOk) {
         logger.i("$TAG - connectCheck - wait network ok - tryTimes:$tryTimes - status:$status");
         if (status) _statusSink.add(ClientConnectStatus.connecting);
-        await Future.delayed(Duration(milliseconds: 1000));
+        await Future.delayed(Duration(milliseconds: 500));
         continue;
       } else if (isClientOK) {
         logger.v("$TAG - connectCheck - ping - tryTimes:$tryTimes - address:$address");
@@ -421,7 +421,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - connectCheck - wait connecting - tryTimes:$tryTimes - _isClientReConnect:$_isReConnecting - status:$status");
         ++tryTimes;
         if (status) _statusSink.add(ClientConnectStatus.connecting);
-        await Future.delayed(Duration(milliseconds: 2 * 1000));
+        await Future.delayed(Duration(milliseconds: maxWaitTimes <= 1 ? (2 * 1000) : 1000));
         continue;
       } else {
         logger.w("$TAG - connectCheck - reConnect - tryTimes:$tryTimes");
