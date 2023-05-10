@@ -144,7 +144,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // appLife
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
-        _readMessages(true, false); // await
+        int gap = DateTime.now().millisecondsSinceEpoch - application.goBackgroundAt;
+        if (gap >= Settings.gapClientReAuthMs) {
+          // nothing (will go app_screen)
+        } else {
+          _readMessages().then((value) => _clearUnreadAndBadge()); // await
+        }
       } else if (application.isGoBackground(states)) {
         audioHelper.playerRelease(); // await
         audioHelper.recordRelease(); // await
@@ -194,7 +199,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // messages
     _onMessageSaveStreamSubscription = messageCommon.onSavedStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
-      _insertMessage(event);
+      _insertMessage(event); // await
     });
     _onMessageDeleteStreamSubscription = messageCommon.onDeleteStream.listen((event) {
       var messages = _messages.where((element) => element.msgId != event).toList();
@@ -268,10 +273,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _refreshTopicSubscribers(); // await
 
     // privateGroup
-    _checkPrivateGroupVersion();
+    _checkPrivateGroupVersion(); // await
 
     // read
-    _readMessages(true, true); // await
+    _readMessages().then((value) => _clearUnreadAndBadge()); // await
 
     // ping
     if ((this._contact != null) && (this._topic == null) && (this._privateGroup == null)) {
@@ -324,7 +329,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     super.dispose();
   }
 
-  _getDataMessages(bool refresh) async {
+  Future _getDataMessages(bool refresh) async {
     if (_moreLoading) return;
     _moreLoading = true;
     Function func = () async {
@@ -342,12 +347,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _moreLoading = false;
   }
 
-  _insertMessage(MessageSchema? added) async {
+  Future _insertMessage(MessageSchema? added) async {
     if (added == null) return;
     // read
-    if (!added.isOutbound && (application.appLifecycleState == AppLifecycleState.resumed)) {
+    bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
+    if (!added.isOutbound && isAppForeground) {
       // count not up in chatting
-      _readMessages(false, false); // await
+      _readMessages(); // await
     }
     // sender
     if (added.temp == null) added.temp = Map();
@@ -365,7 +371,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _refreshTopicJoined() async {
+  Future _refreshTopicJoined() async {
     if ((_topic == null) || !clientCommon.isClientOK) return;
     bool? isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
     if ((isJoined == true) && (_topic?.isPrivate == true)) {
@@ -377,7 +383,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _refreshTopicSubscribers({bool forceFetch = false}) async {
+  Future _refreshTopicSubscribers({bool forceFetch = false}) async {
     if (!clientCommon.isClientOK) return;
     String? topic = _topic?.topic;
     if ((topic == null) || topic.isEmpty) return;
@@ -401,7 +407,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  _checkPrivateGroupVersion() async {
+  Future _checkPrivateGroupVersion() async {
     if ((_privateGroup == null) || !clientCommon.isClientOK) return;
     if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
@@ -409,30 +415,29 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }); // await
   }
 
-  _readMessages(bool sessionUnreadClear, bool badgeRefresh) async {
+  Future _readMessages() async {
     await messageCommon.readMessagesBySelf(
       this.targetId,
       this._topic?.topic,
       this._privateGroup?.groupId,
       this._contact?.clientAddress,
     );
-    // session
+  }
+
+  Future _clearUnreadAndBadge() async {
     int type = _topic != null
         ? SessionType.TOPIC
         : _privateGroup != null
             ? SessionType.PRIVATE_GROUP
             : SessionType.CONTACT;
-    if (sessionUnreadClear) {
-      await sessionCommon.setUnReadCount(this.targetId, type, 0, notify: true);
-    }
+    // session
+    await sessionCommon.setUnReadCount(this.targetId, type, 0, notify: true);
     // badge
-    if (badgeRefresh) {
-      SessionSchema? session = await sessionCommon.query(targetId, type);
-      Badge.Badge.onCountDown(session?.unReadCount ?? 0); // await
-    }
+    SessionSchema? session = await sessionCommon.query(targetId, type);
+    Badge.Badge.onCountDown(session?.unReadCount ?? 0); // await
   }
 
-  _toggleBottomMenu() async {
+  _toggleBottomMenu() {
     if (mounted) FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
       _showBottomMenu = !_showBottomMenu;
@@ -446,7 +451,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
   }
 
-  _checkNotificationTip() async {
+  Future _checkNotificationTip() async {
     if ((this._topic != null) || (this._privateGroup != null) || (this._contact == null)) return;
     if (!clientCommon.isClientOK) return;
     if (_contact?.options?.notificationOpen == true) return;
@@ -475,14 +480,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         backgroundColor: application.theme.primaryColor,
         onPressed: () {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-          _toggleNotificationOpen();
+          _toggleNotificationOpen(); // await
         },
       ),
     );
     await contactCommon.setTipNotification(this._contact, notify: true);
   }
 
-  _toggleNotificationOpen() async {
+  Future _toggleNotificationOpen() async {
     if (!clientCommon.isClientOK) return;
     if (this._topic != null) {
       // nothing
@@ -702,7 +707,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   child: IconButton(
                     icon: Asset.iconSvg('notification-bell', color: notifyBellColor, width: 24),
                     onPressed: () {
-                      _toggleNotificationOpen();
+                      _toggleNotificationOpen(); // await
                     },
                   ),
                 ),

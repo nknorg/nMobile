@@ -405,7 +405,8 @@ class ChatCommon with Tag {
     Function badgeChange = () async {
       if (!message.isOutbound && message.canNotification) {
         bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
-        if (!inSessionPage || (application.appLifecycleState != AppLifecycleState.resumed)) {
+        bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
+        if (!inSessionPage || !isAppForeground) {
           await Badge.Badge.onCountUp(1);
         }
       }

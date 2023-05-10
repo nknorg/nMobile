@@ -21,6 +21,8 @@ class Application {
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
   bool inBackGround = false;
+  int goBackgroundAt = 0;
+  int goForegroundAt = 0;
 
   Application();
 
@@ -30,9 +32,11 @@ class Application {
       if (isFromBackground(states)) {
         logger.i("Application - init - in foreground");
         inBackGround = false;
+        goForegroundAt = DateTime.now().millisecondsSinceEpoch;
       } else if (isGoBackground(states)) {
         logger.i("Application - init - in background");
         inBackGround = true;
+        goBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
   }
