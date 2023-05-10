@@ -129,7 +129,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   @override
   void initState() {
     super.initState();
-    chatCommon.currentChatTargetId = this.targetId;
+    messageCommon.currentChatTargetId = this.targetId;
     _moreLoading = false;
 
     // clientStatus
@@ -305,7 +305,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void dispose() {
-    chatCommon.currentChatTargetId = null;
+    messageCommon.currentChatTargetId = null;
 
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
@@ -353,8 +353,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Future _insertMessage(MessageSchema? added) async {
     if (added == null) return;
     // read
-    bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
-    if (!added.isOutbound && isAppForeground) {
+    if (!added.isOutbound && messageCommon.isTargetMessagePageVisible(targetId)) {
       // count not up in chatting
       _readMessages(); // await
     }
@@ -471,7 +470,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
     if ((sendCount < 3) || (receiveCount < 3)) return;
-    if (chatCommon.currentChatTargetId == null) return; // maybe quit page out
+    if (messageCommon.currentChatTargetId == null) return; // maybe quit page out
     if (!mounted) return; // maybe quit page out
     // tip dialog
     ModalDialog.of(Settings.appContext).confirm(

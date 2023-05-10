@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
 import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart' as Badge;
@@ -24,9 +23,6 @@ import 'package:nmobile/utils/path.dart';
 
 class ChatCommon with Tag {
   ChatCommon();
-
-  // current page
-  String? currentChatTargetId;
 
   // checker
   // Map<String, Map<String, dynamic>> _checkersParams = Map();
@@ -404,9 +400,7 @@ class ChatCommon with Tag {
     // badge
     Function badgeChange = () async {
       if (!message.isOutbound && message.canNotification) {
-        bool inSessionPage = chatCommon.currentChatTargetId == message.targetId;
-        bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
-        if (!inSessionPage || !isAppForeground) {
+        if (!messageCommon.isTargetMessagePageVisible(message.targetId)) {
           await Badge.Badge.onCountUp(1);
         }
       }

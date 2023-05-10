@@ -24,6 +24,8 @@ class Application {
   int goBackgroundAt = 0;
   int goForegroundAt = 0;
 
+  bool isAuthProgress = false;
+
   Application();
 
   void init() {
