@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 class RemoteNotification {
   static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content}) async {
     if (!Settings.notificationPushEnable) return [];
+    if (Settings.debug && Settings.apnsTopic.isEmpty) return ["test"];
     List<String> results = [];
     for (int i = 0; i < tokens.length; i++) {
       String deviceToken = tokens[i];
@@ -63,7 +64,7 @@ class RemoteNotification {
         }
         tryTimes++;
       } else {
-        logger.i("RemoteNotification - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
+        logger.d("RemoteNotification - sendAPNS - success - uuid:$uuid - deviceToken:$deviceToken - payload:$payload");
         break;
       }
     }
@@ -105,7 +106,7 @@ class RemoteNotification {
         );
         // response
         if (response.statusCode == 200) {
-          logger.i("RemoteNotification - sendFCM - success - body:${response.body}");
+          logger.d("RemoteNotification - sendFCM - success - body:${response.body}");
           Map<String, dynamic>? result = jsonDecode(response.body);
           if ((result != null) && (result["results"] is List) && (result["results"].length > 0)) {
             notificationId = result["results"][0]["message_id"]?.toString();
