@@ -148,7 +148,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         if (gap >= Settings.gapClientReAuthMs) {
           // nothing (will go app_screen)
         } else {
-          _readMessages().then((value) => _clearUnreadAndBadge()); // await
+          bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
+          Future.delayed(Duration(milliseconds: isAppForeground ? 0 : 500)).then((value) {
+            _readMessages().then((value) => _clearUnreadAndBadge()); // await
+          });
         }
       } else if (application.isGoBackground(states)) {
         audioHelper.playerRelease(); // await
