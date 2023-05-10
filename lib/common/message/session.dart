@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -142,14 +141,12 @@ class SessionCommon with Tag {
       int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
       // unReadCount
       int newUnReadCount;
-      bool inSessionPage = chatCommon.currentChatTargetId == exist.targetId;
-      bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
       if (unReadCount != null) {
         newUnReadCount = unReadCount;
       } else if (unreadChange != null) {
-        newUnReadCount = (inSessionPage && isAppForeground) ? 0 : (exist.unReadCount + unreadChange);
+        newUnReadCount = (messageCommon.isTargetMessagePageVisible(exist.targetId)) ? 0 : (exist.unReadCount + unreadChange);
       } else {
-        newUnReadCount = (inSessionPage && isAppForeground) ? 0 : exist.unReadCount;
+        newUnReadCount = (messageCommon.isTargetMessagePageVisible(exist.targetId)) ? 0 : exist.unReadCount;
       }
       newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
       // senderName

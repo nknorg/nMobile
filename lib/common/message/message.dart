@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
@@ -39,6 +40,16 @@ class MessageCommon with Tag {
   /*Future<int> unReadCountByTargetId(String? targetId, String? topic, String? groupId) {
     return MessageStorage.instance.unReadCountByTargetId(targetId, topic, groupId);
   }*/
+
+  String? currentChatTargetId;
+
+  bool isTargetMessagePageVisible(String? targetId) {
+    bool inSessionPage = currentChatTargetId == targetId;
+    bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
+    bool needAuth = (application.goForegroundAt - application.goBackgroundAt) >= Settings.gapClientReAuthMs;
+    bool maybeAuthing = needAuth && ((DateTime.now().millisecondsSinceEpoch - application.goForegroundAt) < 200); // wait go app_screen
+    return inSessionPage && isAppForeground && !maybeAuthing && !application.isAuthProgress;
+  }
 
   Future<MessageSchema?> insert(MessageSchema? schema) {
     return MessageStorage.instance.insert(schema);

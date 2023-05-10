@@ -47,7 +47,7 @@ class LocalNotification {
     String? payload,
   }) async {
     if (targetId != null && application.appLifecycleState == AppLifecycleState.resumed) {
-      if (chatCommon.currentChatTargetId == targetId) return;
+      if (messageCommon.currentChatTargetId == targetId) return;
     }
 
     int notificationId = uuid.hashCode;
