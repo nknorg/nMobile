@@ -62,8 +62,6 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   Completer loginCompleter = Completer();
 
-  int appBackgroundAt = 0;
-
   bool isAuthProgress = false;
 
   @override
@@ -90,7 +88,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.listen((int status) {
-      _completeLogin();
+      _tryCompleteLogin();
       if (clientCommon.isClientOK) {
         // task add
         if (firstConnect) {
@@ -112,18 +110,17 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
       if (application.isFromBackground(states)) {
         if (dbCommon.isOpen()) {
-          int gap = DateTime.now().millisecondsSinceEpoch - appBackgroundAt;
+          int gap = DateTime.now().millisecondsSinceEpoch - application.goBackgroundAt;
           if (gap >= Settings.gapClientReAuthMs) {
             _tryAuth().then((success) {
-              if (success) _completeLogin();
+              if (success) _tryCompleteLogin();
             });
           } else {
-            _completeLogin();
+            _tryCompleteLogin();
           }
         }
       } else if (application.isGoBackground(states)) {
         loginCompleter = Completer();
-        appBackgroundAt = DateTime.now().millisecondsSinceEpoch;
       }
     });
 
@@ -188,12 +185,12 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     if (isAuthProgress) return false;
     // view
     _setAuthProgress(true);
+    AppScreen.go(this.context);
     // wallet
     WalletSchema? wallet = await walletCommon.getDefault();
     if (wallet == null) {
       logger.i("AppScreen - _tryAuth - wallet default is empty");
       // ui handle, ChatNoWalletLayout()
-      AppScreen.go(this.context);
       await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
       _setAuthProgress(false);
       return false;
@@ -203,7 +200,6 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     if (!(await walletCommon.isPasswordRight(wallet.address, password))) {
       logger.i("AppScreen - _tryAuth - password error, close all");
       Toast.show(Settings.locale((s) => s.tip_password_error, ctx: context));
-      AppScreen.go(this.context);
       await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
       _setAuthProgress(false);
       return false;
@@ -226,7 +222,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _completeLogin() {
+  void _tryCompleteLogin() {
     if (clientCommon.isClientOK) {
       if (!(loginCompleter.isCompleted == true)) {
         loginCompleter.complete();
