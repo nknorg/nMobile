@@ -79,7 +79,6 @@ class MessageSchema {
   int queueId; // (required) <-> queue_id
 
   String sender; // (required) <-> sender
-  String receiver; // (required) <-> receiver
   String targetId; // (required) <-> target_id
   int targetType; // (required) <-> target_type
 
@@ -96,7 +95,7 @@ class MessageSchema {
   dynamic content; // <-> content
 
   Map<String, dynamic>? options; // <-> options
-  Map<String, dynamic>? data; // <-> data
+  String? data; // <-> data
 
   Map<String, dynamic>? temp; // no_sql
 
@@ -107,7 +106,6 @@ class MessageSchema {
     this.queueId = 0,
     // target
     required this.sender,
-    required this.receiver,
     required this.targetId,
     required this.targetType,
     // status
@@ -194,13 +192,11 @@ class MessageSchema {
 
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
-    if (raw == null || raw.data == null) return null;
+    if (raw == null || raw.src == null || raw.data == null) return null;
     Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
     // target
     String sender = raw.src ?? "";
-    String receiver = clientCommon.address ?? "";
-    if (sender.isEmpty || receiver.isEmpty) return null;
     String topic = data['topic'] ?? "";
     String groupId = data['groupId'] ?? "";
     String targetId = topic.isNotEmpty ? topic : (groupId.isNotEmpty ? groupId : sender);
@@ -213,7 +209,6 @@ class MessageSchema {
       queueId: data['queueId'] ?? 0,
       // target
       sender: sender,
-      receiver: receiver,
       targetId: targetId,
       targetType: targetType,
       // status
@@ -277,7 +272,6 @@ class MessageSchema {
       queueId: queueId ?? 0, // can set after newQueueId
       // target
       sender: clientCommon.address ?? "", // no importance
-      receiver: targetId, // no importance
       targetId: targetId,
       targetType: targetType,
       // status
@@ -397,7 +391,6 @@ class MessageSchema {
       'queue_id': queueId,
       // target
       'sender': sender,
-      'receiver': receiver,
       'target_id': targetId,
       'target_type': targetType,
       // status
@@ -413,7 +406,7 @@ class MessageSchema {
       'type': contentType,
       // content:,
       'options': options != null ? jsonEncode(options) : null,
-      'data': data != null ? jsonEncode(data) : null,
+      'data': data,
     };
     // content
     switch (contentType) {
@@ -457,7 +450,6 @@ class MessageSchema {
       queueId: e['queue_id'] ?? 0,
       // target
       sender: e['sender'] ?? "",
-      receiver: e['receiver'] ?? "",
       targetId: e['target_id'] ?? "",
       targetType: e['target_type'] ?? 0,
       // status
@@ -472,7 +464,7 @@ class MessageSchema {
       // data
       contentType: e['type'] ?? "",
       options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['options']) : null,
-      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
+      data: e['data'],
     );
     // content
     switch (schema.contentType) {
@@ -601,7 +593,6 @@ class MessageSchema {
       queueId: piece.queueId,
       // target
       sender: piece.sender,
-      receiver: piece.receiver,
       targetId: piece.targetId,
       targetType: piece.targetType,
       // status
@@ -633,11 +624,11 @@ class MessageSchema {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, receiver: $receiver, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, data: $data, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, data: $data, temp: $temp}';
   }
 
   String toStringNoContent() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, receiver: $receiver, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
   }
 }
 
