@@ -389,7 +389,7 @@ class ChatOutCommon with Tag {
       if (message.isContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newMessageQueueId(targetId, device.deviceId, message.msgId);
+          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
           if (message.queueId > 0) {
             String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
             if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
@@ -455,7 +455,7 @@ class ChatOutCommon with Tag {
       if (message.isContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newMessageQueueId(targetId, device.deviceId, message.msgId);
+          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
           if (message.queueId > 0) {
             String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
             if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
@@ -538,7 +538,7 @@ class ChatOutCommon with Tag {
       if (message.isContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newMessageQueueId(targetId, device.deviceId, message.msgId);
+          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
           if (message.queueId > 0) {
             String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
             if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
@@ -600,7 +600,7 @@ class ChatOutCommon with Tag {
       if (message.isContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newMessageQueueId(targetId, device.deviceId, message.msgId);
+          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
           if (message.queueId > 0) {
             String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
             if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
@@ -836,7 +836,7 @@ class ChatOutCommon with Tag {
           if ((newQueueIds != null) && newQueueIds.isNotEmpty) {
             if (message.status == MessageStatus.Error) {
               message.deviceId = device.deviceId;
-              message.queueId = await messageCommon.newMessageQueueId(message.targetId, message.deviceId, message.msgId);
+              message.queueId = await messageCommon.newContactMessageQueueId(message.targetId, message.deviceId, message.msgId);
               if (message.queueId > 0) {
                 logger.i("$TAG - resendMute - queueIds new success - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - targetId:${message.targetId}");
                 bool success = await messageCommon.updateDeviceQueueId(message.msgId, message.deviceId, message.queueId);
@@ -979,9 +979,11 @@ class ChatOutCommon with Tag {
     }
     // queue_id (before set status success)
     if (message.canQueue && sendSuccess) {
-      String? queueIds = MessageOptions.getMessageQueueIds(message.options);
-      String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
-      await messageCommon.onMessageQueueSendSuccess(message.targetId, deviceId, message.queueId);
+      if (message.isContact) {
+        String? queueIds = MessageOptions.getMessageQueueIds(message.options);
+        String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
+        await messageCommon.onContactMessageQueueSendSuccess(message.targetId, deviceId, message.queueId);
+      }
     }
     // status
     if (statusSync) {

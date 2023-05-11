@@ -52,6 +52,7 @@ class MessageStorage with Tag {
     await db.execute('CREATE INDEX `index_message_pid` ON `$tableName` (`pid`)');
     await db.execute('CREATE INDEX `index_message_msg_id` ON `$tableName` (`msg_id`)');
     await db.execute('CREATE INDEX `index_message_status_is_delete` ON `$tableName` (`status`, `is_delete`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete` ON `$tableName` (`target_id`, `target_type`, `is_delete`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_type_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `is_delete`, `send_at`)');
@@ -169,7 +170,46 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int targetType = 0, bool? isDelete = false, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTarget(String? targetId, int targetType, {int? status, bool? isDelete, int offset = 0, int limit = 20}) async {
+    if (db?.isOpen != true) return [];
+    if (targetId == null || targetId.isEmpty) return [];
+    String whereStatus = status == null ? "" : "AND status = ?";
+    List valueStatus = status == null ? [] : [status];
+    String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
+    List valueIsDelete = isDelete == null ? [] : [isDelete ? 1 : 0];
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'target_id = ? AND target_type = ? $whereStatus $whereIsDelete',
+          whereArgs: [targetId, targetType, status]
+            ..addAll(valueStatus)
+            ..addAll(valueIsDelete),
+          offset: offset,
+          limit: limit,
+        );
+      });
+      if (res == null || res.isEmpty) {
+        // logger.v("$TAG - queryListByTargetStatus - empty - targetId:$targetId - targetType:$targetType - status:$status");
+        return [];
+      }
+      List<MessageSchema> result = <MessageSchema>[];
+      // String logText = '';
+      res.forEach((map) {
+        MessageSchema item = MessageSchema.fromMap(map);
+        // logText += "    \n$item";
+        result.add(item);
+      });
+      // logger.v("$TAG - queryListByTargetStatus - success - targetId:$targetId - targetType:$targetType - status:$status - length:${result.length} - items:$logText");
+      return result;
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
+  }
+
+  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int targetType = 0, bool? isDelete, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (status == null) return [];
     String whereIsDelete = (isDelete == null) ? "" : "AND is_delete = ?";
@@ -204,42 +244,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByTargetStatus(String? targetId, int targetType, int status, {bool? isDelete = false, int offset = 0, int limit = 20}) async {
-    if (db?.isOpen != true) return [];
-    if (targetId == null || targetId.isEmpty) return [];
-    String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
-    List valueIsDelete = isDelete == null ? [] : [isDelete ? 1 : 0];
-    try {
-      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['*'],
-          where: 'target_id = ? AND target_type = ? AND status = ? $whereIsDelete',
-          whereArgs: [targetId, targetType, status]..addAll(valueIsDelete),
-          offset: offset,
-          limit: limit,
-        );
-      });
-      if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryListByTargetStatus - empty - targetId:$targetId - targetType:$targetType - status:$status");
-        return [];
-      }
-      List<MessageSchema> result = <MessageSchema>[];
-      // String logText = '';
-      res.forEach((map) {
-        MessageSchema item = MessageSchema.fromMap(map);
-        // logText += "    \n$item";
-        result.add(item);
-      });
-      // logger.v("$TAG - queryListByTargetStatus - success - targetId:$targetId - targetType:$targetType - status:$status - length:${result.length} - items:$logText");
-      return result;
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return [];
-  }
-
-  Future<int> queryCountByTargetStatus(String? targetId, int targetType, int status, {bool? isDelete = false}) async {
+  Future<int> queryCountByTargetStatus(String? targetId, int targetType, int status, {bool? isDelete}) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
@@ -262,7 +267,7 @@ class MessageStorage with Tag {
     return 0;
   }
 
-  Future<List<MessageSchema>> queryListByTargetType(String? targetId, int targetType, List<String> types, {bool? isDelete = false, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetType(String? targetId, int targetType, List<String> types, {bool? isDelete, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     if (types.isEmpty) return [];
