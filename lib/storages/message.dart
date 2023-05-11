@@ -28,7 +28,6 @@ class MessageStorage with Tag {
         `device_id` VARCHAR(300),
         `queue_id` BIGINT,
         `sender` VARCHAR(200),
-        `receiver` VARCHAR(200),
         `target_id` VARCHAR(200),
         `target_type` INT,
         `status` INT,
