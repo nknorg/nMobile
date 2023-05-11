@@ -21,10 +21,10 @@ class TopicStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `topic` VARCHAR(200),
-        `type` INT,
         `create_at` BIGINT,
         `update_at` BIGINT,
+        `topic` VARCHAR(200),
+        `type` INT,
         `joined` BOOLEAN DEFAULT 0,
         `subscribe_at` BIGINT,
         `expire_height` BIGINT,

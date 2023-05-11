@@ -31,7 +31,6 @@ class ContactStorage with Tag {
         `profile_version` VARCHAR(300),
         `profile_expires_at` BIGINT,
         `is_top` BOOLEAN DEFAULT 0,
-        `device_token` TEXT,
         `options` TEXT,
         `data` TEXT
       )''';
