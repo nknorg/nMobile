@@ -243,11 +243,11 @@ class ClientCommon with Tag {
         await client?.reconnect(); // no onConnect callback
         await Future.delayed(Duration(milliseconds: 2 * 1000)); // reconnect need more time
       }
+      _lastLoginClientAddress = client?.address;
     } catch (e, st) {
       handleError(e, st, toast: false);
       return {"client": null, "canTry": true, "password": password, "text": getErrorShow(e)};
     }
-    _lastLoginClientAddress = client?.address;
     // status no update (updated by ping/pang)
     connectCheck(); // await
     return {"client": client, "canTry": true, "password": password};
