@@ -8,6 +8,7 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 
@@ -37,10 +38,6 @@ class MessageCommon with Tag {
   Map<String, ParallelQueue> _messageQueueIdQueues = Map();
   Map<String, String?> _syncMessageQueueParams = Map();
 
-  /*Future<int> unReadCountByTargetId(String? targetId, String? topic, String? groupId) {
-    return MessageStorage.instance.unReadCountByTargetId(targetId, topic, groupId);
-  }*/
-
   String? currentChatTargetId;
 
   bool isTargetMessagePageVisible(String? targetId) {
@@ -51,8 +48,24 @@ class MessageCommon with Tag {
     return inSessionPage && isAppForeground && !maybeAuthing && !application.isAuthProgress;
   }
 
-  Future<MessageSchema?> insert(MessageSchema? schema) {
-    return MessageStorage.instance.insert(schema);
+  Future<MessageSchema?> insert(MessageSchema? schema) async {
+    if (schema == null) return null;
+    if (schema.contentType == MessageContentType.piece) {
+      return await MessagePieceStorage.instance.insert(schema);
+    }
+    return await MessageStorage.instance.insert(schema);
+  }
+
+  Future<int> delete(String? msgId, String? contentType) {
+    if (contentType == MessageContentType.piece) {
+      return MessagePieceStorage.instance.delete(msgId);
+    }
+    return MessageStorage.instance.delete(msgId);
+  }
+
+  Future<bool> deleteByTargetId(String? targetId, int targetType) async {
+    await MessagePieceStorage.instance.deleteByTarget(targetId, targetType);
+    return MessageStorage.instance.updateIsDeleteByTarget(targetId, targetType, true, clearContent: true);
   }
 
   Future<bool> updateDeleteAt(String? msgId, int? deleteAt) {
@@ -67,62 +80,54 @@ class MessageCommon with Tag {
     return MessageStorage.instance.updatePid(msgId, pid);
   }
 
-  Future<bool> updateQueueId(String? msgId, int queueId) {
-    return MessageStorage.instance.updateQueueId(msgId, queueId);
+  Future<bool> updateDeviceQueueId(String? msgId, String? deviceId, int queueId) {
+    return MessageStorage.instance.updateDeviceQueueId(msgId, deviceId, queueId);
   }
 
   Future<MessageSchema?> query(String? msgId) {
     return MessageStorage.instance.query(msgId);
   }
 
-  Future<MessageSchema?> queryByIdNoContentType(String? msgId, String? contentType) {
-    return MessageStorage.instance.queryByIdNoContentType(msgId, contentType);
+  Future<List<MessageSchema>> queryPieceList(String? msgId, {int offset = 0, int limit = 20}) async {
+    return await MessagePieceStorage.instance.queryList(msgId, offset: offset, limit: limit);
   }
 
   Future<List<MessageSchema>> queryListByIds(List<String>? msgIds) {
     return MessageStorage.instance.queryListByIds(msgIds);
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, String? topic, String? groupId, int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByStatus(status, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int targetType = 0, bool? isDelete, int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByStatus(status, targetId: targetId, targetType: targetType, isDelete: isDelete, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByIdContentType(String? msgId, String? contentType, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByIdContentType(msgId, contentType, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryListByTargetUnRead(String? targetId, int targetType, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTarget(targetId, targetType, status: MessageStatus.Received, isDelete: false, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByIdsNoContentType(List<String>? msgIds, String? contentType) {
-    return MessageStorage.instance.queryListByIdsNoContentType(msgIds, contentType);
+  Future<List<MessageSchema>> queryListByTargetVisible(String? targetId, int targetType, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTarget(targetId, targetType, isDelete: false, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByTargetIdWithQueueId(String? targetId, String? topic, String? groupId, int queueId, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetIdWithQueueId(targetId, topic, groupId, queueId, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryListByTargetTypeVisible(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetType(targetId, targetType, types, isDelete: false, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisible(String? targetId, String? topic, String? groupId, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetIdWithNotDeleteAndPiece(targetId, topic, groupId, offset: offset, limit: limit);
-  }
-
-  Future<List<MessageSchema>> queryMessagesByTargetIdVisibleWithType(String? targetId, String? topic, String? groupId, List<String>? types, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetIdWithTypeNotDelete(targetId, topic, groupId, types, offset: offset, limit: limit);
-  }
-
-  Future<int> deleteByIdContentType(String? msgId, String? contentType) {
-    return MessageStorage.instance.deleteByIdContentType(msgId, contentType);
-  }
-
-  Future<bool> deleteByTargetId(String? targetId, String? topic, String? groupId) async {
-    await MessageStorage.instance.deleteByTargetIdContentType(targetId, topic, groupId, MessageContentType.piece);
-    return MessageStorage.instance.updateIsDeleteByTargetId(targetId, topic, groupId, true, clearContent: true);
+  Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool clearContent = message.isOutbound ? ((message.status == MessageStatus.Receipt) || (message.status == MessageStatus.Read)) : true;
     bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
+    if (success && (message.contentType == MessageContentType.ipfs)) {
+      message.options = MessageOptions.setIpfsResult(message.options, "", "", 0, "", [], 0);
+      message.options = MessageOptions.setIpfsResultThumbnail(message.options, "", "", 0, "", [], 0);
+      success = await updateMessageOptions(message, message.options, notify: false);
+    }
     if (notify) onDeleteSink.add(message.msgId); // no need success
     // delete file
-    if (clearContent && (message.content is File)) {
+    if (clearContent && (message.isContentFile)) {
       (message.content as File).exists().then((exist) {
         if (exist) {
           try {
@@ -166,7 +171,7 @@ class MessageCommon with Tag {
     }
     // update
     logger.d("$TAG - updateMessageStatus - new:$status - old:${message.status} - msgId:${message.msgId}");
-    bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt, noType: MessageContentType.piece);
+    bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success) {
       message.status = status;
       if (message.status == MessageStatus.Success) {
@@ -201,13 +206,13 @@ class MessageCommon with Tag {
     return options != null;
   }
 
-  Future<int> readMessagesBySelf(String? targetId, String? topic, String? groupId, String? clientAddress) async {
+  Future<int> readMessagesBySelf(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return 0;
     int limit = 20;
     // query
     List<MessageSchema> unreadList = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await MessageStorage.instance.queryListByTargetIdWithUnRead(targetId, topic, groupId, offset: offset, limit: limit);
+      List<MessageSchema> result = await queryListByTargetUnRead(targetId, targetType, offset: offset, limit: limit);
       // result.removeWhere((element) => element.isOutbound);
       unreadList.addAll(result);
       if (result.length < limit) break;
@@ -222,57 +227,57 @@ class MessageCommon with Tag {
       }
     }
     // send
-    if ((clientAddress?.isNotEmpty == true) && msgIds.isNotEmpty) {
-      chatOutCommon.sendRead(clientAddress, msgIds); // await
+    if (msgIds.isNotEmpty && (targetType == MessageTargetType.Contact)) {
+      chatOutCommon.sendRead(targetId, msgIds); // await
     }
     logger.d("$TAG - readMessagesBySelf - count:${msgIds.length} - targetId:$targetId");
     return msgIds.length;
   }
 
-  Future<int> correctMessageRead(String? targetId, String? topic, String? groupId, int? lastSendAt) async {
+  Future<int> correctMessageRead(String? targetId, int targetType, int? lastSendAt) async {
     if (targetId == null || targetId.isEmpty || lastSendAt == null || lastSendAt == 0) return 0;
     int limit = 20;
     int readMinGap = 10 * 1000; // 10s
     // query
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, topic: topic, groupId: groupId, offset: offset, limit: limit);
+      List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
       List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (lastSendAt - readMinGap))).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
     }
     if (unReadList.isNotEmpty) {
-      logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - topic:$topic - groupId:$groupId");
+      logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
     } else {
-      logger.d("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - topic:$topic - groupId:$groupId");
+      logger.d("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
     }
     // update
     for (var i = 0; i < unReadList.length; i++) {
       MessageSchema element = unReadList[i];
       int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
-      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringNoContent()} - targetId:$targetId - topic:$topic - groupId:$groupId");
+      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringNoContent()} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     return unReadList.length;
   }
 
-  Future<int> newMessageQueueId(String? targetClientAddress, String? deviceId, String? messageId) async {
-    if ((targetClientAddress == null) || targetClientAddress.isEmpty) return 0;
-    if (deviceId == null || deviceId.isEmpty) return 0; // filter old_version
+  Future<int> newContactMessageQueueId(String? targetAddress, String? targetDeviceId, String? messageId) async {
+    if ((targetAddress == null) || targetAddress.isEmpty) return 0;
+    if ((targetDeviceId == null) || targetDeviceId.isEmpty) return 0; // filter old_version
     if ((messageId == null) || messageId.isEmpty) return 0;
     Function func = () async {
-      DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
-      if (device == null) return 0;
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-      logger.i("$TAG - newMessageQueueId - START - queueIds:$queueIds - target:$targetClientAddress - deviceId:${device.deviceId} - messageId:$messageId");
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+      if (targetDevice == null) return 0;
+      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);
+      logger.i("$TAG - newContactMessageQueueId - START - queueIds:$queueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - messageId:$messageId");
       int nextQueueId = 0;
       // oldExists
-      Map<int, String> sendingMessageQueueIds = device.sendingMessageQueueIds;
+      Map<int, String> sendingMessageQueueIds = targetDevice.sendingMessageQueueIds;
       if (sendingMessageQueueIds.isNotEmpty) {
         if (sendingMessageQueueIds.containsValue(messageId)) {
           sendingMessageQueueIds.forEach((key, value) {
             if (value == messageId) {
-              logger.d("$TAG - newMessageQueueId - find in exists - nextQueueId:$key - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId}");
+              logger.d("$TAG - newContactMessageQueueId - find in exists - nextQueueId:$key - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
               nextQueueId = key;
             }
           });
@@ -281,117 +286,116 @@ class MessageCommon with Tag {
           for (var i = 0; i < keys.length; i++) {
             int queueId = keys[i];
             String msgId = sendingMessageQueueIds[queueId]?.toString() ?? "";
-            MessageSchema? msg = await queryByIdNoContentType(msgId, MessageContentType.piece);
+            MessageSchema? msg = await query(msgId);
             if ((msg == null) || !msg.canQueue || !msg.isOutbound) {
-              logger.w("$TAG - newMessageQueueId - replace wrong msg (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg?.toStringNoContent() ?? msgId}");
+              logger.w("$TAG - newContactMessageQueueId - replace wrong msg (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg?.toStringNoContent() ?? msgId}");
               nextQueueId = queueId;
               break;
             } else if (msg.status == MessageStatus.Error) {
-              logger.d("$TAG - newMessageQueueId - replace status error - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg.toStringNoContent()}");
+              logger.d("$TAG - newContactMessageQueueId - replace status error - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringNoContent()}");
               nextQueueId = queueId;
               break;
             } else if (msg.status >= MessageStatus.Success) {
-              logger.w("$TAG - newMessageQueueId - replace wrong status(wrong here) - nextQueueId:$queueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId} - msg:${msg.toStringNoContent()}");
+              logger.w("$TAG - newContactMessageQueueId - replace wrong status(wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringNoContent()}");
               nextQueueId = queueId;
               break;
             } else {
-              logger.i("$TAG - newMessageQueueId - replace refuse - msg:${msg.toStringNoContent()} - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId}");
+              logger.i("$TAG - newContactMessageQueueId - replace refuse - msg:${msg.toStringNoContent()} - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             }
           }
         }
       }
       // newCreate
-      int latestSendMessageQueueId = device.latestSendMessageQueueId;
+      int latestSendMessageQueueId = targetDevice.latestSendMessageQueueId;
       if (nextQueueId <= 0) {
         nextQueueId = latestSendMessageQueueId + 1;
-        logger.d("$TAG - newMessageQueueId - increase queue_id - nextQueueId:$nextQueueId - newMsgId:$messageId - target:$targetClientAddress - deviceId:${device.deviceId}");
+        logger.d("$TAG - newContactMessageQueueId - increase queue_id - nextQueueId:$nextQueueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       }
       // update
-      await deviceInfoCommon.setSendingMessageQueueIds(targetClientAddress, device.deviceId, {nextQueueId: messageId}, []);
+      await deviceInfoCommon.setSendingMessageQueueIds(targetAddress, targetDeviceId, {nextQueueId: messageId}, []);
       if (nextQueueId > latestSendMessageQueueId) {
-        await deviceInfoCommon.setLatestSendMessageQueueId(targetClientAddress, device.deviceId, nextQueueId);
+        await deviceInfoCommon.setLatestSendMessageQueueId(targetAddress, targetDeviceId, nextQueueId);
       }
-      logger.i("$TAG - newMessageQueueId - END - nextQueueId:$nextQueueId - target:$targetClientAddress - deviceId:${device.deviceId} - messageId:$messageId");
+      logger.i("$TAG - newContactMessageQueueId - END - nextQueueId:$nextQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - messageId:$messageId");
       return nextQueueId;
     };
     // queue
-    _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    int? queueId = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    _messageQueueIdQueues[targetAddress] = _messageQueueIdQueues[targetAddress] ?? ParallelQueue("message_queue_id_$targetAddress", onLog: (log, error) => error ? logger.w(log) : null);
+    int? queueId = await _messageQueueIdQueues[targetAddress]?.add(() => func());
     return queueId ?? 0;
   }
 
-  Future<bool> onMessageQueueSendSuccess(String? targetClientAddress, String? deviceId, int queueId) async {
-    if ((targetClientAddress == null) || targetClientAddress.isEmpty) return false;
-    if (deviceId == null || deviceId.isEmpty) return false;
+  Future<bool> onContactMessageQueueSendSuccess(String? targetAddress, String? targetDeviceId, int queueId) async {
+    if ((targetAddress == null) || targetAddress.isEmpty) return false;
+    if ((targetDeviceId == null) || targetDeviceId.isEmpty) return false;
     if (queueId <= 0) return false;
     Function func = () async {
-      DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
-      if (device == null) return false;
-      logger.i("$TAG - onMessageQueueSendSuccess - delete queueId from cache - queueId:$queueId - caches:${device.sendingMessageQueueIds} - target:$targetClientAddress - deviceId:${device.deviceId}");
-      return await deviceInfoCommon.setSendingMessageQueueIds(targetClientAddress, device.deviceId, {}, [queueId]);
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+      if (targetDevice == null) return false;
+      logger.i("$TAG - onContactMessageQueueSendSuccess - delete queueId from cache - queueId:$queueId - caches:${targetDevice.sendingMessageQueueIds} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      return await deviceInfoCommon.setSendingMessageQueueIds(targetAddress, targetDeviceId, {}, [queueId]);
     };
     // queue
-    _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    _messageQueueIdQueues[targetAddress] = _messageQueueIdQueues[targetAddress] ?? ParallelQueue("message_queue_id_$targetAddress", onLog: (log, error) => error ? logger.w(log) : null);
+    bool? success = await _messageQueueIdQueues[targetAddress]?.add(() => func());
     return success ?? false;
   }
 
-  Future<bool> onMessageQueueReceive(MessageSchema message) async {
+  Future<bool> onContactMessageQueueReceive(MessageSchema message) async {
     if (!message.canQueue || (message.queueId <= 0)) return false;
-    String targetClientAddress = message.from;
-    if (targetClientAddress.isEmpty) return false;
+    String targetAddress = message.sender;
+    if (targetAddress.isEmpty || (targetAddress == message.targetId)) return false;
     Function func = () async {
-      String? deviceId = MessageOptions.getDeviceId(message.options);
-      DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(targetClientAddress, deviceId);
-      if (device == null) return false;
-      String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, message.deviceId);
+      if (targetDevice == null) return false;
+      String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);
       String? sideQueueIds = MessageOptions.getMessageQueueIds(message.options);
-      String? selfDeviceId = deviceInfoCommon.splitQueueIds(sideQueueIds)[3];
-      if (selfDeviceId?.trim() != Settings.deviceId.trim()) {
-        logger.w("$TAG - onMessageQueueReceive - no target device - selfDeviceId:$selfDeviceId - nativeDeviceId:${Settings.deviceId} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+      String? receiveDeviceId = deviceInfoCommon.splitQueueIds(sideQueueIds)[3];
+      if (receiveDeviceId?.trim() != Settings.deviceId.trim()) {
+        logger.w("$TAG - onContactMessageQueueReceive - no target device - receiveDeviceId:$receiveDeviceId - nativeDeviceId:${Settings.deviceId} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         return false;
       }
       int receiveQueueId = message.queueId;
-      int nativeQueueId = device.latestReceivedMessageQueueId;
-      List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
+      int nativeQueueId = targetDevice.latestReceivedMessageQueueId;
+      List<int> lostReceiveMessageQueueIds = targetDevice.lostReceiveMessageQueueIds;
       if (receiveQueueId > nativeQueueId) {
-        logger.i("$TAG - onMessageQueueReceive - new higher - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
-        bool success = await deviceInfoCommon.setLatestReceivedMessageQueueId(targetClientAddress, device.deviceId, receiveQueueId);
+        logger.i("$TAG - onContactMessageQueueReceive - new higher - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+        bool success = await deviceInfoCommon.setLatestReceivedMessageQueueId(targetAddress, targetDevice.deviceId, receiveQueueId);
         if (success && ((receiveQueueId - nativeQueueId) > 1)) {
           List<int> lostPairs = List.generate(receiveQueueId - nativeQueueId - 1, (index) => nativeQueueId + index + 1);
-          logger.i("$TAG - onMessageQueueReceive - new higher and add lostIds - lostPairs:$lostPairs - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
-          await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, lostPairs, []);
+          logger.i("$TAG - onContactMessageQueueReceive - new higher and add lostIds - lostPairs:$lostPairs - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+          await deviceInfoCommon.setLostReceiveMessageQueueIds(targetAddress, targetDevice.deviceId, lostPairs, []);
         }
       } else if (receiveQueueId < nativeQueueId) {
         if (lostReceiveMessageQueueIds.contains(receiveQueueId)) {
-          logger.i("$TAG - onMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
-          await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], [receiveQueueId]);
+          logger.i("$TAG - onContactMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+          await deviceInfoCommon.setLostReceiveMessageQueueIds(targetAddress, targetDevice.deviceId, [], [receiveQueueId]);
         } else {
-          logger.d("$TAG - onMessageQueueReceive - new lower and duplicated received - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+          logger.d("$TAG - onContactMessageQueueReceive - new lower and duplicated received - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         }
       } else {
-        logger.i("$TAG - onMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+        logger.i("$TAG - onContactMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
       }
       // clear too low queueId
       List<int> deleteQueueIds = lostReceiveMessageQueueIds.where((element) => element < (receiveQueueId - 100)).toList();
       if (deleteQueueIds.isNotEmpty) {
-        logger.w("$TAG - onMessageQueueReceive - clear too low queueId - deleteIds:$deleteQueueIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
-        await deviceInfoCommon.setLostReceiveMessageQueueIds(targetClientAddress, device.deviceId, [], deleteQueueIds);
+        logger.w("$TAG - onContactMessageQueueReceive - clear too low queueId - deleteIds:$deleteQueueIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+        await deviceInfoCommon.setLostReceiveMessageQueueIds(targetAddress, targetDevice.deviceId, [], deleteQueueIds);
       }
       return true;
     };
     // queue
-    _messageQueueIdQueues[targetClientAddress] = _messageQueueIdQueues[targetClientAddress] ?? ParallelQueue("message_queue_id_$targetClientAddress", onLog: (log, error) => error ? logger.w(log) : null);
-    bool? success = await _messageQueueIdQueues[targetClientAddress]?.add(() => func());
+    _messageQueueIdQueues[targetAddress] = _messageQueueIdQueues[targetAddress] ?? ParallelQueue("message_queue_id_$targetAddress", onLog: (log, error) => error ? logger.w(log) : null);
+    bool? success = await _messageQueueIdQueues[targetAddress]?.add(() => func());
     return success ?? false;
   }
 
-  Future syncContactMessages(String? clientAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
-    if (clientAddress == null || clientAddress.isEmpty) return 0;
+  Future syncContactMessages(String? targetAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
+    if (targetAddress == null || targetAddress.isEmpty) return 0;
     if (targetDeviceId == null || targetDeviceId.isEmpty) return 0;
     // use latest params
     bool replace = true;
-    String? oldParams = _syncMessageQueueParams["${clientAddress}_$targetDeviceId"];
+    String? oldParams = _syncMessageQueueParams["${targetAddress}_$targetDeviceId"];
     if (oldParams != null) {
       List splits = deviceInfoCommon.splitQueueIds(oldParams);
       if ((sideSendQueueId <= splits[0]) && (sideReceiveQueueId <= splits[1])) {
@@ -400,87 +404,87 @@ class MessageCommon with Tag {
     }
     if (replace) {
       String? queueIds = deviceInfoCommon.joinQueueIds(sideSendQueueId, sideReceiveQueueId, sideLostQueueIds, "???");
-      logger.d("$TAG - syncContactMessages - receive_queue params replace - newQueueIds:$queueIds - oldQueueIds:$oldParams - from:$clientAddress - targetDeviceId:$targetDeviceId");
-      _syncMessageQueueParams["${clientAddress}_$targetDeviceId"] = queueIds;
+      logger.d("$TAG - syncContactMessages - receive_queue params replace - newQueueIds:$queueIds - oldQueueIds:$oldParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      _syncMessageQueueParams["${targetAddress}_$targetDeviceId"] = queueIds;
     }
     // wait receive queue complete
-    var receiveQueue = chatInCommon.getReceiveQueue(clientAddress);
+    var receiveQueue = chatInCommon.getReceiveQueue(targetAddress);
     if (receiveQueue != null) {
       int receiveCounts = receiveQueue.onCompleteCount("syncContactMessages_$targetDeviceId");
       if (receiveCounts > 0) {
-        logger.d("$TAG - syncContactMessages - receive_queue progress - receiveCounts:$receiveCounts - params:$_syncMessageQueueParams - from:$clientAddress - targetDeviceId:$targetDeviceId");
+        logger.d("$TAG - syncContactMessages - receive_queue progress - receiveCounts:$receiveCounts - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
         return 0;
       }
-      logger.d("$TAG - syncContactMessages - receive_queue waiting - params:$_syncMessageQueueParams - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - syncContactMessages - receive_queue waiting - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       await receiveQueue.onComplete("syncContactMessages_$targetDeviceId");
     }
-    logger.d("$TAG - syncContactMessages - receive_queue complete - params:$_syncMessageQueueParams - from:$clientAddress - sendQueueId:$sideSendQueueId");
+    logger.d("$TAG - syncContactMessages - receive_queue complete - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
     // use latest params
-    String? queueIds = _syncMessageQueueParams["${clientAddress}_$targetDeviceId"];
+    String? queueIds = _syncMessageQueueParams["${targetAddress}_$targetDeviceId"];
     if (queueIds == null || queueIds.isEmpty) {
-      logger.w("$TAG - syncContactMessages - params nil - queueIds:$queueIds - params:$_syncMessageQueueParams - from:$clientAddress - sendQueueId:$sideSendQueueId");
+      logger.w("$TAG - syncContactMessages - params nil - queueIds:$queueIds - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
       return false;
     }
     // check start
     List splits = deviceInfoCommon.splitQueueIds(queueIds);
-    await _syncContactMessages(clientAddress, targetDeviceId, splits[0], splits[1], splits[2]);
+    await _syncContactMessages(targetAddress, targetDeviceId, splits[0], splits[1], splits[2]);
   }
 
-  Future<int> _syncContactMessages(String? clientAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
-    if (clientAddress == null || clientAddress.isEmpty) return 0;
+  Future<int> _syncContactMessages(String? targetAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
+    if (targetAddress == null || targetAddress.isEmpty) return 0;
     if (targetDeviceId == null || targetDeviceId.isEmpty) return 0;
     // contact refresh
-    DeviceInfoSchema? device = await deviceInfoCommon.queryByDeviceId(clientAddress, targetDeviceId);
-    if (device == null) return 0;
+    DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+    if (targetDevice == null) return 0;
     String? sideQueueIds = deviceInfoCommon.joinQueueIds(sideSendQueueId, sideReceiveQueueId, sideLostQueueIds, targetDeviceId);
-    String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-    logger.i("$TAG - _syncContactMessages - START - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);
+    logger.i("$TAG - _syncContactMessages - START - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // sync update
-    int nativeSendQueueId = device.latestSendMessageQueueId;
-    int nativeReceiveQueueId = device.latestReceivedMessageQueueId;
-    List<int> lostReceiveMessageQueueIds = device.lostReceiveMessageQueueIds;
+    int nativeSendQueueId = targetDevice.latestSendMessageQueueId;
+    int nativeReceiveQueueId = targetDevice.latestReceivedMessageQueueId;
+    List<int> lostReceiveMessageQueueIds = targetDevice.lostReceiveMessageQueueIds;
     if (sideReceiveQueueId > nativeSendQueueId) {
-      logger.w("$TAG - _syncContactMessages - need self to sync queue (update native send/receive_queueId) - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
-      await chatOutCommon.sendQueue(clientAddress, targetDeviceId); // mast wait and before update
-      await deviceInfoCommon.setLatestSendMessageQueueId(clientAddress, targetDeviceId, sideReceiveQueueId);
+      logger.w("$TAG - _syncContactMessages - need self to sync queue (update native send/receive_queueId) - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      await chatOutCommon.sendQueue(targetAddress, targetDeviceId); // mast wait and before update
+      await deviceInfoCommon.setLatestSendMessageQueueId(targetAddress, targetDeviceId, sideReceiveQueueId);
       if (sideSendQueueId > nativeReceiveQueueId) {
-        await deviceInfoCommon.setLatestReceivedMessageQueueId(clientAddress, targetDeviceId, sideSendQueueId);
+        await deviceInfoCommon.setLatestReceivedMessageQueueId(targetAddress, targetDeviceId, sideSendQueueId);
       }
       // sendingMessageQueueIds and lostReceiveMessageQueueIds will be correct auto
       return 0; // wait sendQueue reply
     }
     // sync request
     if ((sideSendQueueId > nativeReceiveQueueId) || lostReceiveMessageQueueIds.isNotEmpty) {
-      logger.i("$TAG - _syncContactMessages - need side to resend lost - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
-      await chatOutCommon.sendQueue(clientAddress, targetDeviceId);
+      logger.i("$TAG - _syncContactMessages - need side to resend lost - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      await chatOutCommon.sendQueue(targetAddress, targetDeviceId);
     } else if (sideSendQueueId < nativeReceiveQueueId) {
-      logger.w("$TAG - _syncContactMessages - need side to sync queue - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
-      await chatOutCommon.sendQueue(clientAddress, targetDeviceId);
+      logger.w("$TAG - _syncContactMessages - need side to sync queue - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - lostReceiveMessageQueueIds:$lostReceiveMessageQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      await chatOutCommon.sendQueue(targetAddress, targetDeviceId);
       return 0; // wait sendQueue reply
     } else {
-      logger.d("$TAG - _syncContactMessages - queueIds equal (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - queueIds equal (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     // queueIds
     List<int> resendQueueIds = sideLostQueueIds;
     if (sideReceiveQueueId < nativeSendQueueId) {
       List<int> newLost = List.generate(nativeSendQueueId - sideReceiveQueueId, (index) => sideReceiveQueueId + index + 1);
-      logger.i("$TAG - _syncContactMessages - resendQueueIds add latest msg - newLost:$newLost - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.i("$TAG - _syncContactMessages - resendQueueIds add latest msg - newLost:$newLost - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       resendQueueIds.addAll(newLost);
     } else {
-      logger.d("$TAG - _syncContactMessages - resendQueueIds skip latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - resendQueueIds skip latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     if (resendQueueIds.isEmpty) {
-      logger.i("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.i("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return 0;
     }
-    logger.d("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    logger.d("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // messages
     List<MessageSchema> resendMsgList = [];
     int limit = 5;
     for (var i = 0; i < resendQueueIds.length; i++) {
       int queueId = resendQueueIds[i];
       for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByTargetIdWithQueueId(clientAddress, "", "", queueId, offset: offset, limit: limit);
+        List<MessageSchema> result = await queryListByTargetDeviceQueueId(targetAddress, MessageTargetType.Contact, Settings.deviceId, queueId, offset: offset, limit: limit);
         MessageSchema? resendMsg;
         for (var j = 0; j < result.length; j++) {
           MessageSchema message = result[j];
@@ -488,7 +492,7 @@ class MessageCommon with Tag {
           List splits = deviceInfoCommon.splitQueueIds(queueIds);
           bool isSameDevice = (queueIds != null) && (splits[3].toString().trim() == targetDeviceId.trim());
           if (message.canReceipt && message.isOutbound && isSameDevice && (message.status != MessageStatus.Error)) {
-            logger.i("$TAG - _syncContactMessages - resend messages add - queueId:$queueId - message:$message - from:$clientAddress - targetDeviceId:$targetDeviceId");
+            logger.i("$TAG - _syncContactMessages - resend messages add - queueId:$queueId - message:$message - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             resendMsg = message;
             break;
           }
@@ -498,21 +502,21 @@ class MessageCommon with Tag {
           break;
         }
         if (result.length < limit) {
-          logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - from:$clientAddress - targetDeviceId:$targetDeviceId");
+          logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
           break;
         }
       }
     }
     if (resendMsgList.isEmpty) {
-      logger.i("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.i("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return 0;
     }
-    logger.d("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    logger.d("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // ack check (maybe other device queue)
     List<MessageSchema> noAckList = [];
     limit = 20;
     for (int offset = 0; true; offset += limit) {
-      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: clientAddress, topic: "", groupId: "", offset: offset, limit: limit);
+      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: MessageTargetType.Contact, offset: offset, limit: limit);
       result.removeWhere((element) => !element.isOutbound || !element.canQueue);
       noAckList.addAll(result);
       if (result.length < limit) break;
@@ -521,23 +525,23 @@ class MessageCommon with Tag {
     for (var i = 0; i < noAckList.length; i++) {
       MessageSchema noAck = noAckList[i];
       if (resendMsgList.indexWhere((element) => noAck.msgId == element.msgId) < 0) {
-        logger.i("$TAG - _syncContactMessages - resend messages add - message:$noAck - from:$clientAddress - targetDeviceId:$targetDeviceId");
+        logger.i("$TAG - _syncContactMessages - resend messages add - message:$noAck - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
         noAckAdded = true;
         resendMsgList.add(noAck);
       }
     }
     if (noAckAdded) {
-      logger.d("$TAG - _syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     // resend
     int successCount = 0;
     for (var i = 0; i < resendMsgList.length; i++) {
       MessageSchema message = resendMsgList[i];
-      int gap = Settings.gapMessageQueueResendMs * ((message.content is File) ? 2 : 1);
+      int gap = Settings.gapMessageQueueResendMs * (message.isContentFile ? 2 : 1);
       var data = await chatOutCommon.resend(message, mute: true, muteGap: gap);
       if (data != null) successCount++;
     }
-    logger.i("$TAG - _syncContactMessages - END - count:$successCount/${resendMsgList.length} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - from:$clientAddress - targetDeviceId:$targetDeviceId");
+    logger.i("$TAG - _syncContactMessages - END - count:$successCount/${resendMsgList.length} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     return successCount;
   }
 }
