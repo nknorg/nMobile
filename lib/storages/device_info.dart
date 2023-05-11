@@ -30,11 +30,9 @@ class DeviceInfoStorage with Tag {
 
   static create(Database db) async {
     // create table
-    // TODO:GG 升级(device_token("") + online_at(updateAt))?
     await db.execute(createSQL);
 
     // index
-    // TODO:GG 升级 (几乎都有改，有个旧的uq不影响)?
     await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
     await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
