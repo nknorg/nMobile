@@ -21,10 +21,10 @@ class SubscriberStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `topic` VARCHAR(200),
-        `chat_id` VARCHAR(200),
         `create_at` BIGINT,
         `update_at` BIGINT,
+        `topic` VARCHAR(200),
+        `chat_id` VARCHAR(200),
         `status` INT,
         `perm_page` INT,
         `data` TEXT
