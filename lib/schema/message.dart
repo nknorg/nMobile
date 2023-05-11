@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:mime_type/mime_type.dart';
 import 'package:nkn_sdk_flutter/client.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
+import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/native/common.dart';
@@ -16,6 +17,12 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
+
+class MessageTargetType {
+  static const int Contact = 0;
+  static const int Topic = 1;
+  static const int Group = 2;
+}
 
 class MessageStatus {
   static const int Sending = 100; // out
@@ -68,11 +75,13 @@ class MessageContentType {
 class MessageSchema {
   Uint8List? pid; // <-> pid
   String msgId; // (required) <-> msg_id
+  String deviceId; // (required) <-> device_id
   int queueId; // (required) <-> queue_id
-  String from; // (required) <-> sender / -> target_id(session_id)
-  String to; // <-> receiver / -> target_id(session_id)
-  String topic; // <-> topic / -> target_id(session_id)
-  String groupId; // <-> group_id / -> target_id(session_id)
+
+  String sender; // (required) <-> sender
+  String receiver; // (required) <-> receiver
+  String targetId; // (required) <-> target_id
+  int targetType; // (required) <-> target_type
 
   int status; // <-> status
   bool isOutbound; // <-> is_outbound
@@ -87,17 +96,20 @@ class MessageSchema {
   dynamic content; // <-> content
 
   Map<String, dynamic>? options; // <-> options
+  Map<String, dynamic>? data; // <-> data
 
   Map<String, dynamic>? temp; // no_sql
 
   MessageSchema({
     this.pid,
     required this.msgId,
-    required this.from,
+    this.deviceId = "",
     this.queueId = 0,
-    this.to = "",
-    this.topic = "",
-    this.groupId = "",
+    // target
+    required this.sender,
+    required this.receiver,
+    required this.targetId,
+    required this.targetType,
     // status
     required this.status,
     required this.isOutbound,
@@ -111,24 +123,19 @@ class MessageSchema {
     required this.contentType,
     this.content,
     this.options,
+    this.data,
   });
 
-  String get targetId {
-    return isTopic
-        ? topic
-        : isPrivateGroup
-            ? groupId
-            : isOutbound
-                ? to
-                : from;
+  bool get isContact {
+    return targetType == MessageTargetType.Contact;
   }
 
   bool get isTopic {
-    return topic.trim().isNotEmpty == true;
+    return targetType == MessageTargetType.Topic;
   }
 
   bool get isPrivateGroup {
-    return groupId.trim().isNotEmpty == true;
+    return targetType == MessageTargetType.Group;
   }
 
   // burning
@@ -177,24 +184,38 @@ class MessageSchema {
     return canReceipt && !isTopic && !isPrivateGroup;
   }
 
+  bool get isContentFile {
+    return (content != null) && (content is File);
+  }
+
   int? get reallySendAt {
     return isOutbound ? (sendAt ?? MessageOptions.getSendSuccessAt(options)) : (sendAt ?? receiveAt);
   }
 
   /// from receive
-  static MessageSchema? fromReceive(String myAddress, OnMessage? raw) {
-    if (raw == null || raw.data == null || raw.src == null) return null;
+  static MessageSchema? fromReceive(OnMessage? raw) {
+    if (raw == null || raw.data == null) return null;
     Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
+    // target
+    String sender = raw.src ?? "";
+    String receiver = clientCommon.address ?? "";
+    if (sender.isEmpty || receiver.isEmpty) return null;
+    String topic = data['topic'] ?? "";
+    String groupId = data['groupId'] ?? "";
+    String targetId = topic.isNotEmpty ? topic : (groupId.isNotEmpty ? groupId : sender);
+    int targetType = topic.isNotEmpty ? MessageTargetType.Topic : (groupId.isNotEmpty ? MessageTargetType.Group : MessageTargetType.Contact);
     // schema
     MessageSchema schema = MessageSchema(
       pid: raw.messageId,
       msgId: data['id'] ?? "",
+      deviceId: data['deviceId'] ?? "",
       queueId: data['queueId'] ?? 0,
-      from: raw.src ?? "",
-      to: myAddress,
-      topic: data['topic'] ?? "",
-      groupId: data['groupId'] ?? "",
+      // target
+      sender: sender,
+      receiver: receiver,
+      targetId: targetId,
+      targetType: targetType,
       // status
       status: MessageStatus.Received,
       isOutbound: false,
@@ -207,6 +228,7 @@ class MessageSchema {
       // data
       contentType: data['contentType'] ?? "",
       options: data['options'],
+      data: null, // just send set
     );
     // content
     switch (schema.contentType) {
@@ -234,117 +256,121 @@ class MessageSchema {
     }
     // options
     if (schema.options == null) schema.options = Map();
-    String? deviceId = data["deviceId"];
-    if ((deviceId != null) && deviceId.isNotEmpty) {
-      schema.options = MessageOptions.setDeviceId(schema.options, deviceId);
-    }
     return schema;
   }
 
   /// to send
-  MessageSchema.fromSend({
-    // this.pid, // SDK create
-    required this.msgId,
-    required this.from,
-    this.queueId = 0,
-    this.to = "",
-    this.topic = "",
-    this.groupId = "",
-    // status
-    this.status = MessageStatus.Sending,
-    this.isOutbound = true,
-    // at
-    // this.sendAt,
-    // this.receiveAt,
-    // delete
-    this.isDelete = false,
-    // this.deleteAt,
-    // data
-    required this.contentType,
-    this.content,
-    this.options,
+  static MessageSchema fromSend(
+    String targetId,
+    int targetType,
+    String contentType,
+    dynamic content, {
+    String? msgId,
+    int? queueId,
+    Map<String, dynamic>? options,
     Map<String, dynamic>? extra,
   }) {
-    // at
-    this.sendAt = DateTime.now().millisecondsSinceEpoch;
-    this.receiveAt = null; // set in receive ACK
-    this.deleteAt = null; // set in messages bubble
+    MessageSchema schema = MessageSchema(
+      pid: null, // set after sendSuccess
+      msgId: msgId ?? Uuid().v4(),
+      deviceId: Settings.deviceId,
+      queueId: queueId ?? 0, // can set after newQueueId
+      // target
+      sender: clientCommon.address ?? "", // no importance
+      receiver: targetId, // no importance
+      targetId: targetId,
+      targetType: targetType,
+      // status
+      status: MessageStatus.Sending,
+      isOutbound: true,
+      // at
+      sendAt: DateTime.now().millisecondsSinceEpoch,
+      receiveAt: null, // set in receive ACK
+      // delete
+      isDelete: false,
+      deleteAt: null, // set in messages bubble
+      // data
+      contentType: contentType,
+      content: content,
+      options: options,
+      data: null, // set after getData
+    );
     // options
-    if (this.options == null) this.options = Map();
+    if (schema.options == null) schema.options = Map();
     String? profileVersion = extra?["profileVersion"];
     if (profileVersion != null && profileVersion.isNotEmpty) {
-      this.options = MessageOptions.setProfileVersion(this.options, profileVersion);
+      schema.options = MessageOptions.setProfileVersion(schema.options, profileVersion);
     }
     String? deviceToken = extra?["deviceToken"];
     if (deviceToken != null && deviceToken.isNotEmpty) {
-      this.options = MessageOptions.setDeviceToken(this.options, deviceToken);
+      schema.options = MessageOptions.setDeviceToken(schema.options, deviceToken);
     }
     String? deviceProfile = extra?["deviceProfile"];
     if (deviceProfile != null && deviceProfile.isNotEmpty) {
-      this.options = MessageOptions.setDeviceProfile(this.options, deviceProfile);
+      schema.options = MessageOptions.setDeviceProfile(schema.options, deviceProfile);
     }
     String? privateGroupVersion = extra?["privateGroupVersion"];
     if (privateGroupVersion != null && privateGroupVersion.isNotEmpty) {
-      this.options = MessageOptions.setPrivateGroupVersion(this.options, privateGroupVersion);
+      schema.options = MessageOptions.setPrivateGroupVersion(schema.options, privateGroupVersion);
     }
     int? deleteAfterSeconds = extra?["deleteAfterSeconds"];
     if (deleteAfterSeconds != null && deleteAfterSeconds > 0) {
-      this.options = MessageOptions.setOptionsBurningDeleteSec(this.options, deleteAfterSeconds);
+      schema.options = MessageOptions.setOptionsBurningDeleteSec(schema.options, deleteAfterSeconds);
     }
     int? burningUpdateAt = extra?["burningUpdateAt"];
     if (burningUpdateAt != null && burningUpdateAt > 0) {
-      this.options = MessageOptions.setOptionsBurningUpdateAt(this.options, burningUpdateAt);
+      schema.options = MessageOptions.setOptionsBurningUpdateAt(schema.options, burningUpdateAt);
     }
     String? queueIds = extra?["queueIds"];
     if (queueIds != null && queueIds.isNotEmpty) {
-      this.options = MessageOptions.setMessageQueueIds(this.options, queueIds);
+      schema.options = MessageOptions.setMessageQueueIds(schema.options, queueIds);
     }
     int? size = int.tryParse(extra?["size"]?.toString() ?? "");
     if (size != null && size != 0) {
-      this.options = MessageOptions.setFileSize(this.options, size);
+      schema.options = MessageOptions.setFileSize(schema.options, size);
     }
     String? fileName = extra?["name"];
     if (fileName != null && fileName.isNotEmpty) {
-      this.options = MessageOptions.setFileName(this.options, fileName);
+      schema.options = MessageOptions.setFileName(schema.options, fileName);
     }
     String? fileExt = extra?["fileExt"];
     if (fileExt != null && fileExt.isNotEmpty) {
-      this.options = MessageOptions.setFileExt(this.options, fileExt);
+      schema.options = MessageOptions.setFileExt(schema.options, fileExt);
     }
     String? fileMimeType = extra?["mimeType"];
     if (fileMimeType != null && fileMimeType.isNotEmpty) {
-      this.options = MessageOptions.setFileMimeType(this.options, fileMimeType);
+      schema.options = MessageOptions.setFileMimeType(schema.options, fileMimeType);
     }
     int? fileType = int.tryParse(extra?["fileType"]?.toString() ?? "");
     if (fileType != null && fileType >= 0) {
-      this.options = MessageOptions.setFileType(this.options, fileType);
+      schema.options = MessageOptions.setFileType(schema.options, fileType);
     } else if (((size ?? 0) > 0) || (fileMimeType?.isNotEmpty == true) || (fileExt?.isNotEmpty == true)) {
       if ((fileMimeType?.contains("image") == true)) {
-        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeImage);
+        schema.options = MessageOptions.setFileType(schema.options, MessageOptions.fileTypeImage);
       } else if ((fileMimeType?.contains("audio") == true)) {
-        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeAudio);
+        schema.options = MessageOptions.setFileType(schema.options, MessageOptions.fileTypeAudio);
       } else if ((fileMimeType?.contains("video") == true)) {
-        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeVideo);
+        schema.options = MessageOptions.setFileType(schema.options, MessageOptions.fileTypeVideo);
       } else {
         // file_picker is here, because no mime_type
-        this.options = MessageOptions.setFileType(this.options, MessageOptions.fileTypeNormal);
+        schema.options = MessageOptions.setFileType(schema.options, MessageOptions.fileTypeNormal);
       }
     }
     int? mediaWidth = int.tryParse(extra?["width"]?.toString() ?? "");
     int? mediaHeight = int.tryParse(extra?["height"]?.toString() ?? "");
     if (mediaWidth != null && mediaWidth != 0 && mediaHeight != null && mediaHeight != 0) {
-      this.options = MessageOptions.setMediaSizeWH(this.options, mediaWidth, mediaHeight);
+      schema.options = MessageOptions.setMediaSizeWH(schema.options, mediaWidth, mediaHeight);
     }
     double? duration = double.tryParse(extra?["duration"]?.toString() ?? "");
     if (duration != null && duration >= 0) {
-      this.options = MessageOptions.setMediaDuration(this.options, duration);
+      schema.options = MessageOptions.setMediaDuration(schema.options, duration);
       // SUPPORT:START
-      this.options?["audioDuration"] = duration;
+      schema.options?["audioDuration"] = duration;
       // SUPPORT:END
     }
     String? thumbnailPath = extra?["thumbnailPath"];
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
-      this.options = MessageOptions.setMediaThumbnailPath(this.options, thumbnailPath);
+      schema.options = MessageOptions.setMediaThumbnailPath(schema.options, thumbnailPath);
     }
     // piece
     String? parentType = extra?["piece_parent_type"];
@@ -353,12 +379,13 @@ class MessageSchema {
     int? parity = extra?["piece_parity"];
     int? index = extra?["piece_index"];
     if ((parentType?.isNotEmpty == true) && ((total ?? 0) > 0)) {
-      this.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = parentType;
-      this.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = bytesLength;
-      this.options?[MessageOptions.KEY_PIECE_TOTAL] = total;
-      this.options?[MessageOptions.KEY_PIECE_PARITY] = parity;
-      this.options?[MessageOptions.KEY_PIECE_INDEX] = index;
+      schema.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] = parentType;
+      schema.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] = bytesLength;
+      schema.options?[MessageOptions.KEY_PIECE_TOTAL] = total;
+      schema.options?[MessageOptions.KEY_PIECE_PARITY] = parity;
+      schema.options?[MessageOptions.KEY_PIECE_INDEX] = index;
     }
+    return schema;
   }
 
   /// to sqlite
@@ -366,12 +393,13 @@ class MessageSchema {
     Map<String, dynamic> map = {
       'pid': pid != null ? hexEncode(pid!) : null,
       'msg_id': msgId,
+      'device_id': deviceId,
       'queue_id': queueId,
-      'sender': from,
-      'receiver': to,
-      'topic': topic,
-      'group_id': groupId,
+      // target
+      'sender': sender,
+      'receiver': receiver,
       'target_id': targetId,
+      'target_type': targetType,
       // status
       'status': status,
       'is_outbound': isOutbound ? 1 : 0,
@@ -385,6 +413,7 @@ class MessageSchema {
       'type': contentType,
       // content:,
       'options': options != null ? jsonEncode(options) : null,
+      'data': data != null ? jsonEncode(data) : null,
     };
     // content
     switch (contentType) {
@@ -399,7 +428,7 @@ class MessageSchema {
       case MessageContentType.image:
       case MessageContentType.audio:
       case MessageContentType.piece:
-        if ((content != null) && (content is File)) {
+        if (isContentFile) {
           map['content'] = Path.convert2Local((content as File).path);
         }
         break;
@@ -424,11 +453,13 @@ class MessageSchema {
     MessageSchema schema = MessageSchema(
       pid: e['pid'] != null ? hexDecode(e['pid']) : null,
       msgId: e['msg_id'] ?? "",
+      deviceId: e['device_id'] ?? "",
       queueId: e['queue_id'] ?? 0,
-      from: e['sender'] ?? "",
-      to: e['receiver'] ?? "",
-      topic: e['topic'] ?? "",
-      groupId: e['group_id'] ?? "",
+      // target
+      sender: e['sender'] ?? "",
+      receiver: e['receiver'] ?? "",
+      targetId: e['target_id'] ?? "",
+      targetType: e['target_type'] ?? 0,
       // status
       status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
@@ -441,6 +472,7 @@ class MessageSchema {
       // data
       contentType: e['type'] ?? "",
       options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['options']) : null,
+      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );
     // content
     switch (schema.contentType) {
@@ -483,7 +515,7 @@ class MessageSchema {
   }
 
   static Future<Map<String, dynamic>> piecesSplits(MessageSchema msg) async {
-    if (!(msg.content is File?)) return {};
+    if (!msg.isContentFile) return {};
     File? file = msg.content as File?;
     if (file == null || !file.existsSync()) return {};
     int length = await file.length();
@@ -550,7 +582,7 @@ class MessageSchema {
       logger.e("Message - combinePiecesData - combine fail - recover_lost:${pieces.length - recoverCount}");
       return null;
     }
-    return Common.combinePieces(recoverList, total, parity, bytesLength);
+    return await Common.combinePieces(recoverList, total, parity, bytesLength);
   }
 
   static MessageSchema? combinePiecesMsg(List<MessageSchema> sortPieces, String base64String) {
@@ -564,12 +596,14 @@ class MessageSchema {
     // schema(same with fromReceive)
     MessageSchema schema = MessageSchema(
       pid: piece.pid,
-      queueId: MessageOptions.getMessageQueueId(piece.options),
       msgId: piece.msgId,
-      from: piece.from,
-      to: piece.to,
-      topic: piece.topic,
-      groupId: piece.groupId,
+      deviceId: piece.deviceId,
+      queueId: piece.queueId,
+      // target
+      sender: piece.sender,
+      receiver: piece.receiver,
+      targetId: piece.targetId,
+      targetType: piece.targetType,
       // status
       status: MessageStatus.Received,
       isOutbound: false,
@@ -583,6 +617,7 @@ class MessageSchema {
       contentType: piece.options?[MessageOptions.KEY_PIECE_PARENT_TYPE] ?? "",
       content: base64String,
       options: piece.options,
+      data: null, // must null
     );
     // pieces
     if (schema.options == null) schema.options = Map();
@@ -598,11 +633,11 @@ class MessageSchema {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, queueId: $queueId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, receiver: $receiver, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, data: $data, temp: $temp}';
   }
 
   String toStringNoContent() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, queueId: $queueId, from: $from, to: $to, topic: $topic, groupId: $groupId, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, receiver: $receiver, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
   }
 }
 
@@ -611,16 +646,13 @@ class MessageOptions {
   static const KEY_RESEND_MUTE_AT = "resendMuteAt"; // native
 
   static const KEY_PROFILE_VERSION = "profileVersion";
-  static const KEY_DEVICE_ID = "deviceId";
   static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_DEVICE_PROFILE = "deviceProfile";
+  static const KEY_MESSAGE_QUEUE_IDS = "messageQueueIds";
   static const KEY_PRIVATE_GROUP_VERSION = "privateGroupVersion";
 
   static const KEY_DELETE_AFTER_SECONDS = "deleteAfterSeconds";
   static const KEY_UPDATE_BURNING_AFTER_AT = "updateBurnAfterAt";
-
-  static const KEY_MESSAGE_QUEUE_ID = "messageQueueId";
-  static const KEY_MESSAGE_QUEUE_IDS = "messageQueueIds";
 
   static const KEY_PUSH_NOTIFY_ID = "pushNotifyId"; // native
 
@@ -703,17 +735,6 @@ class MessageOptions {
     return options[MessageOptions.KEY_PROFILE_VERSION]?.toString();
   }
 
-  static Map<String, dynamic> setDeviceId(Map<String, dynamic>? options, String deviceId) {
-    if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_DEVICE_ID] = deviceId;
-    return options;
-  }
-
-  static String? getDeviceId(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_DEVICE_ID]?.toString();
-  }
-
   static Map<String, dynamic> setDeviceToken(Map<String, dynamic>? options, String deviceToken) {
     if (options == null) options = Map<String, dynamic>();
     options[MessageOptions.KEY_DEVICE_TOKEN] = deviceToken;
@@ -734,6 +755,17 @@ class MessageOptions {
   static String? getDeviceProfile(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_DEVICE_PROFILE]?.toString();
+  }
+
+  static Map<String, dynamic> setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_MESSAGE_QUEUE_IDS] = queueIds;
+    return options;
+  }
+
+  static String? getMessageQueueIds(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_MESSAGE_QUEUE_IDS]?.toString();
   }
 
   static Map<String, dynamic> setPrivateGroupVersion(Map<String, dynamic>? options, String peivateGroupVersion) {
@@ -769,29 +801,6 @@ class MessageOptions {
     if (options == null || options.keys.length == 0) return null;
     var update = options[MessageOptions.KEY_UPDATE_BURNING_AFTER_AT]?.toString();
     return int.tryParse(update ?? "");
-  }
-
-  static Map<String, dynamic> setMessageQueueId(Map<String, dynamic>? options, int queueId) {
-    if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_MESSAGE_QUEUE_ID] = queueId;
-    return options;
-  }
-
-  static int getMessageQueueId(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return 0;
-    var queueId = options[MessageOptions.KEY_MESSAGE_QUEUE_ID]?.toString();
-    return int.tryParse(queueId ?? "0") ?? 0;
-  }
-
-  static Map<String, dynamic> setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
-    if (options == null) options = Map<String, dynamic>();
-    options[MessageOptions.KEY_MESSAGE_QUEUE_IDS] = queueIds;
-    return options;
-  }
-
-  static String? getMessageQueueIds(Map<String, dynamic>? options) {
-    if (options == null || options.keys.length == 0) return null;
-    return options[MessageOptions.KEY_MESSAGE_QUEUE_IDS]?.toString();
   }
 
   static Map<String, dynamic> setPushNotifyId(Map<String, dynamic>? options, String uuid) {
@@ -1205,9 +1214,9 @@ class MessageData {
       'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
-      data['topic'] = message.topic;
+      data['topic'] = message.targetId;
     } else if (message.isPrivateGroup) {
-      data['groupId'] = message.groupId;
+      data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
   }
@@ -1221,9 +1230,9 @@ class MessageData {
       'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
-      data['topic'] = message.topic;
+      data['topic'] = message.targetId;
     } else if (message.isPrivateGroup) {
-      data['groupId'] = message.groupId;
+      data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
   }
@@ -1239,9 +1248,9 @@ class MessageData {
       'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
-      data['topic'] = message.topic;
+      data['topic'] = message.targetId;
     } else if (message.isPrivateGroup) {
-      data['groupId'] = message.groupId;
+      data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
   }
@@ -1259,9 +1268,9 @@ class MessageData {
       'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
-      data['topic'] = message.topic;
+      data['topic'] = message.targetId;
     } else if (message.isPrivateGroup) {
-      data['groupId'] = message.groupId;
+      data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
   }
@@ -1273,9 +1282,9 @@ class MessageData {
       'options': _simpleOptions(message.options),
     });
     if (message.isTopic) {
-      data['topic'] = message.topic;
+      data['topic'] = message.targetId;
     } else if (message.isPrivateGroup) {
-      data['groupId'] = message.groupId;
+      data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
   }
@@ -1283,7 +1292,7 @@ class MessageData {
   static String getTopicSubscribe(MessageSchema message) {
     Map data = _base(MessageContentType.topicSubscribe, id: message.msgId, timestamp: message.sendAt);
     data.addAll({
-      'topic': message.topic,
+      'topic': message.targetId,
     });
     return jsonEncode(data);
   }
@@ -1291,7 +1300,7 @@ class MessageData {
   static String getTopicUnSubscribe(MessageSchema message) {
     Map data = _base(MessageContentType.topicUnsubscribe, id: message.msgId, timestamp: message.sendAt);
     data.addAll({
-      'topic': message.topic,
+      'topic': message.targetId,
     });
     return jsonEncode(data);
   }
@@ -1307,7 +1316,7 @@ class MessageData {
   static String getTopicKickOut(MessageSchema message) {
     Map data = _base(MessageContentType.topicKickOut, id: message.msgId, timestamp: message.sendAt);
     data.addAll({
-      'topic': message.topic,
+      'topic': message.targetId,
       'content': message.content,
     });
     return jsonEncode(data);

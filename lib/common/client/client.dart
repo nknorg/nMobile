@@ -328,7 +328,7 @@ class ClientCommon with Tag {
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
       logger.d("$TAG - onMessage -> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
-      MessageSchema? receive = MessageSchema.fromReceive(address ?? "", event);
+      MessageSchema? receive = MessageSchema.fromReceive(event);
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
