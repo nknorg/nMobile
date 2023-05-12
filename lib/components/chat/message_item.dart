@@ -63,18 +63,18 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   void _refreshSender() {
-    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == widget.message.from)) return;
+    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == widget.message.sender)) return;
     if (widget.message.temp?["sender"] == null) {
       _sender = null;
-      contactCommon.queryByClientAddress(widget.message.from).then((sender) {
-        if (widget.message.from == sender?.clientAddress) {
+      contactCommon.queryByClientAddress(widget.message.sender).then((sender) {
+        if (widget.message.sender == sender?.clientAddress) {
           if (widget.message.temp == null) widget.message.temp = Map();
           widget.message.temp?["sender"] = sender;
           setState(() {
             _sender = sender;
           });
         } else {
-          sender = ContactSchema.createWithNoWalletAddress(widget.message.from, ContactType.none);
+          sender = ContactSchema.createWithNoWalletAddress(widget.message.sender, ContactType.none);
           setState(() {
             _sender = sender;
           });
@@ -103,8 +103,8 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     // }
 
     // user
-    bool sameUserBot = widget.message.from == widget.prevMessage?.from;
-    bool sameUserTop = widget.message.from == widget.nextMessage?.from;
+    bool sameUserBot = widget.message.sender == widget.prevMessage?.sender;
+    bool sameUserTop = widget.message.sender == widget.nextMessage?.sender;
     // isOutbound
     bool sameReceiveBot = (widget.message.isOutbound == false) && (widget.message.isOutbound == widget.prevMessage?.isOutbound);
     bool sameReceiveTop = (widget.message.isOutbound == false) && (widget.message.isOutbound == widget.nextMessage?.isOutbound);
@@ -173,7 +173,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     }
 
     // profile
-    bool leftBigMargin = visibleSelf && !widget.message.isOutbound && (widget.message.isTopic || widget.message.isPrivateGroup);
+    bool leftBigMargin = visibleSelf && !widget.message.isOutbound && (widget.message.isTargetTopic || widget.message.isTargetGroup);
 
     List<Widget> contentsWidget = <Widget>[];
     switch (this.widget.message.contentType) {
@@ -419,7 +419,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   Widget _widgetTopicSubscribe(BuildContext context) {
-    String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _sender?.displayName ?? widget.message.from.substring(0, 6);
+    String who = widget.message.isOutbound ? Settings.locale((s) => s.you, ctx: context) : _sender?.displayName ?? widget.message.sender.substring(0, 6);
     String content = who + Settings.locale((s) => s.joined_channel, ctx: context);
 
     return Container(
@@ -434,9 +434,9 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   Widget _widgetTopicInvited(BuildContext context) {
-    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
-    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
-    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
+    String receiver = (widget.message.targetId.length > 6) ? widget.message.targetId.substring(0, 6) : " ";
+    String sender = widget.message.sender.length > 6 ? widget.message.sender.substring(0, 6) : " ";
+    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(receiver), ctx: context) : Settings.locale((s) => s.invites_desc_me(sender), ctx: context);
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20),
@@ -497,9 +497,9 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   Widget _widgetPrivateGroupInvited(BuildContext context) {
-    String to = (widget.message.to.length > 6) ? widget.message.to.substring(0, 6) : " ";
-    String from = widget.message.from.length > 6 ? widget.message.from.substring(0, 6) : " ";
-    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(to), ctx: context) : Settings.locale((s) => s.invites_desc_me(from), ctx: context);
+    String receiver = (widget.message.targetId.length > 6) ? widget.message.targetId.substring(0, 6) : " ";
+    String sender = widget.message.sender.length > 6 ? widget.message.sender.substring(0, 6) : " ";
+    String inviteDesc = widget.message.isOutbound ? Settings.locale((s) => s.invites_desc_other(receiver), ctx: context) : Settings.locale((s) => s.invites_desc_me(sender), ctx: context);
 
     Map content = (widget.message.content != null) ? (widget.message.content as Map) : Map();
     String groupId = content['groupId']?.toString() ?? "";
