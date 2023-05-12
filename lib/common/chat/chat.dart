@@ -250,7 +250,7 @@ class ChatCommon with Tag {
     // queue
     String? queueIds = MessageOptions.getMessageQueueIds(message.options);
     if (message.deviceId.isNotEmpty && (queueIds != null) && queueIds.isNotEmpty) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         logger.d("$TAG - deviceInfoHandle - message queue check - sender:${message.sender} - queueIds:$queueIds");
         List splits = deviceInfoCommon.splitQueueIds(queueIds);
         messageCommon.syncContactMessages(clientAddress, message.deviceId, splits[0], splits[1], splits[2]); // await
