@@ -124,16 +124,20 @@ class MessageSchema {
     this.data,
   });
 
-  bool get isContact {
+  bool get isTargetContact {
     return targetType == MessageTargetType.Contact;
   }
 
-  bool get isTopic {
+  bool get isTargetTopic {
     return targetType == MessageTargetType.Topic;
   }
 
-  bool get isPrivateGroup {
+  bool get isTargetGroup {
     return targetType == MessageTargetType.Group;
+  }
+
+  bool get isTargetSelf {
+    return isTargetContact && (isOutbound ? (sender == targetId) : ((sender == clientCommon.address) && (clientCommon.address?.isNotEmpty == true)));
   }
 
   // burning
@@ -179,7 +183,7 @@ class MessageSchema {
   }
 
   bool get canQueue {
-    return canReceipt && !isTopic && !isPrivateGroup;
+    return canReceipt && !isTargetTopic && !isTargetGroup;
   }
 
   bool get isContentFile {
@@ -192,7 +196,7 @@ class MessageSchema {
 
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
-    if (raw == null || raw.src == null || raw.data == null) return null;
+    if ((raw == null) || (raw.src == null) || (raw.src?.isEmpty == true) || (raw.data == null) || (raw.data?.isEmpty == true)) return null;
     Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
     if (data == null || data['id'] == null || data['contentType'] == null) return null;
     // target
@@ -1204,9 +1208,9 @@ class MessageData {
       'content': message.content,
       'options': _simpleOptions(message.options),
     });
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       data['topic'] = message.targetId;
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
@@ -1220,9 +1224,9 @@ class MessageData {
       'content': content,
       'options': _simpleOptions(message.options),
     });
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       data['topic'] = message.targetId;
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
@@ -1238,9 +1242,9 @@ class MessageData {
       'content': content,
       'options': _simpleOptions(message.options),
     });
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       data['topic'] = message.targetId;
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
@@ -1258,9 +1262,9 @@ class MessageData {
       'content': content,
       'options': _simpleOptions(message.options),
     });
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       data['topic'] = message.targetId;
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       data['groupId'] = message.targetId;
     }
     return jsonEncode(data);
@@ -1272,9 +1276,9 @@ class MessageData {
       'content': message.content,
       'options': _simpleOptions(message.options),
     });
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       data['topic'] = message.targetId;
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       data['groupId'] = message.targetId;
     }
     return jsonEncode(data);

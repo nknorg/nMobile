@@ -344,7 +344,7 @@ class MessageCommon with Tag {
   Future<bool> onContactMessageQueueReceive(MessageSchema message) async {
     if (!message.canQueue || (message.queueId <= 0)) return false;
     String targetAddress = message.sender;
-    if (targetAddress.isEmpty || (targetAddress == message.targetId)) return false;
+    if (targetAddress.isEmpty) return false;
     Function func = () async {
       DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, message.deviceId);
       if (targetDevice == null) return false;
