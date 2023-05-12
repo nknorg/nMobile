@@ -386,7 +386,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -452,7 +452,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -535,7 +535,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -597,7 +597,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -828,7 +828,7 @@ class ChatOutCommon with Tag {
     }
     // queue
     if (message.canQueue) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           String? newQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
@@ -979,7 +979,7 @@ class ChatOutCommon with Tag {
     }
     // queue_id (before set status success)
     if (message.canQueue && sendSuccess) {
-      if (message.isTargetContact) {
+      if (message.isTargetContact && !message.isTargetSelf) {
         String? queueIds = MessageOptions.getMessageQueueIds(message.options);
         String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
         await messageCommon.onContactMessageQueueSendSuccess(message.targetId, deviceId, message.queueId);
