@@ -18,12 +18,6 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
-class MessageTargetType {
-  static const int Contact = 0;
-  static const int Topic = 1;
-  static const int Group = 2;
-}
-
 class MessageStatus {
   static const int Sending = 100; // out
   static const int Error = 110; // out
@@ -125,15 +119,15 @@ class MessageSchema {
   });
 
   bool get isTargetContact {
-    return targetType == MessageTargetType.Contact;
+    return targetType == SessionType.CONTACT;
   }
 
   bool get isTargetTopic {
-    return targetType == MessageTargetType.Topic;
+    return targetType == SessionType.TOPIC;
   }
 
   bool get isTargetGroup {
-    return targetType == MessageTargetType.Group;
+    return targetType == SessionType.PRIVATE_GROUP;
   }
 
   bool get isTargetSelf {
@@ -204,7 +198,7 @@ class MessageSchema {
     String topic = data['topic'] ?? "";
     String groupId = data['groupId'] ?? "";
     String targetId = topic.isNotEmpty ? topic : (groupId.isNotEmpty ? groupId : sender);
-    int targetType = topic.isNotEmpty ? MessageTargetType.Topic : (groupId.isNotEmpty ? MessageTargetType.Group : MessageTargetType.Contact);
+    int targetType = topic.isNotEmpty ? SessionType.TOPIC : (groupId.isNotEmpty ? SessionType.PRIVATE_GROUP : SessionType.CONTACT);
     // schema
     MessageSchema schema = MessageSchema(
       pid: raw.messageId,

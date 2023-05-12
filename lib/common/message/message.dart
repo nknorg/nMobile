@@ -7,6 +7,7 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -38,10 +39,10 @@ class MessageCommon with Tag {
   Map<String, ParallelQueue> _messageQueueIdQueues = Map();
   Map<String, String?> _syncMessageQueueParams = Map();
 
-  String? currentChatTargetId;
+  String? chattingTargetId;
 
   bool isTargetMessagePageVisible(String? targetId) {
-    bool inSessionPage = currentChatTargetId == targetId;
+    bool inSessionPage = chattingTargetId == targetId;
     bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
     bool needAuth = (application.goForegroundAt - application.goBackgroundAt) >= Settings.gapClientReAuthMs;
     bool maybeAuthing = needAuth && ((DateTime.now().millisecondsSinceEpoch - application.goForegroundAt) < 200); // wait go app_screen
@@ -227,7 +228,7 @@ class MessageCommon with Tag {
       }
     }
     // send
-    if (msgIds.isNotEmpty && (targetType == MessageTargetType.Contact)) {
+    if (msgIds.isNotEmpty && (targetType == SessionType.CONTACT)) {
       chatOutCommon.sendRead(targetId, msgIds); // await
     }
     logger.d("$TAG - readMessagesBySelf - count:${msgIds.length} - targetId:$targetId");
@@ -484,7 +485,7 @@ class MessageCommon with Tag {
     for (var i = 0; i < resendQueueIds.length; i++) {
       int queueId = resendQueueIds[i];
       for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByTargetDeviceQueueId(targetAddress, MessageTargetType.Contact, Settings.deviceId, queueId, offset: offset, limit: limit);
+        List<MessageSchema> result = await queryListByTargetDeviceQueueId(targetAddress, SessionType.CONTACT, Settings.deviceId, queueId, offset: offset, limit: limit);
         MessageSchema? resendMsg;
         for (var j = 0; j < result.length; j++) {
           MessageSchema message = result[j];
@@ -516,7 +517,7 @@ class MessageCommon with Tag {
     List<MessageSchema> noAckList = [];
     limit = 20;
     for (int offset = 0; true; offset += limit) {
-      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: MessageTargetType.Contact, offset: offset, limit: limit);
+      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: SessionType.CONTACT, offset: offset, limit: limit);
       result.removeWhere((element) => !element.isOutbound || !element.canQueue);
       noAckList.addAll(result);
       if (result.length < limit) break;
