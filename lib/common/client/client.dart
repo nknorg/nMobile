@@ -332,7 +332,7 @@ class ClientCommon with Tag {
       if (status != ClientConnectStatus.connected) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
-      } else if ((receive?.from == address) && (receive?.from == receive?.to) && (receive?.contentType == MessageContentType.ping)) {
+      } else if ((receive?.isTargetSelf == true) && (receive?.contentType == MessageContentType.ping)) {
         int nowAt = DateTime.now().millisecondsSinceEpoch;
         if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
           _statusSink.add(ClientConnectStatus.connected);

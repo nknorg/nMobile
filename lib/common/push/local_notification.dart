@@ -46,8 +46,8 @@ class LocalNotification {
     int? badgeNumber,
     String? payload,
   }) async {
-    if (targetId != null && application.appLifecycleState == AppLifecycleState.resumed) {
-      if (messageCommon.currentChatTargetId == targetId) return;
+    if ((targetId?.isNotEmpty == true) && (application.appLifecycleState == AppLifecycleState.resumed)) {
+      if (messageCommon.chattingTargetId == targetId) return;
     }
 
     int notificationId = uuid.hashCode;

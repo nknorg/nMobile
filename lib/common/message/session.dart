@@ -40,11 +40,9 @@ class SessionCommon with Tag {
     if (targetId == null || targetId.isEmpty || type == null) return null;
     Function func = () async {
       logger.d('$TAG - add - START - targetId:$targetId - type:$type - unread:$unReadCount - timeAt:$lastMsgAt - message:$lastMsg');
-      String topic = (type == SessionType.TOPIC) ? targetId : "";
-      String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
       if (lastMsg == null) {
-        List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+        List<MessageSchema> history = await messageCommon.queryListByTargetVisible(targetId, type, offset: 0, limit: 1);
         lastMsg = history.isNotEmpty ? history[0] : null;
       }
       // lastMsgAt
@@ -61,7 +59,7 @@ class SessionCommon with Tag {
       String? groupSenderName;
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         if (lastMsg != null) {
-          ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg?.from);
+          ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg?.sender);
           if (_sender?.displayName.isNotEmpty == true) {
             groupSenderName = _sender?.displayName ?? " ";
           }
@@ -113,8 +111,6 @@ class SessionCommon with Tag {
         return null;
       }
       logger.d('$TAG - update - START - targetId:$targetId - type:$type - unread:$unReadCount - change:$unreadChange - timeAt:$lastMsgAt - message:$lastMsg');
-      String topic = (type == SessionType.TOPIC) ? targetId : "";
-      String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
       // lastMsg
       MessageSchema? oldLastMsg;
       Map<String, dynamic> oldLastMessageOptions = exist.lastMessageOptions ?? Map();
@@ -122,7 +118,7 @@ class SessionCommon with Tag {
         oldLastMsg = MessageSchema.fromMap(oldLastMessageOptions);
       }
       if (oldLastMsg == null) {
-        List<MessageSchema> history = await messageCommon.queryMessagesByTargetIdVisible(targetId, topic, group, offset: 0, limit: 1);
+        List<MessageSchema> history = await messageCommon.queryListByTargetVisible(targetId, type, offset: 0, limit: 1);
         oldLastMsg = history.isNotEmpty ? history[0] : null;
       }
       MessageSchema? newLastMsg;
@@ -153,7 +149,7 @@ class SessionCommon with Tag {
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         String? newGroupSenderName;
         if (newLastMsg != null) {
-          ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.from);
+          ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.sender);
           if (_sender?.displayName.isNotEmpty == true) {
             newGroupSenderName = _sender?.displayName ?? " ";
           }
@@ -187,9 +183,7 @@ class SessionCommon with Tag {
     if (targetId == null || targetId.isEmpty || type == null) return false;
     bool success = await SessionStorage.instance.delete(targetId, type);
     if (success && notify) _deleteSink.add([targetId, type]);
-    String topic = (type == SessionType.TOPIC) ? targetId : "";
-    String group = (type == SessionType.PRIVATE_GROUP) ? targetId : "";
-    await messageCommon.deleteByTargetId(targetId, topic, group);
+    await messageCommon.deleteByTargetId(targetId, type);
     return success;
   }
 

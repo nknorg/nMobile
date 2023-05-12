@@ -227,9 +227,9 @@ Future addTestData(
   MessageSchema _message = MessageSchema(
     pid: Uint8List(128),
     msgId: Uuid().v4(),
-    from: (0 % 2 == 0) ? clientAddressList[0] : clientAddressList[1],
-    to: (0 % 2 == 0) ? clientAddressList[1] : clientAddressList[0],
-    topic: (0 % (contactCount ~/ topicCount) == 0) ? topicNameList[0] : "",
+    sender: (0 % 2 == 0) ? clientAddressList[0] : clientAddressList[1],
+    targetId: (0 % 2 == 0) ? clientAddressList[1] : clientAddressList[0], // topic (0 % (contactCount ~/ topicCount) == 0) ? topicNameList[0] : ""
+    targetType: 0,
     status: (0 % 10 == 0) ? ((0 % 2 == 0) ? ((0 % 2 == 0) ? MessageStatus.Receipt : MessageStatus.Success) : MessageStatus.Received) : MessageStatus.Read,
     isOutbound: (0 % 2 == 0) ? true : false,
     isDelete: (0 % 20 == 0) ? true : false,

@@ -12,6 +12,7 @@ import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/utils/hash.dart';
@@ -1037,14 +1038,15 @@ class PrivateGroupCommon with Tag {
     }
     if (sessionNotify == true) {
       MessageSchema? message = MessageSchema.fromSend(
-        msgId: Uuid().v4(),
-        from: schema.invitee ?? "",
-        groupId: schema.groupId,
-        status: MessageStatus.Read,
-        isOutbound: schema.invitee == selfAddress,
-        contentType: MessageContentType.privateGroupSubscribe,
-        content: schema.invitee,
+        schema.groupId,
+        SessionType.PRIVATE_GROUP,
+        MessageContentType.privateGroupSubscribe,
+        schema.invitee,
       );
+      message.deviceId = "";
+      message.sender = schema.invitee ?? "";
+      message.status = MessageStatus.Read;
+      message.isOutbound = schema.invitee == selfAddress;
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       await chatInCommon.onMessageReceive(message);
@@ -1137,14 +1139,15 @@ class PrivateGroupCommon with Tag {
     // session
     if (sessionNotify == true) {
       MessageSchema? message = MessageSchema.fromSend(
-        msgId: Uuid().v4(),
-        from: item.invitee ?? "",
-        groupId: item.groupId,
-        status: MessageStatus.Read,
-        isOutbound: item.invitee == selfAddress,
-        contentType: MessageContentType.privateGroupSubscribe,
-        content: item.invitee,
+        item.groupId,
+        SessionType.PRIVATE_GROUP,
+        MessageContentType.privateGroupSubscribe,
+        item.invitee,
       );
+      message.deviceId = "";
+      message.sender = item.invitee ?? "";
+      message.status = MessageStatus.Read;
+      message.isOutbound = item.invitee == selfAddress;
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       await chatInCommon.onMessageReceive(message);
