@@ -13,6 +13,7 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';

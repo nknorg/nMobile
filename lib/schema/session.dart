@@ -49,9 +49,9 @@ class SessionSchema {
   }
 
   static int getTypeByMessage(MessageSchema? msg) {
-    if (msg?.isTopic == true) {
+    if (msg?.isTargetTopic == true) {
       return SessionType.TOPIC;
-    } else if (msg?.isPrivateGroup == true) {
+    } else if (msg?.isTargetGroup == true) {
       return SessionType.PRIVATE_GROUP;
     } else {
       return SessionType.CONTACT;
