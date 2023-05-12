@@ -212,7 +212,7 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> sendReceipt(MessageSchema received) async {
     if (!(await _waitClientOk())) return false;
-    if (received.isTopic || received.isPrivateGroup) return false; // topic/group no receipt, just send message to myself
+    if (received.isTargetTopic || received.isTargetGroup) return false; // topic/group no receipt, just send message to myself
     if (received.sender.isEmpty) return false;
     String data = MessageData.getReceipt(received.msgId);
     logger.i("$TAG - sendReceipt - dest:${received.sender} - msgId:${received.msgId}");
@@ -386,7 +386,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -452,7 +452,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -535,7 +535,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -597,7 +597,7 @@ class ChatOutCommon with Tag {
     );
     // queue
     if (message.canQueue) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
@@ -828,7 +828,7 @@ class ChatOutCommon with Tag {
     }
     // queue
     if (message.canQueue) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
         if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
           String? newQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
@@ -908,7 +908,7 @@ class ChatOutCommon with Tag {
     if (mute) {
       // notification
       bool notification;
-      if (message.isTopic || message.isPrivateGroup) {
+      if (message.isTargetTopic || message.isTargetGroup) {
         notification = false;
       } else {
         bool noReceipt = message.status < MessageStatus.Receipt;
@@ -952,16 +952,16 @@ class ChatOutCommon with Tag {
     if (sessionSync) await chatCommon.sessionHandle(message);
     // sdk
     Uint8List? pid;
-    if (message.isTopic) {
+    if (message.isTargetTopic) {
       TopicSchema? topic = await chatCommon.topicHandle(message);
       bool pushNotification = message.canNotification && (notification != false);
       pid = await _sendWithTopic(topic, message, notification: pushNotification);
-    } else if (message.isPrivateGroup) {
+    } else if (message.isTargetGroup) {
       PrivateGroupSchema? group = await chatCommon.privateGroupHandle(message);
       // FUTURE:GG (group.options?.notificationOpen == true)
       bool pushNotification = message.canNotification && (notification != false);
       pid = await _sendWithPrivateGroup(group, message, notification: pushNotification);
-    } else if (message.isContact) {
+    } else if (message.isTargetContact) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
       bool pushNotification = message.canNotification && (contact?.options?.notificationOpen == true) && (notification != false);
       pid = await _sendWithContact(contact, message, notification: pushNotification);
@@ -979,7 +979,7 @@ class ChatOutCommon with Tag {
     }
     // queue_id (before set status success)
     if (message.canQueue && sendSuccess) {
-      if (message.isContact) {
+      if (message.isTargetContact) {
         String? queueIds = MessageOptions.getMessageQueueIds(message.options);
         String? deviceId = deviceInfoCommon.splitQueueIds(queueIds)[3];
         await messageCommon.onContactMessageQueueSendSuccess(message.targetId, deviceId, message.queueId);
