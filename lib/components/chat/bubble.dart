@@ -196,7 +196,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     // bool isSendSuccess = _message.status == MessageStatus.SendSuccess;
     // bool isSendReceipt = _message.status == MessageStatus.SendReceipt;
 
-    // bool canProgress = (_message.content is File) && !_message.isTopic;
+    // bool canProgress = _message.isContentFile && !_message.isTopic;
 
     // bool showSending = isSending && !canProgress;
     // bool showProgress = isSending && canProgress && _uploadProgress < 1;
@@ -366,10 +366,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.image:
         // image + ipfs_image
         int state = MessageOptions.getIpfsState(_message.options);
-        bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
         bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
-        if (fileType && (fileNative || fileDownloaded)) {
+        if (_message.isContentFile && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           Map<String, dynamic>? item = MediaScreen.createMediasItemByImagePath(_message.msgId, file.path);
           if (item != null) {
@@ -387,7 +386,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         break;
       case MessageContentType.audio:
         // just audio, no ipfs_audio
-        if (_message.content is File) {
+        if (_message.isContentFile) {
           double? durationS = MessageOptions.getMediaDuration(_message.options);
           int? durationMs = (durationS == null) ? null : ((durationS * 1000).round());
           File file = _message.content as File;
@@ -399,10 +398,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.video:
         // just ipfs_video, no video
         int state = MessageOptions.getIpfsState(_message.options);
-        bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
         bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
-        if (fileType && (fileNative || fileDownloaded)) {
+        if (_message.isContentFile && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           Map<String, dynamic>? item = MediaScreen.createMediasItemByVideoPath(_message.msgId, file.path, _thumbnailPath);
           if (item != null) {
@@ -421,10 +419,9 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
       case MessageContentType.file:
         // just ipfs_file, no file
         int state = MessageOptions.getIpfsState(_message.options);
-        bool fileType = _message.content is File;
         bool fileNative = _message.isOutbound || (_message.contentType != MessageContentType.ipfs);
         bool fileDownloaded = (_message.contentType == MessageContentType.ipfs) && (state == MessageOptions.ipfsStateYes);
-        if (fileType && (fileNative || fileDownloaded)) {
+        if (_message.isContentFile && (fileNative || fileDownloaded)) {
           File file = _message.content as File;
           onTap = () {
             try {
@@ -554,7 +551,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendReceipt = _message.status == MessageStatus.Receipt;
     bool isSendRead = _message.status == MessageStatus.Read;
 
-    bool showProgress = isSending && (_message.content is File) && (_fetchProgress < 1) && (_fetchProgress > 0);
+    bool showProgress = isSending && _message.isContentFile && (_fetchProgress < 1) && (_fetchProgress > 0);
     bool showSending = isSending && !showProgress;
 
     if (showSending) {
@@ -667,7 +664,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     } else {
       if ((_message.isOutbound == false) && (_message.contentType == MessageContentType.ipfs)) {
         int state = MessageOptions.getIpfsState(_message.options);
-        if ((state == MessageOptions.ipfsStateYes) && (_message.content is File)) {
+        if ((state == MessageOptions.ipfsStateYes) && _message.isContentFile) {
           File file = _message.content as File;
           child = Image.file(
             file,
@@ -681,7 +678,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
             height: placeholderHeight,
           );
         }
-      } else if (_message.content is File) {
+      } else if (_message.isContentFile) {
         File file = _message.content as File;
         child = Image.file(
           file,

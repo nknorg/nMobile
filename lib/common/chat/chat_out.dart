@@ -16,6 +16,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/format.dart';
@@ -282,7 +283,7 @@ class ChatOutCommon with Tag {
     if (targetAddress == null || targetAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
-      MessageTargetType.Contact,
+      SessionType.CONTACT,
       MessageContentType.contactOptions,
       null,
       extra: {
@@ -303,7 +304,7 @@ class ChatOutCommon with Tag {
     if (targetAddress == null || targetAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
-      MessageTargetType.Contact,
+      SessionType.CONTACT,
       MessageContentType.contactOptions,
       null,
       extra: {
@@ -357,15 +358,15 @@ class ChatOutCommon with Tag {
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetId = target.clientAddress;
-      targetType = MessageTargetType.Contact;
+      targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topic;
-      targetType = MessageTargetType.Topic;
+      targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
-      targetType = MessageTargetType.Group;
+      targetType = SessionType.PRIVATE_GROUP;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
       privateGroupVersion = target.version;
@@ -422,15 +423,15 @@ class ChatOutCommon with Tag {
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetId = target.clientAddress;
-      targetType = MessageTargetType.Contact;
+      targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topic;
-      targetType = MessageTargetType.Topic;
+      targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
-      targetType = MessageTargetType.Group;
+      targetType = SessionType.PRIVATE_GROUP;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
       privateGroupVersion = target.version;
@@ -504,15 +505,15 @@ class ChatOutCommon with Tag {
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetId = target.clientAddress;
-      targetType = MessageTargetType.Contact;
+      targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topic;
-      targetType = MessageTargetType.Topic;
+      targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
-      targetType = MessageTargetType.Group;
+      targetType = SessionType.PRIVATE_GROUP;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
       privateGroupVersion = target.version;
@@ -565,15 +566,15 @@ class ChatOutCommon with Tag {
     String? privateGroupVersion;
     if (target is ContactSchema) {
       targetId = target.clientAddress;
-      targetType = MessageTargetType.Contact;
+      targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topic;
-      targetType = MessageTargetType.Topic;
+      targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
-      targetType = MessageTargetType.Group;
+      targetType = SessionType.PRIVATE_GROUP;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
       privateGroupVersion = target.version;
@@ -622,7 +623,7 @@ class ChatOutCommon with Tag {
     if (topic == null || topic.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       topic,
-      MessageTargetType.Topic,
+      SessionType.TOPIC,
       MessageContentType.topicSubscribe,
       null,
     );
@@ -638,7 +639,7 @@ class ChatOutCommon with Tag {
     if (topic == null || topic.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       topic,
-      MessageTargetType.Topic,
+      SessionType.TOPIC,
       MessageContentType.topicUnsubscribe,
       null,
     );
@@ -656,7 +657,7 @@ class ChatOutCommon with Tag {
     ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
-      MessageTargetType.Contact,
+      SessionType.CONTACT,
       MessageContentType.topicInvitation,
       topic,
       extra: {
@@ -674,7 +675,7 @@ class ChatOutCommon with Tag {
     if (topic == null || topic.isEmpty || kickAddress == null || kickAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       topic,
-      MessageTargetType.Topic,
+      SessionType.TOPIC,
       MessageContentType.topicKickOut,
       kickAddress,
     );
@@ -692,7 +693,7 @@ class ChatOutCommon with Tag {
     if (privateGroup == null || groupItem == null) return null;
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
-      MessageTargetType.Contact,
+      SessionType.CONTACT,
       MessageContentType.privateGroupInvitation,
       {
         'groupId': privateGroup.groupId,
