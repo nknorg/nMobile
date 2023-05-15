@@ -49,13 +49,14 @@ class SessionSchema {
   }
 
   static int getTypeByMessage(MessageSchema? msg) {
-    if (msg?.isTargetTopic == true) {
+    if (msg?.isTargetContact == true) {
+      return SessionType.CONTACT;
+    } else if (msg?.isTargetTopic == true) {
       return SessionType.TOPIC;
     } else if (msg?.isTargetGroup == true) {
       return SessionType.PRIVATE_GROUP;
-    } else {
-      return SessionType.CONTACT;
     }
+    return 0;
   }
 
   Future<Map<String, dynamic>> toMap() async {
