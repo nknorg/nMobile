@@ -34,14 +34,14 @@ class ChatSessionItem extends BaseStateFulWidget {
 }
 
 class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
+  StreamSubscription? _updateContactSubscription;
   StreamSubscription? _updateTopicSubscription;
   StreamSubscription? _updatePrivateGroupSubscription;
-  StreamSubscription? _updateContactSubscription;
   StreamSubscription? _updateDraftSubscription;
 
+  ContactSchema? _contact;
   TopicSchema? _topic;
   PrivateGroupSchema? _privateGroup;
-  ContactSchema? _contact;
   MessageSchema? _lastMsg;
 
   bool loaded = false;
@@ -49,16 +49,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   void onRefreshArguments() {
     loaded = false;
-    // _topic = null;
-    // _privateGroup = null;
-    // _contact = null;
     // target
-    if (widget.session.isTopic) {
+    if (widget.session.isContact) {
+      _refreshContact();
+    } else if (widget.session.isTopic) {
       _refreshTopic();
     } else if (widget.session.isPrivateGroup) {
       _refreshPrivateGroup();
-    } else {
-      _refreshContact();
     }
     // message
     Map<String, dynamic>? msgOptions = widget.session.lastMessageOptions;
@@ -72,6 +69,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   @override
   void initState() {
     super.initState();
+    // contact
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((event) {
+      widget.session.temp?["contact"] = event;
+      setState(() {
+        _contact = event;
+      });
+    });
     // topic
     _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
       widget.session.temp?["topic"] = event;
@@ -86,17 +90,44 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
         _privateGroup = event;
       });
     });
-    // contact
-    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((event) {
-      widget.session.temp?["contact"] = event;
-      setState(() {
-        _contact = event;
-      });
-    });
     // draft
     _updateDraftSubscription = memoryCache.draftUpdateStream.where((event) => event == widget.session.targetId).listen((String event) {
       setState(() {});
     });
+  }
+
+  void _refreshContact() {
+    if ((_contact?.clientAddress.isNotEmpty == true) && (_contact?.clientAddress == widget.session.targetId)) {
+      loaded = true;
+      return;
+    }
+    if (widget.session.temp?["contact"] == null) {
+      contactCommon.queryByClientAddress(widget.session.targetId).then((contact) {
+        if (widget.session.targetId == contact?.clientAddress) {
+          if (widget.session.temp == null) widget.session.temp = Map();
+          widget.session.temp?["contact"] = contact;
+          setState(() {
+            loaded = true;
+            _topic = null;
+            _privateGroup = null;
+            _contact = contact;
+          });
+        } else {
+          contact = ContactSchema.createWithNoWalletAddress(widget.session.targetId, ContactType.none);
+          setState(() {
+            loaded = true;
+            _topic = null;
+            _privateGroup = null;
+            _contact = contact;
+          });
+        }
+      }); // await
+    } else {
+      loaded = true;
+      _topic = null;
+      _privateGroup = null;
+      _contact = widget.session.temp?["contact"];
+    }
   }
 
   void _refreshTopic() {
@@ -167,45 +198,11 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     }
   }
 
-  void _refreshContact() {
-    if ((_contact?.clientAddress.isNotEmpty == true) && (_contact?.clientAddress == widget.session.targetId)) {
-      loaded = true;
-      return;
-    }
-    if (widget.session.temp?["contact"] == null) {
-      contactCommon.queryByClientAddress(widget.session.targetId).then((contact) {
-        if (widget.session.targetId == contact?.clientAddress) {
-          if (widget.session.temp == null) widget.session.temp = Map();
-          widget.session.temp?["contact"] = contact;
-          setState(() {
-            loaded = true;
-            _topic = null;
-            _privateGroup = null;
-            _contact = contact;
-          });
-        } else {
-          contact = ContactSchema.createWithNoWalletAddress(widget.session.targetId, ContactType.none);
-          setState(() {
-            loaded = true;
-            _topic = null;
-            _privateGroup = null;
-            _contact = contact;
-          });
-        }
-      }); // await
-    } else {
-      loaded = true;
-      _topic = null;
-      _privateGroup = null;
-      _contact = widget.session.temp?["contact"];
-    }
-  }
-
   @override
   void dispose() {
+    _updateContactSubscription?.cancel();
     _updateTopicSubscription?.cancel();
     _updatePrivateGroupSubscription?.cancel();
-    _updateContactSubscription?.cancel();
     _updateDraftSubscription?.cancel();
     super.dispose();
   }
@@ -371,9 +368,9 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     String? draft = memoryCache.getDraft(session.targetId);
     String contactName = _contact?.displayName ?? " ";
     String groupSenderName = widget.session.data?["groupSenderName"] ?? " ";
-    String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? groupSenderName : contactName);
-    String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
-    String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTopic == true) || (_lastMsg?.isPrivateGroup == true)) ? "$groupSenderName: " : "");
+    String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? groupSenderName : contactName);
+    String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$groupSenderName: " : "");
+    String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$groupSenderName: " : "");
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
