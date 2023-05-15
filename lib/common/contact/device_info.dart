@@ -32,7 +32,7 @@ class DeviceInfoCommon with Tag {
     String platform = DevicePlatformName.get();
     String platformVersion = Settings.deviceVersion;
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
-    DeviceInfoSchema? deviceInfo = await queryByDeviceId(selfAddress, Settings.deviceId);
+    DeviceInfoSchema? deviceInfo = await query(selfAddress, Settings.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
         deviceInfo = await add(DeviceInfoSchema(
@@ -79,24 +79,24 @@ class DeviceInfoCommon with Tag {
     return added;
   }
 
+  Future<DeviceInfoSchema?> query(String? contactAddress, String? deviceId) async {
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    return await DeviceInfoStorage.instance.query(contactAddress, deviceId);
+  }
+
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
     return await DeviceInfoStorage.instance.queryLatest(contactAddress);
   }
 
-  Future<List<DeviceInfoSchema>> queryLatestList(String? contactAddress, {int offset = 0, int limit = 20}) async {
+  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, int limit = 20}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
-    return await DeviceInfoStorage.instance.queryLatestList(contactAddress, offset: offset, limit: limit);
+    return await DeviceInfoStorage.instance.queryListLatest(contactAddress, offset: offset, limit: limit);
   }
 
-  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+  Future<List<DeviceInfoSchema>> queryListByContactAddress(List<String>? contactAddressList) async {
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
-    return await DeviceInfoStorage.instance.queryListLatest(contactAddressList);
-  }
-
-  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
-    if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId);
+    return await DeviceInfoStorage.instance.queryListByContactAddress(contactAddressList);
   }
 
   Future<List<String>> queryDeviceTokenList(
@@ -106,7 +106,7 @@ class DeviceInfoCommon with Tag {
   }) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
-    List<DeviceInfoSchema> devices = await queryLatestList(contactAddress, limit: max);
+    List<DeviceInfoSchema> devices = await queryListLatest(contactAddress, limit: max);
     int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
     for (int i = 0; i < devices.length; i++) {
       DeviceInfoSchema schema = devices[i];
@@ -178,7 +178,7 @@ class DeviceInfoCommon with Tag {
 
   Future<String?> joinQueueIdsByAddressDeviceId(String? contactAddress, String? deviceId) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    DeviceInfoSchema? device = await queryByDeviceId(contactAddress, deviceId);
+    DeviceInfoSchema? device = await query(contactAddress, deviceId);
     return joinQueueIdsByDevice(device);
   }
 
