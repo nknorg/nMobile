@@ -621,11 +621,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       header: Header(
         backgroundColor: _theme.headBarColor2,
         titleChild: Container(
-          child: _topic != null
-              ? TopicHeader(
-                  topic: _topic,
+          child: _contact != null
+              ? ContactHeader(
+                  contact: _contact,
                   onTap: () {
-                    TopicProfileScreen.go(context, topicId: _topic?.id);
+                    ContactProfileScreen.go(context, contactId: _contact?.id);
                   },
                   body: Container(
                     padding: EdgeInsets.only(top: 3),
@@ -642,17 +642,17 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            "${_topic.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                            Settings.locale((s) => s.click_to_settings, ctx: context),
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
                   ),
                 )
-              : _privateGroup != null
-                  ? PrivateGroupHeader(
-                      privateGroup: _privateGroup,
+              : _topic != null
+                  ? TopicHeader(
+                      topic: _topic,
                       onTap: () {
-                        PrivateGroupProfileScreen.go(context, groupId: _privateGroup?.groupId);
+                        TopicProfileScreen.go(context, topicId: _topic?.id);
                       },
                       body: Container(
                         padding: EdgeInsets.only(top: 3),
@@ -669,43 +669,44 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                                 ],
                               )
                             : Label(
-                                "${_privateGroup.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                                "${_topic.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
                                 type: LabelType.h4,
                                 color: _theme.fontColor2,
                               ),
                       ),
                     )
-                  : ContactHeader(
-                      contact: _contact!,
-                      onTap: () {
-                        ContactProfileScreen.go(context, contactId: _contact?.id);
-                      },
-                      body: Container(
-                        padding: EdgeInsets.only(top: 3),
-                        child: deleteAfterSeconds > 0
-                            ? Row(
-                                children: [
-                                  Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
-                                  SizedBox(width: 4),
-                                  Label(
-                                    Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
-                                    type: LabelType.bodySmall,
-                                    color: _theme.backgroundLightColor,
+                  : _privateGroup != null
+                      ? PrivateGroupHeader(
+                          privateGroup: _privateGroup,
+                          onTap: () {
+                            PrivateGroupProfileScreen.go(context, groupId: _privateGroup?.groupId);
+                          },
+                          body: Container(
+                            padding: EdgeInsets.only(top: 3),
+                            child: deleteAfterSeconds > 0
+                                ? Row(
+                                    children: [
+                                      Icon(Icons.alarm_on, size: 16, color: _theme.backgroundLightColor),
+                                      SizedBox(width: 4),
+                                      Label(
+                                        Time.formatDuration(Duration(seconds: deleteAfterSeconds)),
+                                        type: LabelType.bodySmall,
+                                        color: _theme.backgroundLightColor,
+                                      ),
+                                    ],
+                                  )
+                                : Label(
+                                    "${_privateGroup.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                                    type: LabelType.h4,
+                                    color: _theme.fontColor2,
                                   ),
-                                ],
-                              )
-                            : Label(
-                                Settings.locale((s) => s.click_to_settings, ctx: context),
-                                type: LabelType.h4,
-                                color: _theme.fontColor2,
-                              ),
-                      ),
-                    ),
+                          ),
+                        )
+                      : SizedBox.shrink(),
         ),
         actions: [
-          _topic != null || _privateGroup != null
-              ? SizedBox.shrink()
-              : Padding(
+          _contact != null
+              ? Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: IconButton(
                     icon: Asset.iconSvg('notification-bell', color: notifyBellColor, width: 24),
@@ -713,29 +714,32 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                       _toggleNotificationOpen(); // await
                     },
                   ),
-                ),
+                )
+              : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: _topic != null
+            child: _contact != null
                 ? IconButton(
-                    icon: Asset.iconSvg('group', color: Colors.white, width: 24),
+                    icon: Asset.iconSvg('more', color: Colors.white, width: 24),
                     onPressed: () {
-                      TopicSubscribersScreen.go(context, schema: _topic);
+                      ContactProfileScreen.go(context, contactId: _contact?.id);
                     },
                   )
-                : _privateGroup != null
+                : _topic != null
                     ? IconButton(
                         icon: Asset.iconSvg('group', color: Colors.white, width: 24),
                         onPressed: () {
-                          PrivateGroupSubscribersScreen.go(context, schema: _privateGroup);
+                          TopicSubscribersScreen.go(context, schema: _topic);
                         },
                       )
-                    : IconButton(
-                        icon: Asset.iconSvg('more', color: Colors.white, width: 24),
-                        onPressed: () {
-                          ContactProfileScreen.go(context, contactId: _contact?.id);
-                        },
-                      ),
+                    : _privateGroup != null
+                        ? IconButton(
+                            icon: Asset.iconSvg('group', color: Colors.white, width: 24),
+                            onPressed: () {
+                              PrivateGroupSubscribersScreen.go(context, schema: _privateGroup);
+                            },
+                          )
+                        : SizedBox.shrink(),
           ),
         ],
       ),
