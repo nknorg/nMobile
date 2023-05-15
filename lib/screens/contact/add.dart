@@ -121,29 +121,31 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       logger.i("$TAG - _saveContact -\n address:$address,\n note:$note,\n remarkName:$remarkName,\n remarkAvatar:$remarkAvatar");
       // exist
       String? clientAddress = await contactCommon.resolveClientAddress(address);
-      ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
+      ContactSchema? exist = await contactCommon.query(clientAddress);
       if ((exist != null) && (exist.type == ContactType.friend)) {
         Toast.show(Settings.locale((s) => s.add_user_duplicated, ctx: context));
         Loading.dismiss();
         return;
       } else if (exist != null) {
-        bool success1 = await contactCommon.setType(exist.id, ContactType.friend, notify: true);
-        if (success1) exist.type = ContactType.friend;
-        await contactCommon.setRemarkName(exist, remarkName, notify: true);
-        await contactCommon.setRemarkAvatar(exist, remarkAvatar, notify: true);
-        await contactCommon.setNotes(exist, note, notify: true);
+        bool success = await contactCommon.setType(exist.address, ContactType.friend, notify: true);
+        if (success) exist.type = ContactType.friend;
+        success = await contactCommon.setOtherRemarkName(exist.address, remarkName, notify: true);
+        if (success) exist.remarkName = remarkName;
+        var data = await contactCommon.setOtherRemarkAvatar(exist.address, remarkAvatar, notify: true);
+        if (data != null) exist.data = data;
+        data = await contactCommon.setNotes(exist.address, note, notify: true);
+        if (data != null) exist.data = data;
         Loading.dismiss();
       } else {
-        ContactSchema? schema = await ContactSchema.create(clientAddress, ContactType.friend);
+        ContactSchema? schema = ContactSchema.create(clientAddress, ContactType.friend);
         if (schema != null) {
-          schema.data = {
-            'remarkName': remarkName,
-            'remarkAvatar': remarkAvatar,
-            "notes": note,
-          };
+          schema.remarkName = remarkName;
+          await schema.nknWalletAddress;
+          schema.data = {"remarkAvatar": remarkAvatar, "notes": note};
         }
         ContactSchema? added = await contactCommon.add(schema, notify: true);
         if (added == null) {
+          logger.i("$TAG - _saveContact - schema:$schema");
           Toast.show(Settings.locale((s) => s.failure, ctx: context));
           Loading.dismiss();
           return;

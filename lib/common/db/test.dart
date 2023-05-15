@@ -86,7 +86,6 @@ Future addTestData(
     updateAt: DateTime.now().millisecondsSinceEpoch + 1,
     firstName: Uuid().v4().substring(0, 5),
     lastName: Uuid().v4().substring(0, 5),
-    profileVersion: Uuid().v4(),
     // profileUpdateAt: DateTime.now().millisecondsSinceEpoch + 2,
     isTop: (0 % 2 == 0) ? true : false,
     // deviceToken: Uuid().v4(),
