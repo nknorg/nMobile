@@ -48,7 +48,7 @@ class ContactStorage with Tag {
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
-    if (schema == null || schema.clientAddress.isEmpty) return null;
+    if (schema == null || schema.address.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -63,7 +63,7 @@ class ContactStorage with Tag {
               tableName,
               columns: ['*'],
               where: 'address = ?',
-              whereArgs: [schema.clientAddress],
+              whereArgs: [schema.address],
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");

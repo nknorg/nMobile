@@ -143,7 +143,7 @@ class DeviceInfoSchema {
       'device_id': deviceId,
       'device_token': deviceToken,
       'online_at': onlineAt,
-      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
+      'data': data != null ? jsonEncode(data) : null,
     };
     return map;
   }
@@ -161,7 +161,6 @@ class DeviceInfoSchema {
 
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-
       if (deviceInfo.data == null) {
         deviceInfo.data = new Map<String, dynamic>();
       }

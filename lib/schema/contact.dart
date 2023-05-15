@@ -15,9 +15,6 @@ class ContactType {
   static const none = 0;
   static const stranger = 1;
   static const friend = 2;
-// static const String stranger = 'stranger';
-// static const String friend = 'friend';
-// static const String me = 'me';
 }
 
 class ContactRequestType {
@@ -30,146 +27,94 @@ class ContactSchema {
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
-  String clientAddress; // (required : (ID).PubKey) <-> address (same with client.address)
-  int? type; // (required) <-> type
+  String address; // (required : (ID).PubKey) <-> address (same with client.address)
 
   File? avatar; // (local_path) <-> avatar
   String? firstName; // (required : name) <-> first_name
   String? lastName; // <-> last_name
-  String? profileVersion; // <-> profile_version
-  // int? profileUpdateAt; // <-> profile_expires_at(long) == update_at // FUTURE:GG multi_device_sync
+  String? remarkName; // <-> last_name
 
+  int type = ContactType.none; // (required) <-> type
   bool isTop = false; // <-> is_top
-  @Deprecated('replace by DeviceInfo.deviceToken')
-  String? deviceToken; // <-> device_token
 
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
-
-  // extra
-  String? nknWalletAddress; // == extraInfo[nknWalletAddress] <-> data[nknWalletAddress]
 
   ContactSchema({
     this.id,
     this.createAt,
     this.updateAt,
-    required this.clientAddress,
-    this.type,
+    required this.address,
     this.avatar,
     this.firstName,
     this.lastName,
-    this.profileVersion,
+    this.remarkName,
+    this.type = ContactType.none,
     this.isTop = false,
-    this.deviceToken,
     this.options,
     this.data,
-    // extra
-    this.nknWalletAddress,
   }) {
-    if (options == null) {
-      options = OptionsSchema();
-    }
+    if (options == null) options = OptionsSchema();
   }
-
-  static Future<ContactSchema?> create(String? clientAddress, int? type, {String? profileVersion}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? schema = createWithNoWalletAddress(clientAddress, type, profileVersion: profileVersion);
-    if (schema == null) return null;
-    String? walletAddress;
-    try {
-      String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-      if (Validate.isNknPublicKey(pubKey)) {
-        walletAddress = await Wallet.pubKeyToWalletAddr(pubKey!);
-      }
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    schema.nknWalletAddress = walletAddress;
-    return schema;
-  }
-
-  static ContactSchema? createWithNoWalletAddress(String? clientAddress, int? type, {String? profileVersion}) {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
+  static ContactSchema? create(String? address, int? type) {
+    if (address == null || address.isEmpty) return null;
     return ContactSchema(
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
-      clientAddress: clientAddress,
-      type: type,
-      profileVersion: profileVersion ?? Uuid().v4(),
+      address: address,
+      type: type ?? ContactType.none,
     );
   }
 
-  static getDefaultName(String? clientAddress) {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
+  static String getDefaultName(String? address) {
+    if (address == null || address.isEmpty) return "";
     String defaultName;
-    var index = clientAddress.lastIndexOf('.');
-    if (clientAddress.length <= 6) {
-      defaultName = clientAddress;
-    } else if (index < 0) {
-      defaultName = clientAddress.substring(0, 6);
+    if (address.length <= 6) {
+      defaultName = address;
+    }
+    var index = address.lastIndexOf('.');
+    if (index < 0) {
+      defaultName = address.substring(0, 6);
     } else {
-      defaultName = clientAddress.substring(0, index + 7);
+      defaultName = address.substring(0, index + 7);
     }
     return defaultName;
   }
 
   String get pubKey {
-    return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
+    return getPubKeyFromTopicOrChatId(address) ?? address;
   }
 
   bool get isMe {
-    if (type == ContactType.me) {
-      return true;
-    } else {
-      return false;
-    }
+    return type == ContactType.me;
   }
 
   String get fullName {
-    return firstName ?? ""; // lastName
-  }
-
-  String? get remarkName {
-    return data?['remarkName'] ?? data?['firstName'];
+    return (firstName ?? "") + (lastName ?? "");
   }
 
   String get displayName {
-    String? displayName;
-    // remark
-    if (data?.isNotEmpty == true) {
-      if (data?['remarkName']?.toString().isNotEmpty == true) {
-        displayName = data?['remarkName'];
-      } else if (data?['firstName']?.toString().isNotEmpty == true) {
-        displayName = data?['firstName'];
-      }
+    String displayName = remarkName ?? "";
+    if (displayName.isEmpty) {
+      displayName = fullName.isNotEmpty ? fullName : getDefaultName(address);
     }
-    // original
-    if (displayName == null || displayName.isEmpty) {
-      if (firstName?.toString().isNotEmpty == true) {
-        displayName = firstName;
-      } else {
-        displayName = getDefaultName(clientAddress);
-      }
-    }
-    return displayName ?? "";
+    return displayName;
   }
 
   String? get remarkAvatarLocalPath {
-    return data?['remarkAvatar'] ?? data?['avatar'];
+    return data?['remarkAvatar'];
   }
 
   String? get displayAvatarLocalPath {
     String? avatarLocalPath;
     // remark
-    if (data?.toString().isNotEmpty == true) {
+    if (data?.isNotEmpty == true) {
       if (data?['remarkAvatar']?.toString().isNotEmpty == true) {
         avatarLocalPath = data?['remarkAvatar'];
-      } else if (data?['avatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = data?['avatar'];
       }
     }
     // original
-    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+    if ((avatarLocalPath == null) || avatarLocalPath.isEmpty) {
       avatarLocalPath = avatar?.path;
     }
     return avatarLocalPath;
@@ -177,11 +122,11 @@ class ContactSchema {
 
   String? get displayAvatarPath {
     String? avatarLocalPath = displayAvatarLocalPath;
-    if (avatarLocalPath == null || avatarLocalPath.isEmpty) {
+    if ((avatarLocalPath == null) || avatarLocalPath.isEmpty) {
       return null;
     }
     String? completePath = Path.convert2Complete(avatarLocalPath);
-    if (completePath == null || completePath.isEmpty) {
+    if ((completePath == null) || completePath.isEmpty) {
       return null;
     }
     return completePath;
@@ -201,12 +146,31 @@ class ContactSchema {
     return avatarFile;
   }
 
-  String? get notes {
-    return data?['notes'];
+  Future<String> get nknWalletAddress async {
+    String value = data?['nknWalletAddress']?.toString() ?? "";
+    value = value.replaceAll("\n", "").trim();
+    if (value.isNotEmpty) return value;
+    try {
+      if (Validate.isNknPublicKey(pubKey)) {
+        value = (await Wallet.pubKeyToWalletAddr(pubKey)) ?? "";
+      }
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    data?['nknWalletAddress'] = value;
+    return value;
   }
 
   List<String> get mappedAddress {
     return (data?['mappedAddress'] ?? []).cast<String>();
+  }
+
+  String? get profileVersion {
+    return data?['profileVersion']?.toString().replaceAll("\n", "").trim();
+  }
+
+  String? get notes {
+    return data?['notes'];
   }
 
   Map<String, int> get burnedMessages {
@@ -218,52 +182,24 @@ class ContactSchema {
     return (int.tryParse(data?['tipNotification']?.toString() ?? "0") ?? 0) > 0;
   }
 
-  Future<String?> tryNknWalletAddress({bool force = false}) async {
-    if ((nknWalletAddress?.isNotEmpty == true) && !force) return nknWalletAddress;
-    try {
-      if (Validate.isNknPublicKey(pubKey)) {
-        nknWalletAddress = await Wallet.pubKeyToWalletAddr(pubKey);
-      }
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return nknWalletAddress;
-  }
-
   Map<String, dynamic> toMap() {
     if (data == null) {
       data = new Map<String, dynamic>();
     }
-    if (nknWalletAddress?.isNotEmpty == true) {
-      data?['nknWalletAddress'] = nknWalletAddress?.replaceAll("\n", "").trim();
-    } else {
-      // data?['nknWalletAddress'] = await tryNknWalletAddress();
-    }
-    if (data?.keys.length == 0) {
-      data = null;
-    }
-
-    if (options == null) {
-      options = OptionsSchema();
-    }
-
-    clientAddress = clientAddress.replaceAll("\n", "").trim();
-    profileVersion = profileVersion?.replaceAll("\n", "").trim();
-    deviceToken = deviceToken?.replaceAll("\n", "").trim();
+    address = address.replaceAll("\n", "").trim();
 
     Map<String, dynamic> map = {
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'address': clientAddress,
-      'type': type,
+      'address': address,
       'avatar': Path.convert2Local(avatar?.path),
-      'first_name': firstName ?? getDefaultName(clientAddress),
-      'last_name': lastName,
-      'profile_version': profileVersion,
+      'first_name': firstName ?? getDefaultName(address),
+      'last_name': lastName ?? "",
+      'remark_name': remarkName ?? "",
+      'type': type,
       'is_top': isTop ? 1 : 0,
-      'device_token': deviceToken,
-      'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
-      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
+      'options': options != null ? jsonEncode(options) : null,
+      'data': data != null ? jsonEncode(data) : null,
     };
     return map;
   }
@@ -273,19 +209,16 @@ class ContactSchema {
       id: e['id'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      clientAddress: e['address'] ?? "",
-      type: e['type'],
+      address: e['address'] ?? "",
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       firstName: e['first_name'] ?? getDefaultName(e['address']),
       lastName: e['last_name'],
-      profileVersion: e['profile_version'],
+      remarkName: e['remark_name'],
+      type: e['type'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
-      deviceToken: e['device_token'],
     );
 
-    contact.clientAddress = contact.clientAddress.replaceAll("\n", "").trim();
-    contact.profileVersion = contact.profileVersion?.replaceAll("\n", "").trim();
-    contact.deviceToken = contact.deviceToken?.replaceAll("\n", "").trim();
+    contact.address = contact.address.replaceAll("\n", "").trim();
 
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
@@ -297,21 +230,18 @@ class ContactSchema {
 
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-
       if (contact.data == null) {
         contact.data = new Map<String, dynamic>();
       }
       if (data != null) {
         contact.data?.addAll(data);
       }
-      contact.nknWalletAddress = data?['nknWalletAddress']?.toString().replaceAll("\n", "").trim();
-      // contact.nknWalletAddress = await contact.tryNknWalletAddress();
     }
     return contact;
   }
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, clientAddress: $clientAddress, type: $type, avatar: $avatar, firstName: $firstName, lastName: $lastName, profileVersion: $profileVersion, isTop: $isTop, deviceToken: $deviceToken, options: $options, data: $data}';
+    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, address: $address, avatar: $avatar, firstName: $firstName, lastName: $lastName, remarkName: $remarkName, type: $type, isTop: $isTop, options: $options, data: $data}';
   }
 }
