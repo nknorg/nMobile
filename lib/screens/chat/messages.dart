@@ -42,13 +42,15 @@ import 'package:nmobile/utils/time.dart';
 
 class ChatMessagesScreen extends BaseStateFulWidget {
   static const String routeName = '/chat/messages';
-  static final String argWho = "who";
+  static final String argTarget = "target";
 
-  static Future go(BuildContext? context, dynamic who) {
+  static Future go(BuildContext? context, dynamic target) {
     if (context == null) return Future.value(null);
-    if (who == null || !(who is ContactSchema || who is PrivateGroupSchema || who is TopicSchema)) return Future.value(null);
+    if (target == null || !((target is ContactSchema) || (target is PrivateGroupSchema) || (target is TopicSchema))) {
+      return Future.value(null);
+    }
     return Navigator.pushNamed(context, routeName, arguments: {
-      argWho: who,
+      argTarget: target,
     });
   }
 
@@ -61,10 +63,9 @@ class ChatMessagesScreen extends BaseStateFulWidget {
 }
 
 class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScreen> with Tag {
-  String? targetId;
-  ContactSchema? _contact;
-  TopicSchema? _topic;
-  PrivateGroupSchema? _privateGroup;
+  String? _targetId;
+  int _targetType = 0;
+  dynamic _target;
 
   bool isClientOk = clientCommon.isClientOK;
 
@@ -107,29 +108,23 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void onRefreshArguments() {
-    dynamic who = widget.arguments?[ChatMessagesScreen.argWho];
-    if (who is TopicSchema) {
-      this._privateGroup = null;
-      this._topic = widget.arguments?[ChatMessagesScreen.argWho] ?? _topic;
-      this._contact = null;
-      this.targetId = this._topic?.topic;
-    } else if (who is PrivateGroupSchema) {
-      this._privateGroup = widget.arguments?[ChatMessagesScreen.argWho] ?? _privateGroup;
-      this._topic = null;
-      this._contact = null;
-      this.targetId = this._privateGroup?.groupId;
-    } else if (who is ContactSchema) {
-      this._privateGroup = null;
-      this._topic = null;
-      this._contact = widget.arguments?[ChatMessagesScreen.argWho] ?? _contact;
-      this.targetId = this._contact?.clientAddress;
+    this._target = widget.arguments?[ChatMessagesScreen.argTarget];
+    if (this._target is ContactSchema) {
+      this._targetId = (this._target as ContactSchema).clientAddress;
+      this._targetType = SessionType.CONTACT;
+    } else if (this._target is TopicSchema) {
+      this._targetId = (this._target as TopicSchema).topic;
+      this._targetType = SessionType.TOPIC;
+    } else if (this._target is PrivateGroupSchema) {
+      this._targetId = (this._target as PrivateGroupSchema).groupId;
+      this._targetType = SessionType.PRIVATE_GROUP;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    messageCommon.currentChatTargetId = this.targetId;
+    messageCommon.chattingTargetId = this._targetId;
     _moreLoading = false;
 
     // clientStatus
@@ -160,29 +155,29 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // contact
-    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((ContactSchema event) {
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => (event.id != null) && (_target is ContactSchema) && (event.id == (_target as ContactSchema).id)).listen((ContactSchema event) {
       setState(() {
-        _contact = event;
+        _target = event;
       });
     });
 
     // topic
-    _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
+    _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((event) {
       setState(() {
-        _topic = event;
+        _target = event;
       });
       _refreshTopicJoined();
       // _refreshTopicSubscribers();
     });
 
     // subscriber
-    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topic?.topic).listen((SubscriberSchema schema) {
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((SubscriberSchema schema) {
       if (schema.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       }
       // _refreshTopicSubscribers();
     });
-    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((event) {
       if (event.clientAddress == clientCommon.address) {
         _refreshTopicJoined();
       } else {
@@ -191,17 +186,17 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // privateGroup
-    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
+    _onPrivateGroupUpdateStreamSubscription = privateGroupCommon.updateGroupStream.where((event) => (_target is PrivateGroupSchema) && (event.groupId == (_target as PrivateGroupSchema).groupId)).listen((event) {
       setState(() {
-        _privateGroup = event;
+        _target = event;
       });
     });
-    _onPrivateGroupItemUpdateStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => event.groupId == _privateGroup?.groupId).listen((event) {
+    _onPrivateGroupItemUpdateStreamSubscription = privateGroupCommon.updateGroupItemStream.where((event) => (_target is PrivateGroupSchema) && (event.groupId == (_target as PrivateGroupSchema).groupId)).listen((event) {
       // nothing
     });
 
     // messages
-    _onMessageSaveStreamSubscription = messageCommon.onSavedStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
+    _onMessageSaveStreamSubscription = messageCommon.onSavedStream.where((MessageSchema event) => (event.targetId == this._targetId) && (event.targetType == this._targetType)).listen((MessageSchema event) {
       _insertMessage(event); // await
     });
     _onMessageDeleteStreamSubscription = messageCommon.onDeleteStream.listen((event) {
@@ -217,7 +212,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         });
       }
     });
-    _onMessageUpdateStreamSubscription = messageCommon.onUpdateStream.where((MessageSchema event) => event.targetId == this.targetId).listen((MessageSchema event) {
+    _onMessageUpdateStreamSubscription = messageCommon.onUpdateStream.where((MessageSchema event) => (event.targetId == this._targetId) && (event.targetType == this._targetType)).listen((MessageSchema event) {
       setState(() {
         _messages = _messages.map((MessageSchema e) {
           if (e.msgId == event.msgId) {
@@ -235,7 +230,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       String type = response[0]["type"]?.toString() ?? "";
       if (type != "request") return;
       String target = response[0]["target"]?.toString() ?? "";
-      if (target != targetId) return;
+      if (target != _targetId) return;
       bool isLeft = response[0]["isLeft"] ?? true;
       String msgId = response[0]["msgId"]?.toString() ?? "";
       // medias
@@ -282,12 +277,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     _readMessages().then((value) => _clearUnreadAndBadge()); // await
 
     // ping
-    if ((this._contact != null) && (this._topic == null) && (this._privateGroup == null)) {
-      chatOutCommon.sendPing([this.targetId ?? ""], true, gap: Settings.gapPingContactMs); // await
+    if (this._targetType == SessionType.CONTACT) {
+      chatOutCommon.sendPing([this._targetId ?? ""], true, gap: Settings.gapPingContactMs); // await
       // chatOutCommon.sendPing([this.targetId ?? ""], false, gap: Settings.gapPingContactMs); // await
-    } else if ((this._topic != null) && (this._contact == null) && (this._privateGroup == null)) {
+    } else if (this._targetType == SessionType.TOPIC) {
       // nothing
-    } else if ((this._privateGroup != null) && (this._contact == null) && (this._topic == null)) {
+    } else if (this._targetType == SessionType.PRIVATE_GROUP) {
       // nothing
     }
 
@@ -305,7 +300,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   @override
   void dispose() {
-    messageCommon.currentChatTargetId = null;
+    messageCommon.chattingTargetId = null;
 
     audioHelper.playerRelease(); // await
     audioHelper.recordRelease(); // await
@@ -342,7 +337,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       } else {
         _offset = _messages.length;
       }
-      var messages = await messageCommon.queryMessagesByTargetIdVisible(this.targetId, _topic?.topic, _privateGroup?.groupId, offset: _offset, limit: _pageLimit);
+      var messages = await messageCommon.queryListByTargetVisible(this._targetId, this._targetType, offset: _offset, limit: _pageLimit);
       _messages = _messages + messages;
       setState(() {});
     };
@@ -353,43 +348,48 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Future _insertMessage(MessageSchema? added) async {
     if (added == null) return;
     // read
-    if (!added.isOutbound && messageCommon.isTargetMessagePageVisible(targetId)) {
+    if (!added.isOutbound && messageCommon.isTargetMessagePageVisible(_targetId)) {
       // count not up in chatting
       _readMessages(); // await
     }
     // sender
     if (added.temp == null) added.temp = Map();
-    added.temp?["sender"] = await contactCommon.queryByClientAddress(added.from);
+    added.temp?["sender"] = await contactCommon.queryByClientAddress(added.sender);
     // state
     setState(() {
       // logger.d("$TAG - messages insert 0 - added:$added");
       _messages.insert(0, added);
     });
     // tip
-    if ((_contact?.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
-      if ((_contact != null) && (_contact?.options?.notificationOpen != true) && (_contact?.tipNotification != true)) {
-        Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
+    if (this._targetType == SessionType.CONTACT) {
+      ContactSchema? _contact = this._target as ContactSchema?;
+      if ((_contact?.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
+        if ((_contact != null) && (_contact.options?.notificationOpen != true) && (_contact.tipNotification != true)) {
+          Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
+        }
       }
     }
   }
 
   Future _refreshTopicJoined() async {
-    if ((_topic == null) || !clientCommon.isClientOK) return;
-    bool? isJoined = await topicCommon.isSubscribed(_topic?.topic, clientCommon.address);
-    if ((isJoined == true) && (_topic?.isPrivate == true)) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic?.topic, clientCommon.address);
+    if (!clientCommon.isClientOK) return;
+    if (this._targetType != SessionType.TOPIC) return;
+    TopicSchema _topic = this._target as TopicSchema;
+    bool? isJoined = await topicCommon.isSubscribed(_topic.topic, clientCommon.address);
+    if ((isJoined == true) && _topic.isPrivate) {
+      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic.topic, clientCommon.address);
       isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
-    if ((isJoined != null) && (isJoined != _topic?.joined)) {
-      await topicCommon.setJoined(_topic?.id, isJoined, notify: true);
+    if ((isJoined != null) && (isJoined != _topic.joined)) {
+      await topicCommon.setJoined(_topic.id, isJoined, notify: true);
     }
   }
 
   Future _refreshTopicSubscribers({bool forceFetch = false}) async {
     if (!clientCommon.isClientOK) return;
-    String? topic = _topic?.topic;
-    if ((topic == null) || topic.isEmpty) return;
-    int lastRefreshAt = _topic?.lastRefreshSubscribersAt() ?? 0;
+    if (this._targetType != SessionType.TOPIC) return;
+    TopicSchema _topic = this._target as TopicSchema;
+    int lastRefreshAt = _topic.lastRefreshSubscribersAt();
     int interval = DateTime.now().millisecondsSinceEpoch - lastRefreshAt;
     if (lastRefreshAt == 0) {
       logger.i("$TAG - _refreshTopicSubscribers - wait sync members - topic:$_topic");
@@ -400,42 +400,32 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else {
       logger.i("$TAG - _refreshTopicSubscribers - enable - gap:$interval>${Settings.gapTopicSubscribersRefreshMs}");
     }
-    await subscriberCommon.refreshSubscribers(topic, _topic?.ownerPubKey, meta: _topic?.isPrivate == true);
-    await topicCommon.setLastRefreshSubscribersAt(_topic?.id, notify: true);
+    await subscriberCommon.refreshSubscribers(_topic.topic, _topic.ownerPubKey, meta: _topic.isPrivate);
+    await topicCommon.setLastRefreshSubscribersAt(_topic.id, notify: true);
     // refresh again
-    int count = await subscriberCommon.getSubscribersCount(topic, _topic?.isPrivate == true);
-    if (_topic?.count != count) {
-      await topicCommon.setCount(_topic?.id, count, notify: true);
+    int count = await subscriberCommon.getSubscribersCount(_topic.topic, _topic.isPrivate);
+    if (_topic.count != count) {
+      await topicCommon.setCount(_topic.id, count, notify: true);
     }
   }
 
   Future _checkPrivateGroupVersion() async {
-    if ((_privateGroup == null) || !clientCommon.isClientOK) return;
-    if (privateGroupCommon.isOwner(_privateGroup?.ownerPublicKey, clientCommon.address)) return;
-    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup?.ownerPublicKey, _privateGroup?.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
-      if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, _privateGroup?.optionsRequestedVersion, notify: true);
+    if (!clientCommon.isClientOK) return;
+    if (this._targetType != SessionType.PRIVATE_GROUP) return;
+    PrivateGroupSchema _privateGroup = this._target as PrivateGroupSchema;
+    if (privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address)) return;
+    await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
+      if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, _privateGroup.optionsRequestedVersion, notify: true);
     }); // await
   }
 
   Future _readMessages() async {
-    await messageCommon.readMessagesBySelf(
-      this.targetId,
-      this._topic?.topic,
-      this._privateGroup?.groupId,
-      this._contact?.clientAddress,
-    );
+    await messageCommon.readMessagesBySelf(this._targetId, this._targetType);
   }
 
   Future _clearUnreadAndBadge() async {
-    int type = _topic != null
-        ? SessionType.TOPIC
-        : _privateGroup != null
-            ? SessionType.PRIVATE_GROUP
-            : SessionType.CONTACT;
-    // session
-    await sessionCommon.setUnReadCount(this.targetId, type, 0, notify: true);
-    // badge
-    SessionSchema? session = await sessionCommon.query(targetId, type);
+    await sessionCommon.setUnReadCount(this._targetId, this._targetType, 0, notify: true);
+    SessionSchema? session = await sessionCommon.query(this._targetId, this._targetType);
     Badge.Badge.onCountDown(session?.unReadCount ?? 0); // await
   }
 
@@ -454,10 +444,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   Future _checkNotificationTip() async {
-    if ((this._topic != null) || (this._privateGroup != null) || (this._contact == null)) return;
     if (!clientCommon.isClientOK) return;
-    if (_contact?.options?.notificationOpen == true) return;
-    if (_contact?.tipNotification == true) return;
+    if (this._targetType != SessionType.CONTACT) return;
+    ContactSchema _contact = this._target as ContactSchema;
+    if (_contact.tipNotification) return;
+    if (_contact.options?.notificationOpen == true) return;
     // check
     int sendCount = 0, receiveCount = 0;
     for (var i = 0; i < _messages.length; i++) {
@@ -470,7 +461,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     logger.i("$TAG - _tipNotificationOpen - sendCount:$sendCount - receiveCount:$receiveCount");
     if ((sendCount < 3) || (receiveCount < 3)) return;
-    if (messageCommon.currentChatTargetId == null) return; // maybe quit page out
+    if (messageCommon.chattingTargetId == null) return; // maybe quit page out
     if (!mounted) return; // maybe quit page out
     // tip dialog
     ModalDialog.of(Settings.appContext).confirm(
@@ -486,18 +477,15 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await contactCommon.setTipNotification(this._contact, notify: true);
+    await contactCommon.setTipNotification(_contact, notify: true);
   }
 
   Future _toggleNotificationOpen() async {
     if (!clientCommon.isClientOK) return;
-    if (this._topic != null) {
-      // nothing
-    } else if (this._privateGroup != null) {
-      // nothing
-    } else {
-      await contactCommon.setTipNotification(this._contact, notify: true);
-      bool nextOpen = !(_contact?.options?.notificationOpen ?? false);
+    if (this._targetType == SessionType.CONTACT) {
+      ContactSchema _contact = this._target as ContactSchema;
+      await contactCommon.setTipNotification(_contact, notify: true);
+      bool nextOpen = !(_contact.options?.notificationOpen ?? false);
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: nextOpen);
       String? deviceToken = nextOpen ? deviceInfo?.deviceToken : null;
       bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
@@ -506,23 +494,26 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         return;
       }
       setState(() {
-        _contact?.options?.notificationOpen = nextOpen;
+        _contact.options?.notificationOpen = nextOpen;
       });
       // update
       bool success = await contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
       if (!success) return;
-      success = await chatOutCommon.sendContactOptionsToken(_contact?.clientAddress, deviceToken);
+      success = await chatOutCommon.sendContactOptionsToken(_contact.clientAddress, deviceToken);
       if (!success) await contactCommon.setNotificationOpen(_contact, !nextOpen, notify: true);
+    } else if (this._targetType == SessionType.TOPIC) {
+      // nothing
+    } else if (this._targetType == SessionType.PRIVATE_GROUP) {
+      // nothing
     }
   }
 
   Future<List<MessageSchema>> _getMediasMessages(int limit, bool isLeft, String msgId) async {
     List<MessageSchema> result = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> msgList = await messageCommon.queryMessagesByTargetIdVisibleWithType(
-        targetId,
-        _topic?.topic,
-        _privateGroup?.groupId,
+      List<MessageSchema> msgList = await messageCommon.queryListByTargetTypeVisible(
+        this._targetId,
+        this._targetType,
         [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
         offset: offset,
         limit: limit,
@@ -539,10 +530,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
             limit = index;
           }
         }
-        result = await messageCommon.queryMessagesByTargetIdVisibleWithType(
-          targetId,
-          _topic?.topic,
-          _privateGroup?.groupId,
+        result = await messageCommon.queryListByTargetTypeVisible(
+          this._targetId,
+          this._targetType,
           [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
           offset: offset,
           limit: limit,
@@ -558,7 +548,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     for (var i = 0; i < messages.length; i++) {
       MessageSchema element = messages[i];
       String? path;
-      if (element.content is File) {
+      if (element.isContentFile) {
         if ((element.content as File).existsSync()) {
           path = element.content.path;
         }
@@ -590,22 +580,33 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   @override
   Widget build(BuildContext context) {
     SkinTheme _theme = application.theme;
-    int deleteAfterSeconds = (_topic != null ? _topic?.options?.deleteAfterSeconds : (_privateGroup != null ? _privateGroup?.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
-    Color notifyBellColor = ((_topic != null ? _topic?.options?.notificationOpen : (_privateGroup != null ? _privateGroup?.options?.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
+    ContactSchema? _contact;
+    TopicSchema? _topic;
+    PrivateGroupSchema? _privateGroup;
+    if (this._targetType == SessionType.CONTACT) {
+      _contact = this._target as ContactSchema?;
+    } else if (this._targetType == SessionType.TOPIC) {
+      _topic = this._target as TopicSchema?;
+    } else if (this._targetType == SessionType.PRIVATE_GROUP) {
+      _privateGroup = this._target as PrivateGroupSchema?;
+    }
 
-    bool isJoined = (_topic != null) ? (_topic?.joined == true) : ((_privateGroup != null) ? (_privateGroup?.joined == true) : true);
+    int deleteAfterSeconds = (_topic != null ? _topic.options?.deleteAfterSeconds : (_privateGroup != null ? _privateGroup.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
+    Color notifyBellColor = ((_topic != null ? _topic.options?.notificationOpen : (_privateGroup != null ? _privateGroup.options?.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
+
+    bool isJoined = (_topic != null) ? (_topic.joined == true) : ((_privateGroup != null) ? (_privateGroup.joined == true) : true);
 
     String? disableTip;
     if ((_topic != null) && !isJoined) {
-      if (_topic?.isSubscribeProgress() == true) {
+      if (_topic.isSubscribeProgress() == true) {
         disableTip = Settings.locale((s) => s.subscribing, ctx: context);
-      } else if (_topic?.isPrivate == true) {
+      } else if (_topic.isPrivate == true) {
         disableTip = Settings.locale((s) => s.tip_ask_group_owner_permission, ctx: context);
       } else {
         disableTip = Settings.locale((s) => s.need_re_subscribe, ctx: context);
       }
     } else if (_privateGroup != null) {
-      if ((_privateGroup?.version == null) || (_privateGroup?.version?.isEmpty == true)) {
+      if ((_privateGroup.version == null) || (_privateGroup.version?.isEmpty == true)) {
         disableTip = Settings.locale((s) => s.data_synchronization, ctx: context);
       } else if (!isJoined) {
         disableTip = Settings.locale((s) => s.contact_invite_group_tip, ctx: context);
@@ -622,7 +623,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         titleChild: Container(
           child: _topic != null
               ? TopicHeader(
-                  topic: _topic!,
+                  topic: _topic,
                   onTap: () {
                     TopicProfileScreen.go(context, topicId: _topic?.id);
                   },
@@ -641,7 +642,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             ],
                           )
                         : Label(
-                            "${_topic?.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                            "${_topic.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
                             type: LabelType.h4,
                             color: _theme.fontColor2,
                           ),
@@ -649,7 +650,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 )
               : _privateGroup != null
                   ? PrivateGroupHeader(
-                      privateGroup: _privateGroup!,
+                      privateGroup: _privateGroup,
                       onTap: () {
                         PrivateGroupProfileScreen.go(context, groupId: _privateGroup?.groupId);
                       },
@@ -668,7 +669,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                                 ],
                               )
                             : Label(
-                                "${_privateGroup?.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                                "${_privateGroup.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
                                 type: LabelType.h4,
                                 color: _theme.fontColor2,
                               ),
@@ -814,13 +815,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ),
               Divider(height: 1, color: _theme.backgroundColor2),
               ChatSendBar(
-                targetId: this.targetId,
+                targetId: this._targetId,
                 disableTip: disableTip,
                 onMenuPressed: () {
                   _toggleBottomMenu();
                 },
                 onSendPress: (String content) {
-                  return chatOutCommon.sendText(_topic ?? _privateGroup ?? _contact, content); // await
+                  return chatOutCommon.sendText(this._target, content); // await
                 },
                 onInputFocus: (bool focus) {
                   if (focus && _showBottomMenu) {
@@ -832,7 +833,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 onRecordTap: (bool visible, bool complete, int durationMs) async {
                   if (visible) {
                     String? savePath = await audioHelper.recordStart(
-                      this.targetId ?? "",
+                      this._targetId ?? "",
                       maxDurationS: Settings.durationAudioRecordMaxS,
                     );
                     if (savePath == null || savePath.isEmpty) {
@@ -863,10 +864,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                     int size = await content.length();
                     logger.d("$TAG - onRecordTap - saveFileSize:${Format.flowSize(size.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
                     if (size <= Settings.piecesMaxSize) {
-                      chatOutCommon.sendAudio(_topic ?? _privateGroup ?? _contact, content, durationMs / 1000); // await
+                      chatOutCommon.sendAudio(this._target, content, durationMs / 1000); // await
                       return true;
                     } else {
-                      chatOutCommon.saveIpfs(_topic ?? _privateGroup ?? _contact, {
+                      chatOutCommon.saveIpfs(this._target, {
                         "path": savePath,
                         "size": size,
                         "name": "",
@@ -891,7 +892,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ),
               isClientOk && isJoined
                   ? ChatBottomMenu(
-                      target: targetId,
+                      target: _targetId,
                       show: _showBottomMenu,
                       onPicked: (List<Map<String, dynamic>> results) async {
                         if (mounted) FocusScope.of(context).requestFocus(FocusNode());
@@ -906,11 +907,11 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                           // no message_type(video/file), and result no mime_type from file_picker
                           // so big_file and video+file go with type_ipfs
                           if ((mimeType?.contains("image") == true) && (size <= Settings.piecesMaxSize)) {
-                            chatOutCommon.sendImage(_topic ?? _privateGroup ?? _contact, File(path)); // await
+                            chatOutCommon.sendImage(this._target, File(path)); // await
                           } else if ((mimeType?.contains("audio") == true) && (size <= Settings.piecesMaxSize)) {
-                            chatOutCommon.sendAudio(_topic ?? _privateGroup ?? _contact, File(path), durationS); // await
+                            chatOutCommon.sendAudio(this._target, File(path), durationS); // await
                           } else {
-                            chatOutCommon.saveIpfs(_topic ?? _privateGroup ?? _contact, result); // await
+                            chatOutCommon.saveIpfs(this._target, result); // await
                           }
                         }
                       },
