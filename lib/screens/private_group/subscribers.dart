@@ -248,7 +248,7 @@ class _PrivateGroupSubscribersScreenState extends BaseStateFulWidgetState<Privat
               privateGroupItem: _member,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               onTap: (ContactSchema? contact) {
-                ContactProfileScreen.go(context, schema: contact, clientAddress: _member.invitee);
+                ContactProfileScreen.go(context, schema: contact, address: _member.invitee);
               },
             ),
             Divider(color: application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),

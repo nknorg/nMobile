@@ -38,16 +38,14 @@ import 'package:nmobile/utils/util.dart';
 class ContactProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/contact/profile';
   static final String argContactSchema = "contact_schema";
-  static final String argContactId = "contact_id";
-  static final String argContactClientAddress = "contact_client_address";
+  static final String argContactAddress = "contact_address";
 
-  static Future go(BuildContext? context, {ContactSchema? schema, int? contactId, String? clientAddress}) {
+  static Future go(BuildContext? context, {ContactSchema? schema, String? address}) {
     if (context == null) return Future.value(null);
-    if (schema == null && (contactId == null || contactId == 0)) return Future.value(null);
+    if (schema == null && (address == null || address.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argContactSchema: schema,
-      argContactId: contactId,
-      argContactClientAddress: clientAddress,
+      argContactAddress: address,
     });
   }
 
@@ -108,10 +106,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
   }
 
-  ContactSchema? _contactSchema;
-  WalletSchema? _walletDefault;
-
   StreamSubscription? _updateContactSubscription;
+
+  ContactSchema? _contact;
+  WalletSchema? _wallet;
 
   bool _initBurnOpen = false;
   int _initBurnProgress = -1;
@@ -131,11 +129,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   initState() {
     super.initState();
     // listen
-    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contactSchema?.id).listen((ContactSchema event) {
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.address == _contact?.address).listen((ContactSchema event) {
       _initBurning(event);
       _initNotification(event);
       setState(() {
-        _contactSchema = event;
+        _contact = event;
       });
     });
 
@@ -152,39 +150,36 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _refreshContactSchema({ContactSchema? schema}) async {
     ContactSchema? contactSchema = widget.arguments?[ContactProfileScreen.argContactSchema];
-    int? contactId = widget.arguments?[ContactProfileScreen.argContactId];
-    String? contactClientAddress = widget.arguments?[ContactProfileScreen.argContactClientAddress];
+    String? contactAddress = widget.arguments?[ContactProfileScreen.argContactAddress];
     if (schema != null) {
-      this._contactSchema = schema;
+      this._contact = schema;
     } else if (contactSchema != null && contactSchema.id != 0) {
-      this._contactSchema = contactSchema;
-    } else if (contactId != null && contactId != 0) {
-      this._contactSchema = await contactCommon.query(contactId);
-    } else if (contactClientAddress?.isNotEmpty == true) {
-      this._contactSchema = await contactCommon.queryByClientAddress(contactClientAddress);
+      this._contact = contactSchema;
+    } else if (contactAddress?.isNotEmpty == true) {
+      this._contact = await contactCommon.query(contactAddress);
     }
-    if (this._contactSchema == null || (this._contactSchema?.clientAddress.isEmpty == true)) return;
+    if (this._contact == null || (this._contact?.address.isEmpty == true)) return;
 
     // exist
-    contactCommon.queryByClientAddress(this._contactSchema?.clientAddress).then((ContactSchema? exist) async {
+    contactCommon.query(this._contact?.address).then((ContactSchema? exist) async {
       if (exist != null) return;
-      ContactSchema? added = await contactCommon.add(this._contactSchema, notify: true);
+      ContactSchema? added = await contactCommon.add(this._contact, notify: true);
       if (added == null) return;
       setState(() {
-        this._contactSchema = added;
+        this._contact = added;
       });
     });
 
-    _initBurning(this._contactSchema);
-    _initNotification(this._contactSchema);
+    _initBurning(this._contact);
+    _initNotification(this._contact);
 
     setState(() {});
 
     // fetch
-    if (!_profileFetched && (_contactSchema?.isMe == false)) {
+    if (!_profileFetched && (_contact?.isMe == false)) {
       _profileFetched = true;
-      chatOutCommon.sendContactProfileRequest(_contactSchema?.clientAddress, ContactRequestType.header, _contactSchema?.profileVersion); // await
-      chatOutCommon.sendDeviceRequest(_contactSchema?.clientAddress); // await
+      chatOutCommon.sendContactProfileRequest(_contact?.address, ContactRequestType.header, _contact?.profileVersion); // await
+      chatOutCommon.sendDeviceRequest(_contact?.address); // await
     }
   }
 
@@ -219,14 +214,14 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       return false;
     }
     setState(() {
-      _walletDefault = wallet;
+      _wallet = wallet;
     });
     return true;
   }
 
   _selectDefaultWallet() async {
     WalletSchema? selected = await BottomDialog.of(Settings.appContext).showWalletSelect(title: Settings.locale((s) => s.select_another_wallet), onlyNKN: true);
-    if (selected == null || selected.address.isEmpty || selected.address == _contactSchema?.nknWalletAddress) return;
+    if (selected == null || selected.address.isEmpty || selected.address == (await _contact?.nknWalletAddress)) return;
 
     Loading.show();
     try {
@@ -248,7 +243,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       if (success) {
         Toast.show(Settings.locale((s) => s.tip_switch_success, ctx: context)); // must global context
         // contact
-        ContactSchema? _me = await contactCommon.getMe(canAdd: true, needWallet: true);
+        ContactSchema? _me = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
         await _refreshContactSchema(schema: _me);
         // wallet
         // Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
@@ -262,12 +257,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _onDropRemarkAvatar() async {
-    if (_contactSchema?.type == ContactType.me) return;
-    contactCommon.setRemarkAvatar(_contactSchema, null, notify: true); // await
+    if (_contact?.type == ContactType.me) return;
+    contactCommon.setOtherRemarkAvatar(_contact?.address, null, notify: true); // await
   }
 
   _selectAvatarPicture() async {
-    String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _contactSchema?.clientAddress, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+    String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _contact?.address, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
@@ -286,10 +281,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     }
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
 
-    if (_contactSchema?.type == ContactType.me) {
-      contactCommon.setSelfAvatar(_contactSchema, remarkAvatarLocalPath, notify: true); // await
+    if (_contact?.type == ContactType.me) {
+      contactCommon.setSelfAvatar(_contact?.address, remarkAvatarLocalPath, notify: true); // await
     } else {
-      contactCommon.setRemarkAvatar(_contactSchema, remarkAvatarLocalPath, notify: true); // await
+      contactCommon.setOtherRemarkAvatar(_contact?.address, remarkAvatarLocalPath, notify: true); // await
     }
   }
 
@@ -298,15 +293,15 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       title: Settings.locale((s) => s.edit_nickname, ctx: context),
       inputTip: Settings.locale((s) => s.edit_nickname, ctx: context),
       inputHint: Settings.locale((s) => s.input_nickname, ctx: context),
-      value: _contactSchema?.displayName,
+      value: _contact?.displayName,
       actionText: Settings.locale((s) => s.save, ctx: context),
       maxLength: 20,
       canTapClose: false,
     );
-    if (_contactSchema?.type == ContactType.me) {
-      contactCommon.setSelfName(_contactSchema, newName?.trim(), null, notify: true); // await
+    if (_contact?.type == ContactType.me) {
+      contactCommon.setSelfFullName(_contact?.address, newName?.trim(), null, notify: true); // await
     } else {
-      contactCommon.setRemarkName(_contactSchema, newName?.trim(), notify: true); // await
+      contactCommon.setOtherRemarkName(_contact?.address, newName?.trim(), notify: true); // await
     }
   }
 
@@ -320,18 +315,18 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
     int timeNow = DateTime.now().millisecondsSinceEpoch;
-    _contactSchema?.options?.deleteAfterSeconds = _burnValue;
-    _contactSchema?.options?.updateBurnAfterAt = timeNow;
+    _contact?.options?.deleteAfterSeconds = _burnValue;
+    _contact?.options?.updateBurnAfterAt = timeNow;
     // inside update
-    contactCommon.setOptionsBurn(_contactSchema, _burnValue, timeNow, notify: true).then((success) {
+    contactCommon.setOptionsBurn(_contact?.address, _burnValue, timeNow, notify: true).then((options) {
       // outside update
-      if (success) chatOutCommon.sendContactOptionsBurn(_contactSchema?.clientAddress, _burnValue, timeNow); // await
+      if (options != null) chatOutCommon.sendContactOptionsBurn(_contact?.address, _burnValue, timeNow); // await
     });
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
     if (!clientCommon.isClientOK) return;
-    await contactCommon.setTipNotification(this._contactSchema, notify: true);
+    await contactCommon.setTipNotification(this._contact?.address, null, notify: true);
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: notificationOpen);
     String? deviceToken = notificationOpen ? deviceInfo?.deviceToken : null;
     bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
@@ -342,18 +337,17 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Toast.show(Settings.locale((s) => s.unavailable_device, ctx: context));
       return;
     }
-    _contactSchema?.options?.notificationOpen = notificationOpen;
+    _contact?.options?.notificationOpen = notificationOpen;
     // update
-    bool success = await contactCommon.setNotificationOpen(_contactSchema, notificationOpen, notify: true);
-    if (!success) return;
-    success = await chatOutCommon.sendContactOptionsToken(_contactSchema?.clientAddress, deviceToken);
-    if (!success) await contactCommon.setNotificationOpen(_contactSchema, !notificationOpen, notify: true);
+    var data = await contactCommon.setNotificationOpen(_contact?.address, notificationOpen, notify: true);
+    if (data == null) return;
+    bool success = await chatOutCommon.sendContactOptionsToken(_contact?.address, deviceToken);
+    if (!success) await contactCommon.setNotificationOpen(_contact?.address, !notificationOpen, notify: true);
   }
 
-  _addFriend() {
-    if (_contactSchema == null) return;
-    contactCommon.setType(_contactSchema?.id, ContactType.friend, notify: true);
-    Toast.show(Settings.locale((s) => s.success, ctx: context));
+  _addFriend() async {
+    bool success = await contactCommon.setType(_contact?.address, ContactType.friend, notify: true);
+    if (success) Toast.show(Settings.locale((s) => s.success, ctx: context));
   }
 
   _deleteAction() {
@@ -366,7 +360,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         backgroundColor: application.theme.strongColor,
         onPressed: () async {
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-          bool success = await contactCommon.delete(_contactSchema?.id, notify: true);
+          bool success = await contactCommon.setType(_contact?.address, ContactType.none, notify: true);
           if (!success) return;
           if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
         },
@@ -384,7 +378,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   String _getClientAddressShow() {
-    String? address = _contactSchema?.clientAddress;
+    String? address = _contact?.address;
     if (address != null) {
       if (address.length > 10) {
         return address.substring(0, 10) + '...';
@@ -403,9 +397,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         backgroundColor: application.theme.backgroundColor4,
         title: Settings.locale((s) => s.settings, ctx: context),
       ),
-      body: _contactSchema?.isMe == true
+      body: _contact?.isMe == true
           ? _getSelfView()
-          : _contactSchema?.isMe == false
+          : _contact?.isMe == false
               ? _getPersonView()
               : SizedBox.shrink(),
     );
@@ -427,7 +421,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getSelfView() {
-    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
+    List<String> mappeds = _contact?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -469,7 +463,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   backgroundColor: application.theme.strongColor,
                   onPressed: () async {
                     List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contactSchema, modified.toSet().toList(), notify: true);
+                    await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
                     Navigator.pop(this.context);
                   },
                 ),
@@ -498,10 +492,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
             ),
             child: Center(
               /// avatar
-              child: _contactSchema != null
+              child: _contact != null
                   ? ContactAvatarEditable(
                       radius: 48,
-                      contact: _contactSchema!,
+                      contact: _contact!,
                       placeHolder: false,
                       onSelect: _selectAvatarPicture,
                     )
@@ -547,7 +541,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           SizedBox(width: 20),
                           Expanded(
                             child: Label(
-                              _contactSchema?.displayName ?? "",
+                              _contact?.displayName ?? "",
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor2,
                               overflow: TextOverflow.fade,
@@ -567,8 +561,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     TextButton(
                       style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                       onPressed: () {
-                        if (this._contactSchema == null) return;
-                        ContactChatProfileScreen.go(this.context, this._contactSchema!);
+                        if (this._contact == null) return;
+                        ContactChatProfileScreen.go(this.context, this._contact!);
                       },
                       child: Row(
                         children: <Widget>[
@@ -610,7 +604,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                           SizedBox(width: 10),
                           Expanded(
                             child: Label(
-                              _walletDefault?.name ?? "--",
+                              _wallet?.name ?? "--",
                               type: LabelType.bodyRegular,
                               color: application.theme.fontColor1,
                             ),
@@ -651,12 +645,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                             } catch (e, st) {
                               handleError(e, st);
                             }
-                            if (clientAddress != _contactSchema?.clientAddress) {
+                            if (clientAddress != _contact?.address) {
                               Toast.show(Settings.locale((s) => s.mapped_address_does_not_match, ctx: context));
                               return;
                             }
                             List<String> added = mappeds..add(qrData);
-                            await contactCommon.setMappedAddress(_contactSchema, added.toSet().toList(), notify: true);
+                            await contactCommon.setMappedAddress(_contact?.address, added.toSet().toList(), notify: true);
                           },
                         ),
                       ],
@@ -680,13 +674,13 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
-    bool remarkNameExists = _contactSchema?.remarkName?.isNotEmpty == true;
-    bool originalNameExists = _contactSchema?.fullName.isNotEmpty == true;
+    bool remarkNameExists = _contact?.remarkName?.isNotEmpty == true;
+    bool originalNameExists = _contact?.fullName.isNotEmpty == true;
     // String clientAddress = _contactSchema?.clientAddress ?? "";
     // bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
     bool showOriginalName = remarkNameExists && originalNameExists; // && !isDefaultName
 
-    List<String> mappeds = _contactSchema?.mappedAddress ?? [];
+    List<String> mappeds = _contact?.mappedAddress ?? [];
     List<Widget> mappedWidget = [];
     for (int i = 0; i < mappeds.length; i++) {
       mappedWidget.add(Slidable(
@@ -728,7 +722,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   backgroundColor: application.theme.strongColor,
                   onPressed: () async {
                     List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contactSchema, modified.toSet().toList(), notify: true);
+                    await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
                     Navigator.pop(this.context);
                   },
                 ),
@@ -754,10 +748,10 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         children: [
           /// avatar
           Center(
-            child: _contactSchema != null
+            child: _contact != null
                 ? ContactAvatarEditable(
                     radius: 48,
-                    contact: _contactSchema!,
+                    contact: _contact!,
                     placeHolder: false,
                     onSelect: _selectAvatarPicture,
                     onDrop: _onDropRemarkAvatar,
@@ -770,7 +764,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           showOriginalName
               ? Center(
                   child: Label(
-                    _contactSchema?.fullName ?? "",
+                    _contact?.fullName ?? "",
                     type: LabelType.h3,
                     color: application.theme.fontColor2,
                     overflow: TextOverflow.fade,
@@ -801,7 +795,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                     SizedBox(width: 20),
                     Expanded(
                       child: Label(
-                        _contactSchema?.displayName ?? "",
+                        _contact?.displayName ?? "",
                         type: LabelType.bodyRegular,
                         color: application.theme.fontColor2,
                         overflow: TextOverflow.fade,
@@ -821,8 +815,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               TextButton(
                 style: _buttonStyle(topRadius: false, botRadius: true, topPad: 10, botPad: 15),
                 onPressed: () {
-                  if (this._contactSchema == null) return;
-                  ContactChatProfileScreen.go(this.context, this._contactSchema!);
+                  if (this._contact == null) return;
+                  ContactChatProfileScreen.go(this.context, this._contact!);
                 },
                 child: Row(
                   children: <Widget>[
@@ -1020,7 +1014,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
             style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
             onPressed: () {
               _updateBurnIfNeed();
-              ChatMessagesScreen.go(this.context, _contactSchema);
+              ChatMessagesScreen.go(this.context, _contact);
             },
             child: Row(
               children: <Widget>[
@@ -1043,7 +1037,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           // SizedBox(height: 28),
 
           /// AddContact
-          _contactSchema?.type != ContactType.friend
+          _contact?.type != ContactType.friend
               ? Column(
                   children: [
                     SizedBox(height: 10),
@@ -1070,7 +1064,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
               : SizedBox.shrink(),
 
           /// delete
-          (_contactSchema?.type == ContactType.friend) || (_contactSchema?.type == ContactType.stranger)
+          (_contact?.type == ContactType.friend) || (_contact?.type == ContactType.stranger)
               ? Column(
                   children: [
                     SizedBox(height: 28),

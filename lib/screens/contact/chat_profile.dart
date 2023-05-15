@@ -30,7 +30,7 @@ class ContactChatProfileScreen extends BaseStateFulWidget {
 }
 
 class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatProfileScreen> {
-  late ContactSchema _contactSchema;
+  late ContactSchema _contact;
 
   @override
   void initState() {
@@ -39,7 +39,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
 
   @override
   void onRefreshArguments() {
-    _contactSchema = widget.arguments?[ContactChatProfileScreen.argContactSchema];
+    _contact = widget.arguments?[ContactChatProfileScreen.argContactSchema];
   }
 
   @override
@@ -63,7 +63,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                 ),
               ),
               onPressed: () {
-                Util.copyText(this._contactSchema.address);
+                Util.copyText(this._contact.address);
               },
               child: Column(
                 children: <Widget>[
@@ -85,7 +85,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                   ),
                   SizedBox(height: 10),
                   Label(
-                    this._contactSchema.address,
+                    this._contact.address,
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor2,
                     softWrap: true,
@@ -103,14 +103,14 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
               child: Column(
                 children: <Widget>[
                   ContactAvatar(
-                    contact: this._contactSchema,
+                    contact: this._contact,
                     radius: 24,
                   ),
                   SizedBox(height: 20),
-                  this._contactSchema.address.isNotEmpty
+                  this._contact.address.isNotEmpty
                       ? Center(
                           child: QrImage(
-                            data: this._contactSchema.address,
+                            data: this._contact.address,
                             backgroundColor: application.theme.backgroundLightColor,
                             foregroundColor: application.theme.primaryColor,
                             version: QrVersions.auto,

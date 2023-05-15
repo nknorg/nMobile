@@ -332,7 +332,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
               topic: _topicSchema,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               onTap: (ContactSchema? contact) {
-                ContactProfileScreen.go(context, schema: contact, clientAddress: _subscriber.clientAddress);
+                ContactProfileScreen.go(context, schema: contact, address: _subscriber.clientAddress);
               },
             ),
             Divider(color: application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
