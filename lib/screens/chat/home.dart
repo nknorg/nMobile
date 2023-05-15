@@ -176,7 +176,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _refreshContactMe({bool deviceInfo = false}) async {
-    ContactSchema? contact = await contactCommon.getMe(needWallet: true);
+    ContactSchema? contact = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
     if ((contact == null) && mounted) {
       return await Future.delayed(Duration(milliseconds: 500), () {
         _refreshContactMe(deviceInfo: deviceInfo);
@@ -187,7 +187,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       _contactMe = contact;
     });
     if (deviceInfo) {
-      await deviceInfoCommon.getMe(clientAddress: contact?.clientAddress, canAdd: true, fetchDeviceToken: true);
+      await deviceInfoCommon.getMe(selfAddress: contact?.address, canAdd: true, fetchDeviceToken: true);
     }
   }
 

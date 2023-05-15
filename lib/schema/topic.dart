@@ -221,7 +221,7 @@ class TopicSchema {
       'avatar': Path.convert2Local(avatar?.path),
       'count': count,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
+      'options': options != null ? jsonEncode(options) : null,
       'data': data != null ? jsonEncode(data) : null,
     };
     return map;
@@ -253,7 +253,6 @@ class TopicSchema {
 
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-
       if (topicSchema.data == null) {
         topicSchema.data = new Map<String, dynamic>();
       }

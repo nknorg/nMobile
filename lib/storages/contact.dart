@@ -206,7 +206,7 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setNames(String? address, String? firstName, String? lastName, String? remarkName) async {
+  Future<bool> setFullName(String? address, String? firstName, String? lastName) async {
     if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
@@ -217,6 +217,34 @@ class ContactStorage with Tag {
                 {
                   'first_name': firstName ?? "",
                   'last_name': lastName ?? "",
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [address],
+              );
+            });
+            if (count != null && count > 0) {
+              // logger.v("$TAG - setFullName - success - address:$address - firstName:$firstName - lastName:$lastName");
+              return true;
+            }
+            logger.w("$TAG - setFullName - fail - address:$address - firstName:$firstName - lastName:$lastName");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setRemarkName(String? address, String? remarkName) async {
+    if (db?.isOpen != true) return false;
+    if (address == null || address.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
                   'remark_name': remarkName ?? "",
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
@@ -225,10 +253,10 @@ class ContactStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setNames - success - address:$address - firstName:$firstName - lastName:$lastName - remarkName:$remarkName");
+              // logger.v("$TAG - setRemarkName - success - address:$address - remarkName:$remarkName");
               return true;
             }
-            logger.w("$TAG - setNames - fail - address:$address - firstName:$firstName - lastName:$lastName - remarkName:$remarkName");
+            logger.w("$TAG - setRemarkName - fail - address:$address - remarkName:$remarkName");
           } catch (e, st) {
             handleError(e, st);
           }

@@ -146,7 +146,7 @@ class PrivateGroupSchema {
       'avatar': Path.convert2Local(avatar?.path),
       'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options?.toMap() ?? Map()) : null,
+      'options': options != null ? jsonEncode(options) : null,
       'data': data != null ? jsonEncode(data) : null,
     };
     return map;

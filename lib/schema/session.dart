@@ -68,7 +68,7 @@ class SessionSchema {
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
-      'data': (data?.isNotEmpty == true) ? jsonEncode(data) : '{}',
+      'data': data != null ? jsonEncode(data) : null,
     };
     return map;
   }
@@ -86,7 +86,6 @@ class SessionSchema {
 
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-
       if (schema.data == null) {
         schema.data = new Map<String, dynamic>();
       }

@@ -80,7 +80,7 @@ Future addTestData(
 
   // contact
   ContactSchema _contact = ContactSchema(
-    clientAddress: clientAddressList[0],
+    address: clientAddressList[0],
     type: ContactType.stranger,
     createAt: DateTime.now().millisecondsSinceEpoch,
     updateAt: DateTime.now().millisecondsSinceEpoch + 1,

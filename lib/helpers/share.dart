@@ -39,7 +39,7 @@ class ShareHelper {
     // subPath
     String? subPath;
     if (target is ContactSchema) {
-      List<String> splits = target.clientAddress.split(".");
+      List<String> splits = target.address.split(".");
       if (splits.length > 0) subPath = splits[0];
     } else if (target is TopicSchema) {
       subPath = Uri.encodeComponent(target.topic);
