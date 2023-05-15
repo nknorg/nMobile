@@ -23,14 +23,13 @@ class ContactStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `address` VARCHAR(200),
-        `type` INT,
+        `address` VARCHAR(100),
         `avatar` TEXT,
         `first_name` VARCHAR(50),
         `last_name` VARCHAR(50),
-        `profile_version` VARCHAR(300),
-        `profile_expires_at` BIGINT,
-        `is_top` BOOLEAN DEFAULT 0,
+        `remark_name` VARCHAR(50),
+        `type` INT,
+        `is_top` BOOLEAN,
         `options` TEXT,
         `data` TEXT
       )''';
@@ -43,8 +42,6 @@ class ContactStorage with Tag {
     await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
     await db.execute('CREATE INDEX `index_contact_create_at` ON `$tableName` (`create_at`)');
     await db.execute('CREATE INDEX `index_contact_update_at` ON `$tableName` (`update_at`)');
-    await db.execute('CREATE INDEX `index_contact_first_name` ON `$tableName` (`first_name`)');
-    await db.execute('CREATE INDEX `index_contact_last_name` ON `$tableName` (`last_name`)');
     await db.execute('CREATE INDEX `index_contact_type_create_at` ON `$tableName` (`type`, `create_at`)');
     await db.execute('CREATE INDEX `index_contact_type_update_at` ON `$tableName` (`type`, `update_at`)');
   }
@@ -67,8 +64,6 @@ class ContactStorage with Tag {
               columns: ['*'],
               where: 'address = ?',
               whereArgs: [schema.clientAddress],
-              offset: 0,
-              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -90,113 +85,46 @@ class ContactStorage with Tag {
     });
   }
 
-  Future<ContactSchema?> query(int? contactId) async {
+  Future<ContactSchema?> query(String? address) async {
     if (db?.isOpen != true) return null;
-    if (contactId == null || contactId == 0) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['*'],
-          where: 'id = ?',
-          whereArgs: [contactId],
-          offset: 0,
-          limit: 1,
-        );
-      });
-      if (res != null && res.length > 0) {
-        ContactSchema schema = ContactSchema.fromMap(res.first);
-        // logger.v("$TAG - query - success - contactId:$contactId - schema:$schema");
-        return schema;
-      }
-      // logger.v("$TAG - query - empty - contactId:$contactId");
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return null;
-  }
-
-  Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
-    if (db?.isOpen != true) return null;
-    if (clientAddress == null || clientAddress.isEmpty) return null;
+    if (address == null || address.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
           where: 'address = ?',
-          whereArgs: [clientAddress],
-          offset: 0,
-          limit: 1,
+          whereArgs: [address],
         );
       });
       if (res != null && res.length > 0) {
         ContactSchema schema = ContactSchema.fromMap(res.first);
-        // logger.v("$TAG - queryByClientAddress - success - address:$clientAddress - schema:$schema");
+        // logger.v("$TAG - query - success - address:$address - schema:$schema");
         return schema;
       }
-      // logger.v("$TAG - queryByClientAddress - empty - address:$clientAddress");
+      // logger.v("$TAG - query - empty - address:$address");
     } catch (e, st) {
       handleError(e, st);
     }
     return null;
   }
 
-  Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
+  Future<List<ContactSchema>> queryList({int? type, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    try {
-      List? res = await db?.transaction((txn) {
-        Batch batch = txn.batch();
-        clientAddressList.forEach((clientAddress) {
-          if (clientAddress.isNotEmpty) {
-            batch.query(
-              tableName,
-              columns: ['*'],
-              where: 'address = ?',
-              whereArgs: [clientAddress],
-              offset: 0,
-              limit: 1,
-            );
-          }
-        });
-        return batch.commit();
-      });
-      if (res != null && res.length > 0) {
-        List<ContactSchema> schemaList = [];
-        for (var i = 0; i < res.length; i++) {
-          if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
-          Map<String, dynamic> map = res[i][0];
-          ContactSchema schema = ContactSchema.fromMap(map);
-          schemaList.add(schema);
-        }
-        // logger.v("$TAG - queryListByClientAddress - success - clientAddressList:$clientAddressList - schemaList:$schemaList");
-        return schemaList;
-      }
-      // logger.v("$TAG - queryListByClientAddress - empty - clientAddressList:$clientAddressList");
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return [];
-  }
-
-  Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int offset = 0, int limit = 20}) async {
-    if (db?.isOpen != true) return [];
-    orderBy = orderBy ?? (contactType == ContactType.friend ? 'create_at DESC' : 'update_at DESC');
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: (contactType != null) ? 'type = ?' : null,
-          whereArgs: (contactType != null) ? [contactType] : null,
+          where: (type != null) ? 'type = ?' : null,
+          whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
           orderBy: orderBy,
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryList - empty - contactType:$contactType");
+        // logger.v("$TAG - queryList - empty - type:$type");
         return [];
       }
       List<ContactSchema> results = <ContactSchema>[];
@@ -213,38 +141,45 @@ class ContactStorage with Tag {
     return [];
   }
 
-  Future<bool> setType(int? contactId, int? contactType) async {
-    if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0 || contactType == null) return false;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                {
-                  'type': contactType,
-                  'update_at': DateTime.now().millisecondsSinceEpoch,
-                },
-                where: 'id = ?',
-                whereArgs: [contactId],
-              );
-            });
-            if (count != null && count > 0) {
-              // logger.v("$TAG - setType - success - contactId:$contactId - type:$contactType");
-              return true;
-            }
-            logger.w("$TAG - setType - fail - contactId:$contactId - type:$contactType");
-          } catch (e, st) {
-            handleError(e, st);
+  Future<List<ContactSchema>> queryListByAddress(List<String>? addressList) async {
+    if (db?.isOpen != true) return [];
+    if (addressList == null || addressList.isEmpty) return [];
+    try {
+      List? res = await db?.transaction((txn) {
+        Batch batch = txn.batch();
+        addressList.forEach((clientAddress) {
+          if (clientAddress.isNotEmpty) {
+            batch.query(
+              tableName,
+              columns: ['*'],
+              where: 'address = ?',
+              whereArgs: [clientAddress],
+            );
           }
-          return false;
-        }) ??
-        false;
+        });
+        return batch.commit();
+      });
+      if (res != null && res.length > 0) {
+        List<ContactSchema> schemaList = [];
+        for (var i = 0; i < res.length; i++) {
+          if (res[i] == null || res[i].isEmpty || res[i][0].isEmpty) continue;
+          Map<String, dynamic> map = res[i][0];
+          ContactSchema schema = ContactSchema.fromMap(map);
+          schemaList.add(schema);
+        }
+        // logger.v("$TAG - queryListByAddress - success - addressList:$addressList - schemaList:$schemaList");
+        return schemaList;
+      }
+      // logger.v("$TAG - queryListByAddress - empty - addressList:$addressList");
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return [];
   }
 
-  Future<bool> setProfile(int? contactId, String? profileVersion, String? avatarLocalPath, String? firstName, String? lastName) async {
+  Future<bool> setAvatar(String? address, String? avatarLocalPath) async {
     if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
+    if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -252,20 +187,17 @@ class ContactStorage with Tag {
                 tableName,
                 {
                   'avatar': avatarLocalPath,
-                  'first_name': firstName,
-                  'last_name': lastName,
-                  'profile_version': profileVersion,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setProfileInfo - success - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
+              // logger.v("$TAG - setAvatar - success - address:$address - avatarLocalPath:$avatarLocalPath");
               return true;
             }
-            logger.w("$TAG - setProfileInfo - fail - contactId:$contactId - profileVersion:$profileVersion - avatarLocalPath:$avatarLocalPath - firstName:$firstName - lastName:$lastName");
+            logger.w("$TAG - setAvatar - fail - address:$address - avatarLocalPath:$avatarLocalPath");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -274,27 +206,29 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setProfileVersion(int? contactId, String? profileVersion) async {
+  Future<bool> setNames(String? address, String? firstName, String? lastName, String? remarkName) async {
     if (db?.isOpen != true) return false;
-    if (contactId == null || contactId == 0) return false;
+    if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
               return txn.update(
                 tableName,
                 {
-                  'profile_version': profileVersion,
+                  'first_name': firstName ?? "",
+                  'last_name': lastName ?? "",
+                  'remark_name': remarkName ?? "",
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setProfileVersion - success - contactId:$contactId - profileVersion:$profileVersion");
+              // logger.v("$TAG - setNames - success - address:$address - firstName:$firstName - lastName:$lastName - remarkName:$remarkName");
               return true;
             }
-            logger.w("$TAG - setProfileVersion - fail - contactId:$contactId - profileVersion:$profileVersion");
+            logger.w("$TAG - setNames - fail - address:$address - firstName:$firstName - lastName:$lastName - remarkName:$remarkName");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -303,9 +237,38 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setTop(String? clientAddress, bool top) async {
+  Future<bool> setType(String? address, int? type) async {
     if (db?.isOpen != true) return false;
-    if (clientAddress == null || clientAddress.isEmpty) return false;
+    if (address == null || address.isEmpty || type == null) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'type': type,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [address],
+              );
+            });
+            if (count != null && count > 0) {
+              // logger.v("$TAG - setType - success - address:$address - type:$type");
+              return true;
+            }
+            logger.w("$TAG - setType - fail - address:$address - type:$type");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
+  }
+
+  Future<bool> setTop(String? address, bool top) async {
+    if (db?.isOpen != true) return false;
+    if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -316,14 +279,14 @@ class ContactStorage with Tag {
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'address = ?',
-                whereArgs: [clientAddress],
+                whereArgs: [address],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setTop - success - clientAddress:$clientAddress - top:$top");
+              // logger.v("$TAG - setTop - success - address:$address - top:$top");
               return true;
             }
-            logger.w("$TAG - setTop - fail - clientAddress:$clientAddress - top:$top");
+            logger.w("$TAG - setTop - fail - address:$address - top:$top");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -332,22 +295,20 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<OptionsSchema?> setNotificationOpen(int? contactId, bool open) async {
+  Future<OptionsSchema?> setNotificationOpen(String? address, bool open) async {
     if (db?.isOpen != true) return null;
-    if (contactId == null || contactId == 0) return null;
+    if (address == null || address.isEmpty) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'id = ?',
-                whereArgs: [contactId],
-                offset: 0,
-                limit: 1,
+                where: 'address = ?',
+                whereArgs: [address],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setNotificationOpen - no exists - contactId:$contactId");
+                logger.w("$TAG - setNotificationOpen - no exists - address:$address");
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
@@ -359,10 +320,10 @@ class ContactStorage with Tag {
                   'options': jsonEncode(options.toMap()),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
-              if (count <= 0) logger.w("$TAG - setNotificationOpen - fail - contactId:$contactId - options:$options");
+              if (count <= 0) logger.w("$TAG - setNotificationOpen - fail - address:$address - options:$options");
               return (count > 0) ? options : null;
             });
           } catch (e, st) {
@@ -373,22 +334,20 @@ class ContactStorage with Tag {
         null;
   }
 
-  Future<OptionsSchema?> setBurning(int? contactId, int? burningSeconds, int? updateAt) async {
+  Future<OptionsSchema?> setBurning(String? address, int? burningSeconds, int? updateAt) async {
     if (db?.isOpen != true) return null;
-    if (contactId == null || contactId == 0) return null;
+    if (address == null || address.isEmpty) return null;
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'id = ?',
-                whereArgs: [contactId],
-                offset: 0,
-                limit: 1,
+                where: 'address = ?',
+                whereArgs: [address],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setBurning - no exists - contactId:$contactId");
+                logger.w("$TAG - setBurning - no exists - address:$address");
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
@@ -401,10 +360,10 @@ class ContactStorage with Tag {
                   'options': jsonEncode(options.toMap()),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
-              if (count <= 0) logger.w("$TAG - setBurning - fail - contactId:$contactId - options:$options");
+              if (count <= 0) logger.w("$TAG - setBurning - fail - address:$address - options:$options");
               return (count > 0) ? options : null;
             });
           } catch (e, st) {
@@ -415,9 +374,9 @@ class ContactStorage with Tag {
         null;
   }
 
-  Future<Map<String, dynamic>?> setData(int? contactId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+  Future<Map<String, dynamic>?> setData(String? address, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
-    if (contactId == null || contactId == 0) return null;
+    if (address == null || address.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
@@ -425,31 +384,29 @@ class ContactStorage with Tag {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'id = ?',
-                whereArgs: [contactId],
-                offset: 0,
-                limit: 1,
+                where: 'address = ?',
+                whereArgs: [address],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setData - no exists - contactId:$contactId");
+                logger.w("$TAG - setData - no exists - address:$address");
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
+              data.addAll(added ?? Map());
               int count = await txn.update(
                 tableName,
                 {
                   'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
-              if (count <= 0) logger.w("$TAG - setData - fail - contactId:$contactId - newData:$data");
+              if (count <= 0) logger.w("$TAG - setData - fail - address:$address - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {
@@ -460,9 +417,9 @@ class ContactStorage with Tag {
         null;
   }
 
-  Future<Map<String, dynamic>?> setDataItemMapChange(int? contactId, String key, Map addPairs, List delKeys) async {
+  Future<Map<String, dynamic>?> setDataItemMapChange(String? address, String key, Map addPairs, List delKeys) async {
     if (db?.isOpen != true) return null;
-    if (contactId == null || contactId == 0) return null;
+    if (address == null || address.isEmpty) return null;
     if (addPairs.isEmpty && delKeys.isEmpty) return null;
     return await _queue.add(() async {
           try {
@@ -470,25 +427,18 @@ class ContactStorage with Tag {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'id = ?',
-                whereArgs: [contactId],
-                offset: 0,
-                limit: 1,
+                where: 'address = ?',
+                whereArgs: [address],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setDataItemMapChange - no exists - contactId:$contactId");
+                logger.w("$TAG - setDataItemMapChange - no exists - address:$address");
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
               Map<String, dynamic> values = data[key] ?? Map();
-              if (delKeys.isNotEmpty) {
-                values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
-              }
-              if (addPairs.isNotEmpty) {
-                Map<String, dynamic> convert = addPairs.map((key, value) => MapEntry(key.toString(), value));
-                values.addAll(convert);
-              }
+              if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              if (addPairs.isNotEmpty) values.addAll(addPairs.map((key, value) => MapEntry(key.toString(), value)));
               data[key] = values;
               int count = await txn.update(
                 tableName,
@@ -496,10 +446,10 @@ class ContactStorage with Tag {
                   'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [contactId],
+                where: 'address = ?',
+                whereArgs: [address],
               );
-              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - contactId:$contactId - newData:$data");
+              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - address:$address - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {
