@@ -21,8 +21,8 @@ class DeviceInfoStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `contact_address` VARCHAR(200),
-        `device_id` TEXT,
+        `contact_address` VARCHAR(100),
+        `device_id` VARCHAR(200),
         `device_token` TEXT,
         `online_at` BIGINT,
         `data` TEXT
@@ -56,8 +56,6 @@ class DeviceInfoStorage with Tag {
               columns: ['*'],
               where: 'contact_address = ? AND device_id = ?',
               whereArgs: [schema.contactAddress, schema.deviceId],
-              offset: 0,
-              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -77,6 +75,32 @@ class DeviceInfoStorage with Tag {
       }
       return null;
     });
+  }
+
+  Future<DeviceInfoSchema?> query(String? contactAddress, String? deviceId) async {
+    if (db?.isOpen != true) return null;
+    if (contactAddress == null || contactAddress.isEmpty) return null;
+    deviceId = deviceId ?? "";
+    try {
+      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
+        return txn.query(
+          tableName,
+          columns: ['*'],
+          where: 'contact_address = ? AND device_id = ?',
+          whereArgs: [contactAddress, deviceId],
+          orderBy: 'online_at DESC',
+        );
+      });
+      if (res != null && res.length > 0) {
+        DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
+        // logger.v("$TAG - query - success - contactAddress:$contactAddress - schema:$schema");
+        return schema;
+      }
+      // logger.v("$TAG - query - empty - contactAddress:$contactAddress");
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return null;
   }
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
@@ -106,7 +130,7 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<List<DeviceInfoSchema>> queryLatestList(String? contactAddress, {int offset = 0, int limit = 20}) async {
+  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (contactAddress == null || contactAddress.isEmpty) return [];
     try {
@@ -122,7 +146,7 @@ class DeviceInfoStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryLatestList - empty - contactAddress:$contactAddress");
+        // logger.v("$TAG - queryListLatest - empty - contactAddress:$contactAddress");
         return [];
       }
       List<DeviceInfoSchema> results = <DeviceInfoSchema>[];
@@ -131,7 +155,7 @@ class DeviceInfoStorage with Tag {
         // logText += "\n      $map";
         results.add(DeviceInfoSchema.fromMap(map));
       });
-      // logger.v("$TAG - queryLatestList - items:$logText");
+      // logger.v("$TAG - queryListLatest - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -139,7 +163,7 @@ class DeviceInfoStorage with Tag {
     return [];
   }
 
-  Future<List<DeviceInfoSchema>> queryListLatest(List<String>? contactAddressList) async {
+  Future<List<DeviceInfoSchema>> queryListByContactAddress(List<String>? contactAddressList) async {
     if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
     try {
@@ -168,42 +192,14 @@ class DeviceInfoStorage with Tag {
           DeviceInfoSchema schema = DeviceInfoSchema.fromMap(map);
           schemaList.add(schema);
         }
-        // logger.v("$TAG - queryListLatest - success - contactAddressList:$contactAddressList - schemaList:$schemaList");
+        // logger.v("$TAG - queryListByContactAddress - success - contactAddressList:$contactAddressList - schemaList:$schemaList");
         return schemaList;
       }
-      // logger.v("$TAG - queryListLatest - empty - contactAddressList:$contactAddressList");
+      // logger.v("$TAG - queryListByContactAddress - empty - contactAddressList:$contactAddressList");
     } catch (e, st) {
       handleError(e, st);
     }
     return [];
-  }
-
-  Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
-    if (db?.isOpen != true) return null;
-    if (contactAddress == null || contactAddress.isEmpty) return null;
-    deviceId = deviceId ?? "";
-    try {
-      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['*'],
-          where: 'contact_address = ? AND device_id = ?',
-          whereArgs: [contactAddress, deviceId],
-          offset: 0,
-          limit: 1,
-          orderBy: 'online_at DESC',
-        );
-      });
-      if (res != null && res.length > 0) {
-        DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
-        // logger.v("$TAG - queryByDeviceId - success - contactAddress:$contactAddress - schema:$schema");
-        return schema;
-      }
-      // logger.v("$TAG - queryByDeviceId - empty - contactAddress:$contactAddress");
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return null;
   }
 
   Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
@@ -280,8 +276,6 @@ class DeviceInfoStorage with Tag {
                 columns: ['*'],
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
-                offset: 0,
-                limit: 1,
                 orderBy: 'online_at DESC',
               );
               if (res == null || res.length <= 0) {
@@ -327,8 +321,6 @@ class DeviceInfoStorage with Tag {
                 columns: ['*'],
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
-                offset: 0,
-                limit: 1,
               );
               if (res == null || res.length <= 0) {
                 logger.w("$TAG - setDataItemListChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
@@ -373,8 +365,6 @@ class DeviceInfoStorage with Tag {
                 columns: ['*'],
                 where: 'contact_address = ? AND device_id = ?',
                 whereArgs: [contactAddress, deviceId],
-                offset: 0,
-                limit: 1,
               );
               if (res == null || res.length <= 0) {
                 logger.w("$TAG - setDataItemMapChange - no exists - contactAddress:$contactAddress - deviceId:$deviceId");
