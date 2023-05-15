@@ -212,10 +212,10 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
-  Future<bool> setSendingMessageQueueIds(String? contactAddress, String? deviceId, Map addPairs, List<int> delQueueIds) async {
+  Future<bool> setSendingMessageQueueIds(String? contactAddress, String? deviceId, Map addQueueIds, List<int> delQueueIds) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    var data = await DeviceInfoStorage.instance.setDataItemMapChange(contactAddress, deviceId, "sendingMessageQueueIds", addPairs, delQueueIds);
-    logger.d("$TAG - setSendingMessageQueueIds - addPairs:$addPairs - delQueueIds:$delQueueIds - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    var data = await DeviceInfoStorage.instance.setDataItemMapChange(contactAddress, deviceId, "sendingMessageQueueIds", addQueueIds, delQueueIds);
+    logger.d("$TAG - setSendingMessageQueueIds - addQueueIds:$addQueueIds - delQueueIds:$delQueueIds - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 

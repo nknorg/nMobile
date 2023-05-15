@@ -209,6 +209,11 @@ class ContactSchema {
     return (data?['mappedAddress'] ?? []).cast<String>();
   }
 
+  Map<String, int> get burnedMessages {
+    Map<String, int> values = data?['burnedMessages'] ?? Map();
+    return values.map((key, value) => MapEntry(key.toString(), value))..removeWhere((key, value) => key.isEmpty);
+  }
+
   bool get tipNotification {
     return (int.tryParse(data?['tipNotification']?.toString() ?? "0") ?? 0) > 0;
   }
