@@ -459,4 +459,54 @@ class ContactStorage with Tag {
         }) ??
         null;
   }
+
+  Future<Map<String, dynamic>?> setDataItemMapChange(int? contactId, String key, Map addPairs, List delKeys) async {
+    if (db?.isOpen != true) return null;
+    if (contactId == null || contactId == 0) return null;
+    if (addPairs.isEmpty && delKeys.isEmpty) return null;
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'id = ?',
+                whereArgs: [contactId],
+                offset: 0,
+                limit: 1,
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemMapChange - no exists - contactId:$contactId");
+                return null;
+              }
+              ContactSchema schema = ContactSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> values = data[key] ?? Map();
+              if (delKeys.isNotEmpty) {
+                values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              }
+              if (addPairs.isNotEmpty) {
+                Map<String, dynamic> convert = addPairs.map((key, value) => MapEntry(key.toString(), value));
+                values.addAll(convert);
+              }
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'id = ?',
+                whereArgs: [contactId],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - contactId:$contactId - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
 }

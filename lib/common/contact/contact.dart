@@ -340,6 +340,20 @@ class ContactCommon with Tag {
     return data != null;
   }
 
+  Future<bool> setBurnedMessages(ContactSchema? schema, Map adds, List<int> dels, {bool notify = false}) async {
+    if (schema == null || schema.id == null || schema.id == 0) return false;
+    logger.d("$TAG - setBurnedMessages - start - adds:$adds - dels:$dels - old:${schema.data} - contact:$schema");
+    var data = await ContactStorage.instance.setDataItemMapChange(schema.id, "burnedMessages", adds, dels);
+    if (data != null) {
+      logger.d("$TAG - setBurnedMessages - end success - new:$data - contact:$schema");
+      schema.data = data;
+      if (notify) queryAndNotify(schema.id);
+    } else {
+      logger.w("$TAG - setBurnedMessages - end fail - adds:$adds - dels:$dels - old:${schema.data} - contact:$schema");
+    }
+    return data != null;
+  }
+
   Future<bool> setTipNotification(ContactSchema? schema, {bool notify = false}) async {
     if (schema == null || schema.id == null || schema.id == 0) return false;
     logger.d("$TAG - setTipNotification - start - old:${schema.data} - contact:$schema");
