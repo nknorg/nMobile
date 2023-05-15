@@ -8,7 +8,6 @@ import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:uuid/uuid.dart';
 
 class ContactType {
   static const me = -1;
@@ -62,6 +61,7 @@ class ContactSchema {
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
       address: address,
+      firstName: getDefaultName(address),
       type: type ?? ContactType.none,
     );
   }
@@ -157,6 +157,7 @@ class ContactSchema {
     } catch (e, st) {
       handleError(e, st);
     }
+    if (data == null) data = Map();
     data?['nknWalletAddress'] = value;
     return value;
   }

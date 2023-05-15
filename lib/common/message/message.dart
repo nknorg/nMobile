@@ -267,7 +267,7 @@ class MessageCommon with Tag {
     if ((targetDeviceId == null) || targetDeviceId.isEmpty) return 0; // filter old_version
     if ((messageId == null) || messageId.isEmpty) return 0;
     Function func = () async {
-      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.query(targetAddress, targetDeviceId);
       if (targetDevice == null) return 0;
       String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);
       logger.i("$TAG - newContactMessageQueueId - START - queueIds:$queueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - messageId:$messageId");
@@ -331,7 +331,7 @@ class MessageCommon with Tag {
     if ((targetDeviceId == null) || targetDeviceId.isEmpty) return false;
     if (queueId <= 0) return false;
     Function func = () async {
-      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.query(targetAddress, targetDeviceId);
       if (targetDevice == null) return false;
       logger.i("$TAG - onContactMessageQueueSendSuccess - delete queueId from cache - queueId:$queueId - caches:${targetDevice.sendingMessageQueueIds} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return await deviceInfoCommon.setSendingMessageQueueIds(targetAddress, targetDeviceId, {}, [queueId]);
@@ -347,7 +347,7 @@ class MessageCommon with Tag {
     String targetAddress = message.sender;
     if (targetAddress.isEmpty) return false;
     Function func = () async {
-      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, message.deviceId);
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.query(targetAddress, message.deviceId);
       if (targetDevice == null) return false;
       String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);
       String? sideQueueIds = MessageOptions.getMessageQueueIds(message.options);
@@ -435,7 +435,7 @@ class MessageCommon with Tag {
     if (targetAddress == null || targetAddress.isEmpty) return 0;
     if (targetDeviceId == null || targetDeviceId.isEmpty) return 0;
     // contact refresh
-    DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryByDeviceId(targetAddress, targetDeviceId);
+    DeviceInfoSchema? targetDevice = await deviceInfoCommon.query(targetAddress, targetDeviceId);
     if (targetDevice == null) return 0;
     String? sideQueueIds = deviceInfoCommon.joinQueueIds(sideSendQueueId, sideReceiveQueueId, sideLostQueueIds, targetDeviceId);
     String? nativeQueueIds = deviceInfoCommon.joinQueueIdsByDevice(targetDevice);

@@ -49,7 +49,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   void initState() {
     super.initState();
     // contact
-    _contactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.id == _sender?.id).listen((event) {
+    _contactUpdateStreamSubscription = contactCommon.updateStream.where((event) => event.address == _sender?.address).listen((event) {
       widget.message.temp?["sender"] = event;
       setState(() {
         _sender = event;
@@ -63,18 +63,18 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
   }
 
   void _refreshSender() {
-    if ((_sender?.clientAddress.isNotEmpty == true) && (_sender?.clientAddress == widget.message.sender)) return;
+    if ((_sender?.address.isNotEmpty == true) && (_sender?.address == widget.message.sender)) return;
     if (widget.message.temp?["sender"] == null) {
       _sender = null;
-      contactCommon.queryByClientAddress(widget.message.sender).then((sender) {
-        if (widget.message.sender == sender?.clientAddress) {
+      contactCommon.query(widget.message.sender).then((sender) {
+        if (widget.message.sender == sender?.address) {
           if (widget.message.temp == null) widget.message.temp = Map();
           widget.message.temp?["sender"] = sender;
           setState(() {
             _sender = sender;
           });
         } else {
-          sender = ContactSchema.createWithNoWalletAddress(widget.message.sender, ContactType.none);
+          sender = ContactSchema.create(widget.message.sender, ContactType.none);
           setState(() {
             _sender = sender;
           });

@@ -211,7 +211,7 @@ class ClientCommon with Tag {
         return {"client": null, "canTry": false, "password": password, "text": "database open fail"};
       }
       BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(wallet.address));
-      ContactSchema? me = await contactCommon.getMe(clientAddress: pubKey, canAdd: true, needWallet: true);
+      ContactSchema? me = await contactCommon.getMe(selfAddress: pubKey, canAdd: true, fetchWalletAddress: true);
       contactCommon.meUpdateSink.add(me);
       onDatabaseOpen?.call();
     } catch (e, st) {

@@ -59,7 +59,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   void initState() {
     super.initState();
     // listen
-    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == contact?.id).listen((ContactSchema event) {
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.address == contact?.address).listen((ContactSchema event) {
       widget.privateGroupItem.temp?["contact"] = event;
       setState(() {
         contact = event;
@@ -69,13 +69,13 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
 
   void _refreshContact() {
     String? address = widget.privateGroupItem.invitee;
-    if ((contact?.clientAddress.isNotEmpty == true) && (contact?.clientAddress == address)) return;
+    if ((contact?.address.isNotEmpty == true) && (contact?.address == address)) return;
     if (widget.privateGroupItem.temp?["contact"] == null) {
-      contactCommon.queryByClientAddress(address).then((result) async {
+      contactCommon.query(address).then((result) async {
         if (result == null) {
-          result = await contactCommon.addByType(address, ContactType.none, notify: true);
+          result = await contactCommon.addByType(address, ContactType.none, fetchWalletAddress: false, notify: true);
         }
-        if ((address == result?.clientAddress) && (address == widget.privateGroupItem.invitee)) {
+        if ((address == result?.address) && (address == widget.privateGroupItem.invitee)) {
           if (widget.privateGroupItem.temp == null) widget.privateGroupItem.temp = Map();
           widget.privateGroupItem.temp?["contact"] = result;
           setState(() {
@@ -237,7 +237,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                 ? ContactItem(
                     contact: contact,
                     bodyTitle: contact.displayName,
-                    bodyDesc: contact.clientAddress,
+                    bodyDesc: contact.address,
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                   )
                 : SizedBox.shrink(),
