@@ -34,7 +34,6 @@ class DeviceInfoStorage with Tag {
 
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
-    await db.execute('CREATE INDEX `index_device_info_device_id` ON `$tableName` (`device_id`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_online_at` ON `$tableName` (`contact_address`, `device_id`, `online_at`)');
   }
@@ -291,10 +290,10 @@ class DeviceInfoStorage with Tag {
               }
               DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
+              data.addAll(added ?? Map());
               int count = await txn.update(
                 tableName,
                 {
@@ -384,13 +383,8 @@ class DeviceInfoStorage with Tag {
               DeviceInfoSchema schema = DeviceInfoSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
               Map<String, dynamic> values = data[key] ?? Map();
-              if (delKeys.isNotEmpty) {
-                values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
-              }
-              if (addPairs.isNotEmpty) {
-                Map<String, dynamic> convert = addPairs.map((key, value) => MapEntry(key.toString(), value));
-                values.addAll(convert);
-              }
+              if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              if (addPairs.isNotEmpty) values.addAll(addPairs.map((key, value) => MapEntry(key.toString(), value)));
               data[key] = values;
               int count = await txn.update(
                 tableName,

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/device_token.dart';
 import 'package:nmobile/common/settings.dart';
-import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -20,19 +19,24 @@ class DeviceInfoCommon with Tag {
     return "$appName:$appVersion:$platform:$platformVersion:$deviceId";
   }
 
-  Future<DeviceInfoSchema?> getMe({String? clientAddress, bool canAdd = false, bool fetchDeviceToken = false}) async {
-    clientAddress = clientAddress ?? clientCommon.address;
-    if (clientAddress == null || clientAddress.isEmpty) return null;
+  Future<DeviceInfoSchema?> getMe({
+    String? selfAddress,
+    bool canAdd = false,
+    bool fetchDeviceToken = false,
+    bool refreshOnlineAt = false,
+  }) async {
+    selfAddress = selfAddress ?? clientCommon.address;
+    if (selfAddress == null || selfAddress.isEmpty) return null;
     String appName = Settings.appName;
     String appVersion = Settings.build;
     String platform = DevicePlatformName.get();
     String platformVersion = Settings.deviceVersion;
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
-    DeviceInfoSchema? deviceInfo = await queryByDeviceId(clientAddress, Settings.deviceId);
+    DeviceInfoSchema? deviceInfo = await queryByDeviceId(selfAddress, Settings.deviceId);
     if (deviceInfo == null) {
       if (canAdd) {
         deviceInfo = await add(DeviceInfoSchema(
-          contactAddress: clientAddress,
+          contactAddress: selfAddress,
           deviceId: Settings.deviceId,
           onlineAt: 0,
           data: newData,
@@ -43,21 +47,25 @@ class DeviceInfoCommon with Tag {
     } else {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
-        logger.d("$TAG - getMe - setData - newData:$newData - oldData:${deviceInfo.data}");
+        logger.i("$TAG - getMe - setData - newData:$newData - oldData:${deviceInfo.data}");
         bool success = await setProfile(deviceInfo.contactAddress, deviceInfo.deviceId, newData);
         if (success) deviceInfo.data = newData;
       }
     }
     if (deviceInfo == null) return null;
     if (fetchDeviceToken) {
-      // SUPPORT:START
-      String? deviceToken = (await DeviceToken.get()) ?? ((await contactCommon.getMe())?.deviceToken);
-      // SUPPORT:END
+      String? deviceToken = await DeviceToken.get();
       if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
         logger.i("$TAG - getMe - self deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
         bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
         if (success) deviceInfo.deviceToken = deviceToken;
       }
+    }
+    if (refreshOnlineAt) {
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      logger.i("$TAG - getMe - self online refresh - new:$nowAt - old:${deviceInfo.onlineAt}");
+      bool success = await setOnlineAt(deviceInfo.contactAddress, deviceInfo.deviceId, onlineAt: nowAt);
+      if (success) deviceInfo.onlineAt = nowAt;
     }
     logger.d("$TAG - getMe - canAdd:$canAdd - fetchToken:$fetchDeviceToken - deviceInfo:$deviceInfo");
     return deviceInfo;
@@ -88,16 +96,20 @@ class DeviceInfoCommon with Tag {
 
   Future<DeviceInfoSchema?> queryByDeviceId(String? contactAddress, String? deviceId) async {
     if (contactAddress == null || contactAddress.isEmpty) return null;
-    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId ?? "");
+    return await DeviceInfoStorage.instance.queryByDeviceId(contactAddress, deviceId);
   }
 
-  Future<List<String>> queryDeviceTokenList(String? contactAddress, {int max = Settings.maxCountPushDevices, int days = Settings.timeoutDeviceTokensDay}) async {
+  Future<List<String>> queryDeviceTokenList(
+    String? contactAddress, {
+    int max = Settings.maxCountPushDevices,
+    int days = Settings.timeoutDeviceTokensDay,
+  }) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     List<String> tokens = [];
-    List<DeviceInfoSchema> schemaList = await queryLatestList(contactAddress, limit: max);
+    List<DeviceInfoSchema> devices = await queryLatestList(contactAddress, limit: max);
     int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
-    for (int i = 0; i < schemaList.length; i++) {
-      DeviceInfoSchema schema = schemaList[i];
+    for (int i = 0; i < devices.length; i++) {
+      DeviceInfoSchema schema = devices[i];
       String deviceToken = schema.deviceToken?.trim() ?? "";
       if (deviceToken.isEmpty) continue;
       if (tokens.isNotEmpty) {
@@ -107,15 +119,6 @@ class DeviceInfoCommon with Tag {
         tokens.add(deviceToken);
       }
     }
-    // SUPPORT:START
-    if (tokens.isEmpty) {
-      ContactSchema? contact = await contactCommon.queryByClientAddress(contactAddress);
-      String deviceToken = contact?.deviceToken ?? "";
-      if (deviceToken.isNotEmpty) {
-        tokens.add(deviceToken);
-      }
-    }
-    // SUPPORT:END
     return tokens;
   }
 
@@ -212,10 +215,10 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
-  Future<bool> setSendingMessageQueueIds(String? contactAddress, String? deviceId, Map addQueueIds, List<int> delQueueIds) async {
+  Future<bool> setSendingMessageQueueIds(String? contactAddress, String? deviceId, Map adds, List<int> dels) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    var data = await DeviceInfoStorage.instance.setDataItemMapChange(contactAddress, deviceId, "sendingMessageQueueIds", addQueueIds, delQueueIds);
-    logger.d("$TAG - setSendingMessageQueueIds - addQueueIds:$addQueueIds - delQueueIds:$delQueueIds - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    var data = await DeviceInfoStorage.instance.setDataItemMapChange(contactAddress, deviceId, "sendingMessageQueueIds", adds, dels);
+    logger.d("$TAG - setSendingMessageQueueIds - adds:$adds - dels:$dels - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
