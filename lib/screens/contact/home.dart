@@ -95,7 +95,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     // contact listen
     _addContactSubscription = contactCommon.addStream.listen((ContactSchema schema) {
       if (schema.type == ContactType.friend) {
-        if (_allFriends.indexWhere((element) => element.clientAddress == schema.clientAddress) < 0) {
+        if (_allFriends.indexWhere((element) => element.address == schema.address) < 0) {
           _allFriends.insert(0, schema);
         }
       }
@@ -113,7 +113,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       // friend
       int friendIndex = -1;
       _allFriends.asMap().forEach((key, value) {
-        if (value.id == event.id) {
+        if (value.address == event.address) {
           friendIndex = key;
         }
       });
@@ -162,7 +162,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     //   _searchAction(_searchController.text);
     // });
     _updateContactSubscription = topicCommon.updateStream.listen((TopicSchema event) {
-      _allTopics = _allTopics.map((e) => e.id == event.id ? event : e).toList();
+      _allTopics = _allTopics.map((e) => e.topic == event.topic ? event : e).toList();
       if (!event.joined) {
         _allTopics = _allTopics.where((element) => element.topic != event.topic).toList();
       }
@@ -177,7 +177,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       }
     });
     _updateGroupSubscription = privateGroupCommon.updateGroupStream.listen((PrivateGroupSchema event) {
-      _allGroups = _allGroups.map((e) => e.id == event.id ? event : e).toList();
+      _allGroups = _allGroups.map((e) => e.groupId == event.groupId ? event : e).toList();
       if (!event.joined) {
         _allGroups = _allGroups.where((element) => element.groupId != event.groupId).toList();
       }
@@ -206,7 +206,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     // contact
     List<ContactSchema> friends = [];
     for (int offset = 0; true; offset += limit) {
-      List<ContactSchema> result = await contactCommon.queryList(contactType: ContactType.friend, offset: offset, limit: limit);
+      List<ContactSchema> result = await contactCommon.queryList(type: ContactType.friend, offset: offset, limit: limit);
       friends.addAll(result);
       if (result.length < limit) break;
     }
@@ -490,7 +490,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               contentWidget: ContactItem(
                 contact: item,
                 bodyTitle: item.displayName,
-                bodyDesc: item.clientAddress,
+                bodyDesc: item.address,
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               ),
               agree: Button(
@@ -499,7 +499,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 backgroundColor: application.theme.strongColor,
                 onPressed: () async {
                   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  await contactCommon.delete(item.id, notify: true);
+                  await contactCommon.setType(item.address, ContactType.none, notify: true);
                 },
               ),
               reject: Button(
