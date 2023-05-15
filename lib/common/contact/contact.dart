@@ -75,33 +75,39 @@ class ContactCommon with Tag {
       }
     }
     // query
-    ContactSchema? contact = await queryByClientAddress(clientAddress);
+    ContactSchema? contact = await query(clientAddress);
     // add
     if (canAdd) {
       if (contact != null) {
         if (contact.type == ContactType.none) {
-          bool success = await setType(contact.id, ContactType.stranger, notify: true);
+          bool success = await setType(clientAddress, ContactType.stranger, notify: true);
           if (success) contact.type = ContactType.stranger;
         }
       } else {
         contact = await addByType(clientAddress, ContactType.stranger, notify: true);
       }
     }
+    // mappedAddress
     if ((contact != null) && resolveOk) {
       if (!contact.mappedAddress.contains(address)) {
         List<String> added = contact.mappedAddress..add(address);
-        await setMappedAddress(contact, added.toSet().toList(), notify: true);
+        var data = await setMappedAddress(contact.address, added.toSet().toList(), notify: true);
+        if (data != null) contact.data = data;
       }
     }
     return contact;
   }
 
-  Future<ContactSchema?> getMe({String? clientAddress, bool canAdd = false, bool needWallet = false}) async {
-    List<ContactSchema> contacts = await ContactStorage.instance.queryList(contactType: ContactType.me, limit: 1);
+  Future<ContactSchema?> getMe({
+    String? selfAddress,
+    bool canAdd = false,
+    bool fetchWalletAddress = false,
+  }) async {
+    List<ContactSchema> contacts = await queryList(type: ContactType.me, orderBy: "create_at ASC", limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : null;
-    String myAddress = clientAddress ?? clientCommon.address ?? "";
+    String myAddress = selfAddress ?? clientCommon.address ?? "";
     if ((contact == null) && myAddress.isNotEmpty) {
-      contact = await ContactStorage.instance.queryByClientAddress(myAddress);
+      contact = await ContactStorage.instance.query(myAddress);
     }
     if ((contact == null) && myAddress.isNotEmpty && canAdd) {
       contact = await addByType(myAddress, ContactType.me, notify: true);
@@ -109,281 +115,283 @@ class ContactCommon with Tag {
     if (contact == null) return null;
     if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
       String profileVersion = Uuid().v4();
-      bool success = await setProfileVersion(contact, profileVersion);
-      if (success) contact.profileVersion = profileVersion;
+      var data = await setProfileVersion(contact.address, profileVersion);
+      logger.i("$TAG - getMe - self profileVersion create - profileVersion:$profileVersion - data:$data");
+      if (data != null) contact.data = data;
     }
-    if (needWallet) {
-      if ((contact.nknWalletAddress == null) || (contact.nknWalletAddress?.isEmpty == true)) {
-        String? nknWalletAddress = await contact.tryNknWalletAddress();
-        await setWalletAddress(contact, nknWalletAddress);
+    if (fetchWalletAddress) {
+      String nknWalletAddress = contact.data?['nknWalletAddress']?.toString() ?? "";
+      if (nknWalletAddress.isEmpty) {
+        String nknWalletAddress = await contact.nknWalletAddress;
+        var data = await setWalletAddress(contact.address, nknWalletAddress);
+        logger.i("$TAG - getMe - self nknWalletAddress create - nknWalletAddress:$nknWalletAddress - data:$data");
+        if (data != null) contact.data = data;
       }
     }
-    logger.d("$TAG - getMe - canAdd:$canAdd - fetchWallet:$needWallet - contact:$contact");
+    logger.d("$TAG - getMe - canAdd:$canAdd - fetchWalletAddress:$fetchWalletAddress - contact:$contact");
     return contact;
   }
 
-  Future<ContactSchema?> addByType(String? clientAddress, int contactType, {bool notify = false}) async {
+  Future<ContactSchema?> addByType(String? clientAddress, int type, {bool fetchWalletAddress = true, bool notify = false}) async {
     if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? schema = await ContactSchema.create(clientAddress, contactType);
-    return await add(schema, notify: notify);
+    ContactSchema? schema = ContactSchema.create(clientAddress, type);
+    return await add(schema, fetchWalletAddress: fetchWalletAddress, notify: notify);
   }
 
-  Future<ContactSchema?> add(ContactSchema? schema, {bool notify = false}) async {
-    if (schema == null || schema.clientAddress.isEmpty) return null;
-    schema.nknWalletAddress = await schema.tryNknWalletAddress();
+  Future<ContactSchema?> add(ContactSchema? schema, {bool fetchWalletAddress = true, bool notify = false}) async {
+    if (schema == null || schema.address.isEmpty) return null;
+    if (fetchWalletAddress) await schema.nknWalletAddress;
     logger.d("$TAG - add - schema:$schema");
     ContactSchema? added = await ContactStorage.instance.insert(schema);
     if ((added != null) && notify) _addSink.add(added);
     return added;
   }
 
-  Future<bool> delete(int? contactId, {bool notify = false}) async {
-    if (contactId == null || contactId == 0) return false;
-    // bool success = await ContactStorage.instance.delete(contactId);
-    // if (success) _deleteSink.add(contactId);
-    // return success;
-    bool success = await ContactStorage.instance.setType(contactId, ContactType.none);
-    if (success && notify) queryAndNotify(contactId);
-    return success;
-  }
+  // Future<bool> delete(int? contactId, {bool notify = false}) async {
+  //   if (contactId == null || contactId == 0) return false;
+  //   bool success = await ContactStorage.instance.delete(contactId);
+  //   if (success) _deleteSink.add(contactId);
+  //   return success;
+  // }
 
-  Future<ContactSchema?> query(int? contactId) async {
-    if (contactId == null || contactId == 0) return null;
-    return await ContactStorage.instance.query(contactId);
-  }
-
-  Future<ContactSchema?> queryByClientAddress(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return null;
-    ContactSchema? _schema = await ContactStorage.instance.queryByClientAddress(clientAddress);
-    if ((_schema != null) && ((_schema.nknWalletAddress == null) || (_schema.nknWalletAddress?.isEmpty == true))) {
-      String? nknWalletAddress = await _schema.tryNknWalletAddress();
-      logger.d("$TAG - queryByClientAddress - nknWalletAddress:$nknWalletAddress");
-      await setWalletAddress(_schema, nknWalletAddress);
+  Future<ContactSchema?> query(String? address, {bool fetchWalletAddress = true}) async {
+    if (address == null || address.isEmpty) return null;
+    ContactSchema? _schema = await ContactStorage.instance.query(address);
+    if ((_schema != null) && fetchWalletAddress) {
+      String nknWalletAddress = _schema.data?['nknWalletAddress']?.toString() ?? "";
+      if (nknWalletAddress.isEmpty) {
+        nknWalletAddress = await _schema.nknWalletAddress;
+        logger.i("$TAG - query - nknWalletAddress:$nknWalletAddress");
+        var data = await setWalletAddress(address, nknWalletAddress);
+        if (data != null) _schema.data = data;
+      }
     }
     return _schema;
   }
 
-  Future<List<ContactSchema>> queryListByClientAddress(List<String>? clientAddressList) async {
+  Future<List<ContactSchema>> queryListByAddress(List<String>? clientAddressList) async {
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    return await ContactStorage.instance.queryListByClientAddress(clientAddressList);
+    return await ContactStorage.instance.queryListByAddress(clientAddressList);
   }
 
-  Future<List<ContactSchema>> queryList({int? contactType, String? orderBy, int offset = 0, int limit = 20}) {
-    return ContactStorage.instance.queryList(contactType: contactType, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<ContactSchema>> queryList({int? type, String orderBy = 'create_at DESC', int offset = 0, int limit = 20}) {
+    return ContactStorage.instance.queryList(type: type, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<bool> setType(int? contactId, int? contactType, {bool notify = false}) async {
-    if (contactId == null || contactId == 0 || contactType == null || contactType == ContactType.me) return false;
-    bool success = await ContactStorage.instance.setType(contactId, contactType);
-    if (success && notify) queryAndNotify(contactId);
-    return success;
-  }
-
-  Future<bool> setSelfAvatar(ContactSchema? old, String? avatarLocalPath, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await ContactStorage.instance.setProfile(
-      old.id,
-      Uuid().v4(),
-      avatarLocalPath,
-      old.firstName,
-      old.lastName,
-    );
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
-  Future<bool> setSelfName(ContactSchema? old, String? firstName, String? lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await ContactStorage.instance.setProfile(
-      old.id,
-      Uuid().v4(),
-      Path.convert2Local(old.avatar?.path),
-      firstName,
-      lastName,
-    );
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
-  Future<bool> setOtherProfile(ContactSchema? old, String? profileVersion, String? avatarLocalPath, String? firstName, String? lastName, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await ContactStorage.instance.setProfile(
-      old.id,
-      profileVersion,
-      avatarLocalPath,
-      firstName,
-      lastName,
-    );
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
-  Future<bool> setProfileVersion(ContactSchema? old, String? profileVersion, {bool notify = false}) async {
-    if (old == null || old.id == 0) return false;
-    bool success = await ContactStorage.instance.setProfileVersion(old.id, profileVersion);
-    if (success && notify) queryAndNotify(old.id);
-    return success;
-  }
-
-  Future<bool> setTop(String? clientAddress, bool top, {bool notify = false}) async {
-    if (clientAddress == null || clientAddress.isEmpty) return false;
-    bool success = await ContactStorage.instance.setTop(clientAddress, top);
-    if (success && notify) queryAndNotifyByClientAddress(clientAddress);
-    return success;
-  }
-
-  Future<bool> setNotificationOpen(ContactSchema? schema, bool open, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setNotificationOpen - start - open:$open - old:${schema.options} - contact:$schema");
-    OptionsSchema? options = await ContactStorage.instance.setNotificationOpen(schema.id, open);
-    if (options != null) {
-      logger.i("$TAG - setNotificationOpen - end success - new:$options - contact:$schema");
-      schema.options = options;
-      if (notify) queryAndNotify(schema.id);
+  Future<String?> setSelfAvatar(String? address, String? avatarPath, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    String profileVersion = Uuid().v4();
+    String? avatarLocalPath = Path.convert2Local(avatarPath);
+    var data = await setProfileVersion(address, profileVersion);
+    bool success = false;
+    if (data != null) success = await ContactStorage.instance.setAvatar(address, avatarLocalPath);
+    if (success) {
+      logger.i("$TAG - setSelfAvatar - success - avatarLocalPath:$avatarLocalPath - profileVersion:$profileVersion - address:$address");
+      if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setNotificationOpen - end fail - open:$open - old:${schema.options} - contact:$schema");
+      logger.w("$TAG - setSelfAvatar - fail - avatarLocalPath:$avatarLocalPath - profileVersion:$profileVersion - address:$address");
     }
-    return options != null;
+    return success ? profileVersion : null;
   }
 
-  Future<bool> setOptionsBurn(ContactSchema? schema, int? burningSeconds, int? updateAt, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setOptionsBurn - start - burningSeconds:$burningSeconds - updateAt:$updateAt - old:${schema.options} - contact:$schema");
-    OptionsSchema? options = await ContactStorage.instance.setBurning(schema.id, burningSeconds, updateAt);
-    if (options != null) {
-      logger.i("$TAG - setOptionsBurn - end success - new:$options - contact:$schema");
-      schema.options = options;
-      if (notify) queryAndNotify(schema.id);
+  Future<String?> setSelfFullName(String? address, String? firstName, String? lastName, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    String profileVersion = Uuid().v4();
+    var data = await setProfileVersion(address, profileVersion);
+    bool success = false;
+    if (data != null) success = await ContactStorage.instance.setFullName(address, firstName, lastName);
+    if (success) {
+      logger.i("$TAG - setSelfFullName - success - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
+      if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setOptionsBurn - end fail - burningSeconds:$burningSeconds - updateAt:$updateAt - old:${schema.options} - contact:$schema");
+      logger.w("$TAG - setSelfFullName - fail - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
     }
-    return options != null;
+    return success ? profileVersion : null;
   }
 
-  Future<bool> setRemarkAvatar(ContactSchema? schema, String? avatarLocalPath, {bool notify = false}) async {
-    if (schema == null || schema.id == 0) return false;
-    logger.d("$TAG - setRemarkAvatar - start - new_avatar_path:$avatarLocalPath - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+  Future<String?> setOtherAvatar(String? address, String? profileVersion, String? avatarPath, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    String? avatarLocalPath = Path.convert2Local(avatarPath);
+    bool success = await ContactStorage.instance.setAvatar(address, avatarLocalPath);
+    if (success) await setProfileVersion(address, profileVersion);
+    if (success) {
+      logger.i("$TAG - setOtherAvatar - success - avatarLocalPath:$avatarLocalPath - profileVersion:$profileVersion - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setOtherAvatar - fail - avatarLocalPath:$avatarLocalPath - profileVersion:$profileVersion - address:$address");
+    }
+    return success ? profileVersion : null;
+  }
+
+  Future<String?> setOtherFullName(String? address, String? profileVersion, String? firstName, String? lastName, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    bool success = await ContactStorage.instance.setFullName(address, firstName, lastName);
+    if (success) await setProfileVersion(address, profileVersion);
+    if (success) {
+      logger.i("$TAG - setOtherFullName - success - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setOtherFullName - fail - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
+    }
+    return success ? profileVersion : null;
+  }
+
+  Future<bool> setOtherRemarkName(String? address, String? remarkName, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return false;
+    bool success = await ContactStorage.instance.setRemarkName(address, remarkName);
+    if (success) {
+      logger.i("$TAG - setOtherRemarkName - success - remarkName:$remarkName - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setOtherRemarkName - fail - remarkName:$remarkName - address:$address");
+    }
+    return success;
+  }
+
+  Future<bool> setType(String? address, int? type, {bool notify = false}) async {
+    if (address == null || address.isEmpty || type == null || type == ContactType.me) return false;
+    bool success = await ContactStorage.instance.setType(address, type);
+    if (success) {
+      logger.i("$TAG - setType - success - type:$type - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setType - fail - type:$type - address:$address");
+    }
+    return success;
+  }
+
+  Future<bool> setTop(String? address, bool top, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return false;
+    bool success = await ContactStorage.instance.setTop(address, top);
+    if (success) {
+      logger.i("$TAG - setTop - success - top:$top - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setTop - fail - top:$top - address:$address");
+    }
+    return success;
+  }
+
+  Future<OptionsSchema?> setNotificationOpen(String? address, bool open, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    OptionsSchema? options = await ContactStorage.instance.setNotificationOpen(address, open);
+    if (options != null) {
+      logger.i("$TAG - setNotificationOpen - success - open:$open - new:$options - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setNotificationOpen - fail - open:$open - new:$options - address:$address");
+    }
+    return options;
+  }
+
+  Future<OptionsSchema?> setOptionsBurn(String? address, int? burningSeconds, int? updateAt, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    OptionsSchema? options = await ContactStorage.instance.setBurning(address, burningSeconds, updateAt);
+    if (options != null) {
+      logger.i("$TAG - setOptionsBurn - success - burningSeconds:$burningSeconds - updateAt:$updateAt - new:$options - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setOptionsBurn - fail - burningSeconds:$burningSeconds - updateAt:$updateAt - new:$options - address:$address");
+    }
+    return options;
+  }
+
+  Future<Map<String, dynamic>?> setOtherRemarkAvatar(String? address, String? avatarPath, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    String? avatarLocalPath = Path.convert2Local(avatarPath);
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
       "remarkAvatar": avatarLocalPath,
     });
     if (data != null) {
-      logger.i("$TAG - setRemarkAvatar - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
+      logger.i("$TAG - setOtherRemarkAvatar - success - avatarLocalPath:$avatarLocalPath - new:$data - address:$address");
+      if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setRemarkAvatar - end fail - new_avatar_path:$avatarLocalPath - old:${schema.data} - contact:$schema");
+      logger.w("$TAG - setOtherRemarkAvatar - fail - avatarLocalPath:$avatarLocalPath - new:$data - address:$address");
     }
-    return data != null;
+    return data;
   }
 
-  Future<bool> setRemarkName(ContactSchema? schema, String? remarkName, {bool notify = false}) async {
-    if (schema == null || schema.id == 0) return false;
-    logger.d("$TAG - setRemarkName - start - new_name:$remarkName - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
-      "remarkName": remarkName,
-    });
-    if (data != null) {
-      logger.i("$TAG - setRemarkName - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
-    } else {
-      logger.w("$TAG - setRemarkName - end fail - new_name:$remarkName - old:${schema.data} - contact:$schema");
-    }
-    return data != null;
-  }
-
-  Future<bool> setNotes(ContactSchema? schema, String? notes, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setNotes - start - notes:$notes - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
-      "notes": notes,
-    });
-    if (data != null) {
-      logger.i("$TAG - setNotes - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
-    } else {
-      logger.w("$TAG - setNotes - end fail - notes:$notes - old:${schema.data} - contact:$schema");
-    }
-    return data != null;
-  }
-
-  Future<bool> setWalletAddress(ContactSchema? schema, String? walletAddress, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setWalletAddress - start - walletAddress:$walletAddress - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+  Future<Map<String, dynamic>?> setWalletAddress(String? address, String? walletAddress) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
       "nknWalletAddress": walletAddress,
     });
     if (data != null) {
-      logger.i("$TAG - setWalletAddress - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
+      logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - new:$data - address:$address");
+      // if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setWalletAddress - end fail - walletAddress:$walletAddress - old:${schema.data} - contact:$schema");
+      logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - new:$data - address:$address");
     }
-    return data != null;
+    return data;
   }
 
-  Future<bool> setMappedAddress(ContactSchema? schema, List<String>? mapped, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setMappedAddress - start - mapped:$mapped - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
+  Future<Map<String, dynamic>?> setMappedAddress(String? address, List<String>? mapped, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
       "mappedAddress": mapped,
     });
     if (data != null) {
-      logger.i("$TAG - setMappedAddress - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
+      logger.i("$TAG - setMappedAddress - success - mapped:$mapped - new:$data - address:$address");
+      if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setMappedAddress - end fail - mapped:$mapped - old:${schema.data} - contact:$schema");
+      logger.w("$TAG - setMappedAddress - fail - mapped:$mapped - new:$data - address:$address");
     }
-    return data != null;
+    return data;
   }
 
-  Future<bool> setBurnedMessages(ContactSchema? schema, Map adds, List<int> dels, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setBurnedMessages - start - adds:$adds - dels:$dels - old:${schema.data} - contact:$schema");
-    var data = await ContactStorage.instance.setDataItemMapChange(schema.id, "burnedMessages", adds, dels);
-    if (data != null) {
-      logger.d("$TAG - setBurnedMessages - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
-    } else {
-      logger.w("$TAG - setBurnedMessages - end fail - adds:$adds - dels:$dels - old:${schema.data} - contact:$schema");
-    }
-    return data != null;
+  Future<Map<String, dynamic>?> setProfileVersion(String? address, String? profileVersion) async {
+    if (address == null || address.isEmpty) return null;
+    var data = await ContactStorage.instance.setData(address, {
+      "profileVersion": profileVersion,
+    });
+    logger.d("$TAG - setProfileVersion - profileVersion:$profileVersion - new:$data - address:$address");
+    // if ((data != null) && notify) queryAndNotify(address);
+    return data;
   }
 
-  Future<bool> setTipNotification(ContactSchema? schema, {bool notify = false}) async {
-    if (schema == null || schema.id == null || schema.id == 0) return false;
-    logger.d("$TAG - setTipNotification - start - old:${schema.data} - contact:$schema");
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(schema.id, {
-      "tipNotification": DateTime.now().millisecondsSinceEpoch,
+  Future<Map<String, dynamic>?> setNotes(String? address, String? notes, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
+      "notes": notes,
     });
     if (data != null) {
-      logger.i("$TAG - setTipNotification - end success - new:$data - contact:$schema");
-      schema.data = data;
-      if (notify) queryAndNotify(schema.id);
+      logger.i("$TAG - setNotes - end success - notes:$notes - new:$data - address:$address");
+      if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setTipNotification - end fail - old:${schema.data} - contact:$schema");
+      logger.w("$TAG - setNotes - end fail - notes:$notes - new:$data - address:$address");
     }
-    return data != null;
+    return data;
   }
 
-  Future queryAndNotify(int? contactId) async {
-    if (contactId == null || contactId == 0) return;
-    ContactSchema? updated = await ContactStorage.instance.query(contactId);
-    if (updated != null) {
-      _updateSink.add(updated);
-      if (updated.type == ContactType.me) {
-        meUpdateSink.add(updated);
-      }
+  Future<Map<String, dynamic>?> setBurnedMessages(String? address, Map adds, List<int> dels, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    var data = await ContactStorage.instance.setDataItemMapChange(address, "burnedMessages", adds, dels);
+    if (data != null) {
+      logger.i("$TAG - setBurnedMessages - success - adds:$adds - dels:$dels - new:$data - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setBurnedMessages - fail - adds:$adds - dels:$dels - new:$data - address:$address");
     }
+    return data;
   }
 
-  Future queryAndNotifyByClientAddress(String? clientAddress) async {
-    if (clientAddress == null || clientAddress.isEmpty) return;
-    ContactSchema? updated = await queryByClientAddress(clientAddress);
+  Future<Map<String, dynamic>?> setTipNotification(String? address, int? timeAt, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
+      "tipNotification": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    if (data != null) {
+      logger.i("$TAG - setTipNotification - success - timeAt:$timeAt - new:$data - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setTipNotification - fail - timeAt:$timeAt - new:$data - address:$address");
+    }
+    return data;
+  }
+
+  Future queryAndNotify(String? address) async {
+    if (address == null || address.isEmpty) return;
+    ContactSchema? updated = await query(address);
     if (updated != null) {
       _updateSink.add(updated);
       if (updated.type == ContactType.me) {

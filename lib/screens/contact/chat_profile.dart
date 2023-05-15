@@ -63,7 +63,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                 ),
               ),
               onPressed: () {
-                Util.copyText(this._contactSchema.clientAddress);
+                Util.copyText(this._contactSchema.address);
               },
               child: Column(
                 children: <Widget>[
@@ -85,7 +85,7 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                   ),
                   SizedBox(height: 10),
                   Label(
-                    this._contactSchema.clientAddress,
+                    this._contactSchema.address,
                     type: LabelType.bodyRegular,
                     color: application.theme.fontColor2,
                     softWrap: true,
@@ -107,10 +107,10 @@ class ContactChatProfileScreenState extends BaseStateFulWidgetState<ContactChatP
                     radius: 24,
                   ),
                   SizedBox(height: 20),
-                  this._contactSchema.clientAddress.isNotEmpty
+                  this._contactSchema.address.isNotEmpty
                       ? Center(
                           child: QrImage(
-                            data: this._contactSchema.clientAddress,
+                            data: this._contactSchema.address,
                             backgroundColor: application.theme.backgroundLightColor,
                             foregroundColor: application.theme.primaryColor,
                             version: QrVersions.auto,

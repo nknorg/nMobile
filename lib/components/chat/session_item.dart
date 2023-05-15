@@ -70,14 +70,14 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   void initState() {
     super.initState();
     // contact
-    _updateContactSubscription = contactCommon.updateStream.where((event) => event.id == _contact?.id).listen((event) {
+    _updateContactSubscription = contactCommon.updateStream.where((event) => event.address == _contact?.address).listen((event) {
       widget.session.temp?["contact"] = event;
       setState(() {
         _contact = event;
       });
     });
     // topic
-    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topic?.id).listen((event) {
+    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
       widget.session.temp?["topic"] = event;
       setState(() {
         _topic = event;
@@ -97,13 +97,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   void _refreshContact() {
-    if ((_contact?.clientAddress.isNotEmpty == true) && (_contact?.clientAddress == widget.session.targetId)) {
+    if ((_contact?.address.isNotEmpty == true) && (_contact?.address == widget.session.targetId)) {
       loaded = true;
       return;
     }
     if (widget.session.temp?["contact"] == null) {
-      contactCommon.queryByClientAddress(widget.session.targetId).then((contact) {
-        if (widget.session.targetId == contact?.clientAddress) {
+      contactCommon.query(widget.session.targetId).then((contact) {
+        if (widget.session.targetId == contact?.address) {
           if (widget.session.temp == null) widget.session.temp = Map();
           widget.session.temp?["contact"] = contact;
           setState(() {
@@ -113,7 +113,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
             _contact = contact;
           });
         } else {
-          contact = ContactSchema.createWithNoWalletAddress(widget.session.targetId, ContactType.none);
+          contact = ContactSchema.create(widget.session.targetId, ContactType.none);
           setState(() {
             loaded = true;
             _topic = null;
