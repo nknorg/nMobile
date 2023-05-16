@@ -98,11 +98,6 @@ class PrivateGroupSchema {
     return data?['signature'] ?? "";
   }
 
-  void setSignature(String? signature) {
-    if (data == null) data = Map();
-    data?['signature'] = signature;
-  }
-
   int? get quitCommits {
     return int.tryParse(data?["quit_at_version_commits"]?.toString() ?? "");
   }

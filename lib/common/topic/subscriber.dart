@@ -532,7 +532,7 @@ class SubscriberCommon with Tag {
       "progress_permission_nonce": nonce,
       "progress_permission_fee": fee,
     });
-    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - new:$data - topicId:$topicId - contactAddress:$contactAddress");
+    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - data:$data - topicId:$topicId - contactAddress:$contactAddress");
     if ((data != null) && notify) queryAndNotify(topicId, contactAddress);
     return data != null;
   }
@@ -544,7 +544,7 @@ class SubscriberCommon with Tag {
       "progress_permission_nonce",
       "progress_permission_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - new:$data - topicId:$topicId - contactAddress:$contactAddress");
+    logger.d("$TAG - setStatusProgressEnd - data:$data - topicId:$topicId - contactAddress:$contactAddress");
     if ((data != null) && notify) queryAndNotify(topicId, contactAddress);
     return data != null;
   }
