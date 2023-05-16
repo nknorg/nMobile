@@ -34,7 +34,9 @@ class SessionSchema {
     this.isTop = false,
     this.unReadCount = 0,
     this.data,
-  });
+  }) {
+    if (this.data == null) this.data = Map();
+  }
 
   bool get isContact {
     return type == SessionType.CONTACT;
@@ -68,7 +70,7 @@ class SessionSchema {
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
-      'data': data != null ? jsonEncode(data) : null,
+      'data': data != null ? jsonEncode(data) : Map(),
     };
     return map;
   }
@@ -83,15 +85,10 @@ class SessionSchema {
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
       unReadCount: e['un_read_count'] ?? 0,
     );
-
+    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (schema.data == null) {
-        schema.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        schema.data?.addAll(data);
-      }
+      if (data != null) schema.data?.addAll(data);
     }
     return schema;
   }
