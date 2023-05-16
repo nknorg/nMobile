@@ -605,7 +605,7 @@ class Upgrade4to5 {
         } else if (oldType == MessageContentType.text || oldType == MessageContentType.textExtension) {
           newType = oldType;
           canBurning = true;
-        } else if (oldType == MessageContentType.media || oldType == MessageContentType.image || oldType == MessageContentType.audio) {
+        } else if (oldType == "media" || oldType == MessageContentType.image || oldType == MessageContentType.audio) {
           newType = oldType;
           canBurning = true;
         } else if (oldType == MessageContentType.piece) {
