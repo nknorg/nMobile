@@ -14,16 +14,17 @@ class MessagePieceStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_message_piece", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_message_piece", onLog: (log, error) => error ? logger.w(log) : null);
 
+  // same with table_messages
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `pid` VARCHAR(300),
-        `msg_id` VARCHAR(300),
-        `device_id` VARCHAR(300),
+        `pid` VARCHAR(100),
+        `msg_id` VARCHAR(100),
+        `device_id` VARCHAR(200),
         `queue_id` BIGINT,
-        `sender` VARCHAR(200),
+        `sender` VARCHAR(100),
         `target_id` VARCHAR(200),
         `target_type` INT,
         `status` INT,
@@ -43,10 +44,8 @@ class MessagePieceStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
-    await db.execute('CREATE INDEX `index_message_piece_pid` ON `$tableName` (`pid`)');
-    await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `$tableName` (`msg_id`)');
+    await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `$tableName` (`msg_id`)'); // no unique
     await db.execute('CREATE INDEX `index_message_piece_target_id_target_type` ON `$tableName` (`target_id`, `target_type`)');
   }
 

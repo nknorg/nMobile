@@ -110,7 +110,7 @@ class ChatOutCommon with Tag {
 
   Future<bool> _waitClientOk() async {
     int tryTimes = 0;
-    // wait ios tcp pipe ok
+    // wait ios tcp pipe ok TODO:GG 重连也要一直等
     if (Platform.isIOS) {
       int gapForeground = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
       if (gapForeground < 500) {
@@ -166,10 +166,10 @@ class ChatOutCommon with Tag {
     } else if ((destList.length == 1) && (destList[0] != selfAddress)) {
       // contact
       ContactSchema? _me = await contactCommon.getMe();
-      ContactSchema? _other = await contactCommon.queryByClientAddress(destList[0]);
+      ContactSchema? _other = await contactCommon.query(destList[0], fetchWalletAddress: false);
       bool notificationOpen = _other?.options?.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
-      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.clientAddress); // just can latest
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.address); // just can latest
       String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
       data = MessageData.getPing(
         isPing,
@@ -195,7 +195,7 @@ class ChatOutCommon with Tag {
     // ping/pong at
     if ((pid?.isNotEmpty == true) && (gap > 0)) {
       int mowAt = DateTime.now().millisecondsSinceEpoch;
-      deviceInfoCommon.queryListLatest(destList).then((deviceInfoList) {
+      deviceInfoCommon.queryListByContactAddress(destList).then((deviceInfoList) {
         for (int i = 0; i < deviceInfoList.length; i++) {
           DeviceInfoSchema deviceInfo = deviceInfoList[i];
           if (deviceInfo.contactAddress == selfAddress) continue;
@@ -291,7 +291,7 @@ class ChatOutCommon with Tag {
         "burningUpdateAt": updateAt,
       },
     );
-    message.content = MessageData.getContactOptionsBurn(message); // same with receive and old version
+    message.content = MessageData.getContactOptionsBurn(message.msgId, message.sendAt, deleteSeconds, updateAt); // same with receive and old version
     message.data = message.content;
     logger.i("$TAG - sendContactOptionsBurn - dest:$targetAddress - deleteSeconds:$deleteSeconds - updateAt:$updateAt");
     var result = await _send(message);
@@ -311,7 +311,7 @@ class ChatOutCommon with Tag {
         "deviceToken": deviceToken,
       },
     );
-    message.content = MessageData.getContactOptionsToken(message); // same with receive and old version
+    message.content = MessageData.getContactOptionsToken(message.msgId, message.sendAt, deviceToken); // same with receive and old version
     message.data = message.content;
     logger.i("$TAG - sendContactOptionsToken - dest:$targetAddress - deviceToken:$deviceToken");
     var result = await _send(message);
@@ -340,7 +340,7 @@ class ChatOutCommon with Tag {
         return false;
       }
     }
-    if (!withToken) selfDeviceInfo.deviceToken = null;
+    if (!withToken) selfDeviceInfo.deviceToken = "";
     String data = MessageData.getDeviceInfo(selfDeviceInfo);
     logger.i("$TAG - sendDeviceInfo - dest:$targetAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([targetAddress], data);
@@ -357,12 +357,12 @@ class ChatOutCommon with Tag {
     int? burningUpdateAt;
     String? privateGroupVersion;
     if (target is ContactSchema) {
-      targetId = target.clientAddress;
+      targetId = target.address;
       targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
-      targetId = target.topic;
+      targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
@@ -386,20 +386,7 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    if (message.canQueue) {
-      if (message.isTargetContact && !message.isTargetSelf) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
-          if (message.queueId > 0) {
-            String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
-            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-          }
-        }
-      } else {
-        // nothing
-      }
-    }
+    message = await messageCommon.loadMessageSendQueue(message, targetId);
     // data
     message.data = MessageData.getText(message);
     logger.i("$TAG - sendText - targetId:$targetId - content:$content - data:${message.data}");
@@ -412,7 +399,7 @@ class ChatOutCommon with Tag {
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) {
-      logger.w("$TAG - saveIpfs - contact is null - data:$data");
+      logger.w("$TAG - saveIpfs - contact is null - mediaData:$data");
       return null;
     }
     // target
@@ -422,12 +409,12 @@ class ChatOutCommon with Tag {
     int? burningUpdateAt;
     String? privateGroupVersion;
     if (target is ContactSchema) {
-      targetId = target.clientAddress;
+      targetId = target.address;
       targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
-      targetId = target.topic;
+      targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
@@ -452,27 +439,14 @@ class ChatOutCommon with Tag {
         }),
     );
     // queue
-    if (message.canQueue) {
-      if (message.isTargetContact && !message.isTargetSelf) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
-          if (message.queueId > 0) {
-            String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
-            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-          }
-        }
-      } else {
-        // nothing
-      }
-    }
+    message = await messageCommon.loadMessageSendQueue(message, targetId);
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
     if (thumbnailPath != null && thumbnailPath.isNotEmpty) {
       message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateNo);
     }
-    logger.i("$TAG - saveIpfs - targetId:$targetId - data:$data");
+    logger.i("$TAG - saveIpfs - targetId:$targetId - message:$message");
     MessageSchema? inserted = await insertMessage(message);
     if (inserted == null) return null;
     // ipfs
@@ -504,12 +478,12 @@ class ChatOutCommon with Tag {
     int? burningUpdateAt;
     String? privateGroupVersion;
     if (target is ContactSchema) {
-      targetId = target.clientAddress;
+      targetId = target.address;
       targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
-      targetId = target.topic;
+      targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
@@ -535,23 +509,10 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    if (message.canQueue) {
-      if (message.isTargetContact && !message.isTargetSelf) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
-          if (message.queueId > 0) {
-            String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
-            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-          }
-        }
-      } else {
-        // nothing
-      }
-    }
+    message = await messageCommon.loadMessageSendQueue(message, targetId);
     // data
     message.data = await MessageData.getImage(message);
-    logger.i("$TAG - sendImage - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringNoContent()}");
+    logger.i("$TAG - sendImage - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringSimple()}");
     return await _send(message);
   }
 
@@ -565,12 +526,12 @@ class ChatOutCommon with Tag {
     int? burningUpdateAt;
     String? privateGroupVersion;
     if (target is ContactSchema) {
-      targetId = target.clientAddress;
+      targetId = target.address;
       targetType = SessionType.CONTACT;
       deleteAfterSeconds = target.options?.deleteAfterSeconds;
       burningUpdateAt = target.options?.updateBurnAfterAt;
     } else if (target is TopicSchema) {
-      targetId = target.topic;
+      targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
@@ -597,91 +558,78 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    if (message.canQueue) {
-      if (message.isTargetContact && !message.isTargetSelf) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId); // just can latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          message.queueId = await messageCommon.newContactMessageQueueId(targetId, device.deviceId, message.msgId);
-          if (message.queueId > 0) {
-            String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetId, device.deviceId);
-            if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
-          }
-        }
-      } else {
-        // nothing
-      }
-    }
+    message = await messageCommon.loadMessageSendQueue(message, targetId);
     // data
     message.data = await MessageData.getAudio(message);
-    logger.i("$TAG - sendAudio - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringNoContent()}");
+    logger.i("$TAG - sendAudio - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringSimple()}");
     return await _send(message);
   }
 
   // NO DB NO single
-  Future<bool> sendTopicSubscribe(String? topic) async {
+  Future<bool> sendTopicSubscribe(String? topicId) async {
     if (!(await _waitClientOk())) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
-      topic,
+      topicId,
       SessionType.TOPIC,
       MessageContentType.topicSubscribe,
       null,
     );
     message.data = MessageData.getTopicSubscribe(message);
-    logger.i("$TAG - sendTopicSubscribe - dest:$topic - data:${message.data}");
+    logger.i("$TAG - sendTopicSubscribe - dest:$topicId - data:${message.data}");
     var result = await _send(message);
     return result != null;
   }
 
   // NO DB NO single
-  Future<bool> sendTopicUnSubscribe(String? topic) async {
+  Future<bool> sendTopicUnSubscribe(String? topicId) async {
     if (!(await _waitClientOk())) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
-      topic,
+      topicId,
       SessionType.TOPIC,
       MessageContentType.topicUnsubscribe,
       null,
     );
     TopicSchema? _schema = await chatCommon.topicHandle(message);
     message.data = MessageData.getTopicUnSubscribe(message);
-    logger.i("$TAG - sendTopicUnSubscribe - dest:$topic - data:${message.data}");
+    logger.i("$TAG - sendTopicUnSubscribe - dest:$topicId - data:${message.data}");
     var result = await _sendWithTopic(_schema, message, notification: false);
     return result != null;
   }
 
   // NO topic (1 to 1)
-  Future<MessageSchema?> sendTopicInvitee(String? targetAddress, String? topic) async {
+  Future<MessageSchema?> sendTopicInvitee(String? topicId, String? targetAddress) async {
     if (!(await _waitClientOk())) return null;
-    if (targetAddress == null || targetAddress.isEmpty || topic == null || topic.isEmpty) return null;
+    if (targetAddress == null || targetAddress.isEmpty || topicId == null || topicId.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
       SessionType.CONTACT,
       MessageContentType.topicInvitation,
-      topic,
+      topicId,
       extra: {
         "profileVersion": me?.profileVersion,
       },
     );
     message.data = MessageData.getTopicInvitee(message);
-    logger.i("$TAG - sendTopicInvitee - dest:$topic - invitee:$targetAddress - data:${message.data}");
+    logger.i("$TAG - sendTopicInvitee - dest:$topicId - invitee:$targetAddress - data:${message.data}");
     return await _send(message);
   }
 
   // NO DB NO single
-  Future<bool> sendTopicKickOut(String? topic, String? kickAddress) async {
+  Future<bool> sendTopicKickOut(String? topicId, String? kickAddress) async {
     if (!(await _waitClientOk())) return false;
-    if (topic == null || topic.isEmpty || kickAddress == null || kickAddress.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty || kickAddress == null || kickAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
-      topic,
+      topicId,
       SessionType.TOPIC,
       MessageContentType.topicKickOut,
       kickAddress,
     );
     TopicSchema? _schema = await chatCommon.topicHandle(message);
     message.data = MessageData.getTopicKickOut(message);
-    logger.i("$TAG - sendTopicKickOut - dest:$topic - kick:$kickAddress - data:${message.data}");
+    logger.i("$TAG - sendTopicKickOut - dest:$topicId - kick:$kickAddress - data:${message.data}");
     var result = await _sendWithTopic(_schema, message, notification: false);
     return result != null;
   }
@@ -816,7 +764,7 @@ class ChatOutCommon with Tag {
     if (mute && (muteGap > 0)) {
       int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
       if (resendMuteAt <= 0) {
-        logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringSimple()}");
       } else {
         int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
         if (interval < muteGap) {
@@ -876,29 +824,28 @@ class ChatOutCommon with Tag {
     switch (message.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-        logger.d("$TAG - resendMute - text - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         message.data = MessageData.getText(message);
+        logger.d("$TAG - resendMute - text - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         break;
       case MessageContentType.ipfs:
-        logger.d("$TAG - resendMute - ipfs - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         message.data = MessageData.getIpfs(message);
+        logger.d("$TAG - resendMute - ipfs - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         break;
-      case MessageContentType.media:
       case MessageContentType.image:
-        logger.d("$TAG - resendMute - image - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         message.data = await MessageData.getImage(message);
+        logger.d("$TAG - resendMute - image - mute:$mute - targetId:${message.targetId} - message:${message.toStringSimple()}");
         break;
       case MessageContentType.audio:
-        logger.d("$TAG - resendMute - audio - mute:$mute - targetId:${message.targetId} - message:${message.toStringNoContent()}");
         message.data = await MessageData.getAudio(message);
+        logger.d("$TAG - resendMute - audio - mute:$mute - targetId:${message.targetId} - message:${message.toStringSimple()}");
         break;
       case MessageContentType.topicInvitation:
-        logger.d("$TAG - resendMute - topic invitee - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         message.data = MessageData.getTopicInvitee(message);
+        logger.d("$TAG - resendMute - topic invitee - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         break;
       case MessageContentType.privateGroupInvitation:
-        logger.d("$TAG - resendMute - group invitee - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         message.data = MessageData.getPrivateGroupInvitation(message);
+        logger.d("$TAG - resendMute - group invitee - mute:$mute - targetId:${message.targetId} - data:${message.data}");
         break;
       default:
         logger.w("$TAG - resendMute - wrong type - mute:$mute - targetId:${message.targetId} - data:${message.data}");
@@ -919,11 +866,11 @@ class ChatOutCommon with Tag {
       // send_mute
       MessageSchema? result = await _send(message, insert: false, sessionSync: false, statusSync: false, notification: notification);
       if (result != null) {
-        logger.i("$TAG - resendMute - success mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.i("$TAG - resendMute - success mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
         result.options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
         await messageCommon.updateMessageOptions(result, result.options, notify: false);
       } else {
-        logger.w("$TAG - resendMute - fail mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.w("$TAG - resendMute - fail mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
       }
       return result;
     }
@@ -967,7 +914,7 @@ class ChatOutCommon with Tag {
       bool pushNotification = message.canNotification && (contact?.options?.notificationOpen == true) && (notification != false);
       pid = await _sendWithContact(contact, message, notification: pushNotification);
     } else {
-      logger.e("$TAG - _send - with_error - type:${message.contentType} - message:${message.toStringNoContent()}");
+      logger.e("$TAG - _send - with_error - type:${message.contentType} - message:${message.toStringSimple()}");
       return null;
     }
     bool sendSuccess = pid?.isNotEmpty == true;
@@ -976,7 +923,7 @@ class ChatOutCommon with Tag {
       bool success = await messageCommon.updatePid(message.msgId, message.pid);
       if (success) message.pid = pid;
     } else {
-      logger.w("$TAG - _send - pid is null - type:${message.contentType} - message:${message.toStringNoContent()}");
+      logger.w("$TAG - _send - pid is null - type:${message.contentType} - message:${message.toStringSimple()}");
     }
     // queue_id (before set status success)
     if (message.canQueue && sendSuccess) {
@@ -1018,10 +965,10 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, {bool notification = false}) async {
     String? data = message?.data;
     if (message == null || data == null) {
-      logger.e("$TAG - _sendWithContact - data == null - message:${message?.toStringNoContent()}");
+      logger.e("$TAG - _sendWithContact - data == null - message:${message?.toStringSimple()}");
       return null;
     }
-    logger.d("$TAG - _sendWithContact - type:${message.contentType} - target:${contact?.clientAddress} - message:${message.toStringNoContent()}");
+    logger.d("$TAG - _sendWithContact - type:${message.contentType} - target:${contact?.address} - message:${message.toStringSimple()}");
     // send
     Uint8List? pid;
     bool tryNoPiece = true;
@@ -1041,8 +988,8 @@ class ChatOutCommon with Tag {
     if (pid == null || pid.isEmpty) return pid;
     // notification
     if (notification && (contact != null) && !contact.isMe) {
-      deviceInfoCommon.queryDeviceTokenList(contact.clientAddress).then((tokens) async {
-        logger.d("$TAG - _sendWithContact - push notification - count:${tokens.length} - target:${contact.clientAddress} - tokens:$tokens");
+      deviceInfoCommon.queryDeviceTokenList(contact.address).then((tokens) async {
+        logger.d("$TAG - _sendWithContact - push notification - count:${tokens.length} - target:${contact.address} - tokens:$tokens");
         List<String> results = await RemoteNotification.send(tokens);
         if (results.isNotEmpty) {
           message.options = MessageOptions.setPushNotifyId(message.options, results[0]);
@@ -1056,27 +1003,27 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, {bool notification = false}) async {
     String? data = message?.data;
     if ((topic == null) || (message == null) || (data == null)) {
-      logger.e("$TAG - _sendWithTopic - topic/data == null - topic:${topic?.topic} - message:${message?.toStringNoContent()}");
+      logger.e("$TAG - _sendWithTopic - topic/data == null - topic:${topic?.topicId} - message:${message?.toStringSimple()}");
       return null;
     }
     // me
-    SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(message.targetId, message.sender); // chatOutCommon.handleSubscribe();
+    SubscriberSchema? _me = await subscriberCommon.query(message.targetId, message.sender); // chatOutCommon.handleSubscribe();
     bool checkStatus = message.contentType == MessageContentType.topicUnsubscribe;
     if (!checkStatus && (_me?.status != SubscriberStatus.Subscribed)) {
-      logger.w("$TAG - _sendWithTopic - subscriber me is wrong - type:${message.contentType} - me:$_me - message:${message.toStringNoContent()}");
+      logger.w("$TAG - _sendWithTopic - subscriber me is wrong - type:${message.contentType} - me:$_me - message:${message.toStringSimple()}");
       return null;
     }
     // subscribers
     int limit = 20;
     List<SubscriberSchema> _subscribers = [];
     for (int offset = 0; true; offset += limit) {
-      List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, status: SubscriberStatus.Subscribed, offset: offset, limit: limit);
+      List<SubscriberSchema> result = await subscriberCommon.queryListByTopicId(topic.topicId, status: SubscriberStatus.Subscribed, offset: offset, limit: limit);
       _subscribers.addAll(result);
       if (result.length < limit) break;
     }
     if (message.contentType == MessageContentType.topicKickOut) {
       logger.i("$TAG - _sendWithTopic - add kick people - type:${message.contentType} - clientAddress:${message.content}");
-      SubscriberSchema? kicked = SubscriberSchema.create(topic.topic, message.content?.toString(), SubscriberStatus.None, null);
+      SubscriberSchema? kicked = SubscriberSchema.create(topic.topicId, message.content?.toString(), SubscriberStatus.None, null);
       if (kicked != null) _subscribers.add(kicked);
     }
     if (_subscribers.isEmpty) return null;
@@ -1084,14 +1031,14 @@ class ChatOutCommon with Tag {
     bool selfIsReceiver = false;
     List<String> destList = [];
     for (var i = 0; i < _subscribers.length; i++) {
-      String clientAddress = _subscribers[i].clientAddress;
+      String clientAddress = _subscribers[i].contactAddress;
       if (clientAddress == message.sender) {
         selfIsReceiver = true;
       } else {
         destList.add(clientAddress);
       }
     }
-    logger.d("$TAG - _sendWithTopic - type:${message.contentType} - topic:${topic.topic} - self:$selfIsReceiver - dest_count:${destList.length} - message:${message.toStringNoContent()}");
+    logger.d("$TAG - _sendWithTopic - type:${message.contentType} - topic:${topic.topicId} - self:$selfIsReceiver - dest_count:${destList.length} - message:${message.toStringSimple()}");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -1123,12 +1070,12 @@ class ChatOutCommon with Tag {
     if (pid == null || pid.isEmpty) return null;
     // notification
     if (notification && destList.isNotEmpty) {
-      contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+      contactCommon.queryListByAddress(destList).then((List<ContactSchema> contactList) async {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
-            logger.d("$TAG - _sendWithTopic - push notification - count:${tokens.length} - target:${_contact.clientAddress} - topic:${topic.topic} - tokens:$tokens");
+          deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
+            logger.d("$TAG - _sendWithTopic - push notification - count:${tokens.length} - target:${_contact.address} - topic:${topic.topicId} - tokens:$tokens");
             RemoteNotification.send(tokens); // await // no need result
           });
         }
@@ -1140,13 +1087,13 @@ class ChatOutCommon with Tag {
   Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, {bool notification = false}) async {
     String? data = message?.data;
     if ((group == null) || (message == null) || (data == null)) {
-      logger.e("$TAG - _sendWithPrivateGroup - group/data == null - group:${group?.groupId} - message:${message?.toStringNoContent()}");
+      logger.e("$TAG - _sendWithPrivateGroup - group/data == null - group:${group?.groupId} - message:${message?.toStringSimple()}");
       return null;
     }
     // me
     PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(group.groupId, message.sender);
-    if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
-      logger.w("$TAG - _sendWithPrivateGroup - member me is null - type:${message.contentType} - me:$_me - group:$group - message:${message.toStringNoContent()}");
+    if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
+      logger.w("$TAG - _sendWithPrivateGroup - member me is null - type:${message.contentType} - me:$_me - group:$group - message:${message.toStringSimple()}");
       return null;
     }
     // destList
@@ -1158,11 +1105,11 @@ class ChatOutCommon with Tag {
       if (clientAddress == null || clientAddress.isEmpty) continue;
       if (clientAddress == message.sender) {
         selfIsReceiver = true;
-      } else if ((members[i].permission ?? 0) > PrivateGroupItemPerm.none) {
+      } else if (members[i].permission > PrivateGroupItemPerm.none) {
         destList.add(clientAddress);
       }
     }
-    logger.d("$TAG - _sendWithPrivateGroup - type:${message.contentType} - groupId:${group.groupId} - self:$selfIsReceiver - dest_count:${destList.length} - message:${message.toStringNoContent()}");
+    logger.d("$TAG - _sendWithPrivateGroup - type:${message.contentType} - groupId:${group.groupId} - self:$selfIsReceiver - dest_count:${destList.length} - message:${message.toStringSimple()}");
     // send
     Uint8List? pid;
     if (destList.isNotEmpty) {
@@ -1190,12 +1137,12 @@ class ChatOutCommon with Tag {
     if (pid == null || pid.isEmpty) return null;
     // notification
     if (notification && destList.isNotEmpty) {
-      contactCommon.queryListByClientAddress(destList).then((List<ContactSchema> contactList) async {
+      contactCommon.queryListByAddress(destList).then((List<ContactSchema> contactList) async {
         for (var i = 0; i < contactList.length; i++) {
           ContactSchema _contact = contactList[i];
           if (_contact.isMe) continue;
-          deviceInfoCommon.queryDeviceTokenList(_contact.clientAddress).then((tokens) {
-            logger.d("$TAG - _sendWithPrivateGroup - push notification - count:${tokens.length} - target:${_contact.clientAddress} - groupId:${group.groupId} - tokens:$tokens");
+          deviceInfoCommon.queryDeviceTokenList(_contact.address).then((tokens) {
+            logger.d("$TAG - _sendWithPrivateGroup - push notification - count:${tokens.length} - target:${_contact.address} - groupId:${group.groupId} - tokens:$tokens");
             RemoteNotification.send(tokens); // await // no need result
           });
         }
@@ -1250,10 +1197,10 @@ class ChatOutCommon with Tag {
     List<MessageSchema> finds = resultList.where((element) => element.pid != null).toList();
     finds.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
     if (finds.length >= total) {
-      logger.i("$TAG - _sendWithPieces:SUCCESS - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
+      logger.i("$TAG - _sendWithPieces:SUCCESS - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringSimple()}");
       if (finds.isNotEmpty) return [finds.firstWhere((element) => element.pid != null).pid, true];
     }
-    logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringNoContent()}");
+    logger.w("$TAG - _sendWithPieces:FAIL - count:${resultList.length} - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - parentType:${message.contentType} - message:${message.toStringSimple()}");
     return [null, false];
   }
 
@@ -1262,10 +1209,10 @@ class ChatOutCommon with Tag {
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendMsg(clientAddressList, data);
     if ((onResult == null) || (onResult.messageId?.isEmpty == true)) {
-      logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
+      logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
       return null;
     }
-    logger.d("$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringNoContent()}");
+    logger.d("$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
     message.pid = onResult.messageId;
     // progress
     if ((percent > 0) && (percent <= 1)) {

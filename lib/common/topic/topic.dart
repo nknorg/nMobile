@@ -548,7 +548,7 @@ class TopicCommon with Tag {
     }
     // send message
     if (sendMsg) {
-      MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(inviteeAddress, topicId);
+      MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(topicId, inviteeAddress);
       if (_msg == null) {
         if (toast) Toast.show(Settings.locale((s) => s.failure));
         return null;
