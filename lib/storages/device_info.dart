@@ -201,7 +201,7 @@ class DeviceInfoStorage with Tag {
     return [];
   }
 
-  Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
+  Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String deviceToken) async {
     if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
     deviceId = deviceId ?? "";

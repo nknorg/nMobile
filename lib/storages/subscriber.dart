@@ -242,7 +242,7 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
-  Future<bool> setStatus(String? topicId, String? contactAddress, int? status) async {
+  Future<bool> setStatus(String? topicId, String? contactAddress, int status) async {
     if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     return await _queue.add(() async {

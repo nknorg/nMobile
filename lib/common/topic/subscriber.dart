@@ -512,7 +512,7 @@ class SubscriberCommon with Tag {
 
   Future<bool> setStatus(String? topicId, String? contactAddress, int? status, {bool notify = false}) async {
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
-    bool success = await SubscriberStorage.instance.setStatus(topicId, contactAddress, status);
+    bool success = await SubscriberStorage.instance.setStatus(topicId, contactAddress, status ?? SubscriberStatus.None);
     if (success && notify) queryAndNotify(topicId, contactAddress);
     return success;
   }

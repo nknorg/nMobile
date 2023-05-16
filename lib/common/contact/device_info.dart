@@ -124,7 +124,7 @@ class DeviceInfoCommon with Tag {
 
   Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String? deviceToken) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
-    return await DeviceInfoStorage.instance.setDeviceToken(contactAddress, deviceId, deviceToken);
+    return await DeviceInfoStorage.instance.setDeviceToken(contactAddress, deviceId, deviceToken ?? "");
   }
 
   Future<bool> setOnlineAt(String? contactAddress, String? deviceId, {int? onlineAt}) async {

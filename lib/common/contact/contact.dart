@@ -103,7 +103,7 @@ class ContactCommon with Tag {
     bool canAdd = false,
     bool fetchWalletAddress = false,
   }) async {
-    List<ContactSchema> contacts = await queryList(type: ContactType.me, orderBy: "create_at ASC", limit: 1);
+    List<ContactSchema> contacts = await queryList(type: ContactType.me, orderDesc: false, limit: 1);
     ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : null;
     String myAddress = selfAddress ?? clientCommon.address ?? "";
     if ((contact == null) && myAddress.isNotEmpty) {
@@ -174,8 +174,8 @@ class ContactCommon with Tag {
     return await ContactStorage.instance.queryListByAddress(clientAddressList);
   }
 
-  Future<List<ContactSchema>> queryList({int? type, String orderBy = 'create_at DESC', int offset = 0, int limit = 20}) {
-    return ContactStorage.instance.queryList(type: type, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) {
+    return ContactStorage.instance.queryList(type: type, orderDesc: orderDesc, offset: offset, limit: limit);
   }
 
   Future<String?> setSelfAvatar(String? address, String? avatarPath, {bool notify = false}) async {
@@ -199,7 +199,7 @@ class ContactCommon with Tag {
     String profileVersion = Uuid().v4();
     var data = await setProfileVersion(address, profileVersion);
     bool success = false;
-    if (data != null) success = await ContactStorage.instance.setFullName(address, firstName, lastName);
+    if (data != null) success = await ContactStorage.instance.setFullName(address, firstName ?? "", lastName ?? "");
     if (success) {
       logger.i("$TAG - setSelfFullName - success - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
       if (notify) queryAndNotify(address);
@@ -225,7 +225,7 @@ class ContactCommon with Tag {
 
   Future<String?> setOtherFullName(String? address, String? profileVersion, String? firstName, String? lastName, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
-    bool success = await ContactStorage.instance.setFullName(address, firstName, lastName);
+    bool success = await ContactStorage.instance.setFullName(address, firstName ?? "", lastName ?? "");
     if (success) await setProfileVersion(address, profileVersion);
     if (success) {
       logger.i("$TAG - setOtherFullName - success - firstName:$firstName - lastName:$lastName - profileVersion:$profileVersion - address:$address");
@@ -238,7 +238,7 @@ class ContactCommon with Tag {
 
   Future<bool> setOtherRemarkName(String? address, String? remarkName, {bool notify = false}) async {
     if (address == null || address.isEmpty) return false;
-    bool success = await ContactStorage.instance.setRemarkName(address, remarkName);
+    bool success = await ContactStorage.instance.setRemarkName(address, remarkName ?? "");
     if (success) {
       logger.i("$TAG - setOtherRemarkName - success - remarkName:$remarkName - address:$address");
       if (notify) queryAndNotify(address);
