@@ -29,12 +29,12 @@ class ContactSchema {
   String address; // (required : (ID).PubKey) <-> address (same with client.address)
 
   File? avatar; // (local_path) <-> avatar
-  String? firstName; // (required : name) <-> first_name
-  String? lastName; // <-> last_name
-  String? remarkName; // <-> last_name
+  String firstName; // (required : name) <-> first_name
+  String lastName; // <-> last_name
+  String remarkName; // <-> last_name
 
-  int type = ContactType.none; // (required) <-> type
-  bool isTop = false; // <-> is_top
+  int type; // (required) <-> type
+  bool isTop; // <-> is_top
 
   OptionsSchema? options; // <-> options
   Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
@@ -45,16 +45,18 @@ class ContactSchema {
     this.updateAt,
     required this.address,
     this.avatar,
-    this.firstName,
-    this.lastName,
-    this.remarkName,
+    this.firstName = "",
+    this.lastName = "",
+    this.remarkName = "",
     this.type = ContactType.none,
     this.isTop = false,
     this.options,
     this.data,
   }) {
     if (options == null) options = OptionsSchema();
+    if (data == null) data = Map();
   }
+
   static ContactSchema? create(String? address, int? type) {
     if (address == null || address.isEmpty) return null;
     return ContactSchema(
@@ -90,11 +92,11 @@ class ContactSchema {
   }
 
   String get fullName {
-    return (firstName ?? "") + (lastName ?? "");
+    return firstName + lastName;
   }
 
   String get displayName {
-    String displayName = remarkName ?? "";
+    String displayName = remarkName;
     if (displayName.isEmpty) {
       displayName = fullName.isNotEmpty ? fullName : getDefaultName(address);
     }
@@ -184,23 +186,19 @@ class ContactSchema {
   }
 
   Map<String, dynamic> toMap() {
-    if (data == null) {
-      data = new Map<String, dynamic>();
-    }
     address = address.replaceAll("\n", "").trim();
-
     Map<String, dynamic> map = {
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'address': address,
       'avatar': Path.convert2Local(avatar?.path),
-      'first_name': firstName ?? getDefaultName(address),
-      'last_name': lastName ?? "",
-      'remark_name': remarkName ?? "",
+      'first_name': firstName.isEmpty ? getDefaultName(address) : firstName,
+      'last_name': lastName,
+      'remark_name': remarkName,
       'type': type,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options) : null,
-      'data': data != null ? jsonEncode(data) : null,
+      'options': options != null ? jsonEncode(options) : OptionsSchema(),
+      'data': data != null ? jsonEncode(data) : Map(),
     };
     return map;
   }
@@ -212,31 +210,22 @@ class ContactSchema {
       updateAt: e['update_at'],
       address: e['address'] ?? "",
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
-      firstName: e['first_name'] ?? getDefaultName(e['address']),
-      lastName: e['last_name'],
-      remarkName: e['remark_name'],
+      firstName: (e['first_name']?.toString() ?? "").isEmpty ? getDefaultName(e['address']) : e['first_name'],
+      lastName: e['last_name'] ?? "",
+      remarkName: e['remark_name'] ?? "",
       type: e['type'],
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
-
     contact.address = contact.address.replaceAll("\n", "").trim();
-
+    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
     }
-    if (contact.options == null) {
-      contact.options = OptionsSchema();
-    }
-
+    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (contact.data == null) {
-        contact.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        contact.data?.addAll(data);
-      }
+      if (data != null) contact.data?.addAll(data);
     }
     return contact;
   }

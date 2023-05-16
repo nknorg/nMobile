@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/client/rpc.dart';
 import 'package:nmobile/common/settings.dart';
@@ -17,17 +16,18 @@ class TopicType {
 
 class TopicSchema {
   int? id; // (required) <-> id
-  String topic; // (required) <-> topic
-  int? type; // (required) <-> type
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
+
+  String topic; // (required) <-> topic
+  int type; // (required) <-> type
 
   bool joined = false; // <-> joined
   int? subscribeAt; // <-> subscribe_at
   int? expireBlockHeight; // <-> expire_height
 
   File? avatar; // <-> avatar
-  int? count; // <-> count
+  int count; // <-> count
   bool isTop = false; // <-> is_top
 
   OptionsSchema? options; // <-> options
@@ -36,42 +36,38 @@ class TopicSchema {
   TopicSchema({
     this.id,
     required this.topic,
-    this.type,
+    this.type = -1,
     this.createAt,
     this.updateAt,
     this.joined = false,
     this.subscribeAt,
     this.expireBlockHeight,
     this.avatar,
-    this.count,
+    this.count = 0,
     this.isTop = false,
     this.options,
     this.data,
   }) {
-    this.type = this.type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
-
-    if (options == null) {
-      options = OptionsSchema();
-    }
+    if (type == -1) type = (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    if (options == null) options = OptionsSchema();
+    if (data == null) data = Map();
   }
 
   static TopicSchema? create(String? topic, {int? type, int expireHeight = 0}) {
-    if (topic?.isNotEmpty == true) {
-      return TopicSchema(
-        topic: topic!,
-        type: type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic),
-        createAt: DateTime.now().millisecondsSinceEpoch,
-        updateAt: DateTime.now().millisecondsSinceEpoch,
-        joined: expireHeight > 0 ? true : false,
-        subscribeAt: expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null,
-        expireBlockHeight: expireHeight > 0 ? expireHeight : null,
-      );
-    }
-    return null;
+    if (topic == null || topic.isEmpty) return null;
+    return TopicSchema(
+      topic: topic,
+      type: type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic),
+      createAt: DateTime.now().millisecondsSinceEpoch,
+      updateAt: DateTime.now().millisecondsSinceEpoch,
+      joined: expireHeight > 0 ? true : false,
+      subscribeAt: expireHeight > 0 ? DateTime.now().millisecondsSinceEpoch : null,
+      expireBlockHeight: expireHeight > 0 ? expireHeight : null,
+    );
   }
 
   bool get isPrivate {
-    int type = this.type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    if (type == -1) type = (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
     return type == TopicType.privateTopic;
   }
 
@@ -102,7 +98,7 @@ class TopicSchema {
     return topicName;
   }
 
-  String get topicShort {
+  String get topicNameShort {
     String topicNameShort;
     if (isPrivate) {
       int index = topic.lastIndexOf('.');
@@ -152,10 +148,10 @@ class TopicSchema {
     return avatarFile;
   }
 
-  bool isOwner(String? clientAddress) {
-    if (!isPrivate || clientAddress == null || clientAddress.isEmpty) return false;
-    String? accountPubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    return accountPubKey?.isNotEmpty == true && accountPubKey == ownerPubKey;
+  bool isOwner(String? contactAddress) {
+    if (!isPrivate || contactAddress == null || contactAddress.isEmpty) return false;
+    String? pubKey = getPubKeyFromTopicOrChatId(contactAddress);
+    return (pubKey?.isNotEmpty == true) && (pubKey == ownerPubKey);
   }
 
   Future<bool> shouldResubscribe(int? globalHeight) async {
@@ -163,9 +159,8 @@ class TopicSchema {
     globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight != null && globalHeight > 0) {
       return ((expireBlockHeight ?? 0) - globalHeight) < Settings.blockHeightTopicWarnBlockExpire;
-    } else {
-      return true;
     }
+    return true;
   }
 
   bool isSubscribeProgress() {
@@ -205,24 +200,20 @@ class TopicSchema {
   }
 
   Map<String, dynamic> toMap() {
-    if (options == null) {
-      options = OptionsSchema();
-    }
-
     Map<String, dynamic> map = {
       'id': id,
-      'topic': topic,
-      'type': type,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'topic': topic,
+      'type': type,
       'joined': joined ? 1 : 0,
       'subscribe_at': subscribeAt,
       'expire_height': expireBlockHeight,
       'avatar': Path.convert2Local(avatar?.path),
       'count': count,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options) : null,
-      'data': data != null ? jsonEncode(data) : null,
+      'options': options != null ? jsonEncode(options) : OptionsSchema(),
+      'data': data != null ? jsonEncode(data) : Map(),
     };
     return map;
   }
@@ -230,47 +221,33 @@ class TopicSchema {
   static TopicSchema fromMap(Map<String, dynamic> e) {
     var topicSchema = TopicSchema(
       id: e['id'],
-      topic: e['topic'] ?? "",
-      type: e['type'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
+      topic: e['topic'] ?? "",
+      type: e['type'] ?? -1,
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       subscribeAt: e['subscribe_at'],
       expireBlockHeight: e['expire_height'],
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
-      count: e['count'],
+      count: e['count'] ?? 0,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
       data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );
-
+    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       topicSchema.options = OptionsSchema.fromMap(options ?? Map());
     }
-    if (topicSchema.options == null) {
-      topicSchema.options = OptionsSchema();
-    }
-
+    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (topicSchema.data == null) {
-        topicSchema.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        topicSchema.data?.addAll(data);
-      }
+      if (data != null) topicSchema.data?.addAll(data);
     }
-
-    // SUPPORT:START
-    if (e['theme_id'] != null && (e['theme_id'] is int) && e['theme_id'] != 0) {
-      topicSchema.options?.avatarBgColor = Color(e['theme_id']);
-    }
-    // SUPPORT:END
     return topicSchema;
   }
 
   @override
   String toString() {
-    return 'TopicSchema{id: $id, topic: $topic, type: $type, createAt: $createAt, updateAt: $updateAt, joined: $joined, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, isTop: $isTop, options: $options, data: $data}';
+    return 'TopicSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topic: $topic, type: $type, joined: $joined, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, isTop: $isTop, options: $options, data: $data}';
   }
 }

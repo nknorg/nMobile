@@ -26,7 +26,7 @@ class DeviceInfoSchema {
 
   String contactAddress; // (required) <-> contact_address
   String deviceId; //  <-> device_id
-  String? deviceToken; // <-> device_token
+  String deviceToken; // <-> device_token
 
   int onlineAt; // <-> online_at
 
@@ -38,16 +38,13 @@ class DeviceInfoSchema {
     this.updateAt,
     required this.contactAddress,
     required this.deviceId,
-    this.deviceToken,
+    this.deviceToken = "",
     required this.onlineAt,
     this.data,
   }) {
-    if (this.createAt == null) {
-      this.createAt = DateTime.now().millisecondsSinceEpoch;
-    }
-    if (this.updateAt == null) {
-      this.updateAt = DateTime.now().millisecondsSinceEpoch;
-    }
+    if (this.createAt == null) this.createAt = DateTime.now().millisecondsSinceEpoch;
+    if (this.updateAt == null) this.updateAt = DateTime.now().millisecondsSinceEpoch;
+    if (this.data == null) this.data = Map();
   }
 
   String get appName {
@@ -133,9 +130,6 @@ class DeviceInfoSchema {
   }
 
   Map<String, dynamic> toMap() {
-    if (data == null) {
-      data = new Map<String, dynamic>();
-    }
     Map<String, dynamic> map = {
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
@@ -143,7 +137,7 @@ class DeviceInfoSchema {
       'device_id': deviceId,
       'device_token': deviceToken,
       'online_at': onlineAt,
-      'data': data != null ? jsonEncode(data) : null,
+      'data': data != null ? jsonEncode(data) : Map(),
     };
     return map;
   }
@@ -155,18 +149,13 @@ class DeviceInfoSchema {
       updateAt: e['update_at'],
       contactAddress: e['contact_address'] ?? "",
       deviceId: e['device_id'] ?? "",
-      deviceToken: e['device_token'],
+      deviceToken: e['device_token'] ?? "",
       onlineAt: e['online_at'],
     );
-
+    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (deviceInfo.data == null) {
-        deviceInfo.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        deviceInfo.data?.addAll(data);
-      }
+      if (data != null) deviceInfo.data?.addAll(data);
     }
     return deviceInfo;
   }

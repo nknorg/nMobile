@@ -14,7 +14,7 @@ class DeviceInfoStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_deviceInfo", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_deviceInfo", onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -154,7 +154,7 @@ class DeviceInfoStorage with Tag {
         // logText += "\n      $map";
         results.add(DeviceInfoSchema.fromMap(map));
       });
-      // logger.v("$TAG - queryListLatest - items:$logText");
+      // logger.v("$TAG - queryListLatest - contactAddress:$contactAddress - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
