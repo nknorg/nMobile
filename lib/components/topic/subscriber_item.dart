@@ -68,14 +68,14 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   }
 
   void _refreshContact() {
-    String? address = widget.subscriber.clientAddress;
+    String? address = widget.subscriber.contactAddress;
     if ((contact?.address.isNotEmpty == true) && (contact?.address == address)) return;
     if (widget.subscriber.temp?["contact"] == null) {
       contactCommon.query(address).then((result) async {
         if (result == null) {
           result = await contactCommon.addByType(address, ContactType.none, fetchWalletAddress: false, notify: true);
         }
-        if ((address == result?.address) && (address == widget.subscriber.clientAddress)) {
+        if ((address == result?.address) && (address == widget.subscriber.contactAddress)) {
           if (widget.subscriber.temp == null) widget.subscriber.temp = Map();
           widget.subscriber.temp?["contact"] = result;
           setState(() {
@@ -155,7 +155,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                           : _getNameLabels(this.widget.topic, this.widget.subscriber, this.contact),
                       SizedBox(height: 6),
                       Label(
-                        this.widget.bodyDesc ?? this.widget.subscriber.clientAddress,
+                        this.widget.bodyDesc ?? this.widget.subscriber.contactAddress,
                         maxLines: 1,
                         type: LabelType.bodyRegular,
                         overflow: TextOverflow.ellipsis,
@@ -171,15 +171,15 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
 
   Widget _getNameLabels(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
     String displayName = contact?.displayName ?? " ";
-    String clientAddress = subscriber.clientAddress;
+    String contactAddress = subscriber.contactAddress;
     int? status = subscriber.status;
 
     // _mark
     List<String> marks = [];
-    if (clientAddress == clientCommon.address) {
+    if (contactAddress == clientCommon.address) {
       marks.add(Settings.locale((s) => s.you));
     }
-    if (topic?.isOwner(clientAddress) == true) {
+    if (topic?.isOwner(contactAddress) == true) {
       marks.add(Settings.locale((s) => s.owner));
     } else if (topic?.isOwner(clientCommon.address) == true) {
       if (status == SubscriberStatus.InvitedSend) {
@@ -233,7 +233,7 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
   Widget _getTailAction(TopicSchema? topic, SubscriberSchema subscriber, ContactSchema? contact) {
     if (topic == null || !topic.isPrivate) return SizedBox.shrink();
     if (!clientCommon.isClientOK) return SizedBox.shrink();
-    if (subscriber.clientAddress == clientCommon.address) return SizedBox.shrink();
+    if (subscriber.contactAddress == clientCommon.address) return SizedBox.shrink();
     if (!topic.isOwner(clientCommon.address)) return SizedBox.shrink();
 
     return SizedBox(
@@ -276,10 +276,10 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
                   double? fee = await topicCommon.getTopicSubscribeFee(this.context);
                   if (fee == null) return;
                   await topicCommon.kick(
-                    topic.topic,
+                    topic.topicId,
                     topic.isPrivate,
                     topic.isOwner(clientCommon.address),
-                    subscriber.clientAddress,
+                    subscriber.contactAddress,
                     fee: fee,
                     toast: true,
                   );
@@ -302,10 +302,10 @@ class _SubscriberItemState extends BaseStateFulWidgetState<SubscriberItem> {
               if (fee == null) return;
             }
             await topicCommon.invitee(
-              topic.topic,
+              topic.topicId,
               topic.isPrivate,
               topic.isOwner(clientCommon.address),
-              subscriber.clientAddress,
+              subscriber.contactAddress,
               fee: fee,
               toast: true,
               sendMsg: true,

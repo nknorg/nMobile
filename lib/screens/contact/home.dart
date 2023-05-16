@@ -152,7 +152,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
 
     // topic listen
     _addTopicSubscription = topicCommon.addStream.listen((TopicSchema schema) {
-      if (_allTopics.indexWhere((element) => element.topic == schema.topic) < 0) {
+      if (_allTopics.indexWhere((element) => element.topicId == schema.topicId) < 0) {
         _allTopics.insert(0, schema);
         _searchAction(_searchController.text);
       }
@@ -162,9 +162,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
     //   _searchAction(_searchController.text);
     // });
     _updateContactSubscription = topicCommon.updateStream.listen((TopicSchema event) {
-      _allTopics = _allTopics.map((e) => e.topic == event.topic ? event : e).toList();
+      _allTopics = _allTopics.map((e) => e.topicId == event.topicId ? event : e).toList();
       if (!event.joined) {
-        _allTopics = _allTopics.where((element) => element.topic != event.topic).toList();
+        _allTopics = _allTopics.where((element) => element.topicId != event.topicId).toList();
       }
       _searchAction(_searchController.text);
     });
@@ -259,7 +259,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       setState(() {
         /*_searchStrangers = _allStrangers.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();*/
         _searchFriends = _allFriends.where((ContactSchema e) => e.displayName.toLowerCase().contains(val.toLowerCase())).toList();
-        _searchTopics = _allTopics.where((TopicSchema e) => e.topic.contains(val)).toList();
+        _searchTopics = _allTopics.where((TopicSchema e) => e.topicId.contains(val)).toList();
         _searchGroups = _allGroups.where((PrivateGroupSchema e) => e.name.contains(val)).toList();
       });
     }
@@ -562,8 +562,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               _onTapTopicItem(item);
             },
             bgColor: Colors.transparent,
-            bodyTitle: item.topicShort,
-            bodyDesc: item.topic,
+            bodyTitle: item.topicNameShort,
+            bodyDesc: item.topicId,
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
           Divider(
@@ -583,8 +583,8 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
               title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
               contentWidget: TopicItem(
                 topic: item,
-                bodyTitle: item.topicShort,
-                bodyDesc: item.topic,
+                bodyTitle: item.topicNameShort,
+                bodyDesc: item.topicId,
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
               agree: Button(
@@ -596,7 +596,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                   double? fee = await topicCommon.getTopicSubscribeFee(this.context);
                   if (fee == null) return;
                   Loading.show();
-                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topic, fee: fee, toast: true);
+                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topicId, fee: fee, toast: true);
                   Loading.dismiss();
                   if (deleted != null) {
                     Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));

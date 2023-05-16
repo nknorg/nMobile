@@ -130,7 +130,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
         bool success = await contactCommon.setType(exist.address, ContactType.friend, notify: true);
         if (success) exist.type = ContactType.friend;
         success = await contactCommon.setOtherRemarkName(exist.address, remarkName, notify: true);
-        if (success) exist.remarkName = remarkName;
+        if (success) exist.remarkName = remarkName ?? "";
         var data = await contactCommon.setOtherRemarkAvatar(exist.address, remarkAvatar, notify: true);
         if (data != null) exist.data = data;
         data = await contactCommon.setNotes(exist.address, note, notify: true);
@@ -139,7 +139,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       } else {
         ContactSchema? schema = ContactSchema.create(clientAddress, ContactType.friend);
         if (schema != null) {
-          schema.remarkName = remarkName;
+          schema.remarkName = remarkName ?? "";
           await schema.nknWalletAddress;
           schema.data = {"remarkAvatar": remarkAvatar, "notes": note};
         }

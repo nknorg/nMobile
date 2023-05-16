@@ -21,7 +21,7 @@ class TopicHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String name = this.topic.topicShort;
+    String name = this.topic.topicNameShort;
     return GestureDetector(
       onTap: () {
         if (this.onTap != null) this.onTap!();
