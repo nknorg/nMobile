@@ -59,7 +59,7 @@ class SessionCommon with Tag {
       String? groupSenderName;
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         if (lastMsg != null) {
-          ContactSchema? _sender = await contactCommon.queryByClientAddress(lastMsg?.sender);
+          ContactSchema? _sender = await contactCommon.query(lastMsg?.sender, fetchWalletAddress: false);
           if (_sender?.displayName.isNotEmpty == true) {
             groupSenderName = _sender?.displayName ?? " ";
           }
@@ -149,7 +149,7 @@ class SessionCommon with Tag {
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         String? newGroupSenderName;
         if (newLastMsg != null) {
-          ContactSchema? _sender = await contactCommon.queryByClientAddress(newLastMsg.sender);
+          ContactSchema? _sender = await contactCommon.query(newLastMsg.sender, fetchWalletAddress: false);
           if (_sender?.displayName.isNotEmpty == true) {
             newGroupSenderName = _sender?.displayName ?? " ";
           }
@@ -164,7 +164,7 @@ class SessionCommon with Tag {
       exist.lastMessageAt = newLastMsgAt;
       exist.unReadCount = newUnReadCount;
       logger.d('$TAG - update - END - targetId:$targetId - type:$type - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
-      bool success = await SessionStorage.instance.updateLastMessageAndUnReadCount(exist);
+      bool success = await SessionStorage.instance.setLastMessageAndUnReadCount(exist);
       if (success && notify) queryAndNotify(targetId, type);
     };
     // queue
@@ -196,8 +196,8 @@ class SessionCommon with Tag {
     return SessionStorage.instance.queryListRecent(offset: offset, limit: limit);
   }
 
-  Future<int> unreadCount() {
-    return SessionStorage.instance.unReadCount();
+  Future<int> totalUnReadCount() {
+    return SessionStorage.instance.querySumUnReadCount();
   }
 
   /*Future<bool> setLastMessageAndUnReadCount(String? targetId, int type, MessageSchema? lastMessage, int unread, {int? sendAt, bool notify = false}) async {
@@ -223,14 +223,14 @@ class SessionCommon with Tag {
 
   Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.updateUnReadCount(targetId, type, unread);
+    bool success = await SessionStorage.instance.setReadCount(targetId, type, unread);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
 
   Future<bool> setTop(String? targetId, int? type, bool top, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.updateIsTop(targetId, type, top);
+    bool success = await SessionStorage.instance.setTop(targetId, type, top);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
