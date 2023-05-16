@@ -23,8 +23,8 @@ class SubscriberStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `topic` VARCHAR(200),
-        `chat_id` VARCHAR(200),
+        `topic` VARCHAR(100),
+        `contact_address` VARCHAR(100),
         `status` INT,
         `perm_page` INT,
         `data` TEXT
@@ -33,9 +33,8 @@ class SubscriberStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_chat_id` ON `$tableName` (`topic`, `chat_id`)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_contact_address` ON `$tableName` (`topic`, `contact_address`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_create_at` ON `$tableName` (`topic`, `create_at`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_update_at` ON `$tableName` (`topic`, `update_at`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_status_create_at` ON `$tableName` (`topic`, `status`, `create_at`)');
@@ -45,7 +44,7 @@ class SubscriberStorage with Tag {
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
-    if (schema == null || schema.topic.isEmpty || schema.clientAddress.isEmpty) return null;
+    if (schema == null || schema.topic.isEmpty || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -59,10 +58,8 @@ class SubscriberStorage with Tag {
             List<Map<String, dynamic>> res = await txn.query(
               tableName,
               columns: ['*'],
-              where: 'topic = ? AND chat_id = ?',
-              whereArgs: [schema.topic, schema.clientAddress],
-              offset: 0,
-              limit: 1,
+              where: 'topic = ? AND contact_address = ?',
+              whereArgs: [schema.topic, schema.contactAddress],
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -84,52 +81,24 @@ class SubscriberStorage with Tag {
     });
   }
 
-  Future<SubscriberSchema?> query(int? subscriberId) async {
+  Future<SubscriberSchema?> query(String? topic, String? contactAddress) async {
     if (db?.isOpen != true) return null;
-    if (subscriberId == null || subscriberId == 0) return null;
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'id = ?',
-          whereArgs: [subscriberId],
-          offset: 0,
-          limit: 1,
+          where: 'topic = ? AND contact_address = ?',
+          whereArgs: [topic, contactAddress],
         );
       });
       if (res != null && res.length > 0) {
         SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
-        // logger.v("$TAG - query - success - subscriberId:$subscriberId - schema:$schema");
+        // logger.v("$TAG - query - success - topic:$topic - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      // logger.v("$TAG - query - empty - subscriberId:$subscriberId");
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    return null;
-  }
-
-  Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
-    if (db?.isOpen != true) return null;
-    if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    try {
-      List<Map<String, dynamic>>? res = await db?.transaction((txn) {
-        return txn.query(
-          tableName,
-          columns: ['*'],
-          where: 'topic = ? AND chat_id = ?',
-          whereArgs: [topic, chatId],
-          offset: 0,
-          limit: 1,
-        );
-      });
-      if (res != null && res.length > 0) {
-        SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
-        // logger.v("$TAG - queryByTopicChatId - success - topic:$topic - chatId:$chatId - schema:$schema");
-        return schema;
-      }
-      // logger.v("$TAG - queryByTopicChatId - empty -  - topic:$topic - chatId:$chatId");
+      // logger.v("$TAG - query - empty -  - topic:$topic - contactAddress:$contactAddress");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -273,9 +242,9 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
-  Future<bool> setStatus(int? subscriberId, int? status) async {
+  Future<bool> setStatus(String? topic, String? contactAddress, int? status) async {
     if (db?.isOpen != true) return false;
-    if (subscriberId == null || subscriberId == 0 || status == null) return false;
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -285,15 +254,15 @@ class SubscriberStorage with Tag {
                   'status': status,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [subscriberId],
+                where: 'topic = ? AND contact_address = ?',
+                whereArgs: [topic, contactAddress],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setStatus - success - subscriberId:$subscriberId - status:$status");
+              // logger.v("$TAG - setStatus - success - topic:$topic - contactAddress:$contactAddress - status:$status");
               return true;
             }
-            logger.w("$TAG - setStatus - fail - subscriberId:$subscriberId - status:$status");
+            logger.w("$TAG - setStatus - fail - topic:$topic - contactAddress:$contactAddress - status:$status");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -302,9 +271,9 @@ class SubscriberStorage with Tag {
         false;
   }
 
-  Future<bool> setPermPage(int? subscriberId, int? permPage) async {
+  Future<bool> setPermPage(String? topic, String? contactAddress, int? permPage) async {
     if (db?.isOpen != true) return false;
-    if (subscriberId == null || subscriberId == 0) return false;
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -314,15 +283,15 @@ class SubscriberStorage with Tag {
                   'perm_page': permPage,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [subscriberId],
+                where: 'topic = ? AND contact_address = ?',
+                whereArgs: [topic, contactAddress],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setPermPage - success - subscriberId:$subscriberId - permPage:$permPage");
+              // logger.v("$TAG - setPermPage - success - topic:$topic - contactAddress:$contactAddress - permPage:$permPage");
               return true;
             }
-            logger.w("$TAG - setPermPage - fail - subscriberId:$subscriberId - permPage:$permPage");
+            logger.w("$TAG - setPermPage - fail - topic:$topic - contactAddress:$contactAddress - permPage:$permPage");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -331,9 +300,9 @@ class SubscriberStorage with Tag {
         false;
   }
 
-  Future<Map<String, dynamic>?> setData(int? subscriberId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+  Future<Map<String, dynamic>?> setData(String? topic, String? contactAddress, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
-    if (subscriberId == null || subscriberId == 0) return null;
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
@@ -341,31 +310,29 @@ class SubscriberStorage with Tag {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'id = ?',
-                whereArgs: [subscriberId],
-                offset: 0,
-                limit: 1,
+                where: 'topic = ? AND contact_address = ?',
+                whereArgs: [topic, contactAddress],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setData - no exists - subscriberId:$subscriberId");
+                logger.w("$TAG - setData - no exists - topic:$topic - contactAddress:$contactAddress");
                 return null;
               }
               SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
+              data.addAll(added ?? Map());
               int count = await txn.update(
                 tableName,
                 {
                   'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'id = ?',
-                whereArgs: [subscriberId],
+                where: 'topic = ? AND contact_address = ?',
+                whereArgs: [topic, contactAddress],
               );
-              if (count <= 0) logger.w("$TAG - setData - fail - topic:${schema.topic} - chatId:${schema.clientAddress} - newData:$data");
+              if (count <= 0) logger.w("$TAG - setData - fail - topic:$topic - contactAddress:$contactAddress - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {

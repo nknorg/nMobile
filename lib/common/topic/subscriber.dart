@@ -76,7 +76,7 @@ class SubscriberCommon with Tag {
       }
       SubscriberSchema? nodeItem;
       for (SubscriberSchema item in nodeSubscribers) {
-        if (dbItem.clientAddress == item.clientAddress) {
+        if (dbItem.contactAddress == item.contactAddress) {
           logger.d("$TAG - refreshSubscribers - start check db_item - status:${item.status} - perm:${item.permPage} - subscriber:$dbItem");
           nodeItem = item;
           break;
@@ -109,7 +109,7 @@ class SubscriberCommon with Tag {
       if (nodeItem == null) {
         if (dbItem.status != SubscriberStatus.None) {
           logger.w("$TAG - refreshSubscribers - DB delete because node no find - DB:$dbItem");
-          await setStatus(dbItem.id, SubscriberStatus.None, notify: true);
+          await setStatus(dbItem.topic, dbItem.contactAddress, SubscriberStatus.None, notify: true);
         }
       } else {
         if (dbItem.status == nodeItem.status) {
@@ -119,13 +119,13 @@ class SubscriberCommon with Tag {
             logger.i("$TAG - refreshSubscribers - DB is receive invited so no update - DB:$dbItem - node:$nodeItem");
           } else {
             logger.w("$TAG - refreshSubscribers - DB update to sync node - status:${dbItem.status}!=${nodeItem.status} - DB:$dbItem - node:$nodeItem");
-            await setStatus(dbItem.id, nodeItem.status, notify: true);
+            await setStatus(dbItem.topic, dbItem.contactAddress, nodeItem.status, notify: true);
           }
         }
         // prmPage
         if ((dbItem.permPage != nodeItem.permPage) && (nodeItem.permPage != null)) {
           logger.w("$TAG - refreshSubscribers - DB set permPage to sync node - perm:${dbItem.permPage}!=${nodeItem.permPage} - DB:$dbItem - node:$nodeItem");
-          await setPermPage(dbItem.id, nodeItem.permPage, notify: true);
+          await setPermPage(dbItem.topic, dbItem.contactAddress, nodeItem.permPage, notify: true);
         }
       }
     }
@@ -134,7 +134,7 @@ class SubscriberCommon with Tag {
       SubscriberSchema nodeItem = nodeSubscribers[i];
       bool findInDB = false;
       for (SubscriberSchema dbItem in dbSubscribers) {
-        if (dbItem.clientAddress == nodeItem.clientAddress) {
+        if (dbItem.contactAddress == nodeItem.contactAddress) {
           findInDB = true;
           break;
         }
@@ -196,7 +196,7 @@ class SubscriberCommon with Tag {
         bool find = false;
         for (int j = 0; j < permissions.length; j++) {
           SubscriberSchema permission = permissions[j];
-          if (subscriber.clientAddress.isNotEmpty && (subscriber.clientAddress == permission.clientAddress)) {
+          if (subscriber.contactAddress.isNotEmpty && (subscriber.contactAddress == permission.contactAddress)) {
             if (permission.status == InitialAcceptStatus) {
               permission.status = SubscriberStatus.Subscribed;
             } else if (permission.status == InitialRejectStatus) {
@@ -215,7 +215,7 @@ class SubscriberCommon with Tag {
       }
       for (int i = 0; i < permissions.length; i++) {
         SubscriberSchema permission = permissions[i];
-        if (subscribers.where((element) => element.clientAddress.isNotEmpty && (element.clientAddress == permission.clientAddress)).toList().isEmpty) {
+        if (subscribers.where((element) => element.contactAddress.isNotEmpty && (element.contactAddress == permission.contactAddress)).toList().isEmpty) {
           if (ownerPubKey != permission.pubKey) {
             logger.w("$TAG - _mergeSubscribersAndPermissionsFromNode - no subscribe but in permission - status:${permission.status} - permission:$permission");
             results.add(permission); // status == InitialAcceptStatus/InitialRejectStatus
@@ -227,7 +227,7 @@ class SubscriberCommon with Tag {
     }
     List<int?> statusList = results.map((e) => e.status).toList();
     List<int?> permList = results.map((e) => e.permPage).toList();
-    List<String?> addressList = results.map((e) => e.clientAddress).toList();
+    List<String?> addressList = results.map((e) => e.contactAddress).toList();
     logger.d("$TAG - _mergeSubscribersAndPermissionsFromNode - topic:$topic - mete:${!meta} - acceptAll:$_acceptAll - subscribers_count:${subscribers.length} - permissions_count:${permissions.length} - result_status:$statusList - result_perm:$permList - result_address:$addressList");
     return results;
   }
@@ -238,8 +238,8 @@ class SubscriberCommon with Tag {
 
   // caller = everyone, result = [acceptAll, permPage, accept, reject]
   @Deprecated('Replace by PrivateGroup')
-  Future<List<dynamic>> findPermissionFromNode(String? topic, String? clientAddress, {bool txPool = true}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) {
+  Future<List<dynamic>> findPermissionFromNode(String? topic, String? contactAddress, {bool txPool = true}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) {
       return [null, null, null, null];
     }
     // permissions
@@ -254,7 +254,7 @@ class SubscriberCommon with Tag {
       return [_acceptAll, null, true, false];
     }
     // find
-    List<SubscriberSchema> finds = permissions.where((element) => element.clientAddress == clientAddress).toList();
+    List<SubscriberSchema> finds = permissions.where((element) => element.contactAddress == contactAddress).toList();
     if (finds.isNotEmpty) {
       int? permPage = finds[0].permPage;
       bool isAccept = finds[0].status == InitialAcceptStatus;
@@ -330,7 +330,7 @@ class SubscriberCommon with Tag {
     } else {
       List<int?> statusList = _permissions.map((e) => e.status).toList();
       List<int?> permList = _permissions.map((e) => e.permPage).toList();
-      List<String?> addressList = _permissions.map((e) => e.clientAddress).toList();
+      List<String?> addressList = _permissions.map((e) => e.contactAddress).toList();
       logger.d("$TAG - _getPermissionsFromNode - topic:$topic - count:${_permissions.length} - statusList:$statusList - permList:$permList - addressList:$addressList");
     }
     return [_acceptAll, _permissions];
@@ -341,83 +341,83 @@ class SubscriberCommon with Tag {
   /// ***********************************************************************************************************
 
   // status: InvitedSend (caller = owner)
-  Future<SubscriberSchema?> onInvitedSend(String? topic, String? clientAddress, int? permPage) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onInvitedSend(String? topic, String? contactAddress, int? permPage) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
+    SubscriberSchema? subscriber = await query(topic, contactAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.InvitedSend, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, contactAddress, SubscriberStatus.InvitedSend, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.InvitedSend) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.InvitedSend, notify: true);
+      bool success = await setStatus(topic, contactAddress, SubscriberStatus.InvitedSend, notify: true);
       if (success) subscriber.status = SubscriberStatus.InvitedSend;
     }
     // permPage
     if ((subscriber.permPage != permPage) && (permPage != null)) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      bool success = await setPermPage(topic, contactAddress, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
     return subscriber;
   }
 
   // status: InvitedReceipt (caller = owner)
-  Future<SubscriberSchema?> onInvitedReceipt(String? topic, String? clientAddress) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onInvitedReceipt(String? topic, String? contactAddress) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
+    SubscriberSchema? subscriber = await query(topic, contactAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.InvitedReceipt, null), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, contactAddress, SubscriberStatus.InvitedReceipt, null), notify: true);
     }
     if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.InvitedReceipt) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.InvitedReceipt, notify: true);
+      bool success = await setStatus(topic, contactAddress, SubscriberStatus.InvitedReceipt, notify: true);
       if (success) subscriber.status = SubscriberStatus.InvitedReceipt;
     }
     return subscriber;
   }
 
   // status: Subscribed (caller = self + other)
-  Future<SubscriberSchema?> onSubscribe(String? topic, String? clientAddress, int? permPage) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onSubscribe(String? topic, String? contactAddress, int? permPage) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
+    SubscriberSchema? subscriber = await query(topic, contactAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Subscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, contactAddress, SubscriberStatus.Subscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.Subscribed) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.Subscribed, notify: true);
+      bool success = await setStatus(topic, contactAddress, SubscriberStatus.Subscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Subscribed;
     }
     // permPage
     if ((subscriber.permPage != permPage) && (permPage != null)) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      bool success = await setPermPage(topic, contactAddress, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
     return subscriber;
   }
 
   // status: Unsubscribed (caller = self + other)
-  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? clientAddress, {int? permPage}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? contactAddress, {int? permPage}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
+    SubscriberSchema? subscriber = await query(topic, contactAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, contactAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.Unsubscribed) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+      bool success = await setStatus(topic, contactAddress, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
     }
     // permPage
     if ((subscriber.permPage != permPage) && (permPage != null)) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      bool success = await setPermPage(topic, contactAddress, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
     // delete (just node sync can delete)
@@ -427,22 +427,22 @@ class SubscriberCommon with Tag {
   }
 
   // status: Kick (caller = owner)
-  Future<SubscriberSchema?> onKickOut(String? topic, String? clientAddress, {int? permPage}) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onKickOut(String? topic, String? contactAddress, {int? permPage}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     // subscriber
-    SubscriberSchema? subscriber = await queryByTopicChatId(topic, clientAddress);
+    SubscriberSchema? subscriber = await query(topic, contactAddress);
     if (subscriber == null) {
-      subscriber = await add(SubscriberSchema.create(topic, clientAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
+      subscriber = await add(SubscriberSchema.create(topic, contactAddress, SubscriberStatus.Unsubscribed, permPage), notify: true);
     }
     if (subscriber == null) return null;
     // status
     if (subscriber.status != SubscriberStatus.Unsubscribed) {
-      bool success = await setStatus(subscriber.id, SubscriberStatus.Unsubscribed, notify: true);
+      bool success = await setStatus(topic, contactAddress, SubscriberStatus.Unsubscribed, notify: true);
       if (success) subscriber.status = SubscriberStatus.Unsubscribed;
     }
     // permPage
     if ((subscriber.permPage != permPage) && (permPage != null)) {
-      bool success = await setPermPage(subscriber.id, permPage, notify: true);
+      bool success = await setPermPage(topic, contactAddress, permPage, notify: true);
       if (success) subscriber.permPage = permPage;
     }
     // delete (just node sync can delete)
@@ -475,13 +475,9 @@ class SubscriberCommon with Tag {
     return count;
   }*/
 
-  Future<SubscriberSchema?> query(int? subscriberId) {
-    return SubscriberStorage.instance.query(subscriberId);
-  }
-
-  Future<SubscriberSchema?> queryByTopicChatId(String? topic, String? chatId) async {
+  Future<SubscriberSchema?> query(String? topic, String? chatId) async {
     if (topic == null || topic.isEmpty || chatId == null || chatId.isEmpty) return null;
-    return await SubscriberStorage.instance.queryByTopicChatId(topic, chatId);
+    return await SubscriberStorage.instance.query(topic, chatId);
   }
 
   Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int offset = 0, int limit = 20}) {
@@ -514,48 +510,48 @@ class SubscriberCommon with Tag {
     return maxPermPage;
   }
 
-  Future<bool> setStatus(int? subscriberId, int? status, {bool notify = false}) async {
-    if (subscriberId == null || subscriberId == 0) return false;
-    bool success = await SubscriberStorage.instance.setStatus(subscriberId, status);
-    if (success && notify) queryAndNotify(subscriberId);
+  Future<bool> setStatus(String? topic, String? contactAddress, int? status, {bool notify = false}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    bool success = await SubscriberStorage.instance.setStatus(topic, contactAddress, status);
+    if (success && notify) queryAndNotify(topic, contactAddress);
     return success;
   }
 
-  Future<bool> setPermPage(int? subscriberId, int? permPage, {bool notify = false}) async {
-    if (subscriberId == null || subscriberId == 0) return false;
+  Future<bool> setPermPage(String? topic, String? contactAddress, int? permPage, {bool notify = false}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     if (permPage != null && permPage < 0) return false;
-    bool success = await SubscriberStorage.instance.setPermPage(subscriberId, permPage);
-    if (success && notify) queryAndNotify(subscriberId);
+    bool success = await SubscriberStorage.instance.setPermPage(topic, contactAddress, permPage);
+    if (success && notify) queryAndNotify(topic, contactAddress);
     return success;
   }
 
-  Future<bool> setStatusProgressStart(int? subscriberId, int status, int? nonce, double fee, {bool notify = false}) async {
-    if (subscriberId == null || subscriberId == 0) return false;
-    var data = await SubscriberStorage.instance.setData(subscriberId, {
+  Future<bool> setStatusProgressStart(String? topic, String? contactAddress, int status, int? nonce, double fee, {bool notify = false}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    var data = await SubscriberStorage.instance.setData(topic, contactAddress, {
       "permission_progress": status,
       "progress_permission_nonce": nonce,
       "progress_permission_fee": fee,
     });
-    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - new:$data - subscriberId:$subscriberId");
-    if ((data != null) && notify) queryAndNotify(subscriberId);
+    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - new:$data - topic:$topic - contactAddress:$contactAddress");
+    if ((data != null) && notify) queryAndNotify(topic, contactAddress);
     return data != null;
   }
 
-  Future<bool> setStatusProgressEnd(int? subscriberId, {bool notify = false}) async {
-    if (subscriberId == null || subscriberId == 0) return false;
-    var data = await SubscriberStorage.instance.setData(subscriberId, null, removeKeys: [
+  Future<bool> setStatusProgressEnd(String? topic, String? contactAddress, {bool notify = false}) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    var data = await SubscriberStorage.instance.setData(topic, contactAddress, null, removeKeys: [
       "permission_progress",
       "progress_permission_nonce",
       "progress_permission_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - new:$data - subscriberId:$subscriberId");
-    if ((data != null) && notify) queryAndNotify(subscriberId);
+    logger.d("$TAG - setStatusProgressEnd - new:$data - topic:$topic - contactAddress:$contactAddress");
+    if ((data != null) && notify) queryAndNotify(topic, contactAddress);
     return data != null;
   }
 
-  Future queryAndNotify(int? subscriberId) async {
-    if (subscriberId == null || subscriberId == 0) return;
-    SubscriberSchema? updated = await query(subscriberId);
+  Future queryAndNotify(String? topic, String? contactAddress) async {
+    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return;
+    SubscriberSchema? updated = await query(topic, contactAddress);
     if (updated != null) {
       _updateSink.add(updated);
     }
