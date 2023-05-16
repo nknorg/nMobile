@@ -144,7 +144,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     String? groupId = widget.arguments?[PrivateGroupProfileScreen.argPrivateGroupId];
     if (schema != null) {
       this._privateGroup = schema;
-    } else if (privateGroupSchema != null && privateGroupSchema.id != 0) {
+    } else if (privateGroupSchema != null) {
       this._privateGroup = privateGroupSchema;
     } else if (groupId != null) {
       this._privateGroup = await privateGroupCommon.queryGroup(groupId);
@@ -190,7 +190,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
       remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     }
 
-    privateGroupCommon.updateGroupAvatar(_privateGroup?.groupId, remarkAvatarLocalPath, notify: true); // await
+    privateGroupCommon.setAvatar(_privateGroup?.groupId, remarkAvatarLocalPath, notify: true); // await
   }
 
   _updateBurnIfNeed() {
