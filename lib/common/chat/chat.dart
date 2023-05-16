@@ -76,7 +76,7 @@ class ChatCommon with Tag {
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
       if (message.canReceipt) {
-        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringSimple()}");
         if (message.contentType == MessageContentType.ipfs) {
           if (!ipfsReset) continue;
           String? ipfsHash = MessageOptions.getIpfsHash(message.options);
@@ -89,7 +89,7 @@ class ChatCommon with Tag {
         message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
       } else {
         // lost some msg, need resend
-        logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:${message.toStringNoContent()}");
+        logger.w("$TAG - resetMessageSending - send err delete - targetId:${message.targetId} - message:${message.toStringSimple()}");
         int count = await messageCommon.delete(message.msgId, message.contentType);
         if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
       }
@@ -106,16 +106,16 @@ class ChatCommon with Tag {
     String? clientAddress = message.isOutbound ? (message.isTargetContact ? message.targetId : null) : message.sender;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     if (message.contentType == MessageContentType.piece) return null;
-    ContactSchema? exist = await contactCommon.queryByClientAddress(clientAddress);
+    ContactSchema? exist = await contactCommon.query(clientAddress);
     if (message.isTargetSelf) return exist;
     // duplicated
     if (exist == null) {
       logger.i("$TAG - contactHandle - new - clientAddress:$clientAddress");
       int type = message.isTargetContact ? (message.canDisplay ? ContactType.stranger : ContactType.none) : ContactType.none;
-      exist = await contactCommon.addByType(clientAddress, type, notify: true);
+      exist = await contactCommon.addByType(clientAddress, type, fetchWalletAddress: false, notify: true);
     } else {
       if (message.canDisplay && (exist.type == ContactType.none) && message.isTargetContact) {
-        bool success = await contactCommon.setType(exist.id, ContactType.stranger, notify: true);
+        bool success = await contactCommon.setType(exist.address, ContactType.stranger, notify: true);
         if (success) exist.type = ContactType.stranger;
       }
     }
@@ -129,7 +129,7 @@ class ChatCommon with Tag {
     if ((profileVersion != null) && profileVersion.isNotEmpty) {
       if (!contactCommon.isProfileVersionSame(exist.profileVersion, profileVersion)) {
         logger.i("$TAG - contactHandle - profile need request - native:${exist.profileVersion} - remote:$profileVersion - clientAddress:$clientAddress");
-        chatOutCommon.sendContactProfileRequest(exist.clientAddress, ContactRequestType.full, exist.profileVersion); // await
+        chatOutCommon.sendContactProfileRequest(exist.address, ContactRequestType.full, exist.profileVersion); // await
       }
     }
     // burning
@@ -145,19 +145,20 @@ class ChatCommon with Tag {
           // side updated latest
           exist.options?.deleteAfterSeconds = burnAfterSeconds;
           exist.options?.updateBurnAfterAt = updateBurnAfterAt;
-          await contactCommon.setOptionsBurn(exist, burnAfterSeconds, updateBurnAfterAt, notify: true);
+          var options = await contactCommon.setOptionsBurn(exist.address, burnAfterSeconds, updateBurnAfterAt, notify: true);
+          if (options != null) exist.options = options;
         } else {
           // mine updated latest
           if ((message.sendAt ?? 0) > existUpdateAt) {
             logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}");
             DeviceInfoSchema? deviceInfo;
             if (message.deviceId.isNotEmpty) {
-              deviceInfo = await deviceInfoCommon.queryByDeviceId(clientAddress, message.deviceId);
+              deviceInfo = await deviceInfoCommon.query(clientAddress, message.deviceId);
             } else {
               deviceInfo = await deviceInfoCommon.queryLatest(clientAddress);
             }
             if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              chatOutCommon.sendContactOptionsBurn(exist.clientAddress, (existSeconds ?? 0), existUpdateAt); // await
+              chatOutCommon.sendContactOptionsBurn(exist.address, (existSeconds ?? 0), existUpdateAt); // await
             }
           }
         }
@@ -173,7 +174,7 @@ class ChatCommon with Tag {
     // latest
     DeviceInfoSchema? latest;
     if (message.deviceId.isNotEmpty) {
-      latest = await deviceInfoCommon.queryByDeviceId(clientAddress, message.deviceId);
+      latest = await deviceInfoCommon.query(clientAddress, message.deviceId);
     } else {
       latest = await deviceInfoCommon.queryLatest(clientAddress);
     }
@@ -217,7 +218,7 @@ class ChatCommon with Tag {
         }
       } else {
         logger.i("$TAG - deviceInfoHandle - new add - new:$deviceId - old${latest.deviceId} - sender:${message.sender}");
-        DeviceInfoSchema? _exist = await deviceInfoCommon.queryByDeviceId(latest.contactAddress, deviceId);
+        DeviceInfoSchema? _exist = await deviceInfoCommon.query(latest.contactAddress, deviceId);
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
           if (!sameProfile) {
@@ -241,7 +242,7 @@ class ChatCommon with Tag {
     if ((latest?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
       logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken} - sender:${message.sender}");
       bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
-      if (success) latest?.deviceToken = deviceToken;
+      if (success) latest?.deviceToken = deviceToken ?? "";
     }
     // online_at
     int nowAt = DateTime.now().millisecondsSinceEpoch;
@@ -264,14 +265,14 @@ class ChatCommon with Tag {
     if (!message.canDisplay && !message.isTopicAction) return null; // topic action need topic
     if (message.contentType == MessageContentType.piece) return null;
     // duplicated
-    TopicSchema? exists = await topicCommon.queryByTopic(message.targetId);
+    TopicSchema? exists = await topicCommon.query(message.targetId);
     if (exists == null) {
       int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(message.targetId, clientCommon.address);
       exists = await topicCommon.add(TopicSchema.create(message.targetId, expireHeight: expireHeight), notify: true);
       // expire + permission + subscribers
       if (exists != null) {
         logger.i("$TAG - topicHandle - new - expireHeight:$expireHeight - topic:$exists ");
-        topicCommon.checkExpireAndSubscribe(exists.topic, refreshSubscribers: true); // await
+        topicCommon.checkExpireAndSubscribe(exists.topicId, refreshSubscribers: true); // await
       } else {
         logger.w("$TAG - topicHandle - topic is empty - topic:${message.targetId} ");
       }
@@ -280,12 +281,12 @@ class ChatCommon with Tag {
   }
 
   Future<SubscriberSchema?> subscriberHandle(MessageSchema message, TopicSchema? topic) async {
-    if (topic == null || topic.id == null || topic.id == 0) return null;
+    if (topic == null || topic.topicId.isEmpty) return null;
     if (!message.isTargetTopic) return null;
     if (message.isTopicAction) return null; // action users will handle in later
     if (message.contentType == MessageContentType.piece) return null;
     // duplicated
-    SubscriberSchema? exist = await subscriberCommon.queryByTopicChatId(message.targetId, message.sender);
+    SubscriberSchema? exist = await subscriberCommon.query(message.targetId, message.sender);
     if (exist == null) {
       if (!topic.isPrivate) {
         exist = await subscriberCommon.add(SubscriberSchema.create(message.targetId, message.sender, SubscriberStatus.Subscribed, null));
@@ -295,7 +296,7 @@ class ChatCommon with Tag {
         logger.i("$TAG - subscriberHandle - private: add Owner - subscriber:$exist");
       } else {
         // will go here when duration(TxPoolDelay) gone in new version
-        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topic, message.sender);
+        List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic.topicId, message.sender);
         bool? acceptAll = permission[0];
         int? permPage = permission[1];
         bool? isAccept = permission[2];
@@ -310,7 +311,7 @@ class ChatCommon with Tag {
             logger.w("$TAG - subscriberHandle - reject: add Unsubscribed - sender:${message.sender} - permission:$permission - topic:$topic - subscriber:$exist");
             exist = await subscriberCommon.add(SubscriberSchema.create(message.targetId, message.sender, SubscriberStatus.Unsubscribed, permPage));
           } else if (isAccept == true) {
-            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.sender);
+            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topicId, message.sender);
             if (expireHeight <= 0) {
               logger.w("$TAG - subscriberHandle - accept: add invited - sender:${message.sender} - permission:$permission - topic:$topic - subscriber:$exist");
               exist = await subscriberCommon.add(SubscriberSchema.create(message.targetId, message.sender, SubscriberStatus.InvitedSend, permPage));
@@ -321,7 +322,7 @@ class ChatCommon with Tag {
             // some subscriber status wrong in new version need refresh
             // subscriberCommon.refreshSubscribers(topic.topic, meta: topic.isPrivate == true); // await
           } else {
-            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topic, message.sender);
+            int expireHeight = await topicCommon.getSubscribeExpireAtFromNode(topic.topicId, message.sender);
             if (expireHeight <= 0) {
               logger.w("$TAG - subscriberHandle - none: add Unsubscribed - sender:${message.sender} - permission:$permission - topic:$topic - subscriber:$exist");
               exist = await subscriberCommon.add(SubscriberSchema.create(message.targetId, message.sender, SubscriberStatus.Unsubscribed, permPage));
@@ -367,7 +368,8 @@ class ChatCommon with Tag {
             int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
             if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
               logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}');
-              await privateGroupCommon.setGroupOptionsBurn(exists, burnAfterSeconds, notify: true);
+              var options = await privateGroupCommon.setGroupOptionsBurn(exists.groupId, burnAfterSeconds, notify: true);
+              if (options != null) exists.options = options;
             }
           }
           // request
@@ -378,7 +380,7 @@ class ChatCommon with Tag {
           }
           int gap = (exists.optionsRequestedVersion != remoteVersion) ? 0 : Settings.gapGroupRequestOptionsMs;
           chatOutCommon.sendPrivateGroupOptionRequest(message.sender, message.targetId, gap: gap).then((value) {
-            if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists, remoteVersion, notify: true);
+            if (value) privateGroupCommon.setGroupOptionsRequestInfo(exists?.groupId, remoteVersion, notify: true);
           }); // await
         }
       }
@@ -430,7 +432,7 @@ class ChatCommon with Tag {
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
     message.deleteAt = DateTime.now().add(Duration(seconds: burnAfterSeconds)).millisecondsSinceEpoch;
-    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:${message.toStringNoContent()}");
+    logger.v("$TAG - burningHandle - deleteAt - deleteAt:${message.deleteAt} - message:${message.toStringSimple()}");
     messageCommon.updateDeleteAt(message.msgId, message.deleteAt).then((success) {
       if (success && notify) messageCommon.onUpdateSink.add(message);
       // if (success && tick) burningTick(message);
@@ -484,7 +486,7 @@ class ChatCommon with Tag {
     // file_result
     String? fileHash = MessageOptions.getIpfsHash(message.options);
     if (fileHash != null && fileHash.isNotEmpty) {
-      logger.i("$TAG - startIpfsUpload - history completed - hash:$fileHash - message:${message.toStringNoContent()}");
+      logger.i("$TAG - startIpfsUpload - history completed - hash:$fileHash - message:${message.toStringSimple()}");
       if (MessageOptions.getIpfsState(message.options) != MessageOptions.ipfsStateYes) {
         message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateYes);
         await messageCommon.updateMessageOptions(message, message.options);
@@ -493,12 +495,12 @@ class ChatCommon with Tag {
     }
     // file_exist
     if (!message.isContentFile) {
-      logger.e("$TAG - startIpfsUpload - content is no file - message:${message.toStringNoContent()}");
+      logger.e("$TAG - startIpfsUpload - content is no file - message:${message.toStringSimple()}");
       return null;
     }
     File file = message.content as File;
     if (!file.existsSync()) {
-      logger.e("$TAG - startIpfsUpload - file is no exists - message:${message.toStringNoContent()}");
+      logger.e("$TAG - startIpfsUpload - file is no exists - message:${message.toStringSimple()}");
       return null;
     }
     // file_state
@@ -507,7 +509,7 @@ class ChatCommon with Tag {
     // thumbnail
     MessageSchema? msg = await startIpfsThumbnailUpload(message);
     if (msg == null) {
-      logger.w("$TAG - startIpfsUpload - thumbnail fail - message:${message.toStringNoContent()}");
+      logger.w("$TAG - startIpfsUpload - thumbnail fail - message:${message.toStringSimple()}");
       message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
       await messageCommon.updateMessageOptions(message, message.options, notify: false);
       message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
@@ -641,7 +643,7 @@ class ChatCommon with Tag {
     // file_result
     String? ipfsHash = MessageOptions.getIpfsHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
+      logger.e("$TAG - startIpfsDownload - ipfsHash is empty - message:${message.toStringSimple()}");
       return null;
     }
     // file_path
@@ -699,7 +701,7 @@ class ChatCommon with Tag {
       File? file = message.content as File?;
       File thumbnail = File(savePath);
       if ((file != null) && file.existsSync() && !thumbnail.existsSync()) {
-        logger.i("$TAG - startIpfsDownload - create thumbnail when no exist - message:${message.toStringNoContent()}");
+        logger.i("$TAG - startIpfsDownload - create thumbnail when no exist - message:${message.toStringSimple()}");
         Map<String, dynamic>? res = await MediaPicker.getVideoThumbnail(file.absolute.path, savePath);
         if (res != null && res.isNotEmpty) {
           message.options = MessageOptions.setMediaThumbnailPath(message.options, savePath);
@@ -737,7 +739,7 @@ class ChatCommon with Tag {
     // result
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
-      logger.w("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:${message.toStringNoContent()}");
+      logger.w("$TAG - _tryIpfsThumbnailDownload - ipfsHash is empty - message:${message.toStringSimple()}");
       return [null, false];
     }
     // path
