@@ -301,10 +301,10 @@ class Upgrade4to5 {
           logger.w("Upgrade4to5 - $oldTableName query - type is null - data:$result");
         }
         int newType;
-        if (oldType != null && (oldType == TopicType.privateTopic || oldType == TopicType.privateTopic)) {
+        if (oldType != null && (oldType == TopicType.private || oldType == TopicType.private)) {
           newType = oldType;
         } else {
-          newType = Validate.isPrivateTopicOk(newTopic) ? TopicType.privateTopic : TopicType.publicTopic;
+          newType = Validate.isPrivateTopicOk(newTopic) ? TopicType.private : TopicType.public;
         }
         // at
         int? oldCreateAt = result["time_update"];
