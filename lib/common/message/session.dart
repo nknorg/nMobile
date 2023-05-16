@@ -223,7 +223,7 @@ class SessionCommon with Tag {
 
   Future<bool> setUnReadCount(String? targetId, int? type, int unread, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.setReadCount(targetId, type, unread);
+    bool success = await SessionStorage.instance.setUnReadCount(targetId, type, unread);
     if (success && notify) queryAndNotify(targetId, type);
     return success;
   }
