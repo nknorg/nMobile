@@ -22,15 +22,13 @@ class TopicSubscribersScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/members';
   static final String argTopicSchema = "topic_schema";
   static final String argTopicId = "topic_id";
-  static final String argTopicTopic = "topic_topic";
 
-  static Future go(BuildContext? context, {TopicSchema? schema, int? topicId, String? topic}) {
+  static Future go(BuildContext? context, {TopicSchema? schema, String? topicId}) {
     if (context == null) return Future.value(null);
-    if (schema == null && (topicId == null || topicId == 0)) return Future.value(null);
+    if (schema == null && (topicId == null || topicId.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argTopicSchema: schema,
       argTopicId: topicId,
-      argTopicTopic: topic,
     });
   }
 
@@ -49,7 +47,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   // StreamSubscription? _deleteSubscriberSubscription;
   StreamSubscription? _updateSubscriberSubscription;
 
-  TopicSchema? _topicSchema;
+  TopicSchema? _topic;
 
   ScrollController _scrollController = ScrollController();
   bool _moreLoading = false;
@@ -71,14 +69,14 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     super.initState();
     // topic listen
     // isPopIng = false;
-    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
+    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.topicId == _topic?.topicId).listen((TopicSchema event) {
       // if (!event.joined && !isPopIng) {
       //   isPopIng = true;
       //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       //   return;
       // }
       setState(() {
-        _topicSchema = event;
+        _topic = event;
       });
       // _refreshMembersCount(); // await
     });
@@ -87,8 +85,8 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     // });
 
     // subscriber listen
-    _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
-      if (_subscriberList.indexWhere((element) => (element.topic == schema.topic) && (element.clientAddress == schema.clientAddress)) < 0) {
+    _addSubscriberSubscription = subscriberCommon.addStream.where((event) => event.topicId == _topic?.topicId).listen((SubscriberSchema schema) {
+      if (_subscriberList.indexWhere((element) => (element.topicId == schema.topicId) && (element.contactAddress == schema.contactAddress)) < 0) {
         _subscriberList.add(schema);
         _showSubscriberList();
       }
@@ -98,8 +96,8 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     //     _subscriberList = _subscriberList.where((element) => element.id != subscriberId).toList();
     //   });
     // });
-    _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema event) {
-      int index = _subscriberList.indexWhere((element) => (element.topic == event.topic) && (element.clientAddress == event.clientAddress));
+    _updateSubscriberSubscription = subscriberCommon.updateStream.where((event) => event.topicId == _topic?.topicId).listen((SubscriberSchema event) {
+      int index = _subscriberList.indexWhere((element) => (element.topicId == event.topicId) && (element.contactAddress == event.contactAddress));
       if ((index >= 0) && (index < _subscriberList.length)) {
         _subscriberList[index] = event;
       } else {
@@ -133,30 +131,27 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
 
   _refreshTopicSchema({TopicSchema? schema}) async {
     TopicSchema? topicSchema = widget.arguments?[TopicSubscribersScreen.argTopicSchema];
-    int? topicId = widget.arguments?[TopicSubscribersScreen.argTopicId];
-    String? topic = widget.arguments?[TopicSubscribersScreen.argTopicTopic];
+    String? topicId = widget.arguments?[TopicSubscribersScreen.argTopicId];
     if (schema != null) {
-      this._topicSchema = schema;
-    } else if (topicSchema != null && topicSchema.id != 0) {
-      this._topicSchema = topicSchema;
-    } else if (topicId != null && topicId != 0) {
-      this._topicSchema = await topicCommon.query(topicId);
-    } else if (topic?.isNotEmpty == true) {
-      this._topicSchema = await topicCommon.queryByTopic(topic);
+      this._topic = schema;
+    } else if (topicSchema != null) {
+      this._topic = topicSchema;
+    } else if (topicId?.isNotEmpty == true) {
+      this._topic = await topicCommon.query(topicId);
     }
-    if (this._topicSchema == null) return;
+    if (this._topic == null) return;
     setState(() {});
 
     // exist
-    topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
+    topicCommon.query(this._topic?.topicId).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true);
+      TopicSchema? added = await topicCommon.add(this._topic, notify: true);
       if (added == null) return;
       setState(() {
-        this._topicSchema = added;
+        this._topic = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(this._topicSchema?.topic, refreshSubscribers: true).then((value) {
+      topicCommon.checkExpireAndSubscribe(this._topic?.topicId, refreshSubscribers: true).then((value) {
         _getDataSubscribers(true);
       }); // await
     });
@@ -165,8 +160,8 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     _refreshMembersCount(); // await
 
     // subscribers
-    subscriberCommon.refreshSubscribers(this._topicSchema?.topic, _topicSchema?.ownerPubKey, meta: this._topicSchema?.isPrivate == true).then((value) async {
-      await topicCommon.setLastRefreshSubscribersAt(this._topicSchema?.id, notify: true); // await
+    subscriberCommon.refreshSubscribers(this._topic?.topicId, _topic?.ownerPubKey, meta: this._topic?.isPrivate == true).then((value) async {
+      await topicCommon.setLastRefreshSubscribersAt(this._topic?.topicId, notify: true); // await
       await _refreshMembersCount(); // await
       _getDataSubscribers(true); // await
     });
@@ -174,13 +169,13 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   }
 
   _refreshMembersCount() async {
-    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic, _topicSchema?.isPrivate == true);
-    if (_topicSchema?.count != count) {
-      await topicCommon.setCount(_topicSchema?.id, count, notify: true);
+    int count = await subscriberCommon.getSubscribersCount(_topic?.topicId, _topic?.isPrivate == true);
+    if (_topic?.count != count) {
+      await topicCommon.setCount(_topic?.topicId, count, notify: true);
     }
-    _invitedSendCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.InvitedSend);
-    _invitedReceiptCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.InvitedReceipt);
-    _subscriberCount = await subscriberCommon.queryCountByTopic(_topicSchema?.topic, status: SubscriberStatus.Subscribed);
+    _invitedSendCount = await subscriberCommon.queryCountByTopicId(_topic?.topicId, status: SubscriberStatus.InvitedSend);
+    _invitedReceiptCount = await subscriberCommon.queryCountByTopicId(_topic?.topicId, status: SubscriberStatus.InvitedReceipt);
+    _subscriberCount = await subscriberCommon.queryCountByTopicId(_topic?.topicId, status: SubscriberStatus.Subscribed);
     setState(() {});
   }
 
@@ -191,16 +186,16 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     } else {
       _offset = _subscriberList.length;
     }
-    bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
+    bool isOwner = _topic?.isOwner(clientCommon.address) ?? false;
     int? status = isOwner ? null : SubscriberStatus.Subscribed;
-    var subscribers = await subscriberCommon.queryListByTopic(this._topicSchema?.topic, status: status, offset: _offset, limit: 20);
-    if (refresh) subscribers.sort((a, b) => (_topicSchema?.isPrivate == true) ? (_topicSchema?.isOwner(b.clientAddress) == true ? 1 : (b.clientAddress == clientCommon.address ? 1 : -1)) : (b.clientAddress == clientCommon.address ? 1 : -1));
+    var subscribers = await subscriberCommon.queryListByTopicId(this._topic?.topicId, status: status, offset: _offset, limit: 20);
+    if (refresh) subscribers.sort((a, b) => (_topic?.isPrivate == true) ? (_topic?.isOwner(b.contactAddress) == true ? 1 : (b.contactAddress == clientCommon.address ? 1 : -1)) : (b.contactAddress == clientCommon.address ? 1 : -1));
     _subscriberList = refresh ? subscribers : _subscriberList + subscribers; // maybe addStream
     _showSubscriberList();
   }
 
   _showSubscriberList() {
-    bool isOwner = _topicSchema?.isOwner(clientCommon.address) ?? false;
+    bool isOwner = _topic?.isOwner(clientCommon.address) ?? false;
     setState(() {
       if (isOwner) {
         _subscriberList = _subscriberList.where((element) => element.status != SubscriberStatus.None).toList();
@@ -211,7 +206,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
   }
 
   _invitee() async {
-    if (_topicSchema == null) return;
+    if (_topic == null) return;
     String? address = await BottomDialog.of(Settings.appContext).showInput(
       title: Settings.locale((s) => s.invite_members),
       inputTip: Settings.locale((s) => s.send_to),
@@ -221,14 +216,14 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
     );
     if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
-      if (_topicSchema?.isPrivate == true) {
+      if (_topic?.isPrivate == true) {
         fee = await topicCommon.getTopicSubscribeFee(this.context);
         if (fee == null) return;
       }
       await topicCommon.invitee(
-        _topicSchema?.topic,
-        _topicSchema?.isPrivate == true,
-        _topicSchema?.isOwner(clientCommon.address) == true,
+        _topic?.topicId,
+        _topic?.isPrivate == true,
+        _topic?.isOwner(clientCommon.address) == true,
         address,
         fee: fee,
         toast: true,
@@ -267,15 +262,15 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
         children: [
           Container(
             padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            child: _topicSchema != null
+            child: _topic != null
                 ? Center(
                     child: TopicHeader(
-                      topic: _topicSchema!,
+                      topic: _topic!,
                       avatarRadius: 36,
                       dark: false,
                       body: Builder(
                         builder: (BuildContext context) {
-                          if (_topicSchema?.isOwner(clientCommon.address) == true) {
+                          if (_topic?.isOwner(clientCommon.address) == true) {
                             return Container(
                               padding: EdgeInsets.only(left: 3),
                               child: Column(
@@ -298,7 +293,7 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
                             );
                           } else {
                             return Label(
-                              '${_topicSchema?.count ?? '--'} ' + Settings.locale((s) => s.members, ctx: context),
+                              '${_topic?.count ?? '--'} ' + Settings.locale((s) => s.members, ctx: context),
                               type: LabelType.bodyRegular,
                               color: application.theme.successColor,
                             );
@@ -329,10 +324,10 @@ class _TopicSubscribersScreenState extends BaseStateFulWidgetState<TopicSubscrib
           children: [
             SubscriberItem(
               subscriber: _subscriber,
-              topic: _topicSchema,
+              topic: _topic,
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               onTap: (ContactSchema? contact) {
-                ContactProfileScreen.go(context, schema: contact, address: _subscriber.clientAddress);
+                ContactProfileScreen.go(context, schema: contact, address: _subscriber.contactAddress);
               },
             ),
             Divider(color: application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),

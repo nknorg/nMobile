@@ -31,15 +31,13 @@ class TopicProfileScreen extends BaseStateFulWidget {
   static const String routeName = '/topic/profile';
   static final String argTopicSchema = "topic_schema";
   static final String argTopicId = "topic_id";
-  static final String argTopicTopic = "topic_topic";
 
-  static Future go(BuildContext? context, {TopicSchema? schema, int? topicId, String? topic}) {
+  static Future go(BuildContext? context, {TopicSchema? schema, String? topicId}) {
     if (context == null) return Future.value(null);
-    if (schema == null && (topicId == null || topicId == 0)) return Future.value(null);
+    if (schema == null && (topicId == null || topicId.isEmpty)) return Future.value(null);
     return Navigator.pushNamed(context, routeName, arguments: {
       argTopicSchema: schema,
       argTopicId: topicId,
-      argTopicTopic: topic,
     });
   }
 
@@ -57,7 +55,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   StreamSubscription? _onSubscriberAddStreamSubscription;
   StreamSubscription? _onSubscriberUpdateStreamSubscription;
 
-  TopicSchema? _topicSchema;
+  TopicSchema? _topic;
 
   bool? _isJoined;
 
@@ -73,26 +71,26 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     super.initState();
     // listen
     // isPopIng = false;
-    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.id == _topicSchema?.id).listen((TopicSchema event) {
+    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.topicId == _topic?.topicId).listen((TopicSchema event) {
       // if (!event.joined && !isPopIng) {
       //   isPopIng = true;
       //   if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
       //   return;
       // }
       setState(() {
-        _topicSchema = event;
+        _topic = event;
       });
       _refreshJoined(); // await
       // _refreshMembersCount(); // await
     });
-    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topic == _topicSchema?.topic).listen((SubscriberSchema schema) {
-      if (schema.clientAddress == clientCommon.address) {
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => event.topicId == _topic?.topicId).listen((SubscriberSchema schema) {
+      if (schema.contactAddress == clientCommon.address) {
         _refreshJoined();
       }
       // _refreshMembersCount();
     });
-    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topic == _topicSchema?.topic).listen((event) {
-      if (event.clientAddress == clientCommon.address) {
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => event.topicId == _topic?.topicId).listen((event) {
+      if (event.contactAddress == clientCommon.address) {
         _refreshJoined();
       } else {
         // _refreshMembersCount();
@@ -115,30 +113,27 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
 
   _refreshTopicSchema({TopicSchema? schema}) async {
     TopicSchema? topicSchema = widget.arguments?[TopicProfileScreen.argTopicSchema];
-    int? topicId = widget.arguments?[TopicProfileScreen.argTopicId];
-    String? topic = widget.arguments?[TopicProfileScreen.argTopicTopic];
+    String? topicId = widget.arguments?[TopicProfileScreen.argTopicId];
     if (schema != null) {
-      this._topicSchema = schema;
-    } else if (topicSchema != null && topicSchema.id != 0) {
-      this._topicSchema = topicSchema;
-    } else if (topicId != null && topicId != 0) {
-      this._topicSchema = await topicCommon.query(topicId);
-    } else if (topic?.isNotEmpty == true) {
-      this._topicSchema = await topicCommon.queryByTopic(topic);
+      this._topic = schema;
+    } else if (topicSchema != null) {
+      this._topic = topicSchema;
+    } else if (topicId?.isNotEmpty == true) {
+      this._topic = await topicCommon.query(topicId);
     }
-    if (this._topicSchema == null) return;
+    if (this._topic == null) return;
     setState(() {});
 
     // exist
-    topicCommon.queryByTopic(this._topicSchema?.topic).then((TopicSchema? exist) async {
+    topicCommon.query(this._topic?.topicId).then((TopicSchema? exist) async {
       if (exist != null) return;
-      TopicSchema? added = await topicCommon.add(this._topicSchema, notify: true);
+      TopicSchema? added = await topicCommon.add(this._topic, notify: true);
       if (added == null) return;
       setState(() {
-        this._topicSchema = added;
+        this._topic = added;
       });
       // check
-      topicCommon.checkExpireAndSubscribe(this._topicSchema?.topic); // await
+      topicCommon.checkExpireAndSubscribe(this._topic?.topicId); // await
     });
 
     _refreshJoined(); // await
@@ -146,10 +141,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
   }
 
   _refreshJoined() async {
-    if (_topicSchema == null || !clientCommon.isClientOK) return;
-    bool? isJoined = await topicCommon.isSubscribed(_topicSchema?.topic, clientCommon.address);
-    if ((isJoined == true) && (_topicSchema?.isPrivate == true)) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topicSchema?.topic, clientCommon.address);
+    if (_topic == null || !clientCommon.isClientOK) return;
+    bool? isJoined = await topicCommon.isSubscribed(_topic?.topicId, clientCommon.address);
+    if ((isJoined == true) && (_topic?.isPrivate == true)) {
+      SubscriberSchema? _me = await subscriberCommon.query(_topic?.topicId, clientCommon.address);
       isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
     // do not topic.setJoined because filed is_joined is action not a tag
@@ -158,20 +153,20 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
         _isJoined = isJoined;
       });
     }
-    if ((isJoined != null) && (isJoined != _topicSchema?.joined)) {
-      await topicCommon.setJoined(_topicSchema?.id, isJoined, notify: true);
+    if ((isJoined != null) && (isJoined != _topic?.joined)) {
+      await topicCommon.setJoined(_topic?.topicId, isJoined, notify: true);
     }
   }
 
   _refreshMembersCount() async {
-    int count = await subscriberCommon.getSubscribersCount(_topicSchema?.topic, _topicSchema?.isPrivate == true);
-    if (_topicSchema?.count != count) {
-      await topicCommon.setCount(_topicSchema?.id, count, notify: true);
+    int count = await subscriberCommon.getSubscribersCount(_topic?.topicId, _topic?.isPrivate == true);
+    if (_topic?.count != count) {
+      await topicCommon.setCount(_topic?.topicId, count, notify: true);
     }
   }
 
   _selectAvatarPicture() async {
-    String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _topicSchema?.topic, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+    String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _topic?.topicId, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
     File? picked = await MediaPicker.pickImage(
@@ -189,11 +184,11 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     }
 
-    topicCommon.setAvatar(_topicSchema?.id, remarkAvatarLocalPath, notify: true); // await
+    topicCommon.setAvatar(_topic?.topicId, remarkAvatarLocalPath, notify: true); // await
   }
 
   _invitee() async {
-    if (_topicSchema == null) return;
+    if (_topic == null) return;
     String? address = await BottomDialog.of(Settings.appContext).showInput(
       title: Settings.locale((s) => s.invite_members),
       inputTip: Settings.locale((s) => s.send_to),
@@ -203,14 +198,14 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
     );
     if (Validate.isNknChatIdentifierOk(address)) {
       double? fee = 0.0;
-      if (_topicSchema?.isPrivate == true) {
+      if (_topic?.isPrivate == true) {
         fee = await topicCommon.getTopicSubscribeFee(this.context);
         if (fee == null) return;
       }
       await topicCommon.invitee(
-        _topicSchema?.topic,
-        _topicSchema?.isPrivate == true,
-        _topicSchema?.isOwner(clientCommon.address) == true,
+        _topic?.topicId,
+        _topic?.isPrivate == true,
+        _topic?.isOwner(clientCommon.address) == true,
         address,
         fee: fee,
         toast: true,
@@ -224,7 +219,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
       double? fee = await topicCommon.getTopicSubscribeFee(this.context);
       if (fee == null) return;
       Loading.show();
-      TopicSchema? result = await topicCommon.subscribe(_topicSchema?.topic, fee: fee);
+      TopicSchema? result = await topicCommon.subscribe(_topic?.topicId, fee: fee);
       Loading.dismiss();
       if (result != null) Toast.show(Settings.locale((s) => s.subscribed));
     } else {
@@ -240,7 +235,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             double? fee = await topicCommon.getTopicSubscribeFee(this.context);
             if (fee == null) return;
             Loading.show();
-            TopicSchema? deleted = await topicCommon.unsubscribe(_topicSchema?.topic, fee: fee, toast: true);
+            TopicSchema? deleted = await topicCommon.unsubscribe(_topic?.topicId, fee: fee, toast: true);
             Loading.dismiss();
             if (deleted != null) {
               Toast.show(Settings.locale((s) => s.unsubscribed));
@@ -277,10 +272,10 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
           children: [
             /// avatar
             Center(
-              child: _topicSchema != null
+              child: _topic != null
                   ? TopicAvatarEditable(
                       radius: 48,
-                      topic: _topicSchema!,
+                      topic: _topic!,
                       placeHolder: false,
                       onSelect: _selectAvatarPicture,
                     )
@@ -294,7 +289,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: true, botRadius: false, topPad: 15, botPad: 10),
                   onPressed: () {
-                    Util.copyText(_topicSchema?.topic);
+                    Util.copyText(_topic?.topicId);
                   },
                   child: Row(
                     children: <Widget>[
@@ -308,7 +303,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          _topicSchema?.topic ?? "",
+                          _topic?.topicId ?? "",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -328,7 +323,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                 TextButton(
                   style: _buttonStyle(topRadius: false, botRadius: false, topPad: 12, botPad: 12),
                   onPressed: () {
-                    TopicSubscribersScreen.go(context, schema: _topicSchema);
+                    TopicSubscribersScreen.go(context, schema: _topic);
                   },
                   child: Row(
                     children: <Widget>[
@@ -342,7 +337,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
                       SizedBox(width: 20),
                       Expanded(
                         child: Label(
-                          "${_topicSchema?.count ?? "--"} ${Settings.locale((s) => s.members, ctx: context)}",
+                          "${_topic?.count ?? "--"} ${Settings.locale((s) => s.members, ctx: context)}",
                           type: LabelType.bodyRegular,
                           color: application.theme.fontColor2,
                           overflow: TextOverflow.fade,
@@ -391,7 +386,7 @@ class _TopicProfileScreenState extends BaseStateFulWidgetState<TopicProfileScree
             TextButton(
               style: _buttonStyle(topRadius: true, botRadius: true, topPad: 12, botPad: 12),
               onPressed: () {
-                ChatMessagesScreen.go(this.context, _topicSchema);
+                ChatMessagesScreen.go(this.context, _topic);
               },
               child: Row(
                 children: <Widget>[

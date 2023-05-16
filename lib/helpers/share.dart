@@ -42,8 +42,8 @@ class ShareHelper {
       List<String> splits = target.address.split(".");
       if (splits.length > 0) subPath = splits[0];
     } else if (target is TopicSchema) {
-      subPath = Uri.encodeComponent(target.topic);
-      if (subPath != target.topic) subPath = "common"; // FUTURE:GG encode
+      subPath = Uri.encodeComponent(target.topicId);
+      if (subPath != target.topicId) subPath = "common"; // FUTURE:GG encode
     } else if (target is PrivateGroupSchema) {
       subPath = Uri.encodeComponent(target.groupId);
       if (subPath != target.groupId) subPath = "common"; // FUTURE:GG encode

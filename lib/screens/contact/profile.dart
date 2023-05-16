@@ -153,7 +153,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     String? contactAddress = widget.arguments?[ContactProfileScreen.argContactAddress];
     if (schema != null) {
       this._contact = schema;
-    } else if (contactSchema != null && contactSchema.id != 0) {
+    } else if (contactSchema != null) {
       this._contact = contactSchema;
     } else if (contactAddress?.isNotEmpty == true) {
       this._contact = await contactCommon.query(contactAddress);
@@ -674,7 +674,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _getPersonView() {
-    bool remarkNameExists = _contact?.remarkName?.isNotEmpty == true;
+    bool remarkNameExists = _contact?.remarkName.isNotEmpty == true;
     bool originalNameExists = _contact?.fullName.isNotEmpty == true;
     // String clientAddress = _contactSchema?.clientAddress ?? "";
     // bool isDefaultName = originalNameExists && clientAddress.startsWith(_contactSchema?.fullName ?? "");
