@@ -46,10 +46,10 @@ class ChatInCommon with Tag {
       logger.e("$TAG - onMessageReceive - message is null");
       return;
     } else if (message.targetId.isEmpty) {
-      logger.e("$TAG - onMessageReceive - targetId is empty - received:${message.toStringNoContent()}");
+      logger.e("$TAG - onMessageReceive - targetId is empty - received:${message.toStringSimple()}");
       return;
     } else if (message.contentType.isEmpty) {
-      logger.e("$TAG - onMessageReceive - contentType is empty - received:${message.toStringNoContent()}");
+      logger.e("$TAG - onMessageReceive - contentType is empty - received:${message.toStringSimple()}");
       return;
     }
     // topic/group msg published callback can be used receipt
@@ -84,7 +84,7 @@ class ChatInCommon with Tag {
         logger.w("$TAG - _handleMessage - topic - deny message - unsubscribe - topic:$topic");
         return;
       }
-      SubscriberSchema? me = await subscriberCommon.queryByTopicChatId(topic.topic, clientCommon.address);
+      SubscriberSchema? me = await subscriberCommon.query(topic.topicId, clientCommon.address);
       if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
         logger.w("$TAG - _handleMessage - topic - deny message - me no permission - me:$me - topic:$topic");
         return;
@@ -108,12 +108,12 @@ class ChatInCommon with Tag {
           return;
         }
         PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
-        if ((_me == null) || ((_me.permission ?? 0) <= PrivateGroupItemPerm.none)) {
+        if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
           logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
           return;
         }
         PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.sender);
-        if ((_sender == null) || ((_sender.permission ?? 0) <= PrivateGroupItemPerm.none)) {
+        if ((_sender == null) || (_sender.permission <= PrivateGroupItemPerm.none)) {
           logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
           return;
         }
@@ -122,9 +122,8 @@ class ChatInCommon with Tag {
     // duplicated
     bool duplicated = false;
     if (received.canDisplay) {
-      MessageSchema? exists = await messageCommon.query(received.msgId);
-      if (exists != null) {
-        logger.d("$TAG - _handleMessage - duplicated - type:${exists.contentType} - targetId:${exists.targetId} - message:$exists");
+      if (await messageCommon.isMessageReceived(received)) {
+        logger.d("$TAG - _handleMessage - duplicated - type:${received.contentType} - targetId:${received.targetId} - message:${received.toStringSimple()}");
         duplicated = true;
       }
     }
@@ -163,7 +162,6 @@ class ChatInCommon with Tag {
         case MessageContentType.ipfs:
           insertOk = await _receiveIpfs(received);
           break;
-        case MessageContentType.media:
         case MessageContentType.image:
           insertOk = await _receiveImage(received);
           break;
@@ -363,7 +361,7 @@ class ChatInCommon with Tag {
       String? lastResponseVersion = deviceInfo?.contactProfileResponseVersion;
       if (requestType == ContactRequestType.header) {
         logger.i("$TAG - _receiveContact - response head - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version");
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, contactMe, ContactRequestType.header); // await
+        chatOutCommon.sendContactProfileResponse(contact.address, contactMe, ContactRequestType.header); // await
       } else {
         int gap;
         if ((selfNativeVersion?.isNotEmpty == true) && (selfNativeVersion != lastResponseVersion)) {
@@ -376,8 +374,8 @@ class ChatInCommon with Tag {
           logger.d('$TAG - _receiveContact - response full - version same (native == remote == response) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
           gap = Settings.gapContactProfileSyncMs;
         }
-        chatOutCommon.sendContactProfileResponse(contact.clientAddress, contactMe, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
-          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.clientAddress, deviceInfo?.deviceId, selfNativeVersion);
+        chatOutCommon.sendContactProfileResponse(contact.address, contactMe, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
+          if (value) deviceInfoCommon.setContactProfileResponseInfo(contact.address, deviceInfo?.deviceId, selfNativeVersion);
         }); // await
       }
     } else {
@@ -385,7 +383,7 @@ class ChatInCommon with Tag {
       if (!contactCommon.isProfileVersionSame(contact.profileVersion, version)) {
         if ((responseType != ContactRequestType.full) && (content == null)) {
           logger.i("$TAG - _receiveContact - request full - sender:${received.sender} - data:$data");
-          chatOutCommon.sendContactProfileRequest(contact.clientAddress, ContactRequestType.full, contact.profileVersion); // await
+          chatOutCommon.sendContactProfileRequest(contact.address, ContactRequestType.full, contact.profileVersion); // await
         } else {
           if (content == null) {
             logger.e("$TAG - _receiveContact - content is empty - data:$data - sender:${received.sender}");
@@ -414,7 +412,8 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherProfile(contact, version, avatarPath, firstName, lastName, notify: true);
+          await contactCommon.setOtherFullName(contact.address, version, firstName, lastName, notify: false);
+          await contactCommon.setOtherAvatar(contact.address, version, avatarPath, notify: true);
           logger.i("$TAG - _receiveContact - updateProfile - firstName:$firstName - lastName:$lastName - avatar:$avatarPath - version:$version - data:$data - sender:${received.sender}");
           // }
         }
@@ -438,8 +437,9 @@ class ChatInCommon with Tag {
       int burningSeconds = (content['deleteAfterSeconds'] as int?) ?? 0;
       int updateAt = (content['updateBurnAfterAt'] as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.i("$TAG - _receiveContactOptions - setBurning - sender:${received.sender} - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)}");
-      bool success = await contactCommon.setOptionsBurn(contact, burningSeconds, updateAt, notify: true);
-      if (!success) return false;
+      var options = await contactCommon.setOptionsBurn(contact.address, burningSeconds, updateAt, notify: true);
+      if (options != null) contact.options = options;
+      return options != null;
     } else if (optionsType == '1') {
       String deviceToken = content['deviceToken']?.toString() ?? "";
       if (deviceInfo?.deviceToken != deviceToken) {
@@ -467,7 +467,7 @@ class ChatInCommon with Tag {
     bool notificationOpen = contact.options?.notificationOpen ?? false;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
     if (deviceInfo == null) return false;
-    chatOutCommon.sendDeviceInfo(contact.clientAddress, deviceInfo, notificationOpen, targetDeviceInfo: targetDeviceInfo, gap: Settings.gapDeviceInfoSyncMs).then((value) {
+    chatOutCommon.sendDeviceInfo(contact.address, deviceInfo, notificationOpen, targetDeviceInfo: targetDeviceInfo, gap: Settings.gapDeviceInfoSyncMs).then((value) {
       if (value) deviceInfoCommon.setDeviceInfoResponse(targetDeviceInfo?.contactAddress, targetDeviceInfo?.deviceId);
     }); // await
     return true;
@@ -487,13 +487,13 @@ class ChatInCommon with Tag {
     String? platformVersion = data["platformVersion"]?.toString();
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
     // exist
-    DeviceInfoSchema? exists = await deviceInfoCommon.queryByDeviceId(contact.clientAddress, data["deviceId"]);
+    DeviceInfoSchema? exists = await deviceInfoCommon.query(contact.address, deviceId);
     // add (wrong here)
     if (exists == null) {
       DeviceInfoSchema deviceInfo = DeviceInfoSchema(
-        contactAddress: contact.clientAddress,
+        contactAddress: contact.address,
         deviceId: deviceId ?? "",
-        deviceToken: deviceToken,
+        deviceToken: deviceToken ?? "",
         onlineAt: DateTime.now().millisecondsSinceEpoch,
         data: newData,
       );
@@ -512,7 +512,7 @@ class ChatInCommon with Tag {
     if ((exists.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
       logger.i("$TAG - _receiveDeviceInfo - deviceToken update - new:$deviceToken - old${exists.deviceToken} - sender:${received.sender}");
       bool success = await deviceInfoCommon.setDeviceToken(exists.contactAddress, exists.deviceId, deviceToken);
-      if (success) exists.deviceToken = deviceToken;
+      if (success) exists.deviceToken = deviceToken ?? "";
     }
     // update_online
     int nowAt = DateTime.now().millisecondsSinceEpoch;
@@ -563,7 +563,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_IMAGE_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - _receiveImage - content is null - message:${received.toStringNoContent()}");
+      logger.e("$TAG - _receiveImage - content is null - message:${received.toStringSimple()}");
       return false;
     }
     // DB
@@ -583,7 +583,7 @@ class ChatInCommon with Tag {
     if (fileExt.isEmpty) fileExt = FileHelper.DEFAULT_AUDIO_EXT;
     received.content = await FileHelper.convertBase64toFile(received.content, (ext) => Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: received.targetId, fileExt: ext ?? fileExt));
     if (received.content == null) {
-      logger.e("$TAG - _receiveAudio - content is null - message:${received.toStringNoContent()}");
+      logger.e("$TAG - _receiveAudio - content is null - message:${received.toStringSimple()}");
       return false;
     }
     // DB
@@ -603,13 +603,6 @@ class ChatInCommon with Tag {
     int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
     int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
     int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
-    // combined duplicated
-    MessageSchema? existsCombine = await messageCommon.query(received.msgId);
-    if (existsCombine != null) {
-      logger.d("$TAG - _receivePiece - combine exists - index:$index - message:${received.toStringNoContent()}");
-      // if (!received.isTopic && index <= 1) chatOutCommon.sendReceipt(existsCombine[0]); // await
-      return false;
-    }
     // piece
     List<MessageSchema> pieces = await messageCommon.queryPieceList(received.msgId, limit: total + parity);
     MessageSchema? piece;
@@ -630,7 +623,7 @@ class ChatInCommon with Tag {
       if (piece != null) {
         pieces.add(piece);
       } else {
-        logger.w("$TAG - _receivePiece - piece added null - message:${received.toStringNoContent()}");
+        logger.w("$TAG - _receivePiece - piece added null - message:${received.toStringSimple()}");
       }
     }
     logger.d("$TAG - _receivePiece - progress:$total/${pieces.length}/${total + parity}");
@@ -641,16 +634,16 @@ class ChatInCommon with Tag {
     String? base64String = await MessageSchema.combinePiecesData(pieces, total, parity, bytesLength);
     if ((base64String == null) || base64String.isEmpty) {
       if (pieces.length >= (total + parity)) {
-        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty and delete pieces - message:${received.toStringNoContent()}");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty and delete pieces - message:${received.toStringSimple()}");
         await _deletePieces(received.msgId); // delete wrong pieces
       } else {
-        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty - message:${received.toStringNoContent()}");
+        logger.e("$TAG - _receivePiece - COMBINE:FAIL - base64String is empty - message:${received.toStringSimple()}");
       }
       return false;
     }
     MessageSchema? combine = MessageSchema.combinePiecesMsg(pieces, base64String);
     if (combine == null) {
-      logger.e("$TAG - _receivePiece - COMBINE:FAIL - message combine is empty - message:${received.toStringNoContent()}");
+      logger.e("$TAG - _receivePiece - COMBINE:FAIL - message combine is empty - message:${received.toStringSimple()}");
       return false;
     }
     // combine.content - handle later
@@ -661,8 +654,7 @@ class ChatInCommon with Tag {
 
   // NO single
   Future<bool> _receiveTopicSubscribe(MessageSchema received) async {
-    // subscriber
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(received.targetId, received.sender);
+    SubscriberSchema? _subscriber = await subscriberCommon.query(received.targetId, received.sender);
     bool historySubscribed = _subscriber?.status == SubscriberStatus.Subscribed;
     Function() syncSubscribe = () async {
       int tryTimes = 0;
@@ -826,7 +818,7 @@ class ChatInCommon with Tag {
       }
       int gap = (group.membersRequestedVersion != version) ? 0 : Settings.gapGroupRequestMembersMs;
       chatOutCommon.sendPrivateGroupMemberRequest(received.sender, groupId, gap: gap).then((value) {
-        if (value) privateGroupCommon.setGroupMembersRequestInfo(group, version, notify: true);
+        if (value) privateGroupCommon.setGroupMembersRequestInfo(group.groupId, version, notify: true);
       }); // await
     }
   }
