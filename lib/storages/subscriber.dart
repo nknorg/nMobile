@@ -16,7 +16,7 @@ class SubscriberStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_subscriber", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_subscriber", onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
@@ -131,7 +131,7 @@ class SubscriberStorage with Tag {
         SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
         results.add(subscriber);
       });
-      // logger.v("$TAG - queryListByTopic - items:$logText");
+      // logger.v("$TAG - queryListByTopic - topic:$topic - status:$status - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -164,7 +164,7 @@ class SubscriberStorage with Tag {
         SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
         results.add(subscriber);
       });
-      // logger.v("$TAG - queryListByTopicPerm - items:$logText");
+      // logger.v("$TAG - queryListByTopicPerm - topic:$topic - permPage:$permPage - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
