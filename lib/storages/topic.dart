@@ -40,12 +40,10 @@ class TopicStorage with Tag {
     await db.execute(createSQL);
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic_id` ON `$tableName` (`topic_id`)');
-    await db.execute('CREATE INDEX `index_topic_create_at` ON `$tableName` (`create_at`)');
-    await db.execute('CREATE INDEX `index_topic_update_at` ON `$tableName` (`update_at`)');
-    await db.execute('CREATE INDEX `index_topic_type_create_at` ON `$tableName` (`type`, `create_at`)');
-    await db.execute('CREATE INDEX `index_topic_type_update_at` ON `$tableName` (`type`, `update_at`)');
-    await db.execute('CREATE INDEX `index_topic_joined_type_create_at` ON `$tableName` (`joined`, `type`, `create_at`)');
-    await db.execute('CREATE INDEX `index_topic_joined_type_update_at` ON `$tableName` (`joined`, `type`, `update_at`)');
+    await db.execute('CREATE INDEX `index_topic_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_topic_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_topic_joined_is_top_create_at` ON `$tableName` (`joined`, `is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_topic_joined_type_is_top_create_at` ON `$tableName` (`joined`, `type`, `is_top`, `create_at`)');
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool unique = true}) async {
@@ -111,7 +109,7 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<List<TopicSchema>> queryList({int? type, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -122,7 +120,7 @@ class TopicStorage with Tag {
           whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
-          orderBy: orderBy ?? 'create_at DESC',
+          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {
@@ -144,7 +142,7 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<List<TopicSchema>> queryListByJoined(bool joined, {int? type, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<TopicSchema>> queryListByJoined(bool joined, {int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -155,7 +153,7 @@ class TopicStorage with Tag {
           whereArgs: (type != null) ? [joined ? 1 : 0, type] : [joined ? 1 : 0],
           offset: offset,
           limit: limit,
-          orderBy: orderBy ?? 'create_at DESC',
+          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {

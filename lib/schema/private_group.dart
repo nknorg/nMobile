@@ -16,11 +16,11 @@ class PrivateGroupSchema {
   int? updateAt;
 
   String groupId;
-  int? type;
-  String name;
-
+  int type;
   String? version;
-  int? count;
+
+  String name;
+  int count;
   File? avatar;
 
   bool joined;
@@ -35,18 +35,17 @@ class PrivateGroupSchema {
     this.updateAt,
     required this.groupId,
     this.type = PrivateGroupType.normal,
-    required this.name,
     this.version,
-    this.count,
+    required this.name,
+    this.count = 0,
     this.avatar,
-    this.isTop = false,
     this.joined = false,
+    this.isTop = false,
     this.options,
     this.data,
   }) {
-    if (this.options == null) {
-      this.options = OptionsSchema();
-    }
+    if (this.options == null) this.options = OptionsSchema();
+    if (this.data == null) this.data = Map();
   }
 
   static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined, String? version}) {
@@ -108,6 +107,11 @@ class PrivateGroupSchema {
     return int.tryParse(data?["quit_at_version_commits"]?.toString() ?? "");
   }
 
+  Map<String, int> get burnedMessages {
+    Map<String, int> values = data?['burnedMessages'] ?? Map();
+    return values.map((key, value) => MapEntry(key.toString(), value))..removeWhere((key, value) => key.isEmpty);
+  }
+
   int get optionsRequestAt {
     return int.tryParse(data?['optionsRequestAt']?.toString() ?? "0") ?? 0;
   }
@@ -127,8 +131,8 @@ class PrivateGroupSchema {
   Map<String, dynamic> getRawDataMap() {
     Map<String, dynamic> data = Map();
     data['groupId'] = groupId;
+    data['type'] = type;
     data['name'] = name;
-    data['type'] = type ?? PrivateGroupType.normal;
     data['deleteAfterSeconds'] = options?.deleteAfterSeconds;
     return data.sortByKey();
   }
@@ -139,15 +143,15 @@ class PrivateGroupSchema {
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'group_id': groupId,
-      'type': type ?? PrivateGroupType.normal,
-      'name': name,
+      'type': type,
       'version': version,
+      'name': name,
       'count': count,
       'avatar': Path.convert2Local(avatar?.path),
       'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options) : null,
-      'data': data != null ? jsonEncode(data) : null,
+      'options': options != null ? jsonEncode(options) : OptionsSchema(),
+      'data': data != null ? jsonEncode(data) : Map(),
     };
     return map;
   }
@@ -159,36 +163,28 @@ class PrivateGroupSchema {
       updateAt: e['update_at'],
       groupId: e['group_id'] ?? "",
       type: e['type'] ?? PrivateGroupType.normal,
-      name: e['name'] ?? "",
       version: e['version'],
-      count: e['count'],
+      name: e['name'] ?? "",
+      count: e['count'] ?? 0,
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
-
+    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       schema.options = OptionsSchema.fromMap(options ?? Map());
     }
-    if (schema.options == null) {
-      schema.options = OptionsSchema();
-    }
-
+    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (schema.data == null) {
-        schema.data = new Map<String, dynamic>();
-      }
-      if (data != null) {
-        schema.data?.addAll(data);
-      }
+      if (data != null) schema.data?.addAll(data);
     }
     return schema;
   }
 
   @override
   String toString() {
-    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, type: $type, name: $name, version: $version, count: $count, avatar: $avatar, joined: $joined, isTop: $isTop, options: $options, data: $data}';
+    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, type: $type, version: $version, name: $name, count: $count, avatar: $avatar, joined: $joined, isTop: $isTop, options: $options, data: $data}';
   }
 }

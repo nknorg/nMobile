@@ -15,17 +15,17 @@ class PrivateGroupStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_private_group", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_private_group", onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `group_id` VARCHAR(200),
+        `group_id` VARCHAR(100),
         `type` INT,
-        `name` VARCHAR(200),
         `version` TEXT,
+        `name` VARCHAR(100),
         `count` INT,
         `avatar` TEXT,
         `joined` BOOLEAN DEFAULT 0,
@@ -37,16 +37,13 @@ class PrivateGroupStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_private_group_group_id` ON `$tableName` (`group_id`)');
     await db.execute('CREATE INDEX `index_private_group_name` ON `$tableName` (`name`)');
-    await db.execute('CREATE INDEX `index_private_group_create_at` ON `$tableName` (`create_at`)');
-    await db.execute('CREATE INDEX `index_private_group_update_at` ON `$tableName` (`update_at`)');
-    await db.execute('CREATE INDEX `index_private_group_type_create_at` ON `$tableName` (`type`, `create_at`)');
-    await db.execute('CREATE INDEX `index_private_group_type_update_at` ON `$tableName` (`type`, `update_at`)');
-    await db.execute('CREATE INDEX `index_private_group_joined_type_create_at` ON `$tableName` (`joined`, `type`, `create_at`)');
-    await db.execute('CREATE INDEX `index_private_group_joined_type_update_at` ON `$tableName` (`joined`, `type`, `update_at`)');
+    await db.execute('CREATE INDEX `index_private_group_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_joined_is_top_create_at` ON `$tableName` (`joined`, `is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_private_group_joined_type_is_top_create_at` ON `$tableName` (`joined`, `type`, `is_top`, `create_at`)');
   }
 
   Future<PrivateGroupSchema?> insert(PrivateGroupSchema? schema, {bool unique = true}) async {
@@ -67,8 +64,6 @@ class PrivateGroupStorage with Tag {
               columns: ['*'],
               where: 'group_id = ?',
               whereArgs: [schema.groupId],
-              offset: 0,
-              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -100,8 +95,6 @@ class PrivateGroupStorage with Tag {
           columns: ['*'],
           where: 'group_id = ?',
           whereArgs: [groupId],
-          offset: 0,
-          limit: 1,
         );
       });
       if (res != null && res.length > 0) {
@@ -116,7 +109,7 @@ class PrivateGroupStorage with Tag {
     return null;
   }
 
-  Future<List<PrivateGroupSchema>> queryListJoined({int? type, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<PrivateGroupSchema>> queryListByJoined(bool joined, {int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -124,14 +117,14 @@ class PrivateGroupStorage with Tag {
           tableName,
           columns: ['*'],
           where: (type != null) ? 'joined = ? AND type = ?' : 'joined = ?',
-          whereArgs: (type != null) ? [1, type] : [1],
+          whereArgs: (type != null) ? [joined ? 1 : 0, type] : [joined ? 1 : 0],
           offset: offset,
           limit: limit,
-          orderBy: orderBy ?? 'create_at DESC',
+          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryList - empty - type:$type");
+        // logger.v("$TAG - queryListByJoined - empty - joined:$joined - type:$type");
         return [];
       }
       List<PrivateGroupSchema> results = <PrivateGroupSchema>[];
@@ -141,7 +134,7 @@ class PrivateGroupStorage with Tag {
         PrivateGroupSchema group = PrivateGroupSchema.fromMap(map);
         results.add(group);
       });
-      // logger.v("$TAG - queryList - items:$logText");
+      // logger.v("$TAG - queryListByJoined - joined:$joined - type:$type - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -149,11 +142,9 @@ class PrivateGroupStorage with Tag {
     return [];
   }
 
-  Future<bool> updateNameType(String? groupId, String? name, int? type) async {
+  Future<bool> setNameType(String? groupId, String name, int type) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
-    if (name == null || name.isEmpty) return false;
-    if (type == null) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -169,10 +160,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - updateNameType - success - groupId:$groupId - name:$name - type:$type");
+              // logger.v("$TAG - setNameType - success - groupId:$groupId - name:$name - type:$type");
               return true;
             }
-            logger.w("$TAG - updateNameType - fail - groupId:$groupId - name:$name - type:$type");
+            logger.w("$TAG - setNameType - fail - groupId:$groupId - name:$name - type:$type");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -181,7 +172,7 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateJoined(String? groupId, bool joined) async {
+  Future<bool> setJoined(String? groupId, bool joined) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -198,10 +189,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - updateJoined - success - groupId:$groupId - joined:$joined");
+              // logger.v("$TAG - setJoined - success - groupId:$groupId - joined:$joined");
               return true;
             }
-            logger.w("$TAG - updateJoined - fail - groupId:$groupId - joined:$joined");
+            logger.w("$TAG - setJoined - fail - groupId:$groupId - joined:$joined");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -210,7 +201,7 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateVersionCount(String? groupId, String? version, int membersCount) async {
+  Future<bool> setVersionCount(String? groupId, String? version, int membersCount) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -228,10 +219,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - updateVersionCount - success - groupId:$groupId - count:$count");
+              // logger.v("$TAG - setVersionCount - success - groupId:$groupId - count:$count");
               return true;
             }
-            logger.w("$TAG - updateVersionCount - fail - groupId:$groupId - count:$count");
+            logger.w("$TAG - setVersionCount - fail - groupId:$groupId - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -240,7 +231,7 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> updateAvatar(String? groupId, String? avatarLocalPath) async {
+  Future<bool> setAvatar(String? groupId, String? avatarLocalPath) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -257,10 +248,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - updateAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+              // logger.v("$TAG - setAvatar - success - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
               return true;
             }
-            logger.w("$TAG - updateAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
+            logger.w("$TAG - setAvatar - fail - groupId:$groupId - avatarLocalPath:$avatarLocalPath");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -280,8 +271,6 @@ class PrivateGroupStorage with Tag {
                 columns: ['*'],
                 where: 'group_id = ?',
                 whereArgs: [groupId],
-                offset: 0,
-                limit: 1,
               );
               if (res == null || res.length <= 0) {
                 logger.w("$TAG - setBurning - no exists - groupId:$groupId");
@@ -322,8 +311,6 @@ class PrivateGroupStorage with Tag {
                 columns: ['*'],
                 where: 'group_id = ?',
                 whereArgs: [groupId],
-                offset: 0,
-                limit: 1,
               );
               if (res == null || res.length <= 0) {
                 logger.w("$TAG - setData - no exists - groupId:$groupId");
@@ -331,10 +318,10 @@ class PrivateGroupStorage with Tag {
               }
               PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
               Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
-              data.addAll(added ?? Map());
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
+              data.addAll(added ?? Map());
               int count = await txn.update(
                 tableName,
                 {
@@ -345,6 +332,49 @@ class PrivateGroupStorage with Tag {
                 whereArgs: [groupId],
               );
               if (count <= 0) logger.w("$TAG - setData - fail - groupId:$groupId - newData:$data");
+              return (count > 0) ? data : null;
+            });
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return null;
+        }) ??
+        null;
+  }
+
+  Future<Map<String, dynamic>?> setDataItemMapChange(String? groupId, String key, Map addPairs, List delKeys) async {
+    if (db?.isOpen != true) return null;
+    if (groupId == null || groupId.isEmpty) return null;
+    if (addPairs.isEmpty && delKeys.isEmpty) return null;
+    return await _queue.add(() async {
+          try {
+            return await db?.transaction((txn) async {
+              List<Map<String, dynamic>> res = await txn.query(
+                tableName,
+                columns: ['*'],
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+              if (res == null || res.length <= 0) {
+                logger.w("$TAG - setDataItemMapChange - no exists - groupId:$groupId");
+                return null;
+              }
+              PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
+              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> values = data[key] ?? Map();
+              if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
+              if (addPairs.isNotEmpty) values.addAll(addPairs.map((key, value) => MapEntry(key.toString(), value)));
+              data[key] = values;
+              int count = await txn.update(
+                tableName,
+                {
+                  'data': jsonEncode(data),
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'group_id = ?',
+                whereArgs: [groupId],
+              );
+              if (count <= 0) logger.w("$TAG - setDataItemMapChange - fail - groupId:$groupId - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {

@@ -39,10 +39,8 @@ class ContactStorage with Tag {
     await db.execute(createSQL);
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
-    await db.execute('CREATE INDEX `index_contact_create_at` ON `$tableName` (`create_at`)');
-    await db.execute('CREATE INDEX `index_contact_update_at` ON `$tableName` (`update_at`)');
-    await db.execute('CREATE INDEX `index_contact_type_create_at` ON `$tableName` (`type`, `create_at`)');
-    await db.execute('CREATE INDEX `index_contact_type_update_at` ON `$tableName` (`type`, `update_at`)');
+    await db.execute('CREATE INDEX `index_contact_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
+    await db.execute('CREATE INDEX `index_contact_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool unique = true}) async {
@@ -108,7 +106,7 @@ class ContactStorage with Tag {
     return null;
   }
 
-  Future<List<ContactSchema>> queryList({int? type, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -119,7 +117,7 @@ class ContactStorage with Tag {
           whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
-          orderBy: orderBy ?? 'create_at DESC',
+          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {
@@ -205,7 +203,7 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setFullName(String? address, String? firstName, String? lastName) async {
+  Future<bool> setFullName(String? address, String firstName, String lastName) async {
     if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
@@ -214,8 +212,8 @@ class ContactStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'first_name': firstName ?? "",
-                  'last_name': lastName ?? "",
+                  'first_name': firstName,
+                  'last_name': lastName,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'address = ?',
@@ -235,7 +233,7 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setRemarkName(String? address, String? remarkName) async {
+  Future<bool> setRemarkName(String? address, String remarkName) async {
     if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
@@ -244,7 +242,7 @@ class ContactStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'remark_name': remarkName ?? "",
+                  'remark_name': remarkName,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
                 where: 'address = ?',
@@ -264,9 +262,9 @@ class ContactStorage with Tag {
         false;
   }
 
-  Future<bool> setType(String? address, int? type) async {
+  Future<bool> setType(String? address, int type) async {
     if (db?.isOpen != true) return false;
-    if (address == null || address.isEmpty || type == null) return false;
+    if (address == null || address.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
