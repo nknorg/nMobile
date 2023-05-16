@@ -29,7 +29,7 @@ class ContactStorage with Tag {
         `last_name` VARCHAR(50),
         `remark_name` VARCHAR(50),
         `type` INT,
-        `is_top` BOOLEAN,
+        `is_top` BOOLEAN DEFAULT 0,
         `options` TEXT,
         `data` TEXT
       )''';
@@ -37,7 +37,6 @@ class ContactStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
     await db.execute('CREATE INDEX `index_contact_create_at` ON `$tableName` (`create_at`)');
@@ -120,7 +119,7 @@ class ContactStorage with Tag {
           whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
-          orderBy: orderBy,
+          orderBy: orderBy ?? 'create_at DESC',
         );
       });
       if (res == null || res.isEmpty) {
