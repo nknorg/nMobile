@@ -15,10 +15,11 @@ class SubscriberSchema {
   static const int PermPageSize = 10;
 
   int? id; // (required) <-> id
-  String topic; // (required) <-> topic
-  String clientAddress; // (required) <-> chat_id
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
+
+  String topic; // (required) <-> topic
+  String contactAddress; // (required) <-> contact_address
 
   int? status; // <-> status
   int? permPage; // <-> perm_page
@@ -29,7 +30,7 @@ class SubscriberSchema {
   SubscriberSchema({
     this.id,
     required this.topic,
-    required this.clientAddress,
+    required this.contactAddress,
     this.createAt,
     this.updateAt,
     this.status,
@@ -38,7 +39,7 @@ class SubscriberSchema {
   });
 
   String get pubKey {
-    return getPubKeyFromTopicOrChatId(clientAddress) ?? clientAddress;
+    return getPubKeyFromTopicOrChatId(contactAddress) ?? contactAddress;
   }
 
   bool get canBeKick {
@@ -66,7 +67,7 @@ class SubscriberSchema {
     if (topic?.isNotEmpty == true && clientAddress?.isNotEmpty == true) {
       return SubscriberSchema(
         topic: topic!,
-        clientAddress: clientAddress!,
+        contactAddress: clientAddress!,
         createAt: DateTime.now().millisecondsSinceEpoch,
         updateAt: DateTime.now().millisecondsSinceEpoch,
         status: status,
@@ -80,7 +81,7 @@ class SubscriberSchema {
     Map<String, dynamic> map = {
       'id': id,
       'topic': topic,
-      'chat_id': clientAddress,
+      'contact_address': contactAddress,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
       'status': status,
@@ -94,7 +95,7 @@ class SubscriberSchema {
     var subscribeSchema = SubscriberSchema(
       id: e['id'],
       topic: e['topic'] ?? "",
-      clientAddress: e['chat_id'] ?? "",
+      contactAddress: e['contact_address'] ?? "",
       createAt: e['create_at'],
       updateAt: e['update_at'],
       status: e['status'],
@@ -115,6 +116,6 @@ class SubscriberSchema {
 
   @override
   String toString() {
-    return 'SubscriberSchema{id: $id, topic: $topic, clientAddress: $clientAddress, createAt: $createAt, updateAt: $updateAt, status: $status, permPage: $permPage, data: $data, temp: $temp}';
+    return 'SubscriberSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topic: $topic, clientAddress: $contactAddress, status: $status, permPage: $permPage, data: $data, temp: $temp}';
   }
 }

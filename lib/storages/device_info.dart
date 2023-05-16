@@ -31,7 +31,6 @@ class DeviceInfoStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
     await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
