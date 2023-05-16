@@ -12,16 +12,16 @@ class PrivateGroupItemStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_private_group_item", timeout: Duration(seconds: 10), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = ParallelQueue("storage_private_group_item", onLog: (log, error) => error ? logger.w(log) : null);
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `group_id` VARCHAR(200),
+        `group_id` VARCHAR(100),
         `permission` INT,
         `expires_at` BIGINT,
-        `inviter` VARCHAR(200),
-        `invitee` VARCHAR(200),
+        `inviter` VARCHAR(100),
+        `invitee` VARCHAR(100),
         `inviter_raw_data` TEXT,
         `invitee_raw_data` TEXT,
         `inviter_signature` VARCHAR(200),
@@ -32,7 +32,6 @@ class PrivateGroupItemStorage with Tag {
   static create(Database db) async {
     // create table
     await db.execute(createSQL);
-
     // index
     await db.execute('CREATE UNIQUE INDEX `index_private_group_item_group_id_invitee` ON `$tableName` (`group_id`, `invitee`)');
     await db.execute('CREATE INDEX `index_private_group_item_group_id_expires_at` ON `$tableName` (`group_id`, `expires_at`)');
@@ -57,8 +56,6 @@ class PrivateGroupItemStorage with Tag {
               columns: ['*'],
               where: 'group_id = ? AND invitee = ?',
               whereArgs: [schema.groupId, schema.invitee],
-              offset: 0,
-              limit: 1,
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -89,8 +86,6 @@ class PrivateGroupItemStorage with Tag {
         columns: ['*'],
         where: 'group_id = ? AND invitee = ?',
         whereArgs: [groupId, invitee],
-        offset: 0,
-        limit: 1,
       );
       if (res != null && res.length > 0) {
         PrivateGroupItemSchema? schema = PrivateGroupItemSchema.fromMap(res.first);
@@ -129,7 +124,7 @@ class PrivateGroupItemStorage with Tag {
         PrivateGroupItemSchema pgItem = PrivateGroupItemSchema.fromMap(map);
         results.add(pgItem);
       });
-      // logger.v("$TAG - queryList - items:$logText");
+      // logger.v("$TAG - queryList - groupId:$groupId - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
