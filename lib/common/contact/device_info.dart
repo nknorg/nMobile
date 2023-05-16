@@ -58,7 +58,7 @@ class DeviceInfoCommon with Tag {
       if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
         logger.i("$TAG - getMe - self deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
         bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
-        if (success) deviceInfo.deviceToken = deviceToken;
+        if (success) deviceInfo.deviceToken = deviceToken ?? "";
       }
     }
     if (refreshOnlineAt) {
@@ -110,7 +110,7 @@ class DeviceInfoCommon with Tag {
     int minOnlineAt = DateTime.now().subtract(Duration(days: days)).millisecondsSinceEpoch;
     for (int i = 0; i < devices.length; i++) {
       DeviceInfoSchema schema = devices[i];
-      String deviceToken = schema.deviceToken?.trim() ?? "";
+      String deviceToken = schema.deviceToken.trim();
       if (deviceToken.isEmpty) continue;
       if (tokens.isNotEmpty) {
         if (schema.onlineAt < minOnlineAt) continue;
