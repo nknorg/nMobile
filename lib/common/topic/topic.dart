@@ -7,7 +7,6 @@ import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/tip/toast.dart';
-import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
@@ -70,21 +69,21 @@ class TopicCommon with Tag {
       List<TopicSchema> result = await queryList(offset: offset, limit: limit);
       result.forEach((element) {
         if (element.isSubscribeProgress()) {
-          logger.i("$TAG - checkAndTryAllSubscribe - topic is subscribe progress - topic:${element.topic} - topic:$element");
+          logger.i("$TAG - checkAndTryAllSubscribe - topic is subscribe progress - topicId:${element.topicId} - topic:$element");
           topicsWithReSubscribe.add(element);
         } else if (element.isUnSubscribeProgress()) {
-          logger.i("$TAG - checkAndTryAllSubscribe - topic is unsubscribe progress - topic:${element.topic} - topic:$element");
+          logger.i("$TAG - checkAndTryAllSubscribe - topic is unsubscribe progress - topicId:${element.topicId} - topic:$element");
           topicsWithReUnSubscribe.add(element);
         } else {
           int lastCheckAt = element.lastCheckSubscribeAt();
           int interval = DateTime.now().millisecondsSinceEpoch - lastCheckAt;
           if (element.joined && (interval > Settings.gapTopicSubscribeCheckMs)) {
-            logger.i("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap ok - gap:$interval>${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
+            logger.i("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap ok - gap:$interval>${Settings.gapTopicSubscribeCheckMs} - topicId:${element.topicId} - topic:$element");
             topicsWithSubscribeExpire.add(element);
           } else if (interval <= Settings.gapTopicSubscribeCheckMs) {
-            logger.d("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap small - gap:$interval<${Settings.gapTopicSubscribeCheckMs} - topic:${element.topic} - topic:$element");
+            logger.d("$TAG - checkAndTryAllSubscribe - topic subscribe expire - gap small - gap:$interval<${Settings.gapTopicSubscribeCheckMs} - topicId:${element.topicId} - topic:$element");
           } else {
-            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - no_joined - joined:${element.joined} - topic:${element.topic} - topic:$element");
+            logger.v("$TAG - checkAndTryAllSubscribe - topic subscribe expire - no_joined - joined:${element.joined} - topicId:${element.topicId} - topic:$element");
           }
         }
       });
@@ -108,8 +107,8 @@ class TopicCommon with Tag {
       double fee = await getTopicReSubscribeFee();
       for (var i = 0; i < topicsWithSubscribeExpire.length; i++) {
         TopicSchema topic = topicsWithSubscribeExpire[i];
-        var result = await checkExpireAndSubscribe(topic.topic, fee: fee); // no nonce
-        if (result != null) await setLastCheckSubscribeAt(topic.id);
+        var result = await checkExpireAndSubscribe(topic.topicId, fee: fee); // no nonce
+        if (result != null) await setLastCheckSubscribeAt(topic.topicId);
       }
     }
   }
@@ -117,29 +116,28 @@ class TopicCommon with Tag {
   Future<bool> _checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
     if (topic == null || !clientCommon.isClientOK) return false;
     // expireHeight
-    int expireHeight = await getSubscribeExpireAtFromNode(topic.topic, clientCommon.address);
+    int expireHeight = await getSubscribeExpireAtFromNode(topic.topicId, clientCommon.address);
     // fee
-    topic = await query(topic.id);
-    if (topic == null) return false;
+    topic = await query(topic.topicId) ?? topic;
     double fee = topic.getProgressSubscribeFee();
     int? nonce = topic.getProgressSubscribeNonce();
     // resubscribe
     if (subscribed) {
       if (expireHeight <= 0) {
-        logger.i("$TAG - _checkAndTrySubscribe - topic try subscribe - nonce:$nonce - fee:$fee - subscribe:$subscribed - topic:$topic");
-        final result = await checkExpireAndSubscribe(topic.topic, refreshSubscribers: false, forceSubscribe: true, enableFirst: true, nonce: nonce, fee: fee);
-        if (result != null) await subscriberCommon.onSubscribe(topic.topic, clientCommon.address, null);
+        logger.i("$TAG - _checkAndTrySubscribe - topic try subscribe - nonce:$nonce - fee:$fee - subscribe:$subscribed - topicId:${topic.topicId} - topic:$topic");
+        final result = await checkExpireAndSubscribe(topic.topicId, refreshSubscribers: false, forceSubscribe: true, enableFirst: true, nonce: nonce, fee: fee);
+        if (result != null) await subscriberCommon.onSubscribe(topic.topicId, clientCommon.address, null);
       } else {
-        logger.i("$TAG - _checkAndTrySubscribe - topic subscribe OK - nonce:$nonce - fee:$fee - subscribe:$subscribed - topic:$topic");
-        await setStatusProgressEnd(topic.id, notify: true);
+        logger.i("$TAG - _checkAndTrySubscribe - topic subscribe OK - nonce:$nonce - fee:$fee - subscribe:$subscribed - topicId:${topic.topicId} - topic:$topic");
+        await setStatusProgressEnd(topic.topicId, notify: true);
       }
     } else {
       if (expireHeight >= 0) {
-        logger.i("$TAG - _checkAndTrySubscribe - topic try unsubscribe - nonce:$nonce - fee:$fee - subscribe:$subscribed - topic:$topic");
-        await unsubscribe(topic.topic, nonce: nonce, fee: fee);
+        logger.i("$TAG - _checkAndTrySubscribe - topic try unsubscribe - nonce:$nonce - fee:$fee - subscribe:$subscribed - topicId:${topic.topicId} - topic:$topic");
+        await unsubscribe(topic.topicId, nonce: nonce, fee: fee);
       } else {
-        logger.i("$TAG - _checkAndTrySubscribe - topic unsubscribe OK - nonce:$nonce - fee:$fee - subscribe:$subscribed - topic:$topic");
-        await setStatusProgressEnd(topic.id, notify: true);
+        logger.i("$TAG - _checkAndTrySubscribe - topic unsubscribe OK - nonce:$nonce - fee:$fee - subscribe:$subscribed - topicId:${topic.topicId} - topic:$topic");
+        await setStatusProgressEnd(topic.topicId, notify: true);
       }
     }
     return true;
@@ -153,17 +151,17 @@ class TopicCommon with Tag {
     List<TopicSchema> permissionTopics = [];
     // topic permission resubscribe
     for (int offset = 0; true; offset += limit) {
-      List<TopicSchema> result = await queryList(topicType: TopicType.privateTopic, offset: offset, limit: limit);
+      List<TopicSchema> result = await queryList(type: TopicType.private, offset: offset, limit: limit);
       result.forEach((element) {
         if (element.isOwner(clientCommon.address)) {
           privateTopics.add(element);
           int lastCheckAt = element.lastCheckPermissionsAt();
           int interval = DateTime.now().millisecondsSinceEpoch - lastCheckAt;
           if (interval > Settings.gapTopicPermissionCheckMs) {
-            logger.i("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap ok - gap:$interval>${Settings.gapTopicPermissionCheckMs} - topic:${element.topic}");
+            logger.i("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap ok - gap:$interval>${Settings.gapTopicPermissionCheckMs} - topicId:${element.topicId} - topic:$element");
             permissionTopics.add(element);
           } else {
-            logger.d("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap small - gap:$interval<${Settings.gapTopicPermissionCheckMs} - topic:${element.topic}");
+            logger.d("$TAG - checkAndTryAllPermission - topic permission resubscribe - gap small - gap:$interval<${Settings.gapTopicPermissionCheckMs} - topicId:${element.topicId} - topic:$element");
           }
         }
       });
@@ -181,7 +179,7 @@ class TopicCommon with Tag {
         for (var i = 0; i < permissionTopics.length; i++) {
           TopicSchema topic = permissionTopics[i];
           bool success = await _checkAndTryPermissionExpire(topic, globalHeight, fee);
-          if (success) await setLastCheckPermissionAt(topic.id);
+          if (success) await setLastCheckPermissionAt(topic.topicId);
         }
       }
     }
@@ -190,10 +188,10 @@ class TopicCommon with Tag {
     for (var i = 0; i < privateTopics.length; i++) {
       TopicSchema topic = privateTopics[i];
       for (int offset = 0; true; offset += limit) {
-        List<SubscriberSchema> result = await subscriberCommon.queryListByTopic(topic.topic, offset: offset, limit: limit);
+        List<SubscriberSchema> result = await subscriberCommon.queryListByTopicId(topic.topicId, offset: offset, limit: limit);
         result.forEach((element) {
           if (element.isPermissionProgress() != null) {
-            logger.i("$TAG - checkAndTryAllPermission - subscribers permission upload - progress:${element.isPermissionProgress()} - topic:$topic");
+            logger.i("$TAG - checkAndTryAllPermission - subscribers permission upload - progress:${element.isPermissionProgress()} - topicId:${element.topicId} - contactAddress:${element.contactAddress} - subscriber:$element");
             subscribers.add(element);
           }
         });
@@ -214,22 +212,22 @@ class TopicCommon with Tag {
   @Deprecated('Replace by PrivateGroup')
   Future<bool> _checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee) async {
     if (topic == null || !clientCommon.isClientOK) return false;
-    int maxPermPage = await subscriberCommon.queryMaxPermPageByTopic(topic.topic);
+    int maxPermPage = await subscriberCommon.queryMaxPermPageByTopicId(topic.topicId);
     for (var i = 0; i <= maxPermPage; i++) {
       // perm_page
-      List? result = await _getPermissionExpireAtByPageFromNode(topic.topic, i);
+      List? result = await _getPermissionExpireAtByPageFromNode(topic.topicId, i);
       Map<String, dynamic>? meta = result?[0];
       int? expireHeight = result?[1];
       if ((meta == null) || (expireHeight == null)) {
-        logger.w("$TAG - _checkAndTryPermissionExpire - error when _getPermissionExpireAtByPageFromNode - topic:${topic.topic} - fee:$fee - expireHeight:$expireHeight - meta:$result");
+        logger.w("$TAG - _checkAndTryPermissionExpire - error when _getPermissionExpireAtByPageFromNode - topicId:${topic.topicId} - fee:$fee - expireHeight:$expireHeight - meta:$result");
         return false;
       }
       // subscribe
       if ((expireHeight > 0) && ((expireHeight - globalHeight) < Settings.blockHeightTopicWarnBlockExpire)) {
-        logger.i("$TAG - _checkAndTryPermissionExpire - resubscribe permission - topic:${topic.topic} - fee:$fee - expireHeight:$expireHeight - meta:$result");
-        return await RPC.subscribeWithPermission(topic.topic, fee: fee, permPage: i, meta: meta, toast: false); // no nonce
+        logger.i("$TAG - _checkAndTryPermissionExpire - resubscribe permission - topicId:${topic.topicId} - fee:$fee - expireHeight:$expireHeight - meta:$result");
+        return await RPC.subscribeWithPermission(topic.topicId, fee: fee, permPage: i, meta: meta, toast: false); // no nonce
       } else {
-        logger.d("$TAG - _checkAndTryPermissionExpire - permission OK - topic:${topic.topic} - fee:$fee - expireHeight:$expireHeight - meta:$result");
+        logger.d("$TAG - _checkAndTryPermissionExpire - permission OK - topicId:${topic.topicId} - fee:$fee - expireHeight:$expireHeight - meta:$result");
       }
     }
     return true;
@@ -243,48 +241,48 @@ class TopicCommon with Tag {
     bool needReject = status == SubscriberStatus.Unsubscribed;
     bool needNoPermission = status == SubscriberStatus.None;
     // permission(txPool=false)
-    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(subscriber.topic, subscriber.clientAddress, txPool: false);
+    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(subscriber.topicId, subscriber.contactAddress, txPool: false);
     bool? acceptAll = permission[0];
     // int? permPage = permission[1];
     bool? isAccept = permission[2];
     bool? isReject = permission[3];
     if (acceptAll == null) {
-      logger.w("$TAG - _checkAndTryPermissionSet - error when findPermissionFromNode - status:$status - permission:$permission - topic:${subscriber.topic} - subscriber:$subscriber");
+      logger.w("$TAG - _checkAndTryPermissionSet - error when findPermissionFromNode - status:$status - permission:$permission - topicId:${subscriber.topicId} - subscriber:$subscriber");
       return false;
     }
     // fee
-    subscriber = await subscriberCommon.query(subscriber.id);
+    subscriber = await subscriberCommon.query(subscriber.topicId, subscriber.contactAddress);
     if (subscriber == null) return false;
     double fee = subscriber.getProgressPermissionFee();
     int? nonce = subscriber.getProgressPermissionNonce();
     // check
     if (needAccept) {
       if (isAccept == true) {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(accept) OK - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await subscriberCommon.setStatusProgressEnd(subscriber.id);
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(accept) OK - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await subscriberCommon.setStatusProgressEnd(subscriber.topicId, subscriber.contactAddress);
       } else {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try invitee - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await invitee(subscriber.topic, true, true, subscriber.clientAddress, nonce: nonce, fee: fee);
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try invitee - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await invitee(subscriber.topicId, true, true, subscriber.contactAddress, nonce: nonce, fee: fee);
       }
     } else if (needReject) {
       if (isReject == true) {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(reject) OK - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await subscriberCommon.setStatusProgressEnd(subscriber.id);
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(reject) OK - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await subscriberCommon.setStatusProgressEnd(subscriber.topicId, subscriber.contactAddress);
       } else {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try kick - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await kick(subscriber.topic, true, true, subscriber.clientAddress, nonce: nonce, fee: fee);
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try kick - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await kick(subscriber.topicId, true, true, subscriber.contactAddress, nonce: nonce, fee: fee);
       }
     } else if (needNoPermission) {
       if ((isAccept != true) && (isReject != true)) {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(none) OK - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await subscriberCommon.setStatusProgressEnd(subscriber.id);
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber permission(none) OK - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await subscriberCommon.setStatusProgressEnd(subscriber.topicId, subscriber.contactAddress);
       } else {
-        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try unsubscribe - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-        await onUnsubscribe(subscriber.topic, subscriber.clientAddress); // no nonce
+        logger.i("$TAG - _checkAndTryPermissionSet - subscriber try unsubscribe - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+        await onUnsubscribe(subscriber.topicId, subscriber.contactAddress); // no nonce
       }
     } else {
-      logger.w("$TAG - _checkAndTryPermissionSet - subscriber permission none - status:$status - nonce:$nonce - fee:$fee - topic:${subscriber.topic} - subscribe:$subscriber");
-      await subscriberCommon.setStatusProgressEnd(subscriber.id);
+      logger.w("$TAG - _checkAndTryPermissionSet - subscriber permission none - status:$status - nonce:$nonce - fee:$fee - topicId:${subscriber.topicId} - subscribe:$subscriber");
+      await subscriberCommon.setStatusProgressEnd(subscriber.topicId, subscriber.contactAddress);
     }
     return true;
   }
@@ -294,33 +292,33 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = self(owner/normal)
-  Future<TopicSchema?> subscribe(String? topic, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
-    if (topic == null || topic.isEmpty || !clientCommon.isClientOK) return null;
+  Future<TopicSchema?> subscribe(String? topicId, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
+    if (topicId == null || topicId.isEmpty || !clientCommon.isClientOK) return null;
     // topic exist
-    TopicSchema? exists = await queryByTopic(topic);
-    if (exists == null) {
-      int expireHeight = await getSubscribeExpireAtFromNode(topic, clientCommon.address);
-      exists = await add(TopicSchema.create(topic, expireHeight: expireHeight), notify: true);
-      logger.i("$TAG - subscribe - new - expireHeight:$expireHeight - schema:$exists");
+    TopicSchema? topic = await query(topicId);
+    if (topic == null) {
+      int expireHeight = await getSubscribeExpireAtFromNode(topicId, clientCommon.address);
+      topic = await add(TopicSchema.create(topicId, expireHeight: expireHeight), notify: true);
+      logger.i("$TAG - subscribe - new - expireHeight:$expireHeight - topic:$topic");
       // refreshSubscribers later
     }
-    if (exists == null) {
-      logger.w("$TAG - subscribe - topic is null - topic:$topic");
+    if (topic == null) {
+      logger.w("$TAG - subscribe - topic is null - topicId:$topicId");
       return null;
     }
     // permission(private + normal)
     int? permPage;
-    if (exists.isPrivate && !exists.isOwner(clientCommon.address)) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, clientCommon.address);
+    if (topic.isPrivate && !topic.isOwner(clientCommon.address)) {
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicId, clientCommon.address);
       bool? acceptAll = permission[0];
       permPage = permission[1];
       bool? isAccept = permission[2];
       bool? isReject = permission[3];
       if (acceptAll == null) {
-        logger.w("$TAG - subscribe - error when findPermissionFromNode - topic:$topic - permission:$permission");
+        logger.w("$TAG - subscribe - error when findPermissionFromNode - topicId:$topicId - permission:$permission");
         return null;
       } else if (acceptAll == true) {
-        logger.d("$TAG - subscribe - accept all - schema:$exists");
+        logger.d("$TAG - subscribe - accept all - topic:$topic");
       } else if (isReject == true) {
         if (justNow) {
           Toast.show(Settings.locale((s) => s.no_permission_join_group));
@@ -336,29 +334,29 @@ class TopicCommon with Tag {
         }
         return null;
       } else {
-        logger.i("$TAG - subscribe - is_accept ok - schema:$exists");
+        logger.i("$TAG - subscribe - is_accept ok - topic:$topic");
       }
     } else {
-      logger.d("$TAG - subscribe - skip permission check - schema:$exists");
+      logger.d("$TAG - subscribe - skip permission check - topic:$topic");
     }
     // check expire + pull subscribers
-    exists = await checkExpireAndSubscribe(topic, refreshSubscribers: fetchSubscribers, forceSubscribe: true, enableFirst: true, fee: fee, toast: true);
-    if (exists == null) return null;
+    topic = await checkExpireAndSubscribe(topicId, refreshSubscribers: fetchSubscribers, forceSubscribe: true, enableFirst: true, fee: fee, toast: true);
+    if (topic == null) return null;
     await Future.delayed(Duration(milliseconds: 250));
     // permission(owner default all permission)
     // status
-    await subscriberCommon.onSubscribe(topic, clientCommon.address, permPage);
+    await subscriberCommon.onSubscribe(topicId, clientCommon.address, permPage);
     await Future.delayed(Duration(milliseconds: 250));
     // send messages
-    await chatOutCommon.sendTopicSubscribe(topic);
+    await chatOutCommon.sendTopicSubscribe(topicId);
     // subscribersInfo
     // subscriberCommon.fetchSubscribersInfo(topic); // await
-    return exists;
+    return topic;
   }
 
   // caller = self(owner/normal)
   Future<TopicSchema?> checkExpireAndSubscribe(
-    String? topic, {
+    String? topicId, {
     bool refreshSubscribers = false,
     bool forceSubscribe = false,
     bool enableFirst = false,
@@ -366,43 +364,43 @@ class TopicCommon with Tag {
     double fee = 0,
     bool toast = false,
   }) async {
-    if (topic == null || topic.isEmpty || !clientCommon.isClientOK) return null;
+    if (topicId == null || topicId.isEmpty || !clientCommon.isClientOK) return null;
     // topic exist
-    TopicSchema? exists = await queryByTopic(topic);
-    if (exists == null) {
-      logger.w("$TAG - checkExpireAndSubscribe - topic is null - topic:$topic");
+    TopicSchema? topic = await query(topicId);
+    if (topic == null) {
+      logger.w("$TAG - checkExpireAndSubscribe - topic is null - topicId:$topicId");
       return null;
     }
     // check expire
     bool noSubscribed;
-    int expireHeight = await getSubscribeExpireAtFromNode(exists.topic, clientCommon.address);
-    if (!exists.joined || (exists.subscribeAt ?? 0) <= 0 || (exists.expireBlockHeight ?? 0) <= 0) {
+    int expireHeight = await getSubscribeExpireAtFromNode(topic.topicId, clientCommon.address);
+    if (!topic.joined || (topic.subscribeAt ?? 0) <= 0 || (topic.expireBlockHeight ?? 0) <= 0) {
       // DB no joined
       if (expireHeight > 0) {
         // node is joined
         noSubscribed = false;
-        int gap = DateTime.now().millisecondsSinceEpoch - (exists.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        int gap = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
         if (gap > Settings.gapTxPoolUpdateDelayMs) {
-          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
-          int subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
+          logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
+          int subscribeAt = topic.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
           bool success = await setJoined(
-            exists.id,
+            topicId,
             true,
             subscribeAt: subscribeAt,
             expireBlockHeight: expireHeight,
             notify: true,
           );
           if (success) {
-            exists.joined = true;
-            exists.subscribeAt = subscribeAt;
-            exists.expireBlockHeight = expireHeight;
+            topic.joined = true;
+            topic.subscribeAt = subscribeAt;
+            topic.expireBlockHeight = expireHeight;
           }
         } else {
-          logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB expire but node not expire, maybe in txPool, just return - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
         }
       } else {
         // node no joined
-        logger.i("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$exists");
+        logger.i("$TAG - checkExpireAndSubscribe - no subscribe history - topic:$topic");
         noSubscribed = true;
       }
     } else {
@@ -410,45 +408,45 @@ class TopicCommon with Tag {
       if (expireHeight <= 0) {
         // node no joined
         noSubscribed = true;
-        int gap = DateTime.now().millisecondsSinceEpoch - (exists.createAt ?? DateTime.now().millisecondsSinceEpoch);
-        if (exists.joined && (gap > Settings.gapTxPoolUpdateDelayMs)) {
-          logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
+        int gap = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        if (topic.joined && (gap > Settings.gapTxPoolUpdateDelayMs)) {
+          logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
           bool success = await setJoined(
-            exists.id,
+            topicId,
             false,
             subscribeAt: null,
             expireBlockHeight: 0,
             notify: true,
           );
           if (success) {
-            exists.joined = false;
-            exists.subscribeAt = null;
-            exists.expireBlockHeight = 0;
+            topic.joined = false;
+            topic.subscribeAt = null;
+            topic.expireBlockHeight = 0;
           }
         } else {
-          logger.i("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$exists");
+          logger.i("$TAG - checkExpireAndSubscribe - DB not expire but node expire, maybe in txPool, just run - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
         }
       } else {
         // node is joined
-        logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$exists");
+        logger.d("$TAG - checkExpireAndSubscribe - OK OK OK OK OK - topic:$topic");
         noSubscribed = false;
       }
     }
     // subscribe
     int? globalHeight = await RPC.getBlockHeight();
-    bool shouldResubscribe = await exists.shouldResubscribe(globalHeight);
-    if (forceSubscribe || (noSubscribed && enableFirst) || (exists.joined && shouldResubscribe)) {
+    bool shouldResubscribe = await topic.shouldResubscribe(globalHeight);
+    if (forceSubscribe || (noSubscribed && enableFirst) || (topic.joined && shouldResubscribe)) {
       // client subscribe
-      bool subscribeSuccess = await RPC.subscribeWithJoin(topic, true, nonce: nonce, fee: fee, toast: toast);
+      bool subscribeSuccess = await RPC.subscribeWithJoin(topicId, true, nonce: nonce, fee: fee, toast: toast);
       if (!subscribeSuccess) {
-        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topic:$topic - nonce:$nonce - fee:$fee - topic:$exists");
+        logger.w("$TAG - checkExpireAndSubscribe - _clientSubscribe fail - topicId:$topicId - nonce:$nonce - fee:$fee - topic:$topic");
         return null;
       }
       // db update
-      var subscribeAt = exists.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
-      var expireHeight = (globalHeight ?? exists.expireBlockHeight ?? 0) + Settings.blockHeightTopicSubscribeDefault;
+      var subscribeAt = topic.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
+      var expireHeight = (globalHeight ?? topic.expireBlockHeight ?? 0) + Settings.blockHeightTopicSubscribeDefault;
       bool setSuccess = await setJoined(
-        exists.id,
+        topicId,
         true,
         subscribeAt: subscribeAt,
         expireBlockHeight: expireHeight,
@@ -456,25 +454,25 @@ class TopicCommon with Tag {
         notify: true,
       );
       if (setSuccess) {
-        exists.joined = true;
-        exists.subscribeAt = subscribeAt;
-        exists.expireBlockHeight = expireHeight;
+        topic.joined = true;
+        topic.subscribeAt = subscribeAt;
+        topic.expireBlockHeight = expireHeight;
       }
-      logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topic:$topic - nonce:$nonce - fee:$fee - topic:$exists");
+      logger.i("$TAG - checkExpireAndSubscribe - _clientSubscribe success - topicId:$topicId - nonce:$nonce - fee:$fee - topic:$topic");
     } else {
-      logger.d("$TAG - checkExpireAndSubscribe - _clientSubscribe no need subscribe - topic:$exists");
+      logger.d("$TAG - checkExpireAndSubscribe - _clientSubscribe no need subscribe - topic:$topic");
     }
     // subscribers
     if (refreshSubscribers) {
-      await subscriberCommon.refreshSubscribers(topic, exists.ownerPubKey, meta: exists.isPrivate);
-      await setLastRefreshSubscribersAt(exists.id, notify: true);
-      int count = await subscriberCommon.getSubscribersCount(topic, exists.isPrivate);
-      if (exists.count != count) {
-        bool success = await setCount(exists.id, count, notify: true);
-        if (success) exists.count = count;
+      await subscriberCommon.refreshSubscribers(topicId, topic.ownerPubKey, meta: topic.isPrivate);
+      await setLastRefreshSubscribersAt(topicId, notify: true);
+      int count = await subscriberCommon.getSubscribersCount(topicId, topic.isPrivate);
+      if (topic.count != count) {
+        bool success = await setCount(topicId, count, notify: true);
+        if (success) topic.count = count;
       }
     }
-    return exists;
+    return topic;
   }
 
   /// ***********************************************************************************************************
@@ -482,8 +480,8 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> invitee(String? topic, bool isPrivate, bool isOwner, String? inviteeAddress, {int? nonce, double fee = 0, bool toast = false, bool sendMsg = false}) async {
-    if (topic == null || topic.isEmpty || inviteeAddress == null || inviteeAddress.isEmpty) return null;
+  Future<SubscriberSchema?> invitee(String? topicId, bool isPrivate, bool isOwner, String? inviteeAddress, {int? nonce, double fee = 0, bool toast = false, bool sendMsg = false}) async {
+    if (topicId == null || topicId.isEmpty || inviteeAddress == null || inviteeAddress.isEmpty) return null;
     if (!clientCommon.isClientOK) return null;
     if (isPrivate && !isOwner) {
       if (toast) Toast.show(Settings.locale((s) => s.member_no_auth_invite));
@@ -493,22 +491,22 @@ class TopicCommon with Tag {
       return null;
     }
     // check status
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, inviteeAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.query(topicId, inviteeAddress);
     if ((_subscriber != null) && (_subscriber.status == SubscriberStatus.Subscribed)) {
       if (toast) Toast.show(Settings.locale((s) => s.group_member_already));
       return null;
     }
-    int? oldStatus = _subscriber?.status;
+    int oldStatus = _subscriber?.status ?? SubscriberStatus.None;
     // if (isPrivate && toast) Toast.show(Settings.locale((s) => s.inviting));
     // check permission
     int? appendPermPage;
     if (isPrivate) {
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, inviteeAddress);
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicId, inviteeAddress);
       bool? acceptAll = permission[0];
-      appendPermPage = permission[1] ?? (await subscriberCommon.queryNextPermPageByTopic(topic));
+      appendPermPage = permission[1] ?? (await subscriberCommon.queryNextPermPageByTopicId(topicId));
       bool? isReject = permission[3];
       if (acceptAll == null) {
-        logger.w("$TAG - invitee - error when findPermissionFromNode - topic:$topic - permission:$permission - subscriber:$_subscriber");
+        logger.w("$TAG - invitee - error when findPermissionFromNode - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
         return null;
       } else if (!isOwner && (acceptAll != true) && (isReject == true)) {
         // just owner can invitee reject item
@@ -516,69 +514,69 @@ class TopicCommon with Tag {
         return null;
       }
       // update DB
-      _subscriber = await subscriberCommon.onInvitedSend(topic, inviteeAddress, appendPermPage);
+      _subscriber = await subscriberCommon.onInvitedSend(topicId, inviteeAddress, appendPermPage);
       // update meta (private + owner + no_accept_all)
       if (acceptAll == true) {
-        logger.i("$TAG - invitee - acceptAll == true - topic:$topic - invitee:$inviteeAddress - permission:$permission");
+        logger.i("$TAG - invitee - acceptAll == true - topicId:$topicId - invitee:$inviteeAddress - permission:$permission");
       } else {
         if (appendPermPage == null) {
-          logger.e("$TAG - invitee - permPage is null - topic:$topic - permission:$permission - subscriber:$_subscriber");
+          logger.e("$TAG - invitee - permPage is null - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
           return null;
         }
-        logger.i("$TAG - invitee - push permission by me(==owner) - topic:$topic - permission:$permission - subscriber:$_subscriber");
-        Map<String, dynamic>? meta = await _getMetaByPageFromNode(topic, appendPermPage);
+        logger.i("$TAG - invitee - push permission by me(==owner) - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
+        Map<String, dynamic>? meta = await _getMetaByPageFromNode(topicId, appendPermPage);
         if (meta == null) {
-          logger.w("$TAG - invitee - meta is null by _getMetaFromNodeByPage - topic:$topic - permission:$permission - subscriber:$_subscriber");
+          logger.w("$TAG - invitee - meta is null by _getMetaFromNodeByPage - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
           return null;
         }
-        meta = await _buildPageMetaByAppend(topic, meta, _subscriber);
+        meta = await _buildPageMetaByAppend(topicId, meta, _subscriber);
         if (meta == null) {
-          logger.w("$TAG - invitee - meta is null by _buildPageMetaByAppend - topic:$topic - permission:$permission - subscriber:$_subscriber");
+          logger.w("$TAG - invitee - meta is null by _buildPageMetaByAppend - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
           return null;
         }
-        bool subscribeSuccess = await RPC.subscribeWithPermission(topic, nonce: nonce, fee: fee, permPage: appendPermPage, meta: meta, toast: toast, clientAddress: inviteeAddress, newStatus: SubscriberStatus.InvitedSend, oldStatus: oldStatus);
+        bool subscribeSuccess = await RPC.subscribeWithPermission(topicId, nonce: nonce, fee: fee, permPage: appendPermPage, meta: meta, toast: toast, contactAddress: inviteeAddress, newStatus: SubscriberStatus.InvitedSend, oldStatus: oldStatus);
         if (!subscribeSuccess) {
-          logger.w("$TAG - invitee - rpc error - topic:$topic - nonce_$nonce - fee:$fee - permPage:$appendPermPage - meta:$meta");
+          logger.w("$TAG - invitee - rpc error - topicId:$topicId - nonce_$nonce - fee:$fee - permPage:$appendPermPage - meta:$meta");
           _subscriber?.status = oldStatus;
           return null;
         }
       }
     } else {
       // update DB
-      logger.d("$TAG - invitee - no permission by me(public) - topic:$topic - subscriber:$_subscriber");
-      _subscriber = await subscriberCommon.onInvitedSend(topic, inviteeAddress, null);
+      logger.d("$TAG - invitee - no permission by me(public) - topicId:$topicId - subscriber:$_subscriber");
+      _subscriber = await subscriberCommon.onInvitedSend(topicId, inviteeAddress, null);
     }
     // send message
     if (sendMsg) {
-      MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(inviteeAddress, topic);
+      MessageSchema? _msg = await chatOutCommon.sendTopicInvitee(inviteeAddress, topicId);
       if (_msg == null) {
         if (toast) Toast.show(Settings.locale((s) => s.failure));
         return null;
       }
     } else if (oldStatus == SubscriberStatus.InvitedReceipt) {
-      await subscriberCommon.setStatus(_subscriber?.id, SubscriberStatus.InvitedReceipt, notify: true);
+      await subscriberCommon.setStatus(_subscriber?.topicId, _subscriber?.contactAddress, SubscriberStatus.InvitedReceipt, notify: true);
     }
     if (toast) Toast.show(Settings.locale((s) => s.invitation_sent));
     return _subscriber;
   }
 
   // caller = self
-  Future<TopicSchema?> unsubscribe(String? topic, {int? nonce, double fee = 0, bool toast = false}) async {
-    if (topic == null || topic.isEmpty) return null;
+  Future<TopicSchema?> unsubscribe(String? topicId, {int? nonce, double fee = 0, bool toast = false}) async {
+    if (topicId == null || topicId.isEmpty) return null;
     if (!clientCommon.isClientOK) return null;
     // permission modify in owners message received by owner
-    TopicSchema? exists = await queryByTopic(topic);
+    TopicSchema? topic = await query(topicId);
     // client unsubscribe
-    bool unsubscribeSuccess = await RPC.subscribeWithJoin(topic, false, nonce: nonce, fee: fee, toast: toast);
+    bool unsubscribeSuccess = await RPC.subscribeWithJoin(topicId, false, nonce: nonce, fee: fee, toast: toast);
     if (!unsubscribeSuccess) {
-      logger.w("$TAG - unsubscribe - rpc error - topic:$topic - nonce$nonce - fee:$fee - topic:$exists");
+      logger.w("$TAG - unsubscribe - rpc error - topicId:$topicId - nonce$nonce - fee:$fee - topic:$topic");
       return null;
     }
-    logger.i("$TAG - unsubscribe - rpc success - topic:$topic - nonce$nonce - fee:$fee - topic:$exists");
+    logger.i("$TAG - unsubscribe - rpc success - topicId:$topicId - nonce$nonce - fee:$fee - topic:$topic");
     await Future.delayed(Duration(milliseconds: 250));
     // topic update
     bool setSuccess = await setJoined(
-      exists?.id,
+      topicId,
       false,
       subscribeAt: null,
       expireBlockHeight: 0,
@@ -586,78 +584,78 @@ class TopicCommon with Tag {
       notify: true,
     );
     if (setSuccess) {
-      exists?.joined = false;
-      exists?.subscribeAt = null;
-      exists?.expireBlockHeight = 0;
+      topic?.joined = false;
+      topic?.subscribeAt = null;
+      topic?.expireBlockHeight = 0;
     }
-    // setSuccess = await setCount(exists?.id, (exists?.count ?? 1) - 1, notify: true);
-    // if (setSuccess) exists?.count = (exists.count ?? 1) - 1;
+    // setSuccess = await setCount(topic?.id, (topic?.count ?? 1) - 1, notify: true);
+    // if (setSuccess) topic?.count = (topic.count ?? 1) - 1;
     // DB(topic+subscriber) delete
-    await subscriberCommon.onUnsubscribe(topic, clientCommon.address);
+    await subscriberCommon.onUnsubscribe(topicId, clientCommon.address);
     // await subscriberCommon.deleteByTopic(topic); // stay is useful
-    // await delete(exists?.id, notify: true); // replace by setJoined
+    // await delete(topic?.id, notify: true); // replace by setJoined
     // send message
-    await chatOutCommon.sendTopicUnSubscribe(topic);
+    await chatOutCommon.sendTopicUnSubscribe(topicId);
     await Future.delayed(Duration(milliseconds: 250));
-    return exists;
+    return topic;
   }
 
   // caller = private + owner
   @Deprecated('Replace by PrivateGroup')
-  Future<SubscriberSchema?> kick(String? topic, bool isPrivate, bool isOwner, String? kickAddress, {int? nonce, double fee = 0, bool toast = false}) async {
-    if (topic == null || topic.isEmpty || kickAddress == null || kickAddress.isEmpty) return null;
+  Future<SubscriberSchema?> kick(String? topicId, bool isPrivate, bool isOwner, String? kickAddress, {int? nonce, double fee = 0, bool toast = false}) async {
+    if (topicId == null || topicId.isEmpty || kickAddress == null || kickAddress.isEmpty) return null;
     if (!clientCommon.isClientOK) return null;
     if (kickAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
     // topic exist
-    TopicSchema? _topic = await queryByTopic(topic);
+    TopicSchema? _topic = await query(topicId);
     if (_topic == null) {
-      logger.e("$TAG - kick - topic is null - topic:$topic");
+      logger.e("$TAG - kick - topic is null - topicId:$topicId");
       return null;
     }
     // check status
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, kickAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.query(topicId, kickAddress);
     if (_subscriber == null) return null;
     // if (_subscriber.canBeKick == false) return null; // checked in UI
-    int? oldStatus = _subscriber.status;
+    int oldStatus = _subscriber.status;
     // check permission
-    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, kickAddress);
+    List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicId, kickAddress);
     bool? acceptAll = permission[0];
     int? permPage = permission[1] ?? _subscriber.permPage;
     if (acceptAll == null) {
-      logger.w("$TAG - kick - error when findPermissionFromNode - topic:$topic - kickAddress:$kickAddress");
+      logger.w("$TAG - kick - error when findPermissionFromNode - topicId:$topicId - kickAddress:$kickAddress");
       return null;
     } else if ((acceptAll == true) || (permPage == null)) {
-      logger.w("$TAG - kick - permPage is null(maybe accept all) - topic:$topic - kickAddress:$kickAddress");
+      logger.w("$TAG - kick - permPage is null(maybe accept all) - topicId:$topicId - kickAddress:$kickAddress");
       if (toast) Toast.show(Settings.locale((s) => s.failure));
       return null;
     }
     // update DB
-    _subscriber = await subscriberCommon.onKickOut(topic, kickAddress, permPage: permPage);
+    _subscriber = await subscriberCommon.onKickOut(topicId, kickAddress, permPage: permPage);
     // update meta (private + owner + no_accept_all)
-    Map<String, dynamic>? meta = await _getMetaByPageFromNode(topic, permPage);
+    Map<String, dynamic>? meta = await _getMetaByPageFromNode(topicId, permPage);
     if (meta == null) {
-      logger.w("$TAG - kick - meta is null by _getMetaFromNodeByPage - topic:$topic - permission:$permission - subscriber:$_subscriber");
+      logger.w("$TAG - kick - meta is null by _getMetaFromNodeByPage - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
       return null;
     }
-    meta = await _buildPageMetaByAppend(topic, meta, _subscriber);
+    meta = await _buildPageMetaByAppend(topicId, meta, _subscriber);
     if (meta == null) {
-      logger.w("$TAG - kick - meta is null by _buildPageMetaByAppend - topic:$topic - permission:$permission - subscriber:$_subscriber");
+      logger.w("$TAG - kick - meta is null by _buildPageMetaByAppend - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
       return null;
     }
-    bool subscribeSuccess = await RPC.subscribeWithPermission(topic, nonce: nonce, fee: fee, permPage: permPage, meta: meta, toast: toast, clientAddress: kickAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus);
+    bool subscribeSuccess = await RPC.subscribeWithPermission(topicId, nonce: nonce, fee: fee, permPage: permPage, meta: meta, toast: toast, contactAddress: kickAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus);
     if (!subscribeSuccess) {
-      logger.w("$TAG - kick - rpc error - topic:$topic - nonce:$nonce - fee:$fee - permission:$permission - meta:$meta - subscriber:$_subscriber");
+      logger.w("$TAG - kick - rpc error - topicId:$topicId - nonce:$nonce - fee:$fee - permission:$permission - meta:$meta - subscriber:$_subscriber");
       _subscriber?.status = oldStatus;
       return null;
     }
-    logger.i("$TAG - kick - rpc success - topic:$topic - nonce:$nonce - fee:$fee - permission:$permission - meta:$meta - subscriber:$_subscriber");
+    logger.i("$TAG - kick - rpc success - topicId:$topicId - nonce:$nonce - fee:$fee - permission:$permission - meta:$meta - subscriber:$_subscriber");
     if (oldStatus == SubscriberStatus.Subscribed) {
-      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
-      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+      bool setSuccess = await setCount(topicId, _topic.count - 1, notify: true);
+      if (setSuccess) _topic.count = _topic.count - 1;
     }
     // send message
-    await chatOutCommon.sendTopicKickOut(topic, kickAddress);
+    await chatOutCommon.sendTopicKickOut(topicId, kickAddress);
     if (toast) Toast.show(Settings.locale((s) => s.rejected));
     return _subscriber;
   }
@@ -667,23 +665,23 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<SubscriberSchema?> onSubscribe(String? topic, String? subAddress) async {
-    if (topic == null || topic.isEmpty || subAddress == null || subAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onSubscribe(String? topicId, String? subAddress) async {
+    if (topicId == null || topicId.isEmpty || subAddress == null || subAddress.isEmpty) return null;
     // no client check, has progress
     // topic exist
-    TopicSchema? _topic = await queryByTopic(topic);
+    TopicSchema? _topic = await query(topicId);
     if (_topic == null) {
-      logger.e("$TAG - onSubscribe - topic is null - topic:$topic");
+      logger.e("$TAG - onSubscribe - topic is null - topicId:$topicId");
       return null;
     }
     // subscriber exist
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, subAddress);
-    int? oldStatus = _subscriber?.status ?? SubscriberStatus.None;
+    SubscriberSchema? _subscriber = await subscriberCommon.query(topicId, subAddress);
+    int oldStatus = _subscriber?.status ?? SubscriberStatus.None;
     // permission check
     int? permPage;
     if (_topic.isPrivate && !_topic.isOwner(subAddress)) {
-      logger.i("$TAG - onSubscribe - sync permission by me(no owner) - topic:$topic - subAddress:$subAddress - topic:$_topic");
-      List permission = await subscriberCommon.findPermissionFromNode(topic, subAddress);
+      logger.i("$TAG - onSubscribe - sync permission by me(no owner) - topicId:$topicId - subAddress:$subAddress - topic:$_topic");
+      List permission = await subscriberCommon.findPermissionFromNode(topicId, subAddress);
       bool? acceptAll = permission[0];
       permPage = permission[1];
       bool? isAccept = permission[2];
@@ -700,18 +698,18 @@ class TopicCommon with Tag {
         logger.i("$TAG - onSubscribe - subscriber permission is ok - topic:$_topic - subAddress:$subAddress - permission:$permission");
       }
     } else {
-      logger.d("$TAG - onSubscribe - no permission action by me - topic:$topic - subAddress:$subAddress - topic:$_topic");
+      logger.d("$TAG - onSubscribe - no permission action by me - topicId:$topicId - subAddress:$subAddress - topic:$_topic");
     }
     // permission modify in invitee action by owner
     // subscriber update
-    _subscriber = await subscriberCommon.onSubscribe(topic, subAddress, permPage);
+    _subscriber = await subscriberCommon.onSubscribe(topicId, subAddress, permPage);
     if (_subscriber == null) {
-      logger.w("$TAG - onSubscribe - subscriber is null - topic:$topic - subAddress:$subAddress - permPage:$permPage");
+      logger.w("$TAG - onSubscribe - subscriber is null - topicId:$topicId - subAddress:$subAddress - permPage:$permPage");
       return null;
     }
     if (oldStatus != SubscriberStatus.Subscribed) {
-      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) + 1, notify: true);
-      if (setSuccess) _topic.count = (_topic.count ?? 1) + 1;
+      bool setSuccess = await setCount(topicId, _topic.count + 1, notify: true);
+      if (setSuccess) _topic.count = _topic.count + 1;
     }
     // subscribers sync
     // if (_topic.isPrivate) {
@@ -723,66 +721,66 @@ class TopicCommon with Tag {
   }
 
   // caller = everyone
-  Future<SubscriberSchema?> onUnsubscribe(String? topic, String? unSubAddress) async {
-    if (topic == null || topic.isEmpty || unSubAddress == null || unSubAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onUnsubscribe(String? topicId, String? unSubAddress) async {
+    if (topicId == null || topicId.isEmpty || unSubAddress == null || unSubAddress.isEmpty) return null;
     // no client check, has progress
     // topic exist
-    TopicSchema? _topic = await queryByTopic(topic);
+    TopicSchema? _topic = await query(topicId);
     if (_topic == null) {
-      logger.e("$TAG - onUnsubscribe - topic is null - topic:$topic");
+      logger.e("$TAG - onUnsubscribe - topic is null - topicId:$topicId");
       return null;
     }
     // subscriber exist
-    SubscriberSchema? _subscriber = await subscriberCommon.queryByTopicChatId(topic, unSubAddress);
-    int? oldStatus = _subscriber?.status ?? SubscriberStatus.None;
+    SubscriberSchema? _subscriber = await subscriberCommon.query(topicId, unSubAddress);
+    int oldStatus = _subscriber?.status ?? SubscriberStatus.None;
     // subscriber update
-    _subscriber = await subscriberCommon.onUnsubscribe(topic, unSubAddress);
+    _subscriber = await subscriberCommon.onUnsubscribe(topicId, unSubAddress);
     if (_subscriber == null) {
-      logger.w("$TAG - onUnsubscribe - subscriber is null - topic:$topic - unSubAddress:$unSubAddress");
+      logger.w("$TAG - onUnsubscribe - subscriber is null - topicId:$topicId - unSubAddress:$unSubAddress");
       return null;
     }
     // private + owner
     if (_topic.isPrivate && _topic.isOwner(clientCommon.address) && (clientCommon.address != unSubAddress)) {
-      logger.i("$TAG - onUnsubscribe - sync permission by me(==owner) - topic:$topic - subscriber:$_subscriber - topic:$_topic");
-      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topic, unSubAddress);
+      logger.i("$TAG - onUnsubscribe - sync permission by me(==owner) - topicId:$topicId - subscriber:$_subscriber - topic:$_topic");
+      List<dynamic> permission = await subscriberCommon.findPermissionFromNode(topicId, unSubAddress);
       bool? acceptAll = permission[0];
       int? permPage = permission[1] ?? _subscriber.permPage;
       if (acceptAll == null) {
-        logger.w("$TAG - onUnsubscribe - error when findPermissionFromNode - topic:$topic - permission:$permission - subscriber:$_subscriber - topic:$_topic");
+        logger.w("$TAG - onUnsubscribe - error when findPermissionFromNode - topicId:$topicId - permission:$permission - subscriber:$_subscriber - topic:$_topic");
         return null;
       } else if (acceptAll == true) {
-        logger.i("$TAG - onUnsubscribe - acceptAll == true - topic:$topic - permission:$permission - subscriber:$_subscriber - topic:$_topic");
+        logger.i("$TAG - onUnsubscribe - acceptAll == true - topicId:$topicId - permission:$permission - subscriber:$_subscriber - topic:$_topic");
       } else {
         if (permPage == null) {
-          logger.e("$TAG - onUnsubscribe - permPage is null - topic:$topic - permission:$permission - subscriber:$_subscriber");
+          logger.e("$TAG - onUnsubscribe - permPage is null - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
           return null;
         } else if (_subscriber.permPage != permPage) {
-          logger.w("$TAG - onUnsubscribe - permPage is diff - topic:$topic - permission:$permission - subscriber:$_subscriber");
-          bool success = await subscriberCommon.setPermPage(_subscriber.id, permPage, notify: true);
+          logger.w("$TAG - onUnsubscribe - permPage is diff - topicId:$topicId - permission:$permission - subscriber:$_subscriber");
+          bool success = await subscriberCommon.setPermPage(_subscriber.topicId, _subscriber.contactAddress, permPage, notify: true);
           if (success) _subscriber.permPage = permPage; // if (success)
         }
         // meta update
-        Map<String, dynamic>? meta = await _getMetaByPageFromNode(topic, permPage);
+        Map<String, dynamic>? meta = await _getMetaByPageFromNode(topicId, permPage);
         if (meta == null) {
-          logger.w("$TAG - onUnsubscribe - meta is null by _getMetaFromNodeByPage - topic:$topic - permission:$permission - subscriber:$_subscriber - topic:$_topic");
+          logger.w("$TAG - onUnsubscribe - meta is null by _getMetaFromNodeByPage - topicId:$topicId - permission:$permission - subscriber:$_subscriber - topic:$_topic");
           return null;
         }
         _subscriber.status = SubscriberStatus.None; // temp for build meta
-        meta = await _buildPageMetaByAppend(topic, meta, _subscriber);
+        meta = await _buildPageMetaByAppend(topicId, meta, _subscriber);
         _subscriber.status = SubscriberStatus.Unsubscribed;
         if (meta == null) {
-          logger.w("$TAG - onUnsubscribe - meta is null by _buildPageMetaByAppend - topic:$topic - permission:$permission - subscriber:$_subscriber - topic:$_topic");
+          logger.w("$TAG - onUnsubscribe - meta is null by _buildPageMetaByAppend - topicId:$topicId - permission:$permission - subscriber:$_subscriber - topic:$_topic");
           return null;
         }
-        bool subscribeSuccess = await RPC.subscribeWithPermission(topic, permPage: permPage, meta: meta, clientAddress: unSubAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus);
+        bool subscribeSuccess = await RPC.subscribeWithPermission(topicId, permPage: permPage, meta: meta, contactAddress: unSubAddress, newStatus: SubscriberStatus.Unsubscribed, oldStatus: oldStatus);
         if (!subscribeSuccess) {
-          logger.w("$TAG - onUnsubscribe - rpc error - topic:$topic - permission:$permission - meta:$meta - subscriber:$_subscriber - topic:$_topic");
+          logger.w("$TAG - onUnsubscribe - rpc error - topicId:$topicId - permission:$permission - meta:$meta - subscriber:$_subscriber - topic:$_topic");
           _subscriber.status = oldStatus;
           return null;
         }
       }
     } else {
-      logger.d("$TAG - onUnsubscribe - no permission action by me - topic:$topic - subscriber:$_subscriber - topic:$_topic");
+      logger.d("$TAG - onUnsubscribe - no permission action by me - topicId:$topicId - subscriber:$_subscriber - topic:$_topic");
     }
     // owner unsubscribe
     if (_topic.isPrivate && _topic.isOwner(unSubAddress) && (clientCommon.address == unSubAddress)) {
@@ -790,8 +788,8 @@ class TopicCommon with Tag {
     }
     // DB update (just node sync can delete)
     if (oldStatus == SubscriberStatus.Subscribed) {
-      bool setSuccess = await setCount(_topic.id, (_topic.count ?? 1) - 1, notify: true);
-      if (setSuccess) _topic.count = (_topic.count ?? 1) - 1;
+      bool setSuccess = await setCount(topicId, _topic.count - 1, notify: true);
+      if (setSuccess) _topic.count = _topic.count - 1;
     }
     // await subscriberCommon.delete(_subscriber.id, notify: true);
     // subscribers sync
@@ -805,35 +803,35 @@ class TopicCommon with Tag {
 
   // caller = everyone
   @Deprecated('Replace by PrivateGroup')
-  Future<SubscriberSchema?> onKickOut(String? topic, String? adminAddress, String? blackAddress) async {
-    if (topic == null || topic.isEmpty || adminAddress == null || adminAddress.isEmpty || blackAddress == null || blackAddress.isEmpty) return null;
+  Future<SubscriberSchema?> onKickOut(String? topicId, String? adminAddress, String? blackAddress) async {
+    if (topicId == null || topicId.isEmpty || adminAddress == null || adminAddress.isEmpty || blackAddress == null || blackAddress.isEmpty) return null;
     // no client check, has progress
     // topic exist
-    TopicSchema? _exist = await queryByTopic(topic);
+    TopicSchema? _exist = await query(topicId);
     if (_exist == null) {
-      logger.e("$TAG - onKickOut - topic is null - topic:$topic");
+      logger.e("$TAG - onKickOut - topic is null - topicId:$topicId");
       return null;
     } else if (!_exist.isOwner(adminAddress)) {
-      logger.e("$TAG - onKickOut - sender is not owner - topic:$topic - adminAddress:$adminAddress");
+      logger.e("$TAG - onKickOut - sender is not owner - topicId:$topicId - adminAddress:$adminAddress");
       return null;
     }
     // subscriber update
-    SubscriberSchema? _subscriber = await subscriberCommon.onKickOut(topic, blackAddress);
+    SubscriberSchema? _subscriber = await subscriberCommon.onKickOut(topicId, blackAddress);
     if (_subscriber == null) {
-      logger.w("$TAG - onKickOut - subscriber is null - topic:$topic - blackAddress:$blackAddress - topic:$_exist");
+      logger.w("$TAG - onKickOut - subscriber is null - topicId:$topicId - blackAddress:$blackAddress - topic:$_exist");
       return null;
     }
     // permission modify in kick action by owner
     // self unsubscribe
     if (blackAddress == clientCommon.address) {
-      logger.i("$TAG - onKickOut - kick self - topic:$topic - subscriber:$_subscriber - topic:$_exist");
-      bool unsubscribeSuccess = await RPC.subscribeWithJoin(topic, false);
+      logger.i("$TAG - onKickOut - kick self - topicId:$topicId - subscriber:$_subscriber - topic:$_exist");
+      bool unsubscribeSuccess = await RPC.subscribeWithJoin(topicId, false);
       if (!unsubscribeSuccess) {
-        logger.w("$TAG - onKickOut - rpc error - topic:$topic - subscriber:$_subscriber");
+        logger.w("$TAG - onKickOut - rpc error - topicId:$topicId - subscriber:$_subscriber");
         return null;
       }
       bool setSuccess = await setJoined(
-        _exist.id,
+        topicId,
         false,
         subscribeAt: null,
         expireBlockHeight: 0,
@@ -849,9 +847,9 @@ class TopicCommon with Tag {
       // await subscriberCommon.deleteByTopic(topic); // stay is useful
       // await delete(_topic.id, notify: true); // replace by setJoined
     } else {
-      logger.i("$TAG - onKickOut - kick other - topic:$topic - subscriber:$_subscriber - topic:$_exist");
-      bool setSuccess = await setCount(_exist.id, (_exist.count ?? 1) - 1, notify: true);
-      if (setSuccess) _exist.count = (_exist.count ?? 1) - 1;
+      logger.i("$TAG - onKickOut - kick other - topicId:$topicId - subscriber:$_subscriber - topic:$_exist");
+      bool setSuccess = await setCount(topicId, _exist.count - 1, notify: true);
+      if (setSuccess) _exist.count = _exist.count - 1;
       // await subscriberCommon.delete(_subscriber.id, notify: true);
       // subscribers sync
       // if (_topic.isPrivate) {
@@ -868,49 +866,49 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   // caller = everyone
-  Future<bool?> isSubscribed(String? topic, String? clientAddress, {int? globalHeight}) async {
-    if (topic == null || topic.isEmpty) return null;
-    TopicSchema? exists = await queryByTopic(topic);
+  Future<bool?> isSubscribed(String? topicId, String? contactAddress, {int? globalHeight}) async {
+    if (topicId == null || topicId.isEmpty) return null;
+    TopicSchema? exists = await query(topicId);
     int gap = DateTime.now().millisecondsSinceEpoch - (exists?.createAt ?? DateTime.now().millisecondsSinceEpoch);
     if ((exists != null) && (gap < Settings.gapTxPoolUpdateDelayMs)) {
-      logger.i("$TAG - isSubscribed - createAt just now, maybe in txPool - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topic:$topic - clientAddress:$clientAddress");
+      logger.i("$TAG - isSubscribed - createAt just now, maybe in txPool - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - topicId:$topicId - contactAddress:$contactAddress");
       return exists.joined; // maybe in txPool
     }
-    int expireHeight = await getSubscribeExpireAtFromNode(exists?.topic, clientAddress);
+    int expireHeight = await getSubscribeExpireAtFromNode(exists?.topicId, contactAddress);
     if (expireHeight <= 0) {
-      logger.i("$TAG - isSubscribed - expireHeight <= 0 - topic:$topic - clientAddress:$clientAddress");
+      logger.i("$TAG - isSubscribed - expireHeight <= 0 - topicId:$topicId - contactAddress:$contactAddress");
       return false;
     }
     globalHeight = globalHeight ?? (await RPC.getBlockHeight());
     if (globalHeight == null || globalHeight <= 0) {
-      logger.w("$TAG - isSubscribed - globalHeight <= 0 - topic:$topic");
+      logger.w("$TAG - isSubscribed - globalHeight <= 0 - topicId:$topicId");
       return null;
     }
-    logger.d("$TAG - isSubscribed - joined:${expireHeight >= globalHeight} - topic:$topic");
+    logger.d("$TAG - isSubscribed - joined:${expireHeight >= globalHeight} - topicId:$topicId");
     return expireHeight >= globalHeight;
   }
 
-  Future<int> getSubscribeExpireAtFromNode(String? topic, String? clientAddress) async {
-    if (topic == null || topic.isEmpty || clientAddress == null || clientAddress.isEmpty) return 0;
-    String? pubKey = getPubKeyFromTopicOrChatId(clientAddress);
-    Map<String, dynamic>? result = await RPC.getSubscription(topic, pubKey);
+  Future<int> getSubscribeExpireAtFromNode(String? topicId, String? contactAddress) async {
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return 0;
+    String? pubKey = getPubKeyFromTopicOrChatId(contactAddress);
+    Map<String, dynamic>? result = await RPC.getSubscription(topicId, pubKey);
     if (result == null) {
-      logger.w("$TAG - getSubscribeExpireAtFromNode - meta is null - topic:$topic - address:$clientAddress");
+      logger.w("$TAG - getSubscribeExpireAtFromNode - meta is null - topicId:$topicId - address:$contactAddress");
       return 0;
     }
     int expireSec = int.tryParse(result['expiresAt']?.toString() ?? "0") ?? 0;
-    logger.d("$TAG - getSubscribeExpireAtFromNode - topic:$topic - clientAddress:$clientAddress - expireSec:$expireSec");
+    logger.d("$TAG - getSubscribeExpireAtFromNode - topicId:$topicId - contactAddress:$contactAddress - expireSec:$expireSec");
     return expireSec;
   }
 
   @Deprecated('Replace by PrivateGroup')
-  Future<List?> _getPermissionExpireAtByPageFromNode(String? topic, int permPage) async {
-    if (topic == null || topic.isEmpty) return [null, null];
-    String? ownerPubKey = getPubKeyFromTopicOrChatId(topic);
+  Future<List?> _getPermissionExpireAtByPageFromNode(String? topicId, int permPage) async {
+    if (topicId == null || topicId.isEmpty) return [null, null];
+    String? ownerPubKey = getPubKeyFromTopicOrChatId(topicId);
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
-    Map<String, dynamic>? result = await RPC.getSubscription(topic, indexWithPubKey);
+    Map<String, dynamic>? result = await RPC.getSubscription(topicId, indexWithPubKey);
     if (result == null) {
-      logger.w("$TAG - _getPermissionExpireAtByPageFromNode - meta is null - topic:$topic - permPage:$permPage");
+      logger.w("$TAG - _getPermissionExpireAtByPageFromNode - meta is null - topicId:$topicId - permPage:$permPage");
       return [null, null];
     }
     Map<String, dynamic> meta = Map();
@@ -918,37 +916,37 @@ class TopicCommon with Tag {
       meta = Util.jsonFormatMap(result['meta']) ?? Map();
     }
     int expireSec = int.tryParse(result['expiresAt']?.toString() ?? "0") ?? 0;
-    logger.d("$TAG - _getPermissionExpireAtByPageFromNode - topic:$topic - permPage:$permPage - expireSec:$expireSec - meta:$meta");
+    logger.d("$TAG - _getPermissionExpireAtByPageFromNode - topicId:$topicId - permPage:$permPage - expireSec:$expireSec - meta:$meta");
     return [meta, expireSec];
   }
 
   @Deprecated('Replace by PrivateGroup')
-  Future<Map<String, dynamic>?> _getMetaByPageFromNode(String? topic, int permPage) async {
-    if (topic == null || topic.isEmpty) return null;
-    String? ownerPubKey = getPubKeyFromTopicOrChatId(topic);
+  Future<Map<String, dynamic>?> _getMetaByPageFromNode(String? topicId, int permPage) async {
+    if (topicId == null || topicId.isEmpty) return null;
+    String? ownerPubKey = getPubKeyFromTopicOrChatId(topicId);
     String indexWithPubKey = '__${permPage}__.__permission__.$ownerPubKey';
-    Map<String, dynamic>? result = await RPC.getSubscription(topic, indexWithPubKey);
+    Map<String, dynamic>? result = await RPC.getSubscription(topicId, indexWithPubKey);
     if (result == null) {
-      logger.w("$TAG - _getMetaByPageFromNode - meta is null - topic:$topic - permPage:$permPage");
+      logger.w("$TAG - _getMetaByPageFromNode - meta is null - topicId:$topicId - permPage:$permPage");
       return null;
     }
     Map<String, dynamic> meta = Map();
     if (result['meta']?.toString().isNotEmpty == true) {
       meta = Util.jsonFormatMap(result['meta']) ?? Map();
     }
-    logger.d("$TAG - _getMetaByPageFromNode- topic:$topic - permPage:$permPage - meta:$meta");
+    logger.d("$TAG - _getMetaByPageFromNode- topicId:$topicId - permPage:$permPage - meta:$meta");
     return meta;
   }
 
   @Deprecated('Replace by PrivateGroup')
-  Future<Map<String, dynamic>?> _buildPageMetaByAppend(String? topic, Map<String, dynamic> meta, SubscriberSchema? append) async {
-    if (topic == null || topic.isEmpty || append == null || append.clientAddress.isEmpty) return null;
+  Future<Map<String, dynamic>?> _buildPageMetaByAppend(String? topicId, Map<String, dynamic> meta, SubscriberSchema? append) async {
+    if (topicId == null || topicId.isEmpty || append == null || append.contactAddress.isEmpty) return null;
     // permPage
     if ((append.permPage ?? -1) <= 0) {
-      append.permPage = (await subscriberCommon.findPermissionFromNode(topic, append.clientAddress))[1] ?? 0;
+      append.permPage = (await subscriberCommon.findPermissionFromNode(topicId, append.contactAddress))[1] ?? 0;
     }
     // func
-    Function whereList = (bool equal, List<dynamic> permList, String clientAddress) {
+    Function whereList = (bool equal, List<dynamic> permList, String contactAddress) {
       return permList.where((element) {
         String address;
         if (element is Map) {
@@ -956,7 +954,7 @@ class TopicCommon with Tag {
         } else {
           address = element.toString();
         }
-        return equal ? (address == clientAddress) : (address != clientAddress);
+        return equal ? (address == contactAddress) : (address != contactAddress);
       }).toList();
     };
     // node meta
@@ -964,49 +962,49 @@ class TopicCommon with Tag {
     List<dynamic> rejectList = meta['reject'] ?? [];
     if ((append.status == SubscriberStatus.InvitedSend) || (append.status == SubscriberStatus.InvitedReceipt) || (append.status == SubscriberStatus.Subscribed)) {
       // add to accepts
-      rejectList = whereList(false, rejectList, append.clientAddress);
-      if (whereList(true, acceptList, append.clientAddress).isEmpty) {
-        logger.d("$TAG - _buildPageMetaByAppend - add to accepts - status:${append.status} - topic:$topic - address:${append.clientAddress}");
-        acceptList.add({'addr': append.clientAddress});
+      rejectList = whereList(false, rejectList, append.contactAddress);
+      if (whereList(true, acceptList, append.contactAddress).isEmpty) {
+        logger.d("$TAG - _buildPageMetaByAppend - add to accepts - status:${append.status} - topicId:$topicId - address:${append.contactAddress}");
+        acceptList.add({'addr': append.contactAddress});
       }
     } else if (append.status == SubscriberStatus.Unsubscribed) {
       // add to rejects
-      logger.d("$TAG - _buildPageMetaByAppend - add to rejects - status:${append.status} - topic:$topic - address:${append.clientAddress}");
-      acceptList = whereList(false, acceptList, append.clientAddress);
-      if (whereList(true, rejectList, append.clientAddress).isEmpty) {
-        rejectList.add({'addr': append.clientAddress});
+      logger.d("$TAG - _buildPageMetaByAppend - add to rejects - status:${append.status} - topicId:$topicId - address:${append.contactAddress}");
+      acceptList = whereList(false, acceptList, append.contactAddress);
+      if (whereList(true, rejectList, append.contactAddress).isEmpty) {
+        rejectList.add({'addr': append.contactAddress});
       }
     } else {
       // remove from all
-      logger.d("$TAG - _buildPageMetaByAppend - remove from all - status:${append.status} - topic:$topic - address:${append.clientAddress}");
-      acceptList = whereList(false, acceptList, append.clientAddress);
-      rejectList = whereList(false, rejectList, append.clientAddress);
+      logger.d("$TAG - _buildPageMetaByAppend - remove from all - status:${append.status} - topicId:$topicId - address:${append.contactAddress}");
+      acceptList = whereList(false, acceptList, append.contactAddress);
+      rejectList = whereList(false, rejectList, append.contactAddress);
     }
     // DB meta (maybe in txPool)
-    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicPerm(topic, append.permPage, SubscriberSchema.PermPageSize * 2);
+    List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicIdPerm(topicId, append.permPage, SubscriberSchema.PermPageSize * 2);
     subscribers.forEach((SubscriberSchema dbItem) {
-      if ((dbItem.clientAddress.isNotEmpty == true) && (dbItem.clientAddress != append.clientAddress)) {
+      if ((dbItem.contactAddress.isNotEmpty == true) && (dbItem.contactAddress != append.contactAddress)) {
         int gap = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
         if (gap < Settings.gapTxPoolUpdateDelayMs) {
           if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.Subscribed)) {
             // add to accepts
-            logger.i("$TAG - _buildPageMetaByAppend - add to accepts (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
-            rejectList = whereList(false, rejectList, dbItem.clientAddress);
-            if (whereList(true, acceptList, dbItem.clientAddress).isEmpty) {
-              acceptList.add({'addr': dbItem.clientAddress});
+            logger.i("$TAG - _buildPageMetaByAppend - add to accepts (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topicId:$topicId - address:${append.contactAddress}");
+            rejectList = whereList(false, rejectList, dbItem.contactAddress);
+            if (whereList(true, acceptList, dbItem.contactAddress).isEmpty) {
+              acceptList.add({'addr': dbItem.contactAddress});
             }
           } else if (dbItem.status == SubscriberStatus.Unsubscribed) {
             // add to rejects
-            logger.i("$TAG - _buildPageMetaByAppend - add to rejects (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
-            acceptList = whereList(false, acceptList, dbItem.clientAddress);
-            if (whereList(true, rejectList, dbItem.clientAddress).isEmpty) {
-              rejectList.add({'addr': dbItem.clientAddress});
+            logger.i("$TAG - _buildPageMetaByAppend - add to rejects (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topicId:$topicId - address:${append.contactAddress}");
+            acceptList = whereList(false, acceptList, dbItem.contactAddress);
+            if (whereList(true, rejectList, dbItem.contactAddress).isEmpty) {
+              rejectList.add({'addr': dbItem.contactAddress});
             }
           } else {
             // remove from all
-            logger.d("$TAG - _buildPageMetaByAppend - remove from all (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topic:$topic - address:${append.clientAddress}");
-            acceptList = whereList(false, acceptList, dbItem.clientAddress);
-            rejectList = whereList(false, rejectList, dbItem.clientAddress);
+            logger.d("$TAG - _buildPageMetaByAppend - remove from all (txPool) - gap:$gap<${Settings.gapTxPoolUpdateDelayMs} - status:${append.status} - progress_status:${dbItem.isPermissionProgress()} - topicId:$topicId - address:${append.contactAddress}");
+            acceptList = whereList(false, acceptList, dbItem.contactAddress);
+            rejectList = whereList(false, rejectList, dbItem.contactAddress);
           }
         }
       }
@@ -1014,7 +1012,7 @@ class TopicCommon with Tag {
     // new meta
     meta['accept'] = acceptList;
     meta['reject'] = rejectList;
-    logger.d("$TAG - _buildPageMetaByAppend - topic:$topic - permPage:${append.permPage} - accept:$acceptList - reject:$rejectList");
+    logger.d("$TAG - _buildPageMetaByAppend - topicId:$topicId - permPage:${append.permPage} - accept:$acceptList - reject:$rejectList");
     return meta;
   }
 
@@ -1023,8 +1021,7 @@ class TopicCommon with Tag {
   /// ***********************************************************************************************************
 
   Future<TopicSchema?> add(TopicSchema? schema, {bool notify = false}) async {
-    if (schema == null || schema.topic.isEmpty) return null;
-    schema.type = schema.type ?? (Validate.isPrivateTopicOk(schema.topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    if (schema == null || schema.topicId.isEmpty) return null;
     TopicSchema? added = await TopicStorage.instance.insert(schema);
     if ((added != null) && notify) _addSink.add(added);
     return added;
@@ -1039,25 +1036,28 @@ class TopicCommon with Tag {
     return success;
   }*/
 
-  Future<TopicSchema?> query(int? topicId) {
-    return TopicStorage.instance.query(topicId);
-  }
-
-  Future<TopicSchema?> queryByTopic(String? topic) async {
+  Future<TopicSchema?> query(String? topic) async {
     if (topic == null || topic.isEmpty) return null;
-    return await TopicStorage.instance.queryByTopic(topic);
+    return await TopicStorage.instance.query(topic);
   }
 
-  Future<List<TopicSchema>> queryList({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
-    return TopicStorage.instance.queryList(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<TopicSchema>> queryList({int? type, String? orderBy, int offset = 0, int limit = 20}) {
+    return TopicStorage.instance.queryList(type: type, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<List<TopicSchema>> queryListJoined({int? topicType, String? orderBy, int offset = 0, int limit = 20}) {
-    return TopicStorage.instance.queryListJoined(topicType: topicType, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<TopicSchema>> queryListJoined({int? type, String? orderBy, int offset = 0, int limit = 20}) {
+    return TopicStorage.instance.queryListByJoined(true, type: type, orderBy: orderBy, offset: offset, limit: limit);
   }
 
-  Future<bool> setJoined(int? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, bool refreshCreateAt = false, bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setJoined(
+    String? topicId,
+    bool joined, {
+    int? subscribeAt,
+    int? expireBlockHeight,
+    bool refreshCreateAt = false,
+    bool notify = false,
+  }) async {
+    if (topicId == null || topicId.isEmpty) return false;
     bool success = await TopicStorage.instance.setJoined(
       topicId,
       joined,
@@ -1065,61 +1065,66 @@ class TopicCommon with Tag {
       expireBlockHeight: expireBlockHeight,
       createAt: refreshCreateAt ? DateTime.now().millisecondsSinceEpoch : null,
     );
+    logger.d("$TAG - setJoined - success:$success - joined:$joined - topicId:$topicId - subscribeAt:$subscribeAt - expireBlockHeight:$expireBlockHeight - refreshCreateAt:$refreshCreateAt");
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
-  Future<bool> setAvatar(int? topicId, String? avatarLocalPath, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setAvatar(String? topicId, String? avatarLocalPath, {bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
     bool success = await TopicStorage.instance.setAvatar(topicId, avatarLocalPath);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
-  Future<bool> setCount(int? topicId, int? count, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
-    bool success = await TopicStorage.instance.setCount(topicId, count ?? 0);
+  Future<bool> setCount(String? topicId, int? count, {bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
+    if ((count == null) || (count < 0)) count = 0;
+    bool success = await TopicStorage.instance.setCount(topicId, count);
+    logger.d("$TAG - setCount - success:$success - topicId:$topicId - topicId:$topicId");
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
-  Future<bool> setTop(int? topicId, bool top, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setTop(String? topicId, bool top, {bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
     bool success = await TopicStorage.instance.setTop(topicId, top);
     if (success && notify) queryAndNotify(topicId);
     return success;
   }
 
-  Future<bool> setLastCheckSubscribeAt(int? topicId, {int? timeAt, bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setLastCheckSubscribeAt(String? topicId, {int? timeAt, bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
     var data = await TopicStorage.instance.setData(topicId, {
       "last_check_subscribe_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setLastCheckSubscribeAt - timeAt:$timeAt - new:$data - topicId:$topicId");
-    return data != null;
-  }
-
-  Future<bool> setLastCheckPermissionAt(int? topicId, {int? timeAt, bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
-    var data = await TopicStorage.instance.setData(topicId, {
-      "last_check_permissions_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
-    });
-    logger.d("$TAG - setLastCheckPermissionAt - timeAt:$timeAt - new:$data - topicId:$topicId");
-    return data != null;
-  }
-
-  Future<bool> setLastRefreshSubscribersAt(int? topicId, {int? timeAt, bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
-    var data = await TopicStorage.instance.setData(topicId, {
-      "last_refresh_subscribers_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
-    });
-    logger.d("$TAG - setLastRefreshSubscribersAt - timeAt:$timeAt - new:$data - topicId:$topicId");
+    logger.d("$TAG - setLastCheckSubscribeAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
 
-  Future<bool> setStatusProgressStart(int? topicId, bool subscribe, int? nonce, double fee, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setLastCheckPermissionAt(String? topicId, {int? timeAt, bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
+    var data = await TopicStorage.instance.setData(topicId, {
+      "last_check_permissions_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setLastCheckPermissionAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
+    if ((data != null) && notify) queryAndNotify(topicId);
+    return data != null;
+  }
+
+  Future<bool> setLastRefreshSubscribersAt(String? topicId, {int? timeAt, bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
+    var data = await TopicStorage.instance.setData(topicId, {
+      "last_refresh_subscribers_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    logger.d("$TAG - setLastRefreshSubscribersAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
+    if ((data != null) && notify) queryAndNotify(topicId);
+    return data != null;
+  }
+
+  Future<bool> setStatusProgressStart(String? topicId, bool subscribe, int? nonce, double fee, {bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
     var added = subscribe
         ? {
             "subscribe_progress": true,
@@ -1133,26 +1138,26 @@ class TopicCommon with Tag {
           };
     List<String> removeKeys = subscribe ? ["unsubscribe_progress"] : ["subscribe_progress"];
     var data = await TopicStorage.instance.setData(topicId, added, removeKeys: removeKeys);
-    logger.d("$TAG - setStatusProgressStart - added:$added - new:$data - topicId:$topicId");
+    logger.d("$TAG - setStatusProgressStart - success:${data != null} - added:$added - new:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
 
-  Future<bool> setStatusProgressEnd(int? topicId, {bool notify = false}) async {
-    if (topicId == null || topicId == 0) return false;
+  Future<bool> setStatusProgressEnd(String? topicId, {bool notify = false}) async {
+    if (topicId == null || topicId.isEmpty) return false;
     var data = await TopicStorage.instance.setData(topicId, null, removeKeys: [
       "subscribe_progress",
       "unsubscribe_progress",
       "progress_subscribe_nonce",
       "progress_subscribe_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - new:$data - topicId:$topicId");
+    logger.d("$TAG - setStatusProgressEnd - success:${data != null} - new:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
 
-  Future queryAndNotify(int? topicId) async {
-    if (topicId == null || topicId == 0) return;
+  Future queryAndNotify(String? topicId) async {
+    if (topicId == null || topicId.isEmpty) return;
     TopicSchema? updated = await query(topicId);
     if (updated != null) {
       _updateSink.add(updated);
