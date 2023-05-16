@@ -276,10 +276,10 @@ class ContactCommon with Tag {
     if (address == null || address.isEmpty) return null;
     OptionsSchema? options = await ContactStorage.instance.setNotificationOpen(address, open);
     if (options != null) {
-      logger.i("$TAG - setNotificationOpen - success - open:$open - new:$options - address:$address");
+      logger.i("$TAG - setNotificationOpen - success - open:$open - options:$options - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setNotificationOpen - fail - open:$open - new:$options - address:$address");
+      logger.w("$TAG - setNotificationOpen - fail - open:$open - options:$options - address:$address");
     }
     return options;
   }
@@ -288,10 +288,10 @@ class ContactCommon with Tag {
     if (address == null || address.isEmpty) return null;
     OptionsSchema? options = await ContactStorage.instance.setBurning(address, burningSeconds, updateAt);
     if (options != null) {
-      logger.i("$TAG - setOptionsBurn - success - burningSeconds:$burningSeconds - updateAt:$updateAt - new:$options - address:$address");
+      logger.i("$TAG - setOptionsBurn - success - burningSeconds:$burningSeconds - updateAt:$updateAt - options:$options - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setOptionsBurn - fail - burningSeconds:$burningSeconds - updateAt:$updateAt - new:$options - address:$address");
+      logger.w("$TAG - setOptionsBurn - fail - burningSeconds:$burningSeconds - updateAt:$updateAt - options:$options - address:$address");
     }
     return options;
   }
@@ -303,10 +303,10 @@ class ContactCommon with Tag {
       "remarkAvatar": avatarLocalPath,
     });
     if (data != null) {
-      logger.i("$TAG - setOtherRemarkAvatar - success - avatarLocalPath:$avatarLocalPath - new:$data - address:$address");
+      logger.i("$TAG - setOtherRemarkAvatar - success - avatarLocalPath:$avatarLocalPath - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setOtherRemarkAvatar - fail - avatarLocalPath:$avatarLocalPath - new:$data - address:$address");
+      logger.w("$TAG - setOtherRemarkAvatar - fail - avatarLocalPath:$avatarLocalPath - data:$data - address:$address");
     }
     return data;
   }
@@ -317,10 +317,10 @@ class ContactCommon with Tag {
       "nknWalletAddress": walletAddress,
     });
     if (data != null) {
-      logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - new:$data - address:$address");
+      logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - data:$data - address:$address");
       // if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - new:$data - address:$address");
+      logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - data:$data - address:$address");
     }
     return data;
   }
@@ -331,10 +331,10 @@ class ContactCommon with Tag {
       "mappedAddress": mapped,
     });
     if (data != null) {
-      logger.i("$TAG - setMappedAddress - success - mapped:$mapped - new:$data - address:$address");
+      logger.i("$TAG - setMappedAddress - success - mapped:$mapped - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setMappedAddress - fail - mapped:$mapped - new:$data - address:$address");
+      logger.w("$TAG - setMappedAddress - fail - mapped:$mapped - data:$data - address:$address");
     }
     return data;
   }
@@ -344,7 +344,7 @@ class ContactCommon with Tag {
     var data = await ContactStorage.instance.setData(address, {
       "profileVersion": profileVersion,
     });
-    logger.d("$TAG - setProfileVersion - profileVersion:$profileVersion - new:$data - address:$address");
+    logger.d("$TAG - setProfileVersion - profileVersion:$profileVersion - data:$data - address:$address");
     // if ((data != null) && notify) queryAndNotify(address);
     return data;
   }
@@ -355,10 +355,10 @@ class ContactCommon with Tag {
       "notes": notes,
     });
     if (data != null) {
-      logger.i("$TAG - setNotes - end success - notes:$notes - new:$data - address:$address");
+      logger.i("$TAG - setNotes - end success - notes:$notes - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setNotes - end fail - notes:$notes - new:$data - address:$address");
+      logger.w("$TAG - setNotes - end fail - notes:$notes - data:$data - address:$address");
     }
     return data;
   }
@@ -367,10 +367,10 @@ class ContactCommon with Tag {
     if (address == null || address.isEmpty) return null;
     var data = await ContactStorage.instance.setDataItemMapChange(address, "burnedMessages", adds, dels);
     if (data != null) {
-      logger.i("$TAG - setBurnedMessages - success - adds:$adds - dels:$dels - new:$data - address:$address");
+      logger.i("$TAG - setBurnedMessages - success - adds:$adds - dels:$dels - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setBurnedMessages - fail - adds:$adds - dels:$dels - new:$data - address:$address");
+      logger.w("$TAG - setBurnedMessages - fail - adds:$adds - dels:$dels - data:$data - address:$address");
     }
     return data;
   }
@@ -381,10 +381,10 @@ class ContactCommon with Tag {
       "tipNotification": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
     if (data != null) {
-      logger.i("$TAG - setTipNotification - success - timeAt:$timeAt - new:$data - address:$address");
+      logger.i("$TAG - setTipNotification - success - timeAt:$timeAt - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setTipNotification - fail - timeAt:$timeAt - new:$data - address:$address");
+      logger.w("$TAG - setTipNotification - fail - timeAt:$timeAt - data:$data - address:$address");
     }
     return data;
   }

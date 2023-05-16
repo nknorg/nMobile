@@ -135,7 +135,7 @@ class DeviceInfoCommon with Tag {
   Future<bool> setProfile(String? contactAddress, String? deviceId, Map<String, dynamic>? added) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, added);
-    logger.d("$TAG - setProfile - success:${data != null} - add:$added - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setProfile - success:${data != null} - add:$added - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -144,7 +144,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "pingAt": pingAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setPingAt - success:${data != null} - pingAt:$pingAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setPingAt - success:${data != null} - pingAt:$pingAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -153,7 +153,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "pongAt": pongAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setPongAt - success:${data != null} - pongAt:$pongAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setPongAt - success:${data != null} - pongAt:$pongAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -163,7 +163,7 @@ class DeviceInfoCommon with Tag {
       "contactProfileResponseVersion": version,
       "contactProfileResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setContactProfileResponseInfo - success:${data != null} - version:$version - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setContactProfileResponseInfo - success:${data != null} - version:$version - timeAt:$timeAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -172,7 +172,7 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "deviceInfoResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setDeviceInfoResponse - success:${data != null} - timeAt:$timeAt - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setDeviceInfoResponse - success:${data != null} - timeAt:$timeAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -211,14 +211,14 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "latestSendMessageQueueId": queueId,
     });
-    logger.d("$TAG - setLatestSendMessageQueueId - success:${data != null} - queueId:$queueId - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setLatestSendMessageQueueId - success:${data != null} - queueId:$queueId - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
   Future<bool> setSendingMessageQueueIds(String? contactAddress, String? deviceId, Map adds, List<int> dels) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setDataItemMapChange(contactAddress, deviceId, "sendingMessageQueueIds", adds, dels);
-    logger.d("$TAG - setSendingMessageQueueIds - success:${data != null} - adds:$adds - dels:$dels - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setSendingMessageQueueIds - success:${data != null} - adds:$adds - dels:$dels - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
@@ -227,14 +227,14 @@ class DeviceInfoCommon with Tag {
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "latestReceivedMessageQueueId": queueId,
     });
-    logger.d("$TAG - setLatestReceivedMessageQueueId - success:${data != null} - queueId:$queueId - new:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setLatestReceivedMessageQueueId - success:${data != null} - queueId:$queueId - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
   Future<bool> setLostReceiveMessageQueueIds(String? contactAddress, String? deviceId, List<int> adds, List<int> dels) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setDataItemListChange(contactAddress, deviceId, "lostReceiveMessageQueueIds", adds, dels);
-    logger.d("$TAG - setLostReceiveMessageQueueIds - success:${data != null} - adds:$adds - dels:$dels - new:$data - clientAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setLostReceiveMessageQueueIds - success:${data != null} - adds:$adds - dels:$dels - data:$data - clientAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 

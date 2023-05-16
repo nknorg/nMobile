@@ -1098,7 +1098,7 @@ class TopicCommon with Tag {
     var data = await TopicStorage.instance.setData(topicId, {
       "last_check_subscribe_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setLastCheckSubscribeAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
+    logger.d("$TAG - setLastCheckSubscribeAt - success:${data != null} - timeAt:$timeAt - data:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
@@ -1108,7 +1108,7 @@ class TopicCommon with Tag {
     var data = await TopicStorage.instance.setData(topicId, {
       "last_check_permissions_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setLastCheckPermissionAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
+    logger.d("$TAG - setLastCheckPermissionAt - success:${data != null} - timeAt:$timeAt - data:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
@@ -1118,7 +1118,7 @@ class TopicCommon with Tag {
     var data = await TopicStorage.instance.setData(topicId, {
       "last_refresh_subscribers_at": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setLastRefreshSubscribersAt - success:${data != null} - timeAt:$timeAt - new:$data - topicId:$topicId");
+    logger.d("$TAG - setLastRefreshSubscribersAt - success:${data != null} - timeAt:$timeAt - data:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
@@ -1138,7 +1138,7 @@ class TopicCommon with Tag {
           };
     List<String> removeKeys = subscribe ? ["unsubscribe_progress"] : ["subscribe_progress"];
     var data = await TopicStorage.instance.setData(topicId, added, removeKeys: removeKeys);
-    logger.d("$TAG - setStatusProgressStart - success:${data != null} - added:$added - new:$data - topicId:$topicId");
+    logger.d("$TAG - setStatusProgressStart - success:${data != null} - added:$added - data:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
@@ -1151,7 +1151,7 @@ class TopicCommon with Tag {
       "progress_subscribe_nonce",
       "progress_subscribe_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - success:${data != null} - new:$data - topicId:$topicId");
+    logger.d("$TAG - setStatusProgressEnd - success:${data != null} - data:$data - topicId:$topicId");
     if ((data != null) && notify) queryAndNotify(topicId);
     return data != null;
   }
