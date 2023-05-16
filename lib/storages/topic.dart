@@ -23,7 +23,7 @@ class TopicStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `topic` VARCHAR(100),
+        `topic_id` VARCHAR(100),
         `type` INT,
         `joined` BOOLEAN DEFAULT 0,
         `subscribe_at` BIGINT,
@@ -39,7 +39,7 @@ class TopicStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic` ON `$tableName` (`topic`)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic_id` ON `$tableName` (`topic_id`)');
     await db.execute('CREATE INDEX `index_topic_create_at` ON `$tableName` (`create_at`)');
     await db.execute('CREATE INDEX `index_topic_update_at` ON `$tableName` (`update_at`)');
     await db.execute('CREATE INDEX `index_topic_type_create_at` ON `$tableName` (`type`, `create_at`)');
@@ -50,7 +50,7 @@ class TopicStorage with Tag {
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
-    if (schema == null || schema.topic.isEmpty) return null;
+    if (schema == null || schema.topicId.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -64,8 +64,8 @@ class TopicStorage with Tag {
             List<Map<String, dynamic>> res = await txn.query(
               tableName,
               columns: ['*'],
-              where: 'topic = ?',
-              whereArgs: [schema.topic],
+              where: 'topic_id = ?',
+              whereArgs: [schema.topicId],
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -87,24 +87,24 @@ class TopicStorage with Tag {
     });
   }
 
-  Future<TopicSchema?> query(String? topic) async {
+  Future<TopicSchema?> query(String? topicId) async {
     if (db?.isOpen != true) return null;
-    if (topic == null || topic.isEmpty) return null;
+    if (topicId == null || topicId.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'topic = ?',
-          whereArgs: [topic],
+          where: 'topic_id = ?',
+          whereArgs: [topicId],
         );
       });
       if (res != null && res.length > 0) {
         TopicSchema schema = TopicSchema.fromMap(res.first);
-        // logger.v("$TAG - query - success - topic:$topic - schema:$schema");
+        // logger.v("$TAG - query - success - topicId:$topicId - schema:$schema");
         return schema;
       }
-      // logger.v("$TAG - query - empty - topic:$topic");
+      // logger.v("$TAG - query - empty - topicId:$topicId");
     } catch (e, st) {
       handleError(e, st);
     }
@@ -177,9 +177,9 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<bool> setJoined(String? topic, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
+  Future<bool> setJoined(String? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     var values = {
       'joined': joined ? 1 : 0,
       'update_at': DateTime.now().millisecondsSinceEpoch,
@@ -197,15 +197,15 @@ class TopicStorage with Tag {
               return txn.update(
                 tableName,
                 values,
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setJoined - success - topic:$topic - joined:$joined - expireBlockHeight:$expireBlockHeight");
+              // logger.v("$TAG - setJoined - success - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
               return true;
             }
-            logger.w("$TAG - setJoined - fail - topic:$topic - joined:$joined - expireBlockHeight:$expireBlockHeight");
+            logger.w("$TAG - setJoined - fail - topicId:$topicId - joined:$joined - expireBlockHeight:$expireBlockHeight");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -214,9 +214,9 @@ class TopicStorage with Tag {
         false;
   }
 
-  Future<bool> setAvatar(String? topic, String? avatarLocalPath) async {
+  Future<bool> setAvatar(String? topicId, String? avatarLocalPath) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -226,15 +226,15 @@ class TopicStorage with Tag {
                   'avatar': avatarLocalPath,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setAvatar - success - topic:$topic - avatarLocalPath:$avatarLocalPath");
+              // logger.v("$TAG - setAvatar - success - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
               return true;
             }
-            logger.w("$TAG - setAvatar - fail - topic:$topic - avatarLocalPath:$avatarLocalPath");
+            logger.w("$TAG - setAvatar - fail - topicId:$topicId - avatarLocalPath:$avatarLocalPath");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -243,9 +243,9 @@ class TopicStorage with Tag {
         false;
   }
 
-  Future<bool> setCount(String? topic, int userCount) async {
+  Future<bool> setCount(String? topicId, int userCount) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -255,15 +255,15 @@ class TopicStorage with Tag {
                   'count': userCount,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setCount - success - topic:$topic - count:$count");
+              // logger.v("$TAG - setCount - success - topicId:$topicId - count:$count");
               return true;
             }
-            logger.w("$TAG - setCount - fail - topic:$topic - count:$count");
+            logger.w("$TAG - setCount - fail - topicId:$topicId - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -272,9 +272,9 @@ class TopicStorage with Tag {
         false;
   }
 
-  Future<bool> setTop(String? topic, bool top) async {
+  Future<bool> setTop(String? topicId, bool top) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -284,15 +284,15 @@ class TopicStorage with Tag {
                   'is_top': top ? 1 : 0,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setTop - success - topic:$topic - top:$top");
+              // logger.v("$TAG - setTop - success - topicId:$topicId - top:$top");
               return true;
             }
-            logger.w("$TAG - setTop - fail - topic:$topic - top:$top");
+            logger.w("$TAG - setTop - fail - topicId:$topicId - top:$top");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -301,9 +301,9 @@ class TopicStorage with Tag {
         false;
   }
 
-  Future<Map<String, dynamic>?> setData(String? topic, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+  Future<Map<String, dynamic>?> setData(String? topicId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
-    if (topic == null || topic.isEmpty) return null;
+    if (topicId == null || topicId.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
@@ -311,11 +311,11 @@ class TopicStorage with Tag {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setData - no exists - topic:$topic");
+                logger.w("$TAG - setData - no exists - topicId:$topicId");
                 return null;
               }
               TopicSchema schema = TopicSchema.fromMap(res.first);
@@ -330,10 +330,10 @@ class TopicStorage with Tag {
                   'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ?',
-                whereArgs: [topic],
+                where: 'topic_id = ?',
+                whereArgs: [topicId],
               );
-              if (count <= 0) logger.w("$TAG - setData - fail - topic:${schema.topic} - newData:$data");
+              if (count <= 0) logger.w("$TAG - setData - fail - topic:${schema.topicId} - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {

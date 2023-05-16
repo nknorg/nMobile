@@ -18,7 +18,7 @@ class SubscriberSchema {
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
-  String topic; // (required) <-> topic
+  String topicId; // (required) <-> topic_id
   String contactAddress; // (required) <-> contact_address
 
   int status; // <-> status
@@ -29,7 +29,7 @@ class SubscriberSchema {
 
   SubscriberSchema({
     this.id,
-    required this.topic,
+    required this.topicId,
     required this.contactAddress,
     this.createAt,
     this.updateAt,
@@ -64,10 +64,10 @@ class SubscriberSchema {
     return fee;
   }
 
-  static SubscriberSchema? create(String? topic, String? contactAddress, int? status, int? permPage) {
-    if ((topic == null) || topic.isEmpty || (contactAddress == null) || contactAddress.isEmpty) return null;
+  static SubscriberSchema? create(String? topicId, String? contactAddress, int? status, int? permPage) {
+    if ((topicId == null) || topicId.isEmpty || (contactAddress == null) || contactAddress.isEmpty) return null;
     return SubscriberSchema(
-      topic: topic,
+      topicId: topicId,
       contactAddress: contactAddress,
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
@@ -81,7 +81,7 @@ class SubscriberSchema {
       'id': id,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': topic,
+      'topic_id': topicId,
       'contact_address': contactAddress,
       'status': status,
       'perm_page': permPage,
@@ -95,7 +95,7 @@ class SubscriberSchema {
       id: e['id'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      topic: e['topic'] ?? "",
+      topicId: e['topic_id'] ?? "",
       contactAddress: e['contact_address'] ?? "",
       status: e['status'] ?? SubscriberStatus.None,
       permPage: e['perm_page'],
@@ -110,6 +110,6 @@ class SubscriberSchema {
 
   @override
   String toString() {
-    return 'SubscriberSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topic: $topic, clientAddress: $contactAddress, status: $status, permPage: $permPage, data: $data, temp: $temp}';
+    return 'SubscriberSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topicId: $topicId, clientAddress: $contactAddress, status: $status, permPage: $permPage, data: $data, temp: $temp}';
   }
 }

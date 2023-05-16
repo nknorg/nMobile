@@ -23,7 +23,7 @@ class SubscriberStorage with Tag {
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         `create_at` BIGINT,
         `update_at` BIGINT,
-        `topic` VARCHAR(100),
+        `topic_id` VARCHAR(100),
         `contact_address` VARCHAR(100),
         `status` INT,
         `perm_page` INT,
@@ -34,17 +34,17 @@ class SubscriberStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_contact_address` ON `$tableName` (`topic`, `contact_address`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_create_at` ON `$tableName` (`topic`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_update_at` ON `$tableName` (`topic`, `update_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_status_create_at` ON `$tableName` (`topic`, `status`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_status_update_at` ON `$tableName` (`topic`, `status`, `update_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_perm_status` ON `$tableName` (`topic`, `perm_page`, `status`)');
+    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_id_contact_address` ON `$tableName` (`topic_id`, `contact_address`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_id_create_at` ON `$tableName` (`topic_id`, `create_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_id_update_at` ON `$tableName` (`topic_id`, `update_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_id_status_create_at` ON `$tableName` (`topic_id`, `status`, `create_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_id_status_update_at` ON `$tableName` (`topic_id`, `status`, `update_at`)');
+    await db.execute('CREATE INDEX `index_subscriber_topic_id_perm_status` ON `$tableName` (`topic_id`, `perm_page`, `status`)');
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool unique = true}) async {
     if (db?.isOpen != true) return null;
-    if (schema == null || schema.topic.isEmpty || schema.contactAddress.isEmpty) return null;
+    if (schema == null || schema.topicId.isEmpty || schema.contactAddress.isEmpty) return null;
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -58,8 +58,8 @@ class SubscriberStorage with Tag {
             List<Map<String, dynamic>> res = await txn.query(
               tableName,
               columns: ['*'],
-              where: 'topic = ? AND contact_address = ?',
-              whereArgs: [schema.topic, schema.contactAddress],
+              where: 'topic_id = ? AND contact_address = ?',
+              whereArgs: [schema.topicId, schema.contactAddress],
             );
             if (res != null && res.length > 0) {
               logger.w("$TAG - insert - duplicated - db_exist:${res.first} - insert_new:$schema");
@@ -81,47 +81,47 @@ class SubscriberStorage with Tag {
     });
   }
 
-  Future<SubscriberSchema?> query(String? topic, String? contactAddress) async {
+  Future<SubscriberSchema?> query(String? topicId, String? contactAddress) async {
     if (db?.isOpen != true) return null;
-    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'topic = ? AND contact_address = ?',
-          whereArgs: [topic, contactAddress],
+          where: 'topic_id = ? AND contact_address = ?',
+          whereArgs: [topicId, contactAddress],
         );
       });
       if (res != null && res.length > 0) {
         SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
-        // logger.v("$TAG - query - success - topic:$topic - contactAddress:$contactAddress - schema:$schema");
+        // logger.v("$TAG - query - success - topicId:$topicId - contactAddress:$contactAddress - schema:$schema");
         return schema;
       }
-      // logger.v("$TAG - query - empty -  - topic:$topic - contactAddress:$contactAddress");
+      // logger.v("$TAG - query - empty -  - topicId:$topicId - contactAddress:$contactAddress");
     } catch (e, st) {
       handleError(e, st);
     }
     return null;
   }
 
-  Future<List<SubscriberSchema>> queryListByTopic(String? topic, {int? status, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, String? orderBy, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    if (topic == null || topic.isEmpty) return [];
+    if (topicId == null || topicId.isEmpty) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
-          whereArgs: status != null ? [topic, status] : [topic],
+          where: status != null ? 'topic_id = ? AND status = ?' : 'topic_id = ?',
+          whereArgs: status != null ? [topicId, status] : [topicId],
           offset: offset,
           limit: limit,
           orderBy: orderBy ?? 'create_at ASC',
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryListByTopic - empty - topic:$topic - status:$status");
+        // logger.v("$TAG - queryListByTopicId - empty - topicId:$topicId - status:$status");
         return [];
       }
       List<SubscriberSchema> results = <SubscriberSchema>[];
@@ -131,7 +131,7 @@ class SubscriberStorage with Tag {
         SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
         results.add(subscriber);
       });
-      // logger.v("$TAG - queryListByTopic - topic:$topic - status:$status - items:$logText");
+      // logger.v("$TAG - queryListByTopicId - topicId:$topicId - status:$status - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -139,22 +139,22 @@ class SubscriberStorage with Tag {
     return [];
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicPerm(String? topic, int? permPage, int limit) async {
+  Future<List<SubscriberSchema>> queryListByTopicIdPerm(String? topicId, int? permPage, int limit) async {
     if (db?.isOpen != true) return [];
-    if (topic == null || topic.isEmpty || permPage == null) return [];
+    if (topicId == null || topicId.isEmpty || permPage == null) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'topic = ? AND perm_page = ?',
-          whereArgs: [topic, permPage],
+          where: 'topic_id = ? AND perm_page = ?',
+          whereArgs: [topicId, permPage],
           offset: 0,
           limit: limit,
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryListByTopicPerm - empty - topic:$topic - permPage:$permPage");
+        // logger.v("$TAG - queryListByTopicIdPerm - empty - topicId:$topicId - permPage:$permPage");
         return [];
       }
       List<SubscriberSchema> results = <SubscriberSchema>[];
@@ -164,7 +164,7 @@ class SubscriberStorage with Tag {
         SubscriberSchema subscriber = SubscriberSchema.fromMap(map);
         results.add(subscriber);
       });
-      // logger.v("$TAG - queryListByTopicPerm - topic:$topic - permPage:$permPage - items:$logText");
+      // logger.v("$TAG - queryListByTopicIdPerm - topicId:$topicId - permPage:$permPage - items:$logText");
       return results;
     } catch (e, st) {
       handleError(e, st);
@@ -172,20 +172,20 @@ class SubscriberStorage with Tag {
     return [];
   }
 
-  Future<int> queryCountByTopic(String? topic, {int? status}) async {
+  Future<int> queryCountByTopicId(String? topicId, {int? status}) async {
     if (db?.isOpen != true) return 0;
-    if (topic == null || topic.isEmpty) return 0;
+    if (topicId == null || topicId.isEmpty) return 0;
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['COUNT(id)'],
-          where: status != null ? 'topic = ? AND status = ?' : 'topic = ?',
-          whereArgs: status != null ? [topic, status] : [topic],
+          where: status != null ? 'topic_id = ? AND status = ?' : 'topic_id = ?',
+          whereArgs: status != null ? [topicId, status] : [topicId],
         );
       });
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      // logger.v("$TAG - queryCountByTopic - topic:$topic - count:$status");
+      // logger.v("$TAG - queryCountByTopicId - topicId:$topicId - count:$status");
       return count ?? 0;
     } catch (e, st) {
       handleError(e, st);
@@ -193,20 +193,20 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
-  Future<int> queryCountByTopicPermPage(String? topic, int permPage, {int? status}) async {
+  Future<int> queryCountByTopicIdPerm(String? topicId, int permPage, {int? status}) async {
     if (db?.isOpen != true) return 0;
-    if (topic == null || topic.isEmpty) return 0;
+    if (topicId == null || topicId.isEmpty) return 0;
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['COUNT(id)'],
-          where: status != null ? 'topic = ? AND perm_page = ? AND status = ?' : 'topic = ? AND perm_page = ?',
-          whereArgs: status != null ? [topic, permPage, status] : [topic, permPage],
+          where: status != null ? 'topic_id = ? AND perm_page = ? AND status = ?' : 'topic_id = ? AND perm_page = ?',
+          whereArgs: status != null ? [topicId, permPage, status] : [topicId, permPage],
         );
       });
       int? count = Sqflite.firstIntValue(res ?? <Map<String, dynamic>>[]);
-      // logger.v("$TAG - queryCountByTopicPermPage - topic:$topic - permPage:$permPage - count:$status");
+      // logger.v("$TAG - queryCountByTopicIdPerm - topicId:$topicId - permPage:$permPage - count:$status");
       return count ?? 0;
     } catch (e, st) {
       handleError(e, st);
@@ -214,16 +214,16 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
-  Future<int> queryMaxPermPageByTopic(String? topic) async {
+  Future<int> queryMaxPermPageByTopicId(String? topicId) async {
     if (db?.isOpen != true) return 0;
-    if (topic == null || topic.isEmpty) return 0;
+    if (topicId == null || topicId.isEmpty) return 0;
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'topic = ?',
-          whereArgs: [topic],
+          where: 'topic_id = ?',
+          whereArgs: [topicId],
           orderBy: 'perm_page DESC',
           offset: 0,
           limit: 1,
@@ -231,10 +231,10 @@ class SubscriberStorage with Tag {
       });
       if (res != null && res.length > 0) {
         SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
-        // logger.v("$TAG - queryMaxPermPageByTopic - success - topic:$topic - schema:$schema");
+        // logger.v("$TAG - queryMaxPermPageByTopicId - success - topicId:$topicId - schema:$schema");
         return schema.permPage ?? 0;
       }
-      // logger.v("$TAG - queryMaxPermPageByTopic - empty - topic:$topic");
+      // logger.v("$TAG - queryMaxPermPageByTopicId - empty - topicId:$topicId");
       return 0;
     } catch (e, st) {
       handleError(e, st);
@@ -242,9 +242,9 @@ class SubscriberStorage with Tag {
     return 0;
   }
 
-  Future<bool> setStatus(String? topic, String? contactAddress, int? status) async {
+  Future<bool> setStatus(String? topicId, String? contactAddress, int? status) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -254,15 +254,15 @@ class SubscriberStorage with Tag {
                   'status': status,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ? AND contact_address = ?',
-                whereArgs: [topic, contactAddress],
+                where: 'topic_id = ? AND contact_address = ?',
+                whereArgs: [topicId, contactAddress],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setStatus - success - topic:$topic - contactAddress:$contactAddress - status:$status");
+              // logger.v("$TAG - setStatus - success - topicId:$topicId - contactAddress:$contactAddress - status:$status");
               return true;
             }
-            logger.w("$TAG - setStatus - fail - topic:$topic - contactAddress:$contactAddress - status:$status");
+            logger.w("$TAG - setStatus - fail - topicId:$topicId - contactAddress:$contactAddress - status:$status");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -271,9 +271,9 @@ class SubscriberStorage with Tag {
         false;
   }
 
-  Future<bool> setPermPage(String? topic, String? contactAddress, int? permPage) async {
+  Future<bool> setPermPage(String? topicId, String? contactAddress, int? permPage) async {
     if (db?.isOpen != true) return false;
-    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -283,15 +283,15 @@ class SubscriberStorage with Tag {
                   'perm_page': permPage,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ? AND contact_address = ?',
-                whereArgs: [topic, contactAddress],
+                where: 'topic_id = ? AND contact_address = ?',
+                whereArgs: [topicId, contactAddress],
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setPermPage - success - topic:$topic - contactAddress:$contactAddress - permPage:$permPage");
+              // logger.v("$TAG - setPermPage - success - topicId:$topicId - contactAddress:$contactAddress - permPage:$permPage");
               return true;
             }
-            logger.w("$TAG - setPermPage - fail - topic:$topic - contactAddress:$contactAddress - permPage:$permPage");
+            logger.w("$TAG - setPermPage - fail - topicId:$topicId - contactAddress:$contactAddress - permPage:$permPage");
           } catch (e, st) {
             handleError(e, st);
           }
@@ -300,9 +300,9 @@ class SubscriberStorage with Tag {
         false;
   }
 
-  Future<Map<String, dynamic>?> setData(String? topic, String? contactAddress, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
+  Future<Map<String, dynamic>?> setData(String? topicId, String? contactAddress, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
     if (db?.isOpen != true) return null;
-    if (topic == null || topic.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
     return await _queue.add(() async {
           try {
@@ -310,11 +310,11 @@ class SubscriberStorage with Tag {
               List<Map<String, dynamic>> res = await txn.query(
                 tableName,
                 columns: ['*'],
-                where: 'topic = ? AND contact_address = ?',
-                whereArgs: [topic, contactAddress],
+                where: 'topic_id = ? AND contact_address = ?',
+                whereArgs: [topicId, contactAddress],
               );
               if (res == null || res.length <= 0) {
-                logger.w("$TAG - setData - no exists - topic:$topic - contactAddress:$contactAddress");
+                logger.w("$TAG - setData - no exists - topicId:$topicId - contactAddress:$contactAddress");
                 return null;
               }
               SubscriberSchema schema = SubscriberSchema.fromMap(res.first);
@@ -329,10 +329,10 @@ class SubscriberStorage with Tag {
                   'data': jsonEncode(data),
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
-                where: 'topic = ? AND contact_address = ?',
-                whereArgs: [topic, contactAddress],
+                where: 'topic_id = ? AND contact_address = ?',
+                whereArgs: [topicId, contactAddress],
               );
-              if (count <= 0) logger.w("$TAG - setData - fail - topic:$topic - contactAddress:$contactAddress - newData:$data");
+              if (count <= 0) logger.w("$TAG - setData - fail - topicId:$topicId - contactAddress:$contactAddress - newData:$data");
               return (count > 0) ? data : null;
             });
           } catch (e, st) {

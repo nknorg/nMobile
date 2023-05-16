@@ -10,8 +10,8 @@ import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
 
 class TopicType {
-  static const publicTopic = 1;
-  static const privateTopic = 2;
+  static const public = 1;
+  static const private = 2;
 }
 
 class TopicSchema {
@@ -19,7 +19,7 @@ class TopicSchema {
   int? createAt; // <-> create_at
   int? updateAt; // <-> update_at
 
-  String topic; // (required) <-> topic
+  String topicId; // (required) <-> topic_id
   int type; // (required) <-> type
 
   bool joined = false; // <-> joined
@@ -35,7 +35,7 @@ class TopicSchema {
 
   TopicSchema({
     this.id,
-    required this.topic,
+    required this.topicId,
     this.type = -1,
     this.createAt,
     this.updateAt,
@@ -48,16 +48,16 @@ class TopicSchema {
     this.options,
     this.data,
   }) {
-    if (type == -1) type = (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
+    if (type == -1) type = (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public);
     if (options == null) options = OptionsSchema();
     if (data == null) data = Map();
   }
 
-  static TopicSchema? create(String? topic, {int? type, int expireHeight = 0}) {
-    if (topic == null || topic.isEmpty) return null;
+  static TopicSchema? create(String? topicId, {int? type, int expireHeight = 0}) {
+    if (topicId == null || topicId.isEmpty) return null;
     return TopicSchema(
-      topic: topic,
-      type: type ?? (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic),
+      topicId: topicId,
+      type: type ?? (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public),
       createAt: DateTime.now().millisecondsSinceEpoch,
       updateAt: DateTime.now().millisecondsSinceEpoch,
       joined: expireHeight > 0 ? true : false,
@@ -67,15 +67,15 @@ class TopicSchema {
   }
 
   bool get isPrivate {
-    if (type == -1) type = (Validate.isPrivateTopicOk(topic) ? TopicType.privateTopic : TopicType.publicTopic);
-    return type == TopicType.privateTopic;
+    if (type == -1) type = (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public);
+    return type == TopicType.private;
   }
 
   String? get ownerPubKey {
     String? owner;
     if (isPrivate) {
-      int index = topic.lastIndexOf('.');
-      owner = topic.substring(index + 1);
+      int index = topicId.lastIndexOf('.');
+      owner = topicId.substring(index + 1);
       if (owner.isEmpty) owner = null;
     } else {
       owner = null;
@@ -86,14 +86,14 @@ class TopicSchema {
   String get topicName {
     String topicName;
     if (isPrivate) {
-      int index = topic.lastIndexOf('.');
+      int index = topicId.lastIndexOf('.');
       if (index > 0) {
-        topicName = topic.substring(0, index);
+        topicName = topicId.substring(0, index);
       } else {
-        topicName = topic;
+        topicName = topicId;
       }
     } else {
-      topicName = topic;
+      topicName = topicId;
     }
     return topicName;
   }
@@ -101,9 +101,9 @@ class TopicSchema {
   String get topicNameShort {
     String topicNameShort;
     if (isPrivate) {
-      int index = topic.lastIndexOf('.');
+      int index = topicId.lastIndexOf('.');
       if (index > 0) {
-        String topicName = topic.substring(0, index);
+        String topicName = topicId.substring(0, index);
         if (ownerPubKey?.isNotEmpty == true) {
           if ((ownerPubKey?.length ?? 0) > 8) {
             topicNameShort = topicName + '.' + (ownerPubKey?.substring(0, 8) ?? "");
@@ -114,10 +114,10 @@ class TopicSchema {
           topicNameShort = topicName;
         }
       } else {
-        topicNameShort = topic;
+        topicNameShort = topicId;
       }
     } else {
-      topicNameShort = topic;
+      topicNameShort = topicId;
     }
     return topicNameShort;
   }
@@ -200,11 +200,12 @@ class TopicSchema {
   }
 
   Map<String, dynamic> toMap() {
+    if (type == -1) type = (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public);
     Map<String, dynamic> map = {
       'id': id,
       'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
       'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
-      'topic': topic,
+      'topic_id': topicId,
       'type': type,
       'joined': joined ? 1 : 0,
       'subscribe_at': subscribeAt,
@@ -223,7 +224,7 @@ class TopicSchema {
       id: e['id'],
       createAt: e['create_at'],
       updateAt: e['update_at'],
-      topic: e['topic'] ?? "",
+      topicId: e['topic_id'] ?? "",
       type: e['type'] ?? -1,
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       subscribeAt: e['subscribe_at'],
@@ -248,6 +249,6 @@ class TopicSchema {
 
   @override
   String toString() {
-    return 'TopicSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topic: $topic, type: $type, joined: $joined, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, isTop: $isTop, options: $options, data: $data}';
+    return 'TopicSchema{id: $id, createAt: $createAt, updateAt: $updateAt, topicId: $topicId, type: $type, joined: $joined, subscribeAt: $subscribeAt, expireBlockHeight: $expireBlockHeight, avatar: $avatar, count: $count, isTop: $isTop, options: $options, data: $data}';
   }
 }
