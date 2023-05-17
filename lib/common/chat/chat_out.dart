@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/remote_notification.dart';
 import 'package:nmobile/common/settings.dart';
@@ -110,7 +109,7 @@ class ChatOutCommon with Tag {
 
   Future<bool> _waitClientOk() async {
     int tryTimes = 0;
-    // wait ios tcp pipe ok TODO:GG 重连也要一直等
+    // wait ios tcp pipe ok TODO:GG 重连也要一直等?
     if (Platform.isIOS) {
       int gapForeground = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
       if (gapForeground < 500) {
@@ -386,7 +385,7 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    message = await messageCommon.loadMessageSendQueue(message, targetId);
+    message = await messageCommon.loadMessageSendQueue(message);
     // data
     message.data = MessageData.getText(message);
     logger.i("$TAG - sendText - targetId:$targetId - content:$content - data:${message.data}");
@@ -439,7 +438,7 @@ class ChatOutCommon with Tag {
         }),
     );
     // queue
-    message = await messageCommon.loadMessageSendQueue(message, targetId);
+    message = await messageCommon.loadMessageSendQueue(message);
     // insert
     message.options = MessageOptions.setIpfsState(message.options, MessageOptions.ipfsStateNo);
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
@@ -509,7 +508,7 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    message = await messageCommon.loadMessageSendQueue(message, targetId);
+    message = await messageCommon.loadMessageSendQueue(message);
     // data
     message.data = await MessageData.getImage(message);
     logger.i("$TAG - sendImage - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringSimple()}");
@@ -558,7 +557,7 @@ class ChatOutCommon with Tag {
       },
     );
     // queue
-    message = await messageCommon.loadMessageSendQueue(message, targetId);
+    message = await messageCommon.loadMessageSendQueue(message);
     // data
     message.data = await MessageData.getAudio(message);
     logger.i("$TAG - sendAudio - targetId:$targetId - path:${content.absolute.path} - message:${message.toStringSimple()}");
@@ -776,36 +775,8 @@ class ChatOutCommon with Tag {
       }
     }
     // queue
-    if (message.canQueue) {
-      if (message.isTargetContact && !message.isTargetSelf) {
-        DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
-        if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
-          String? newQueueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
-          String? oldQueueIds = MessageOptions.getMessageQueueIds(message.options);
-          if ((newQueueIds != null) && newQueueIds.isNotEmpty) {
-            if (message.status == MessageStatus.Error) {
-              message.deviceId = device.deviceId;
-              message.queueId = await messageCommon.newContactMessageQueueId(message.targetId, message.deviceId, message.msgId);
-              if (message.queueId > 0) {
-                logger.i("$TAG - resendMute - queueIds new success - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - targetId:${message.targetId}");
-                bool success = await messageCommon.updateDeviceQueueId(message.msgId, message.deviceId, message.queueId);
-                if (!success) return null;
-                message.options = MessageOptions.setMessageQueueIds(message.options, newQueueIds);
-                await messageCommon.updateMessageOptions(message, message.options, notify: true);
-              } else {
-                logger.w("$TAG - resendMute - queueIds new fail - device:$device - targetId:${message.targetId}");
-              }
-            } else {
-              logger.d("$TAG - resendMute - replace old queueIds - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - options:${message.options} - targetId:${message.targetId}");
-              message.options = MessageOptions.setMessageQueueIds(message.options, newQueueIds);
-              await messageCommon.updateMessageOptions(message, message.options, notify: true);
-            }
-          } else {
-            logger.w("$TAG - resendMute - newQueueIds == null - oldQueueIds:$oldQueueIds - device:$device - targetId:${message.targetId}");
-          }
-        }
-      }
-    }
+    message = await messageCommon.loadMessageSendQueueAgain(message);
+    // status
     if (!mute) {
       bool success = await messageCommon.updateSendAt(message.msgId, DateTime.now().millisecondsSinceEpoch);
       if (success) message.sendAt = DateTime.now().millisecondsSinceEpoch;

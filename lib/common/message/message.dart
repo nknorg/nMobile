@@ -3,10 +3,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
+import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
+import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
@@ -64,11 +67,6 @@ class MessageCommon with Tag {
     return MessageStorage.instance.delete(msgId);
   }
 
-  Future<bool> deleteByTargetId(String? targetId, int targetType) async {
-    await MessagePieceStorage.instance.deleteByTarget(targetId, targetType);
-    return MessageStorage.instance.updateIsDeleteByTarget(targetId, targetType, true, clearContent: true);
-  }
-
   Future<bool> updateDeleteAt(String? msgId, int? deleteAt) {
     return MessageStorage.instance.updateDeleteAt(msgId, deleteAt);
   }
@@ -109,58 +107,173 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByTarget(targetId, targetType, isDelete: false, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByTargetTypeVisible(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetType(targetId, targetType, types, isDelete: false, offset: offset, limit: limit);
+  Future<List<MessageSchema>> queryListByTargetTypesVisible(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) {
+    return MessageStorage.instance.queryListByTargetTypes(targetId, targetType, types, isDelete: false, offset: offset, limit: limit);
   }
 
   Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, int limit = 20}) {
     return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
   }
 
+  Future<bool> isMessageReceived(MessageSchema message) async {
+    MessageSchema? exists = await query(message.msgId);
+    if (exists != null) return true;
+    if (message.isTargetContact) {
+      ContactSchema? _contact = await contactCommon.query(message.targetId);
+      if (_contact == null) return false;
+      Map<String, int> receivedMessages = _contact.receivedMessages;
+      int timeAt = receivedMessages[message.msgId] ?? 0;
+      return timeAt > 0;
+    } else if (message.isTargetGroup) {
+      PrivateGroupSchema? _group = await privateGroupCommon.queryGroup(message.targetId);
+      if (_group == null) return false;
+      Map<String, int> receivedMessages = _group.receivedMessages;
+      int timeAt = receivedMessages[message.msgId] ?? 0;
+      return timeAt > 0;
+    }
+    return false;
+  }
+
+  Future<bool> onSessionDelete(String? targetId, int targetType) async {
+    // received tags
+    if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {
+      int limit = 30;
+      int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      int minReceiveAt = nowAt - gap;
+      // query
+      List<MessageSchema> messageList = [];
+      for (int offset = 0; true; offset += limit) {
+        List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
+        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        messageList.addAll(needTags);
+        if (receiveList.length > needTags.length) break;
+        if (result.length < limit) break;
+      }
+      for (int offset = 0; true; offset += limit) {
+        List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
+        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        messageList.addAll(needTags);
+        if (receiveList.length > needTags.length) break;
+        if (result.length < limit) break;
+      }
+      // tag
+      dynamic target;
+      if (targetType == SessionType.CONTACT) {
+        target = await contactCommon.query(targetId);
+      } else if (targetType == SessionType.PRIVATE_GROUP) {
+        target = await privateGroupCommon.queryGroup(targetId);
+      }
+      Map<String, int> needTags = {};
+      for (var i = 0; i < messageList.length; i++) {
+        MessageSchema message = messageList[i];
+        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
+          if (!target.receivedMessages.containsKey(message.msgId)) {
+            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
+          }
+        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
+          if (!target.receivedMessages.containsKey(message.msgId)) {
+            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
+          }
+        }
+      }
+      // target
+      if (needTags.isNotEmpty) {
+        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
+          var data = await contactCommon.setReceivedMessages(targetId, needTags, []);
+          if (data != null) {
+            logger.i("$TAG - onSessionDelete - contact setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          } else {
+            logger.w("$TAG - onSessionDelete - contact setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          }
+        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
+          var data = await privateGroupCommon.setReceivedMessages(targetId, needTags, []);
+          if (data != null) {
+            logger.i("$TAG - onSessionDelete - privateGroup setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          } else {
+            logger.w("$TAG - onSessionDelete - privateGroup setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          }
+        }
+      }
+    }
+    // messages
+    await MessageStorage.instance.deleteByTarget(targetId, targetType);
+    // pieces
+    await MessagePieceStorage.instance.deleteByTarget(targetId, targetType);
+    return true;
+  }
+
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
-    bool clearContent = message.isOutbound ? ((message.status == MessageStatus.Receipt) || (message.status == MessageStatus.Read)) : true;
-    bool success = await MessageStorage.instance.updateIsDelete(message.msgId, true, clearContent: clearContent);
-    if (success && (message.contentType == MessageContentType.ipfs)) {
-      message.options = MessageOptions.setIpfsResult(message.options, "", "", 0, "", [], 0);
-      message.options = MessageOptions.setIpfsResultThumbnail(message.options, "", "", 0, "", [], 0);
-      success = await updateMessageOptions(message, message.options, notify: false);
+    bool delDeep = !message.canReceipt ? true : (message.isOutbound ? (message.status >= MessageStatus.Receipt) : (message.status >= MessageStatus.Read));
+    bool? success;
+    if (delDeep) {
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      if (message.isTargetContact) {
+        ContactSchema? contact = await contactCommon.query(message.targetId);
+        if ((contact != null) && !contact.receivedMessages.containsKey(message.msgId)) {
+          var data = await contactCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
+          if (data == null) {
+            logger.w("$TAG - messageDelete - contact setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
+            success = false;
+          }
+        }
+      } else if (message.isTargetGroup) {
+        PrivateGroupSchema? group = await privateGroupCommon.queryGroup(message.targetId);
+        if ((group != null) && !group.receivedMessages.containsKey(message.msgId)) {
+          var data = await privateGroupCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
+          if (data == null) {
+            logger.w("$TAG - messageDelete - privateGroup setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
+            success = false;
+          }
+        }
+      }
+      if (success == null) {
+        success = (await delete(message.msgId, message.contentType)) > 0;
+      }
+    } else {
+      if (!message.isDelete) {
+        success = await MessageStorage.instance.updateIsDelete(message.msgId, true);
+        if (success == true) message.isDelete = true;
+      }
     }
     if (notify) onDeleteSink.add(message.msgId); // no need success
     // delete file
-    if (clearContent && (message.isContentFile)) {
-      (message.content as File).exists().then((exist) {
-        if (exist) {
-          try {
-            (message.content as File).delete(); // await
-          } catch (e) {}
-          logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
-        } else {
-          logger.d("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
-        }
-      });
+    if (delDeep) {
+      if (message.isContentFile) {
+        (message.content as File).exists().then((exist) {
+          if (exist) {
+            try {
+              (message.content as File).delete(); // await
+            } catch (e) {}
+            logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
+          } else {
+            logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
+          }
+        });
+      }
+      String? mediaThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
+      if ((mediaThumbnail != null) && mediaThumbnail.isNotEmpty) {
+        File(mediaThumbnail).exists().then((exist) {
+          if (exist) {
+            try {
+              File(mediaThumbnail).delete(); // await
+            } catch (e) {}
+            logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
+          } else {
+            logger.d("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
+          }
+        });
+      }
     }
-    // delete thumbnail
-    String? mediaThumbnail = MessageOptions.getMediaThumbnailPath(message.options);
-    if (clearContent && (mediaThumbnail != null) && mediaThumbnail.isNotEmpty) {
-      File(mediaThumbnail).exists().then((exist) {
-        if (exist) {
-          try {
-            File(mediaThumbnail).delete(); // await
-          } catch (e) {}
-          logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
-        } else {
-          logger.d("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
-        }
-      });
-    }
-    return success;
+    return success ?? false;
   }
 
   Future<MessageSchema> updateMessageStatus(MessageSchema message, int status, {bool force = false, int? receiveAt, bool notify = true}) async {
     // re_query
-    MessageSchema? _latest = await query(message.msgId);
-    if (_latest != null) message = _latest;
+    message = (await query(message.msgId)) ?? message;
     // check
     if ((status <= message.status) && !force) {
       if (status == message.status) {
@@ -181,14 +294,11 @@ class MessageCommon with Tag {
       }
       if (notify) onUpdateSink.add(message);
     }
-    // delete later
-    if (message.isDelete && (message.content != null)) {
-      bool clearContent = message.isOutbound ? ((message.status == MessageStatus.Receipt) || (message.status == MessageStatus.Read)) : true;
-      if (clearContent) {
-        messageDelete(message, notify: false); // await
-      } else {
-        logger.i("$TAG - updateMessageStatus - delete later no - message:${message.toStringNoContent()}");
-      }
+    // delete
+    if (message.isDelete) {
+      await messageDelete(message, notify: true);
+    } else {
+      logger.i("$TAG - updateMessageStatus - need delete later - status:${message.status} - message:${message.toStringSimple()}");
     }
     return message;
   }
@@ -256,10 +366,64 @@ class MessageCommon with Tag {
     for (var i = 0; i < unReadList.length; i++) {
       MessageSchema element = unReadList[i];
       int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
-      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringNoContent()} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringSimple()} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     return unReadList.length;
+  }
+
+  Future<MessageSchema> loadMessageSendQueue(MessageSchema message) async {
+    if (!message.canQueue) return message;
+    if (message.isTargetContact && !message.isTargetSelf) {
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // just can latest
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        message.queueId = await newContactMessageQueueId(message.targetId, device.deviceId, message.msgId);
+        if (message.queueId > 0) {
+          String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(message.targetId, device.deviceId);
+          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+        } else {
+          logger.w("$TAG - loadMessageSendQueue - new queueId fail - queueId:${message.queueId} - options:${message.options} - targetId:${message.targetId}");
+        }
+      } else {
+        // device no support
+      }
+    } else {
+      // nothing
+    }
+    return message;
+  }
+
+  Future<MessageSchema> loadMessageSendQueueAgain(MessageSchema message) async {
+    if (!message.canQueue) return message;
+    if (message.isTargetContact && !message.isTargetSelf) {
+      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        String? oldQueueIds = MessageOptions.getMessageQueueIds(message.options);
+        if ((message.queueId <= 0) || (message.status == MessageStatus.Error)) {
+          String newDeviceId = Settings.deviceId;
+          int newQueueId = await newContactMessageQueueId(message.targetId, device.deviceId, message.msgId);
+          if (newQueueId > 0) {
+            bool success = await updateDeviceQueueId(message.msgId, newDeviceId, newQueueId);
+            if (!success) return message;
+            message.deviceId = newDeviceId;
+            message.queueId = newQueueId;
+          }
+        }
+        if (message.queueId > 0) {
+          String? newQueueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(message.targetId, device.deviceId);
+          logger.i("$TAG - loadMessageSendQueueAgain - re_new queueIds success - queueId:${message.queueId} - newQueueIds:$newQueueIds - oldQueueIds:$oldQueueIds - options:${message.options} - targetId:${message.targetId}");
+          if (newQueueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, newQueueIds);
+          await updateMessageOptions(message, message.options, notify: true);
+        } else {
+          logger.w("$TAG - loadMessageSendQueueAgain - re_new queueId fail - queueId:${message.queueId} - oldQueueIds:$oldQueueIds - options:${message.options} - targetId:${message.targetId}");
+        }
+      } else {
+        // device no support
+      }
+    } else {
+      // nothing
+    }
+    return message;
   }
 
   Future<int> newContactMessageQueueId(String? targetAddress, String? targetDeviceId, String? messageId) async {
@@ -289,19 +453,19 @@ class MessageCommon with Tag {
             String msgId = sendingMessageQueueIds[queueId]?.toString() ?? "";
             MessageSchema? msg = await query(msgId);
             if ((msg == null) || !msg.canQueue || !msg.isOutbound) {
-              logger.w("$TAG - newContactMessageQueueId - replace wrong msg (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg?.toStringNoContent() ?? msgId}");
+              logger.w("$TAG - newContactMessageQueueId - replace wrong msg (wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg?.toStringSimple() ?? msgId}");
               nextQueueId = queueId;
               break;
             } else if (msg.status == MessageStatus.Error) {
-              logger.d("$TAG - newContactMessageQueueId - replace status error - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringNoContent()}");
+              logger.d("$TAG - newContactMessageQueueId - replace status error - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringSimple()}");
               nextQueueId = queueId;
               break;
             } else if (msg.status >= MessageStatus.Success) {
-              logger.w("$TAG - newContactMessageQueueId - replace wrong status(wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringNoContent()}");
+              logger.w("$TAG - newContactMessageQueueId - replace wrong status(wrong here) - nextQueueId:$queueId - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId - msg:${msg.toStringSimple()}");
               nextQueueId = queueId;
               break;
             } else {
-              logger.i("$TAG - newContactMessageQueueId - replace refuse - msg:${msg.toStringNoContent()} - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+              logger.i("$TAG - newContactMessageQueueId - replace refuse - msg:${msg.toStringSimple()} - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             }
           }
         }
@@ -517,7 +681,7 @@ class MessageCommon with Tag {
     List<MessageSchema> noAckList = [];
     limit = 20;
     for (int offset = 0; true; offset += limit) {
-      final result = await messageCommon.queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: SessionType.CONTACT, offset: offset, limit: limit);
+      final result = await queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: SessionType.CONTACT, offset: offset, limit: limit);
       result.removeWhere((element) => !element.isOutbound || !element.canQueue);
       noAckList.addAll(result);
       if (result.length < limit) break;
