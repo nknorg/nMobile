@@ -52,6 +52,10 @@ class MessageCommon with Tag {
     return inSessionPage && isAppForeground && !maybeAuthing && !application.isAuthProgress;
   }
 
+  ///*********************************************************************************///
+  ///************************************ Storage ************************************///
+  ///*********************************************************************************///
+
   Future<MessageSchema?> insert(MessageSchema? schema) async {
     if (schema == null) return null;
     if (schema.contentType == MessageContentType.piece) {
@@ -113,96 +117,6 @@ class MessageCommon with Tag {
 
   Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, int limit = 20}) {
     return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
-  }
-
-  Future<bool> isMessageReceived(MessageSchema message) async {
-    MessageSchema? exists = await query(message.msgId);
-    if (exists != null) return true;
-    if (message.isTargetContact) {
-      ContactSchema? _contact = await contactCommon.query(message.targetId);
-      if (_contact == null) return false;
-      Map<String, int> receivedMessages = _contact.receivedMessages;
-      int timeAt = receivedMessages[message.msgId] ?? 0;
-      return timeAt > 0;
-    } else if (message.isTargetGroup) {
-      PrivateGroupSchema? _group = await privateGroupCommon.queryGroup(message.targetId);
-      if (_group == null) return false;
-      Map<String, int> receivedMessages = _group.receivedMessages;
-      int timeAt = receivedMessages[message.msgId] ?? 0;
-      return timeAt > 0;
-    }
-    return false;
-  }
-
-  Future<bool> onSessionDelete(String? targetId, int targetType) async {
-    // received tags
-    if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {
-      int limit = 30;
-      int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
-      int nowAt = DateTime.now().millisecondsSinceEpoch;
-      int minReceiveAt = nowAt - gap;
-      // query
-      List<MessageSchema> messageList = [];
-      for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
-        messageList.addAll(needTags);
-        if (receiveList.length > needTags.length) break;
-        if (result.length < limit) break;
-      }
-      for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
-        messageList.addAll(needTags);
-        if (receiveList.length > needTags.length) break;
-        if (result.length < limit) break;
-      }
-      // tag
-      dynamic target;
-      if (targetType == SessionType.CONTACT) {
-        target = await contactCommon.query(targetId);
-      } else if (targetType == SessionType.PRIVATE_GROUP) {
-        target = await privateGroupCommon.queryGroup(targetId);
-      }
-      Map<String, int> needTags = {};
-      for (var i = 0; i < messageList.length; i++) {
-        MessageSchema message = messageList[i];
-        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
-          if (!target.receivedMessages.containsKey(message.msgId)) {
-            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
-          }
-        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
-          if (!target.receivedMessages.containsKey(message.msgId)) {
-            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
-          }
-        }
-      }
-      // target
-      if (needTags.isNotEmpty) {
-        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
-          var data = await contactCommon.setReceivedMessages(targetId, needTags, []);
-          if (data != null) {
-            logger.i("$TAG - onSessionDelete - contact setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
-          } else {
-            logger.w("$TAG - onSessionDelete - contact setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
-          }
-        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
-          var data = await privateGroupCommon.setReceivedMessages(targetId, needTags, []);
-          if (data != null) {
-            logger.i("$TAG - onSessionDelete - privateGroup setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
-          } else {
-            logger.w("$TAG - onSessionDelete - privateGroup setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
-          }
-        }
-      }
-    }
-    // messages
-    await MessageStorage.instance.deleteByTarget(targetId, targetType);
-    // pieces
-    await MessagePieceStorage.instance.deleteByTarget(targetId, targetType);
-    return true;
   }
 
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
@@ -317,6 +231,145 @@ class MessageCommon with Tag {
     return options != null;
   }
 
+  ///*********************************************************************************///
+  ///************************************ Handle *************************************///
+  ///*********************************************************************************///
+
+  Future<bool> isMessageReceived(MessageSchema message) async {
+    MessageSchema? exists = await query(message.msgId);
+    if (exists != null) return true;
+    if (message.isTargetContact) {
+      ContactSchema? _contact = await contactCommon.query(message.targetId);
+      if (_contact == null) return false;
+      Map<String, int> receivedMessages = _contact.receivedMessages;
+      int? timeAt = receivedMessages[message.msgId];
+      return timeAt != null;
+    } else if (message.isTargetGroup) {
+      PrivateGroupSchema? _group = await privateGroupCommon.queryGroup(message.targetId);
+      if (_group == null) return false;
+      Map<String, int> receivedMessages = _group.receivedMessages;
+      int? timeAt = receivedMessages[message.msgId];
+      return timeAt != null;
+    }
+    return false;
+  }
+
+  Future<bool> refreshTargetReceivedMessagesTag(String? targetId, int targetType) async {
+    if (targetId == null || targetId.isEmpty) return false;
+    if ((targetType != SessionType.CONTACT) && (targetType != SessionType.PRIVATE_GROUP)) return false;
+    int nowAt = DateTime.now().millisecondsSinceEpoch;
+    int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
+    int minReceiveAt = nowAt - gap;
+    Map<String, int>? receivedMessages;
+    if (targetType == SessionType.CONTACT) {
+      receivedMessages = (await contactCommon.query(targetId))?.receivedMessages;
+    } else if (targetType == SessionType.PRIVATE_GROUP) {
+      receivedMessages = (await privateGroupCommon.queryGroup(targetId))?.receivedMessages;
+    }
+    if (receivedMessages == null) return false;
+    if (receivedMessages.isEmpty) {
+      logger.d("$TAG - refreshTargetReceivedMessagesTag - receivedMessages is empty - receivedMessages:$receivedMessages - targetId:$targetId - targetType:$targetType");
+      return true;
+    }
+    int startLen = receivedMessages.keys.length;
+    List<String> delKeys = [];
+    List<String> msgIdList = receivedMessages.keys.toList();
+    for (var i = 0; i < msgIdList.length; i++) {
+      String msgId = msgIdList[i];
+      int? receiveAt = receivedMessages[msgId];
+      if ((receiveAt == null) || (receiveAt <= minReceiveAt)) {
+        delKeys.add(msgId);
+      }
+    }
+    if (delKeys.isEmpty) {
+      logger.d("$TAG - refreshTargetReceivedMessagesTag - delKeys is empty - receivedMessages:$receivedMessages - targetId:$targetId - targetType:$targetType");
+      return true;
+    }
+    var data;
+    if (targetType == SessionType.CONTACT) {
+      data = await contactCommon.setReceivedMessages(targetId, {}, delKeys);
+    } else if (targetType == SessionType.PRIVATE_GROUP) {
+      data = await privateGroupCommon.setReceivedMessages(targetId, {}, delKeys);
+    }
+    if (data != null) {
+      logger.i("$TAG - refreshTargetReceivedMessagesTag - success - count:${delKeys.length}/$startLen - delKeys:$delKeys - receivedMessages:$receivedMessages - targetId:$targetId - targetType:$targetType");
+    } else {
+      logger.w("$TAG - refreshTargetReceivedMessagesTag - fail - count:${delKeys.length}/$startLen - delKeys:$delKeys - receivedMessages:$receivedMessages - targetId:$targetId - targetType:$targetType");
+    }
+    return data != null;
+  }
+
+  Future<bool> onSessionDelete(String? targetId, int targetType) async {
+    // received tags
+    if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {
+      int limit = 30;
+      int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
+      int nowAt = DateTime.now().millisecondsSinceEpoch;
+      int minReceiveAt = nowAt - gap;
+      // query
+      List<MessageSchema> messageList = [];
+      for (int offset = 0; true; offset += limit) {
+        List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
+        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        messageList.addAll(needTags);
+        if (receiveList.length > needTags.length) break;
+        if (result.length < limit) break;
+      }
+      for (int offset = 0; true; offset += limit) {
+        List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
+        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        messageList.addAll(needTags);
+        if (receiveList.length > needTags.length) break;
+        if (result.length < limit) break;
+      }
+      // tag
+      dynamic target;
+      if (targetType == SessionType.CONTACT) {
+        target = await contactCommon.query(targetId);
+      } else if (targetType == SessionType.PRIVATE_GROUP) {
+        target = await privateGroupCommon.queryGroup(targetId);
+      }
+      Map<String, int> needTags = {};
+      for (var i = 0; i < messageList.length; i++) {
+        MessageSchema message = messageList[i];
+        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
+          if (!target.receivedMessages.containsKey(message.msgId)) {
+            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
+          }
+        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
+          if (!target.receivedMessages.containsKey(message.msgId)) {
+            needTags.addAll({message.msgId: message.receiveAt ?? nowAt});
+          }
+        }
+      }
+      // target
+      if (needTags.isNotEmpty) {
+        if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
+          var data = await contactCommon.setReceivedMessages(targetId, needTags, []);
+          if (data != null) {
+            logger.i("$TAG - onSessionDelete - contact setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          } else {
+            logger.w("$TAG - onSessionDelete - contact setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          }
+        } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
+          var data = await privateGroupCommon.setReceivedMessages(targetId, needTags, []);
+          if (data != null) {
+            logger.i("$TAG - onSessionDelete - privateGroup setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          } else {
+            logger.w("$TAG - onSessionDelete - privateGroup setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+          }
+        }
+      }
+    }
+    // messages
+    await MessageStorage.instance.deleteByTarget(targetId, targetType);
+    // pieces
+    await MessagePieceStorage.instance.deleteByTarget(targetId, targetType);
+    return true;
+  }
+
   Future<int> readMessagesBySelf(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return 0;
     int limit = 20;
@@ -371,6 +424,10 @@ class MessageCommon with Tag {
     }
     return unReadList.length;
   }
+
+  ///*********************************************************************************///
+  ///************************************* Queue *************************************///
+  ///*********************************************************************************///
 
   Future<MessageSchema> loadMessageSendQueue(MessageSchema message) async {
     if (!message.canQueue) return message;

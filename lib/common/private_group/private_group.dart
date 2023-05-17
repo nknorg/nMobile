@@ -978,7 +978,7 @@ class PrivateGroupCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setReceivedMessages(String? groupId, Map adds, List<int> dels, {bool notify = false}) async {
+  Future<Map<String, dynamic>?> setReceivedMessages(String? groupId, Map adds, List<String> dels, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return null;
     var data = await PrivateGroupStorage.instance.setDataItemMapChange(groupId, "receivedMessages", adds, dels);
     if (data != null) {
