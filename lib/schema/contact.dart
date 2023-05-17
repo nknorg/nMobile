@@ -176,8 +176,8 @@ class ContactSchema {
     return data?['notes'];
   }
 
-  Map<String, int> get burnedMessages {
-    Map<String, int> values = data?['burnedMessages'] ?? Map();
+  Map<String, int> get receivedMessages {
+    Map<String, int> values = data?['receivedMessages'] ?? Map();
     return values.map((key, value) => MapEntry(key.toString(), value))..removeWhere((key, value) => key.isEmpty);
   }
 

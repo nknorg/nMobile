@@ -978,14 +978,14 @@ class PrivateGroupCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setBurnedMessages(String? groupId, Map adds, List<int> dels, {bool notify = false}) async {
+  Future<Map<String, dynamic>?> setReceivedMessages(String? groupId, Map adds, List<int> dels, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return null;
-    var data = await PrivateGroupStorage.instance.setDataItemMapChange(groupId, "burnedMessages", adds, dels);
+    var data = await PrivateGroupStorage.instance.setDataItemMapChange(groupId, "receivedMessages", adds, dels);
     if (data != null) {
-      logger.i("$TAG - setBurnedMessages - success - adds:$adds - dels:$dels - data:$data - groupId:$groupId");
+      logger.i("$TAG - setReceivedMessages - success - adds:$adds - dels:$dels - data:$data - groupId:$groupId");
       if (notify) queryAndNotifyGroup(groupId);
     } else {
-      logger.w("$TAG - setBurnedMessages - fail - adds:$adds - dels:$dels - data:$data - groupId:$groupId");
+      logger.w("$TAG - setReceivedMessages - fail - adds:$adds - dels:$dels - data:$data - groupId:$groupId");
     }
     return data;
   }

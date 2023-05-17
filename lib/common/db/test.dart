@@ -151,7 +151,7 @@ Future addTestData(
 
   // topic
   TopicSchema _topic = TopicSchema.create(Uuid().v4())!;
-  _topic.type = TopicType.privateTopic;
+  _topic.type = TopicType.private;
   _topic.createAt = DateTime.now().millisecondsSinceEpoch;
   _topic.updateAt = DateTime.now().millisecondsSinceEpoch + 1;
   _topic.joined = false;
@@ -164,7 +164,7 @@ Future addTestData(
   // final batch3 = db.batch();
   for (var i = 0; i < topicCount; i++) {
     entity3['topic'] = topicNameList[i];
-    entity3['type'] = Validate.isPrivateTopicOk(entity3['topic']) ? TopicType.privateTopic : TopicType.publicTopic;
+    entity3['type'] = Validate.isPrivateTopicOk(entity3['topic']) ? TopicType.private : TopicType.public;
     entity3['create_at'] = entity3['create_at'] + 1;
     entity3['update_at'] = entity3['update_at'] + 1;
     entity3['joined'] = (i % 2 == 0) ? 0 : 1;

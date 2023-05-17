@@ -49,12 +49,15 @@ class MessageStorage with Tag {
     await db.execute(createSQL);
     // index
     await db.execute('CREATE UNIQUE INDEX `index_message_msg_id` ON `$tableName` (`msg_id`)');
-    await db.execute('CREATE INDEX `index_message_status_is_delete` ON `$tableName` (`status`, `is_delete`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete` ON `$tableName` (`target_id`, `target_type`, `is_delete`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`)');
+    await db.execute('CREATE INDEX `index_message_status_send_at` ON `$tableName` (`status`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_status_is_delete_send_at` ON `$tableName` (`status`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_send_at` ON `$tableName` (`target_id`, `target_type`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_type_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id_send_at` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`, `send_at`)');
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
@@ -209,6 +212,7 @@ class MessageStorage with Tag {
           whereArgs: [targetId, targetType, status]
             ..addAll(valueStatus)
             ..addAll(valueIsDelete),
+          orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
         );
@@ -244,6 +248,7 @@ class MessageStorage with Tag {
           columns: ['*'],
           where: (targetId?.isNotEmpty == true) ? 'target_id = ? AND target_type = ? AND status = ? $whereIsDelete' : 'status = ? $whereIsDelete',
           whereArgs: (targetId?.isNotEmpty == true) ? ([targetId, targetType, status]..addAll(valueIsDelete)) : ([status]..addAll(valueIsDelete)),
+          orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
         );
@@ -349,6 +354,7 @@ class MessageStorage with Tag {
           columns: ['*'],
           where: 'target_id = ? AND target_type = ? AND device_id = ? AND queue_id = ?',
           whereArgs: [targetId, targetType, deviceId, queueId],
+          orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
         );
@@ -454,7 +460,7 @@ class MessageStorage with Tag {
         false;
   }
 
-  Future<bool> updateIsDelete(String? msgId, bool isDelete, {bool clearContent = false}) async {
+  Future<bool> updateIsDelete(String? msgId, bool isDelete) async {
     if (db?.isOpen != true) return false;
     if (msgId == null || msgId.isEmpty) return false;
     return await _queue.add(() async {
@@ -462,49 +468,14 @@ class MessageStorage with Tag {
             int? count = await db?.transaction((txn) {
               return txn.update(
                 tableName,
-                clearContent
-                    ? {
-                        'is_delete': isDelete ? 1 : 0,
-                        'content': null,
-                      }
-                    : {
-                        'is_delete': isDelete ? 1 : 0,
-                      },
+                {
+                  'is_delete': isDelete ? 1 : 0,
+                },
                 where: 'msg_id = ?',
                 whereArgs: [msgId],
               );
             });
             // logger.v("$TAG - updateIsDelete - count:$count - msgId:$msgId - isDelete:$isDelete");
-            return (count ?? 0) > 0;
-          } catch (e, st) {
-            handleError(e, st);
-          }
-          return false;
-        }) ??
-        false;
-  }
-
-  Future<bool> updateIsDeleteByTarget(String? targetId, int targetType, bool isDelete, {bool clearContent = false}) async {
-    if (db?.isOpen != true) return false;
-    if (targetId == null || targetId.isEmpty) return false;
-    return await _queue.add(() async {
-          try {
-            int? count = await db?.transaction((txn) {
-              return txn.update(
-                tableName,
-                clearContent
-                    ? {
-                        'is_delete': isDelete ? 1 : 0,
-                        'content': null,
-                      }
-                    : {
-                        'is_delete': isDelete ? 1 : 0,
-                      },
-                where: 'target_id = ? AND target_type = ?',
-                whereArgs: [targetId, targetType],
-              );
-            });
-            // logger.v("$TAG - updateIsDeleteByTarget - count:$count - targetId:$targetId - targetType:$targetType - isDelete:$isDelete");
             return (count ?? 0) > 0;
           } catch (e, st) {
             handleError(e, st);
