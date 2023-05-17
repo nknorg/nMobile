@@ -158,7 +158,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   _refreshBadge({int? delayMs}) async {
     if (delayMs != null) await Future.delayed(Duration(milliseconds: delayMs));
-    int unread = await sessionCommon.unreadCount();
+    int unread = await sessionCommon.totalUnReadCount();
     Badge.Badge.refreshCount(count: unread);
   }
 

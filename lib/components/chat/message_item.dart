@@ -179,7 +179,6 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
     switch (this.widget.message.contentType) {
       case MessageContentType.text:
       case MessageContentType.textExtension:
-      case MessageContentType.media:
       case MessageContentType.image:
       case MessageContentType.audio:
       case MessageContentType.ipfs:
@@ -452,7 +451,7 @@ class _ChatMessageItemState extends BaseStateFulWidgetState<ChatMessageItem> {
               ),
               SizedBox(width: 2),
               Label(
-                TopicSchema(topic: widget.message.content?.toString() ?? " ").topicShort,
+                TopicSchema(topicId: widget.message.content?.toString() ?? " ").topicNameShort,
                 maxWidth: Settings.screenWidth() * 0.5,
                 type: LabelType.bodyRegular,
                 fontWeight: FontWeight.bold,

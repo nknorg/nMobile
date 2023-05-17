@@ -77,7 +77,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       });
     });
     // topic
-    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.topic == _topic?.topic).listen((event) {
+    _updateTopicSubscription = topicCommon.updateStream.where((event) => event.topicId == _topic?.topicId).listen((event) {
       widget.session.temp?["topic"] = event;
       setState(() {
         _topic = event;
@@ -131,13 +131,13 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
   }
 
   void _refreshTopic() {
-    if ((_topic?.topic.isNotEmpty == true) && (_topic?.topic == widget.session.targetId)) {
+    if ((_topic?.topicId.isNotEmpty == true) && (_topic?.topicId == widget.session.targetId)) {
       loaded = true;
       return;
     }
     if (widget.session.temp?["topic"] == null) {
-      topicCommon.queryByTopic(widget.session.targetId).then((topic) {
-        if (widget.session.targetId == topic?.topic) {
+      topicCommon.query(widget.session.targetId).then((topic) {
+        if (widget.session.targetId == topic?.topicId) {
           if (widget.session.temp == null) widget.session.temp = Map();
           widget.session.temp?["topic"] = topic;
           setState(() {
@@ -248,7 +248,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                                     : SizedBox.shrink(),
                                 Expanded(
                                   child: Label(
-                                    _topic?.topicShort ?? " ",
+                                    _topic?.topicNameShort ?? " ",
                                     type: LabelType.h3,
                                     color: (_topic?.joined == true) ? null : application.theme.fontColor3,
                                     fontWeight: FontWeight.bold,
@@ -424,7 +424,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
       } else {
         contentWidget = SizedBox.shrink();
       }
-    } else if (msgType == MessageContentType.media || msgType == MessageContentType.image) {
+    } else if (msgType == MessageContentType.image) {
       contentWidget = Padding(
         padding: const EdgeInsets.only(top: 0),
         child: Row(

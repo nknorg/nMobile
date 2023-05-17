@@ -110,10 +110,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   void onRefreshArguments() {
     this._target = widget.arguments?[ChatMessagesScreen.argTarget];
     if (this._target is ContactSchema) {
-      this._targetId = (this._target as ContactSchema).clientAddress;
+      this._targetId = (this._target as ContactSchema).address;
       this._targetType = SessionType.CONTACT;
     } else if (this._target is TopicSchema) {
-      this._targetId = (this._target as TopicSchema).topic;
+      this._targetId = (this._target as TopicSchema).topicId;
       this._targetType = SessionType.TOPIC;
     } else if (this._target is PrivateGroupSchema) {
       this._targetId = (this._target as PrivateGroupSchema).groupId;
@@ -155,14 +155,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // contact
-    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => (event.id != null) && (_target is ContactSchema) && (event.id == (_target as ContactSchema).id)).listen((ContactSchema event) {
+    _onContactUpdateStreamSubscription = contactCommon.updateStream.where((event) => (_target is ContactSchema) && (event.address == (_target as ContactSchema).address)).listen((ContactSchema event) {
       setState(() {
         _target = event;
       });
     });
 
     // topic
-    _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((event) {
+    _onTopicUpdateStreamSubscription = topicCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topicId == (_target as TopicSchema).topicId)).listen((event) {
       setState(() {
         _target = event;
       });
@@ -171,14 +171,14 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // subscriber
-    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((SubscriberSchema schema) {
-      if (schema.clientAddress == clientCommon.address) {
+    _onSubscriberAddStreamSubscription = subscriberCommon.addStream.where((event) => (_target is TopicSchema) && (event.topicId == (_target as TopicSchema).topicId)).listen((SubscriberSchema schema) {
+      if (schema.contactAddress == clientCommon.address) {
         _refreshTopicJoined();
       }
       // _refreshTopicSubscribers();
     });
-    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topic == (_target as TopicSchema).topic)).listen((event) {
-      if (event.clientAddress == clientCommon.address) {
+    _onSubscriberUpdateStreamSubscription = subscriberCommon.updateStream.where((event) => (_target is TopicSchema) && (event.topicId == (_target as TopicSchema).topicId)).listen((event) {
+      if (event.contactAddress == clientCommon.address) {
         _refreshTopicJoined();
       } else {
         //_refreshTopicSubscribers();
@@ -354,7 +354,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
     // sender
     if (added.temp == null) added.temp = Map();
-    added.temp?["sender"] = await contactCommon.queryByClientAddress(added.sender);
+    added.temp?["sender"] = await contactCommon.query(added.sender);
     // state
     setState(() {
       // logger.d("$TAG - messages insert 0 - added:$added");
@@ -363,25 +363,31 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // tip
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema? _contact = this._target as ContactSchema?;
-      if ((_contact?.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
-        if ((_contact != null) && (_contact.options?.notificationOpen != true) && (_contact.tipNotification != true)) {
+      if (_contact != null) {
+        if ((_contact.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
           Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
+        } else {
+          contactCommon.setTipNotification(_contact.address, null, notify: true); // await
         }
       }
     }
   }
 
+  // TODO:GG 还得来个清理机制，根据timeAt
+  // contactCommon.setReceivedMessages(address, {}, dels);
+  // privateGroupCommon.setReceivedMessages(address, {}, dels);
+
   Future _refreshTopicJoined() async {
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.TOPIC) return;
     TopicSchema _topic = this._target as TopicSchema;
-    bool? isJoined = await topicCommon.isSubscribed(_topic.topic, clientCommon.address);
+    bool? isJoined = await topicCommon.isSubscribed(_topic.topicId, clientCommon.address);
     if ((isJoined == true) && _topic.isPrivate) {
-      SubscriberSchema? _me = await subscriberCommon.queryByTopicChatId(_topic.topic, clientCommon.address);
+      SubscriberSchema? _me = await subscriberCommon.query(_topic.topicId, clientCommon.address);
       isJoined = _me?.status == SubscriberStatus.Subscribed;
     }
     if ((isJoined != null) && (isJoined != _topic.joined)) {
-      await topicCommon.setJoined(_topic.id, isJoined, notify: true);
+      await topicCommon.setJoined(_topic.topicId, isJoined, notify: true);
     }
   }
 
@@ -400,12 +406,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     } else {
       logger.i("$TAG - _refreshTopicSubscribers - enable - gap:$interval>${Settings.gapTopicSubscribersRefreshMs}");
     }
-    await subscriberCommon.refreshSubscribers(_topic.topic, _topic.ownerPubKey, meta: _topic.isPrivate);
-    await topicCommon.setLastRefreshSubscribersAt(_topic.id, notify: true);
+    await subscriberCommon.refreshSubscribers(_topic.topicId, _topic.ownerPubKey, meta: _topic.isPrivate);
+    await topicCommon.setLastRefreshSubscribersAt(_topic.topicId, notify: true);
     // refresh again
-    int count = await subscriberCommon.getSubscribersCount(_topic.topic, _topic.isPrivate);
+    int count = await subscriberCommon.getSubscribersCount(_topic.topicId, _topic.isPrivate);
     if (_topic.count != count) {
-      await topicCommon.setCount(_topic.id, count, notify: true);
+      await topicCommon.setCount(_topic.topicId, count, notify: true);
     }
   }
 
@@ -415,7 +421,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     PrivateGroupSchema _privateGroup = this._target as PrivateGroupSchema;
     if (privateGroupCommon.isOwner(_privateGroup.ownerPublicKey, clientCommon.address)) return;
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
-      if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup, _privateGroup.optionsRequestedVersion, notify: true);
+      if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup.groupId, _privateGroup.optionsRequestedVersion, notify: true);
     }); // await
   }
 
@@ -448,7 +454,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._targetType != SessionType.CONTACT) return;
     ContactSchema _contact = this._target as ContactSchema;
     if (_contact.tipNotification) return;
-    if (_contact.options?.notificationOpen == true) return;
+    if (_contact.options?.notificationOpen == true) {
+      await contactCommon.setTipNotification(_contact.address, null, notify: true);
+      return;
+    }
     // check
     int sendCount = 0, receiveCount = 0;
     for (var i = 0; i < _messages.length; i++) {
@@ -477,14 +486,13 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         },
       ),
     );
-    await contactCommon.setTipNotification(_contact, notify: true);
+    await contactCommon.setTipNotification(_contact.address, null, notify: true);
   }
 
   Future _toggleNotificationOpen() async {
     if (!clientCommon.isClientOK) return;
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema _contact = this._target as ContactSchema;
-      await contactCommon.setTipNotification(_contact, notify: true);
       bool nextOpen = !(_contact.options?.notificationOpen ?? false);
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: nextOpen);
       String? deviceToken = nextOpen ? deviceInfo?.deviceToken : null;
@@ -497,10 +505,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         _contact.options?.notificationOpen = nextOpen;
       });
       // update
-      bool success = await contactCommon.setNotificationOpen(_contact, nextOpen, notify: true);
-      if (!success) return;
-      success = await chatOutCommon.sendContactOptionsToken(_contact.clientAddress, deviceToken);
-      if (!success) await contactCommon.setNotificationOpen(_contact, !nextOpen, notify: true);
+      var data = await contactCommon.setNotificationOpen(_contact.address, nextOpen, notify: true);
+      if (data == null) return;
+      bool success = await chatOutCommon.sendContactOptionsToken(_contact.address, deviceToken);
+      if (!success) await contactCommon.setNotificationOpen(_contact.address, !nextOpen, notify: true);
     } else if (this._targetType == SessionType.TOPIC) {
       // nothing
     } else if (this._targetType == SessionType.PRIVATE_GROUP) {
@@ -511,34 +519,33 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Future<List<MessageSchema>> _getMediasMessages(int limit, bool isLeft, String msgId) async {
     List<MessageSchema> result = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> msgList = await messageCommon.queryListByTargetTypeVisible(
+      List<MessageSchema> msgList = await messageCommon.queryListByTargetTypesVisible(
         this._targetId,
         this._targetType,
-        [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
+        [MessageContentType.ipfs, MessageContentType.image, MessageContentType.video],
         offset: offset,
         limit: limit,
       );
       if (msgList.isEmpty) break;
       int index = msgList.indexWhere((element) => element.msgId == msgId);
-      if (index >= 0) {
-        if (isLeft) {
-          offset = offset + index + 1;
-        } else {
-          offset = offset - limit + index;
-          if (offset < 0) {
-            offset = 0;
-            limit = index;
-          }
+      if (index < 0) continue;
+      if (isLeft) {
+        offset = offset + index + 1;
+      } else {
+        offset = offset - limit + index;
+        if (offset < 0) {
+          offset = 0;
+          limit = index;
         }
-        result = await messageCommon.queryListByTargetTypeVisible(
-          this._targetId,
-          this._targetType,
-          [MessageContentType.ipfs, MessageContentType.media, MessageContentType.image, MessageContentType.video],
-          offset: offset,
-          limit: limit,
-        );
-        break;
       }
+      result = await messageCommon.queryListByTargetTypesVisible(
+        this._targetId,
+        this._targetType,
+        [MessageContentType.ipfs, MessageContentType.image, MessageContentType.video],
+        offset: offset,
+        limit: limit,
+      );
+      break;
     }
     return result;
   }
@@ -566,7 +573,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         }
       }
       Map<String, dynamic>? media;
-      if (contentType == MessageContentType.image || contentType == MessageContentType.media) {
+      if (contentType == MessageContentType.image) {
         media = MediaScreen.createMediasItemByImagePath(element.msgId, path);
       } else if (contentType == MessageContentType.video) {
         String? thumbnail = MessageOptions.getMediaThumbnailPath(element.options);
@@ -625,7 +632,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
               ? ContactHeader(
                   contact: _contact,
                   onTap: () {
-                    ContactProfileScreen.go(context, contactId: _contact?.id);
+                    ContactProfileScreen.go(context, address: _contact?.address);
                   },
                   body: Container(
                     padding: EdgeInsets.only(top: 3),
@@ -652,7 +659,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                   ? TopicHeader(
                       topic: _topic,
                       onTap: () {
-                        TopicProfileScreen.go(context, topicId: _topic?.id);
+                        TopicProfileScreen.go(context, topicId: _topic?.topicId);
                       },
                       body: Container(
                         padding: EdgeInsets.only(top: 3),
@@ -669,7 +676,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                                 ],
                               )
                             : Label(
-                                "${_topic.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                                "${_topic.count} ${Settings.locale((s) => s.channel_members, ctx: context)}",
                                 type: LabelType.h4,
                                 color: _theme.fontColor2,
                               ),
@@ -696,7 +703,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                                     ],
                                   )
                                 : Label(
-                                    "${_privateGroup.count ?? "--"} ${Settings.locale((s) => s.channel_members, ctx: context)}",
+                                    "${_privateGroup.count} ${Settings.locale((s) => s.channel_members, ctx: context)}",
                                     type: LabelType.h4,
                                     color: _theme.fontColor2,
                                   ),
@@ -722,7 +729,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 ? IconButton(
                     icon: Asset.iconSvg('more', color: Colors.white, width: 24),
                     onPressed: () {
-                      ContactProfileScreen.go(context, contactId: _contact?.id);
+                      ContactProfileScreen.go(context, address: _contact?.address);
                     },
                   )
                 : _topic != null
