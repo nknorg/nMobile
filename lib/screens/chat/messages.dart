@@ -273,6 +273,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     // privateGroup
     _checkPrivateGroupVersion(); // await
 
+    // common
+    _refreshReceivedMessagesTag();
+
     // read
     _readMessages().then((value) => _clearUnreadAndBadge()); // await
 
@@ -373,10 +376,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     }
   }
 
-  // TODO:GG 还得来个清理机制，根据timeAt
-  // contactCommon.setReceivedMessages(address, {}, dels);
-  // privateGroupCommon.setReceivedMessages(address, {}, dels);
-
   Future _refreshTopicJoined() async {
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.TOPIC) return;
@@ -423,6 +422,10 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     await chatOutCommon.sendPrivateGroupOptionRequest(_privateGroup.ownerPublicKey, _privateGroup.groupId, gap: Settings.gapGroupRequestOptionsMs).then((value) {
       if (value) privateGroupCommon.setGroupOptionsRequestInfo(_privateGroup.groupId, _privateGroup.optionsRequestedVersion, notify: true);
     }); // await
+  }
+
+  Future _refreshReceivedMessagesTag() async {
+    await messageCommon.refreshTargetReceivedMessagesTag(this._targetId, this._targetType);
   }
 
   Future _readMessages() async {
