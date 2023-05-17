@@ -299,7 +299,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         childs = _widgetBubbleText();
         childs.add(SizedBox(height: 1));
         break;
-      case MessageContentType.media:
       case MessageContentType.image:
         childs = _widgetBubbleImage();
         childs.add(SizedBox(height: 4));
@@ -362,7 +361,6 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
           popupMenu.show(widgetKey: _contentKey);
         };
         break;
-      case MessageContentType.media:
       case MessageContentType.image:
         // image + ipfs_image
         int state = MessageOptions.getIpfsState(_message.options);
