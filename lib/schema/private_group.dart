@@ -102,8 +102,8 @@ class PrivateGroupSchema {
     return int.tryParse(data?["quit_at_version_commits"]?.toString() ?? "");
   }
 
-  Map<String, int> get burnedMessages {
-    Map<String, int> values = data?['burnedMessages'] ?? Map();
+  Map<String, int> get receivedMessages {
+    Map<String, int> values = data?['receivedMessages'] ?? Map();
     return values.map((key, value) => MapEntry(key.toString(), value))..removeWhere((key, value) => key.isEmpty);
   }
 

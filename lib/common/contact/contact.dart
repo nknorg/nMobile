@@ -363,14 +363,14 @@ class ContactCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setBurnedMessages(String? address, Map adds, List<int> dels, {bool notify = false}) async {
+  Future<Map<String, dynamic>?> setReceivedMessages(String? address, Map adds, List<int> dels, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
-    var data = await ContactStorage.instance.setDataItemMapChange(address, "burnedMessages", adds, dels);
+    var data = await ContactStorage.instance.setDataItemMapChange(address, "receivedMessages", adds, dels);
     if (data != null) {
-      logger.i("$TAG - setBurnedMessages - success - adds:$adds - dels:$dels - data:$data - address:$address");
+      logger.i("$TAG - setReceivedMessages - success - adds:$adds - dels:$dels - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setBurnedMessages - fail - adds:$adds - dels:$dels - data:$data - address:$address");
+      logger.w("$TAG - setReceivedMessages - fail - adds:$adds - dels:$dels - data:$data - address:$address");
     }
     return data;
   }

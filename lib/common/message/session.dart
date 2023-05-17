@@ -181,9 +181,9 @@ class SessionCommon with Tag {
 
   Future<bool> delete(String? targetId, int? type, {bool notify = false}) async {
     if (targetId == null || targetId.isEmpty || type == null) return false;
-    bool success = await SessionStorage.instance.delete(targetId, type);
+    bool success = await messageCommon.onSessionDelete(targetId, type);
+    if (success) success = await SessionStorage.instance.delete(targetId, type);
     if (success && notify) _deleteSink.add([targetId, type]);
-    await messageCommon.deleteByTargetId(targetId, type);
     return success;
   }
 
