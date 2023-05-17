@@ -363,7 +363,7 @@ class ContactCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setReceivedMessages(String? address, Map adds, List<int> dels, {bool notify = false}) async {
+  Future<Map<String, dynamic>?> setReceivedMessages(String? address, Map adds, List<String> dels, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
     var data = await ContactStorage.instance.setDataItemMapChange(address, "receivedMessages", adds, dels);
     if (data != null) {
