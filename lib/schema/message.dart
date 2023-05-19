@@ -420,7 +420,7 @@ class MessageSchema {
   /// to sqlite
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
-      'pid': pid != null ? hexEncode(pid!) : null,
+      'pid': (pid?.isNotEmpty == true) ? hexEncode(pid!) : null,
       'msg_id': msgId,
       'device_id': deviceId,
       'queue_id': queueId,

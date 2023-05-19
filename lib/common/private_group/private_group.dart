@@ -69,7 +69,7 @@ class PrivateGroupCommon with Tag {
     // group
     PrivateGroupSchema? schemaGroup = PrivateGroupSchema.create(groupId, name);
     if (schemaGroup == null) return null;
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return null;
     Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
@@ -159,7 +159,7 @@ class PrivateGroupCommon with Tag {
       logger.i('$TAG - invitee - repeat - invitee:$invitee - group:$schemaGroup');
     }
     if (invitee == null) return false;
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return false;
     Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     invitee.inviterSignature = await genSignature(inviterPrivateKey, invitee.inviterRawData);
@@ -208,7 +208,7 @@ class PrivateGroupCommon with Tag {
     }
     // set
     if (inviteePrivateKey == null) {
-      Uint8List? clientSeed = clientCommon.client?.seed;
+      Uint8List? clientSeed = clientCommon.getSeed();
       if (clientSeed == null) return null;
       inviteePrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     }
@@ -312,7 +312,7 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     // action
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return false;
     Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     myself.permission = PrivateGroupItemPerm.quit;
@@ -390,7 +390,7 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     // action
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return false;
     Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     lefter.permission = PrivateGroupItemPerm.quit;
@@ -475,7 +475,7 @@ class PrivateGroupCommon with Tag {
       return false;
     }
     // action
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return false;
     Uint8List inviterPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     blacker.permission = PrivateGroupItemPerm.black;
@@ -543,7 +543,7 @@ class PrivateGroupCommon with Tag {
     }
     schemaGroup.options = options;
     // signature
-    Uint8List? clientSeed = clientCommon.client?.seed;
+    Uint8List? clientSeed = clientCommon.getSeed();
     if (clientSeed == null) return false;
     Uint8List ownerPrivateKey = await Crypto.getPrivateKeyFromSeed(clientSeed);
     String? signatureData = await genSignature(ownerPrivateKey, jsonEncode(schemaGroup.getRawDataMap()));
