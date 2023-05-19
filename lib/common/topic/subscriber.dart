@@ -480,8 +480,8 @@ class SubscriberCommon with Tag {
     return await SubscriberStorage.instance.query(topicId, chatId);
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, String? orderBy, int offset = 0, int limit = 20}) {
-    return SubscriberStorage.instance.queryListByTopicId(topicId, status: status, orderBy: orderBy, offset: offset, limit: limit);
+  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, int limit = 20}) {
+    return SubscriberStorage.instance.queryListByTopicId(topicId, status: status, offset: offset, limit: limit);
   }
 
   Future<List<SubscriberSchema>> queryListByTopicIdPerm(String? topicId, int? permPage, int limit) {
