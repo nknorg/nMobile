@@ -117,7 +117,7 @@ class ContactStorage with Tag {
           whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
-          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
+          orderBy: "is_top DESC, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {

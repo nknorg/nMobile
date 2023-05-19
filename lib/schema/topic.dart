@@ -35,10 +35,10 @@ class TopicSchema {
 
   TopicSchema({
     this.id,
-    required this.topicId,
-    this.type = -1,
     this.createAt,
     this.updateAt,
+    required this.topicId,
+    this.type = -1,
     this.joined = false,
     this.subscribeAt,
     this.expireBlockHeight,

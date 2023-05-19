@@ -39,7 +39,6 @@ class PrivateGroupStorage with Tag {
     await db.execute(createSQL);
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_private_group_group_id` ON `$tableName` (`group_id`)');
-    await db.execute('CREATE INDEX `index_private_group_name` ON `$tableName` (`name`)');
     await db.execute('CREATE INDEX `index_private_group_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
     await db.execute('CREATE INDEX `index_private_group_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
     await db.execute('CREATE INDEX `index_private_group_joined_is_top_create_at` ON `$tableName` (`joined`, `is_top`, `create_at`)');
@@ -120,7 +119,7 @@ class PrivateGroupStorage with Tag {
           whereArgs: (type != null) ? [joined ? 1 : 0, type] : [joined ? 1 : 0],
           offset: offset,
           limit: limit,
-          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
+          orderBy: "is_top DESC, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {

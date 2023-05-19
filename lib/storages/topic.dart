@@ -120,7 +120,7 @@ class TopicStorage with Tag {
           whereArgs: (type != null) ? [type] : null,
           offset: offset,
           limit: limit,
-          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
+          orderBy: "is_top DESC, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {
@@ -153,7 +153,7 @@ class TopicStorage with Tag {
           whereArgs: (type != null) ? [joined ? 1 : 0, type] : [joined ? 1 : 0],
           offset: offset,
           limit: limit,
-          orderBy: "is_top desc, create_at ${orderDesc ? 'DESC' : 'ASC'}",
+          orderBy: "is_top DESC, create_at ${orderDesc ? 'DESC' : 'ASC'}",
         );
       });
       if (res == null || res.isEmpty) {
