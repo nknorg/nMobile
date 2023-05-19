@@ -36,9 +36,7 @@ class SubscriberStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_id_contact_address` ON `$tableName` (`topic_id`, `contact_address`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_id_create_at` ON `$tableName` (`topic_id`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_id_update_at` ON `$tableName` (`topic_id`, `update_at`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_id_status_create_at` ON `$tableName` (`topic_id`, `status`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_id_status_update_at` ON `$tableName` (`topic_id`, `status`, `update_at`)');
     await db.execute('CREATE INDEX `index_subscriber_topic_id_perm_status` ON `$tableName` (`topic_id`, `perm_page`, `status`)');
   }
 
@@ -105,7 +103,7 @@ class SubscriberStorage with Tag {
     return null;
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, String? orderBy, int offset = 0, int limit = 20}) async {
+  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (topicId == null || topicId.isEmpty) return [];
     try {
@@ -117,7 +115,7 @@ class SubscriberStorage with Tag {
           whereArgs: status != null ? [topicId, status] : [topicId],
           offset: offset,
           limit: limit,
-          orderBy: orderBy ?? 'create_at ASC',
+          orderBy: 'create_at ASC',
         );
       });
       if (res == null || res.isEmpty) {
