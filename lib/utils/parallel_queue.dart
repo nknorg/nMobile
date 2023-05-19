@@ -50,8 +50,8 @@ class ParallelQueue {
   final Duration? interval;
   final Duration? timeout;
 
-  bool _isStop = false;
-  bool get isStop => _isStop;
+  bool _isPause = false;
+  bool get isPause => _isPause;
 
   ParallelQueue(this.tag, {this.parallel = 1, this.interval, this.timeout, this.onLog});
 
@@ -73,9 +73,9 @@ class ParallelQueue {
     return count;
   }
 
-  void restart({bool clear = false}) {
-    this.onLog?.call("ParallelQueue - restart - clear:$clear - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
-    _isStop = false;
+  void run({bool clear = false}) {
+    this.onLog?.call("ParallelQueue - run - clear:$clear - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
+    _isPause = false;
     if (clear) {
       _lastProcessId = 0;
       _activeItems.clear();
@@ -86,15 +86,15 @@ class ParallelQueue {
     unawaited(_process());
   }
 
-  void stop() {
-    this.onLog?.call("ParallelQueue - stop - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
-    _isStop = true;
+  void pause() {
+    this.onLog?.call("ParallelQueue - pause - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);
+    _isPause = true;
     _queue.removeWhere((item) => item.completer.isCompleted);
   }
 
   Future<T?> add<T>(Future<T?> Function() func, {String? id, Duration? delay, bool priority = false}) async {
-    if (isStop) {
-      this.onLog?.call("ParallelQueue - add - isStop - tag:$tag", true);
+    if (isPause) {
+      this.onLog?.call("ParallelQueue - add - isPause - tag:$tag", true);
       return null;
     }
     if (id != null && id.isNotEmpty && delay != null) {
@@ -154,8 +154,8 @@ class ParallelQueue {
   }
 
   Future<bool> _onQueueNext() async {
-    if (isStop) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - isStop - tag:$tag - lastProcessId:$_lastProcessId", true);
+    if (isPause) {
+      this.onLog?.call("ParallelQueue - _onQueueNext - isPause - tag:$tag - lastProcessId:$_lastProcessId", true);
       return false;
     } else if (_queue.isNotEmpty && (_activeItems.length < parallel)) {
       this.onLog?.call("ParallelQueue - _onQueueNext - run - tag:$tag - lastProcessId:$_lastProcessId - actives:${_activeItems.length} - queues:${_queue.length} - parallel:$parallel", false);

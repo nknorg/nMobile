@@ -23,22 +23,42 @@ class ChatInCommon with Tag {
 
   Map<String, ParallelQueue> _receiveQueues = Map();
 
-  Future start({bool reset = true}) async {
-    logger.i("$TAG - start - reset:$reset");
+  Future run({bool reset = true}) async {
+    logger.i("$TAG - run - reset:$reset");
     if (reset) {
       _receiveQueues.clear();
     } else {
-      _receiveQueues.forEach((key, queue) => queue.restart(clear: false));
+      _receiveQueues.forEach((key, queue) => queue.run(clear: false));
     }
   }
 
-  Future stop({bool reset = true}) async {
-    logger.i("$TAG - stop - reset:$reset");
-    _receiveQueues.forEach((key, queue) => queue.stop());
+  Future pause({bool reset = true}) async {
+    logger.i("$TAG - pause - reset:$reset");
+    _receiveQueues.forEach((key, queue) => queue.pause());
   }
 
-  ParallelQueue? getReceiveQueue(String targetId) {
-    return _receiveQueues[targetId];
+  Future waitReceiveQueues(String key) async {
+    List<Future> futures = [];
+    _receiveQueues.forEach((targetId, queue) {
+      futures.add(waitReceiveQueue(targetId, key));
+    });
+    logger.d("$TAG - waitReceiveQueues - waiting - count:${futures.length} - key:$key");
+    await Future.wait(futures);
+    logger.d("$TAG - waitReceiveQueues - complete - count:${futures.length} - key:$key");
+  }
+
+  Future<bool> waitReceiveQueue(String targetId, String keyPrefix) async {
+    ParallelQueue? receiveQueue = _receiveQueues[targetId];
+    if (receiveQueue == null) return true;
+    int count = receiveQueue.onCompleteCount("$keyPrefix$targetId");
+    if (count > 0) {
+      logger.d("$TAG - waitReceiveQueue - progress - count:$count - keyPrefix:$keyPrefix - targetId:$targetId");
+      return false;
+    }
+    logger.d("$TAG - waitReceiveQueue - waiting - keyPrefix:$keyPrefix - targetId:$targetId");
+    await receiveQueue.onComplete("$keyPrefix$targetId");
+    logger.d("$TAG - waitReceiveQueue - complete - keyPrefix:$keyPrefix - targetId:$targetId");
+    return true;
   }
 
   Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {

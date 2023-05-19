@@ -48,7 +48,7 @@ class MessageCommon with Tag {
     bool inSessionPage = chattingTargetId == targetId;
     bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
     bool needAuth = (application.goForegroundAt - application.goBackgroundAt) >= Settings.gapClientReAuthMs;
-    bool maybeAuthing = needAuth && ((DateTime.now().millisecondsSinceEpoch - application.goForegroundAt) < 200); // wait go app_screen
+    bool maybeAuthing = needAuth && ((DateTime.now().millisecondsSinceEpoch - application.goForegroundAt) < 500); // wait go app_screen
     return inSessionPage && isAppForeground && !maybeAuthing && !application.isAuthProgress;
   }
 
@@ -630,15 +630,10 @@ class MessageCommon with Tag {
       _syncMessageQueueParams["${targetAddress}_$targetDeviceId"] = queueIds;
     }
     // wait receive queue complete
-    var receiveQueue = chatInCommon.getReceiveQueue(targetAddress);
-    if (receiveQueue != null) {
-      int receiveCounts = receiveQueue.onCompleteCount("syncContactMessages_$targetDeviceId");
-      if (receiveCounts > 0) {
-        logger.d("$TAG - syncContactMessages - receive_queue progress - receiveCounts:$receiveCounts - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
-        return 0;
-      }
-      logger.d("$TAG - syncContactMessages - receive_queue waiting - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
-      await receiveQueue.onComplete("syncContactMessages_$targetDeviceId");
+    bool onComplete = await chatInCommon.waitReceiveQueue(targetAddress, "syncContactMessages_");
+    if (!onComplete) {
+      logger.d("$TAG - syncContactMessages - receive_queue progress - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      return 0;
     }
     logger.d("$TAG - syncContactMessages - receive_queue complete - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
     // use latest params
