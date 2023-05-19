@@ -36,7 +36,6 @@ class SessionStorage with Tag {
     // index
     await db.execute('CREATE UNIQUE INDEX `index_unique_session_target_id_type` ON `$tableName` (`target_id`, `type`)');
     await db.execute('CREATE INDEX `index_session_is_top_last_message_at` ON `$tableName` (`is_top`, `last_message_at`)');
-    await db.execute('CREATE INDEX `index_session_type_is_top_last_message_at` ON `$tableName` (`type`, `is_top`, `last_message_at`)');
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool unique = true}) async {
@@ -136,7 +135,7 @@ class SessionStorage with Tag {
           columns: ['*'],
           offset: offset,
           limit: limit,
-          orderBy: 'is_top desc, last_message_at DESC',
+          orderBy: 'is_top DESC, last_message_at DESC',
         );
       });
       if (res == null || res.isEmpty) {

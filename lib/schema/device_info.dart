@@ -150,7 +150,7 @@ class DeviceInfoSchema {
       contactAddress: e['contact_address'] ?? "",
       deviceId: e['device_id'] ?? "",
       deviceToken: e['device_token'] ?? "",
-      onlineAt: e['online_at'],
+      onlineAt: e['online_at'] ?? 0,
     );
     // data
     if (e['data']?.toString().isNotEmpty == true) {

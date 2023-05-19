@@ -29,10 +29,10 @@ class SubscriberSchema {
 
   SubscriberSchema({
     this.id,
-    required this.topicId,
-    required this.contactAddress,
     this.createAt,
     this.updateAt,
+    required this.topicId,
+    required this.contactAddress,
     this.status = SubscriberStatus.None,
     this.permPage,
     this.data,

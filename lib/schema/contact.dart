@@ -104,7 +104,7 @@ class ContactSchema {
   }
 
   String? get remarkAvatarLocalPath {
-    return data?['remarkAvatar'];
+    return data?['remarkAvatar']?.toString();
   }
 
   String? get displayAvatarLocalPath {
@@ -173,7 +173,7 @@ class ContactSchema {
   }
 
   String? get notes {
-    return data?['notes'];
+    return data?['notes']?.toString();
   }
 
   Map<String, int> get receivedMessages {
@@ -213,7 +213,7 @@ class ContactSchema {
       firstName: (e['first_name']?.toString() ?? "").isEmpty ? getDefaultName(e['address']) : e['first_name'],
       lastName: e['last_name'] ?? "",
       remarkName: e['remark_name'] ?? "",
-      type: e['type'],
+      type: e['type'] ?? ContactType.none,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
     contact.address = contact.address.replaceAll("\n", "").trim();
