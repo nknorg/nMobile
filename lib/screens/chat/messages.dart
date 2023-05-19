@@ -367,7 +367,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema? _contact = this._target as ContactSchema?;
       if (_contact != null) {
-        if ((_contact.createAt ?? 0) >= dbCommon.dbUpgradeAt) {
+        if ((_contact.createAt ?? 0) >= dbCommon.upgradeAt(7)) {
           Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
         } else {
           contactCommon.setTipNotification(_contact.address, null, notify: true); // await

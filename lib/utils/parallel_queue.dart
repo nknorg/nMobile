@@ -35,7 +35,7 @@ class _QueuedFuture<T> {
 
 class ParallelQueue {
   final List<_QueuedFuture> _queue = [];
-  final List<Map<String, Completer<void>>> _completeListeners = [];
+  final Map<String, Completer<void>> _completeListeners = {};
 
   final List<String> _delays = [];
   final List<String> _delaysDel = [];
@@ -58,19 +58,16 @@ class ParallelQueue {
   int get length => _delays.length + _queue.length + _activeItems.length;
 
   Future onComplete(String key) {
-    final completer = Completer();
-    _completeListeners.add({key: completer});
+    Completer? completer = _completeListeners[key];
+    if (completer == null) {
+      completer = Completer();
+      _completeListeners[key] = completer;
+    }
     return completer.future;
   }
 
-  int onCompleteCount(String key) {
-    int count = 0;
-    _completeListeners.forEach((element) {
-      if (element.keys.toList()[0] == key) {
-        count++;
-      }
-    });
-    return count;
+  bool isOnComplete(String key) {
+    return _completeListeners[key] != null;
   }
 
   void run({bool clear = false}) {
@@ -176,13 +173,12 @@ class ParallelQueue {
       await c.future;
       return true;
     } else if (_activeItems.isEmpty && _queue.isEmpty) {
-      this.onLog?.call("ParallelQueue - _onQueueNext - over - tag:$tag - _lastProcessId:$_lastProcessId", false);
-      for (final pairs in _completeListeners) {
-        Completer completer = pairs.values.toList()[0];
-        if (completer.isCompleted != true) {
-          completer.complete();
+      this.onLog?.call("ParallelQueue - _onQueueNext - total_complete - tag:$tag - _lastProcessId:$_lastProcessId", false);
+      _completeListeners.forEach((key, value) {
+        if (value.isCompleted != true) {
+          value.complete();
         }
-      }
+      });
       _completeListeners.clear();
       return !(_activeItems.isEmpty && _queue.isEmpty);
     } else {
