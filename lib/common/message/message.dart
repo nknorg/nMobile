@@ -305,13 +305,13 @@ class MessageCommon with Tag {
       int limit = 30;
       int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
       int nowAt = DateTime.now().millisecondsSinceEpoch;
-      int minReceiveAt = nowAt - gap;
+      int minSendAt = nowAt - gap;
       // query
       List<MessageSchema> messageList = [];
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
         List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.sendAt ?? 0) > minSendAt).toList();
         messageList.addAll(needTags);
         if (receiveList.length > needTags.length) break;
         if (result.length < limit) break;
@@ -319,7 +319,7 @@ class MessageCommon with Tag {
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
         List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.receiveAt ?? 0) > minReceiveAt).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => (element.sendAt ?? 0) > minSendAt).toList();
         messageList.addAll(needTags);
         if (receiveList.length > needTags.length) break;
         if (result.length < limit) break;

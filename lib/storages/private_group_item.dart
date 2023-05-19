@@ -135,7 +135,7 @@ class PrivateGroupItemStorage with Tag {
   Future<bool> updatePermission(
     String? groupId,
     String? invitee,
-    int? permission,
+    int permission,
     int? expiresAt,
     String? inviterRawData,
     String? inviteeRawData,
@@ -144,7 +144,6 @@ class PrivateGroupItemStorage with Tag {
   ) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty || invitee == null || invitee.isEmpty) return false;
-    if (permission == null) return false;
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {

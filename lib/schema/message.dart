@@ -200,13 +200,6 @@ class MessageSchema {
     String msgId = data['id']?.toString() ?? "";
     String contentType = data['contentType']?.toString() ?? "";
     if (msgId.isEmpty || contentType.isEmpty) return null;
-    // target
-    String sender = raw.src ?? "";
-    String topic = data['topic']?.toString() ?? "";
-    String groupId = data['groupId']?.toString() ?? "";
-    String targetId = topic.isNotEmpty ? topic : (groupId.isNotEmpty ? groupId : sender);
-    int targetType = topic.isNotEmpty ? SessionType.TOPIC : (groupId.isNotEmpty ? SessionType.PRIVATE_GROUP : SessionType.CONTACT);
-    // SUPPORT:START
     // contentType
     switch (contentType) {
       case "contact":
@@ -238,7 +231,12 @@ class MessageSchema {
         // nothing
         break;
     }
-    // SUPPORT:END
+    // target
+    String sender = raw.src ?? "";
+    String topic = data['topic']?.toString() ?? "";
+    String groupId = data['groupId']?.toString() ?? "";
+    String targetId = topic.isNotEmpty ? topic : (groupId.isNotEmpty ? groupId : sender);
+    int targetType = topic.isNotEmpty ? SessionType.TOPIC : (groupId.isNotEmpty ? SessionType.PRIVATE_GROUP : SessionType.CONTACT);
     // schema
     MessageSchema schema = MessageSchema(
       pid: raw.messageId,
@@ -476,7 +474,7 @@ class MessageSchema {
   /// from sqlite
   static MessageSchema fromMap(Map<String, dynamic> e) {
     MessageSchema schema = MessageSchema(
-      pid: e['pid'] != null ? hexDecode(e['pid']) : null,
+      pid: (e['pid'] != null) ? hexDecode(e['pid']) : null,
       msgId: e['msg_id'] ?? "",
       deviceId: e['device_id'] ?? "",
       queueId: e['queue_id'] ?? 0,

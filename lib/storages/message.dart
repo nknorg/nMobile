@@ -52,11 +52,11 @@ class MessageStorage with Tag {
     await db.execute('CREATE INDEX `index_message_status_send_at` ON `$tableName` (`status`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_status_is_delete_send_at` ON `$tableName` (`status`, `is_delete`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_send_at` ON `$tableName` (`target_id`, `target_type`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_type_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_status_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_type_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id_send_at` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`, `send_at`)');
   }
 

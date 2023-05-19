@@ -159,7 +159,7 @@ class PrivateGroupSchema {
       groupId: e['group_id'] ?? "",
       type: e['type'] ?? PrivateGroupType.normal,
       version: e['version'],
-      name: e['name'] ?? "",
+      name: e['name'] ?? e['group_id'] ?? "",
       count: e['count'] ?? 0,
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
