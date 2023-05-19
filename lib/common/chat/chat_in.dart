@@ -47,12 +47,12 @@ class ChatInCommon with Tag {
     logger.d("$TAG - waitReceiveQueues - complete - count:${futures.length} - key:$key");
   }
 
-  Future<bool> waitReceiveQueue(String targetId, String keyPrefix) async {
+  Future<bool> waitReceiveQueue(String targetId, String keyPrefix, {bool duplicated = true}) async {
     ParallelQueue? receiveQueue = _receiveQueues[targetId];
     if (receiveQueue == null) return true;
-    int count = receiveQueue.onCompleteCount("$keyPrefix$targetId");
-    if (count > 0) {
-      logger.d("$TAG - waitReceiveQueue - progress - count:$count - keyPrefix:$keyPrefix - targetId:$targetId");
+    bool isOnComplete = receiveQueue.isOnComplete("$keyPrefix$targetId");
+    if (isOnComplete && !duplicated) {
+      logger.d("$TAG - waitReceiveQueue - progress no duplicated - keyPrefix:$keyPrefix - targetId:$targetId");
       return false;
     }
     logger.d("$TAG - waitReceiveQueue - waiting - keyPrefix:$keyPrefix - targetId:$targetId");

@@ -19,14 +19,14 @@ class TaskService {
 
   TaskService();
 
-  void addTask(String key, int sec, Function(String) func, {bool background = false, int? delayMs}) {
+  void addTask(String key, int sec, Function(String) func, {bool canBackground = false, int? delayMs}) {
     _queue.add(() async {
       // timer
       if (_timers[sec] == null) {
         logger.i("TaskService - addTask - timer create - sec:$sec - key:$key - delayMs:$delayMs");
         _timers[sec] = Timer.periodic(Duration(seconds: sec), (timer) async {
           _tasks[sec]?.keys.forEach((String key) {
-            if (!background && application.inBackGround) return;
+            if (!canBackground && application.inBackGround) return;
             Function? _func = _tasks[sec]?[key];
             if (_func == null) {
               logger.w("TaskService - addTask - timer tick nil - sec:$sec - key:$key - delayMs:$delayMs");
@@ -53,7 +53,7 @@ class TaskService {
         }
         _delays[sec]?[key] = func;
         Future.delayed(Duration(milliseconds: delayMs ?? 0)).then((value) {
-          if (!background && application.inBackGround) return;
+          if (!canBackground && application.inBackGround) return;
           if (_delays[sec]?.keys.contains(key) != true) return;
           Function? _func = _delays[sec]?[key];
           if (_func == null) {
