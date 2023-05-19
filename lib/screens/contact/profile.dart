@@ -226,12 +226,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     Loading.show();
     try {
       // client signOut
-      await clientCommon.signOut(clearWallet: true, closeDB: true, force: true);
+      await clientCommon.signOut(clearWallet: true, closeDB: true);
       await Future.delayed(Duration(milliseconds: 500)); // wait client close
       Loading.dismiss();
 
       // client signIn
-      bool success = await clientCommon.signIn(selected, null, force: true, toast: true, loading: (visible, dbOpen) {
+      bool success = await clientCommon.signIn(selected, null, toast: true, loading: (visible, dbOpen) {
         if (visible && !dbOpen) {
           Loading.show();
         } else if (!visible) {
@@ -306,7 +306,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateBurnIfNeed() {
-    if (!clientCommon.isClientOK) return;
     if ((_burnOpen == _initBurnOpen) && (_burnProgress == _initBurnProgress)) return;
     int _burnValue;
     if (!_burnOpen || _burnProgress < 0) {
@@ -325,7 +324,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
-    if (!clientCommon.isClientOK) return;
     await contactCommon.setTipNotification(this._contact?.address, null, notify: true);
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: notificationOpen);
     String? deviceToken = notificationOpen ? deviceInfo?.deviceToken : null;

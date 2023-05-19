@@ -561,7 +561,7 @@ class _WalletSendScreenState extends BaseStateFulWidgetState<WalletSendScreen> w
                                         ? SizedBox.shrink()
                                         : GestureDetector(
                                             onTap: () async {
-                                              if (clientCommon.isClientOK) {
+                                              if (dbCommon.isOpen()) {
                                                 var contact = await ContactHomeScreen.go(context, selectContact: true);
                                                 if ((contact != null) && (contact is ContactSchema)) {
                                                   _sendToController.text = await contact.nknWalletAddress;

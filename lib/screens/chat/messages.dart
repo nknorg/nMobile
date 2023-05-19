@@ -493,7 +493,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   Future _toggleNotificationOpen() async {
-    if (!clientCommon.isClientOK) return;
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema _contact = this._target as ContactSchema;
       bool nextOpen = !(_contact.options?.notificationOpen ?? false);
