@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nmobile/generated/l10n.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/storages/settings.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -85,7 +86,7 @@ class Settings {
   static const int gapTxPoolUpdateDelayMs = 1 * 60 * 1000; // 1m
   static const int gapClientReAuthMs = 1 * 60 * 1000; // 1m
   static const int gapPingSessionsMs = 30 * 60 * 1000; // 30m
-  static const int gapPingContactMs = 5 * 60 * 1000; // 5m
+  static const int gapPingContactMs = 3 * 60 * 1000; // 3m
   static const int gapPongPingMs = 30 * 1000; // 30s
   static const int gapMessageQueueResendMs = 10 * 1000; // 10s
   static const int gapContactProfileSyncMs = 30 * 1000; // 30s
@@ -171,6 +172,26 @@ class Settings {
     // authentication
     final isAuth = await SettingsStorage.getSettings(SettingsStorage.BIOMETRICS_AUTHENTICATION);
     Settings.biometricsAuthentication = (isAuth == null) ? true : ((isAuth is bool) ? isAuth : true);
+    logger.i("Settings - init - "
+        "\n debug:$debug"
+        "\n sentryEnable:$sentryEnable"
+        "\n sentryDSN:$sentryDSN"
+        "\n notificationPushEnable:$notificationPushEnable"
+        "\n notificationType:$notificationType"
+        "\n apnsTopic:$apnsTopic"
+        "\n infuraProjectId:$infuraProjectId"
+        "\n infuraApiKeySecret:$infuraApiKeySecret"
+        "\n biometricsAuthentication:$biometricsAuthentication"
+        "\n language:$language"
+        "\n appName:$appName"
+        "\n packageName:$packageName"
+        "\n version:$version"
+        "\n build:$build"
+        "\n versionFormat:$versionFormat"
+        "\n deviceId:$deviceId"
+        "\n deviceVersionName:$deviceVersionName"
+        "\n deviceVersion:$deviceVersion"
+        "\n applicationRootDirectory:$applicationRootDirectory");
   }
 
   // return Your push(F_?_i_?_r_?_e_?_b_?_a_?_s_?_e) server token
