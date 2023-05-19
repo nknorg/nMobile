@@ -630,7 +630,7 @@ class MessageCommon with Tag {
       _syncMessageQueueParams["${targetAddress}_$targetDeviceId"] = queueIds;
     }
     // wait receive queue complete
-    bool onComplete = await chatInCommon.waitReceiveQueue(targetAddress, "syncContactMessages_");
+    bool onComplete = await chatInCommon.waitReceiveQueue(targetAddress, "syncContactMessages_", duplicated: false);
     if (!onComplete) {
       logger.d("$TAG - syncContactMessages - receive_queue progress - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return 0;
