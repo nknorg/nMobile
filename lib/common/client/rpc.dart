@@ -71,7 +71,11 @@ class RPC {
       if (!measure && !appendDefault) return await getRpcServers(walletAddress, measure: measure);
     }
 
-    logger.d("PRC - getRpcServers - return - walletAddress:$walletAddress - length:${list.length} - list:$list");
+    if (list.length <= 2) {
+      logger.w("PRC - getRpcServers - result small - length:${list.length} - walletAddress:$walletAddress - list:$list");
+    } else {
+      logger.d("PRC - getRpcServers - result ok - length:${list.length} - walletAddress:$walletAddress - list:$list");
+    }
     return list;
   }
 
@@ -223,7 +227,7 @@ class RPC {
       logger.w("PRC - subscribeWithPermission - action fail - fee_no - results:$results - topicId:$topicId - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topicId:$topicId");
     }
     // try
-    if (newStatus != null) {
+    if ((newStatus != null) && (oldStatus != null)) {
       if (!canTry && !isBlock) {
         logger.w("PRC - subscribeWithPermission - cancel permission try - newStatus:$newStatus - oldStatus:$oldStatus - result:$results - contactAddress:$contactAddress - nonce:$_nonce - fee:$fee - identifier:$identifier - meta:$metaString - topicId:$topicId");
         await subscriberCommon.setStatusProgressEnd(topicId, contactAddress);

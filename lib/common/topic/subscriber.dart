@@ -475,9 +475,9 @@ class SubscriberCommon with Tag {
     return count;
   }*/
 
-  Future<SubscriberSchema?> query(String? topicId, String? chatId) async {
-    if (topicId == null || topicId.isEmpty || chatId == null || chatId.isEmpty) return null;
-    return await SubscriberStorage.instance.query(topicId, chatId);
+  Future<SubscriberSchema?> query(String? topicId, String? contactAddress) async {
+    if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
+    return await SubscriberStorage.instance.query(topicId, contactAddress);
   }
 
   Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, int limit = 20}) {
@@ -510,9 +510,9 @@ class SubscriberCommon with Tag {
     return maxPermPage;
   }
 
-  Future<bool> setStatus(String? topicId, String? contactAddress, int? status, {bool notify = false}) async {
+  Future<bool> setStatus(String? topicId, String? contactAddress, int status, {bool notify = false}) async {
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
-    bool success = await SubscriberStorage.instance.setStatus(topicId, contactAddress, status ?? SubscriberStatus.None);
+    bool success = await SubscriberStorage.instance.setStatus(topicId, contactAddress, status);
     if (success && notify) queryAndNotify(topicId, contactAddress);
     return success;
   }
@@ -532,7 +532,7 @@ class SubscriberCommon with Tag {
       "progress_permission_nonce": nonce,
       "progress_permission_fee": fee,
     });
-    logger.d("$TAG - setStatusProgressStart - status:$status - nonce:$nonce - fee:$fee - data:$data - topicId:$topicId - contactAddress:$contactAddress");
+    logger.d("$TAG - setStatusProgressStart - success:${data != null} - status:$status - nonce:$nonce - fee:$fee - data:$data - topicId:$topicId - contactAddress:$contactAddress");
     if ((data != null) && notify) queryAndNotify(topicId, contactAddress);
     return data != null;
   }
@@ -544,7 +544,7 @@ class SubscriberCommon with Tag {
       "progress_permission_nonce",
       "progress_permission_fee",
     ]);
-    logger.d("$TAG - setStatusProgressEnd - data:$data - topicId:$topicId - contactAddress:$contactAddress");
+    logger.d("$TAG - setStatusProgressEnd - success:${data != null} - data:$data - topicId:$topicId - contactAddress:$contactAddress");
     if ((data != null) && notify) queryAndNotify(topicId, contactAddress);
     return data != null;
   }
