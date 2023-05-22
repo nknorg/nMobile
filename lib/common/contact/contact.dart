@@ -128,7 +128,7 @@ class ContactCommon with Tag {
         if (data != null) contact.data = data;
       }
     }
-    logger.d("$TAG - getMe - canAdd:$canAdd - fetchWalletAddress:$fetchWalletAddress - contact:$contact");
+    logger.d("$TAG - getMe - fetchWalletAddress:$fetchWalletAddress - contact:$contact");
     return contact;
   }
 
@@ -311,14 +311,14 @@ class ContactCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setWalletAddress(String? address, String? walletAddress) async {
+  Future<Map<String, dynamic>?> setWalletAddress(String? address, String? walletAddress, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
     Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
       "nknWalletAddress": walletAddress,
     });
     if (data != null) {
       logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - data:$data - address:$address");
-      // if (notify) queryAndNotify(address);
+      if (notify) queryAndNotify(address);
     } else {
       logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - data:$data - address:$address");
     }
@@ -339,13 +339,17 @@ class ContactCommon with Tag {
     return data;
   }
 
-  Future<Map<String, dynamic>?> setProfileVersion(String? address, String? profileVersion) async {
+  Future<Map<String, dynamic>?> setProfileVersion(String? address, String? profileVersion, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
     var data = await ContactStorage.instance.setData(address, {
       "profileVersion": profileVersion,
     });
-    logger.d("$TAG - setProfileVersion - profileVersion:$profileVersion - data:$data - address:$address");
-    // if ((data != null) && notify) queryAndNotify(address);
+    if (data != null) {
+      logger.i("$TAG - setProfileVersion - success - profileVersion:$profileVersion - data:$data - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setProfileVersion - fail - profileVersion:$profileVersion - data:$data - address:$address");
+    }
     return data;
   }
 
@@ -355,10 +359,10 @@ class ContactCommon with Tag {
       "notes": notes,
     });
     if (data != null) {
-      logger.i("$TAG - setNotes - end success - notes:$notes - data:$data - address:$address");
+      logger.i("$TAG - setNotes - success - notes:$notes - data:$data - address:$address");
       if (notify) queryAndNotify(address);
     } else {
-      logger.w("$TAG - setNotes - end fail - notes:$notes - data:$data - address:$address");
+      logger.w("$TAG - setNotes - fail - notes:$notes - data:$data - address:$address");
     }
     return data;
   }
