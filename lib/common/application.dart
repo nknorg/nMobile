@@ -30,15 +30,16 @@ class Application {
 
   void init() {
     appLifeStream.listen((List<AppLifecycleState> states) {
-      logger.d("Application - init - appLifeStream - states:$states");
       if (isFromBackground(states)) {
-        logger.i("Application - init - in foreground");
+        logger.i("Application - appLifeStream - in foreground - states:$states");
         inBackGround = false;
         goForegroundAt = DateTime.now().millisecondsSinceEpoch;
       } else if (isGoBackground(states)) {
-        logger.i("Application - init - in background");
+        logger.i("Application - appLifeStream - in background - states:$states");
         inBackGround = true;
         goBackgroundAt = DateTime.now().millisecondsSinceEpoch;
+      } else {
+        logger.i("Application - appLifeStream - in others - states:$states");
       }
     });
   }
