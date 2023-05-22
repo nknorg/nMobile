@@ -453,7 +453,7 @@ class MessageSchema {
       // data
       'type': contentType,
       // content:,
-      'options': options != null ? jsonEncode(options) : null,
+      'options': jsonEncode(options ?? Map()),
       'data': data,
     };
     // content

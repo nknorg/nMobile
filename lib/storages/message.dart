@@ -209,7 +209,7 @@ class MessageStorage with Tag {
           tableName,
           columns: ['*'],
           where: 'target_id = ? AND target_type = ? $whereStatus $whereIsDelete',
-          whereArgs: [targetId, targetType, status]
+          whereArgs: [targetId, targetType]
             ..addAll(valueStatus)
             ..addAll(valueIsDelete),
           orderBy: 'send_at DESC',
