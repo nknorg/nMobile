@@ -34,16 +34,13 @@ class DeviceInfoCommon with Tag {
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
     DeviceInfoSchema? deviceInfo = await query(selfAddress, Settings.deviceId);
     if (deviceInfo == null) {
-      if (canAdd) {
-        deviceInfo = await add(DeviceInfoSchema(
-          contactAddress: selfAddress,
-          deviceId: Settings.deviceId,
-          onlineAt: 0,
-          data: newData,
-        ));
-      } else {
-        return null;
-      }
+      if (!canAdd) return null;
+      deviceInfo = await add(DeviceInfoSchema(
+        contactAddress: selfAddress,
+        deviceId: Settings.deviceId,
+        onlineAt: 0,
+        data: newData,
+      ));
     } else {
       bool sameProfile = (appName == deviceInfo.appName) && (appVersion == deviceInfo.appVersion.toString()) && (platform == deviceInfo.platform) && (platformVersion == deviceInfo.platformVersion.toString());
       if (!sameProfile) {
@@ -56,18 +53,18 @@ class DeviceInfoCommon with Tag {
     if (fetchDeviceToken) {
       String? deviceToken = await DeviceToken.get();
       if ((deviceToken?.isNotEmpty == true) && (deviceInfo.deviceToken != deviceToken)) {
-        logger.i("$TAG - getMe - self deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
+        logger.i("$TAG - getMe - deviceToken diff - new:$deviceToken - old:${deviceInfo.deviceToken}");
         bool success = await setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
         if (success) deviceInfo.deviceToken = deviceToken ?? "";
       }
     }
     if (refreshOnlineAt) {
       int nowAt = DateTime.now().millisecondsSinceEpoch;
-      logger.i("$TAG - getMe - self online refresh - new:$nowAt - old:${deviceInfo.onlineAt}");
+      logger.i("$TAG - getMe - online refresh - new:$nowAt - old:${deviceInfo.onlineAt}");
       bool success = await setOnlineAt(deviceInfo.contactAddress, deviceInfo.deviceId, onlineAt: nowAt);
       if (success) deviceInfo.onlineAt = nowAt;
     }
-    logger.d("$TAG - getMe - canAdd:$canAdd - fetchToken:$fetchDeviceToken - deviceInfo:$deviceInfo");
+    logger.d("$TAG - getMe - fetchDeviceToken:$fetchDeviceToken - deviceInfo:$deviceInfo");
     return deviceInfo;
   }
 
@@ -75,8 +72,7 @@ class DeviceInfoCommon with Tag {
     if (schema == null || schema.contactAddress.isEmpty) return null;
     schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
     schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
-    DeviceInfoSchema? added = await DeviceInfoStorage.instance.insert(schema);
-    return added;
+    return await DeviceInfoStorage.instance.insert(schema);
   }
 
   Future<DeviceInfoSchema?> query(String? contactAddress, String? deviceId) async {
@@ -119,6 +115,7 @@ class DeviceInfoCommon with Tag {
         tokens.add(deviceToken);
       }
     }
+    logger.i("$TAG - queryDeviceTokenList - count:${tokens.length}/${devices.length} - tokens:$tokens - contactAddress:$contactAddress");
     return tokens;
   }
 
@@ -238,6 +235,17 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
+//  SUPPORT:START
+  static bool isMessageQueueEnable(String? platform, int? appVersion) {
+    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
+    bool platformOK = false, versionOk = false;
+    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
+    versionOk = appVersion >= 282;
+    return platformOK && versionOk;
+  }
+//  SUPPORT:END
+
+//  SUPPORT:START
   static bool isIOSDeviceVersionLess152({String deviceVersion = ""}) {
     deviceVersion = deviceVersion.isEmpty ? Settings.deviceVersionName : deviceVersion;
     List<String> vList = deviceVersion.split(".");
@@ -248,35 +256,6 @@ class DeviceInfoCommon with Tag {
     if ((v0 == null) || (v0 >= 16)) return false;
     if ((v0 == 15) && ((v1 == null) || (v1 >= 2))) return false;
     return true;
-  }
-
-//  SUPPORT:START
-  static bool isMsgReadEnable(String? platform, int? appVersion) {
-    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
-    bool platformOK = false, versionOk = false;
-    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
-    versionOk = appVersion >= 224;
-    return platformOK && versionOk;
-  }
-//  SUPPORT:END
-
-//  SUPPORT:START
-  static bool isBurningUpdateAtEnable(String? platform, int? appVersion) {
-    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
-    bool platformOK = false, versionOk = false;
-    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
-    versionOk = appVersion >= 224;
-    return platformOK && versionOk;
-  }
-//  SUPPORT:END
-
-//  SUPPORT:START
-  static bool isMessageQueueEnable(String? platform, int? appVersion) {
-    if (platform == null || platform.isEmpty || appVersion == null || appVersion == 0) return false;
-    bool platformOK = false, versionOk = false;
-    platformOK = (platform == DevicePlatformName.android) || (platform == DevicePlatformName.ios);
-    versionOk = appVersion >= 282;
-    return platformOK && versionOk;
   }
 //  SUPPORT:END
 }
