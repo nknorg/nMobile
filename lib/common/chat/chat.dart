@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
@@ -147,20 +146,10 @@ class ChatCommon with Tag {
           exist.options?.updateBurnAfterAt = updateBurnAfterAt;
           var options = await contactCommon.setOptionsBurn(exist.address, burnAfterSeconds, updateBurnAfterAt, notify: true);
           if (options != null) exist.options = options;
-        } else {
+        } else if ((message.sendAt ?? 0) > existUpdateAt) {
           // mine updated latest
-          if ((message.sendAt ?? 0) > existUpdateAt) {
-            logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}");
-            DeviceInfoSchema? deviceInfo;
-            if (message.deviceId.isNotEmpty) {
-              deviceInfo = await deviceInfoCommon.query(clientAddress, message.deviceId);
-            } else {
-              deviceInfo = await deviceInfoCommon.queryLatest(clientAddress);
-            }
-            if (DeviceInfoCommon.isBurningUpdateAtEnable(deviceInfo?.platform, deviceInfo?.appVersion)) {
-              chatOutCommon.sendContactOptionsBurn(exist.address, (existSeconds ?? 0), existUpdateAt); // await
-            }
-          }
+          logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}");
+          chatOutCommon.sendContactOptionsBurn(exist.address, (existSeconds ?? 0), existUpdateAt); // await
         }
       }
     }
