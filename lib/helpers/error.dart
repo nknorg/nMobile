@@ -191,7 +191,7 @@ String? getErrorShow(dynamic error) {
   // release
   if (errStr.isEmpty) return "";
   bool contains = _containsStrings(errStr, [
-    //NknError.rpcRequestFail
+    NknError.rpcRequestFail,
     NknError.writeBroken,
     NknError.readBroken,
     NknError.writeTCP,
