@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
@@ -298,8 +297,7 @@ class ChatInCommon with Tag {
     }
     logger.i("$TAG - receiveReceipt - sender:${received.sender} - msgId:${received.content}");
     // status
-    bool readSupport = DeviceInfoCommon.isMsgReadEnable(deviceInfo?.platform, deviceInfo?.appVersion);
-    if (exists.isTargetContact && readSupport) {
+    if (exists.isTargetContact) {
       await messageCommon.updateMessageStatus(exists, MessageStatus.Receipt, receiveAt: DateTime.now().millisecondsSinceEpoch);
     } else {
       await messageCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
@@ -432,8 +430,8 @@ class ChatInCommon with Tag {
           // if (firstName.isEmpty || lastName.isEmpty || (avatar?.path ?? "").isEmpty) {
           //   logger.i("$TAG - receiveContact - setProfile - NULL");
           // } else {
-          await contactCommon.setOtherFullName(contact.address, version, firstName, lastName, notify: false);
-          await contactCommon.setOtherAvatar(contact.address, version, avatarPath, notify: true);
+          await contactCommon.setOtherAvatar(contact.address, version, avatarPath, notify: false);
+          await contactCommon.setOtherFullName(contact.address, version, firstName, lastName, notify: true);
           logger.i("$TAG - _receiveContact - updateProfile - firstName:$firstName - lastName:$lastName - avatar:$avatarPath - version:$version - data:$data - sender:${received.sender}");
           // }
         }
