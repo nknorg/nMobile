@@ -194,12 +194,27 @@ class MessageSchema {
 
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
-    if ((raw == null) || (raw.src == null) || (raw.src?.isEmpty == true) || (raw.data == null) || (raw.data?.isEmpty == true)) return null;
+    if (raw == null) {
+      logger.e("MessageSchema - fromReceive - raw nil");
+      return null;
+    } else if ((raw.src == null) || (raw.src?.isEmpty == true)) {
+      logger.e("MessageSchema - fromReceive - src nil");
+      return null;
+    } else if ((raw.data == null) || (raw.data?.isEmpty == true)) {
+      logger.e("MessageSchema - fromReceive - data nil");
+      return null;
+    }
     Map<String, dynamic>? data = Util.jsonFormatMap(raw.data);
-    if (data == null) return null;
+    if (data == null) {
+      logger.e("MessageSchema - fromReceive - data<map> nil");
+      return null;
+    }
     String msgId = data['id']?.toString() ?? "";
     String contentType = data['contentType']?.toString() ?? "";
-    if (msgId.isEmpty || contentType.isEmpty) return null;
+    if (msgId.isEmpty || contentType.isEmpty) {
+      logger.e("MessageSchema - fromReceive - info nil");
+      return null;
+    }
     // contentType
     switch (contentType) {
       case "contact":

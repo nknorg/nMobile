@@ -410,11 +410,11 @@ class MessageCommon with Tag {
       unReadList.addAll(needReads);
       if (result.length < limit) break;
     }
-    if (unReadList.isNotEmpty) {
-      logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
-    } else {
-      logger.d("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+    if (unReadList.isEmpty) {
+      logger.d("$TAG - correctMessageRead - empty - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+      return 0;
     }
+    logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
     // update
     for (var i = 0; i < unReadList.length; i++) {
       MessageSchema element = unReadList[i];
@@ -613,8 +613,8 @@ class MessageCommon with Tag {
   }
 
   Future syncContactMessages(String? targetAddress, String? targetDeviceId, int sideSendQueueId, int sideReceiveQueueId, List<int> sideLostQueueIds) async {
-    if (targetAddress == null || targetAddress.isEmpty) return 0;
-    if (targetDeviceId == null || targetDeviceId.isEmpty) return 0;
+    if (targetAddress == null || targetAddress.isEmpty) return;
+    if (targetDeviceId == null || targetDeviceId.isEmpty) return;
     // use latest params
     bool replace = true;
     String? oldParams = _syncMessageQueueParams["${targetAddress}_$targetDeviceId"];
@@ -633,14 +633,14 @@ class MessageCommon with Tag {
     bool onComplete = await chatInCommon.waitReceiveQueue(targetAddress, "syncContactMessages_", duplicated: false);
     if (!onComplete) {
       logger.d("$TAG - syncContactMessages - receive_queue progress - params:$_syncMessageQueueParams - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
-      return 0;
+      return;
     }
     logger.d("$TAG - syncContactMessages - receive_queue complete - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
     // use latest params
     String? queueIds = _syncMessageQueueParams["${targetAddress}_$targetDeviceId"];
     if (queueIds == null || queueIds.isEmpty) {
       logger.w("$TAG - syncContactMessages - params nil - queueIds:$queueIds - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
-      return false;
+      return;
     }
     // check start
     List splits = deviceInfoCommon.splitQueueIds(queueIds);
