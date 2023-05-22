@@ -70,7 +70,7 @@ class SessionSchema {
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
-      'data': data != null ? jsonEncode(data) : Map(),
+      'data': jsonEncode(data ?? Map()),
     };
     return map;
   }

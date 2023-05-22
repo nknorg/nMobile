@@ -137,7 +137,7 @@ class DeviceInfoSchema {
       'device_id': deviceId,
       'device_token': deviceToken,
       'online_at': onlineAt,
-      'data': data != null ? jsonEncode(data) : Map(),
+      'data': jsonEncode(data ?? Map()),
     };
     return map;
   }
