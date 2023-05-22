@@ -85,7 +85,7 @@ class SubscriberSchema {
       'contact_address': contactAddress,
       'status': status,
       'perm_page': permPage,
-      'data': data != null ? jsonEncode(data) : Map(),
+      'data': jsonEncode(data ?? Map()),
     };
     return map;
   }

@@ -113,7 +113,7 @@ class PrivateGroupItemSchema {
       'invitee_raw_data': inviteeRawData,
       'inviter_signature': inviterSignature,
       'invitee_signature': inviteeSignature,
-      'data': data != null ? jsonEncode(data) : Map(),
+      'data': jsonEncode(data ?? Map()),
     };
     return map.sortByKey();
   }

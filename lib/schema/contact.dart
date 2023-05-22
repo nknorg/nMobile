@@ -197,8 +197,8 @@ class ContactSchema {
       'remark_name': remarkName,
       'type': type,
       'is_top': isTop ? 1 : 0,
-      'options': options != null ? jsonEncode(options) : OptionsSchema(),
-      'data': data != null ? jsonEncode(data) : Map(),
+      'options': jsonEncode(options?.toMap() ?? Map()),
+      'data': jsonEncode(data ?? Map()),
     };
     return map;
   }
