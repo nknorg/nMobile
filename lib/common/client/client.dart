@@ -70,8 +70,9 @@ class ClientCommon with Tag {
 
   // status
   int status = ClientConnectStatus.disconnected;
-  bool get isClientConnecting => (client == null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
-  bool get isClientOK => (client != null) && ((status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connected));
+  bool get isClientConnecting => (status == ClientConnectStatus.connecting);
+  bool get isClientReconnecting => (reconnectCompleter != null) && !(reconnectCompleter?.isCompleted == true);
+  bool get isClientOK => (client != null) && (status == ClientConnectStatus.connected) && !isClientReconnecting;
   bool get isClientStop => (status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected);
 
   // complete
@@ -90,7 +91,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - onConnectivityChanged - okay - status:$status");
       }
       isNetworkOk = status != ConnectivityResult.none;
-      ping(status: true, maxWaitTimes: 1);
+      ping(status: true);
     });
   }
 
@@ -320,6 +321,7 @@ class ClientCommon with Tag {
       if (!isClientStop) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
+        if (isClientReconnecting) reconnectCompleter?.complete();
       }
       RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
     });
@@ -337,6 +339,7 @@ class ClientCommon with Tag {
             _statusSink.add(ClientConnectStatus.connected);
           }
         }
+        if (isClientReconnecting) reconnectCompleter?.complete();
       }
       chatInCommon.onMessageReceive(receive); // await
     });
@@ -367,14 +370,17 @@ class ClientCommon with Tag {
     if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
     // reconnect
     await waitReconnect();
-    // status
+    // connect
     int tryTimes = 0;
-    while (!clientCommon.isClientOK) {
+    while (clientCommon.isClientConnecting) {
       if (clientCommon.isClientStop) break;
       logger.w("$TAG - waitClientOk - connecting - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
       tryTimes++;
       await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
     }
+    // reconnect-again
+    await waitReconnect();
+    // log
     if (!clientCommon.isClientOK) {
       logger.w("$TAG - waitClientOk - broken - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
       return false;
@@ -386,7 +392,7 @@ class ClientCommon with Tag {
   }
 
   Future waitReconnect() async {
-    if ((reconnectCompleter != null) && !(reconnectCompleter?.isCompleted == true)) {
+    if (isClientReconnecting) {
       logger.i("$TAG - waitReconnect - client:${clientCommon.client != null} - status:$status");
       await reconnectCompleter?.future;
     }
@@ -397,17 +403,17 @@ class ClientCommon with Tag {
     // connecting wait
     if (isClientConnecting) {
       int tryTimes = 0;
-      while (!clientCommon.isClientOK) {
+      while (clientCommon.isClientConnecting) {
         if (clientCommon.isClientStop) break;
         logger.w("$TAG - reconnect -  connecting wait - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
         tryTimes++;
         await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
       }
       logger.i("$TAG - reconnect - connecting complete - ok:${clientCommon.isClientOK} - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
-      return clientCommon.isClientOK;
+      if (!isClientReconnecting) return clientCommon.isClientOK;
     }
     // complete check
-    if ((reconnectCompleter != null) && !(reconnectCompleter?.isCompleted == true)) {
+    if (isClientReconnecting) {
       if (force) {
         logger.i("$TAG - reconnect - force complete");
         await reconnectCompleter?.future;
@@ -454,9 +460,9 @@ class ClientCommon with Tag {
       _statusSink.add(ClientConnectStatus.connecting); // need first flush
       await Future.delayed(Duration(milliseconds: isNetworkOk ? 100 : 200));
     }
-    reconnectCompleter?.complete();
-    //reconnectCompleter = null;
-    ping(status: true); // await must after reconnectCompleter
+    //reconnectCompleter?.complete(); // complete in onConnect
+    //reconnectCompleter = null; // sync nil error
+    //ping(status: true); // await must after reconnectCompleter
     return success;
   }
 

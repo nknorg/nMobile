@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nmobile/common/client/client.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/badge.dart' as Badge;
 import 'package:nmobile/common/settings.dart';
@@ -67,7 +68,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   int _targetType = 0;
   dynamic _target;
 
-  bool isClientOk = clientCommon.isClientOK;
+  bool isClientOk = clientCommon.status == ClientConnectStatus.connected;
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
@@ -129,9 +130,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // clientStatus
     _clientStatusSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
-      if (isClientOk != clientCommon.isClientOK) {
+      if (isClientOk != (clientCommon.status == ClientConnectStatus.connected)) {
         setState(() {
-          isClientOk = clientCommon.isClientOK;
+          isClientOk = (clientCommon.status == ClientConnectStatus.connected);
         });
       }
     });
