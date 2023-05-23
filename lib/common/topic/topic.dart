@@ -59,7 +59,7 @@ class TopicCommon with Tag {
   }
 
   Future checkAndTryAllSubscribe() async {
-    if (!clientCommon.isClientOK) return;
+    if (await clientCommon.waitClientOk()) return;
     int limit = 20;
     List<TopicSchema> topicsWithReSubscribe = [];
     List<TopicSchema> topicsWithReUnSubscribe = [];
@@ -114,7 +114,8 @@ class TopicCommon with Tag {
   }
 
   Future<bool> _checkAndTrySubscribe(TopicSchema? topic, bool subscribed) async {
-    if (topic == null || !clientCommon.isClientOK) return false;
+    if (topic == null) return false;
+    if (await clientCommon.waitClientOk()) return false;
     // expireHeight
     int expireHeight = await getSubscribeExpireAtFromNode(topic.topicId, clientCommon.address);
     // fee
@@ -145,7 +146,7 @@ class TopicCommon with Tag {
 
   @Deprecated('Replace by PrivateGroup')
   Future checkAndTryAllPermission() async {
-    if (!clientCommon.isClientOK) return;
+    if (await clientCommon.waitClientOk()) return;
     int limit = 20;
     List<TopicSchema> privateTopics = [];
     List<TopicSchema> permissionTopics = [];
@@ -211,7 +212,8 @@ class TopicCommon with Tag {
 
   @Deprecated('Replace by PrivateGroup')
   Future<bool> _checkAndTryPermissionExpire(TopicSchema? topic, int globalHeight, double fee) async {
-    if (topic == null || !clientCommon.isClientOK) return false;
+    if (topic == null) return false;
+    if (await clientCommon.waitClientOk()) return false;
     int maxPermPage = await subscriberCommon.queryMaxPermPageByTopicId(topic.topicId);
     for (var i = 0; i <= maxPermPage; i++) {
       // perm_page
@@ -236,7 +238,8 @@ class TopicCommon with Tag {
   @Deprecated('Replace by PrivateGroup')
   Future<bool> _checkAndTryPermissionSet(SubscriberSchema? subscriber) async {
     int? status = subscriber?.isPermissionProgress();
-    if (subscriber == null || status == null || !clientCommon.isClientOK) return false;
+    if (subscriber == null || status == null) return false;
+    if (await clientCommon.waitClientOk()) return false;
     bool needAccept = (status == SubscriberStatus.InvitedSend) || (status == SubscriberStatus.InvitedReceipt) || (status == SubscriberStatus.Subscribed);
     bool needReject = status == SubscriberStatus.Unsubscribed;
     bool needNoPermission = status == SubscriberStatus.None;
@@ -293,7 +296,8 @@ class TopicCommon with Tag {
 
   // caller = self(owner/normal)
   Future<TopicSchema?> subscribe(String? topicId, {bool fetchSubscribers = false, bool justNow = false, double fee = 0}) async {
-    if (topicId == null || topicId.isEmpty || !clientCommon.isClientOK) return null;
+    if (topicId == null || topicId.isEmpty) return null;
+    if (await clientCommon.waitClientOk()) return null;
     // topic exist
     TopicSchema? topic = await query(topicId);
     if (topic == null) {
@@ -364,7 +368,8 @@ class TopicCommon with Tag {
     double fee = 0,
     bool toast = false,
   }) async {
-    if (topicId == null || topicId.isEmpty || !clientCommon.isClientOK) return null;
+    if (topicId == null || topicId.isEmpty) return null;
+    if (await clientCommon.waitClientOk()) return null;
     // topic exist
     TopicSchema? topic = await query(topicId);
     if (topic == null) {
@@ -482,7 +487,7 @@ class TopicCommon with Tag {
   // caller = everyone
   Future<SubscriberSchema?> invitee(String? topicId, bool isPrivate, bool isOwner, String? inviteeAddress, {int? nonce, double fee = 0, bool toast = false, bool sendMsg = false}) async {
     if (topicId == null || topicId.isEmpty || inviteeAddress == null || inviteeAddress.isEmpty) return null;
-    if (!clientCommon.isClientOK) return null;
+    if (await clientCommon.waitClientOk()) return null;
     if (isPrivate && !isOwner) {
       if (toast) Toast.show(Settings.locale((s) => s.member_no_auth_invite));
       return null;
@@ -563,7 +568,7 @@ class TopicCommon with Tag {
   // caller = self
   Future<TopicSchema?> unsubscribe(String? topicId, {int? nonce, double fee = 0, bool toast = false}) async {
     if (topicId == null || topicId.isEmpty) return null;
-    if (!clientCommon.isClientOK) return null;
+    if (await clientCommon.waitClientOk()) return null;
     // permission modify in owners message received by owner
     TopicSchema? topic = await query(topicId);
     // client unsubscribe
@@ -604,7 +609,7 @@ class TopicCommon with Tag {
   @Deprecated('Replace by PrivateGroup')
   Future<SubscriberSchema?> kick(String? topicId, bool isPrivate, bool isOwner, String? kickAddress, {int? nonce, double fee = 0, bool toast = false}) async {
     if (topicId == null || topicId.isEmpty || kickAddress == null || kickAddress.isEmpty) return null;
-    if (!clientCommon.isClientOK) return null;
+    if (await clientCommon.waitClientOk()) return null;
     if (kickAddress == clientCommon.address) return null;
     if (!isPrivate || !isOwner) return null; // enable just private + owner
     // topic exist

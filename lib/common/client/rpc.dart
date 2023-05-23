@@ -127,8 +127,7 @@ class RPC {
   static Future<int?> getBlockHeight() async {
     int? newBlockHeight;
     try {
-      if (clientCommon.isClientOK) {
-        await clientCommon.waitReconnect();
+      if (await clientCommon.waitClientOk()) {
         newBlockHeight = await clientCommon.client?.getHeight();
       }
       if ((newBlockHeight == null) || (newBlockHeight <= 0)) {
@@ -155,9 +154,8 @@ class RPC {
         // walletAddress no check
         List<String> seedRpcList = await getRpcServers(walletAddress);
         nonce = await Wallet.getNonceByAddress(walletAddress, txPool: txPool, config: RpcConfig(seedRPCServerAddr: seedRpcList));
-      } else if (clientCommon.isClientOK) {
+      } else if (await clientCommon.waitClientOk()) {
         // client no check rpcSeed
-        await clientCommon.waitReconnect();
         nonce = await clientCommon.client?.getNonce(txPool: txPool);
       }
     } catch (e, st) {
@@ -350,8 +348,7 @@ class RPC {
       bool isBlock = false;
       nonce = nonce ?? await RPC.getNonce(null);
       try {
-        if (clientCommon.isClientOK) {
-          await clientCommon.waitReconnect();
+        if (await clientCommon.waitClientOk()) {
           String? topicHash = await clientCommon.client?.subscribe(
             topic: RPC.genTopicHash(topicId),
             duration: Settings.blockHeightTopicSubscribeDefault,
@@ -424,8 +421,7 @@ class RPC {
       bool isBlock = false;
       nonce = nonce ?? await RPC.getNonce(null);
       try {
-        if (clientCommon.isClientOK) {
-          await clientCommon.waitReconnect();
+        if (await clientCommon.waitClientOk()) {
           String? topicHash = await clientCommon.client?.unsubscribe(
             topic: RPC.genTopicHash(topicId),
             identifier: identifier,
@@ -509,8 +505,7 @@ class RPC {
     // func
     Function() func = () async {
       try {
-        if (clientCommon.isClientOK) {
-          await clientCommon.waitReconnect();
+        if (await clientCommon.waitClientOk()) {
           Map<String, dynamic>? result = await clientCommon.client?.getSubscription(
             topic: genTopicHash(topicId),
             subscriber: subscriber,
@@ -557,8 +552,7 @@ class RPC {
     // func
     Function(int, int) func = (int offset, int limit) async {
       try {
-        if (clientCommon.isClientOK) {
-          await clientCommon.waitReconnect();
+        if (await clientCommon.waitClientOk()) {
           Map<String, dynamic>? result = await clientCommon.client?.getSubscribers(
             topic: genTopicHash(topicId),
             offset: offset,
@@ -620,8 +614,7 @@ class RPC {
     // func
     Function() func = () async {
       try {
-        if (clientCommon.isClientOK) {
-          await clientCommon.waitReconnect();
+        if (await clientCommon.waitClientOk()) {
           int? result = await clientCommon.client?.getSubscribersCount(
             topic: genTopicHash(topicId),
             // subscriberHashPrefix: subscriberHashPrefix,
