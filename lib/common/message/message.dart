@@ -211,7 +211,7 @@ class MessageCommon with Tag {
     // delete
     if (message.isDelete) {
       await messageDelete(message, notify: true);
-    } else {
+    } else if ((message.deleteAt ?? 0) > 0) {
       logger.i("$TAG - updateMessageStatus - need delete later - status:${message.status} - message:${message.toStringSimple()}");
     }
     return message;
