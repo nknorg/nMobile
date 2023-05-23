@@ -50,6 +50,47 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         return FlutterError(code: code ?? "", message: error?.localizedDescription, details: "")
     }
     
+    private func getClientConfig(seedRpc: [String]?, connectRetries: Int32, maxReconnectInterval: Int32, ethResolverConfigArray: [[String: Any]]?, dnsResolverConfigArray: [[String: Any]]?) -> NknClientConfig {
+        let config: NknClientConfig = NknClientConfig()
+        
+        if(seedRpc != nil){
+            config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
+            for (_, v) in seedRpc!.enumerated() {
+                config.seedRPCServerAddr?.append(v)
+            }
+        }
+        
+        config.connectRetries = connectRetries
+        config.maxReconnectInterval = maxReconnectInterval
+        
+        if (ethResolverConfigArray != nil) {
+            for (_, cfg) in ethResolverConfigArray!.enumerated() {
+                let ethResolverConfig: EthresolverConfig = EthresolverConfig()
+                ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
+                ethResolverConfig.rpcServer = cfg["rpcServer"] as! String
+                ethResolverConfig.contractAddress = cfg["contractAddress"] as! String
+                if (config.resolvers == nil) {
+                    config.resolvers = NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
+                } else {
+                    config.resolvers?.append(EthResolver(config: ethResolverConfig))
+                }
+            }
+        }
+        
+        if (dnsResolverConfigArray != nil) {
+            for (_, cfg) in dnsResolverConfigArray!.enumerated() {
+                let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
+                dnsResolverConfig.dnsServer = cfg["dnsServer"] as! String
+                if (config.resolvers == nil) {
+                    config.resolvers = NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
+                } else {
+                    config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
+                }
+            }
+        }
+        return config
+    }
+    
     private func createClient(account: NknAccount, identifier: String = "", numSubClients: Int = 3, config: NknClientConfig) throws -> NknMultiClient? {
         let pubKey: String = account.pubKey()!.hexEncode
         let id = identifier.isEmpty ? pubKey : "\(identifier).\(pubKey)"
@@ -67,12 +108,22 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         guard let client = clientMap.keys.contains(id) ? clientMap[id] : nil else {
             return
         }
-        guard (!client.isClosed()) else{
-            return
+        if(!client.isClosed()) {
+            try client.close()
         }
-        
-        try client.close()
         clientMap.removeValue(forKey: id)
+    }
+    
+    private func recreateClient(id: String, account: NknAccount, identifier: String = "", numSubClients: Int = 3, config: NknClientConfig) throws -> NknMultiClient? {
+        guard let newClient = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config) else {
+            return nil
+        }
+        let oldClient = clientMap.keys.contains(id) ? clientMap[id] : nil
+        if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
+            try oldClient?.close()
+        }
+        clientMap[newClient.address()] = newClient
+        return newClient
     }
     
     private func onConnect(_id: String, numSubClients: Int) {
@@ -121,7 +172,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 guard let client = clientMap.keys.contains(_id) ? clientMap[_id] : nil else {
                     break
                 }
-                guard (!client.isClosed()) else{
+                if (client.isClosed()) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.onMessage(_id: _id)
+                    }
                     break
                 }
                 guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
@@ -153,6 +207,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         switch call.method{
         case "create":
             create(call, result: result)
+        case "recreate":
+            recreate(call, result: result)
         case "reconnect":
             reconnect(call, result: result)
         case "close":
@@ -193,43 +249,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
         
-        let config: NknClientConfig = NknClientConfig()
-        
-        if(seedRpc != nil){
-            config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
-            for (_, v) in seedRpc!.enumerated() {
-                config.seedRPCServerAddr?.append(v)
-            }
-        }
-        
-        config.connectRetries = connectRetries
-        config.maxReconnectInterval = maxReconnectInterval
-        
-        if (ethResolverConfigArray != nil) {
-            for (_, cfg) in ethResolverConfigArray!.enumerated() {
-                let ethResolverConfig: EthresolverConfig = EthresolverConfig()
-                ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
-                ethResolverConfig.rpcServer = cfg["rpcServer"] as! String
-                ethResolverConfig.contractAddress = cfg["contractAddress"] as! String
-                if (config.resolvers == nil) {
-                    config.resolvers = NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
-                } else {
-                    config.resolvers?.append(EthResolver(config: ethResolverConfig))
-                }
-            }
-        }
-        
-        if (dnsResolverConfigArray != nil) {
-            for (_, cfg) in dnsResolverConfigArray!.enumerated() {
-                let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
-                dnsResolverConfig.dnsServer = cfg["dnsServer"] as! String
-                if (config.resolvers == nil) {
-                    config.resolvers = NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
-                } else {
-                    config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
-                }
-            }
-        }
+        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
         
         clientWorkItem = DispatchWorkItem {
             do {
@@ -275,9 +295,78 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 resp["publicKey"] = clientPubKey
                 resp["seed"] = clientSeed
                 self.resultSuccess(result: result, resp: resp)
-                
+                // listen
                 self.onConnect(_id: clientAddress, numSubClients: numSubClients)
                 self.onMessage(_id: clientAddress)
+                return
+            } catch let error {
+                self.resultError(result: result, error: error)
+                return
+            }
+        }
+        clientQueue.async(execute: clientWorkItem!)
+    }
+    
+    private func recreate(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        let args = call.arguments as! [String: Any]
+        let _id = args["_id"] as! String
+        let identifier = args["identifier"] as? String ?? ""
+        let seed = args["seed"] as? FlutterStandardTypedData
+        let seedRpc = args["seedRpc"] as? [String]
+        let numSubClients = args["numSubClients"] as? Int ?? 3
+        let connectRetries = args["connectRetries"] as? Int32 ?? -1
+        let maxReconnectInterval = args["maxReconnectInterval"] as? Int32 ?? 5000
+        let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
+        let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
+        
+        let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
+        
+        clientWorkItem = DispatchWorkItem {
+            do {
+                var error: NSError?
+                guard let account = NknNewAccount(seed?.data, &error) else {
+                    self.resultError(result: result, code: "", message: "new account fail", details: "recreate")
+                    return
+                }
+                if (error != nil) {
+                    self.resultError(result: result, error: error)
+                    return
+                }
+                
+                var client: NknMultiClient?
+                do {
+                    client = try self.recreateClient(id: _id, account: account, identifier: identifier, numSubClients: numSubClients, config: config)
+                } catch _ {
+                }
+                if (client == nil) {
+                    NkngolibAddClientConfigWithDialContext(config)
+                    client = try self.recreateClient(id: _id, account: account, identifier: identifier, numSubClients: numSubClients, config: config)
+                }
+                if (client == nil) {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "recreate")
+                    return
+                }
+                
+                guard let clientAddress = client?.address() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "recreate_address")
+                    return
+                }
+                guard let clientPubKey = client?.pubKey() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "recreate_pubkey")
+                    return
+                }
+                guard let clientSeed = client?.seed() ?? nil else {
+                    self.resultError(result: result, code: "", message: "client create fail", details: "recreate_seed")
+                    return
+                }
+                
+                var resp:[String:Any] = [String:Any]()
+                resp["address"] = clientAddress
+                resp["publicKey"] = clientPubKey
+                resp["seed"] = clientSeed
+                self.resultSuccess(result: result, resp: resp)
+                // listen
+                self.onConnect(_id: clientAddress, numSubClients: numSubClients)
                 return
             } catch let error {
                 self.resultError(result: result, error: error)

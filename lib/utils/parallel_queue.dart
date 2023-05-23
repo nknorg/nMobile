@@ -57,7 +57,10 @@ class ParallelQueue {
 
   int get length => _delays.length + _queue.length + _activeItems.length;
 
-  Future onComplete(String key) {
+  Future onComplete(String key, {bool completeWhenEmpty = true}) {
+    if ((length <= 0) && completeWhenEmpty) {
+      return Future.delayed(Duration(seconds: 0));
+    }
     Completer? completer = _completeListeners[key];
     if (completer == null) {
       completer = Completer();

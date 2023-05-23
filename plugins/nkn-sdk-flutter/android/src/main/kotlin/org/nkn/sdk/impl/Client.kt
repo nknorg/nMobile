@@ -7,6 +7,7 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nkn.*
@@ -49,6 +50,55 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         eventSink = null
     }
 
+    private fun getClientConfig(
+        seedRpc: ArrayList<String>?,
+        connectRetries: Int,
+        maxReconnectInterval: Int,
+        ethResolverConfigArray: ArrayList<Map<String, Any>>?,
+        dnsResolverConfigArray: ArrayList<Map<String, Any>>?
+    ): ClientConfig {
+        val config = ClientConfig()
+
+        if (seedRpc != null) {
+            config.seedRPCServerAddr = StringArray(null)
+            for (addr in seedRpc) {
+                config.seedRPCServerAddr.append(addr)
+            }
+        }
+
+        config.connectRetries = connectRetries
+        config.maxReconnectInterval = maxReconnectInterval
+
+        if (ethResolverConfigArray != null) {
+            for (cfg in ethResolverConfigArray) {
+                val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+                ethResolverConfig.prefix = cfg["prefix"] as String?
+                ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
+                ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
+                val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+                if (config.resolvers == null) {
+                    config.resolvers = nkngomobile.ResolverArray(ethResolver)
+                } else {
+                    config.resolvers.append(ethResolver)
+                }
+            }
+        }
+
+        if (dnsResolverConfigArray != null) {
+            for (cfg in dnsResolverConfigArray) {
+                val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+                dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
+                val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+                if (config.resolvers == null) {
+                    config.resolvers = nkngomobile.ResolverArray(dnsResolver)
+                } else {
+                    config.resolvers.append(dnsResolver)
+                }
+            }
+        }
+        return config
+    }
+
     private suspend fun createClient(
         account: Account,
         identifier: String,
@@ -69,13 +119,29 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val client = (if (clientMap.containsKey(id)) clientMap[id] else null) ?: return@withContext
 
         try {
-            if (client.isClosed) {
+            if (!client.isClosed) {
                 client.close()
             }
             clientMap.remove(id)
         } catch (e: Throwable) {
             throw e
         }
+    }
+
+    private suspend fun recreateClient(
+        id: String,
+        account: Account,
+        identifier: String,
+        numSubClients: Long,
+        config: ClientConfig
+    ): MultiClient = withContext(Dispatchers.IO) {
+        val newClient = MultiClient(account, identifier, numSubClients, true, config)
+        val oldClient = if (clientMap.containsKey(id)) clientMap[id] else null
+        if ((oldClient != null) && !oldClient.isClosed) {
+            oldClient.close()
+        }
+        clientMap[newClient.address()] = newClient
+        newClient
     }
 
     private suspend fun onConnect(_id: String, numSubClients: Long) =
@@ -119,8 +185,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             while (true) {
                 try {
                     val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-                    if (client == null || client.isClosed) {
+                    if (client == null) {
                         break
+                    } else if (client.isClosed) {
+                        delay(500)
+                        continue
                     }
                     val msg = client.onMessage.nextWithTimeout(5 * 1000) ?: continue
 
@@ -149,6 +218,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         when (call.method) {
             "create" -> {
                 create(call, result)
+            }
+            "recreate" -> {
+                recreate(call, result)
             }
             "reconnect" -> {
                 reconnect(call, result)
@@ -204,45 +276,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val dnsResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
 
-        val config = ClientConfig()
-
-        if (seedRpc != null) {
-            config.seedRPCServerAddr = StringArray(null)
-            for (addr in seedRpc) {
-                config.seedRPCServerAddr.append(addr)
-            }
-        }
-
-        config.connectRetries = connectRetries
-        config.maxReconnectInterval = maxReconnectInterval
-
-        if (ethResolverConfigArray != null) {
-            for (cfg in ethResolverConfigArray) {
-                val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-                ethResolverConfig.prefix = cfg["prefix"] as String?
-                ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
-                ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
-                val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-                if (config.resolvers == null) {
-                    config.resolvers = nkngomobile.ResolverArray(ethResolver)
-                } else {
-                    config.resolvers.append(ethResolver)
-                }
-            }
-        }
-
-        if (dnsResolverConfigArray != null) {
-            for (cfg in dnsResolverConfigArray) {
-                val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-                dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
-                val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
-                if (config.resolvers == null) {
-                    config.resolvers = nkngomobile.ResolverArray(dnsResolver)
-                } else {
-                    config.resolvers.append(dnsResolver)
-                }
-            }
-        }
+        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -272,10 +306,60 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     "seed" to client.seed()
                 )
                 resultSuccess(result, data)
-
+                // listen
                 onConnect(client.address(), numSubClients)
-
                 onMessage(client.address())
+            } catch (e: Throwable) {
+                resultError(result, e)
+            }
+        }
+    }
+
+    private fun recreate(call: MethodCall, result: MethodChannel.Result) {
+        val _id = call.argument<String>("_id")!!
+        val identifier = call.argument<String>("identifier") ?: ""
+        val seed = call.argument<ByteArray>("seed")
+        val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
+        val numSubClients = (call.argument<Int>("numSubClients") ?: 3).toLong()
+        val connectRetries = call.argument<Int>("connectRetries") ?: -1
+        val maxReconnectInterval = call.argument<Int>("maxReconnectInterval") ?: 5000
+        val ethResolverConfigArray =
+            call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
+        val dnsResolverConfigArray =
+            call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
+
+        val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val account = Nkn.newAccount(seed)
+                if (account == null) {
+                    resultError(result, "", "new account fail", "recreate")
+                    return@launch
+                }
+
+                var client: MultiClient? = null
+                try {
+                    client = recreateClient(_id, account, identifier, numSubClients, config)
+                } catch (_: Throwable) {
+                }
+                if (client == null) {
+                    Nkngolib.addClientConfigWithDialContext(config)
+                    client = recreateClient(_id, account, identifier, numSubClients, config)
+                }
+                if (client == null) {
+                    resultError(result, "", "client create fail", "recreate")
+                    return@launch
+                }
+                // result
+                val data = hashMapOf(
+                    "address" to client.address(),
+                    "publicKey" to client.pubKey(),
+                    "seed" to client.seed()
+                )
+                resultSuccess(result, data)
+                // listen
+                onConnect(client.address(), numSubClients)
             } catch (e: Throwable) {
                 resultError(result, e)
             }

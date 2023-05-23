@@ -255,7 +255,7 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> sendContactOptionsBurn(String? targetAddress, int deleteSeconds, int updateAt) async {
-    if (!(await clientCommon.waitClientOk())) return false;
+    // if (!(await clientCommon.waitClientOk())) return false;
     if (targetAddress == null || targetAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
@@ -276,7 +276,7 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<bool> sendContactOptionsToken(String? targetAddress, String? deviceToken) async {
-    if (!(await clientCommon.waitClientOk())) return false;
+    // if (!(await clientCommon.waitClientOk())) return false;
     if (targetAddress == null || targetAddress.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
@@ -324,7 +324,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendText(dynamic target, String? content) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    //if (!(await clientCommon.waitClientOk())) return null;
     if (content == null || content.trim().isEmpty) return null;
     // target
     String targetId = "";
@@ -370,7 +370,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     // content
     String contentPath = data["path"]?.toString() ?? "";
     File? content = contentPath.isEmpty ? null : File(contentPath);
@@ -433,7 +433,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendIpfs(String? msgId) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     if (msgId == null || msgId.isEmpty) return null;
     // schema
     MessageSchema? message = await messageCommon.query(msgId);
@@ -445,7 +445,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendImage(dynamic target, File? content) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetId = "";
@@ -493,7 +493,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<MessageSchema?> sendAudio(dynamic target, File? content, double? durationS) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     if (content == null || (!await content.exists()) || ((await content.length()) <= 0)) return null;
     // target
     String targetId = "";
@@ -543,7 +543,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO single
   Future<bool> sendTopicSubscribe(String? topicId) async {
-    if (!(await clientCommon.waitClientOk())) return false;
+    // if (!(await clientCommon.waitClientOk())) return false;
     if (topicId == null || topicId.isEmpty) return false;
     MessageSchema message = MessageSchema.fromSend(
       topicId,
@@ -576,7 +576,7 @@ class ChatOutCommon with Tag {
 
   // NO topic (1 to 1)
   Future<MessageSchema?> sendTopicInvitee(String? topicId, String? targetAddress) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     if (targetAddress == null || targetAddress.isEmpty || topicId == null || topicId.isEmpty) return null;
     ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
@@ -612,7 +612,7 @@ class ChatOutCommon with Tag {
 
   // NO group (1 to 1)
   Future<MessageSchema?> sendPrivateGroupInvitee(String? targetAddress, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
-    if (!(await clientCommon.waitClientOk())) return null;
+    // if (!(await clientCommon.waitClientOk())) return null;
     if (targetAddress == null || targetAddress.isEmpty) return null;
     if (privateGroup == null || groupItem == null) return null;
     MessageSchema message = MessageSchema.fromSend(
