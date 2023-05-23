@@ -232,6 +232,52 @@ class Client {
     }
   }
 
+  Future<void> recreate(
+    Uint8List seed, {
+    String identifier = '',
+    int? numSubClients,
+    int connectRetries = -1,
+    int maxReconnectInterval = 5 * 1000,
+    ClientConfig? config,
+  }) async {
+    List<Map>? ethResolverConfigArray;
+    if (config?.ethResolverConfig != null) {
+      ethResolverConfigArray = <Map>[];
+      config?.ethResolverConfig?.forEach((item) {
+        ethResolverConfigArray?.add({'prefix': item.prefix, 'contractAddress': item.contractAddress, 'rpcServer': item.rpcServer});
+      });
+    }
+
+    List<Map>? dnsResolverConfigArray;
+    if (config?.dnsResolverConfig != null) {
+      dnsResolverConfigArray = <Map>[];
+      config?.dnsResolverConfig?.forEach((item) {
+        dnsResolverConfigArray?.add({
+          'dnsServer': item.dnsServer,
+        });
+      });
+    }
+
+    try {
+      final Map resp = await _methodChannel.invokeMethod('recreate', {
+        '_id': this.address,
+        'identifier': identifier,
+        'seed': seed,
+        'numSubClients': numSubClients,
+        'seedRpc': config?.seedRPCServerAddr?.isNotEmpty == true ? config?.seedRPCServerAddr : null,
+        'connectRetries': connectRetries,
+        'maxReconnectInterval': maxReconnectInterval,
+        'ethResolverConfigArray': ethResolverConfigArray,
+        'dnsResolverConfigArray': dnsResolverConfigArray,
+      });
+      this.address = resp['address'];
+      this.publicKey = resp['publicKey'];
+      this.seed = resp['seed'];
+    } catch (e) {
+      throw e;
+    }
+  }
+
   /// [reconnect] reconnect the multiclient
   Future<void> reconnect() async {
     if (!(this.address.isNotEmpty == true)) {
