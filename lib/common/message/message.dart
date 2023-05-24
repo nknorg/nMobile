@@ -177,7 +177,7 @@ class MessageCommon with Tag {
             } catch (e) {}
             logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
           } else {
-            logger.d("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
+            logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
           }
         });
       }
@@ -349,16 +349,16 @@ class MessageCommon with Tag {
         if ((targetType == SessionType.CONTACT) && (target is ContactSchema)) {
           var data = await contactCommon.setReceivedMessages(targetId, needTags, []);
           if (data != null) {
-            logger.i("$TAG - onSessionDelete - contact setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+            logger.i("$TAG - onSessionDelete - contact setReceivedMessages success - count:${needTags.length} - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
           } else {
-            logger.w("$TAG - onSessionDelete - contact setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+            logger.w("$TAG - onSessionDelete - contact setReceivedMessages fail - count:${needTags.length} - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
           }
         } else if ((targetType == SessionType.PRIVATE_GROUP) && (target is PrivateGroupSchema)) {
           var data = await privateGroupCommon.setReceivedMessages(targetId, needTags, []);
           if (data != null) {
-            logger.i("$TAG - onSessionDelete - privateGroup setReceivedMessages success - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+            logger.i("$TAG - onSessionDelete - privateGroup setReceivedMessages success - count:${needTags.length} - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
           } else {
-            logger.w("$TAG - onSessionDelete - privateGroup setReceivedMessages fail - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
+            logger.w("$TAG - onSessionDelete - privateGroup setReceivedMessages fail - count:${needTags.length} - tage:$needTags - receivedMessages:${target.receivedMessages} - targetId:$targetType - targetId:$targetType - targetData:$data");
           }
         }
       }

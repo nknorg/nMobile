@@ -103,8 +103,8 @@ class PrivateGroupSchema {
   }
 
   Map<String, int> get receivedMessages {
-    Map<String, int> values = data?['receivedMessages'] ?? Map();
-    return values.map((key, value) => MapEntry(key.toString(), value))..removeWhere((key, value) => key.isEmpty);
+    Map<String, dynamic> values = data?['receivedMessages'] ?? Map();
+    return values.map((key, value) => MapEntry(key.toString(), int.tryParse(value?.toString() ?? "") ?? 0))..removeWhere((key, value) => key.isEmpty || value == 0);
   }
 
   int get optionsRequestAt {
