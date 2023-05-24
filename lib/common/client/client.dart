@@ -416,7 +416,19 @@ class ClientCommon with Tag {
       int tryTimes = 0;
       while (clientCommon.isClientConnecting) {
         if (clientCommon.isClientStop) break;
-        logger.w("$TAG - reconnect -  connecting wait - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
+        while (!isNetworkOk) {
+          logger.w("$TAG - reconnect - wait network ok");
+          await Future.delayed(Duration(milliseconds: 500));
+        }
+        if (force && (tryTimes >= 10)) {
+          logger.w("$TAG - reconnect - force no wait connecting - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
+          break;
+        } else if ((tryTimes > 0) && (tryTimes % 20 == 0)) {
+          logger.w("$TAG - reconnect -  try ping - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
+          chatOutCommon.sendPing([address ?? ""], true); // await
+        } else {
+          logger.w("$TAG - reconnect -  connecting wait - tryTimes:$tryTimes - client:${clientCommon.client == null} - status:${clientCommon.status}");
+        }
         tryTimes++;
         await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
       }

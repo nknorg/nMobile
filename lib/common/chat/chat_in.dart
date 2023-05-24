@@ -321,7 +321,7 @@ class ChatInCommon with Tag {
     List<String> msgIds = readIds.map((e) => e?.toString() ?? "").toList();
     List<MessageSchema> msgList = await messageCommon.queryListByIds(msgIds);
     if (msgList.isEmpty) {
-      logger.w("$TAG - _receiveRead - msgIds is nil - sender:${received.sender} - received:$received");
+      logger.i("$TAG - _receiveRead - msgIds is nil - sender:${received.sender} - received:$received");
       return true;
     }
     logger.i("$TAG - _receiveRead - count:${msgList.length} - sender:${received.sender} - msgIds:$msgIds");
