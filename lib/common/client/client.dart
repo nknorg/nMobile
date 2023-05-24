@@ -90,8 +90,19 @@ class ClientCommon with Tag {
       } else {
         logger.i("$TAG - onConnectivityChanged - okay - status:$status");
       }
-      isNetworkOk = status != ConnectivityResult.none;
-      ping(status: true);
+      bool newNetworkStatus = status != ConnectivityResult.none;
+      if (newNetworkStatus) {
+        if (!isNetworkOk) {
+          isNetworkOk = newNetworkStatus;
+          reconnect(force: true); // await
+        } else {
+          isNetworkOk = newNetworkStatus;
+          ping(status: true); // await
+        }
+      } else {
+        isNetworkOk = newNetworkStatus;
+        // nothing
+      }
     });
   }
 
@@ -141,7 +152,7 @@ class ClientCommon with Tag {
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
-          ping(); // await
+          //ping(); // await
           break;
         } else if (!canTry) {
           logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
@@ -361,7 +372,7 @@ class ClientCommon with Tag {
 
   Future<bool> waitClientOk() async {
     if (clientCommon.isClientStop) {
-      logger.e("$TAG - waitClientOk - closed - client:${clientCommon.client == null} - status:${clientCommon.status}");
+      logger.w("$TAG - waitClientOk - closed - client:${clientCommon.client == null} - status:${clientCommon.status}");
       return false;
     }
     // interval
