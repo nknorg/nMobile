@@ -272,7 +272,7 @@ class MessageSchema {
       isDelete: false,
       deleteAt: null,
       // data
-      contentType: data['contentType']?.toString() ?? "",
+      contentType: contentType,
       options: (data['options'] is Map) ? data['options'] : Map(),
       data: null, // just send set
     );
