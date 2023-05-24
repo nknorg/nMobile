@@ -26,16 +26,16 @@ class Settings {
 
   // sentry
   static bool sentryEnable = true;
-  static const String sentryDSN = ''; // TODO:GG pro+dev
+  static const String sentryDSN = '';
 
   // infura
-  static const String infuraProjectId = ''; // TODO:GG pro+dev
-  static const String infuraApiKeySecret = ''; // TODO:GG pro+dev
+  static const String infuraProjectId = '';
+  static const String infuraApiKeySecret = '';
 
   // notification
   static bool notificationPushEnable = true;
   static int notificationType = NotificationType.only_name;
-  static const String apnsTopic = ""; // TODO:GG pro+dev
+  static const String apnsTopic = "";
 
   // authentication
   static bool biometricsAuthentication = true;
@@ -173,25 +173,25 @@ class Settings {
     final isAuth = await SettingsStorage.getSettings(SettingsStorage.BIOMETRICS_AUTHENTICATION);
     Settings.biometricsAuthentication = (isAuth == null) ? true : ((isAuth is bool) ? isAuth : true);
     logger.i("Settings - init - "
-        "\n debug:$debug"
-        "\n sentryEnable:$sentryEnable"
-        "\n sentryDSN:$sentryDSN"
-        "\n notificationPushEnable:$notificationPushEnable"
-        "\n notificationType:$notificationType"
-        "\n apnsTopic:$apnsTopic"
-        "\n infuraProjectId:$infuraProjectId"
-        "\n infuraApiKeySecret:$infuraApiKeySecret"
-        "\n biometricsAuthentication:$biometricsAuthentication"
-        "\n language:$language"
-        "\n appName:$appName"
-        "\n packageName:$packageName"
-        "\n version:$version"
-        "\n build:$build"
-        "\n versionFormat:$versionFormat"
-        "\n deviceId:$deviceId"
-        "\n deviceVersionName:$deviceVersionName"
-        "\n deviceVersion:$deviceVersion"
-        "\n applicationRootDirectory:$applicationRootDirectory");
+        "\n debug: $debug"
+        "\n sentryEnable: $sentryEnable"
+        "\n sentryDSN: $sentryDSN"
+        "\n notificationPushEnable: $notificationPushEnable"
+        "\n notificationType: $notificationType"
+        "\n apnsTopic: $apnsTopic"
+        "\n infuraProjectId: $infuraProjectId"
+        "\n infuraApiKeySecret: $infuraApiKeySecret"
+        "\n biometricsAuthentication: $biometricsAuthentication"
+        "\n language: $language"
+        "\n appName: $appName"
+        "\n packageName: $packageName"
+        "\n version: $version"
+        "\n build: $build"
+        "\n versionFormat: $versionFormat"
+        "\n deviceId: $deviceId"
+        "\n deviceVersionName: $deviceVersionName"
+        "\n deviceVersion: $deviceVersion"
+        "\n applicationRootDirectory: ${applicationRootDirectory.path}");
   }
 
   // return Your push(F_?_i_?_r_?_e_?_b_?_a_?_s_?_e) server token
