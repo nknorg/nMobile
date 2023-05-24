@@ -70,6 +70,7 @@ class DeviceInfoCommon with Tag {
 
   Future<DeviceInfoSchema?> add(DeviceInfoSchema? schema) async {
     if (schema == null || schema.contactAddress.isEmpty) return null;
+    if (schema.deviceId.isEmpty) return null;
     schema.createAt = schema.createAt ?? DateTime.now().millisecondsSinceEpoch;
     schema.updateAt = schema.updateAt ?? DateTime.now().millisecondsSinceEpoch;
     return await DeviceInfoStorage.instance.insert(schema);
