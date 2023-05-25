@@ -91,17 +91,12 @@ class ClientCommon with Tag {
         logger.i("$TAG - onConnectivityChanged - okay - status:$status");
       }
       bool newNetworkStatus = status != ConnectivityResult.none;
-      if (newNetworkStatus) {
-        if (!isNetworkOk) {
-          isNetworkOk = newNetworkStatus;
-          reconnect(force: true); // await
-        } else {
-          isNetworkOk = newNetworkStatus;
-          ping(status: true); // await
-        }
+      if (newNetworkStatus != isNetworkOk) {
+        isNetworkOk = newNetworkStatus;
+        reconnect(force: !newNetworkStatus); // await
       } else {
         isNetworkOk = newNetworkStatus;
-        // nothing
+        ping(status: true); // await
       }
     });
   }
@@ -438,15 +433,15 @@ class ClientCommon with Tag {
     // complete check
     if (isClientReconnecting) {
       if (force) {
-        logger.i("$TAG - reconnect - force complete");
+        logger.i("$TAG - reconnect - force new complete");
         await reconnectCompleter?.future;
         return await reconnect();
       } else {
-        logger.i("$TAG - reconnect - last complete");
+        logger.i("$TAG - reconnect - wait last complete");
         return await reconnectCompleter?.future;
       }
     } else {
-      logger.i("$TAG - reconnect - new complete");
+      logger.i("$TAG - reconnect - new new complete");
       reconnectCompleter = Completer();
     }
     // password
