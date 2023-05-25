@@ -81,11 +81,11 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states)) {
-        _refreshBadge(delayMs: 1000);
-      } else if (application.isGoBackground(states)) {
+    _appLifeChangeSubscription = application.appLifeStream.listen((bool inBackground) {
+      if (inBackground) {
         _refreshBadge(delayMs: 0);
+      } else {
+        _refreshBadge(delayMs: 1000);
       }
     });
 
