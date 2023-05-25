@@ -97,20 +97,18 @@ class IpfsHelper with Tag {
   ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
   ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
 
-  IpfsHelper(bool log) {
+  IpfsHelper() {
     _dio.options.connectTimeout = Duration(seconds: 1 * 60); // 1m
     _dio.options.receiveTimeout = null; // no limit
-    if (log) {
-      _dio.interceptors.add(LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: false,
-        responseHeader: true,
-        responseBody: false,
-        error: true,
-        logPrint: (log) => logger.i(log),
-      ));
-    }
+    // _dio.interceptors.add(LogInterceptor(
+    //   request: true,
+    //   requestHeader: true,
+    //   requestBody: false,
+    //   responseHeader: true,
+    //   responseBody: false,
+    //   error: true,
+    //   logPrint: (log) => logger.i(log),
+    // ));
   }
 
   String _getUrlFromGateway(Map<String, dynamic> gateway) {
