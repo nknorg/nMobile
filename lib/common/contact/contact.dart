@@ -116,7 +116,7 @@ class ContactCommon with Tag {
     if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
       String profileVersion = Uuid().v4();
       var data = await setProfileVersion(contact.address, profileVersion);
-      logger.i("$TAG - getMe - self profileVersion create - profileVersion:$profileVersion - data:$data");
+      logger.i("$TAG - getMe - self profileVersion created - profileVersion:$profileVersion - data:$data");
       if (data != null) contact.data = data;
     }
     if (fetchWalletAddress) {
