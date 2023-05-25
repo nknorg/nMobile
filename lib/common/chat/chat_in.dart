@@ -384,13 +384,13 @@ class ChatInCommon with Tag {
       } else {
         int gap;
         if ((selfNativeVersion?.isNotEmpty == true) && (selfNativeVersion != lastResponseVersion)) {
-          logger.i('$TAG - _receiveContact - response full - version diff (native != response ?? remote) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          logger.i('$TAG - _receiveContact - response full - version diff (native != responsed ?? remote) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
           gap = 0;
         } else if ((selfNativeVersion?.isNotEmpty == true) && (selfNativeVersion != version)) {
-          logger.i('$TAG - _receiveContact - response full - version diff (native == response != remote) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          logger.i('$TAG - _receiveContact - response full - version diff (native == responsed != remote) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
           gap = Settings.gapContactProfileSyncMs;
         } else {
-          logger.d('$TAG - _receiveContact - response full - version same (native == remote == response) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
+          logger.d('$TAG - _receiveContact - response full - version same (native == remote == responsed) - sender:${received.sender} - native:$selfNativeVersion - response:$lastResponseVersion - remote:$version');
           gap = Settings.gapContactProfileSyncMs;
         }
         chatOutCommon.sendContactProfileResponse(contact.address, contactMe, ContactRequestType.full, deviceInfo: deviceInfo, gap: gap).then((value) {
