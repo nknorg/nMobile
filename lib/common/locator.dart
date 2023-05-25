@@ -12,7 +12,6 @@ import 'package:nmobile/common/message/message.dart';
 import 'package:nmobile/common/message/session.dart';
 import 'package:nmobile/common/private_group/private_group.dart';
 import 'package:nmobile/common/push/local_notification.dart';
-import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/common/topic/subscriber.dart';
 import 'package:nmobile/common/topic/topic.dart';
 import 'package:nmobile/common/wallet/wallet.dart';
@@ -54,7 +53,7 @@ void setupLocator() {
   locator.registerSingleton(LocalNotification());
   // locator.registerSingleton(BackgroundFetchService());
   locator.registerSingleton(AudioHelper());
-  locator.registerSingleton(IpfsHelper(Settings.debug));
+  locator.registerSingleton(IpfsHelper());
   locator.registerSingleton(MemoryCache());
 
   locator.registerSingleton(DB());

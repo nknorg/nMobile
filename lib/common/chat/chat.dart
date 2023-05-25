@@ -467,6 +467,7 @@ class ChatCommon with Tag {
     if (msgId == null || msgId.isEmpty) return null;
     MessageSchema? message = await messageCommon.query(msgId);
     if (message == null) return null;
+    logger.i("$TAG - startIpfsUpload - start - options${message.options}");
     // file_result
     String? fileHash = MessageOptions.getIpfsHash(message.options);
     if (fileHash != null && fileHash.isNotEmpty) {
@@ -561,6 +562,7 @@ class ChatCommon with Tag {
 
   Future<List<dynamic>> _tryIpfsThumbnailUpload(MessageSchema? message) async {
     if (message == null) return [null, false];
+    logger.i("$TAG - _tryIpfsThumbnailUpload - start - options${message.options}");
     // check
     String? thumbnailHash = MessageOptions.getIpfsThumbnailHash(message.options);
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
@@ -624,6 +626,7 @@ class ChatCommon with Tag {
   Future<MessageSchema?> startIpfsDownload(MessageSchema message) async {
     String? walletAddress = (await walletCommon.getDefault())?.address;
     if (walletAddress == null || walletAddress.isEmpty) return null;
+    logger.i("$TAG - startIpfsDownload - start - options${message.options}");
     // file_result
     String? ipfsHash = MessageOptions.getIpfsHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
@@ -720,6 +723,7 @@ class ChatCommon with Tag {
     if (message == null) return [null, false];
     String? walletAddress = (await walletCommon.getDefault())?.address;
     if (walletAddress == null || walletAddress.isEmpty) return [null, false];
+    logger.i("$TAG - _tryIpfsThumbnailDownload - start - options${message.options}");
     // result
     String? ipfsHash = MessageOptions.getIpfsThumbnailHash(message.options);
     if (ipfsHash == null || ipfsHash.isEmpty) {
