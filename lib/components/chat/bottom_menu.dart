@@ -32,7 +32,9 @@ class ChatBottomMenu extends StatelessWidget {
     if (source == ImageSource.camera) {
       // no video so no encode
       String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: target, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
+      application.isSystemMediaSelecting = true;
       Map<String, dynamic>? result = await MediaPicker.takeImage(savePath);
+      application.isSystemMediaSelecting = false;
       if (result == null || result.isEmpty) return;
       results = []..add(result);
     } else {
@@ -44,7 +46,9 @@ class ChatBottomMenu extends StatelessWidget {
         String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.chat, subPath: subPath, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
         savePaths.add(savePath);
       }
+      application.isSystemMediaSelecting = true;
       results = await MediaPicker.pickCommons(savePaths, maxSize: Settings.sizeIpfsMax);
+      application.isSystemMediaSelecting = false;
     }
     if (results.isEmpty) return;
     for (var i = 0; i < results.length; i++) {
@@ -76,6 +80,7 @@ class ChatBottomMenu extends StatelessWidget {
 
   _pickFiles({int? maxSize}) async {
     FilePickerResult? result;
+    application.isSystemMediaSelecting = true;
     try {
       result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -85,6 +90,7 @@ class ChatBottomMenu extends StatelessWidget {
     } catch (e, st) {
       handleError(e, st);
     }
+    application.isSystemMediaSelecting = false;
     if (result == null || result.files.isEmpty) return;
     List<Map<String, dynamic>> results = [];
     for (var i = 0; i < result.files.length; i++) {

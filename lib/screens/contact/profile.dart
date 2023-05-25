@@ -265,6 +265,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     String remarkAvatarPath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: _contact?.address, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
     String? remarkAvatarLocalPath = Path.convert2Local(remarkAvatarPath);
     if (remarkAvatarPath.isEmpty || remarkAvatarLocalPath == null || remarkAvatarLocalPath.isEmpty) return;
+    application.isSystemMediaSelecting = true;
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
@@ -272,6 +273,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       bestSize: Settings.sizeAvatarBest,
       savePath: remarkAvatarPath,
     );
+    application.isSystemMediaSelecting = false;
     if (picked == null) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;

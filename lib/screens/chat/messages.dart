@@ -138,9 +138,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states)) {
-        int gap = DateTime.now().millisecondsSinceEpoch - application.goBackgroundAt;
+    _appLifeChangeSubscription = application.appLifeStream.listen((bool inBackground) {
+      if (inBackground) {
+        audioHelper.playerRelease(); // await
+        audioHelper.recordRelease(); // await
+      } else {
+        int gap = application.goForegroundAt - application.goBackgroundAt;
         if (gap >= Settings.gapClientReAuthMs) {
           // nothing (will go app_screen)
         } else {
@@ -149,9 +152,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
             _readMessages().then((value) => _clearUnreadAndBadge()); // await
           });
         }
-      } else if (application.isGoBackground(states)) {
-        audioHelper.playerRelease(); // await
-        audioHelper.recordRelease(); // await
       }
     });
 

@@ -107,14 +107,14 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     });
 
     // appLife
-    _appLifeChangeSubscription = application.appLifeStream.listen((List<AppLifecycleState> states) {
-      if (application.isFromBackground(states)) {
+    _appLifeChangeSubscription = application.appLifeStream.listen((bool inBackground) {
+      if (inBackground) {
+        loginCompleter = Completer();
+      } else {
         if (dbCommon.isOpen()) {
-          int gap = DateTime.now().millisecondsSinceEpoch - application.goBackgroundAt;
+          int gap = application.goForegroundAt - application.goBackgroundAt;
           _tryAuth(gap >= Settings.gapClientReAuthMs);
         }
-      } else if (application.isGoBackground(states)) {
-        loginCompleter = Completer();
       }
     });
 
