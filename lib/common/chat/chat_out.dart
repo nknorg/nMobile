@@ -67,7 +67,7 @@ class ChatOutCommon with Tag {
         await Future.delayed(Duration(milliseconds: delay));
       }
       if (tryTimes >= Settings.tryTimesMsgSend) {
-        logger.w("$TAG - sendMsg - try over - count:${destList.length} - destList:$destList");
+        logger.e("$TAG - sendMsg - try max over - count:${destList.length} - destList:$destList");
       }
       return onMessage;
     });
@@ -163,6 +163,7 @@ class ChatOutCommon with Tag {
         profileVersion: _me?.profileVersion,
         // deviceToken(unknown notification_open)
         deviceProfile: deviceInfoCommon.getDeviceProfile(),
+        // queueIds(no support)
       );
       logger.d("$TAG - sendPing - group - dest:$destList - data:$data");
     }
