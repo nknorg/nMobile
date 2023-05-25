@@ -147,7 +147,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             guard let client = self.getClient(id: _id) else {
                 return
             }
-            guard (!client.isClosed()) else{
+            guard (!client.isClosed()) else {
                 return
             }
             guard let node = try client.onConnect?.next() else {
@@ -189,9 +189,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     break
                 }
                 if (client.isClosed()) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    clientListenQueue.asyncAfter(deadline: .now() + 0.5, execute: {
                         self.onMessage(_id: _id)
-                    }
+                    })
                     break
                 }
                 guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
@@ -418,7 +418,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "reconnect")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "reconnect")
             return
         }
@@ -440,7 +440,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "close")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultSuccess(result: result, resp: nil)
             return
         }
@@ -472,7 +472,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "replyText")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "replyText")
             return
         }
@@ -505,7 +505,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "sendText")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "sendText")
             return
         }
@@ -577,7 +577,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "publishText")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "publishText")
             return
         }
@@ -619,7 +619,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "subscribe")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "subscribe")
             return
         }
@@ -657,7 +657,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "unsubscribe")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "unsubscribe")
             return
         }
@@ -697,7 +697,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "getSubscribers")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "getSubscribers")
             return
         }
@@ -731,7 +731,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "getSubscribersCount")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "getSubscribersCount")
             return
         }
@@ -761,7 +761,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "getSubscription")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "getSubscription")
             return
         }
@@ -791,7 +791,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "getHeight")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "getHeight")
             return
         }
@@ -821,7 +821,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultError(result: result, code: "", message: "client is null", details: "getNonce")
             return
         }
-        guard (!client.isClosed()) else{
+        guard (!client.isClosed()) else {
             self.resultError(result: result, code: "", message: "client is closed", details: "getNonce")
             return
         }

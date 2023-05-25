@@ -16,6 +16,7 @@ import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/storages/session.dart';
@@ -47,7 +48,7 @@ class DB {
 
   Database? database;
 
-  int dbUpgradeAt = 0;
+  Map<int, int> _upgradeAt = {};
 
   DB();
 
@@ -275,10 +276,11 @@ class DB {
         await DeviceInfoStorage.create(db);
         await TopicStorage.create(db);
         await SubscriberStorage.create(db);
-        await MessageStorage.create(db);
-        await SessionStorage.create(db);
         await PrivateGroupStorage.create(db);
         await PrivateGroupItemStorage.create(db);
+        await MessageStorage.create(db);
+        await MessagePieceStorage.create(db);
+        await SessionStorage.create(db);
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         logger.i("DB - onUpgrade - old:$oldVersion - new:$newVersion");
@@ -322,7 +324,9 @@ class DB {
         }
 
         // 5 -> 6
+        bool v5to6 = false;
         if ((v4to5 || (oldVersion == 5)) && (newVersion >= 6)) {
+          v5to6 = true;
           await Upgrade5to6.createPrivateGroup(db);
           await Upgrade5to6.createPrivateGroupItem(db);
           await Upgrade5to6.upgradeMessages(db);
@@ -337,14 +341,19 @@ class DB {
         // db.rawQuery('PRAGMA cipher_version').then((value) => logger.i('DB - opened - cipher_version:$value'));
         if (upgradeTip) _upgradeTipSink.add(null);
         if (publicKey.isNotEmpty) {
+          // version_now
           await SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey", version); // await
-          int? value = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$VERSION_DB_NOW");
-          dbUpgradeAt = int.tryParse(value?.toString() ?? "0") ?? 0;
-          if (dbUpgradeAt <= 0) {
-            dbUpgradeAt = DateTime.now().millisecondsSinceEpoch;
-            logger.i("DB - onOpen - set_version_time - time:$dbUpgradeAt - version:$version - path:${db.path}");
-            SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$VERSION_DB_NOW", dbUpgradeAt); // await
+          // upgrade_at
+          for (var i = 1; i <= VERSION_DB_NOW; i++) {
+            int? value = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$i");
+            int dbUpgradeAt = int.tryParse(value?.toString() ?? "0") ?? 0;
+            if (dbUpgradeAt <= 0) {
+              dbUpgradeAt = DateTime.now().millisecondsSinceEpoch;
+              SettingsStorage.setSettings("${SettingsStorage.DATABASE_VERSION_TIME}:$publicKey:$i", dbUpgradeAt); // await
+            }
+            _upgradeAt[i] = dbUpgradeAt;
           }
+          logger.d("DB - onOpen - upgrade_at:$_upgradeAt");
         }
       },
     );
@@ -376,6 +385,10 @@ class DB {
     if (publicKey.isEmpty) return false;
     int? savedVersion = await SettingsStorage.getSettings("${SettingsStorage.DATABASE_VERSION}:$publicKey");
     return savedVersion != VERSION_DB_NOW;
+  }
+
+  int upgradeAt(int i) {
+    return _upgradeAt[i] ?? 0;
   }
 
   Future<bool> _deleteDBFile(String? filePath) async {
