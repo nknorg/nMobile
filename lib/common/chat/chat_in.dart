@@ -154,7 +154,7 @@ class ChatInCommon with Tag {
           await _receivePing(received);
           break;
         case MessageContentType.receipt:
-          await _receiveReceipt(received, deviceInfo);
+          await _receiveReceipt(received);
           break;
         case MessageContentType.read:
           await _receiveRead(received);
@@ -263,20 +263,20 @@ class ChatInCommon with Tag {
     }
     String content = received.content as String;
     if (content == "ping") {
-      logger.i("$TAG - _receivePing - receive ping - sender:${received.sender}");
+      logger.i("$TAG - _receivePing - receive ping - sender:${received.sender} - options:${received.options}");
       chatOutCommon.sendPing([received.sender], false, gap: Settings.gapPongPingMs); // await
     } else if (content == "pong") {
-      logger.i("$TAG - _receivePing - receive pong - sender:${received.sender}");
+      logger.i("$TAG - _receivePing - receive pong - sender:${received.sender} - options:${received.options}");
       // nothing
     } else {
-      logger.e("$TAG - _receivePing - content wrong - received:$received");
+      logger.e("$TAG - _receivePing - content wrong - received:$received - options:${received.options}");
       return false;
     }
     return true;
   }
 
   // NO DB NO display NO topic (1 to 1)
-  Future<bool> _receiveReceipt(MessageSchema received, DeviceInfoSchema? deviceInfo) async {
+  Future<bool> _receiveReceipt(MessageSchema received) async {
     // if (received.isTopic) return; (limit in out, just receive self msg)
     if ((received.content == null) || !(received.content is String)) return false;
     MessageSchema? exists = await messageCommon.query(received.content);
@@ -292,14 +292,15 @@ class ChatInCommon with Tag {
       logger.v("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
     } else if ((exists.isTargetTopic || exists.isTargetGroup) && (received.sender != clientCommon.address)) {
-      logger.w("$TAG - receiveReceipt - group skip others - exists:$exists");
+      logger.w("$TAG - receiveReceipt - group skip no_self - exists:$exists");
       return false;
     }
-    logger.i("$TAG - receiveReceipt - sender:${received.sender} - msgId:${received.content}");
     // status
     if (exists.isTargetContact) {
+      logger.i("$TAG - receiveReceipt - read enable - sender:${received.sender} - msgId:${received.content}");
       await messageCommon.updateMessageStatus(exists, MessageStatus.Receipt, receiveAt: DateTime.now().millisecondsSinceEpoch);
     } else {
+      logger.i("$TAG - receiveReceipt - read disable - sender:${received.sender} - msgId:${received.content}");
       await messageCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
     }
     // topicInvitation
@@ -460,12 +461,15 @@ class ChatInCommon with Tag {
       return options != null;
     } else if (optionsType == '1') {
       String deviceToken = content['deviceToken']?.toString() ?? "";
-      if (deviceInfo?.deviceToken != deviceToken) {
-        logger.i("$TAG - _receiveContactOptions - setDeviceToken - sender:${received.sender} - deviceToken:$deviceToken");
-        bool success = await deviceInfoCommon.setDeviceToken(deviceInfo?.contactAddress, deviceInfo?.deviceId, deviceToken);
+      if (deviceInfo == null) {
+        logger.w("$TAG - _receiveContactOptions - deviceToken no_deviceInfo - sender:${received.sender} - new:$deviceToken - deviceId:${received.deviceId}");
+        return false;
+      } else if (deviceInfo.deviceToken != deviceToken) {
+        logger.i("$TAG - _receiveContactOptions - deviceToken set - sender:${received.sender} - new:$deviceToken - deviceInfo:$deviceInfo");
+        bool success = await deviceInfoCommon.setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
         if (!success) return false;
       } else {
-        logger.i("$TAG - _receiveContactOptions - deviceToken same - sender:${received.sender} - data:$data");
+        logger.i("$TAG - _receiveContactOptions - deviceToken same - sender:${received.sender} - new:$deviceToken - deviceInfo:$deviceInfo");
       }
     } else {
       logger.e("$TAG - _receiveContactOptions - setNothing - data:$data - sender:${received.sender}");
@@ -484,6 +488,7 @@ class ChatInCommon with Tag {
     if (contact == null) return false;
     bool notificationOpen = contact.options?.notificationOpen ?? false;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
+    logger.i("$TAG - _receiveDeviceRequest - sender:${received.sender} - self:$deviceInfo");
     if (deviceInfo == null) return false;
     chatOutCommon.sendDeviceInfo(contact.address, deviceInfo, notificationOpen, targetDeviceInfo: targetDeviceInfo, gap: Settings.gapDeviceInfoSyncMs).then((value) {
       if (value) deviceInfoCommon.setDeviceInfoResponse(targetDeviceInfo?.contactAddress, targetDeviceInfo?.deviceId);
@@ -504,6 +509,7 @@ class ChatInCommon with Tag {
     String? platform = data["platform"]?.toString();
     String? platformVersion = data["platformVersion"]?.toString();
     Map<String, dynamic> newData = {'appName': appName, 'appVersion': appVersion, 'platform': platform, 'platformVersion': platformVersion};
+    logger.i("$TAG - _receiveDeviceInfo - sender:${received.sender} - newData:$newData");
     // exist
     DeviceInfoSchema? exists = await deviceInfoCommon.query(contact.address, deviceId);
     // add (wrong here)

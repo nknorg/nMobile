@@ -160,32 +160,27 @@ class ChatCommon with Tag {
     String? clientAddress = message.isOutbound ? (message.isTargetContact ? message.targetId : null) : message.sender;
     if (clientAddress == null || clientAddress.isEmpty) return null;
     if (message.contentType == MessageContentType.piece) return null;
-    // latest
-    DeviceInfoSchema? latest;
-    if (message.deviceId.isNotEmpty) {
-      latest = await deviceInfoCommon.query(clientAddress, message.deviceId);
-    } else {
-      latest = await deviceInfoCommon.queryLatest(clientAddress);
-    }
-    if (message.isTargetSelf) return latest;
+    // exists
+    DeviceInfoSchema? exists = await deviceInfoCommon.query(clientAddress, message.deviceId);
+    if (message.isTargetSelf) return exists;
     // duplicated
-    if (latest == null) {
+    if (exists == null) {
       // skip all messages need send contact request
-      latest = await deviceInfoCommon.add(
+      exists = await deviceInfoCommon.add(
         DeviceInfoSchema(
           contactAddress: clientAddress,
           deviceId: message.deviceId,
           onlineAt: DateTime.now().millisecondsSinceEpoch,
         ),
       );
-      logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$latest");
+      logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$exists");
       chatOutCommon.sendDeviceRequest(clientAddress); // await
     }
-    if (latest == null) {
-      logger.e("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
+    if (exists == null) {
+      logger.w("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
       return null;
     }
-    if (message.isOutbound) return latest;
+    if (message.isOutbound) return exists;
     // data
     String? deviceProfile = MessageOptions.getDeviceProfile(message.options);
     if ((deviceProfile != null) && deviceProfile.isNotEmpty) {
@@ -198,45 +193,45 @@ class ChatCommon with Tag {
       String? deviceId = splits.length > 4 ? splits[4] : null;
       if (deviceId == null || deviceId.isEmpty) {
         logger.e("$TAG - deviceInfoHandle - deviceId is nil - sender:${message.sender} - newData:$newData");
-      } else if (deviceId == latest.deviceId) {
-        bool sameProfile = (appName == latest.appName) && (appVersion == latest.appVersion.toString()) && (platform == latest.platform) && (platformVersion == latest.platformVersion.toString());
+      } else if (deviceId == exists.deviceId) {
+        bool sameProfile = (appName == exists.appName) && (appVersion == exists.appVersion.toString()) && (platform == exists.platform) && (platformVersion == exists.platformVersion.toString());
         if (!sameProfile) {
-          logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${latest.data} - sender:${message.sender}");
-          bool success = await deviceInfoCommon.setProfile(latest.contactAddress, latest.deviceId, newData);
-          if (success) latest.data = newData;
+          logger.i("$TAG - deviceInfoHandle - profile update - newData:$newData - oldData:${exists.data} - sender:${message.sender}");
+          bool success = await deviceInfoCommon.setProfile(exists.contactAddress, exists.deviceId, newData);
+          if (success) exists.data = newData;
         }
       } else {
-        logger.i("$TAG - deviceInfoHandle - new add - new:$deviceId - old${latest.deviceId} - sender:${message.sender}");
-        DeviceInfoSchema? _exist = await deviceInfoCommon.query(latest.contactAddress, deviceId);
+        logger.i("$TAG - deviceInfoHandle - new add - new:$deviceId - old${exists.deviceId} - sender:${message.sender}");
+        DeviceInfoSchema? _exist = await deviceInfoCommon.query(exists.contactAddress, deviceId);
         if (_exist != null) {
           bool sameProfile = (appName == _exist.appName) && (appVersion == _exist.appVersion.toString()) && (platform == _exist.platform) && (platformVersion == _exist.platformVersion.toString());
           if (!sameProfile) {
             bool success = await deviceInfoCommon.setProfile(_exist.contactAddress, _exist.deviceId, newData);
             if (success) _exist.data = newData;
           }
-          latest = _exist;
+          exists = _exist;
         } else {
           DeviceInfoSchema _schema = DeviceInfoSchema(
-            contactAddress: latest.contactAddress,
+            contactAddress: exists.contactAddress,
             deviceId: deviceId,
             onlineAt: DateTime.now().millisecondsSinceEpoch,
             data: newData,
           );
-          latest = await deviceInfoCommon.add(_schema);
+          exists = await deviceInfoCommon.add(_schema);
         }
       }
     }
     // device_token (empty updated on receiveDeviceInfo)
     String? deviceToken = MessageOptions.getDeviceToken(message.options);
-    if ((latest?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
-      logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${latest?.deviceToken} - sender:${message.sender}");
-      bool success = await deviceInfoCommon.setDeviceToken(latest?.contactAddress, latest?.deviceId, deviceToken);
-      if (success) latest?.deviceToken = deviceToken ?? "";
+    if ((exists?.deviceToken != deviceToken) && (deviceToken?.isNotEmpty == true)) {
+      logger.i("$TAG - deviceInfoHandle - deviceToken update - new:$deviceToken - old${exists?.deviceToken} - sender:${message.sender}");
+      bool success = await deviceInfoCommon.setDeviceToken(exists?.contactAddress, exists?.deviceId, deviceToken);
+      if (success) exists?.deviceToken = deviceToken ?? "";
     }
     // online_at
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    bool success = await deviceInfoCommon.setOnlineAt(latest?.contactAddress, latest?.deviceId, onlineAt: nowAt);
-    if (success) latest?.onlineAt = nowAt;
+    bool success = await deviceInfoCommon.setOnlineAt(exists?.contactAddress, exists?.deviceId, onlineAt: nowAt);
+    if (success) exists?.onlineAt = nowAt;
     // queue
     String? queueIds = MessageOptions.getMessageQueueIds(message.options);
     if (message.deviceId.isNotEmpty && (queueIds != null) && queueIds.isNotEmpty) {
@@ -246,7 +241,7 @@ class ChatCommon with Tag {
         messageCommon.syncContactMessages(clientAddress, message.deviceId, splits[0], splits[1], splits[2]); // await
       }
     }
-    return latest;
+    return exists;
   }
 
   Future<TopicSchema?> topicHandle(MessageSchema message) async {
