@@ -60,7 +60,7 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  Future onMessageReceive(MessageSchema? message, {bool needFast = false}) async {
+  Future onMessageReceive(MessageSchema? message, {bool priority = false, Function? onAdd}) async {
     if (message == null) {
       logger.e("$TAG - onMessageReceive - message is null");
       return;
@@ -82,13 +82,14 @@ class ChatInCommon with Tag {
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
     _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
+    await onAdd?.call();
     _receiveQueues[message.targetId]?.add(() async {
       try {
         return await _handleMessage(message);
       } catch (e, st) {
         handleError(e, st);
       }
-    }, id: message.msgId, priority: needFast);
+    }, id: message.msgId, priority: priority);
   }
 
   Future _handleMessage(MessageSchema received) async {
@@ -144,6 +145,18 @@ class ChatInCommon with Tag {
       if (await messageCommon.isMessageReceived(received)) {
         logger.d("$TAG - _handleMessage - duplicated - type:${received.contentType} - targetId:${received.targetId} - message:${received.toStringSimple()}");
         duplicated = true;
+      }
+    } else if (received.contentType == MessageContentType.piece) {
+      if (await messageCommon.isMessageReceived(received)) {
+        int? index = received.options?[MessageOptions.KEY_PIECE_INDEX];
+        int? total = received.options?[MessageOptions.KEY_PIECE_TOTAL];
+        int? parity = received.options?[MessageOptions.KEY_PIECE_PARITY];
+        logger.v("$TAG - _handleMessage - duplicated(piece) - index:$index/$total+$parity - targetId:${received.targetId} - message:${received.toStringSimple()}");
+        duplicated = true;
+        if (index == 0) {
+          MessageSchema? exists = await messageCommon.query(received.msgId);
+          received = exists ?? received; // replace
+        }
       }
     }
     // receive
@@ -626,7 +639,8 @@ class ChatInCommon with Tag {
     int bytesLength = received.options?[MessageOptions.KEY_PIECE_BYTES_LENGTH] ?? 0;
     int total = received.options?[MessageOptions.KEY_PIECE_TOTAL] ?? 1;
     int parity = received.options?[MessageOptions.KEY_PIECE_PARITY] ?? 1;
-    int index = received.options?[MessageOptions.KEY_PIECE_INDEX] ?? 1;
+    int? index = received.options?[MessageOptions.KEY_PIECE_INDEX];
+    if (index == null || index < 0) return false;
     // piece
     List<MessageSchema> pieces = await messageCommon.queryPieceList(received.msgId, limit: total + parity);
     MessageSchema? piece;
@@ -672,7 +686,9 @@ class ChatInCommon with Tag {
     }
     // combine.content - handle later
     logger.i("$TAG - _receivePiece - COMBINE:SUCCESS - combine:$combine");
-    onMessageReceive(combine, needFast: true); // await
+    onMessageReceive(combine, priority: true, onAdd: () {
+      _receiveQueues[combine.targetId]?.delete(combine.msgId); // delete pieces in queue
+    }); // await
     return true;
   }
 

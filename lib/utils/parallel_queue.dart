@@ -124,16 +124,6 @@ class ParallelQueue {
     return await completer.future;
   }
 
-  bool deleteDelays(String id) {
-    bool deleted = false;
-    _delays.removeWhere((element) {
-      deleted = (element == id) || deleted;
-      return deleted;
-    });
-    _delaysDel.add(id);
-    return deleted;
-  }
-
   bool contains(String id) {
     bool find = false;
     _delays.forEach((element) {
@@ -143,6 +133,20 @@ class ParallelQueue {
       find = (element.id == id) || find;
     });
     return find;
+  }
+
+  void deleteDelays(String id) {
+    _delays.removeWhere((element) {
+      return element == id;
+    });
+    _delaysDel.add(id);
+  }
+
+  void delete(String id) {
+    deleteDelays(id);
+    _queue.removeWhere((element) {
+      return element.id == id;
+    });
   }
 
   Future<void> _process() async {
