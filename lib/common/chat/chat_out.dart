@@ -79,9 +79,9 @@ class ChatOutCommon with Tag {
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
       if (onMessage?.messageId?.isNotEmpty == true) {
-        logger.v("$TAG - _sendData - send success - count:${destList.length} - destList:$destList");
+        logger.v("$TAG - _sendData - success - count:${destList.length} - destList:$destList");
       } else {
-        logger.e("$TAG - _sendData - pid is empty - count:${destList.length} - destList:$destList");
+        logger.e("$TAG - _sendData - error - count:${destList.length} - destList:$destList");
       }
       return [onMessage, true, 100];
     } catch (e, st) {
@@ -767,6 +767,8 @@ class ChatOutCommon with Tag {
         logger.i("$TAG - resendMute - ipfs start - mute:$mute - targetId:${message.targetId} - options:${message.options}");
         message = await chatCommon.startIpfsUpload(message.msgId);
         if (message == null) return null;
+      } else {
+        logger.i("$TAG - resendMute - ipfs hash ok - mute:$mute - targetId:${message.targetId} - options:${message.options}");
       }
     }
     // send
