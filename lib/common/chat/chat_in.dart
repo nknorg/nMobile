@@ -51,7 +51,7 @@ class ChatInCommon with Tag {
     if (receiveQueue == null) return true;
     bool isOnComplete = receiveQueue.isOnComplete("$keyPrefix$targetId");
     if (isOnComplete && !duplicated) {
-      logger.d("$TAG - waitReceiveQueue - progress no duplicated - keyPrefix:$keyPrefix - targetId:$targetId");
+      logger.d("$TAG - waitReceiveQueue - progress refuse duplicated - keyPrefix:$keyPrefix - targetId:$targetId");
       return false;
     }
     logger.d("$TAG - waitReceiveQueue - waiting - keyPrefix:$keyPrefix - targetId:$targetId");
