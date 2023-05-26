@@ -499,7 +499,7 @@ class MessageCommon with Tag {
         if (sendingMessageQueueIds.containsValue(messageId)) {
           sendingMessageQueueIds.forEach((key, value) {
             if (value == messageId) {
-              logger.d("$TAG - newContactMessageQueueId - find in exists - nextQueueId:$key - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+              logger.d("$TAG - newContactMessageQueueId - find in sending_ids - nextQueueId:$key - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
               nextQueueId = key;
             }
           });
@@ -522,7 +522,7 @@ class MessageCommon with Tag {
               nextQueueId = queueId;
               break;
             } else {
-              logger.i("$TAG - newContactMessageQueueId - replace refuse - msg:${msg.toStringSimple()} - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+              logger.i("$TAG - newContactMessageQueueId - replace nothing - msg:${msg.toStringSimple()} - newMsgId:$messageId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             }
           }
         }
@@ -554,7 +554,7 @@ class MessageCommon with Tag {
     Function func = () async {
       DeviceInfoSchema? targetDevice = await deviceInfoCommon.query(targetAddress, targetDeviceId);
       if (targetDevice == null) return false;
-      logger.i("$TAG - onContactMessageQueueSendSuccess - delete queueId from cache - queueId:$queueId - caches:${targetDevice.sendingMessageQueueIds} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.i("$TAG - onContactMessageQueueSendSuccess - delete queueId from sending - queueId:$queueId - caches:${targetDevice.sendingMessageQueueIds} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return await deviceInfoCommon.setSendingMessageQueueIds(targetAddress, targetDeviceId, {}, [queueId]);
     };
     // queue
@@ -593,7 +593,7 @@ class MessageCommon with Tag {
           logger.i("$TAG - onContactMessageQueueReceive - new lower and delete lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
           await deviceInfoCommon.setLostReceiveMessageQueueIds(targetAddress, targetDevice.deviceId, [], [receiveQueueId]);
         } else {
-          logger.d("$TAG - onContactMessageQueueReceive - new lower and duplicated received - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
+          logger.d("$TAG - onContactMessageQueueReceive - new lower and no lostIds - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
         }
       } else {
         logger.i("$TAG - onContactMessageQueueReceive - new == old - receiveQueueId:$receiveQueueId - nativeQueueId:$nativeQueueId - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds");
@@ -688,7 +688,7 @@ class MessageCommon with Tag {
       logger.i("$TAG - _syncContactMessages - resendQueueIds add latest msg - newLost:$newLost - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       resendQueueIds.addAll(newLost);
     } else {
-      logger.d("$TAG - _syncContactMessages - resendQueueIds skip latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - resendQueueIds ok latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     if (resendQueueIds.isEmpty) {
       logger.i("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
@@ -719,7 +719,7 @@ class MessageCommon with Tag {
           break;
         }
         if (result.length < limit) {
-          logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+          logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
           break;
         }
       }
