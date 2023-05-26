@@ -639,7 +639,7 @@ class MessageCommon with Tag {
     // use latest params
     String? queueIds = _syncMessageQueueParams["${targetAddress}_$targetDeviceId"];
     if (queueIds == null || queueIds.isEmpty) {
-      logger.w("$TAG - syncContactMessages - params nil - queueIds:$queueIds - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
+      logger.e("$TAG - syncContactMessages - params nil - queueIds:$queueIds - params:$_syncMessageQueueParams - targetAddress:$targetAddress - sendQueueId:$sideSendQueueId");
       return;
     }
     // check start
