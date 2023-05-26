@@ -662,7 +662,7 @@ class MessageCommon with Tag {
     List<int> lostReceiveMessageQueueIds = targetDevice.lostReceiveMessageQueueIds;
     if (sideReceiveQueueId > nativeSendQueueId) {
       logger.w("$TAG - _syncContactMessages - need self to sync queue (update native send/receive_queueId) - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
-      await chatOutCommon.sendQueue(targetAddress, targetDeviceId); // mast wait and before update
+      await chatOutCommon.sendQueue(targetAddress, targetDeviceId); // must wait and before update
       await deviceInfoCommon.setLatestSendMessageQueueId(targetAddress, targetDeviceId, sideReceiveQueueId);
       if (sideSendQueueId > nativeReceiveQueueId) {
         await deviceInfoCommon.setLatestReceivedMessageQueueId(targetAddress, targetDeviceId, sideSendQueueId);
@@ -679,7 +679,7 @@ class MessageCommon with Tag {
       await chatOutCommon.sendQueue(targetAddress, targetDeviceId);
       return 0; // wait sendQueue reply
     } else {
-      logger.d("$TAG - _syncContactMessages - queueIds equal (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - queueIds no wrong (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     // queueIds
     List<int> resendQueueIds = sideLostQueueIds;
@@ -691,10 +691,10 @@ class MessageCommon with Tag {
       logger.d("$TAG - _syncContactMessages - resendQueueIds ok latest msg - sideReceiveQueueId:$sideReceiveQueueId - nativeSendQueueId:$nativeSendQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     if (resendQueueIds.isEmpty) {
-      logger.i("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return 0;
     }
-    logger.d("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+    logger.i("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // messages
     List<MessageSchema> resendMsgList = [];
     int limit = 5;
@@ -703,6 +703,7 @@ class MessageCommon with Tag {
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByTargetDeviceQueueId(targetAddress, SessionType.CONTACT, Settings.deviceId, queueId, offset: offset, limit: limit);
         MessageSchema? resendMsg;
+        bool isStatusError = false;
         for (var j = 0; j < result.length; j++) {
           MessageSchema message = result[j];
           String? queueIds = MessageOptions.getMessageQueueIds(message.options);
@@ -713,22 +714,26 @@ class MessageCommon with Tag {
             resendMsg = message;
             break;
           }
+          isStatusError = (message.status == MessageStatus.Error) || isStatusError;
         }
         if (resendMsg != null) {
           resendMsgList.add(resendMsg);
           break;
-        }
-        if (result.length < limit) {
-          logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+        } else if (result.length < limit) {
+          if (isStatusError) {
+            logger.d("$TAG - _syncContactMessages - resend message no find (status error) - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+          } else {
+            logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+          }
           break;
         }
       }
     }
     if (resendMsgList.isEmpty) {
-      logger.i("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.w("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
       return 0;
     }
-    logger.d("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+    logger.i("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // ack check (maybe other device queue)
     List<MessageSchema> noAckList = [];
     limit = 20;
@@ -748,7 +753,7 @@ class MessageCommon with Tag {
       }
     }
     if (noAckAdded) {
-      logger.d("$TAG - _syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.i("$TAG - _syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     // resend
     int successCount = 0;
