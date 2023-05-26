@@ -1158,10 +1158,10 @@ class ChatOutCommon with Tag {
     String data = MessageData.getPiece(message);
     OnMessage? onResult = await sendMsg(clientAddressList, data);
     if ((onResult == null) || (onResult.messageId?.isEmpty == true)) {
-      logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
+      logger.w("$TAG - _sendPiece - fail - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]}+${message.options?[MessageOptions.KEY_PIECE_PARITY]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
       return null;
     }
-    logger.d("$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_PARITY]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
+    logger.d("$TAG - _sendPiece - success - progress:${message.options?[MessageOptions.KEY_PIECE_INDEX]}/${message.options?[MessageOptions.KEY_PIECE_TOTAL]}+${message.options?[MessageOptions.KEY_PIECE_PARITY]} - parentType:${message.options?[MessageOptions.KEY_PIECE_PARENT_TYPE]} - message:${message.toStringSimple()}");
     message.pid = onResult.messageId;
     // progress
     if ((percent > 0) && (percent <= 1)) {

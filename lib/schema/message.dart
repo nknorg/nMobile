@@ -1307,7 +1307,7 @@ class MessageData {
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = _base("nknOnePiece", id: message.msgId, timestamp: message.sendAt); // FUTURE:GG message.contentType
+    Map data = _base("nknOnePiece", id: message.msgId, timestamp: message.sendAt, queueId: message.queueId); // FUTURE:GG message.contentType
     data.addAll({
       'content': message.content,
       'options': _simpleOptions(message.options),

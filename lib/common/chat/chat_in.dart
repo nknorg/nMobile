@@ -371,6 +371,8 @@ class ChatInCommon with Tag {
     // sync_queue
     if (received.isTargetContact && !received.isTargetSelf) {
       messageCommon.syncContactMessages(targetAddress, received.deviceId, splits[0], splits[1], splits[2]); // await
+    } else {
+      // nothing
     }
     return true;
   }
@@ -664,7 +666,7 @@ class ChatInCommon with Tag {
         logger.w("$TAG - _receivePiece - piece added null - message:${received.toStringSimple()}");
       }
     }
-    logger.d("$TAG - _receivePiece - progress:$total/${pieces.length}/${total + parity}");
+    logger.d("$TAG - _receivePiece - progress:${pieces.length}/$total+$parity");
     if (pieces.length < total || bytesLength <= 0) return false;
     logger.i("$TAG - _receivePiece - COMBINE:START - total:$total - parity:$parity - bytesLength:${Format.flowSize(bytesLength.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}");
     pieces.sort((prev, next) => (prev.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0).compareTo((next.options?[MessageOptions.KEY_PIECE_INDEX] ?? 0)));
