@@ -796,7 +796,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                             this.setState(() {
                               _messages = messages;
                             });
-                            await chatOutCommon.resend(find);
+                            await chatOutCommon.resend(msgId);
                           },
                         );
                       },
