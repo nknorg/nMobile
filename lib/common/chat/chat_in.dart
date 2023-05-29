@@ -239,6 +239,11 @@ class ChatInCommon with Tag {
         case MessageContentType.privateGroupMemberResponse:
           await _receivePrivateGroupMemberResponse(received);
           break;
+        case "msgStatus":
+          break;
+        default:
+          logger.e("$TAG - _handleMessage - type error - type:${received.contentType} - targetId:${received.targetId} - message:${received.toStringSimple()}");
+          break;
       }
     }
     // receipt
