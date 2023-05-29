@@ -94,8 +94,8 @@ class IpfsHelper with Tag {
   static const String KEY_ENCRYPT_NONCE_SIZE = "encryptNonceSize";
 
   Dio _dio = Dio();
-  ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
-  ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _uploadQueue = ParallelQueue("ipfs_upload", parallel: 3, interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", parallel: 3, interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
 
   IpfsHelper() {
     _dio.options.connectTimeout = Duration(seconds: 1 * 60); // 1m
@@ -205,13 +205,13 @@ class IpfsHelper with Tag {
             result.addAll({"id": id, KEY_IP: gateway["ip"], KEY_HASH: ipfsHash});
             if (encrypt) result.addAll({KEY_ENCRYPT: 1}..addAll(cryptParams ?? Map()));
             onSuccess?.call(result);
-            if (encrypt) File(filePath).delete(); // await
+            if (encrypt) File(filePath).deleteSync();
             canBreak = true;
             if (!completer.isCompleted) completer.complete();
           },
           onError: (retry) {
             if (isLastTimes || !retry) onError?.call("http wrong");
-            if ((isLastTimes || !retry) && encrypt) File(filePath).delete(); // await
+            if ((isLastTimes || !retry) && encrypt) File(filePath).deleteSync();
             canBreak = !retry;
             if (!completer.isCompleted) completer.complete();
           },
@@ -339,9 +339,9 @@ class IpfsHelper with Tag {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
-        handleError(e.response?.data, st);
+        handleError(e.response?.data ?? e.error, st);
       } else {
-        handleError(response?.statusMessage, st);
+        handleError(response?.statusMessage ?? e.error, st);
       }
       onError?.call(true);
       return null;
@@ -401,9 +401,9 @@ class IpfsHelper with Tag {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx and is also not 304.
       if (e.response != null) {
-        handleError(e.response?.data, st);
+        handleError(e.response?.data ?? e.error, st);
       } else {
-        handleError(response?.statusMessage, st);
+        handleError(response?.statusMessage ?? e.error, st);
       }
       onError?.call(true);
       return null;

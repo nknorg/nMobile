@@ -698,30 +698,38 @@ class MessageCommon with Tag {
     // messages
     List<MessageSchema> resendMsgList = [];
     int limit = 5;
+    int statusSendingCount = 0;
+    int statusErrorCount = 0;
     for (var i = 0; i < resendQueueIds.length; i++) {
       int queueId = resendQueueIds[i];
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByTargetDeviceQueueId(targetAddress, SessionType.CONTACT, Settings.deviceId, queueId, offset: offset, limit: limit);
         MessageSchema? resendMsg;
+        bool isStatusSending = false;
         bool isStatusError = false;
         for (var j = 0; j < result.length; j++) {
           MessageSchema message = result[j];
           String? queueIds = MessageOptions.getMessageQueueIds(message.options);
           List splits = deviceInfoCommon.splitQueueIds(queueIds);
           bool isSameDevice = (queueIds != null) && (splits[3].toString().trim() == targetDeviceId.trim());
-          if (message.canReceipt && message.isOutbound && isSameDevice && (message.status != MessageStatus.Error)) {
+          if (message.canReceipt && message.isOutbound && isSameDevice && (message.status > MessageStatus.Error)) {
             logger.i("$TAG - _syncContactMessages - resend messages add - queueId:$queueId - message:$message - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             resendMsg = message;
             break;
           }
+          isStatusSending = (message.status == MessageStatus.Sending) || isStatusSending;
           isStatusError = (message.status == MessageStatus.Error) || isStatusError;
         }
         if (resendMsg != null) {
           resendMsgList.add(resendMsg);
           break;
         } else if (result.length < limit) {
-          if (isStatusError) {
+          if (isStatusSending) {
+            logger.d("$TAG - _syncContactMessages - resend message no find (status sending) - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+            statusSendingCount++;
+          } else if (isStatusError) {
             logger.d("$TAG - _syncContactMessages - resend message no find (status error) - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+            statusErrorCount++;
           } else {
             logger.w("$TAG - _syncContactMessages - resend message no find - queueId:$queueId - msgs:${result.length} - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
           }
@@ -730,7 +738,11 @@ class MessageCommon with Tag {
       }
     }
     if (resendMsgList.isEmpty) {
-      logger.w("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      if (resendMsgList.length <= (statusSendingCount + statusErrorCount)) {
+        logger.i("$TAG - _syncContactMessages - resendMessages is empty (status ok) - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      } else {
+        logger.w("$TAG - _syncContactMessages - resendMessages is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      }
       return 0;
     }
     logger.i("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
@@ -759,8 +771,8 @@ class MessageCommon with Tag {
     int successCount = 0;
     for (var i = 0; i < resendMsgList.length; i++) {
       MessageSchema message = resendMsgList[i];
-      int gap = Settings.gapMessageQueueResendMs * (message.isContentFile ? 2 : 1);
-      var data = await chatOutCommon.resend(message, mute: true, muteGap: gap);
+      int gap = Settings.gapMessageQueueResendMs * ((message.contentType == MessageContentType.ipfs) ? 3 : (message.isContentFile ? 2 : 1));
+      var data = await chatOutCommon.resend(message.msgId, mute: true, muteGap: gap);
       if (data != null) successCount++;
     }
     logger.i("$TAG - _syncContactMessages - END - count:$successCount/${resendMsgList.length} - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
