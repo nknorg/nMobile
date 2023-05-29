@@ -735,13 +735,16 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
-  Future<MessageSchema?> resend(MessageSchema? message, {bool mute = false, int muteGap = 0}) async {
+  Future<MessageSchema?> resend(String? msgId, {bool mute = false, int muteGap = 0}) async {
+    MessageSchema? message = await messageCommon.query(msgId);
     if (message == null) return null;
     // reSendAt
     if (mute && (muteGap > 0)) {
       int resendMuteAt = MessageOptions.getResendMuteAt(message.options) ?? 0;
+      int sendSuccessAt = MessageOptions.getSendSuccessAt(message.options) ?? 0;
+      resendMuteAt = (resendMuteAt > 0) ? resendMuteAt : sendSuccessAt;
       if (resendMuteAt <= 0) {
-        logger.d("$TAG - resendMute - resend first no interval - targetId:${message.targetId} - message:${message.toStringSimple()}");
+        logger.w("$TAG - resendMute - resend time set wrong - targetId:${message.targetId} - message:${message.toStringSimple()}");
       } else {
         int interval = DateTime.now().millisecondsSinceEpoch - resendMuteAt;
         if (interval < muteGap) {
