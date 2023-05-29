@@ -116,7 +116,7 @@ class DeviceInfoCommon with Tag {
         tokens.add(deviceToken);
       }
     }
-    logger.i("$TAG - queryDeviceTokenList - count:${tokens.length}/${devices.length} - tokens:$tokens - contactAddress:$contactAddress");
+    logger.d("$TAG - queryDeviceTokenList - count:${tokens.length}/${devices.length} - tokens:$tokens - contactAddress:$contactAddress");
     return tokens;
   }
 
