@@ -164,7 +164,7 @@ class ChatCommon with Tag {
     DeviceInfoSchema? exists = await deviceInfoCommon.query(clientAddress, message.deviceId);
     if (message.isTargetSelf) return exists;
     // duplicated
-    if (exists == null) {
+    if ((exists == null) && message.deviceId.isNotEmpty) {
       // skip all messages need send contact request
       exists = await deviceInfoCommon.add(
         DeviceInfoSchema(
@@ -177,7 +177,11 @@ class ChatCommon with Tag {
       chatOutCommon.sendDeviceRequest(clientAddress); // await
     }
     if (exists == null) {
-      logger.w("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
+      if (message.deviceId.isNotEmpty) {
+        logger.w("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
+      } else {
+        logger.d("$TAG - deviceInfoHandle - exist is nil (deviceId isEmpty) - clientAddress:$clientAddress");
+      }
       return null;
     }
     if (message.isOutbound) return exists;
