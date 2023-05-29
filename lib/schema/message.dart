@@ -118,6 +118,7 @@ class MessageSchema {
     this.data,
   }) {
     if (options == null) options = Map();
+    contentType = futureContentType(contentType);
   }
 
   bool get isTargetContact {
@@ -214,37 +215,6 @@ class MessageSchema {
     if (msgId.isEmpty || contentType.isEmpty) {
       logger.e("MessageSchema - fromReceive - info nil");
       return null;
-    }
-    // contentType
-    switch (contentType) {
-      case "contact":
-        contentType = MessageContentType.contactProfile;
-        break;
-      case "event:contactOptions":
-        contentType = MessageContentType.contactOptions;
-        break;
-      case "media":
-      case "nknImage":
-        contentType = MessageContentType.image;
-        break;
-      case "nknOnePiece":
-        contentType = MessageContentType.piece;
-        break;
-      case "event:subscribe":
-        contentType = MessageContentType.topicSubscribe;
-        break;
-      case "event:unsubscribe":
-        contentType = MessageContentType.topicUnsubscribe;
-        break;
-      case "event:channelInvitation":
-        contentType = MessageContentType.topicInvitation;
-        break;
-      case "event:channelKickOut":
-        contentType = MessageContentType.topicKickOut;
-        break;
-      default:
-        // nothing
-        break;
     }
     // target
     String sender = raw.src ?? "";
@@ -663,6 +633,77 @@ class MessageSchema {
     schema.options?.remove("piece");
     schema.options?[MessageOptions.KEY_FROM_PIECE] = true;
     return schema;
+  }
+
+  // FUTURE:GG
+  static String futureContentType(String oldType) {
+    String contentType = oldType;
+    switch (oldType) {
+      case "contact":
+        contentType = MessageContentType.contactProfile;
+        break;
+      case "event:contactOptions":
+        contentType = MessageContentType.contactOptions;
+        break;
+      case "media":
+      case "nknImage":
+        contentType = MessageContentType.image;
+        break;
+      case "nknOnePiece":
+        contentType = MessageContentType.piece;
+        break;
+      case "event:subscribe":
+        contentType = MessageContentType.topicSubscribe;
+        break;
+      case "event:unsubscribe":
+        contentType = MessageContentType.topicUnsubscribe;
+        break;
+      case "event:channelInvitation":
+        contentType = MessageContentType.topicInvitation;
+        break;
+      case "event:channelKickOut":
+        contentType = MessageContentType.topicKickOut;
+        break;
+      default:
+        // nothing
+        break;
+    }
+    return contentType;
+  }
+
+  // FUTURE:GG
+  static String supportContentType(String newType) {
+    String contentType = newType;
+    switch (newType) {
+      case MessageContentType.contactProfile:
+        contentType = "contact";
+        break;
+      case MessageContentType.contactOptions:
+        contentType = "event:contactOptions";
+        break;
+      case MessageContentType.image:
+        contentType = "media";
+        break;
+      case MessageContentType.piece:
+        contentType = "nknOnePiece";
+        break;
+      case MessageContentType.topicSubscribe:
+        contentType = "event:subscribe";
+        break;
+      case MessageContentType.topicUnsubscribe:
+        contentType = "event:unsubscribe";
+        break;
+      case MessageContentType.topicInvitation:
+        contentType = "event:channelInvitation";
+        break;
+      case MessageContentType.topicKickOut:
+        contentType = "event:channelKickOut";
+        break;
+      default:
+        // nothing
+        break;
+    }
+    return contentType;
   }
 
   @override
@@ -1158,7 +1199,7 @@ class MessageData {
   }
 
   static String getContactProfileRequest(String requestType, String? profileVersion) {
-    Map data = _base("contact"); // FUTURE:GG MessageContentType.contactProfile
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.contactProfile));
     data.addAll({
       'requestType': requestType,
       'version': profileVersion,
@@ -1167,7 +1208,7 @@ class MessageData {
   }
 
   static String getContactProfileResponseHeader(String? profileVersion) {
-    Map data = _base("contact"); // FUTURE:GG MessageContentType.contactProfile
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.contactProfile));
     data.addAll({
       'responseType': ContactRequestType.header,
       'version': profileVersion,
@@ -1176,7 +1217,7 @@ class MessageData {
   }
 
   static Future<String> getContactProfileResponseFull(String? profileVersion, File? avatar, String? firstName, String? lastName) async {
-    Map data = _base("contact"); // FUTURE:GG MessageContentType.contactProfile
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.contactProfile));
     data.addAll({
       'responseType': ContactRequestType.full,
       'version': profileVersion,
@@ -1197,8 +1238,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactOptionsBurn(String msgId, int? sendAt, int? burnAfterSeconds, int? updateBurnAfterAt) {
-    Map data = _base("event:contactOptions", id: msgId, timestamp: sendAt); // FUTURE:GG MessageContentType.contactOptions
+  static String getContactOptionsBurn(String msgId, int? burnAfterSeconds, int? updateBurnAfterAt) {
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.contactOptions), id: msgId);
     data.addAll({
       'optionType': '0',
       'content': {
@@ -1209,8 +1250,8 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getContactOptionsToken(String msgId, int? sendAt, String? deviceToken) {
-    Map data = _base("event:contactOptions", id: msgId, timestamp: sendAt); // FUTURE:GG MessageContentType.contactOptions
+  static String getContactOptionsToken(String msgId, String? deviceToken) {
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.contactOptions), id: msgId);
     data.addAll({
       'optionType': '1',
       'content': {
@@ -1255,7 +1296,7 @@ class MessageData {
   static String? getIpfs(MessageSchema message) {
     String? content = MessageOptions.getIpfsHash(message.options);
     if (content == null || content.isEmpty) return null;
-    Map data = _base(MessageContentType.ipfs, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
+    Map data = _base(message.contentType, id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': content,
       'options': _simpleOptions(message.options),
@@ -1273,7 +1314,7 @@ class MessageData {
     if (file == null) return null;
     String? content = await FileHelper.convertFileToBase64(file, type: "image");
     if (content == null) return null;
-    Map data = _base("nknImage", id: message.msgId, timestamp: message.sendAt, queueId: message.queueId); // FUTURE:GG message.contentType
+    Map data = _base(MessageSchema.supportContentType(message.contentType), id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': content,
       'options': _simpleOptions(message.options),
@@ -1307,7 +1348,7 @@ class MessageData {
   }
 
   static String getPiece(MessageSchema message) {
-    Map data = _base("nknOnePiece", id: message.msgId, timestamp: message.sendAt, queueId: message.queueId); // FUTURE:GG message.contentType
+    Map data = _base(MessageSchema.supportContentType(message.contentType), id: message.msgId, timestamp: message.sendAt, queueId: message.queueId);
     data.addAll({
       'content': message.content,
       'options': _simpleOptions(message.options),
@@ -1320,35 +1361,35 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicSubscribe(MessageSchema message) {
-    Map data = _base("event:subscribe", id: message.msgId, timestamp: message.sendAt); // FUTURE:GG MessageContentType.topicSubscribe
+  static String getTopicSubscribe(String? msgId, String targetId) {
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.topicSubscribe), id: msgId);
     data.addAll({
-      'topic': message.targetId,
+      'topic': targetId,
     });
     return jsonEncode(data);
   }
 
-  static String getTopicUnSubscribe(MessageSchema message) {
-    Map data = _base("event:unsubscribe", id: message.msgId, timestamp: message.sendAt); // FUTURE:GG MessageContentType.topicUnsubscribe
+  static String getTopicUnSubscribe(String targetId) {
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.topicUnsubscribe));
     data.addAll({
-      'topic': message.targetId,
+      'topic': targetId,
     });
     return jsonEncode(data);
   }
 
   static String getTopicInvitee(MessageSchema message) {
-    Map data = _base("event:channelInvitation", id: message.msgId, timestamp: message.sendAt); // FUTURE:GG MessageContentType.topicInvitation
+    Map data = _base(MessageSchema.supportContentType(message.contentType), id: message.msgId, timestamp: message.sendAt);
     data.addAll({
       'content': message.content,
     });
     return jsonEncode(data);
   }
 
-  static String getTopicKickOut(MessageSchema message) {
-    Map data = _base("event:channelKickOut", id: message.msgId, timestamp: message.sendAt); // FUTURE:GG MessageContentType.topicKickOut
+  static String getTopicKickOut(String topic, String targetId) {
+    Map data = _base(MessageSchema.supportContentType(MessageContentType.topicKickOut));
     data.addAll({
-      'topic': message.targetId,
-      'content': message.content,
+      'topic': topic,
+      'content': targetId,
     });
     return jsonEncode(data);
   }
