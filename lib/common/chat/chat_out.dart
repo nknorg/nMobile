@@ -268,7 +268,7 @@ class ChatOutCommon with Tag {
         "burningUpdateAt": updateAt,
       },
     );
-    message.content = MessageData.getContactOptionsBurn(message.msgId, message.sendAt, deleteSeconds, updateAt); // same with receive and old version
+    message.content = MessageData.getContactOptionsBurn(message.msgId, deleteSeconds, updateAt); // same with receive and old version
     message.data = message.content;
     logger.i("$TAG - sendContactOptionsBurn - dest:$targetAddress - deleteSeconds:$deleteSeconds - updateAt:$updateAt");
     var result = await _send(message);
@@ -288,7 +288,7 @@ class ChatOutCommon with Tag {
         "deviceToken": deviceToken,
       },
     );
-    message.content = MessageData.getContactOptionsToken(message.msgId, message.sendAt, deviceToken); // same with receive and old version
+    message.content = MessageData.getContactOptionsToken(message.msgId, deviceToken); // same with receive and old version
     message.data = message.content;
     logger.i("$TAG - sendContactOptionsToken - dest:$targetAddress - deviceToken:$deviceToken");
     var result = await _send(message);
