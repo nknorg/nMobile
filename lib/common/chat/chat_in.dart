@@ -71,13 +71,6 @@ class ChatInCommon with Tag {
       logger.e("$TAG - onMessageReceive - contentType is empty - received:${message.toStringSimple()}");
       return;
     }
-    // topic/group msg published callback can be used receipt
-    if ((message.isTargetTopic || message.isTargetGroup) && (message.sender == clientCommon.address)) {
-      if (message.contentType != MessageContentType.receipt) {
-        message.contentType = MessageContentType.receipt;
-        message.content = message.msgId;
-      }
-    }
     // status
     message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
@@ -322,9 +315,9 @@ class ChatInCommon with Tag {
       await messageCommon.updateMessageStatus(exists, MessageStatus.Read, receiveAt: DateTime.now().millisecondsSinceEpoch);
     }
     // topicInvitation
-    if (exists.contentType == MessageContentType.topicInvitation) {
-      await subscriberCommon.onInvitedReceipt(exists.content, received.sender);
-    }
+    // if (exists.contentType == MessageContentType.topicInvitation) {
+    //   await subscriberCommon.onInvitedReceipt(exists.content, received.sender);
+    // }
     return true;
   }
 
