@@ -239,6 +239,8 @@ class ChatCommon with Tag {
         logger.d("$TAG - deviceInfoHandle - message queue check - sender:${message.sender} - queueIds:$queueIds");
         List splits = deviceInfoCommon.splitQueueIds(queueIds);
         messageCommon.syncContactMessages(clientAddress, message.deviceId, splits[0], splits[1], splits[2]); // await
+      } else {
+        // nothing
       }
     }
     return exists;
@@ -567,7 +569,6 @@ class ChatCommon with Tag {
     String? thumbnailHash = MessageOptions.getIpfsThumbnailHash(message.options);
     String? thumbnailPath = MessageOptions.getMediaThumbnailPath(message.options);
     if (thumbnailHash != null && thumbnailHash.isNotEmpty) {
-      // success
       logger.i("$TAG - _tryIpfsThumbnailUpload - history completed - hash:$thumbnailHash - options${message.options}");
       if (MessageOptions.getIpfsThumbnailState(message.options) != MessageOptions.ipfsThumbnailStateYes) {
         message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateYes);
@@ -575,14 +576,8 @@ class ChatCommon with Tag {
       }
       return [message, true];
     } else if (thumbnailPath == null || thumbnailPath.isEmpty) {
-      // no native thumbnail file
-      if (MessageOptions.getFileMimeType(message.options)?.contains("gif") == true) {
-        logger.d("$TAG - _tryIpfsThumbnailUpload - gif no thumbnail - options${message.options}");
-        return [message, false];
-      } else {
-        logger.e("$TAG - _tryIpfsThumbnailUpload - file is nil - options${message.options}");
-        return [null, false];
-      }
+      logger.d("$TAG - _tryIpfsThumbnailUpload - no thumbnail - options${message.options}");
+      return [message, false];
     }
     // state
     message.options = MessageOptions.setIpfsThumbnailState(message.options, MessageOptions.ipfsThumbnailStateIng);
