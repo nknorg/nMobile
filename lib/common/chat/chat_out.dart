@@ -1012,7 +1012,7 @@ class ChatOutCommon with Tag {
       }
     }
     // self
-    if (selfIsReceiver) {
+    if (selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
@@ -1083,7 +1083,7 @@ class ChatOutCommon with Tag {
       }
     }
     // self
-    if (selfIsReceiver) {
+    if (selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
