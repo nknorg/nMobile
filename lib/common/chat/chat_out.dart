@@ -1177,7 +1177,8 @@ class ChatOutCommon with Tag {
     } else {
       int? total = message.options?[MessageOptions.KEY_PIECE_TOTAL];
       int? index = message.options?[MessageOptions.KEY_PIECE_INDEX];
-      double percent = (index ?? 0) / (total ?? 1);
+      int? parity = message.options?[MessageOptions.KEY_PIECE_PARITY];
+      double percent = ((index ?? 0) + 1) / ((total ?? 1) + (parity ?? 0));
       if (percent <= 1.05) {
         // logger.v("$TAG - _sendPiece - success - index:$index - total:$total - time:$timeNowAt - message:${message.toStringNoContent()}");
         messageCommon.onProgressSink.add({"msg_id": message.msgId, "percent": percent});
