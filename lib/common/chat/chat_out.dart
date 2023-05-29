@@ -552,7 +552,7 @@ class ChatOutCommon with Tag {
       MessageContentType.topicSubscribe,
       null,
     );
-    message.data = MessageData.getTopicSubscribe(message);
+    message.data = MessageData.getTopicSubscribe(message.msgId, message.targetId);
     logger.i("$TAG - sendTopicSubscribe - dest:$topicId - data:${message.data}");
     var result = await _send(message);
     return result != null;
@@ -566,10 +566,10 @@ class ChatOutCommon with Tag {
       topicId,
       SessionType.TOPIC,
       MessageContentType.topicUnsubscribe,
-      null,
+      "",
     );
     TopicSchema? _schema = await chatCommon.topicHandle(message);
-    message.data = MessageData.getTopicUnSubscribe(message);
+    message.data = MessageData.getTopicUnSubscribe(message.targetId);
     logger.i("$TAG - sendTopicUnSubscribe - dest:$topicId - data:${message.data}");
     var result = await _sendWithTopic(_schema, message, notification: false);
     return result != null;
@@ -605,7 +605,7 @@ class ChatOutCommon with Tag {
       kickAddress,
     );
     TopicSchema? _schema = await chatCommon.topicHandle(message);
-    message.data = MessageData.getTopicKickOut(message);
+    message.data = MessageData.getTopicKickOut(message.targetId, message.content);
     logger.i("$TAG - sendTopicKickOut - dest:$topicId - kick:$kickAddress - data:${message.data}");
     var result = await _sendWithTopic(_schema, message, notification: false);
     return result != null;
@@ -1136,7 +1136,7 @@ class ChatOutCommon with Tag {
         queueId: message.queueId,
         options: options,
         extra: {
-          "piece_parent_type": message.contentType,
+          "piece_parent_type": MessageSchema.supportContentType(message.contentType),
           "piece_bytes_length": bytesLength,
           "piece_total": total,
           "piece_parity": parity,
