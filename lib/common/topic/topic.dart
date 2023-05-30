@@ -384,7 +384,7 @@ class TopicCommon with Tag {
       if (expireHeight > 0) {
         // node is joined
         noSubscribed = false;
-        int gap = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        int gap = DateTime.now().millisecondsSinceEpoch - topic.createAt;
         if (gap > Settings.gapTxPoolUpdateDelayMs) {
           logger.d("$TAG - checkExpireAndSubscribe - DB expire but node not expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
           int subscribeAt = topic.subscribeAt ?? DateTime.now().millisecondsSinceEpoch;
@@ -413,7 +413,7 @@ class TopicCommon with Tag {
       if (expireHeight <= 0) {
         // node no joined
         noSubscribed = true;
-        int gap = DateTime.now().millisecondsSinceEpoch - (topic.createAt ?? DateTime.now().millisecondsSinceEpoch);
+        int gap = DateTime.now().millisecondsSinceEpoch - topic.createAt;
         if (topic.joined && (gap > Settings.gapTxPoolUpdateDelayMs)) {
           logger.i("$TAG - checkExpireAndSubscribe - DB no expire but node expire - gap:$gap>${Settings.gapTxPoolUpdateDelayMs} - topic:$topic");
           bool success = await setJoined(

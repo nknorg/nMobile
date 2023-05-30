@@ -317,7 +317,7 @@ class TopicStorage with Tag {
                 return null;
               }
               TopicSchema schema = TopicSchema.fromMap(res.first);
-              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> data = schema.data;
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
