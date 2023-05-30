@@ -15,13 +15,13 @@ class SessionSchema {
   String targetId; // (required) <-> target_id
   int type; // (required) <-> type
 
-  int? lastMessageAt; // <-> last_message_at
+  int lastMessageAt; // <-> last_message_at
   Map<String, dynamic>? lastMessageOptions; // <-> last_message_options
 
   bool isTop; // <-> is_top
   int unReadCount; // <-> un_read_count
 
-  Map<String, dynamic>? data; // <-> data
+  Map<String, dynamic> data = Map(); // <-> data
 
   Map<String, dynamic>? temp; // no_sql
 
@@ -29,14 +29,11 @@ class SessionSchema {
     this.id,
     required this.targetId,
     required this.type,
-    this.lastMessageAt,
+    required this.lastMessageAt,
     this.lastMessageOptions,
     this.isTop = false,
     this.unReadCount = 0,
-    this.data,
-  }) {
-    if (this.data == null) this.data = Map();
-  }
+  });
 
   bool get isContact {
     return type == SessionType.CONTACT;
@@ -70,7 +67,7 @@ class SessionSchema {
       'last_message_options': (lastMessageOptions?.isNotEmpty == true) ? jsonEncode(lastMessageOptions) : null,
       'is_top': isTop ? 1 : 0,
       'un_read_count': unReadCount,
-      'data': jsonEncode(data ?? Map()),
+      'data': jsonEncode(data),
     };
     return map;
   }
@@ -80,7 +77,7 @@ class SessionSchema {
       id: e['id'],
       targetId: e['target_id'] ?? "",
       type: e['type'] ?? 0,
-      lastMessageAt: e['last_message_at'],
+      lastMessageAt: e['last_message_at'] ?? DateTime.now().millisecondsSinceEpoch,
       lastMessageOptions: e['last_message_options'] != null ? Util.jsonFormatMap(e['last_message_options']) : null,
       isTop: (e['is_top'] != null && e['is_top'] == 1) ? true : false,
       unReadCount: e['un_read_count'] ?? 0,
@@ -88,7 +85,7 @@ class SessionSchema {
     // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) schema.data?.addAll(data);
+      if (data != null) schema.data.addAll(data);
     }
     return schema;
   }

@@ -63,8 +63,8 @@ class OptionsSchema {
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
     final random = Random().nextInt(application.theme.randomBackgroundColorList.length);
-    schema.receiveOpen = (map['receiveOpen'] != null && map['receiveOpen'].toString() == '1') ? true : false;
-    schema.notificationOpen = (map['notificationOpen'] != null && map['notificationOpen'].toString() == '1') ? true : false;
+    schema.receiveOpen = ((map['receiveOpen'] != null) && (map['receiveOpen'].toString() == '1')) ? true : false;
+    schema.notificationOpen = ((map['notificationOpen'] != null) && (map['notificationOpen'].toString() == '1')) ? true : false;
     schema.muteExpireAt = map['muteExpireAt'] ?? -1;
     schema.soundResource = map['soundResource'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
