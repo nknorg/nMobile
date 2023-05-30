@@ -184,7 +184,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _initBurning(ContactSchema? schema) {
-    int? burnAfterSeconds = schema?.options?.deleteAfterSeconds;
+    int? burnAfterSeconds = schema?.options.deleteAfterSeconds;
     _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
     if (_burnOpen) {
       _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
@@ -199,8 +199,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _initNotification(ContactSchema? schema) {
     if (schema?.isMe == false) {
-      if (schema?.options?.notificationOpen != null) {
-        _notificationOpen = schema?.options?.notificationOpen ?? false;
+      if (schema?.options.notificationOpen != null) {
+        _notificationOpen = schema?.options.notificationOpen ?? false;
       } else {
         _notificationOpen = false;
       }
@@ -316,8 +316,8 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
     int timeNow = DateTime.now().millisecondsSinceEpoch;
-    _contact?.options?.deleteAfterSeconds = _burnValue;
-    _contact?.options?.updateBurnAfterAt = timeNow;
+    _contact?.options.deleteAfterSeconds = _burnValue;
+    _contact?.options.updateBurnAfterAt = timeNow;
     // inside update
     contactCommon.setOptionsBurn(_contact?.address, _burnValue, timeNow, notify: true).then((options) {
       // outside update
@@ -337,7 +337,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Toast.show(Settings.locale((s) => s.unavailable_device, ctx: context));
       return;
     }
-    _contact?.options?.notificationOpen = notificationOpen;
+    _contact?.options.notificationOpen = notificationOpen;
     // update
     var data = await contactCommon.setNotificationOpen(_contact?.address, notificationOpen, notify: true);
     if (data == null) return;

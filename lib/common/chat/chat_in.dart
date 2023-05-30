@@ -499,7 +499,7 @@ class ChatInCommon with Tag {
   // NO DB NO display
   Future<bool> _receiveDeviceRequest(MessageSchema received, ContactSchema? contact, DeviceInfoSchema? targetDeviceInfo) async {
     if (contact == null) return false;
-    bool notificationOpen = contact.options?.notificationOpen ?? false;
+    bool notificationOpen = contact.options.notificationOpen;
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: notificationOpen);
     logger.i("$TAG - _receiveDeviceRequest - sender:${received.sender} - self:$deviceInfo");
     if (deviceInfo == null) return false;

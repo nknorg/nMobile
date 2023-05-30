@@ -337,7 +337,7 @@ class ContactStorage with Tag {
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
-              OptionsSchema options = schema.options ?? OptionsSchema();
+              OptionsSchema options = schema.options;
               options.notificationOpen = open;
               int count = await txn.update(
                 tableName,
@@ -376,7 +376,7 @@ class ContactStorage with Tag {
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
-              OptionsSchema options = schema.options ?? OptionsSchema();
+              OptionsSchema options = schema.options;
               options.deleteAfterSeconds = burningSeconds ?? 0;
               options.updateBurnAfterAt = updateAt ?? DateTime.now().millisecondsSinceEpoch;
               int count = await txn.update(

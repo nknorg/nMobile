@@ -368,7 +368,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema? _contact = this._target as ContactSchema?;
       if (_contact != null) {
-        if ((_contact.createAt ?? 0) >= dbCommon.upgradeAt(7)) {
+        if (_contact.createAt >= dbCommon.upgradeAt(7)) {
           Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
         } else {
           contactCommon.setTipNotification(_contact.address, null, notify: true); // await
@@ -458,7 +458,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (this._targetType != SessionType.CONTACT) return;
     ContactSchema _contact = this._target as ContactSchema;
     if (_contact.tipNotification) return;
-    if (_contact.options?.notificationOpen == true) {
+    if (_contact.options.notificationOpen == true) {
       await contactCommon.setTipNotification(_contact.address, null, notify: true);
       return;
     }
@@ -496,7 +496,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   Future _toggleNotificationOpen() async {
     if (this._targetType == SessionType.CONTACT) {
       ContactSchema _contact = this._target as ContactSchema;
-      bool nextOpen = !(_contact.options?.notificationOpen ?? false);
+      bool nextOpen = !_contact.options.notificationOpen;
       DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: nextOpen);
       String? deviceToken = nextOpen ? deviceInfo?.deviceToken : null;
       bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
@@ -505,7 +505,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         return;
       }
       setState(() {
-        _contact.options?.notificationOpen = nextOpen;
+        _contact.options.notificationOpen = nextOpen;
       });
       // update
       var data = await contactCommon.setNotificationOpen(_contact.address, nextOpen, notify: true);
@@ -601,8 +601,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _privateGroup = this._target as PrivateGroupSchema?;
     }
 
-    int deleteAfterSeconds = (_topic != null ? _topic.options.deleteAfterSeconds : (_privateGroup != null ? _privateGroup.options.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
-    Color notifyBellColor = ((_topic != null ? _topic.options.notificationOpen : (_privateGroup != null ? _privateGroup.options.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
+    int deleteAfterSeconds = (_topic != null ? _topic.options.deleteAfterSeconds : (_privateGroup != null ? _privateGroup.options.deleteAfterSeconds : _contact?.options.deleteAfterSeconds)) ?? 0;
+    Color notifyBellColor = ((_topic != null ? _topic.options.notificationOpen : (_privateGroup != null ? _privateGroup.options.notificationOpen : _contact?.options.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
 
     bool isJoined = (_topic != null) ? (_topic.joined == true) : ((_privateGroup != null) ? (_privateGroup.joined == true) : true);
 

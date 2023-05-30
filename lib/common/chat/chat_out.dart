@@ -143,7 +143,7 @@ class ChatOutCommon with Tag {
       // contact
       ContactSchema? _me = await contactCommon.getMe();
       ContactSchema? _other = await contactCommon.query(destList[0], fetchWalletAddress: false);
-      bool notificationOpen = _other?.options?.notificationOpen == true;
+      bool notificationOpen = _other?.options.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.address); // just can latest
       String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
@@ -336,16 +336,16 @@ class ChatOutCommon with Tag {
     if (target is ContactSchema) {
       targetId = target.address;
       targetType = SessionType.CONTACT;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
       targetType = SessionType.PRIVATE_GROUP;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
       privateGroupVersion = target.version;
     }
     if (targetId.isEmpty) return null;
@@ -388,16 +388,16 @@ class ChatOutCommon with Tag {
     if (target is ContactSchema) {
       targetId = target.address;
       targetType = SessionType.CONTACT;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
       targetType = SessionType.PRIVATE_GROUP;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
       privateGroupVersion = target.version;
     }
     if (targetId.isEmpty) return null;
@@ -457,16 +457,16 @@ class ChatOutCommon with Tag {
     if (target is ContactSchema) {
       targetId = target.address;
       targetType = SessionType.CONTACT;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
       targetType = SessionType.PRIVATE_GROUP;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
       privateGroupVersion = target.version;
     }
     if (targetId.isEmpty) return null;
@@ -505,16 +505,16 @@ class ChatOutCommon with Tag {
     if (target is ContactSchema) {
       targetId = target.address;
       targetType = SessionType.CONTACT;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
     } else if (target is TopicSchema) {
       targetId = target.topicId;
       targetType = SessionType.TOPIC;
     } else if (target is PrivateGroupSchema) {
       targetId = target.groupId;
       targetType = SessionType.PRIVATE_GROUP;
-      deleteAfterSeconds = target.options?.deleteAfterSeconds;
-      burningUpdateAt = target.options?.updateBurnAfterAt;
+      deleteAfterSeconds = target.options.deleteAfterSeconds;
+      burningUpdateAt = target.options.updateBurnAfterAt;
       privateGroupVersion = target.version;
     }
     if (targetId.isEmpty) return null;
@@ -865,7 +865,7 @@ class ChatOutCommon with Tag {
       pid = await _sendWithPrivateGroup(group, message, notification: pushNotification);
     } else if (message.isTargetContact) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
-      bool pushNotification = message.canNotification && (contact?.options?.notificationOpen == true) && (notification != false);
+      bool pushNotification = message.canNotification && (contact?.options.notificationOpen == true) && (notification != false);
       pid = await _sendWithContact(contact, message, notification: pushNotification);
     } else {
       logger.e("$TAG - _send - with_error - type:${message.contentType} - message:${message.toStringSimple()}");
@@ -1012,7 +1012,7 @@ class ChatOutCommon with Tag {
       }
     }
     // self
-    if (selfIsReceiver && message.canReceipt) {
+    if ((destList.isNotEmpty && (pid != null)) && selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
@@ -1083,7 +1083,7 @@ class ChatOutCommon with Tag {
       }
     }
     // self
-    if (selfIsReceiver && message.canReceipt) {
+    if ((destList.isNotEmpty && (pid != null)) && selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
       if (destList.isEmpty) pid = _pid;
