@@ -26,7 +26,7 @@ class PrivateGroupItemSchema {
   String? inviterSignature;
   String? inviteeSignature;
 
-  Map<String, dynamic>? data;
+  Map<String, dynamic> data = Map();
 
   Map<String, dynamic>? temp; // no_sql
 
@@ -41,10 +41,7 @@ class PrivateGroupItemSchema {
     this.inviteeRawData,
     this.inviterSignature,
     this.inviteeSignature,
-    this.data,
-  }) {
-    if (this.data == null) this.data = Map();
-  }
+  });
 
   static PrivateGroupItemSchema? create(
     String? groupId, {
@@ -113,7 +110,7 @@ class PrivateGroupItemSchema {
       'invitee_raw_data': inviteeRawData,
       'inviter_signature': inviterSignature,
       'invitee_signature': inviteeSignature,
-      'data': jsonEncode(data ?? Map()),
+      'data': jsonEncode(data),
     };
     return map.sortByKey();
   }
@@ -131,10 +128,9 @@ class PrivateGroupItemSchema {
       inviterSignature: e['inviter_signature'],
       inviteeSignature: e['invitee_signature'],
     );
-    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) schema.data?.addAll(data);
+      if (data != null) schema.data.addAll(data);
     }
     return schema;
   }

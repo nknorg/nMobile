@@ -276,7 +276,7 @@ class PrivateGroupStorage with Tag {
                 return null;
               }
               PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
-              OptionsSchema options = schema.options ?? OptionsSchema();
+              OptionsSchema options = schema.options;
               options.deleteAfterSeconds = burningSeconds ?? 0;
               int count = await txn.update(
                 tableName,
@@ -316,7 +316,7 @@ class PrivateGroupStorage with Tag {
                 return null;
               }
               PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
-              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> data = schema.data;
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
@@ -359,7 +359,7 @@ class PrivateGroupStorage with Tag {
                 return null;
               }
               PrivateGroupSchema schema = PrivateGroupSchema.fromMap(res.first);
-              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> data = schema.data;
               Map<String, dynamic> values = data[key] ?? Map();
               if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
               if (addPairs.isNotEmpty) values.addAll(addPairs.map((key, value) => MapEntry(key.toString(), value)));

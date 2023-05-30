@@ -601,8 +601,8 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       _privateGroup = this._target as PrivateGroupSchema?;
     }
 
-    int deleteAfterSeconds = (_topic != null ? _topic.options.deleteAfterSeconds : (_privateGroup != null ? _privateGroup.options?.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
-    Color notifyBellColor = ((_topic != null ? _topic.options.notificationOpen : (_privateGroup != null ? _privateGroup.options?.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
+    int deleteAfterSeconds = (_topic != null ? _topic.options.deleteAfterSeconds : (_privateGroup != null ? _privateGroup.options.deleteAfterSeconds : _contact?.options?.deleteAfterSeconds)) ?? 0;
+    Color notifyBellColor = ((_topic != null ? _topic.options.notificationOpen : (_privateGroup != null ? _privateGroup.options.notificationOpen : _contact?.options?.notificationOpen)) ?? false) ? application.theme.primaryColor : Colors.white38;
 
     bool isJoined = (_topic != null) ? (_topic.joined == true) : ((_privateGroup != null) ? (_privateGroup.joined == true) : true);
 
