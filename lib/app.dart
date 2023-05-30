@@ -215,7 +215,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   }
 
   _setAuthProgress(bool progress) {
-    application.isAuthProgress = progress;
+    application.inAuthProgress = progress;
     if (isAuthProgress != progress) {
       isAuthProgress = progress; // no check mounted
       setState(() {
