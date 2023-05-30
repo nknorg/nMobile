@@ -16,8 +16,8 @@ class TopicType {
 
 class TopicSchema {
   int? id; // (required) <-> id
-  int? createAt; // <-> create_at
-  int? updateAt; // <-> update_at
+  int createAt; // <-> create_at
+  int updateAt; // <-> update_at
 
   String topicId; // (required) <-> topic_id
   int type; // (required) <-> type
@@ -30,13 +30,13 @@ class TopicSchema {
   int count; // <-> count
   bool isTop = false; // <-> is_top
 
-  OptionsSchema? options; // <-> options
-  Map<String, dynamic>? data; // <-> data[...]
+  OptionsSchema options = OptionsSchema(); // <-> options
+  Map<String, dynamic> data = Map(); // <-> data[...]
 
   TopicSchema({
     this.id,
-    this.createAt,
-    this.updateAt,
+    this.createAt = 0,
+    this.updateAt = 0,
     required this.topicId,
     this.type = -1,
     this.joined = false,
@@ -45,12 +45,10 @@ class TopicSchema {
     this.avatar,
     this.count = 0,
     this.isTop = false,
-    this.options,
-    this.data,
   }) {
+    if (createAt == 0) createAt = DateTime.now().millisecondsSinceEpoch;
+    if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
     if (type == -1) type = (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public);
-    if (options == null) options = OptionsSchema();
-    if (data == null) data = Map();
   }
 
   static TopicSchema? create(String? topicId, {int? type, int expireHeight = 0}) {
@@ -164,47 +162,47 @@ class TopicSchema {
   }
 
   bool isSubscribeProgress() {
-    bool? isProgress = data?['subscribe_progress'];
+    bool? isProgress = data['subscribe_progress'];
     if (isProgress == null) return false;
     return isProgress;
   }
 
   bool isUnSubscribeProgress() {
-    bool? isProgress = data?['unsubscribe_progress'];
+    bool? isProgress = data['unsubscribe_progress'];
     if (isProgress == null) return false;
     return isProgress;
   }
 
   int? getProgressSubscribeNonce() {
-    int? nonce = int.tryParse(data?['progress_subscribe_nonce']?.toString() ?? "");
+    int? nonce = int.tryParse(data['progress_subscribe_nonce']?.toString() ?? "");
     if (nonce == null || nonce < 0) return null;
     return nonce;
   }
 
   double getProgressSubscribeFee() {
-    double? fee = double.tryParse(data?['progress_subscribe_fee']?.toString() ?? "");
+    double? fee = double.tryParse(data['progress_subscribe_fee']?.toString() ?? "");
     if (fee == null || fee < 0) return 0;
     return fee;
   }
 
   int lastCheckSubscribeAt() {
-    return int.tryParse(data?['last_check_subscribe_at']?.toString() ?? "0") ?? 0;
+    return int.tryParse(data['last_check_subscribe_at']?.toString() ?? "0") ?? 0;
   }
 
   int lastCheckPermissionsAt() {
-    return int.tryParse(data?['last_check_permissions_at']?.toString() ?? "0") ?? 0;
+    return int.tryParse(data['last_check_permissions_at']?.toString() ?? "0") ?? 0;
   }
 
   int lastRefreshSubscribersAt() {
-    return int.tryParse(data?['last_refresh_subscribers_at']?.toString() ?? "0") ?? 0;
+    return int.tryParse(data['last_refresh_subscribers_at']?.toString() ?? "0") ?? 0;
   }
 
   Map<String, dynamic> toMap() {
     if (type == -1) type = (Validate.isPrivateTopicOk(topicId) ? TopicType.private : TopicType.public);
     Map<String, dynamic> map = {
       'id': id,
-      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt,
+      'update_at': updateAt,
       'topic_id': topicId,
       'type': type,
       'joined': joined ? 1 : 0,
@@ -213,8 +211,8 @@ class TopicSchema {
       'avatar': Path.convert2Local(avatar?.path),
       'count': count,
       'is_top': isTop ? 1 : 0,
-      'options': jsonEncode(options?.toMap() ?? Map()),
-      'data': jsonEncode(data ?? Map()),
+      'options': jsonEncode(options.toMap()),
+      'data': jsonEncode(data),
     };
     return map;
   }
@@ -222,8 +220,8 @@ class TopicSchema {
   static TopicSchema fromMap(Map<String, dynamic> e) {
     var topicSchema = TopicSchema(
       id: e['id'],
-      createAt: e['create_at'],
-      updateAt: e['update_at'],
+      createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
+      updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       topicId: e['topic_id'] ?? "",
       type: e['type'] ?? -1,
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
@@ -232,17 +230,14 @@ class TopicSchema {
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       count: e['count'] ?? 0,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
-      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );
-    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       topicSchema.options = OptionsSchema.fromMap(options ?? Map());
     }
-    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) topicSchema.data?.addAll(data);
+      if (data != null) topicSchema.data.addAll(data);
     }
     return topicSchema;
   }
