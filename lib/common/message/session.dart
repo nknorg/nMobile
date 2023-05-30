@@ -70,7 +70,7 @@ class SessionCommon with Tag {
         targetId: targetId,
         type: type,
         lastMessageOptions: lastMsg?.toMap(),
-        lastMessageAt: lastMsgAt,
+        lastMessageAt: lastMsgAt ?? DateTime.now().millisecondsSinceEpoch,
         unReadCount: unReadCount ?? 0,
       );
       if (groupSenderName?.isNotEmpty == true) {
@@ -134,7 +134,7 @@ class SessionCommon with Tag {
         }
       }
       // lastMsgAt
-      int? newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
+      int newLastMsgAt = lastMsgAt ?? newLastMsg?.sendAt ?? exist.lastMessageAt;
       // unReadCount
       int newUnReadCount;
       if (unReadCount != null) {
@@ -154,7 +154,7 @@ class SessionCommon with Tag {
             newGroupSenderName = _sender?.displayName ?? " ";
           }
         }
-        if (newGroupSenderName != exist.data?["groupSenderName"]?.toString()) {
+        if (newGroupSenderName != exist.data["groupSenderName"]?.toString()) {
           Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
           bool success = await SessionStorage.instance.setData(targetId, type, newData);
           if (success) exist.data = newData;

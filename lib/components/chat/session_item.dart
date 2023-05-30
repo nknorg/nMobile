@@ -329,7 +329,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
                         Padding(
                           padding: const EdgeInsets.only(right: 0, bottom: 6),
                           child: Label(
-                            Time.formatTime(DateTime.fromMillisecondsSinceEpoch(session.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch)),
+                            Time.formatTime(DateTime.fromMillisecondsSinceEpoch(session.lastMessageAt)),
                             type: LabelType.bodyRegular,
                           ),
                         ),
@@ -367,7 +367,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
     String? draft = memoryCache.getDraft(session.targetId);
     String contactName = _contact?.displayName ?? " ";
-    String groupSenderName = widget.session.data?["groupSenderName"] ?? " ";
+    String groupSenderName = widget.session.data["groupSenderName"]?.toString() ?? " ";
     String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? groupSenderName : contactName);
     String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$groupSenderName: " : "");
     String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$groupSenderName: " : "");
