@@ -77,7 +77,7 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - createPrivateGroup - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
       return null;
     }
-    schemaGroup.data?['signature'] = signatureData;
+    schemaGroup.data['signature'] = signatureData;
     // item
     String? selfAddress = clientCommon.address;
     if (selfAddress == null || selfAddress.isEmpty) return null;
@@ -622,7 +622,7 @@ class PrivateGroupCommon with Tag {
       _newGroup.version = version;
       _newGroup.count = count;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
-      _newGroup.data?['signature'] = signature;
+      _newGroup.data['signature'] = signature;
       exists = await addPrivateGroup(_newGroup, notify: true);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
@@ -639,7 +639,7 @@ class PrivateGroupCommon with Tag {
             exists.type = type ?? exists.type;
             await setNameType(groupId, exists.name, exists.type, notify: true);
           }
-          if (deleteAfterSeconds != exists.options?.deleteAfterSeconds) {
+          if (deleteAfterSeconds != exists.options.deleteAfterSeconds) {
             var options = await setGroupOptionsBurn(groupId, deleteAfterSeconds, notify: true);
             if (options != null) exists.options = options;
           }

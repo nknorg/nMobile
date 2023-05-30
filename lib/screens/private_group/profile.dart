@@ -158,7 +158,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
   }
 
   _initBurning(PrivateGroupSchema? privateGroup) {
-    int? burnAfterSeconds = privateGroup?.options?.deleteAfterSeconds;
+    int? burnAfterSeconds = privateGroup?.options.deleteAfterSeconds;
     _burnOpen = burnAfterSeconds != null && burnAfterSeconds != 0;
     if (_burnOpen) {
       _burnProgress = burnValueArray.indexWhere((x) => x.inSeconds == burnAfterSeconds);
@@ -203,7 +203,7 @@ class _PrivateGroupProfileScreenState extends BaseStateFulWidgetState<PrivateGro
     } else {
       _burnValue = burnValueArray[_burnProgress].inSeconds;
     }
-    _privateGroup?.options?.deleteAfterSeconds = _burnValue;
+    _privateGroup?.options.deleteAfterSeconds = _burnValue;
     privateGroupCommon.setOptionsBurning(_privateGroup?.groupId, _burnValue, notify: true); // await
   }
 
