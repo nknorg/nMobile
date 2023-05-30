@@ -48,7 +48,7 @@ class ChatCommon with Tag {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       bool lastTimeOK = true;
       result.forEach((element) {
-        int interval = DateTime.now().millisecondsSinceEpoch - (element.lastMessageAt ?? 0);
+        int interval = DateTime.now().millisecondsSinceEpoch - element.lastMessageAt;
         lastTimeOK = interval < Settings.timeoutPingSessionOnlineMs;
         if (element.isContact && lastTimeOK && !targetIds.contains(element.targetId)) {
           targetIds.add(element.targetId);
@@ -133,8 +133,8 @@ class ChatCommon with Tag {
     }
     // burning
     if (message.isTargetContact && message.canBurning) {
-      int? existSeconds = exist.options?.deleteAfterSeconds;
-      int? existUpdateAt = exist.options?.updateBurnAfterAt;
+      int? existSeconds = exist.options.deleteAfterSeconds;
+      int? existUpdateAt = exist.options.updateBurnAfterAt;
       int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
       int? updateBurnAfterAt = MessageOptions.getOptionsBurningUpdateAt(message.options);
       if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
@@ -142,8 +142,8 @@ class ChatCommon with Tag {
         if ((existUpdateAt == null) || ((updateBurnAfterAt ?? 0) >= existUpdateAt)) {
           logger.i("$TAG - contactHandle - burning be sync - remote:$burnAfterSeconds - native:$existSeconds - sender:${message.sender}");
           // side updated latest
-          exist.options?.deleteAfterSeconds = burnAfterSeconds;
-          exist.options?.updateBurnAfterAt = updateBurnAfterAt;
+          exist.options.deleteAfterSeconds = burnAfterSeconds;
+          exist.options.updateBurnAfterAt = updateBurnAfterAt;
           var options = await contactCommon.setOptionsBurn(exist.address, burnAfterSeconds, updateBurnAfterAt, notify: true);
           if (options != null) exist.options = options;
         } else if ((message.sendAt ?? 0) > existUpdateAt) {
@@ -354,7 +354,7 @@ class ChatCommon with Tag {
           logger.i('$TAG - privateGroupHandle - commits diff - native:$nativeCommits - remote:$remoteCommits - sender:${message.sender}');
           // burning
           if (privateGroupCommon.isOwner(exists.ownerPublicKey, message.sender) && message.canBurning) {
-            int? existSeconds = exists.options?.deleteAfterSeconds;
+            int? existSeconds = exists.options.deleteAfterSeconds;
             int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
             if (((burnAfterSeconds ?? 0) > 0) && (existSeconds != burnAfterSeconds)) {
               logger.i('$TAG - privateGroupHandle - burning diff - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}');

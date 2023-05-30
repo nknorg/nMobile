@@ -466,7 +466,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
             },
             bgColor: Colors.transparent,
             bodyTitle: item.displayName,
-            bodyDesc: Time.formatTime(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
+            bodyDesc: Time.formatTime(DateTime.fromMillisecondsSinceEpoch(item.updateAt)),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             tail: Padding(
               padding: const EdgeInsets.only(right: 8, left: 16),

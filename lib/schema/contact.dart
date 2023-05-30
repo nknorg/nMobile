@@ -23,8 +23,8 @@ class ContactRequestType {
 
 class ContactSchema {
   int? id; // <- id
-  int? createAt; // <-> create_at
-  int? updateAt; // <-> update_at
+  int createAt; // <-> create_at
+  int updateAt; // <-> update_at
 
   String address; // (required : (ID).PubKey) <-> address (same with client.address)
 
@@ -36,13 +36,13 @@ class ContactSchema {
   int type; // (required) <-> type
   bool isTop; // <-> is_top
 
-  OptionsSchema? options; // <-> options
-  Map<String, dynamic>? data; // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
+  OptionsSchema options = OptionsSchema(); // <-> options
+  Map<String, dynamic> data = Map(); // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
 
   ContactSchema({
     this.id,
-    this.createAt,
-    this.updateAt,
+    this.createAt = 0,
+    this.updateAt = 0,
     required this.address,
     this.avatar,
     this.firstName = "",
@@ -50,11 +50,9 @@ class ContactSchema {
     this.remarkName = "",
     this.type = ContactType.none,
     this.isTop = false,
-    this.options,
-    this.data,
   }) {
-    if (options == null) options = OptionsSchema();
-    if (data == null) data = Map();
+    if (createAt == 0) createAt = DateTime.now().millisecondsSinceEpoch;
+    if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
   }
 
   static ContactSchema? create(String? address, int? type) {
@@ -104,15 +102,15 @@ class ContactSchema {
   }
 
   String? get remarkAvatarLocalPath {
-    return data?['remarkAvatar']?.toString();
+    return data['remarkAvatar']?.toString();
   }
 
   String? get displayAvatarLocalPath {
     String? avatarLocalPath;
     // remark
-    if (data?.isNotEmpty == true) {
-      if (data?['remarkAvatar']?.toString().isNotEmpty == true) {
-        avatarLocalPath = data?['remarkAvatar'];
+    if (data.isNotEmpty == true) {
+      if (data['remarkAvatar']?.toString().isNotEmpty == true) {
+        avatarLocalPath = data['remarkAvatar'];
       }
     }
     // original
@@ -149,7 +147,7 @@ class ContactSchema {
   }
 
   Future<String> get nknWalletAddress async {
-    String value = data?['nknWalletAddress']?.toString() ?? "";
+    String value = data['nknWalletAddress']?.toString() ?? "";
     value = value.replaceAll("\n", "").trim();
     if (value.isNotEmpty) return value;
     try {
@@ -159,37 +157,36 @@ class ContactSchema {
     } catch (e, st) {
       handleError(e, st);
     }
-    if (data == null) data = Map();
-    data?['nknWalletAddress'] = value;
+    data['nknWalletAddress'] = value;
     return value;
   }
 
   List<String> get mappedAddress {
-    return (data?['mappedAddress'] ?? []).cast<String>();
+    return (data['mappedAddress'] ?? []).cast<String>();
   }
 
   String? get profileVersion {
-    return data?['profileVersion']?.toString().replaceAll("\n", "").trim();
+    return data['profileVersion']?.toString().replaceAll("\n", "").trim();
   }
 
   String? get notes {
-    return data?['notes']?.toString();
+    return data['notes']?.toString();
   }
 
   Map<String, int> get receivedMessages {
-    Map<String, dynamic> values = data?['receivedMessages'] ?? Map();
+    Map<String, dynamic> values = data['receivedMessages'] ?? Map();
     return values.map((key, value) => MapEntry(key.toString(), int.tryParse(value?.toString() ?? "") ?? 0))..removeWhere((key, value) => key.isEmpty || value == 0);
   }
 
   bool get tipNotification {
-    return (int.tryParse(data?['tipNotification']?.toString() ?? "0") ?? 0) > 0;
+    return (int.tryParse(data['tipNotification']?.toString() ?? "0") ?? 0) > 0;
   }
 
   Map<String, dynamic> toMap() {
     address = address.replaceAll("\n", "").trim();
     Map<String, dynamic> map = {
-      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt,
+      'update_at': updateAt,
       'address': address,
       'avatar': Path.convert2Local(avatar?.path),
       'first_name': firstName.isEmpty ? getDefaultName(address) : firstName,
@@ -197,8 +194,8 @@ class ContactSchema {
       'remark_name': remarkName,
       'type': type,
       'is_top': isTop ? 1 : 0,
-      'options': jsonEncode(options?.toMap() ?? Map()),
-      'data': jsonEncode(data ?? Map()),
+      'options': jsonEncode(options.toMap()),
+      'data': jsonEncode(data),
     };
     return map;
   }
@@ -206,8 +203,8 @@ class ContactSchema {
   static ContactSchema fromMap(Map e) {
     var contact = ContactSchema(
       id: e['id'],
-      createAt: e['create_at'],
-      updateAt: e['update_at'],
+      createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
+      updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       address: e['address'] ?? "",
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       firstName: (e['first_name']?.toString() ?? "").isEmpty ? getDefaultName(e['address']) : e['first_name'],
@@ -217,15 +214,13 @@ class ContactSchema {
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
     contact.address = contact.address.replaceAll("\n", "").trim();
-    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
     }
-    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) contact.data?.addAll(data);
+      if (data != null) contact.data.addAll(data);
     }
     return contact;
   }

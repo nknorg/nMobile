@@ -21,8 +21,8 @@ class DevicePlatformName {
 
 class DeviceInfoSchema {
   int? id; // <- id
-  int? createAt; // <-> create_at
-  int? updateAt; // <-> update_at
+  int createAt; // <-> create_at
+  int updateAt; // <-> update_at
 
   String contactAddress; // (required) <-> contact_address
   String deviceId; //  <-> device_id
@@ -34,16 +34,16 @@ class DeviceInfoSchema {
 
   DeviceInfoSchema({
     this.id,
-    this.createAt,
-    this.updateAt,
+    this.createAt = 0,
+    this.updateAt = 0,
     required this.contactAddress,
     required this.deviceId,
     this.deviceToken = "",
     required this.onlineAt,
     this.data,
   }) {
-    if (this.createAt == null) this.createAt = DateTime.now().millisecondsSinceEpoch;
-    if (this.updateAt == null) this.updateAt = DateTime.now().millisecondsSinceEpoch;
+    if (createAt == 0) createAt = DateTime.now().millisecondsSinceEpoch;
+    if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
     if (this.data == null) this.data = Map();
   }
 
@@ -131,8 +131,8 @@ class DeviceInfoSchema {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
-      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt,
+      'update_at': updateAt,
       'contact_address': contactAddress,
       'device_id': deviceId,
       'device_token': deviceToken,
@@ -145,18 +145,14 @@ class DeviceInfoSchema {
   static DeviceInfoSchema fromMap(Map e) {
     var deviceInfo = DeviceInfoSchema(
       id: e['id'],
-      createAt: e['create_at'],
-      updateAt: e['update_at'],
+      createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
+      updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       contactAddress: e['contact_address'] ?? "",
       deviceId: e['device_id'] ?? "",
       deviceToken: e['device_token'] ?? "",
       onlineAt: e['online_at'] ?? 0,
+      data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );
-    // data
-    if (e['data']?.toString().isNotEmpty == true) {
-      Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) deviceInfo.data?.addAll(data);
-    }
     return deviceInfo;
   }
 
