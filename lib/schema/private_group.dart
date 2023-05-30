@@ -12,8 +12,8 @@ class PrivateGroupType {
 
 class PrivateGroupSchema {
   int? id;
-  int? createAt;
-  int? updateAt;
+  int createAt;
+  int updateAt;
 
   String groupId;
   int type;
@@ -26,13 +26,13 @@ class PrivateGroupSchema {
   bool joined;
   bool isTop;
 
-  OptionsSchema? options;
-  Map<String, dynamic>? data;
+  OptionsSchema options = OptionsSchema();
+  Map<String, dynamic> data = Map();
 
   PrivateGroupSchema({
     this.id,
-    this.createAt,
-    this.updateAt,
+    this.createAt = 0,
+    this.updateAt = 0,
     required this.groupId,
     this.type = PrivateGroupType.normal,
     this.version,
@@ -41,11 +41,9 @@ class PrivateGroupSchema {
     this.avatar,
     this.joined = false,
     this.isTop = false,
-    this.options,
-    this.data,
   }) {
-    if (this.options == null) this.options = OptionsSchema();
-    if (this.data == null) this.data = Map();
+    if (createAt == 0) createAt = DateTime.now().millisecondsSinceEpoch;
+    if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
   }
 
   static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined, String? version}) {
@@ -95,32 +93,32 @@ class PrivateGroupSchema {
   }
 
   String get signature {
-    return data?['signature'] ?? "";
+    return data['signature'] ?? "";
   }
 
   int? get quitCommits {
-    return int.tryParse(data?["quit_at_version_commits"]?.toString() ?? "");
+    return int.tryParse(data["quit_at_version_commits"]?.toString() ?? "");
   }
 
   Map<String, int> get receivedMessages {
-    Map<String, dynamic> values = data?['receivedMessages'] ?? Map();
+    Map<String, dynamic> values = data['receivedMessages'] ?? Map();
     return values.map((key, value) => MapEntry(key.toString(), int.tryParse(value?.toString() ?? "") ?? 0))..removeWhere((key, value) => key.isEmpty || value == 0);
   }
 
   int get optionsRequestAt {
-    return int.tryParse(data?['optionsRequestAt']?.toString() ?? "0") ?? 0;
+    return int.tryParse(data['optionsRequestAt']?.toString() ?? "0") ?? 0;
   }
 
   String get optionsRequestedVersion {
-    return data?['optionsRequestedVersion']?.toString() ?? "";
+    return data['optionsRequestedVersion']?.toString() ?? "";
   }
 
   int get membersRequestAt {
-    return int.tryParse(data?['membersRequestAt']?.toString() ?? "0") ?? 0;
+    return int.tryParse(data['membersRequestAt']?.toString() ?? "0") ?? 0;
   }
 
   String get membersRequestedVersion {
-    return data?['membersRequestedVersion']?.toString() ?? "";
+    return data['membersRequestedVersion']?.toString() ?? "";
   }
 
   Map<String, dynamic> getRawDataMap() {
@@ -128,15 +126,15 @@ class PrivateGroupSchema {
     data['groupId'] = groupId;
     data['type'] = type;
     data['name'] = name;
-    data['deleteAfterSeconds'] = options?.deleteAfterSeconds;
+    data['deleteAfterSeconds'] = options.deleteAfterSeconds;
     return data.sortByKey();
   }
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
       'id': id,
-      'create_at': createAt ?? DateTime.now().millisecondsSinceEpoch,
-      'update_at': updateAt ?? DateTime.now().millisecondsSinceEpoch,
+      'create_at': createAt,
+      'update_at': updateAt,
       'group_id': groupId,
       'type': type,
       'version': version,
@@ -145,8 +143,8 @@ class PrivateGroupSchema {
       'avatar': Path.convert2Local(avatar?.path),
       'joined': joined ? 1 : 0,
       'is_top': isTop ? 1 : 0,
-      'options': jsonEncode(options?.toMap() ?? Map()),
-      'data': jsonEncode(data ?? Map()),
+      'options': jsonEncode(options.toMap()),
+      'data': jsonEncode(data),
     };
     return map;
   }
@@ -154,8 +152,8 @@ class PrivateGroupSchema {
   static PrivateGroupSchema fromMap(Map<String, dynamic> e) {
     var schema = PrivateGroupSchema(
       id: e['id'],
-      createAt: e['create_at'],
-      updateAt: e['update_at'],
+      createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
+      updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       groupId: e['group_id'] ?? "",
       type: e['type'] ?? PrivateGroupType.normal,
       version: e['version'],
@@ -165,15 +163,13 @@ class PrivateGroupSchema {
       joined: (e['joined'] != null) && (e['joined'] == 1) ? true : false,
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
-    // options
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       schema.options = OptionsSchema.fromMap(options ?? Map());
     }
-    // data
     if (e['data']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? data = Util.jsonFormatMap(e['data']);
-      if (data != null) schema.data?.addAll(data);
+      if (data != null) schema.data.addAll(data);
     }
     return schema;
   }
