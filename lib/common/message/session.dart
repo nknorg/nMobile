@@ -127,7 +127,7 @@ class SessionCommon with Tag {
       } else if (oldLastMsg == null) {
         newLastMsg = lastMsg;
       } else {
-        if ((lastMsg.sendAt ?? 0) >= (oldLastMsg.sendAt ?? 0)) {
+        if (lastMsg.sendAt >= oldLastMsg.sendAt) {
           newLastMsg = lastMsg;
         } else {
           newLastMsg = oldLastMsg;
