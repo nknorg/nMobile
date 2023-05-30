@@ -30,8 +30,8 @@ class MessageStorage with Tag {
         `sender` VARCHAR(100),
         `target_id` VARCHAR(200),
         `target_type` INT,
-        `status` INT,
         `is_outbound` BOOLEAN DEFAULT 0,
+        `status` INT,
         `send_at` BIGINT,
         `receive_at` BIGINT,
         `is_delete` BOOLEAN DEFAULT 0,
@@ -49,14 +49,21 @@ class MessageStorage with Tag {
     await db.execute(createSQL);
     // index
     await db.execute('CREATE UNIQUE INDEX `index_message_msg_id` ON `$tableName` (`msg_id`)');
-    await db.execute('CREATE INDEX `index_message_status_send_at` ON `$tableName` (`status`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_status_is_delete_send_at` ON `$tableName` (`status`, `is_delete`, `send_at`)');
+    // queryListByTarget
     await db.execute('CREATE INDEX `index_message_target_id_target_type_send_at` ON `$tableName` (`target_id`, `target_type`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_type_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_status_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `type`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `send_at`)');
     await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `is_delete`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `is_delete`, `send_at`)');
+    // queryListByOutboundStatus
+    await db.execute('CREATE INDEX `index_message_is_outbound_status_send_at` ON `$tableName` (`is_outbound`, `status`, `send_at`)');
+    await db.execute('CREATE INDEX `index_message_is_outbound_status_is_delete_send_at` ON `$tableName` (`is_outbound`, `status`, `is_delete`, `send_at`)');
+    // queryListByTargetTypesWithNoDelete
+    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_type_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `type`, `send_at`)');
+    // queryListByTargetDeviceQueueId
     await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id_send_at` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`, `send_at`)');
   }
 
@@ -196,9 +203,11 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByTarget(String? targetId, int targetType, {int? status, bool? isDelete, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTarget(String? targetId, int targetType, {bool? isOutbound, int? status, bool? isDelete, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
+    String whereOutbound = isOutbound == null ? "" : "AND is_outbound = ?";
+    List valueOutbound = isOutbound == null ? [] : [isOutbound];
     String whereStatus = status == null ? "" : "AND status = ?";
     List valueStatus = status == null ? [] : [status];
     String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
@@ -208,8 +217,9 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'target_id = ? AND target_type = ? $whereStatus $whereIsDelete',
+          where: 'target_id = ? AND target_type = ? $whereOutbound $whereStatus $whereIsDelete',
           whereArgs: [targetId, targetType]
+            ..addAll(valueOutbound)
             ..addAll(valueStatus)
             ..addAll(valueIsDelete),
           orderBy: 'send_at DESC',
@@ -218,7 +228,7 @@ class MessageStorage with Tag {
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryListByTarget - empty - targetId:$targetId - targetType:$targetType - status:$status");
+        // logger.v("$TAG - queryListByTarget - empty - targetId:$targetId - targetType:$targetType - isOutbound:$isOutbound - status:$status - isDelete:$isDelete");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
@@ -228,7 +238,7 @@ class MessageStorage with Tag {
         // logText += "    \n$item";
         result.add(item);
       });
-      // logger.v("$TAG - queryListByTarget - success - targetId:$targetId - targetType:$targetType - status:$status - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByTarget - success - targetId:$targetId - targetType:$targetType - isOutbound:$isOutbound - status:$status - isDelete:$isDelete - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -236,9 +246,8 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int targetType = 0, bool? isDelete, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByOutboundStatus(bool isOutbound, int status, {bool? isDelete, int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
-    if (status == null) return [];
     String whereIsDelete = (isDelete == null) ? "" : "AND is_delete = ?";
     List valueIsDelete = (isDelete == null) ? [] : [isDelete ? 1 : 0];
     try {
@@ -246,15 +255,15 @@ class MessageStorage with Tag {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: (targetId?.isNotEmpty == true) ? 'target_id = ? AND target_type = ? AND status = ? $whereIsDelete' : 'status = ? $whereIsDelete',
-          whereArgs: (targetId?.isNotEmpty == true) ? ([targetId, targetType, status]..addAll(valueIsDelete)) : ([status]..addAll(valueIsDelete)),
+          where: 'is_outbound = ? AND status = ? $whereIsDelete',
+          whereArgs: [isOutbound, status]..addAll(valueIsDelete),
           orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
         );
       });
       if (res == null || res.isEmpty) {
-        // logger.v("$TAG - queryListByStatus - empty - status:$status - targetId:$targetId - targetType:$targetType");
+        // logger.v("$TAG - queryListByOutboundStatus - empty - isOutbound:$isOutbound - status:$status - isDelete:$isDelete");
         return [];
       }
       List<MessageSchema> result = <MessageSchema>[];
@@ -264,7 +273,7 @@ class MessageStorage with Tag {
         // logText += "    \n$item";
         result.add(item);
       });
-      // logger.v("$TAG - queryListByStatus - success - status:$status - targetId:$targetId - targetType:$targetType - length:${result.length} - items:$logText");
+      // logger.v("$TAG - queryListByOutboundStatus - success - isOutbound:$isOutbound - status:$status - isDelete:$isDelete - length:${result.length} - items:$logText");
       return result;
     } catch (e, st) {
       handleError(e, st);
@@ -272,7 +281,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<int> queryCountByTargetStatus(String? targetId, int targetType, int status, {bool? isDelete}) async {
+  /*Future<int> queryCountByTargetStatus(String? targetId, int targetType, int status, {bool? isDelete}) async {
     if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
@@ -293,9 +302,9 @@ class MessageStorage with Tag {
       handleError(e, st);
     }
     return 0;
-  }
+  }*/
 
-  Future<List<MessageSchema>> queryListByTargetTypes(String? targetId, int targetType, List<String> types, {bool? isDelete, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetTypesWithNoDelete(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     if (types.isEmpty) return [];
@@ -308,17 +317,13 @@ class MessageStorage with Tag {
       }
       whereTypes = "AND ( " + whereTypes + " )";
     }
-    String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
-    List valueIsDelete = isDelete == null ? [] : [isDelete ? 1 : 0];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
           tableName,
           columns: ['*'],
-          where: 'target_id = ? AND target_type = ? $whereTypes $whereIsDelete',
-          whereArgs: [targetId, targetType]
-            ..addAll(types)
-            ..addAll(valueIsDelete),
+          where: 'target_id = ? AND target_type = ? AND is_delete = ? $whereTypes',
+          whereArgs: [targetId, targetType, 0]..addAll(types),
           orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
