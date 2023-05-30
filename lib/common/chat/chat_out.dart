@@ -611,6 +611,7 @@ class ChatOutCommon with Tag {
     return result != null;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<MessageSchema?> sendPrivateGroupInvitee(String? targetAddress, PrivateGroupSchema? privateGroup, PrivateGroupItemSchema? groupItem) async {
     // if (!(await clientCommon.waitClientOk())) return null;
@@ -644,6 +645,7 @@ class ChatOutCommon with Tag {
     return await _send(message);
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupAccept(String? targetAddress, PrivateGroupItemSchema? groupItem) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -655,6 +657,7 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupQuit(String? targetAddress, PrivateGroupItemSchema? groupItem) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -666,6 +669,7 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupOptionRequest(String? targetAddress, String? groupId, {int gap = 0}) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -689,6 +693,7 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupOptionResponse(List<String> targetAddressList, PrivateGroupSchema? group) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -700,6 +705,7 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupMemberRequest(String? targetAddress, String? groupId, {int gap = 0}) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -723,6 +729,7 @@ class ChatOutCommon with Tag {
     return pid?.isNotEmpty == true;
   }
 
+  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> sendPrivateGroupMemberResponse(List<String> targetAddressList, PrivateGroupSchema? schema, List<PrivateGroupItemSchema> members) async {
     if (!(await clientCommon.waitClientOk())) return false;
@@ -840,6 +847,7 @@ class ChatOutCommon with Tag {
     return message;
   }
 
+  // TODO:GG test
   Future<MessageSchema?> _send(
     MessageSchema? message, {
     bool insert = true,
@@ -954,6 +962,7 @@ class ChatOutCommon with Tag {
     return pid;
   }
 
+  // TODO:GG test
   Future<Uint8List?> _sendWithTopic(TopicSchema? topic, MessageSchema? message, {bool notification = false}) async {
     String? data = message?.data;
     if ((topic == null) || (message == null) || (data == null)) {
@@ -1038,6 +1047,7 @@ class ChatOutCommon with Tag {
     return pid;
   }
 
+  // TODO:GG test
   Future<Uint8List?> _sendWithPrivateGroup(PrivateGroupSchema? group, MessageSchema? message, {bool notification = false}) async {
     String? data = message?.data;
     if ((group == null) || (message == null) || (data == null)) {

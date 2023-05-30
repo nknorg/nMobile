@@ -44,12 +44,13 @@ class MessageCommon with Tag {
 
   String? chattingTargetId;
 
+  // TODO:GG test
   bool isTargetMessagePageVisible(String? targetId) {
     bool inSessionPage = chattingTargetId == targetId;
     bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
     bool needAuth = (application.goForegroundAt - application.goBackgroundAt) >= Settings.gapClientReAuthMs;
     bool maybeAuthing = needAuth && ((DateTime.now().millisecondsSinceEpoch - application.goForegroundAt) < 500); // wait go app_screen
-    return inSessionPage && isAppForeground && !maybeAuthing && !application.isAuthProgress;
+    return inSessionPage && isAppForeground && !maybeAuthing && !application.inAuthProgress;
   }
 
   ///*********************************************************************************///
@@ -119,6 +120,7 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
   }
 
+  // TODO:GG test
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool delDeep = !message.canReceipt ? true : (message.isOutbound ? (message.status >= MessageStatus.Receipt) : (message.status >= MessageStatus.Read));
@@ -235,6 +237,7 @@ class MessageCommon with Tag {
   ///************************************ Handle *************************************///
   ///*********************************************************************************///
 
+  // TODO:GG test
   Future<bool> isMessageReceived(MessageSchema message) async {
     MessageSchema? exists = await query(message.msgId);
     if (exists != null) return true;
@@ -254,6 +257,7 @@ class MessageCommon with Tag {
     return false;
   }
 
+  // TODO:GG test
   Future<bool> refreshTargetReceivedMessagesTag(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return false;
     if ((targetType != SessionType.CONTACT) && (targetType != SessionType.PRIVATE_GROUP)) return false;
@@ -299,6 +303,7 @@ class MessageCommon with Tag {
     return data != null;
   }
 
+  // TODO:GG test
   Future<bool> onSessionDelete(String? targetId, int targetType) async {
     // received tags
     if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {
@@ -311,7 +316,7 @@ class MessageCommon with Tag {
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
         List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.sendAt ?? 0) > minSendAt).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => element.sendAt > minSendAt).toList();
         messageList.addAll(needTags);
         if (receiveList.length > needTags.length) break;
         if (result.length < limit) break;
@@ -319,7 +324,7 @@ class MessageCommon with Tag {
       for (int offset = 0; true; offset += limit) {
         List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
         List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => (element.sendAt ?? 0) > minSendAt).toList();
+        List<MessageSchema> needTags = receiveList.where((element) => element.sendAt > minSendAt).toList();
         messageList.addAll(needTags);
         if (receiveList.length > needTags.length) break;
         if (result.length < limit) break;
@@ -370,6 +375,7 @@ class MessageCommon with Tag {
     return true;
   }
 
+  // TODO:GG test
   Future<int> readMessagesBySelf(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return 0;
     int limit = 20;
@@ -398,6 +404,7 @@ class MessageCommon with Tag {
     return msgIds.length;
   }
 
+  // TODO:GG test
   Future<int> correctMessageRead(String? targetId, int targetType, int? lastSendAt) async {
     if (targetId == null || targetId.isEmpty || lastSendAt == null || lastSendAt == 0) return 0;
     int limit = 20;
@@ -406,7 +413,7 @@ class MessageCommon with Tag {
     List<MessageSchema> unReadList = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-      List<MessageSchema> needReads = result.where((element) => element.isOutbound && ((element.sendAt ?? 0) <= (lastSendAt - readMinGap))).toList();
+      List<MessageSchema> needReads = result.where((element) => element.isOutbound && (element.sendAt <= (lastSendAt - readMinGap))).toList();
       unReadList.addAll(needReads);
       if (result.length < limit) break;
     }

@@ -1051,8 +1051,8 @@ class PrivateGroupCommon with Tag {
       );
       message.deviceId = "";
       message.sender = schema.invitee ?? "";
-      message.status = MessageStatus.Read;
       message.isOutbound = schema.invitee == selfAddress;
+      message.status = MessageStatus.Read;
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       await chatInCommon.onMessageReceive(message);
@@ -1152,8 +1152,8 @@ class PrivateGroupCommon with Tag {
       );
       message.deviceId = "";
       message.sender = item.invitee ?? "";
-      message.status = MessageStatus.Read;
       message.isOutbound = item.invitee == selfAddress;
+      message.status = MessageStatus.Read;
       message.sendAt = DateTime.now().millisecondsSinceEpoch;
       message.receiveAt = DateTime.now().millisecondsSinceEpoch;
       await chatInCommon.onMessageReceive(message);

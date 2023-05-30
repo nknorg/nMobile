@@ -443,8 +443,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
   Widget _widgetBubbleInfoBottom() {
     Color color = _message.isOutbound ? application.theme.fontLightColor.withAlpha(178) : application.theme.fontColor2.withAlpha(178);
 
-    int? sendAt = _message.reallySendAt;
-    String sendTime = ((sendAt != null) && (sendAt != 0)) ? Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(sendAt)) : "";
+    String sendTime = Time.formatChatTime(DateTime.fromMillisecondsSinceEpoch(_message.sendAt));
     bool isSending = _message.status == MessageStatus.Sending;
 
     bool showTime = isSending || widget.showTimeAndStatus;

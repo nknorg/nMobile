@@ -26,6 +26,11 @@ class MessageStatus {
   static const int Receipt = 130; // out
   static const int Received = 200; // in
   static const int Read = 310; // out+in
+  // static const int Error = -10;
+  // static const int Sending = 0;
+  // static const int Success = 10;
+  // static const int Receipt = 20;
+  // static const int Read = 30;
 }
 
 class MessageContentType {
@@ -76,10 +81,10 @@ class MessageSchema {
   String targetId; // (required) <-> target_id
   int targetType; // (required) <-> target_type
 
-  int status; // <-> status
   bool isOutbound; // <-> is_outbound
+  int status; // <-> status
 
-  int? sendAt; // <-> send_at (== create_at/send_at)
+  int sendAt; // <-> send_at (== create_at/send_at)
   int? receiveAt; // <-> receive_at (== receive_at or ack_at)
 
   bool isDelete; // <-> is_delete
@@ -103,8 +108,8 @@ class MessageSchema {
     required this.targetId,
     required this.targetType,
     // status
-    required this.status,
     required this.isOutbound,
+    required this.status,
     // at
     required this.sendAt,
     this.receiveAt,
@@ -117,8 +122,8 @@ class MessageSchema {
     this.options,
     this.data,
   }) {
-    if (options == null) options = Map();
     contentType = futureContentType(contentType);
+    if (options == null) options = Map();
   }
 
   bool get isTargetContact {
@@ -189,10 +194,6 @@ class MessageSchema {
     return (content != null) && (content is File);
   }
 
-  int? get reallySendAt {
-    return isOutbound ? (sendAt ?? MessageOptions.getSendSuccessAt(options)) : (sendAt ?? receiveAt);
-  }
-
   /// from receive
   static MessageSchema? fromReceive(OnMessage? raw) {
     if (raw == null) {
@@ -233,8 +234,8 @@ class MessageSchema {
       targetId: targetId,
       targetType: targetType,
       // status
-      status: MessageStatus.Received,
       isOutbound: false,
+      status: MessageStatus.Received,
       // at
       sendAt: int.tryParse(data['timestamp']?.toString() ?? "") ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: DateTime.now().millisecondsSinceEpoch,
@@ -294,8 +295,8 @@ class MessageSchema {
       targetId: targetId,
       targetType: targetType,
       // status
-      status: MessageStatus.Sending,
       isOutbound: true,
+      status: MessageStatus.Sending,
       // at
       sendAt: DateTime.now().millisecondsSinceEpoch,
       receiveAt: null, // set in receive ACK
@@ -412,8 +413,8 @@ class MessageSchema {
       'target_id': targetId,
       'target_type': targetType,
       // status
-      'status': status,
       'is_outbound': isOutbound ? 1 : 0,
+      'status': status,
       // at
       'send_at': sendAt,
       'receive_at': receiveAt,
@@ -468,10 +469,10 @@ class MessageSchema {
       targetId: e['target_id'] ?? "",
       targetType: e['target_type'] ?? 0,
       // status
-      status: e['status'] ?? 0,
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
+      status: e['status'] ?? 0,
       // at
-      sendAt: e['send_at'] != null ? e['send_at'] : null,
+      sendAt: e['send_at'] != null ? e['send_at'] : DateTime.now().millisecondsSinceEpoch,
       receiveAt: e['receive_at'] != null ? e['receive_at'] : null,
       // delete
       isDelete: (e['is_delete'] != null && e['is_delete'] == 1) ? true : false,
@@ -610,8 +611,8 @@ class MessageSchema {
       targetId: piece.targetId,
       targetType: piece.targetType,
       // status
-      status: MessageStatus.Received,
       isOutbound: false,
+      status: MessageStatus.Received,
       // at
       sendAt: piece.sendAt,
       receiveAt: DateTime.now().millisecondsSinceEpoch,
@@ -708,11 +709,11 @@ class MessageSchema {
 
   @override
   String toString() {
-    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, data: $data, temp: $temp}';
+    return 'MessageSchema{pid: $pid, msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, isOutbound: $isOutbound, status: $status, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, content: $content, options: $options, data: $data, temp: $temp}';
   }
 
   String toStringSimple() {
-    return 'MessageSchema{msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, status: $status, isOutbound: $isOutbound, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
+    return 'MessageSchema{msgId: $msgId, deviceId: $deviceId, queueId: $queueId, sender: $sender, targetId: $targetId, targetType: $targetType, isOutbound: $isOutbound, status: $status, sendAt: $sendAt, receiveAt: $receiveAt, isDelete: $isDelete, deleteAt: $deleteAt, contentType: $contentType, options: $options, temp: $temp}';
   }
 }
 

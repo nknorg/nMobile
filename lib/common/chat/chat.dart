@@ -146,7 +146,7 @@ class ChatCommon with Tag {
           exist.options.updateBurnAfterAt = updateBurnAfterAt;
           var options = await contactCommon.setOptionsBurn(exist.address, burnAfterSeconds, updateBurnAfterAt, notify: true);
           if (options != null) exist.options = options;
-        } else if ((message.sendAt ?? 0) > existUpdateAt) {
+        } else if (message.sendAt > existUpdateAt) {
           // mine updated latest
           logger.i("$TAG - contactHandle - burning to sync - native:$existSeconds - remote:$burnAfterSeconds - sender:${message.sender}");
           chatOutCommon.sendContactOptionsBurn(exist.address, (existSeconds ?? 0), existUpdateAt); // await
@@ -332,6 +332,7 @@ class ChatCommon with Tag {
     return exist;
   }
 
+  // TODO:GG test
   Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
     if (!message.isTargetGroup) return null;
     if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
@@ -378,6 +379,7 @@ class ChatCommon with Tag {
     return exists;
   }
 
+  // TODO:GG test
   Future sessionHandle(MessageSchema message) async {
     if (!message.canDisplay) return;
     if (message.targetId.isEmpty) return;
@@ -413,6 +415,7 @@ class ChatCommon with Tag {
     return;
   }
 
+  // TODO:GG test
   MessageSchema burningHandle(MessageSchema message, {bool notify = true}) {
     if (message.isTargetTopic) return message;
     if (!message.canBurning || message.isDelete) return message;
@@ -430,6 +433,7 @@ class ChatCommon with Tag {
     return message;
   }
 
+  // TODO:GG test
   MessageSchema burningTick(MessageSchema message, String keyPrefix, {Function? onTick}) {
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
@@ -455,7 +459,7 @@ class ChatCommon with Tag {
     } else {
       if (!message.isDelete) {
         logger.d("$TAG - burningTick - delete(now) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
-        message.isDelete = true;
+        // message.isDelete = true; TODO:GG delete?
         messageCommon.messageDelete(message, notify: true); // await
       } else {
         logger.w("$TAG - burningTick - delete(wrong) - msgId:${message.msgId} - deleteAt:${message.deleteAt} - now:${DateTime.now()}");
