@@ -989,7 +989,7 @@ class TopicCommon with Tag {
     List<SubscriberSchema> subscribers = await subscriberCommon.queryListByTopicIdPerm(topicId, append.permPage, SubscriberSchema.PermPageSize * 2);
     subscribers.forEach((SubscriberSchema dbItem) {
       if ((dbItem.contactAddress.isNotEmpty == true) && (dbItem.contactAddress != append.contactAddress)) {
-        int gap = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
+        int gap = DateTime.now().millisecondsSinceEpoch - dbItem.updateAt;
         if (gap < Settings.gapTxPoolUpdateDelayMs) {
           if ((dbItem.status == SubscriberStatus.InvitedSend) || (dbItem.status == SubscriberStatus.InvitedReceipt) || (dbItem.status == SubscriberStatus.Subscribed)) {
             // add to accepts
