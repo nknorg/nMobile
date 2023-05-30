@@ -83,8 +83,8 @@ class SubscriberCommon with Tag {
         }
       }
       // filter in txPool
-      var createGap = DateTime.now().millisecondsSinceEpoch - (dbItem.createAt ?? 0);
-      var updateGap = DateTime.now().millisecondsSinceEpoch - (dbItem.updateAt ?? 0);
+      var createGap = DateTime.now().millisecondsSinceEpoch - dbItem.createAt;
+      var updateGap = DateTime.now().millisecondsSinceEpoch - dbItem.updateAt;
       if (createGap < Settings.gapTxPoolUpdateDelayMs) {
         if (dbItem.status == SubscriberStatus.None) {
           logger.d("$TAG - refreshSubscribers - DB created just now, next by status none - status:${dbItem.status} - perm:${dbItem.permPage} - dbSub:$dbItem");
