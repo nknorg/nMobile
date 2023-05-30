@@ -70,10 +70,10 @@ class _TopicAvatarState extends BaseStateFulWidgetState<TopicAvatar> {
     }
     return CircleAvatar(
       radius: radius,
-      backgroundColor: widget.topic.options?.avatarBgColor ?? application.theme.primaryColor.withAlpha(19),
+      backgroundColor: widget.topic.options.avatarBgColor ?? application.theme.primaryColor.withAlpha(19),
       child: Label(
         name.length > 2 ? name.substring(0, 2).toUpperCase() : name,
-        color: widget.topic.options?.avatarNameColor ?? application.theme.fontLightColor,
+        color: widget.topic.options.avatarNameColor ?? application.theme.fontLightColor,
         type: LabelType.h3,
         fontSize: radius / 3 * 2,
       ),
