@@ -650,8 +650,8 @@ class RPC {
     return count;
   }
 
-  static String genTopicHash(String topic) {
-    var t = topic.replaceFirst(RegExp(r'^#*'), '');
+  static String genTopicHash(String topicId) {
+    var t = topicId.replaceFirst(RegExp(r'^#*'), '');
     return 'dchat' + hexEncode(Uint8List.fromList(Hash.sha1(t)));
   }
 }

@@ -64,7 +64,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
 
   _selectAvatarPicture() async {
     String savePath = await Path.getRandomFile(clientCommon.getPublicKey(), DirType.profile, subPath: null, fileExt: FileHelper.DEFAULT_IMAGE_EXT);
-    application.isSystemMediaSelecting = true;
+    application.inSystemSelecting = true;
     File? picked = await MediaPicker.pickImage(
       cropStyle: CropStyle.rectangle,
       cropRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
@@ -72,7 +72,7 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
       bestSize: Settings.sizeAvatarBest,
       savePath: savePath,
     );
-    application.isSystemMediaSelecting = false;
+    application.inSystemSelecting = false;
     if (picked == null || !picked.existsSync()) {
       // Toast.show("Open camera or MediaLibrary for nMobile to update your profile");
       return;

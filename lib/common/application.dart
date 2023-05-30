@@ -27,11 +27,11 @@ class Application {
   AppLifecycleState appLifecycleState = AppLifecycleState.resumed;
 
   bool inBackGround = false;
+  bool inAuthProgress = false;
+  bool inSystemSelecting = false;
+
   int goBackgroundAt = 0;
   int goForegroundAt = 0;
-
-  bool isAuthProgress = false;
-  bool isSystemMediaSelecting = false;
 
   Application();
 
@@ -81,9 +81,9 @@ class Application {
   bool _isGoBackground(List<AppLifecycleState> states) {
     if (states.length >= 2) {
       if (Platform.isIOS) {
-        return !isSystemMediaSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
+        return !inSystemSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       } else if (Platform.isAndroid) {
-        return !isSystemMediaSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
+        return !inSystemSelecting && (states[0] == AppLifecycleState.inactive) && (states[1] == AppLifecycleState.paused);
       }
     }
     return false;
