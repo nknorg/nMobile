@@ -37,13 +37,6 @@ class ChatCommon with Tag {
 
   Future startInitChecks({int? delay}) async {
     if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
-    // receipts
-    List<MessageSchema> receiptList = await messageCommon.queryAllReceivedSuccess();
-    for (var i = 0; i < receiptList.length; i++) {
-      MessageSchema message = receiptList[i];
-      await chatOutCommon.sendReceipt(message);
-    }
-    if (receiptList.length > 0) logger.i("$TAG - startInitChecks - receipt_count:${receiptList.length}");
     // pings
     List<String> targetIds = [];
     final limit = Settings.maxCountPingSessions;
@@ -61,6 +54,14 @@ class ChatCommon with Tag {
     }
     int count = await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
     logger.i("$TAG - startInitChecks - ping_count:$count/${targetIds.length} - targetIds:$targetIds");
+    // receipts
+    await chatInCommon.waitReceiveQueues("startInitChecks");
+    List<MessageSchema> receiptList = await messageCommon.queryAllReceivedSuccess();
+    for (var i = 0; i < receiptList.length; i++) {
+      MessageSchema message = receiptList[i];
+      await chatOutCommon.sendReceipt(message);
+    }
+    if (receiptList.length > 0) logger.i("$TAG - startInitChecks - receipt_count:${receiptList.length}");
   }
 
   Future<int> resetMessageSending({bool ipfsReset = false}) async {
@@ -72,7 +73,7 @@ class ChatCommon with Tag {
         logger.w("$TAG - resetMessageSending - why is delete - targetId:${message.targetId} - message:${message.toStringSimple()}");
         await messageCommon.delete(message.msgId, message.contentType);
       } else if (message.canReceipt) {
-        logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringSimple()}");
+        logger.i("$TAG - resetMessageSending - send err set - targetId:${message.targetId} - message:${message.toStringSimple()}");
         if (message.contentType == MessageContentType.ipfs) {
           if (!ipfsReset) continue;
           String? ipfsHash = MessageOptions.getIpfsHash(message.options);
