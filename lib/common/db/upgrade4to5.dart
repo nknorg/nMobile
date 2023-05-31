@@ -67,7 +67,7 @@ class Upgrade4to5 {
     // convert all v2Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 30;
+    final limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
@@ -268,7 +268,7 @@ class Upgrade4to5 {
     // convert all v2Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 30;
+    final limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
@@ -425,7 +425,7 @@ class Upgrade4to5 {
     // convert all v4Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 30;
+    final limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
@@ -567,7 +567,7 @@ class Upgrade4to5 {
     // convert all v2Data to v5Data
     int total = 0;
     int offset = 0;
-    int limit = 30;
+    final limit = 30;
     bool loop = true;
     while (loop) {
       List<Map<String, dynamic>>? results = await db.query(oldTableName, columns: ['*'], orderBy: 'id ASC', offset: offset, limit: limit);
@@ -719,14 +719,14 @@ class Upgrade4to5 {
         int? oldIsSendError = result["is_send_error"];
         // int? oldIsSuccess = result["is_success"];
         int? oldIsRead = result["is_read"];
-        int newStatus = MessageStatus.Read;
+        int newStatus = 310;
         if (newIsOutbound == 1) {
           if (oldIsSendError == 1) {
-            newStatus = MessageStatus.Error;
+            newStatus = 110;
           }
         } else if (newIsOutbound == 0) {
           if (oldIsRead == null || oldIsRead == 0) {
-            newStatus = MessageStatus.Received;
+            newStatus = 200;
           }
         }
         // at
@@ -844,7 +844,7 @@ class Upgrade4to5 {
     // contact
     int contactTotal = 0;
     int contactOffset = 0;
-    int contactLimit = 30;
+    final contactLimit = 30;
     bool contactLoop = true;
     while (contactLoop) {
       List<Map<String, dynamic>>? contacts = await db.query(ContactStorage.tableName, columns: ['*'], offset: contactOffset, limit: contactLimit);
@@ -882,7 +882,7 @@ class Upgrade4to5 {
         Map<String, dynamic> lastMsgMap = msgList[0];
 
         // unreadCount
-        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [MessageStatus.Received, 0, targetId]);
+        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [200, 0, targetId]);
         int unreadCount = Sqflite.firstIntValue(res) ?? 0;
 
         // duplicated
@@ -916,7 +916,7 @@ class Upgrade4to5 {
     // topic
     int topicTotal = 0;
     int topicOffset = 0;
-    int topicLimit = 30;
+    final topicLimit = 30;
     bool topicLoop = true;
     while (topicLoop) {
       List<Map<String, dynamic>>? topics = await db.query(TopicStorage.tableName, columns: ['*'], offset: topicOffset, limit: topicLimit);
@@ -948,7 +948,7 @@ class Upgrade4to5 {
         Map<String, dynamic> lastMsgMap = msgList[0];
 
         // unreadCount
-        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [MessageStatus.Received, 0, targetId]);
+        final res = await db.query(MessageStorage.tableName, columns: ['COUNT(id)'], where: 'status = ? AND is_delete = ? AND target_id = ?', whereArgs: [200, 0, targetId]);
         int unreadCount = Sqflite.firstIntValue(res) ?? 0;
 
         // duplicated
@@ -962,7 +962,7 @@ class Upgrade4to5 {
         Map<String, dynamic> entity = {
           'target_id': targetId,
           'type': SessionType.TOPIC,
-          'last_message_at': lastMsgMap['send_at'],
+          'last_message_at': lastMsgMap['send_at'] ?? 0,
           'last_message_options': (lastMsgMap.isNotEmpty == true) ? jsonEncode(lastMsgMap) : null,
           'is_top': (topic["is_top"]?.toString() == '1') ? 1 : 0,
           'un_read_count': (unreadCount < 0) ? 0 : unreadCount,
