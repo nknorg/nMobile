@@ -202,7 +202,7 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   }
 
   _initData() async {
-    int limit = 20;
+    final limit = 20;
     // contact
     List<ContactSchema> friends = [];
     for (int offset = 0; true; offset += limit) {

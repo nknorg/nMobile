@@ -109,7 +109,7 @@ class TopicStorage with Tag {
     return null;
   }
 
-  Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
+  Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -142,7 +142,7 @@ class TopicStorage with Tag {
     return [];
   }
 
-  Future<List<TopicSchema>> queryListByJoined(bool joined, {int? type, bool orderDesc = true, int offset = 0, int limit = 20}) async {
+  Future<List<TopicSchema>> queryListByJoined(bool joined, {int? type, bool orderDesc = true, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {

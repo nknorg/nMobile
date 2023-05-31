@@ -129,7 +129,7 @@ class DeviceInfoStorage with Tag {
     return null;
   }
 
-  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, int limit = 20}) async {
+  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (contactAddress == null || contactAddress.isEmpty) return [];
     try {

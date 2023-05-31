@@ -103,7 +103,7 @@ class SubscriberStorage with Tag {
     return null;
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, int limit = 20}) async {
+  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (topicId == null || topicId.isEmpty) return [];
     try {

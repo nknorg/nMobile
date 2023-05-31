@@ -1024,7 +1024,7 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupStorage.instance.query(groupId);
   }
 
-  Future<List<PrivateGroupSchema>> queryGroupListJoined({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) {
+  Future<List<PrivateGroupSchema>> queryGroupListJoined({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
     return PrivateGroupStorage.instance.queryListByJoined(true, type: type, orderDesc: orderDesc, offset: offset, limit: limit);
   }
 
@@ -1064,14 +1064,14 @@ class PrivateGroupCommon with Tag {
     return await PrivateGroupItemStorage.instance.queryByInvitee(groupId, invitee);
   }
 
-  Future<List<PrivateGroupItemSchema>> queryMembers(String? groupId, {int? perm, int offset = 0, int limit = 20}) async {
+  Future<List<PrivateGroupItemSchema>> queryMembers(String? groupId, {int? perm, int offset = 0, final limit = 20}) async {
     return await PrivateGroupItemStorage.instance.queryList(groupId, perm: perm, limit: limit, offset: offset);
   }
 
   Future<List<PrivateGroupItemSchema>> getMembersAll(String? groupId, {bool all = false}) async {
     if (groupId == null || groupId.isEmpty) return [];
     List<PrivateGroupItemSchema> members = [];
-    int limit = 20;
+    final limit = 20;
     // owner
     List<PrivateGroupItemSchema> result = await queryMembers(groupId, perm: PrivateGroupItemPerm.owner, offset: 0, limit: 1);
     members.addAll(result);

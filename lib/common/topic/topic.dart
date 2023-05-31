@@ -60,7 +60,7 @@ class TopicCommon with Tag {
 
   Future checkAndTryAllSubscribe() async {
     if (!(await clientCommon.waitClientOk())) return;
-    int limit = 20;
+    final limit = 20;
     List<TopicSchema> topicsWithReSubscribe = [];
     List<TopicSchema> topicsWithReUnSubscribe = [];
     List<TopicSchema> topicsWithSubscribeExpire = [];
@@ -147,7 +147,7 @@ class TopicCommon with Tag {
   @Deprecated('Replace by PrivateGroup')
   Future checkAndTryAllPermission() async {
     if (!(await clientCommon.waitClientOk())) return;
-    int limit = 20;
+    final limit = 20;
     List<TopicSchema> privateTopics = [];
     List<TopicSchema> permissionTopics = [];
     // topic permission resubscribe
@@ -1046,11 +1046,11 @@ class TopicCommon with Tag {
     return await TopicStorage.instance.query(topic);
   }
 
-  Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) {
+  Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
     return TopicStorage.instance.queryList(type: type, orderDesc: orderDesc, offset: offset, limit: limit);
   }
 
-  Future<List<TopicSchema>> queryListJoined({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) {
+  Future<List<TopicSchema>> queryListJoined({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
     return TopicStorage.instance.queryListByJoined(true, type: type, orderDesc: orderDesc, offset: offset, limit: limit);
   }
 

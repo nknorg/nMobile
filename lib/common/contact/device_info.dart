@@ -84,7 +84,7 @@ class DeviceInfoCommon with Tag {
     return await DeviceInfoStorage.instance.queryLatest(contactAddress);
   }
 
-  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, int limit = 20}) async {
+  Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, final limit = 20}) async {
     if (contactAddress == null || contactAddress.isEmpty) return [];
     return await DeviceInfoStorage.instance.queryListLatest(contactAddress, offset: offset, limit: limit);
   }

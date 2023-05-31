@@ -203,7 +203,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByTarget(String? targetId, int targetType, {bool? isOutbound, int? status, bool? isDelete, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTarget(String? targetId, int targetType, {bool? isOutbound, int? status, bool? isDelete, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     String whereOutbound = isOutbound == null ? "" : "AND is_outbound = ?";
@@ -246,7 +246,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByOutboundStatus(bool isOutbound, int status, {bool? isDelete, int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByOutboundStatus(bool isOutbound, int status, {bool? isDelete, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     String whereIsDelete = (isDelete == null) ? "" : "AND is_delete = ?";
     List valueIsDelete = (isDelete == null) ? [] : [isDelete ? 1 : 0];
@@ -304,7 +304,7 @@ class MessageStorage with Tag {
     return 0;
   }*/
 
-  Future<List<MessageSchema>> queryListByTargetTypesWithNoDelete(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetTypesWithNoDelete(String? targetId, int targetType, List<String> types, {int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     if (types.isEmpty) return [];
@@ -348,7 +348,7 @@ class MessageStorage with Tag {
     return [];
   }
 
-  Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     deviceId = deviceId ?? "";
