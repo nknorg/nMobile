@@ -207,7 +207,7 @@ class MessageStorage with Tag {
     if (db?.isOpen != true) return [];
     if (targetId == null || targetId.isEmpty) return [];
     String whereOutbound = isOutbound == null ? "" : "AND is_outbound = ?";
-    List valueOutbound = isOutbound == null ? [] : [isOutbound];
+    List valueOutbound = isOutbound == null ? [] : [isOutbound ? 1 : 0];
     String whereStatus = status == null ? "" : "AND status = ?";
     List valueStatus = status == null ? [] : [status];
     String whereIsDelete = isDelete == null ? "" : "AND is_delete = ?";
@@ -256,7 +256,7 @@ class MessageStorage with Tag {
           tableName,
           columns: ['*'],
           where: 'is_outbound = ? AND status = ? $whereIsDelete',
-          whereArgs: [isOutbound, status]..addAll(valueIsDelete),
+          whereArgs: [isOutbound ? 1 : 0, status]..addAll(valueIsDelete),
           orderBy: 'send_at DESC',
           offset: offset,
           limit: limit,
