@@ -98,7 +98,7 @@ class PrivateGroupItemStorage with Tag {
     return null;
   }
 
-  Future<List<PrivateGroupItemSchema>> queryList(String? groupId, {int? perm, int offset = 0, int limit = 20}) async {
+  Future<List<PrivateGroupItemSchema>> queryList(String? groupId, {int? perm, int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (groupId == null || groupId.isEmpty) return [];
     try {

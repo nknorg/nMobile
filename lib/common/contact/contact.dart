@@ -174,7 +174,7 @@ class ContactCommon with Tag {
     return await ContactStorage.instance.queryListByAddress(clientAddressList);
   }
 
-  Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, int limit = 20}) {
+  Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
     return ContactStorage.instance.queryList(type: type, orderDesc: orderDesc, offset: offset, limit: limit);
   }
 

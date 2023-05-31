@@ -192,7 +192,7 @@ class SessionCommon with Tag {
     return await SessionStorage.instance.query(targetId, type);
   }
 
-  Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) {
+  Future<List<SessionSchema>> queryListRecent({int offset = 0, final limit = 20}) {
     return SessionStorage.instance.queryListRecent(offset: offset, limit: limit);
   }
 

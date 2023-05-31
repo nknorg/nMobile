@@ -96,7 +96,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
   ParallelQueue _fetchMsgQueue = ParallelQueue("messages_fetch", onLog: (log, error) => error ? logger.w(log) : null);
 
-  int _pageLimit = 30;
+  final _pageLimit = 30;
   bool _moreLoading = false;
   List<MessageSchema> _messages = <MessageSchema>[];
 
@@ -235,7 +235,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       bool isLeft = response[0]["isLeft"] ?? true;
       String msgId = response[0]["msgId"]?.toString() ?? "";
       // medias
-      int limit = 10;
+      final limit = 10;
       List<MessageSchema> messages = [];
       List<Map<String, dynamic>> medias = [];
       while (medias.length < limit) {
@@ -430,7 +430,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   }
 
   Future _readMessages() async {
-    await messageCommon.readMessagesBySelf(this._targetId, this._targetType);
+    await messageCommon.readOtherSideMessagesBySelf(this._targetId, this._targetType);
   }
 
   Future _clearUnreadAndBadge() async {
