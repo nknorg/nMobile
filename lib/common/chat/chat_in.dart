@@ -469,8 +469,8 @@ class ChatInCommon with Tag {
       int updateAt = (content['updateBurnAfterAt'] as int?) ?? DateTime.now().millisecondsSinceEpoch;
       logger.i("$TAG - _receiveContactOptions - setBurning - sender:${received.sender} - burningSeconds:$burningSeconds - updateAt:${DateTime.fromMillisecondsSinceEpoch(updateAt)}");
       var options = await contactCommon.setOptionsBurn(contact.address, burningSeconds, updateAt, notify: true);
-      if (options != null) contact.options = options;
-      return options != null;
+      if (options == null) return false;
+      contact.options = options;
     } else if (optionsType == '1') {
       String deviceToken = content['deviceToken']?.toString() ?? "";
       if (deviceInfo == null) {

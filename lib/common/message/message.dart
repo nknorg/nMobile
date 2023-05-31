@@ -171,6 +171,9 @@ class MessageCommon with Tag {
           if (data == null) {
             logger.w("$TAG - messageDelete - contact setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
             success = false;
+          } else {
+            contact.data = data;
+            logger.d("$TAG - messageDelete - contact setReceivedMessages success - count:${contact.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
           }
         }
       } else if (message.isTargetGroup) {
@@ -180,6 +183,9 @@ class MessageCommon with Tag {
           if (data == null) {
             logger.w("$TAG - messageDelete - privateGroup setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
             success = false;
+          } else {
+            group.data = data;
+            logger.d("$TAG - messageDelete - privateGroup setReceivedMessages success - count:${group.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
           }
         }
       }
@@ -410,7 +416,6 @@ class MessageCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   Future<int> readOtherSideMessagesBySelf(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return 0;
     // query
@@ -433,7 +438,6 @@ class MessageCommon with Tag {
     return msgIds.length;
   }
 
-  // TODO:GG test
   Future<int> correctOwnSideMessagesRead(String? targetId, int targetType, int? lastSendAt) async {
     if (targetId == null || targetId.isEmpty || lastSendAt == null || lastSendAt == 0) return 0;
     int readMinGap = 10 * 1000; // 10s
