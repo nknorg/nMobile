@@ -467,6 +467,7 @@ class MessageCommon with Tag {
   Future<MessageSchema> loadMessageSendQueue(MessageSchema message) async {
     if (!message.canQueue) return message;
     if (message.isTargetContact && !message.isTargetSelf) {
+      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueue");
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // just can latest
       if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await newContactMessageQueueId(message.targetId, device.deviceId, message.msgId);
@@ -488,6 +489,7 @@ class MessageCommon with Tag {
   Future<MessageSchema> loadMessageSendQueueAgain(MessageSchema message) async {
     if (!message.canQueue) return message;
     if (message.isTargetContact && !message.isTargetSelf) {
+      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueueAgain");
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
       if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         String? oldQueueIds = MessageOptions.getMessageQueueIds(message.options);

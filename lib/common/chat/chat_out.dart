@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/client.dart';
+import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/push/remote_notification.dart';
 import 'package:nmobile/common/settings.dart';
@@ -146,7 +147,12 @@ class ChatOutCommon with Tag {
       bool notificationOpen = _other?.options.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.address); // just can latest
-      String? queueIds = deviceInfoCommon.joinQueueIdsByDevice(device);
+      String? queueIds;
+      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+        await Future.delayed(Duration(milliseconds: 1000));
+        await chatInCommon.waitReceiveQueue(device.contactAddress, "sendPing");
+        queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(device.contactAddress, device.deviceId);
+      }
       data = MessageData.getPing(
         isPing,
         profileVersion: _me?.profileVersion,
@@ -216,6 +222,8 @@ class ChatOutCommon with Tag {
     if (!(await clientCommon.waitClientOk())) return false;
     if (targetAddress == null || targetAddress.isEmpty) return false;
     if (targetDeviceId == null || targetDeviceId.isEmpty) return false;
+    await Future.delayed(Duration(milliseconds: 500));
+    await chatInCommon.waitReceiveQueue(targetAddress, "sendQueue");
     String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetAddress, targetDeviceId);
     if (queueIds == null) return false;
     String data = MessageData.getQueue(queueIds);
