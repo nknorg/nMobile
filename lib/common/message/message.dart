@@ -286,7 +286,6 @@ class MessageCommon with Tag {
   ///************************************ Handle *************************************///
   ///*********************************************************************************///
 
-  // TODO:GG test
   Future<bool> isMessageReceived(MessageSchema message) async {
     MessageSchema? exists = await query(message.msgId);
     if (exists != null) return true;
@@ -306,7 +305,6 @@ class MessageCommon with Tag {
     return false;
   }
 
-  // TODO:GG test
   Future<bool> refreshTargetReceivedMessagesTag(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return false;
     if ((targetType != SessionType.CONTACT) && (targetType != SessionType.PRIVATE_GROUP)) return false;
@@ -352,7 +350,6 @@ class MessageCommon with Tag {
     return data != null;
   }
 
-  // TODO:GG test
   Future<bool> onSessionDelete(String? targetId, int targetType) async {
     // received tags
     if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {

@@ -907,7 +907,6 @@ class ChatInCommon with Tag {
     await privateGroupCommon.updatePrivateGroupMembers(received.targetId, received.sender, groupId, version, members);
   }
 
-  // TODO:GG test
   Future<int> _deletePieces(String msgId) async {
     final limit = 20;
     List<MessageSchema> pieces = [];
@@ -929,7 +928,7 @@ class ChatInCommon with Tag {
             // logger.v("$TAG - _deletePieces - DELETE:PROGRESS - path:${(piece.content as File).path}");
             count++;
           } else {
-            logger.w("$TAG - _deletePieces - DELETE:ERROR - NoExists - path:${(piece.content as File).path}");
+            // logger.v("$TAG - _deletePieces - DELETE:NO_EXISTS - path:${(piece.content as File).path}");
           }
         } else {
           logger.w("$TAG - _deletePieces - DELETE:ERROR - empty:${piece.content?.toString()}");
