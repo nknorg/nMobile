@@ -126,7 +126,7 @@ class SessionStorage with Tag {
     return null;
   }
 
-  Future<List<SessionSchema>> queryListRecent({int offset = 0, int limit = 20}) async {
+  Future<List<SessionSchema>> queryListRecent({int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {

@@ -121,7 +121,7 @@ class MessagePieceStorage with Tag {
         0;
   }
 
-  Future<List<MessageSchema>> queryList(String? msgId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryList(String? msgId, {int offset = 0, final limit = 20}) async {
     if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty) return [];
     try {

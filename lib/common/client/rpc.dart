@@ -586,7 +586,7 @@ class RPC {
     // call
     Map<String, dynamic>? subscribers;
     int offset = 0;
-    int limit = 1000;
+    final limit = 1000;
     int tryTimes = 0;
     while (tryTimes < maxTryTimes) {
       Map<String, dynamic>? subs = await func(offset, limit);

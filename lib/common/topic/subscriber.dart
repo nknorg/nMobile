@@ -53,7 +53,7 @@ class SubscriberCommon with Tag {
   Future refreshSubscribers(String? topicId, String? ownerPubKey, {bool meta = false, bool txPool = true}) async {
     if (topicId == null || topicId.isEmpty) return [];
     // db
-    int limit = 20;
+    final limit = 20;
     List<SubscriberSchema> dbSubscribers = [];
     for (int offset = 0; true; offset += limit) {
       List<SubscriberSchema> result = await queryListByTopicId(topicId, offset: offset, limit: limit);
@@ -480,7 +480,7 @@ class SubscriberCommon with Tag {
     return await SubscriberStorage.instance.query(topicId, contactAddress);
   }
 
-  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, int limit = 20}) {
+  Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, final limit = 20}) {
     return SubscriberStorage.instance.queryListByTopicId(topicId, status: status, offset: offset, limit: limit);
   }
 
