@@ -9,7 +9,7 @@ class TaskService {
   static const KEY_CLIENT_CONNECT = "client_connect";
   static const KEY_SUBSCRIBE_CHECK = "subscribe_check";
   static const KEY_PERMISSION_CHECK = "permission_check";
-  static const KEY_MSG_BURNING_ = "message_burning_";
+  static const KEY_MSG_BURNING = "message_burning";
 
   ParallelQueue _queue = ParallelQueue("task_service", onLog: (log, error) => error ? logger.w(log) : null);
 

@@ -62,7 +62,7 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
     _lastMsg = (msgOptions != null) ? MessageSchema.fromMap(msgOptions) : null;
     // burning
     if ((_lastMsg?.deleteAt != null) && ((_lastMsg?.deleteAt ?? 0) > 0)) {
-      _lastMsg = chatCommon.burningTick(_lastMsg!, "session");
+      _lastMsg = chatCommon.burningTick(_lastMsg!);
     }
   }
 
