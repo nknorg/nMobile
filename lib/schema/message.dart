@@ -20,17 +20,11 @@ import 'package:nmobile/utils/util.dart';
 import 'package:uuid/uuid.dart';
 
 class MessageStatus {
-  static const int Sending = 100; // out
-  static const int Error = 110; // out
-  static const int Success = 120; // out
-  static const int Receipt = 130; // out
-  static const int Received = 200; // in
-  static const int Read = 310; // out+in
-  // static const int Error = -10;
-  // static const int Sending = 0;
-  // static const int Success = 10;
-  // static const int Receipt = 20;
-  // static const int Read = 30;
+  static const int Error = -10;
+  static const int Sending = 0;
+  static const int Success = 10;
+  static const int Receipt = 20;
+  static const int Read = 30;
 }
 
 class MessageContentType {
@@ -235,7 +229,7 @@ class MessageSchema {
       targetType: targetType,
       // status
       isOutbound: false,
-      status: MessageStatus.Received,
+      status: MessageStatus.Success,
       // at
       sendAt: int.tryParse(data['timestamp']?.toString() ?? "") ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: DateTime.now().millisecondsSinceEpoch,
@@ -247,6 +241,7 @@ class MessageSchema {
       options: (data['options'] is Map) ? data['options'] : Map(),
       data: null, // just send set
     );
+    schema.status = schema.canReceipt ? schema.status : MessageStatus.Read;
     // content
     switch (schema.contentType) {
       case MessageContentType.receipt:
@@ -472,11 +467,11 @@ class MessageSchema {
       isOutbound: (e['is_outbound'] != null && e['is_outbound'] == 1) ? true : false,
       status: e['status'] ?? 0,
       // at
-      sendAt: e['send_at'] != null ? e['send_at'] : DateTime.now().millisecondsSinceEpoch,
-      receiveAt: e['receive_at'] != null ? e['receive_at'] : null,
+      sendAt: e['send_at'] ?? DateTime.now().millisecondsSinceEpoch,
+      receiveAt: e['receive_at'],
       // delete
       isDelete: (e['is_delete'] != null && e['is_delete'] == 1) ? true : false,
-      deleteAt: e['delete_at'] != null ? e['delete_at'] : null,
+      deleteAt: e['delete_at'],
       // data
       contentType: e['type'] ?? "",
       options: (e['options']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['options']) : null,
@@ -612,7 +607,7 @@ class MessageSchema {
       targetType: piece.targetType,
       // status
       isOutbound: false,
-      status: MessageStatus.Received,
+      status: MessageStatus.Success,
       // at
       sendAt: piece.sendAt,
       receiveAt: DateTime.now().millisecondsSinceEpoch,
@@ -625,6 +620,7 @@ class MessageSchema {
       options: piece.options,
       data: null, // just send set
     );
+    schema.status = schema.canReceipt ? schema.status : MessageStatus.Read;
     // pieces
     schema.options?.remove(MessageOptions.KEY_PIECE_PARENT_TYPE);
     schema.options?.remove(MessageOptions.KEY_PIECE_BYTES_LENGTH);

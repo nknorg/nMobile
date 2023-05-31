@@ -195,6 +195,9 @@ class ChatOutCommon with Tag {
     String data = MessageData.getReceipt(received.msgId);
     logger.i("$TAG - sendReceipt - dest:${received.sender} - msgId:${received.msgId}");
     Uint8List? pid = await _sendWithAddress([received.sender], data);
+    if ((pid?.isNotEmpty == true) && (messageCommon.chattingTargetId != received.targetId)) {
+      await messageCommon.updateMessageStatus(received, MessageStatus.Receipt, notify: false);
+    }
     return pid?.isNotEmpty == true;
   }
 
@@ -977,7 +980,7 @@ class ChatOutCommon with Tag {
       return null;
     }
     // subscribers
-    int limit = 20;
+    final limit = 20;
     List<SubscriberSchema> _subscribers = [];
     for (int offset = 0; true; offset += limit) {
       List<SubscriberSchema> result = await subscriberCommon.queryListByTopicId(topic.topicId, status: SubscriberStatus.Subscribed, offset: offset, limit: limit);
@@ -1020,17 +1023,18 @@ class ChatOutCommon with Tag {
         pid = (await sendMsg(destList, data))?.messageId;
       }
     }
+    bool success = destList.isEmpty || (destList.isNotEmpty && !(pid == null || pid.isEmpty));
     // self
-    if ((destList.isNotEmpty && (pid != null)) && selfIsReceiver && message.canReceipt) {
+    if (success && selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
-      if (destList.isEmpty) pid = _pid;
+      if (destList.isEmpty && (_pid != null)) pid = _pid;
     }
     // do not forget delete (replace by setJoined)
     // if (message.contentType == MessageContentType.topicUnsubscribe) {
     //   await topicCommon.delete(topic.id, notify: true);
     // }
-    if (pid == null || pid.isEmpty) return null;
+    if (!success) return null;
     // notification
     if (notification && destList.isNotEmpty) {
       contactCommon.queryListByAddress(destList).then((List<ContactSchema> contactList) async {
@@ -1092,13 +1096,14 @@ class ChatOutCommon with Tag {
         pid = (await sendMsg(destList, data))?.messageId;
       }
     }
+    bool success = destList.isEmpty || (destList.isNotEmpty && !(pid == null || pid.isEmpty));
     // self
-    if ((destList.isNotEmpty && (pid != null)) && selfIsReceiver && message.canReceipt) {
+    if (success && selfIsReceiver && message.canReceipt) {
       String data = MessageData.getReceipt(message.msgId);
       Uint8List? _pid = (await sendMsg([message.sender], data))?.messageId;
-      if (destList.isEmpty) pid = _pid;
+      if (destList.isEmpty && (_pid != null)) pid = _pid;
     }
-    if (pid == null || pid.isEmpty) return null;
+    if (!success) return null;
     // notification
     if (notification && destList.isNotEmpty) {
       contactCommon.queryListByAddress(destList).then((List<ContactSchema> contactList) async {

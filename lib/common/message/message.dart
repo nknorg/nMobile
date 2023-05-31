@@ -92,7 +92,7 @@ class MessageCommon with Tag {
     return MessageStorage.instance.query(msgId);
   }
 
-  Future<List<MessageSchema>> queryPieceList(String? msgId, {int offset = 0, int limit = 20}) async {
+  Future<List<MessageSchema>> queryPieceList(String? msgId, {int offset = 0, final limit = 20}) async {
     return await MessagePieceStorage.instance.queryList(msgId, offset: offset, limit: limit);
   }
 
@@ -100,24 +100,66 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByIds(msgIds);
   }
 
-  Future<List<MessageSchema>> queryListByStatus(int? status, {String? targetId, int targetType = 0, bool? isDelete, int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByStatus(status, targetId: targetId, targetType: targetType, isDelete: isDelete, offset: offset, limit: limit);
-  }
-
-  Future<List<MessageSchema>> queryListByTargetUnRead(String? targetId, int targetType, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTarget(targetId, targetType, status: MessageStatus.Received, isDelete: false, offset: offset, limit: limit);
-  }
-
-  Future<List<MessageSchema>> queryListByTargetVisible(String? targetId, int targetType, {int offset = 0, int limit = 20}) {
+  // TODO:GG test
+  Future<List<MessageSchema>> queryListByTargetVisible(String? targetId, int targetType, {int offset = 0, final limit = 20}) {
     return MessageStorage.instance.queryListByTarget(targetId, targetType, isDelete: false, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByTargetTypesVisible(String? targetId, int targetType, List<String> types, {int offset = 0, int limit = 20}) {
-    return MessageStorage.instance.queryListByTargetTypes(targetId, targetType, types, isDelete: false, offset: offset, limit: limit);
+  // TODO:GG test
+  Future<List<MessageSchema>> queryListByTargetTypesVisible(String? targetId, int targetType, List<String> types, {int offset = 0, final limit = 20}) {
+    return MessageStorage.instance.queryListByTargetTypesWithNoDelete(targetId, targetType, types, offset: offset, limit: limit);
   }
 
-  Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, int limit = 20}) {
+  Future<List<MessageSchema>> queryListByTargetDeviceQueueId(String? targetId, int targetType, String? deviceId, int queueId, {int offset = 0, final limit = 20}) {
     return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
+  }
+
+  // TODO:GG test
+  Future<List<MessageSchema>> queryAllSending() async {
+    List<MessageSchema> messages = [];
+    final limit = 20;
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByOutboundStatus(true, MessageStatus.Sending, offset: offset, limit: limit);
+      messages.addAll(result);
+      if (result.length < limit) break;
+    }
+    return messages;
+  }
+
+  // TODO:GG test
+  Future<List<MessageSchema>> queryAllReceivedSuccess() async {
+    List<MessageSchema> messages = [];
+    final limit = 20;
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByOutboundStatus(false, MessageStatus.Success, offset: offset, limit: limit);
+      messages.addAll(result);
+      if (result.length < limit) break;
+    }
+    return messages;
+  }
+
+  // TODO:GG test
+  Future<List<MessageSchema>> queryAllNoACKByTarget(String? targetId, int targetType) async {
+    List<MessageSchema> messages = [];
+    final limit = 20;
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(targetId, targetType, isOutbound: true, status: MessageStatus.Success, offset: offset, limit: limit);
+      messages.addAll(result);
+      if (result.length < limit) break;
+    }
+    return messages;
+  }
+
+  // TODO:GG test
+  Future<List<MessageSchema>> queryAllByTargetOutboundStatus(String? targetId, int targetType, bool isOutbound, int status) async {
+    List<MessageSchema> messages = [];
+    final limit = 20;
+    for (int offset = 0; true; offset += limit) {
+      List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(targetId, targetType, isOutbound: isOutbound, status: status, offset: offset, limit: limit);
+      messages.addAll(result);
+      if (result.length < limit) break;
+    }
+    return messages;
   }
 
   // TODO:GG test
@@ -148,6 +190,9 @@ class MessageCommon with Tag {
       }
       if (success == null) {
         success = (await delete(message.msgId, message.contentType)) > 0;
+        if (!success && ((await query(message.msgId)) == null)) {
+          success = true;
+        }
       }
     } else {
       if (!message.isDelete) {
@@ -157,7 +202,7 @@ class MessageCommon with Tag {
     }
     if (notify) onDeleteSink.add(message.msgId); // no need success
     // delete file
-    if (delDeep) {
+    if (delDeep && (success == true)) {
       if (message.isContentFile) {
         (message.content as File).exists().then((exist) {
           if (exist) {
@@ -313,21 +358,16 @@ class MessageCommon with Tag {
       int minSendAt = nowAt - gap;
       // query
       List<MessageSchema> messageList = [];
-      for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByStatus(MessageStatus.Received, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => element.sendAt > minSendAt).toList();
-        messageList.addAll(needTags);
-        if (receiveList.length > needTags.length) break;
-        if (result.length < limit) break;
-      }
-      for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await queryListByStatus(MessageStatus.Read, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-        List<MessageSchema> receiveList = result.where((element) => !element.isOutbound).toList();
-        List<MessageSchema> needTags = receiveList.where((element) => element.sendAt > minSendAt).toList();
-        messageList.addAll(needTags);
-        if (receiveList.length > needTags.length) break;
-        if (result.length < limit) break;
+      List<int> statusList = [MessageStatus.Success, MessageStatus.Receipt, MessageStatus.Read];
+      for (int i = 0; i < statusList.length; i++) {
+        int status = statusList[i];
+        for (int offset = 0; true; offset += limit) {
+          List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(targetId, targetType, isOutbound: false, status: status, offset: offset, limit: limit);
+          List<MessageSchema> needTags = result.where((element) => element.sendAt > minSendAt).toList();
+          messageList.addAll(needTags);
+          if (result.length > needTags.length) break;
+          if (result.length < limit) break;
+        }
       }
       // tag
       dynamic target;
@@ -376,17 +416,11 @@ class MessageCommon with Tag {
   }
 
   // TODO:GG test
-  Future<int> readMessagesBySelf(String? targetId, int targetType) async {
+  Future<int> readOtherSideMessagesBySelf(String? targetId, int targetType) async {
     if (targetId == null || targetId.isEmpty) return 0;
-    int limit = 20;
     // query
-    List<MessageSchema> unreadList = [];
-    for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await queryListByTargetUnRead(targetId, targetType, offset: offset, limit: limit);
-      // result.removeWhere((element) => element.isOutbound);
-      unreadList.addAll(result);
-      if (result.length < limit) break;
-    }
+    List<MessageSchema> unreadList = await queryAllByTargetOutboundStatus(targetId, targetType, false, MessageStatus.Success);
+    unreadList.addAll(await queryAllByTargetOutboundStatus(targetId, targetType, false, MessageStatus.Receipt));
     // update
     List<String> msgIds = [];
     for (var i = 0; i < unreadList.length; i++) {
@@ -400,33 +434,27 @@ class MessageCommon with Tag {
     if (msgIds.isNotEmpty && (targetType == SessionType.CONTACT)) {
       chatOutCommon.sendRead(targetId, msgIds); // await
     }
-    logger.d("$TAG - readMessagesBySelf - count:${msgIds.length} - targetId:$targetId");
+    logger.d("$TAG - readOtherSideMessagesBySelf - count:${msgIds.length} - targetId:$targetId");
     return msgIds.length;
   }
 
   // TODO:GG test
-  Future<int> correctMessageRead(String? targetId, int targetType, int? lastSendAt) async {
+  Future<int> correctOwnSideMessagesRead(String? targetId, int targetType, int? lastSendAt) async {
     if (targetId == null || targetId.isEmpty || lastSendAt == null || lastSendAt == 0) return 0;
-    int limit = 20;
     int readMinGap = 10 * 1000; // 10s
     // query
-    List<MessageSchema> unReadList = [];
-    for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> result = await queryListByStatus(MessageStatus.Receipt, targetId: targetId, targetType: targetType, offset: offset, limit: limit);
-      List<MessageSchema> needReads = result.where((element) => element.isOutbound && (element.sendAt <= (lastSendAt - readMinGap))).toList();
-      unReadList.addAll(needReads);
-      if (result.length < limit) break;
-    }
+    List<MessageSchema> unReadList = await queryAllByTargetOutboundStatus(targetId, targetType, true, MessageStatus.Receipt);
+    unReadList = unReadList.where((element) => element.sendAt <= (lastSendAt - readMinGap)).toList();
     if (unReadList.isEmpty) {
-      logger.d("$TAG - correctMessageRead - empty - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+      logger.d("$TAG - correctOwnSideMessagesRead - empty - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
       return 0;
     }
-    logger.i("$TAG - correctMessageRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+    logger.i("$TAG - correctOwnSideMessagesRead - count:${unReadList.length} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
     // update
     for (var i = 0; i < unReadList.length; i++) {
       MessageSchema element = unReadList[i];
       int? receiveAt = (element.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : element.receiveAt;
-      logger.d("$TAG - correctMessageRead - receiveAt:$receiveAt - element:${element.toStringSimple()} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
+      logger.d("$TAG - correctOwnSideMessagesRead - receiveAt:$receiveAt - element:${element.toStringSimple()} - targetId:$targetId - targetType:$targetType - lastSendAt:$lastSendAt");
       await updateMessageStatus(element, MessageStatus.Read, receiveAt: receiveAt, notify: true);
     }
     return unReadList.length;
@@ -704,7 +732,7 @@ class MessageCommon with Tag {
     logger.i("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // messages
     List<MessageSchema> resendMsgList = [];
-    int limit = 5;
+    final limit = 3;
     int statusSendingCount = 0;
     int statusErrorCount = 0;
     for (var i = 0; i < resendQueueIds.length; i++) {
@@ -719,7 +747,7 @@ class MessageCommon with Tag {
           String? queueIds = MessageOptions.getMessageQueueIds(message.options);
           List splits = deviceInfoCommon.splitQueueIds(queueIds);
           bool isSameDevice = (queueIds != null) && (splits[3].toString().trim() == targetDeviceId.trim());
-          if (message.canReceipt && message.isOutbound && isSameDevice && (message.status > MessageStatus.Error)) {
+          if (message.canReceipt && message.isOutbound && isSameDevice && (message.status >= MessageStatus.Success)) {
             logger.i("$TAG - _syncContactMessages - resend messages add - queueId:$queueId - message:$message - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
             resendMsg = message;
             break;
@@ -754,14 +782,8 @@ class MessageCommon with Tag {
     }
     logger.i("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // ack check (maybe other device queue)
-    List<MessageSchema> noAckList = [];
-    limit = 20;
-    for (int offset = 0; true; offset += limit) {
-      final result = await queryListByStatus(MessageStatus.Success, targetId: targetAddress, targetType: SessionType.CONTACT, offset: offset, limit: limit);
-      result.removeWhere((element) => !element.isOutbound || !element.canQueue);
-      noAckList.addAll(result);
-      if (result.length < limit) break;
-    }
+    List<MessageSchema> noAckList = await queryAllNoACKByTarget(targetAddress, SessionType.CONTACT);
+    noAckList.removeWhere((element) => !element.canQueue);
     bool noAckAdded = false;
     for (var i = 0; i < noAckList.length; i++) {
       MessageSchema noAck = noAckList[i];

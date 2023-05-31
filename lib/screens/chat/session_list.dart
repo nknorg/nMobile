@@ -206,7 +206,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
   _sortMessages() {
     setState(() {
-      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt).compareTo((a.lastMessageAt)) : -1) : (b.isTop ? 1 : (b.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch).compareTo((a.lastMessageAt ?? DateTime.now().millisecondsSinceEpoch))));
+      _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt).compareTo((a.lastMessageAt)) : -1) : (b.isTop ? 1 : b.lastMessageAt.compareTo(a.lastMessageAt)));
     });
   }
 
