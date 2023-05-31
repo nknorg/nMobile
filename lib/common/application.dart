@@ -48,7 +48,7 @@ class Application {
         goForegroundAt = DateTime.now().millisecondsSinceEpoch;
         _appLifeSink.add(false);
       } else {
-        logger.i("Application - appLifeStream - nothing - states:$states");
+        logger.d("Application - appLifeStream - nothing - states:$states");
       }
     });
   }
