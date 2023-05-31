@@ -100,12 +100,10 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByIds(msgIds);
   }
 
-  // TODO:GG test
   Future<List<MessageSchema>> queryListByTargetVisible(String? targetId, int targetType, {int offset = 0, final limit = 20}) {
     return MessageStorage.instance.queryListByTarget(targetId, targetType, isDelete: false, offset: offset, limit: limit);
   }
 
-  // TODO:GG test
   Future<List<MessageSchema>> queryListByTargetTypesVisible(String? targetId, int targetType, List<String> types, {int offset = 0, final limit = 20}) {
     return MessageStorage.instance.queryListByTargetTypesWithNoDelete(targetId, targetType, types, offset: offset, limit: limit);
   }
@@ -114,7 +112,6 @@ class MessageCommon with Tag {
     return MessageStorage.instance.queryListByTargetDeviceQueueId(targetId, targetType, deviceId, queueId, offset: offset, limit: limit);
   }
 
-  // TODO:GG test
   Future<List<MessageSchema>> queryAllSending() async {
     List<MessageSchema> messages = [];
     final limit = 20;
@@ -126,7 +123,6 @@ class MessageCommon with Tag {
     return messages;
   }
 
-  // TODO:GG test
   Future<List<MessageSchema>> queryAllReceivedSuccess() async {
     List<MessageSchema> messages = [];
     final limit = 20;
@@ -138,19 +134,18 @@ class MessageCommon with Tag {
     return messages;
   }
 
-  // TODO:GG test
-  Future<List<MessageSchema>> queryAllNoACKByTarget(String? targetId, int targetType) async {
+  Future<List<MessageSchema>> queryAllNoACKByTarget(String? targetId, int targetType, {final max = 20}) async {
     List<MessageSchema> messages = [];
     final limit = 20;
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(targetId, targetType, isOutbound: true, status: MessageStatus.Success, offset: offset, limit: limit);
       messages.addAll(result);
       if (result.length < limit) break;
+      if (messages.length > max) break;
     }
     return messages;
   }
 
-  // TODO:GG test
   Future<List<MessageSchema>> queryAllByTargetOutboundStatus(String? targetId, int targetType, bool isOutbound, int status) async {
     List<MessageSchema> messages = [];
     final limit = 20;
