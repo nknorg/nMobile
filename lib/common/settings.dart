@@ -88,7 +88,7 @@ class Settings {
   static const int gapPingSessionsMs = 30 * 60 * 1000; // 30m
   static const int gapPingContactMs = 3 * 60 * 1000; // 3m
   static const int gapPongPingMs = 30 * 1000; // 30s
-  static const int gapMessageQueueResendMs = 10 * 1000; // 10s
+  static const int gapMessageQueueResendMs = 5 * 1000; // 5s
   static const int gapContactProfileSyncMs = 30 * 1000; // 30s
   static const int gapDeviceInfoSyncMs = 30 * 1000; // 30s
   static const int gapGroupRequestOptionsMs = 1 * 60 * 1000; // 1m

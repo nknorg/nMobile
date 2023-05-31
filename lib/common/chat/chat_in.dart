@@ -71,8 +71,6 @@ class ChatInCommon with Tag {
       logger.e("$TAG - onMessageReceive - contentType is empty - received:${message.toStringSimple()}");
       return;
     }
-    // status
-    message.status = message.canReceipt ? message.status : MessageStatus.Read;
     // queue
     _receiveQueues[message.targetId] = _receiveQueues[message.targetId] ?? ParallelQueue("chat_receive_${message.targetId}", onLog: (log, error) => error ? logger.w(log) : null);
     await onAdd?.call();
@@ -297,10 +295,10 @@ class ChatInCommon with Tag {
       return false;
     } else if (!exists.canReceipt) {
       logger.d("$TAG - _receiveReceipt - contentType is error - received:$received");
-    } else if (!exists.isOutbound || (exists.status == MessageStatus.Received)) {
+    } else if (!exists.isOutbound) {
       logger.w("$TAG - receiveReceipt - outbound error - exists:$exists");
       return false;
-    } else if ((exists.status == MessageStatus.Receipt) || (exists.status == MessageStatus.Read)) {
+    } else if (exists.status >= MessageStatus.Receipt) {
       logger.v("$TAG - receiveReceipt - duplicated - exists:$exists");
       return false;
     } else if ((exists.isTargetTopic || exists.isTargetGroup) && (received.sender != clientCommon.address)) {
@@ -334,10 +332,10 @@ class ChatInCommon with Tag {
     List<String> msgIds = readIds.map((e) => e?.toString() ?? "").toList();
     List<MessageSchema> msgList = await messageCommon.queryListByIds(msgIds);
     if (msgList.isEmpty) {
-      logger.i("$TAG - _receiveRead - msgIds is nil - sender:${received.sender} - received:$received");
+      logger.i("$TAG - _receiveRead - msgIds is nil - count:${msgIds.length} - sender:${received.sender} - received:$received");
       return true;
     }
-    logger.i("$TAG - _receiveRead - count:${msgList.length} - sender:${received.sender} - msgIds:$msgIds");
+    logger.i("$TAG - _receiveRead - count:${msgList.length}/${msgIds.length} - sender:${received.sender} - msgIds:$msgIds");
     // update
     for (var i = 0; i < msgList.length; i++) {
       MessageSchema message = msgList[i];
@@ -347,7 +345,7 @@ class ChatInCommon with Tag {
     // correct no read
     msgList.sort((prev, next) => prev.sendAt.compareTo(next.sendAt));
     int lastSendAt = msgList[msgList.length - 1].sendAt;
-    messageCommon.correctMessageRead(received.targetId, received.targetType, lastSendAt); // await
+    messageCommon.correctOwnSideMessagesRead(received.targetId, received.targetType, lastSendAt); // await
     return true;
   }
 
@@ -911,7 +909,7 @@ class ChatInCommon with Tag {
 
   // TODO:GG test
   Future<int> _deletePieces(String msgId) async {
-    int limit = 20;
+    final limit = 20;
     List<MessageSchema> pieces = [];
     for (int offset = 0; true; offset += limit) {
       List<MessageSchema> result = await messageCommon.queryPieceList(msgId, offset: offset, limit: limit);

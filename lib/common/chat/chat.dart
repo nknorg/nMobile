@@ -37,13 +37,16 @@ class ChatCommon with Tag {
 
   Future startInitChecks({int? delay}) async {
     if ((delay ?? 0) > 0) await Future.delayed(Duration(milliseconds: delay ?? 0));
-    await sendPings2LatestSessions();
-  }
-
-  Future sendPings2LatestSessions() async {
-    // sessions
+    // receipts
+    List<MessageSchema> receiptList = await messageCommon.queryAllReceivedSuccess();
+    for (var i = 0; i < receiptList.length; i++) {
+      MessageSchema message = receiptList[i];
+      await chatOutCommon.sendReceipt(message);
+    }
+    if (receiptList.length > 0) logger.i("$TAG - startInitChecks - receipt_count:${receiptList.length}");
+    // pings
     List<String> targetIds = [];
-    int limit = Settings.maxCountPingSessions;
+    final limit = Settings.maxCountPingSessions;
     for (int offset = 0; true; offset += limit) {
       List<SessionSchema> result = await sessionCommon.queryListRecent(offset: offset, limit: limit);
       bool lastTimeOK = true;
@@ -56,25 +59,19 @@ class ChatCommon with Tag {
       });
       if (!lastTimeOK || (result.length < limit) || (targetIds.length >= limit)) break;
     }
-    // send
     int count = await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
-    logger.i("$TAG - sendPings2LatestSessions - count:$count/${targetIds.length} - targetIds:$targetIds");
+    logger.i("$TAG - startInitChecks - ping_count:$count/${targetIds.length} - targetIds:$targetIds");
   }
 
   Future<int> resetMessageSending({bool ipfsReset = false}) async {
     // sending list
-    List<MessageSchema> sendingList = [];
-    int limit = 20;
-    for (int offset = 0; true; offset += limit) {
-      final result = await messageCommon.queryListByStatus(MessageStatus.Sending, offset: offset, limit: limit);
-      // result.removeWhere((element) => !element.isOutbound);
-      sendingList.addAll(result);
-      if (result.length < limit) break;
-    }
-    // update status
+    List<MessageSchema> sendingList = await messageCommon.queryAllSending();
     for (var i = 0; i < sendingList.length; i++) {
       MessageSchema message = sendingList[i];
-      if (message.canReceipt) {
+      if (message.isDelete) {
+        logger.w("$TAG - resetMessageSending - why is delete - targetId:${message.targetId} - message:${message.toStringSimple()}");
+        await messageCommon.delete(message.msgId, message.contentType);
+      } else if (message.canReceipt) {
         logger.i("$TAG - resetMessageSending - send err add - targetId:${message.targetId} - message:${message.toStringSimple()}");
         if (message.contentType == MessageContentType.ipfs) {
           if (!ipfsReset) continue;
@@ -420,7 +417,7 @@ class ChatCommon with Tag {
     if (message.isTargetTopic) return message;
     if (!message.canBurning || message.isDelete) return message;
     if ((message.deleteAt != null) && ((message.deleteAt ?? 0) > 0)) return message;
-    if ((message.status == MessageStatus.Sending) || (message.status == MessageStatus.Error)) return message; // status_read maybe updating
+    if (message.status < MessageStatus.Success) return message; // status_read maybe updating
     int? burnAfterSeconds = MessageOptions.getOptionsBurningDeleteSec(message.options);
     if ((burnAfterSeconds == null) || (burnAfterSeconds <= 0)) return message;
     // set delete time
