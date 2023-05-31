@@ -157,7 +157,6 @@ class MessageCommon with Tag {
     return messages;
   }
 
-  // TODO:GG test
   Future<bool> messageDelete(MessageSchema? message, {bool notify = false}) async {
     if (message == null || message.msgId.isEmpty) return false;
     bool delDeep = !message.canReceipt ? true : (message.isOutbound ? (message.status >= MessageStatus.Receipt) : (message.status >= MessageStatus.Read));
@@ -175,6 +174,8 @@ class MessageCommon with Tag {
             contact.data = data;
             logger.d("$TAG - messageDelete - contact setReceivedMessages success - count:${contact.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
           }
+        } else {
+          logger.v("$TAG - messageDelete - contact setReceivedMessages contains - count:${contact?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact?.receivedMessages} - targetId:${message.targetId}");
         }
       } else if (message.isTargetGroup) {
         PrivateGroupSchema? group = await privateGroupCommon.queryGroup(message.targetId);
@@ -187,6 +188,8 @@ class MessageCommon with Tag {
             group.data = data;
             logger.d("$TAG - messageDelete - privateGroup setReceivedMessages success - count:${group.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
           }
+        } else {
+          logger.v("$TAG - messageDelete - privateGroup setReceivedMessages contains - count:${group?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group?.receivedMessages} - targetId:${message.targetId}");
         }
       }
       if (success == null) {
@@ -212,7 +215,7 @@ class MessageCommon with Tag {
             } catch (e) {}
             logger.d("$TAG - messageDelete - content file delete success - path:${(message.content as File).path}");
           } else {
-            logger.w("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
+            // logger.v("$TAG - messageDelete - content file no Exists - path:${(message.content as File).path}");
           }
         });
       }
@@ -225,7 +228,7 @@ class MessageCommon with Tag {
             } catch (e) {}
             logger.d("$TAG - messageDelete - video_thumbnail delete success - path:$mediaThumbnail");
           } else {
-            logger.w("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
+            // logger.v("$TAG - messageDelete - video_thumbnail no Exists - path:$mediaThumbnail");
           }
         });
       }
