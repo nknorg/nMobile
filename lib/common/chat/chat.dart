@@ -330,7 +330,6 @@ class ChatCommon with Tag {
     return exist;
   }
 
-  // TODO:GG test
   Future<PrivateGroupSchema?> privateGroupHandle(MessageSchema message) async {
     if (!message.isTargetGroup) return null;
     if (!message.canDisplay && !message.isGroupAction) return null; // group action need group
