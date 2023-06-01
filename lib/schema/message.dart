@@ -1358,18 +1358,18 @@ class MessageData {
     return jsonEncode(data);
   }
 
-  static String getTopicSubscribe(String? msgId, String targetId) {
+  static String getTopicSubscribe(String? msgId, String topicId) {
     Map data = _base(MessageSchema.supportContentType(MessageContentType.topicSubscribe), id: msgId);
     data.addAll({
-      'topic': targetId,
+      'topic': topicId,
     });
     return jsonEncode(data);
   }
 
-  static String getTopicUnSubscribe(String targetId) {
+  static String getTopicUnSubscribe(String topicId) {
     Map data = _base(MessageSchema.supportContentType(MessageContentType.topicUnsubscribe));
     data.addAll({
-      'topic': targetId,
+      'topic': topicId,
     });
     return jsonEncode(data);
   }

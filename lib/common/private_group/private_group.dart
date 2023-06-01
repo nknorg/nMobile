@@ -694,7 +694,7 @@ class PrivateGroupCommon with Tag {
     return true;
   }
 
-  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? selfAddress, String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? modifyMembers) async {
+  Future<PrivateGroupSchema?> updatePrivateGroupMembers(String? sender, String? groupId, String? remoteVersion, List<PrivateGroupItemSchema>? modifyMembers) async {
     if (sender == null || sender.isEmpty) return null;
     if (groupId == null || groupId.isEmpty) return null;
     if (remoteVersion == null || remoteVersion.isEmpty) return null;
@@ -726,6 +726,7 @@ class PrivateGroupCommon with Tag {
       }
     }
     // sender (can not believe sender perm because native members maybe empty)
+    String? selfAddress = clientCommon.address;
     PrivateGroupItemSchema? senderItem = await queryGroupItem(groupId, sender);
     if (senderItem == null) {
       if (isOwner(schemaGroup.ownerPublicKey, sender)) {
