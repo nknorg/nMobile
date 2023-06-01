@@ -904,7 +904,7 @@ class ChatInCommon with Tag {
       );
       if (item != null) members.add(item);
     }
-    await privateGroupCommon.updatePrivateGroupMembers(received.targetId, received.sender, groupId, version, members);
+    await privateGroupCommon.updatePrivateGroupMembers(received.sender, groupId, version, members);
   }
 
   Future<int> _deletePieces(String msgId) async {

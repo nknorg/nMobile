@@ -242,7 +242,7 @@ class MessageCommon with Tag {
     // check
     if ((status <= message.status) && !force) {
       if (status == message.status) {
-        logger.w("$TAG - updateMessageStatus - status is same - new:$status - old:${message.status} - msgId:${message.msgId}");
+        logger.d("$TAG - updateMessageStatus - status is same - new:$status - old:${message.status} - msgId:${message.msgId}");
       } else {
         logger.w("$TAG - updateMessageStatus - status is wrong - new:$status - old:${message.status} - msgId:${message.msgId}");
       }

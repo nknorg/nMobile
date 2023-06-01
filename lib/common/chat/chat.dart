@@ -433,9 +433,7 @@ class ChatCommon with Tag {
   MessageSchema burningTick(MessageSchema message, {Function? onTick}) {
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
-      String ownerKey = message.isOutbound ? message.sender : message.targetId;
-      if (ownerKey.isEmpty) return message;
-      String taskKey = "${TaskService.KEY_MSG_BURNING}:$ownerKey:${message.msgId}";
+      String taskKey = "${TaskService.KEY_MSG_BURNING}:${message.targetType}_${message.targetId}:${message.msgId}";
       taskService.addTask(taskKey, 1, (String key) {
         if (key != taskKey) {
           taskService.removeTask(key, 1); // remove others client burning
