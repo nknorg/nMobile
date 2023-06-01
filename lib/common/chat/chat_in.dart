@@ -108,7 +108,6 @@ class ChatInCommon with Tag {
         }
       }
     }
-    // TODO:GG test
     // group
     PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
     if (privateGroup != null) {
@@ -740,7 +739,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupInvitation(MessageSchema received) async {
     // DB
@@ -751,7 +749,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupAccept(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -805,7 +802,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupSubscribe(MessageSchema received) async {
     // DB
@@ -816,7 +812,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupQuit(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -833,7 +828,6 @@ class ChatInCommon with Tag {
     return await privateGroupCommon.onMemberQuit(newGroupItem, notify: true);
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupOptionRequest(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -844,7 +838,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future _receivePrivateGroupOptionResponse(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -868,7 +861,6 @@ class ChatInCommon with Tag {
     }
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future<bool> _receivePrivateGroupMemberRequest(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
@@ -879,7 +871,6 @@ class ChatInCommon with Tag {
     return true;
   }
 
-  // TODO:GG test
   // NO group (1 to 1)
   Future _receivePrivateGroupMemberResponse(MessageSchema received) async {
     if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
