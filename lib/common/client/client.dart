@@ -121,11 +121,11 @@ class ClientCommon with Tag {
   /// ***************************************   Sign   *************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> signIn(WalletSchema? wallet, String? password, {bool toast = false, Function(bool, bool)? loading}) async {
+  Future<bool> signIn(WalletSchema? wallet, String? password, {bool toast = false, Function(bool, bool, bool)? loading}) async {
     if ((wallet == null) || wallet.address.isEmpty) return false;
     // status (just updated(connecting) in this func)
     if (status == ClientConnectStatus.connecting) return false;
-    loading?.call(true, false);
+    loading?.call(true, false, false);
     await waitReconnect(); // before set status
     status = ClientConnectStatus.connecting;
     _statusSink.add(ClientConnectStatus.connecting);
@@ -134,7 +134,12 @@ class ClientCommon with Tag {
       bool success = false;
       int tryTimes = 0;
       while (true) {
-        Map<String, dynamic> result = await _signIn(wallet, password, onDatabaseOpen: () => loading?.call(true, true));
+        Map<String, dynamic> result = await _signIn(
+          wallet,
+          password,
+          onInputVisible: (visible) => loading?.call(true, visible, false),
+          onDatabaseOpen: () => loading?.call(true, false, true),
+        );
         Client? c = result["client"];
         bool canTry = result["canTry"];
         password = result["password"]?.toString();
@@ -163,18 +168,18 @@ class ClientCommon with Tag {
       return success;
     });
     // status (set when onMessageReceive)
-    loading?.call(false, true);
+    loading?.call(false, false, true);
     return success;
   }
 
-  Future<Map<String, dynamic>> _signIn(WalletSchema wallet, String? password, {Function? onDatabaseOpen}) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema wallet, String? password, {Function(bool)? onInputVisible, Function? onDatabaseOpen}) async {
     while (!isNetworkOk) {
       logger.w("$TAG - _signIn - wait network ok");
       await Future.delayed(Duration(milliseconds: 500));
     }
     // password
     try {
-      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address));
+      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address, onInput: (visible) => onInputVisible?.call(visible)));
       if ((password == null) || password.isEmpty) {
         logger.w("$TAG - _signIn - password is null - wallet:$wallet");
         return {"client": null, "canTry": false}; // , "text": "password empty"
