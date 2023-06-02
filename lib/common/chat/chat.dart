@@ -376,7 +376,6 @@ class ChatCommon with Tag {
     return exists;
   }
 
-  // TODO:GG test
   Future sessionHandle(MessageSchema message) async {
     if (!message.canDisplay) return;
     if (message.targetId.isEmpty) return;

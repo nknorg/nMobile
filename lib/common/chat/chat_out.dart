@@ -143,15 +143,15 @@ class ChatOutCommon with Tag {
     } else if ((destList.length == 1) && (destList[0] != selfAddress)) {
       // contact
       ContactSchema? _me = await contactCommon.getMe();
-      ContactSchema? _other = await contactCommon.query(destList[0], fetchWalletAddress: false);
-      bool notificationOpen = _other?.options.notificationOpen == true;
+      ContactSchema? _target = await contactCommon.query(destList[0], fetchWalletAddress: false);
+      bool notificationOpen = _target?.options.notificationOpen == true;
       String? deviceToken = notificationOpen ? (await deviceInfoCommon.getMe(canAdd: true, fetchDeviceToken: true))?.deviceToken : null;
-      DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(_other?.address); // just can latest
+      DeviceInfoSchema? targetDevice = await deviceInfoCommon.queryLatest(_target?.address); // just can latest
       String? queueIds;
-      if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
+      if ((targetDevice != null) && DeviceInfoCommon.isMessageQueueEnable(targetDevice.platform, targetDevice.appVersion)) {
         await Future.delayed(Duration(milliseconds: 1000));
-        await chatInCommon.waitReceiveQueue(device.contactAddress, "sendPing");
-        queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(device.contactAddress, device.deviceId);
+        await chatInCommon.waitReceiveQueue(targetDevice.contactAddress, "sendPing");
+        queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(targetDevice.contactAddress, targetDevice.deviceId);
       }
       data = MessageData.getPing(
         isPing,
@@ -590,14 +590,13 @@ class ChatOutCommon with Tag {
   Future<MessageSchema?> sendTopicInvitee(String? topicId, String? targetAddress) async {
     // if (!(await clientCommon.waitClientOk())) return null;
     if (targetAddress == null || targetAddress.isEmpty || topicId == null || topicId.isEmpty) return null;
-    ContactSchema? me = await contactCommon.getMe();
     MessageSchema message = MessageSchema.fromSend(
       targetAddress,
       SessionType.CONTACT,
       MessageContentType.topicInvitation,
       topicId,
       extra: {
-        "profileVersion": me?.profileVersion,
+        "profileVersion": (await contactCommon.getMe())?.profileVersion,
       },
     );
     message.data = MessageData.getTopicInvitee(message);

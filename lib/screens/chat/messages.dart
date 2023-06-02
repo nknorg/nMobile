@@ -366,14 +366,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     });
     // tip
     if (this._targetType == SessionType.CONTACT) {
-      ContactSchema? _contact = this._target as ContactSchema?;
-      if (_contact != null) {
-        if (_contact.createAt >= dbCommon.upgradeAt(7)) {
-          Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
-        } else {
-          contactCommon.setTipNotification(_contact.address, null, notify: true); // await
-        }
-      }
+      Future.delayed(Duration(milliseconds: 100), () => _checkNotificationTip()); // await
     }
   }
 
@@ -457,8 +450,12 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     if (!clientCommon.isClientOK) return;
     if (this._targetType != SessionType.CONTACT) return;
     ContactSchema _contact = this._target as ContactSchema;
-    if (_contact.tipNotification) return;
-    if (_contact.options.notificationOpen == true) {
+    if (_contact.tipNotification) {
+      return;
+    } else if (_contact.createAt < dbCommon.upgradeAt(7)) {
+      await contactCommon.setTipNotification(_contact.address, null, notify: true);
+      return;
+    } else if (_contact.options.notificationOpen) {
       await contactCommon.setTipNotification(_contact.address, null, notify: true);
       return;
     }

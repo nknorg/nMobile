@@ -44,7 +44,6 @@ class MessageCommon with Tag {
 
   String? chattingTargetId;
 
-  // TODO:GG test
   bool isTargetMessagePageVisible(String? targetId) {
     bool inSessionPage = chattingTargetId == targetId;
     bool isAppForeground = application.appLifecycleState == AppLifecycleState.resumed;
@@ -162,34 +161,36 @@ class MessageCommon with Tag {
     bool delDeep = !message.canReceipt ? true : (message.isOutbound ? (message.status >= MessageStatus.Receipt) : (message.status >= MessageStatus.Read));
     bool? success;
     if (delDeep) {
-      int nowAt = DateTime.now().millisecondsSinceEpoch;
-      if (message.isTargetContact) {
-        ContactSchema? contact = await contactCommon.query(message.targetId);
-        if ((contact != null) && !contact.receivedMessages.containsKey(message.msgId)) {
-          var data = await contactCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
-          if (data == null) {
-            logger.w("$TAG - messageDelete - contact setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
-            success = false;
+      if (!message.isOutbound) {
+        int nowAt = DateTime.now().millisecondsSinceEpoch;
+        if (message.isTargetContact) {
+          ContactSchema? contact = await contactCommon.query(message.targetId, fetchWalletAddress: false);
+          if ((contact != null) && !contact.receivedMessages.containsKey(message.msgId)) {
+            var data = await contactCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
+            if (data == null) {
+              logger.w("$TAG - messageDelete - contact setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
+              success = false;
+            } else {
+              contact.data = data;
+              logger.d("$TAG - messageDelete - contact setReceivedMessages success - count:${contact.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
+            }
           } else {
-            contact.data = data;
-            logger.d("$TAG - messageDelete - contact setReceivedMessages success - count:${contact.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact.receivedMessages} - targetId:${message.targetId}");
+            logger.v("$TAG - messageDelete - contact setReceivedMessages contains - count:${contact?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact?.receivedMessages} - targetId:${message.targetId}");
           }
-        } else {
-          logger.v("$TAG - messageDelete - contact setReceivedMessages contains - count:${contact?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${contact?.receivedMessages} - targetId:${message.targetId}");
-        }
-      } else if (message.isTargetGroup) {
-        PrivateGroupSchema? group = await privateGroupCommon.queryGroup(message.targetId);
-        if ((group != null) && !group.receivedMessages.containsKey(message.msgId)) {
-          var data = await privateGroupCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
-          if (data == null) {
-            logger.w("$TAG - messageDelete - privateGroup setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
-            success = false;
+        } else if (message.isTargetGroup) {
+          PrivateGroupSchema? group = await privateGroupCommon.queryGroup(message.targetId);
+          if ((group != null) && !group.receivedMessages.containsKey(message.msgId)) {
+            var data = await privateGroupCommon.setReceivedMessages(message.targetId, {message.msgId: message.receiveAt ?? nowAt}, []);
+            if (data == null) {
+              logger.w("$TAG - messageDelete - privateGroup setReceivedMessages fail - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
+              success = false;
+            } else {
+              group.data = data;
+              logger.d("$TAG - messageDelete - privateGroup setReceivedMessages success - count:${group.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
+            }
           } else {
-            group.data = data;
-            logger.d("$TAG - messageDelete - privateGroup setReceivedMessages success - count:${group.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group.receivedMessages} - targetId:${message.targetId}");
+            logger.v("$TAG - messageDelete - privateGroup setReceivedMessages contains - count:${group?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group?.receivedMessages} - targetId:${message.targetId}");
           }
-        } else {
-          logger.v("$TAG - messageDelete - privateGroup setReceivedMessages contains - count:${group?.receivedMessages.length} - msgId:${message.msgId} - receivedMessages:${group?.receivedMessages} - targetId:${message.targetId}");
         }
       }
       if (success == null) {
@@ -290,7 +291,7 @@ class MessageCommon with Tag {
     MessageSchema? exists = await query(message.msgId);
     if (exists != null) return true;
     if (message.isTargetContact) {
-      ContactSchema? _contact = await contactCommon.query(message.targetId);
+      ContactSchema? _contact = await contactCommon.query(message.targetId, fetchWalletAddress: false);
       if (_contact == null) return false;
       Map<String, int> receivedMessages = _contact.receivedMessages;
       int? timeAt = receivedMessages[message.msgId];
@@ -313,7 +314,7 @@ class MessageCommon with Tag {
     int minReceiveAt = nowAt - gap;
     Map<String, int>? receivedMessages;
     if (targetType == SessionType.CONTACT) {
-      receivedMessages = (await contactCommon.query(targetId))?.receivedMessages;
+      receivedMessages = (await contactCommon.query(targetId, fetchWalletAddress: false))?.receivedMessages;
     } else if (targetType == SessionType.PRIVATE_GROUP) {
       receivedMessages = (await privateGroupCommon.queryGroup(targetId))?.receivedMessages;
     }
@@ -373,7 +374,7 @@ class MessageCommon with Tag {
       // tag
       dynamic target;
       if (targetType == SessionType.CONTACT) {
-        target = await contactCommon.query(targetId);
+        target = await contactCommon.query(targetId, fetchWalletAddress: false);
       } else if (targetType == SessionType.PRIVATE_GROUP) {
         target = await privateGroupCommon.queryGroup(targetId);
       }
