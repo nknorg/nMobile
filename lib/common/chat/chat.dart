@@ -428,12 +428,16 @@ class ChatCommon with Tag {
     return message;
   }
 
-  MessageSchema burningTick(MessageSchema message, {Function? onTick}) {
+  MessageSchema burningTick(MessageSchema message, String tag, {Function? onTick}) {
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
-      String taskKey = "${TaskService.KEY_MSG_BURNING}:${message.targetType}_${message.targetId}:${message.msgId}";
+      String selfAddress = clientCommon.address ?? "";
+      String taskKey = "${TaskService.KEY_MSG_BURNING}:$tag:${message.msgId}";
       taskService.addTask(taskKey, 1, (String key) {
-        if (key != taskKey) {
+        String currentSelfAddress = clientCommon.address ?? "";
+        if (selfAddress.isEmpty) {
+          selfAddress = currentSelfAddress;
+        } else if ((selfAddress != currentSelfAddress) && currentSelfAddress.isNotEmpty) {
           taskService.removeTask(key, 1); // remove others client burning
           return;
         }
