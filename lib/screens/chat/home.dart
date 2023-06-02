@@ -155,7 +155,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     // fixed:GG ios_152_db
     if (init) await dbCommon.fixIOS_152();
     // client
-    bool success = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, dbOpen) {
+    bool success = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, input, dbOpen) {
       if (dbOpen) _setConnected(true);
     });
     // check

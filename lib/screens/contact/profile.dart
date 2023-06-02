@@ -231,9 +231,11 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Loading.dismiss();
 
       // client signIn
-      bool success = await clientCommon.signIn(selected, null, toast: true, loading: (visible, dbOpen) {
-        if (visible && !dbOpen) {
+      bool success = await clientCommon.signIn(selected, null, toast: true, loading: (visible, input, dbOpen) {
+        if (visible && !input && !dbOpen) {
           Loading.show();
+        } else if (visible && input) {
+          Loading.dismiss();
         } else if (!visible) {
           Loading.dismiss();
         }
@@ -245,10 +247,12 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         // contact
         ContactSchema? _me = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
         await _refreshContactSchema(schema: _me);
-        // wallet
-        // Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
       }
-      if (mounted) AppScreen.go(this.context);
+      if (mounted) {
+        AppScreen.go(this.context);
+      } else {
+        Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
+      }
     } catch (e, st) {
       handleError(e, st);
     } finally {
@@ -326,7 +330,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
   }
 
   _updateNotificationAndDeviceToken(bool notificationOpen) async {
-    await contactCommon.setTipNotification(this._contact?.address, null, notify: true);
     DeviceInfoSchema? deviceInfo = await deviceInfoCommon.getMe(fetchDeviceToken: notificationOpen);
     String? deviceToken = notificationOpen ? deviceInfo?.deviceToken : null;
     bool tokenEmpty = (deviceToken == null) || deviceToken.isEmpty;
