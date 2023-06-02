@@ -51,7 +51,7 @@ class Authorization {
     return _localAuth.stopAuthentication();
   }
 
-  Future<String?> getWalletPassword(String? walletAddress) {
+  Future<String?> getWalletPassword(String? walletAddress, {Function(bool)? onInput}) {
     if (walletAddress == null || walletAddress.isEmpty) {
       return Future.value(null);
     }
@@ -63,7 +63,8 @@ class Authorization {
     }).then((bool authOk) async {
       String? pwd = await walletCommon.getPassword(walletAddress);
       if (!authOk || pwd == null || pwd.isEmpty) {
-        return BottomDialog.of(Settings.appContext).showInput(
+        onInput?.call(true);
+        String? password = await BottomDialog.of(Settings.appContext).showInput(
           title: Settings.locale((s) => s.verify_wallet_password),
           inputTip: Settings.locale((s) => s.wallet_password),
           inputHint: Settings.locale((s) => s.input_password),
@@ -71,6 +72,8 @@ class Authorization {
           validator: Validator.of(Settings.appContext).password(),
           password: true,
         );
+        onInput?.call(false);
+        return password;
       }
       return pwd;
     });
