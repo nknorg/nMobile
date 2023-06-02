@@ -597,23 +597,23 @@ class Upgrade4to5 {
         } else if (oldType == MessageContentType.receipt) {
           logger.w("Upgrade4to5 - $oldTableName convert - type is receipt, need skip - data:$result");
           continue;
-        } else if (oldType == MessageContentType.contactProfile) {
+        } else if (oldType == "contact") {
           logger.w("Upgrade4to5 - $oldTableName convert - type is contact, need skip - data:$result");
           continue;
-        } else if (oldType == MessageContentType.contactOptions) {
+        } else if (oldType == "event:contactOptions") {
           newType = oldType;
         } else if (oldType == MessageContentType.text || oldType == MessageContentType.textExtension) {
           newType = oldType;
           canBurning = true;
-        } else if (oldType == "media" || oldType == MessageContentType.image || oldType == MessageContentType.audio) {
+        } else if (oldType == "media" || oldType == "nknImage" || oldType == MessageContentType.audio) {
           newType = oldType;
           canBurning = true;
-        } else if (oldType == MessageContentType.piece) {
+        } else if (oldType == "nknOnePiece") {
           logger.w("Upgrade4to5 - $oldTableName convert - type is piece, need skip - data:$result");
           continue;
-        } else if (oldType == MessageContentType.topicInvitation || oldType == MessageContentType.topicSubscribe) {
+        } else if (oldType == "event:channelInvitation" || oldType == "event:subscribe") {
           newType = oldType;
-        } else if (oldType == MessageContentType.topicUnsubscribe) {
+        } else if (oldType == "event:unsubscribe") {
           logger.w("Upgrade4to5 - $oldTableName convert - type is unsubscribe, need skip - data:$result");
           continue;
         } else {

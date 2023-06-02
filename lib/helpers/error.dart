@@ -145,10 +145,14 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
     String errStr = error?.toString().toLowerCase() ?? "";
     bool contains = _containsStrings(errStr, [
       "wrong password",
+      "biometrics",
+      "startRecorder",
+      "Permission state error",
+      "Cannot delete file",
+      "fcm.googleapis.com",
+      "mainnet.infura.io",
+      "eth-mainnet.g.alchemy.com",
       NknError.rpcRequestFail,
-      "address = fcm.googleapis.com",
-      "address = mainnet.infura.io",
-      "address = eth-mainnet.g.alchemy.com",
     ]);
     if (upload && !contains) {
       if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace);
