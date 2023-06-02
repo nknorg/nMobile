@@ -39,7 +39,7 @@ class SessionCommon with Tag {
   }) async {
     if (targetId == null || targetId.isEmpty || type == null) return null;
     Function func = () async {
-      logger.d('$TAG - add - START - targetId:$targetId - type:$type - unread:$unReadCount - timeAt:$lastMsgAt - message:$lastMsg');
+      logger.d('$TAG - session_add - START - targetId:$targetId - type:$type - unread:$unReadCount - timeAt:$lastMsgAt - message:$lastMsg');
       // lastMsg
       if (lastMsg == null) {
         List<MessageSchema> history = await messageCommon.queryListByTargetVisible(targetId, type, offset: 0, limit: 1);
@@ -76,7 +76,7 @@ class SessionCommon with Tag {
       if (groupSenderName?.isNotEmpty == true) {
         added.data = {"groupSenderName": groupSenderName};
       }
-      logger.d('$TAG - add - END - targetId:${added.targetId} - type${added.type} - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - data:${added.data} - message:${added.lastMessageOptions}');
+      logger.d('$TAG - session_add - END - targetId:${added.targetId} - type${added.type} - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - data:${added.data} - message:${added.lastMessageOptions}');
       // insert
       added = await SessionStorage.instance.insert(added);
       if ((added != null) && notify) _addSink.add(added);
@@ -107,10 +107,10 @@ class SessionCommon with Tag {
     Function func = () async {
       SessionSchema? exist = await query(targetId, type);
       if (exist == null) {
-        logger.w("$TAG - update - empty - schema:$targetId - type:$type");
+        logger.w("$TAG - session_update - empty - schema:$targetId - type:$type");
         return null;
       }
-      logger.d('$TAG - update - START - targetId:$targetId - type:$type - unread:$unReadCount - change:$unreadChange - timeAt:$lastMsgAt - message:$lastMsg');
+      logger.d('$TAG - session_update - START - targetId:$targetId - type:$type - unread:$unReadCount - change:$unreadChange - timeAt:$lastMsgAt - message:$lastMsg');
       // lastMsg
       MessageSchema? oldLastMsg;
       Map<String, dynamic> oldLastMessageOptions = exist.lastMessageOptions ?? Map();
@@ -163,7 +163,7 @@ class SessionCommon with Tag {
       exist.lastMessageOptions = newLastMsg?.toMap();
       exist.lastMessageAt = newLastMsgAt;
       exist.unReadCount = newUnReadCount;
-      logger.d('$TAG - update - END - targetId:$targetId - type:$type - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
+      logger.d('$TAG - session_update - END - targetId:$targetId - type:$type - unread:${exist.unReadCount} - timeAt:${exist.lastMessageAt} - message:${exist.lastMessageOptions}');
       bool success = await SessionStorage.instance.setLastMessageAndUnReadCount(exist);
       if (success && notify) queryAndNotify(targetId, type);
     };

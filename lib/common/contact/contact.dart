@@ -120,7 +120,7 @@ class ContactCommon with Tag {
       if (data != null) contact.data = data;
     }
     if (fetchWalletAddress) {
-      String nknWalletAddress = contact.data?['nknWalletAddress']?.toString() ?? "";
+      String nknWalletAddress = contact.data['nknWalletAddress']?.toString() ?? "";
       if (nknWalletAddress.isEmpty) {
         String nknWalletAddress = await contact.nknWalletAddress;
         var data = await setWalletAddress(contact.address, nknWalletAddress);
@@ -158,7 +158,7 @@ class ContactCommon with Tag {
     if (address == null || address.isEmpty) return null;
     ContactSchema? _schema = await ContactStorage.instance.query(address);
     if ((_schema != null) && fetchWalletAddress) {
-      String nknWalletAddress = _schema.data?['nknWalletAddress']?.toString() ?? "";
+      String nknWalletAddress = _schema.data['nknWalletAddress']?.toString() ?? "";
       if (nknWalletAddress.isEmpty) {
         nknWalletAddress = await _schema.nknWalletAddress;
         logger.i("$TAG - query - nknWalletAddress:$nknWalletAddress");
@@ -171,7 +171,11 @@ class ContactCommon with Tag {
 
   Future<List<ContactSchema>> queryListByAddress(List<String>? clientAddressList) async {
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
-    return await ContactStorage.instance.queryListByAddress(clientAddressList);
+    List<ContactSchema> contactList = await ContactStorage.instance.queryListByAddress(clientAddressList);
+    if (clientAddressList.length != contactList.length) {
+      logger.w("$TAG - queryListByAddress - len diff - query_count:${clientAddressList.length} - result_count:${contactList.length}");
+    }
+    return contactList;
   }
 
   Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
