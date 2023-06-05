@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 // TODO:GG 应该就不是升级，是迁移了，版本号还是改成7？
@@ -19,7 +21,7 @@ class Upgrade6to7 {
     // update_at/create_at (BIGINT) -> online_at (BIGINT)(NOT EMPTY)
     // data (TEXT) -> data (TEXT)(NOT NULL) ----> equal。旧的值直接拷贝，新的临时创建
 
-    upgradeTipSink?.add("... (1/8)");
+    upgradeTipSink?.add("... (1/9)");
 
     // TODO:GG db
   }
@@ -44,7 +46,7 @@ class Upgrade6to7 {
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
     // device_token (TEXT) -> deviceInfo.device_token (TEXT)
 
-    upgradeTipSink?.add("... (2/8)");
+    upgradeTipSink?.add("... (2/9)");
 
     // TODO:GG db
   }
@@ -68,7 +70,7 @@ class Upgrade6to7 {
     // topicSchema.options?.avatarBgColor = Color(e['theme_id']);
     // }
 
-    upgradeTipSink?.add("... (3/8)");
+    upgradeTipSink?.add("... (3/9)");
 
     // TODO:GG db
   }
@@ -83,7 +85,7 @@ class Upgrade6to7 {
     // perm_page (INT) -> perm_page (INT)
     // data (TEXT) -> data (TEXT)(NOT NULL) ---->  clear。都是临时的，直接清除掉吧
 
-    upgradeTipSink?.add("... (4/8)");
+    upgradeTipSink?.add("... (4/9)");
 
     // TODO:GG db
   }
@@ -105,7 +107,7 @@ class Upgrade6to7 {
     ///----------------------
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
 
-    upgradeTipSink?.add("... (5/8)");
+    upgradeTipSink?.add("... (5/9)");
 
     // TODO:GG db
   }
@@ -123,7 +125,7 @@ class Upgrade6to7 {
     // invitee_signature (VARCHAR(200)) -> invitee_signature (VARCHAR(200))
     // data (TEXT) -> data (TEXT)(NOT NULL) ---> clear。根本没有值
 
-    upgradeTipSink?.add("... (6/8)");
+    upgradeTipSink?.add("... (6/9)");
 
     // TODO:GG db
   }
@@ -149,13 +151,29 @@ class Upgrade6to7 {
     // ??? -> data (TEXT) ----> clear。旧的没有值
     // TODO:GG 仔细看看
 
-    upgradeTipSink?.add("... (7/8)");
+    upgradeTipSink?.add("... (7/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeMessagePiece(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // nothing, just temp table
+    upgradeTipSink?.add("... (8/9)");
+    // just create table
+    if ((await DB.checkTableExists(db, MessagePieceStorage.tableName))) {
+      try {
+        await MessagePieceStorage.create(db);
+      } catch (e) {
+        throw e;
+      }
+      try {
+        await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `${MessagePieceStorage.tableName}` (`msg_id`)'); // no unique
+        await db.execute('CREATE INDEX `index_message_piece_target_id_target_type` ON `${MessagePieceStorage.tableName}` (`target_id`, `target_type`)');
+      } catch (e) {
+        throw e;
+      }
+    } else {
+      logger.w("Upgrade6to7 - ${MessagePieceStorage.tableName} exist");
+    }
   }
 
   static Future upgradeSession(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -168,7 +186,7 @@ class Upgrade6to7 {
     // un_read_count (INT) -> un_read_count (INT)(NOT NULL)
     // ??? -> data (TEXT)(NOT NULL) ----> reset。只有一个senderName，直接从last_message_options里找contact然后赋值
 
-    upgradeTipSink?.add("... (8/8)");
+    upgradeTipSink?.add("... (9/9)");
 
     // TODO:GG db
   }
