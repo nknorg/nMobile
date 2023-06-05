@@ -28,7 +28,7 @@ class MessageStorage with Tag {
         `device_id` VARCHAR(200),
         `queue_id` BIGINT,
         `sender` VARCHAR(100),
-        `target_id` VARCHAR(200),
+        `target_id` VARCHAR(100),
         `target_type` INT,
         `is_outbound` BOOLEAN DEFAULT 0,
         `status` INT,

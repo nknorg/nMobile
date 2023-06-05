@@ -134,8 +134,8 @@ class DeviceInfoSchema {
       'create_at': createAt,
       'update_at': updateAt,
       'contact_address': contactAddress,
-      'device_id': deviceId,
-      'device_token': deviceToken,
+      'device_id': deviceId.replaceAll("\n", "").trim(),
+      'device_token': deviceToken.replaceAll("\n", "").trim(),
       'online_at': onlineAt,
       'data': jsonEncode(data ?? Map()),
     };
@@ -148,8 +148,8 @@ class DeviceInfoSchema {
       createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
       updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       contactAddress: e['contact_address'] ?? "",
-      deviceId: e['device_id'] ?? "",
-      deviceToken: e['device_token'] ?? "",
+      deviceId: e['device_id'].replaceAll("\n", "").trim() ?? "",
+      deviceToken: e['device_token']?.replaceAll("\n", "").trim() ?? "",
       onlineAt: e['online_at'] ?? 0,
       data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
     );

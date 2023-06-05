@@ -318,7 +318,7 @@ class ContactCommon with Tag {
   Future<Map<String, dynamic>?> setWalletAddress(String? address, String? walletAddress, {bool notify = false}) async {
     if (address == null || address.isEmpty) return null;
     Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
-      "nknWalletAddress": walletAddress,
+      "nknWalletAddress": walletAddress?.replaceAll("\n", "").trim(),
     });
     if (data != null) {
       logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - data:$data - address:$address");
