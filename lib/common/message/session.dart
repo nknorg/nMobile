@@ -56,12 +56,12 @@ class SessionCommon with Tag {
         }
       }
       // senderName
-      String? groupSenderName;
+      String? senderName;
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
         if (lastMsg != null) {
           ContactSchema? _sender = await contactCommon.query(lastMsg?.sender, fetchWalletAddress: false);
           if (_sender?.displayName.isNotEmpty == true) {
-            groupSenderName = _sender?.displayName ?? " ";
+            senderName = _sender?.displayName ?? " ";
           }
         }
       }
@@ -73,8 +73,8 @@ class SessionCommon with Tag {
         lastMessageAt: lastMsgAt ?? DateTime.now().millisecondsSinceEpoch,
         unReadCount: unReadCount ?? 0,
       );
-      if (groupSenderName?.isNotEmpty == true) {
-        added.data = {"groupSenderName": groupSenderName};
+      if (senderName?.isNotEmpty == true) {
+        added.data = {"senderName": senderName};
       }
       logger.d('$TAG - session_add - END - targetId:${added.targetId} - type${added.type} - unread:${added.unReadCount} - timeAt:${added.lastMessageAt} - data:${added.data} - message:${added.lastMessageOptions}');
       // insert
@@ -147,15 +147,15 @@ class SessionCommon with Tag {
       newUnReadCount = (newUnReadCount >= 0) ? newUnReadCount : 0;
       // senderName
       if ((type == SessionType.TOPIC) || (type == SessionType.PRIVATE_GROUP)) {
-        String? newGroupSenderName;
+        String? newSenderName;
         if (newLastMsg != null) {
           ContactSchema? _sender = await contactCommon.query(newLastMsg.sender, fetchWalletAddress: false);
           if (_sender?.displayName.isNotEmpty == true) {
-            newGroupSenderName = _sender?.displayName ?? " ";
+            newSenderName = _sender?.displayName ?? " ";
           }
         }
-        if (newGroupSenderName != exist.data["groupSenderName"]?.toString()) {
-          Map<String, dynamic>? newData = {"groupSenderName": newGroupSenderName};
+        if (newSenderName != exist.data["senderName"]?.toString()) {
+          Map<String, dynamic>? newData = {"senderName": newSenderName};
           bool success = await SessionStorage.instance.setData(targetId, type, newData);
           if (success) exist.data = newData;
         }
