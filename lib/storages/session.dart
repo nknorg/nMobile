@@ -19,7 +19,7 @@ class SessionStorage with Tag {
   static String createSQL = '''
       CREATE TABLE `$tableName` (
         `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        `target_id` VARCHAR(200),
+        `target_id` VARCHAR(100),
         `type` INT,
         `last_message_at` BIGINT,
         `last_message_options` TEXT,
