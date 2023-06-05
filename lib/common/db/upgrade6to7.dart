@@ -1,18 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/session.dart';
+import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 // TODO:GG 应该就不是升级，是迁移了，版本号还是改成7？
 // TODO:GG 各个表名要修改吗？
+// TODO:GG 尽量不要importSchema
 class Upgrade6to7 {
   static Future upgradeDeviceInfo(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // contact_address (VARCHAR(200)) -> contact_address (VARCHAR(100))(NOT EMPTY)
@@ -21,13 +23,12 @@ class Upgrade6to7 {
     // update_at/create_at (BIGINT) -> online_at (BIGINT)(NOT EMPTY)
     // data (TEXT) -> data (TEXT)(NOT NULL) ----> equal。旧的值直接拷贝，新的临时创建
 
-    upgradeTipSink?.add(".. (1/9)");
+    upgradeTipSink?.add(". (1/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeContact(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // address (VARCHAR(200)) -> address (VARCHAR(100))(NOT EMPTY)
@@ -46,13 +47,12 @@ class Upgrade6to7 {
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
     // device_token (TEXT) -> deviceInfo.device_token (TEXT)
 
-    upgradeTipSink?.add(".. (2/9)");
+    upgradeTipSink?.add(". (2/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeTopic(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // topic (VARCHAR(200)) -> topic_id (VARCHAR(100))(NOT EMPTY)
@@ -70,13 +70,12 @@ class Upgrade6to7 {
     // topicSchema.options?.avatarBgColor = Color(e['theme_id']);
     // }
 
-    upgradeTipSink?.add(".. (3/9)");
+    upgradeTipSink?.add(". (3/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeSubscriber(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // topic (VARCHAR(200)) -> topic_id (VARCHAR(100))(NOT EMPTY)
@@ -85,13 +84,131 @@ class Upgrade6to7 {
     // perm_page (INT) -> perm_page (INT)
     // data (TEXT) -> data (TEXT)(NOT NULL) ---->  clear。都是临时的，直接清除掉吧
 
-    upgradeTipSink?.add(".. (4/9)");
+    upgradeTipSink?.add(". (4/9)");
 
-    // TODO:GG db
+    // v7 table
+    if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
+      upgradeTipSink?.add(".. (4/9)");
+      await SubscriberStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (4/9)");
+
+    // v5 table
+    String oldTableName = "Subscriber_3";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (4/9)");
+
+    // total
+    int totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+
+    // convert all data v5 to v7
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // createAt
+        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        if (newCreateAt == 0) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - oldCreateAt null - data:$result");
+          newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
+        }
+        // updateAt
+        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - oldUpdateAt null - data:$result");
+          newUpdateAt = newCreateAt;
+        }
+        // topicId
+        String? oldTopicId = result["topic"]?.toString();
+        if ((oldTopicId == null) || oldTopicId.isEmpty) {
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - oldTopicId null - data:$result");
+          continue;
+        }
+        String newTopicId = (oldTopicId.length <= 100) ? oldTopicId : "";
+        if (newTopicId.isEmpty) {
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newTopicId wrong - data:$result");
+          continue;
+        }
+        // contactAddress
+        String? oldContactAddress = result["chat_id"]?.toString();
+        if ((oldContactAddress == null) || oldContactAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - oldContactAddress null - data:$result");
+          continue;
+        }
+        String newContactAddress = (oldContactAddress.length <= 100) ? oldContactAddress : "";
+        if (newContactAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newContactAddress wrong - data:$result");
+          continue;
+        }
+        // status
+        int newStatus = int.tryParse(result["status"] ?? "") ?? 0; // SubscriberStatus.None
+        // permPage
+        int? newPermPage = int.tryParse(result["perm_page"] ?? "");
+        // data
+        Map<String, dynamic> newData = Map();
+        // duplicated
+        List<Map<String, dynamic>>? duplicated = await db.query(
+          SubscriberStorage.tableName,
+          columns: ['id'],
+          where: 'topic_id = ? AND contact_address = ?',
+          whereArgs: [newTopicId, newContactAddress],
+          offset: 0,
+          limit: 1,
+        );
+        if ((duplicated != null) && duplicated.isNotEmpty) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+          continue;
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'topic_id': newTopicId,
+          'contact_address': newContactAddress,
+          'status': newStatus,
+          'perm_page': newPermPage,
+          'data': jsonEncode(newData),
+        };
+        int id = await db.insert(SubscriberStorage.tableName, entity);
+        if (id > 0) {
+          logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - insert success - data:$entity");
+          total++;
+        } else {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert fail - data:$entity");
+        }
+      }
+      upgradeTipSink?.add("..... (4/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over - progress:$offset/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over - progress:$offset/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop next - progress:$offset/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradePrivateGroup(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // group_id (VARCHAR(200)) -> group_id (VARCHAR(100))(NOT EMPTY)
@@ -107,13 +224,12 @@ class Upgrade6to7 {
     ///----------------------
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
 
-    upgradeTipSink?.add(".. (5/9)");
+    upgradeTipSink?.add(". (5/9)");
 
     // TODO:GG db
   }
 
   static Future upgradePrivateGroupItem(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // group_id (VARCHAR(200)) -> group_id (VARCHAR(100))(NOT EMPTY)
     // permission (INT) -> permission (INT)(NOT EMPTY)
     // expires_at (BIGINT) -> expires_at (BIGINT)
@@ -125,13 +241,12 @@ class Upgrade6to7 {
     // invitee_signature (VARCHAR(200)) -> invitee_signature (VARCHAR(200))
     // data (TEXT) -> data (TEXT)(NOT NULL) ---> clear。根本没有值
 
-    upgradeTipSink?.add(".. (6/9)");
+    upgradeTipSink?.add(". (6/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeMessage(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // pid (VARCHAR(300)) -> pid (VARCHAR(100))(NOT EMPTY) // TODO:GG 除非是StatusError，否则Null不插入
     // msg_id (VARCHAR(300)) -> msg_id (VARCHAR(100))(NOT EMPTY)
     // ??? -> device_id (VARCHAR(200))(const="")
@@ -151,33 +266,23 @@ class Upgrade6to7 {
     // ??? -> data (TEXT) ----> clear。旧的没有值
     // TODO:GG 仔细看看
 
-    upgradeTipSink?.add(".. (7/9)");
+    upgradeTipSink?.add(". (7/9)");
 
     // TODO:GG db
   }
 
   static Future upgradeMessagePiece(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    upgradeTipSink?.add(".. (8/9)");
+    upgradeTipSink?.add(". (8/9)");
     // just create table
     if (!(await DB.checkTableExists(db, MessagePieceStorage.tableName))) {
-      try {
-        await MessagePieceStorage.create(db);
-      } catch (e) {
-        throw e;
-      }
+      upgradeTipSink?.add(".. (8/9)");
+      await MessagePieceStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${MessagePieceStorage.tableName} - exist");
-    }
-    try {
-      await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `${MessagePieceStorage.tableName}` (`msg_id`)'); // no unique
-      await db.execute('CREATE INDEX `index_message_piece_target_id_target_type` ON `${MessagePieceStorage.tableName}` (`target_id`, `target_type`)');
-    } catch (e) {
-      logger.w("Upgrade6to7 - ${MessagePieceStorage.tableName} - index exist");
     }
   }
 
   static Future upgradeSession(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // id (NOT NULL) -> id (NOT NULL)
     // target_id (VARCHAR(200)) -> target_id (VARCHAR(100))(NOT EMPTY)
     // type (INT) -> type (INT)(NOT EMPTY)
     // last_message_at (BIGINT) -> last_message_at (BIGINT)(NOT EMPTY)
@@ -186,7 +291,7 @@ class Upgrade6to7 {
     // un_read_count (INT) -> un_read_count (INT)(NOT NULL)
     // ??? -> data (TEXT)(NOT NULL) ----> reset。只有一个senderName，直接从last_message_options里找contact然后赋值
 
-    upgradeTipSink?.add(".. (9/9)");
+    upgradeTipSink?.add(". (9/9)");
 
     // TODO:GG db
   }
