@@ -148,7 +148,7 @@ class DeviceInfoSchema {
       createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
       updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       contactAddress: e['contact_address'] ?? "",
-      deviceId: e['device_id'].replaceAll("\n", "").trim() ?? "",
+      deviceId: e['device_id']?.replaceAll("\n", "").trim() ?? "",
       deviceToken: e['device_token']?.replaceAll("\n", "").trim() ?? "",
       onlineAt: e['online_at'] ?? 0,
       data: (e['data']?.toString().isNotEmpty == true) ? Util.jsonFormatMap(e['data']) : null,
