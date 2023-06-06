@@ -116,16 +116,15 @@ class ContactCommon with Tag {
     if ((contact.profileVersion == null) || (contact.profileVersion?.isEmpty == true)) {
       String profileVersion = Uuid().v4();
       var data = await setProfileVersion(contact.address, profileVersion);
-      logger.i("$TAG - getMe - self profileVersion created - profileVersion:$profileVersion - data:$data");
+      logger.i("$TAG - getMe - profileVersion created - profileVersion:$profileVersion - data:$data");
       if (data != null) contact.data = data;
     }
     if (fetchWalletAddress) {
-      String nknWalletAddress = contact.data['nknWalletAddress']?.toString() ?? "";
-      if (nknWalletAddress.isEmpty) {
-        String nknWalletAddress = await contact.nknWalletAddress;
-        var data = await setWalletAddress(contact.address, nknWalletAddress);
-        logger.i("$TAG - getMe - self nknWalletAddress create - nknWalletAddress:$nknWalletAddress - data:$data");
-        if (data != null) contact.data = data;
+      String oldWalletAddress = contact.walletAddress;
+      String newWalletAddress = await contact.loadWalletAddress();
+      if (oldWalletAddress != newWalletAddress) {
+        logger.i("$TAG - getMe - walletAddress update - newWalletAddress:$newWalletAddress - oldWalletAddress:$oldWalletAddress");
+        await setWalletAddress(contact.address, newWalletAddress);
       }
     }
     logger.d("$TAG - getMe - fetchWalletAddress:$fetchWalletAddress - contact:$contact");
@@ -140,7 +139,7 @@ class ContactCommon with Tag {
 
   Future<ContactSchema?> add(ContactSchema? schema, {bool fetchWalletAddress = true, bool notify = false}) async {
     if (schema == null || schema.address.isEmpty) return null;
-    if (fetchWalletAddress) await schema.nknWalletAddress;
+    if (fetchWalletAddress) await schema.loadWalletAddress();
     logger.d("$TAG - add - schema:$schema");
     ContactSchema? added = await ContactStorage.instance.insert(schema);
     if ((added != null) && notify) _addSink.add(added);
@@ -158,12 +157,11 @@ class ContactCommon with Tag {
     if (address == null || address.isEmpty) return null;
     ContactSchema? _schema = await ContactStorage.instance.query(address);
     if ((_schema != null) && fetchWalletAddress) {
-      String nknWalletAddress = _schema.data['nknWalletAddress']?.toString() ?? "";
-      if (nknWalletAddress.isEmpty) {
-        nknWalletAddress = await _schema.nknWalletAddress;
-        logger.i("$TAG - query - nknWalletAddress:$nknWalletAddress");
-        var data = await setWalletAddress(address, nknWalletAddress);
-        if (data != null) _schema.data = data;
+      String oldWalletAddress = _schema.walletAddress;
+      String newWalletAddress = await _schema.loadWalletAddress();
+      if (oldWalletAddress != newWalletAddress) {
+        logger.i("$TAG - query - newWalletAddress:$newWalletAddress - oldWalletAddress:$oldWalletAddress");
+        await setWalletAddress(address, _schema.walletAddress);
       }
     }
     return _schema;
@@ -180,6 +178,18 @@ class ContactCommon with Tag {
 
   Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) {
     return ContactStorage.instance.queryList(type: type, orderDesc: orderDesc, offset: offset, limit: limit);
+  }
+
+  Future<bool> setWalletAddress(String? address, String? walletAddress, {bool notify = false}) async {
+    if (address == null || address.isEmpty) return false;
+    bool success = await ContactStorage.instance.setWalletAddress(address, walletAddress ?? "");
+    if (success) {
+      logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - address:$address");
+    }
+    return success;
   }
 
   Future<String?> setSelfAvatar(String? address, String? avatarPath, {bool notify = false}) async {
@@ -311,20 +321,6 @@ class ContactCommon with Tag {
       if (notify) queryAndNotify(address);
     } else {
       logger.w("$TAG - setOtherRemarkAvatar - fail - avatarLocalPath:$avatarLocalPath - data:$data - address:$address");
-    }
-    return data;
-  }
-
-  Future<Map<String, dynamic>?> setWalletAddress(String? address, String? walletAddress, {bool notify = false}) async {
-    if (address == null || address.isEmpty) return null;
-    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
-      "nknWalletAddress": walletAddress?.replaceAll("\n", "").trim(),
-    });
-    if (data != null) {
-      logger.i("$TAG - setWalletAddress - success - walletAddress:$walletAddress - data:$data - address:$address");
-      if (notify) queryAndNotify(address);
-    } else {
-      logger.w("$TAG - setWalletAddress - fail - walletAddress:$walletAddress - data:$data - address:$address");
     }
     return data;
   }
