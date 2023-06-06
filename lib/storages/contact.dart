@@ -24,6 +24,7 @@ class ContactStorage with Tag {
         `create_at` BIGINT,
         `update_at` BIGINT,
         `address` VARCHAR(100),
+        `wallet_address` VARCHAR(100),
         `avatar` TEXT,
         `first_name` VARCHAR(50),
         `last_name` VARCHAR(50),
@@ -172,6 +173,35 @@ class ContactStorage with Tag {
       handleError(e, st);
     }
     return [];
+  }
+
+  Future<bool> setWalletAddress(String? address, String walletAddress) async {
+    if (db?.isOpen != true) return false;
+    if (address == null || address.isEmpty) return false;
+    return await _queue.add(() async {
+          try {
+            int? count = await db?.transaction((txn) {
+              return txn.update(
+                tableName,
+                {
+                  'wallet_address': walletAddress,
+                  'update_at': DateTime.now().millisecondsSinceEpoch,
+                },
+                where: 'address = ?',
+                whereArgs: [address],
+              );
+            });
+            if (count != null && count > 0) {
+              // logger.v("$TAG - setWalletAddress - success - address:$address - walletAddress:$walletAddress");
+              return true;
+            }
+            logger.w("$TAG - setWalletAddress - fail - address:$address - walletAddress:$walletAddress");
+          } catch (e, st) {
+            handleError(e, st);
+          }
+          return false;
+        }) ??
+        false;
   }
 
   Future<bool> setAvatar(String? address, String? avatarLocalPath) async {
