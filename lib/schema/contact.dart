@@ -70,15 +70,15 @@ class ContactSchema {
 
   static String getDefaultName(String? address) {
     if (address == null || address.isEmpty) return "";
+    if (address.length <= 6) return address;
     String defaultName;
-    if (address.length <= 6) {
-      defaultName = address;
-    }
     var index = address.lastIndexOf('.');
     if (index < 0) {
       defaultName = address.substring(0, 6);
-    } else {
+    } else if (address.length > (index + 7)) {
       defaultName = address.substring(0, index + 7);
+    } else {
+      defaultName = address;
     }
     return defaultName;
   }

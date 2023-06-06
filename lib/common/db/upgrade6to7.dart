@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/schema/option.dart';
+import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/private_group.dart';
@@ -124,7 +125,7 @@ class Upgrade6to7 {
         try {
           newData = jsonEncode(_newData);
         } catch (e) {
-          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newData wrong - data:$result");
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
         }
         // duplicated
         try {
@@ -190,19 +191,212 @@ class Upgrade6to7 {
     // last_name (VARCHAR(50)) -> last_name (VARCHAR(50))(NOT NULL)
     // .data[remarkName/firstName] (String) -> remark_name (VARCHAR(50))(NOT NULL)
     // type (INT) -> type (INT)(NOT EMPTY)
-    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(const=0)
+    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)
     // options (TEXT) -> options (TEXT)(NOT NULL)
-    // data (TEXT) -> data (TEXT)(NOT NULL) ----> reset。还有notes,mappedAddress
-    ///----------------------
-    // profile_version (VARCHAR(300)) -> .data[profileVersion] (String)
-    // .data[remarkAvatar/avatar] (TEXT) -> .data[remarkAvatar] (TEXT)
-    // Settings."chat_tip_notification:$client_address:$targetId" (String(0/1)) -> .data[tipNotification] (Int(0/1))
-    // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
-    // device_token (TEXT) -> deviceInfo.device_token (TEXT) ---> 是否带有[XXX:]的前缀，不带就舍弃。 如果contact有token，那么也可以健一个device_id为empty的，把token塞进去????? .replaceAll("\n", "").trim();
+    // data (TEXT) -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (2/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
+      upgradeTipSink?.add(".. (2/9)");
+      await ContactStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (2/9)");
+
+    // table(v5)
+    String oldTableName = "Contact_2";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (2/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // createAt
+        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        if (newCreateAt == 0) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldCreateAt null - data:$result");
+          newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
+        }
+        // updateAt
+        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldUpdateAt null - data:$result");
+          newUpdateAt = newCreateAt;
+        }
+        // address
+        String? oldAddress = result["address"]?.toString();
+        if ((oldAddress == null) || oldAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - oldAddress null - data:$result");
+          continue;
+        }
+        String newAddress = (oldAddress.length <= 100) ? oldAddress : "";
+        if (newAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - newAddress null - data:$result");
+          continue;
+        }
+        // avatar
+        String? newAvatar = Path.convert2Local(result["avatar"]?.toString());
+        // firstName
+        String newFirstName = result["first_name"]?.toString() ?? "";
+        if (newFirstName.isEmpty) {
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - oldFirstName wrong - data:$result");
+          if (newAddress.length <= 6) {
+            newFirstName = newAddress;
+          } else {
+            var index = newAddress.lastIndexOf('.');
+            if (index < 0) {
+              newFirstName = newAddress.substring(0, 6);
+            } else if (newAddress.length > (index + 7)) {
+              newFirstName = newAddress.substring(0, index + 7);
+            } else {
+              newFirstName = newAddress;
+            }
+          }
+        }
+        // lastName
+        String newLastName = result["last_name"]?.toString() ?? "";
+        // type
+        int newType = int.tryParse(result["type"] ?? "") ?? 0; // ContactType.none
+        // isTop
+        int newIsTop = 0;
+        // options
+        OptionsSchema? _newOptions;
+        if (result['options']?.toString().isNotEmpty == true) {
+          Map<String, dynamic>? map = Util.jsonFormatMap(result['options']?.toString());
+          _newOptions = OptionsSchema.fromMap(map ?? Map());
+        } else {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldOptions wrong - data:$result");
+        }
+        _newOptions = _newOptions ?? OptionsSchema();
+        String newOptions = "{}";
+        try {
+          newOptions = jsonEncode(_newOptions.toMap());
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+        }
+        // data
+        Map<String, dynamic> _oldData = Map();
+        if (result['data']?.toString().isNotEmpty == true) {
+          _oldData = Util.jsonFormatMap(result['data']?.toString()) ?? Map();
+        }
+        Map<String, dynamic> _newData = Map();
+        _newData["profileVersion"] = result["profile_version"]?.toString();
+        _newData['remarkAvatar'] = _oldData['avatar'] ?? _oldData['remarkAvatar'] ?? _oldData['remark_avatar'];
+        _newData['notes'] = _oldData['notes'];
+        _newData['mappedAddress'] = _oldData['mappedAddress'];
+        _newData['tipNotification'] = 1; // or Settings."chat_tip_notification:$client_address:$targetId" (String(0/1)) -> .data[tipNotification] (Int(0/1))
+        _newData['receivedMessages'] = {}; // set when message delete
+        String newData = "{}";
+        try {
+          newData = jsonEncode(_newData);
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
+        }
+        // walletAddress
+        String newWalletAddress = _oldData["nknWalletAddress"]?.toString() ?? ""; // no refresh
+        // remarkName
+        String newRemarkName = (_oldData["firstName"] ?? _oldData["first_name"] ?? _oldData["remarkName"] ?? _oldData["remark_name"])?.toString() ?? "";
+        // deviceToken
+        String deviceToken = (result["device_token"]?.toString() ?? "").replaceAll("\n", "").trim();
+        if (deviceToken.isNotEmpty && (deviceToken.startsWith("[APNS]:") || deviceToken.startsWith("[FCM]:"))) {
+          try {
+            int? count = await db.update(
+              DeviceInfoStorage.tableName,
+              {
+                'device_token': deviceToken,
+              },
+              where: 'contact_address = ?',
+              whereArgs: [newAddress],
+            );
+            if ((count == null) || (count <= 0)) logger.w("Upgrade6to7 - ${ContactStorage.tableName} - deviceToken no set - old:$result");
+          } catch (e) {
+            logger.w("Upgrade6to7 - ${ContactStorage.tableName} - deviceToken error - old:$result - error:${e.toString()}");
+          }
+        }
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            ContactStorage.tableName,
+            columns: ['id'],
+            where: 'address = ?',
+            whereArgs: [newAddress],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'address': newAddress,
+          'wallet_address': newWalletAddress,
+          'avatar': newAvatar,
+          'first_name': newFirstName,
+          'last_name': newLastName,
+          'remark_name': newRemarkName,
+          'type': newType,
+          'is_top': newIsTop,
+          'options': newOptions,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(ContactStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${ContactStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (2/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradeTopic(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -215,7 +409,7 @@ class Upgrade6to7 {
     // expire_height (BIGINT) -> expire_height (BIGINT)
     // avatar (TEXT) -> avatar (TEXT)
     // count (INT) -> count (INT)(NOT NULL)
-    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(const=0)
+    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
@@ -319,7 +513,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions.toMap());
         } catch (e) {
-          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - newOptions wrong - data:$result");
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         String newData = "{}"; // clear temps
@@ -532,12 +726,12 @@ class Upgrade6to7 {
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // group_id (VARCHAR(200)) -> group_id (VARCHAR(100))(NOT EMPTY)
-    // type (INT) -> type (INT)(const=0)
+    // type (INT) -> type (INT)
     // name (VARCHAR(200)) -> name (VARCHAR(100))(NOT EMPTY)
     // count (INT) -> count (INT)(NOT NULL)
     // avatar (TEXT) -> avatar (TEXT)
     // joined (BOOLEAN DEFAULT 0) -> joined (BOOLEAN DEFAULT 0)(NOT NULL)
-    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(const=0)
+    // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
@@ -636,7 +830,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions.toMap());
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newOptions wrong - data:$result");
+          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         Map<String, dynamic> _oldData = Map();
@@ -652,7 +846,7 @@ class Upgrade6to7 {
         try {
           newData = jsonEncode(_newData);
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newData wrong - data:$result");
+          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
         }
         // duplicated
         try {
