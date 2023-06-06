@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/schema/option.dart';
+import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
@@ -23,14 +24,160 @@ class Upgrade6to7 {
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // contact_address (VARCHAR(200)) -> contact_address (VARCHAR(100))(NOT EMPTY)
-    // device_id (TEXT) -> device_id (VARCHAR(200))(NOT EMPTY) ---> 注意如果是empty就舍弃了
-    // contact.device_token (TEXT) -> device_token (TEXT)(NOT NULL) ---> 是否带有[XXX:]的前缀，不带就舍弃。 如果contact有token，那么也可以健一个device_id为empty的，把token塞进去?????
+    // device_id (TEXT) -> device_id (VARCHAR(200))(NOT EMPTY)
+    // contact.device_token (TEXT) -> device_token (TEXT)(NOT NULL)
     // update_at/create_at (BIGINT) -> online_at (BIGINT)(NOT EMPTY)
-    // data (TEXT) -> data (TEXT)(NOT NULL) ----> equal。旧的值直接拷贝，新的临时创建
+    // data (TEXT) -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (1/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, DeviceInfoStorage.tableName))) {
+      upgradeTipSink?.add(".. (1/9)");
+      await DeviceInfoStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (1/9)");
+
+    // table(v5)
+    String oldTableName = "DeviceInfo";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (1/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // createAt
+        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        if (newCreateAt == 0) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldCreateAt null - data:$result");
+          newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
+        }
+        // updateAt
+        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldUpdateAt null - data:$result");
+          newUpdateAt = newCreateAt;
+        }
+        // contactAddress
+        String? oldContactAddress = result["contact_address"]?.toString();
+        if ((oldContactAddress == null) || oldContactAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldContactAddress null - data:$result");
+          continue;
+        }
+        String newContactAddress = (oldContactAddress.length <= 100) ? oldContactAddress : "";
+        if (newContactAddress.isEmpty) {
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newContactAddress null - data:$result");
+          continue;
+        }
+        // deviceId
+        String? oldDeviceId = result["device_id"]?.toString().replaceAll("\n", "").trim();
+        if ((oldDeviceId == null) || oldDeviceId.isEmpty) {
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldContactAddress null - data:$result");
+          continue;
+        }
+        String newDeviceId = (oldDeviceId.length <= 200) ? oldDeviceId : "";
+        if (newDeviceId.isEmpty) {
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newDeviceId null - data:$result");
+          continue;
+        }
+        // deviceToken
+        String newDeviceToken = ""; // set in contact
+        // onlineAt
+        int newOnlineAt = newUpdateAt;
+        // data
+        Map<String, dynamic> _oldData = Map();
+        if (result['data']?.toString().isNotEmpty == true) {
+          _oldData = Util.jsonFormatMap(result['data']?.toString()) ?? Map();
+        }
+        Map<String, dynamic> _newData = Map();
+        _newData['appName'] = _oldData['appName'];
+        _newData['appVersion'] = _oldData['appVersion'];
+        _newData['platform'] = _oldData['platform'];
+        _newData['platformVersion'] = _oldData['platformVersion'];
+        String newData = "{}";
+        try {
+          newData = jsonEncode(_newData);
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newData wrong - data:$result");
+        }
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            DeviceInfoStorage.tableName,
+            columns: ['id'],
+            where: 'contact_address = ? AND device_id = ?',
+            whereArgs: [newContactAddress, newDeviceId],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'contact_address': newContactAddress,
+          'device_id': newDeviceId,
+          'device_token': newDeviceToken,
+          'online_at': newOnlineAt,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(DeviceInfoStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (1/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradeContact(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -51,7 +198,7 @@ class Upgrade6to7 {
     // .data[remarkAvatar/avatar] (TEXT) -> .data[remarkAvatar] (TEXT)
     // Settings."chat_tip_notification:$client_address:$targetId" (String(0/1)) -> .data[tipNotification] (Int(0/1))
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
-    // device_token (TEXT) -> deviceInfo.device_token (TEXT)
+    // device_token (TEXT) -> deviceInfo.device_token (TEXT) ---> 是否带有[XXX:]的前缀，不带就舍弃。 如果contact有token，那么也可以健一个device_id为empty的，把token塞进去????? .replaceAll("\n", "").trim();
 
     upgradeTipSink?.add(". (2/9)");
 
@@ -135,7 +282,7 @@ class Upgrade6to7 {
         }
         String newTopicId = (oldTopicId.length <= 100) ? oldTopicId : "";
         if (newTopicId.isEmpty) {
-          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - newTopicId wrong - data:$result");
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - newTopicId null - data:$result");
           continue;
         }
         // type
@@ -307,7 +454,7 @@ class Upgrade6to7 {
         }
         String newTopicId = (oldTopicId.length <= 100) ? oldTopicId : "";
         if (newTopicId.isEmpty) {
-          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newTopicId wrong - data:$result");
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newTopicId null - data:$result");
           continue;
         }
         // contactAddress
@@ -318,7 +465,7 @@ class Upgrade6to7 {
         }
         String newContactAddress = (oldContactAddress.length <= 100) ? oldContactAddress : "";
         if (newContactAddress.isEmpty) {
-          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newContactAddress wrong - data:$result");
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - newContactAddress null - data:$result");
           continue;
         }
         // status
@@ -457,7 +604,7 @@ class Upgrade6to7 {
         }
         String newGroupId = (oldGroupId.length <= 100) ? oldGroupId : "";
         if (newGroupId.isEmpty) {
-          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newGroupId wrong - data:$result");
+          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newGroupId null - data:$result");
           continue;
         }
         // type
@@ -628,7 +775,7 @@ class Upgrade6to7 {
         }
         String newGroupId = (oldGroupId.length <= 100) ? oldGroupId : "";
         if (newGroupId.isEmpty) {
-          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - newGroupId wrong - data:$result");
+          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - newGroupId null - data:$result");
           continue;
         }
         // permission
