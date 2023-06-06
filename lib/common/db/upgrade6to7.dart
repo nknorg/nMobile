@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:nmobile/common/db/db.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/message_piece.dart';
+import 'package:nmobile/storages/private_group_item.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -35,6 +36,7 @@ class Upgrade6to7 {
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // address (VARCHAR(200)) -> address (VARCHAR(100))(NOT EMPTY)
+    // .data[nknWalletAddress] (String) -> wallet_address (VARCHAR(100))(NOT NULL)
     // avatar (TEXT) -> avatar (TEXT)
     // first_name (VARCHAR(50)) -> first_name (VARCHAR(50))(NOT EMPTY)
     // last_name (VARCHAR(50)) -> last_name (VARCHAR(50))(NOT NULL)
@@ -42,7 +44,7 @@ class Upgrade6to7 {
     // type (INT) -> type (INT)(NOT EMPTY)
     // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(const=0)
     // options (TEXT) -> options (TEXT)(NOT NULL)
-    // data (TEXT) -> data (TEXT)(NOT NULL) ----> reset。还有notes,mappedAddress,nknWalletAddress
+    // data (TEXT) -> data (TEXT)(NOT NULL) ----> reset。还有notes,mappedAddress
     ///----------------------
     // profile_version (VARCHAR(300)) -> .data[profileVersion] (String)
     // .data[remarkAvatar/avatar] (TEXT) -> .data[remarkAvatar] (TEXT)
@@ -381,7 +383,6 @@ class Upgrade6to7 {
     // update_at (BIGINT) -> update_at (BIGINT)(NOT EMPTY)
     // group_id (VARCHAR(200)) -> group_id (VARCHAR(100))(NOT EMPTY)
     // type (INT) -> type (INT)(const=0)
-    // version (TEXT) -> version (TEXT)
     // name (VARCHAR(200)) -> name (VARCHAR(100))(NOT EMPTY)
     // count (INT) -> count (INT)(NOT NULL)
     // avatar (TEXT) -> avatar (TEXT)
@@ -390,6 +391,7 @@ class Upgrade6to7 {
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL) ----> equal。拷贝就行
     ///----------------------
+    // version (TEXT) -> data[version] (String)
     // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
 
     upgradeTipSink?.add(". (5/9)");
@@ -407,11 +409,135 @@ class Upgrade6to7 {
     // invitee_raw_data (TEXT) -> invitee_raw_data (TEXT)
     // inviter_signature (VARCHAR(200)) -> inviter_signature (VARCHAR(200))
     // invitee_signature (VARCHAR(200)) -> invitee_signature (VARCHAR(200))
-    // data (TEXT) -> data (TEXT)(NOT NULL) ---> clear。根本没有值
+    // data (TEXT) -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (6/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, PrivateGroupItemStorage.tableName))) {
+      upgradeTipSink?.add(".. (4/9)");
+      await PrivateGroupItemStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (4/9)");
+
+    // table(v5)
+    String oldTableName = "PrivateGroupList";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (4/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // groupId
+        String? oldGroupId = result["group_id"]?.toString();
+        if ((oldGroupId == null) || oldGroupId.isEmpty) {
+          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - oldGroupId null - data:$result");
+          continue;
+        }
+        String newGroupId = (oldGroupId.length <= 100) ? oldGroupId : "";
+        if (newGroupId.isEmpty) {
+          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - newGroupId wrong - data:$result");
+          continue;
+        }
+        // permission
+        int newPermission = int.tryParse(result["permission"] ?? "") ?? 0; // PrivateGroupItemPerm.None
+        // expiresAt
+        int? newExpiresAt = int.tryParse(result["expires_at"] ?? "");
+        // inviter
+        String? newInviter = result["inviter"];
+        // newInvitee
+        String? newInvitee = result["invitee"];
+        // inviterRawData
+        String? newInviterRawData = result["inviter_raw_data"];
+        // inviteeRawData
+        String? newInviteeRawData = result["invitee_raw_data"];
+        // inviterSignature
+        String? newInviterSignature = result["inviter_signature"];
+        // inviteeSignature
+        String? newInviteeSignature = result["invitee_signature"];
+        // data
+        String newData = "{}"; // nothing
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            PrivateGroupItemStorage.tableName,
+            columns: ['id'],
+            where: 'group_id = ? AND invitee = ?',
+            whereArgs: [newGroupId, newInvitee],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'group_id': newGroupId,
+          'permission': newPermission,
+          'expires_at': newExpiresAt,
+          'inviter': newInviter,
+          'invitee': newInvitee,
+          'inviter_raw_data': newInviterRawData,
+          'invitee_raw_data': newInviteeRawData,
+          'inviter_signature': newInviterSignature,
+          'invitee_signature': newInviteeSignature,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(PrivateGroupItemStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (4/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradeMessage(Database db, {StreamSink<String?>? upgradeTipSink}) async {
