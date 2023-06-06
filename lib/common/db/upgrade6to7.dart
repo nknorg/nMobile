@@ -82,11 +82,11 @@ class Upgrade6to7 {
     // chat_id (VARCHAR(200)) -> contact_address (VARCHAR(100))(NOT EMPTY)
     // status (INT) -> status (INT)(NOT EMPTY)
     // perm_page (INT) -> perm_page (INT)
-    // data (TEXT) -> data (TEXT)(NOT NULL) ---->  clear。都是临时的，直接清除掉吧
+    // data (TEXT) -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (4/9)");
 
-    // v7 table
+    // table(v7)
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
       upgradeTipSink?.add(".. (4/9)");
       await SubscriberStorage.create(db);
@@ -95,7 +95,7 @@ class Upgrade6to7 {
     }
     upgradeTipSink?.add("... (4/9)");
 
-    // v5 table
+    // table(v5)
     String oldTableName = "Subscriber_3";
     if (!(await DB.checkTableExists(db, oldTableName))) {
       logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName no exist");
@@ -104,9 +104,14 @@ class Upgrade6to7 {
     upgradeTipSink?.add(".... (4/9)");
 
     // total
-    int totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
 
-    // convert all data v5 to v7
+    // convert(v5->v7)
     int total = 0;
     final limit = 50;
     for (int offset = 0; true; offset += limit) {
@@ -159,21 +164,25 @@ class Upgrade6to7 {
         // status
         int newStatus = int.tryParse(result["status"] ?? "") ?? 0; // SubscriberStatus.None
         // permPage
-        int? newPermPage = int.tryParse(result["perm_page"] ?? "");
+        int? newPermPage = int.tryParse(result["perm_page"] ?? ""); // maybe null
         // data
-        Map<String, dynamic> newData = Map();
+        Map<String, dynamic> newData = Map(); // nothing
         // duplicated
-        List<Map<String, dynamic>>? duplicated = await db.query(
-          SubscriberStorage.tableName,
-          columns: ['id'],
-          where: 'topic_id = ? AND contact_address = ?',
-          whereArgs: [newTopicId, newContactAddress],
-          offset: 0,
-          limit: 1,
-        );
-        if ((duplicated != null) && duplicated.isNotEmpty) {
-          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
-          continue;
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            SubscriberStorage.tableName,
+            columns: ['id'],
+            where: 'topic_id = ? AND contact_address = ?',
+            whereArgs: [newTopicId, newContactAddress],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -185,25 +194,29 @@ class Upgrade6to7 {
           'perm_page': newPermPage,
           'data': jsonEncode(newData),
         };
-        int id = await db.insert(SubscriberStorage.tableName, entity);
-        if (id > 0) {
-          logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - insert success - data:$entity");
-          total++;
-        } else {
-          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert fail - data:$entity");
+        try {
+          int id = await db.insert(SubscriberStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (4/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
-          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over - progress:$offset/$totalRawCount");
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
         } else {
-          logger.i("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over - progress:$offset/$totalRawCount");
+          logger.i("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
         }
         break;
       } else {
-        logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop next - progress:$offset/$totalRawCount");
+        logger.d("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
       }
     }
   }
