@@ -58,7 +58,11 @@ class SecureStorage {
   Future<Map<String, dynamic>?> getItem(String key, int n) async {
     String? item = await _storage.read(key: '$key:$n');
     if (item == null) return null;
-    return jsonDecode(item);
+    try {
+      return jsonDecode(item);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<List<Map<String, dynamic>>> getArray(String key) async {

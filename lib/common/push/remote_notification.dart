@@ -107,7 +107,10 @@ class RemoteNotification {
         // response
         if (response.statusCode == 200) {
           logger.d("RemoteNotification - sendFCM - success - body:${response.body}");
-          Map<String, dynamic>? result = jsonDecode(response.body);
+          Map<String, dynamic>? result;
+          try {
+            result = jsonDecode(response.body);
+          } catch (e) {}
           if ((result != null) && (result["results"] is List) && (result["results"].length > 0)) {
             notificationId = result["results"][0]["message_id"]?.toString();
           } else {
