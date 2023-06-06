@@ -221,7 +221,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
 
   _selectDefaultWallet() async {
     WalletSchema? selected = await BottomDialog.of(Settings.appContext).showWalletSelect(title: Settings.locale((s) => s.select_another_wallet), onlyNKN: true);
-    if (selected == null || selected.address.isEmpty || selected.address == (await _contact?.nknWalletAddress)) return;
+    if (selected == null || selected.address.isEmpty || selected.address == (_contact?.walletAddress)) return;
 
     Loading.show();
     try {

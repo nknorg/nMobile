@@ -140,11 +140,9 @@ class ContactAddScreenState extends BaseStateFulWidgetState<ContactAddScreen> wi
         Loading.dismiss();
       } else {
         ContactSchema? schema = ContactSchema.create(clientAddress, ContactType.friend);
-        if (schema != null) {
-          schema.remarkName = remarkName ?? "";
-          await schema.nknWalletAddress;
-          schema.data = {"remarkAvatar": remarkAvatar, "notes": note};
-        }
+        await schema?.loadWalletAddress();
+        schema?.remarkName = remarkName ?? "";
+        schema?.data = {"remarkAvatar": remarkAvatar, "notes": note};
         ContactSchema? added = await contactCommon.add(schema, notify: true);
         if (added == null) {
           logger.i("$TAG - _saveContact - schema:$schema");

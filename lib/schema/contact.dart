@@ -27,6 +27,7 @@ class ContactSchema {
   int updateAt; // <-> update_at
 
   String address; // (required : (ID).PubKey) <-> address (same with client.address)
+  String walletAddress;
 
   File? avatar; // (local_path) <-> avatar
   String firstName; // (required : name) <-> first_name
@@ -37,13 +38,14 @@ class ContactSchema {
   bool isTop; // <-> is_top
 
   OptionsSchema options = OptionsSchema(); // <-> options
-  Map<String, dynamic> data = Map(); // [*]<-> data[*, avatar, firstName, notes, nknWalletAddress, ...]
+  Map<String, dynamic> data = Map(); // [*]<-> data[*, avatar, firstName, notes, ...]
 
   ContactSchema({
     this.id,
     this.createAt = 0,
     this.updateAt = 0,
     required this.address,
+    this.walletAddress = "",
     this.avatar,
     this.firstName = "",
     this.lastName = "",
@@ -87,6 +89,19 @@ class ContactSchema {
 
   bool get isMe {
     return type == ContactType.me;
+  }
+
+  Future<String> loadWalletAddress() async {
+    walletAddress = walletAddress.replaceAll("\n", "").trim();
+    if (Validate.isNknAddressOk(walletAddress)) return walletAddress;
+    try {
+      if (Validate.isNknPublicKey(pubKey)) {
+        walletAddress = (await Wallet.pubKeyToWalletAddr(pubKey)) ?? "";
+      }
+    } catch (e, st) {
+      handleError(e, st);
+    }
+    return walletAddress;
   }
 
   String get fullName {
@@ -146,21 +161,6 @@ class ContactSchema {
     return avatarFile;
   }
 
-  Future<String> get nknWalletAddress async {
-    String value = data['nknWalletAddress']?.toString() ?? "";
-    value = value.replaceAll("\n", "").trim();
-    if (value.isNotEmpty) return value;
-    try {
-      if (Validate.isNknPublicKey(pubKey)) {
-        value = (await Wallet.pubKeyToWalletAddr(pubKey)) ?? "";
-      }
-    } catch (e, st) {
-      handleError(e, st);
-    }
-    data['nknWalletAddress'] = value;
-    return value;
-  }
-
   List<String> get mappedAddress {
     return (data['mappedAddress'] ?? []).cast<String>();
   }
@@ -184,10 +184,12 @@ class ContactSchema {
 
   Map<String, dynamic> toMap() {
     address = address.replaceAll("\n", "").trim();
+    walletAddress = walletAddress.replaceAll("\n", "").trim();
     Map<String, dynamic> map = {
       'create_at': createAt,
       'update_at': updateAt,
       'address': address,
+      'wallet_address': walletAddress,
       'avatar': Path.convert2Local(avatar?.path),
       'first_name': firstName.isEmpty ? getDefaultName(address) : firstName,
       'last_name': lastName,
@@ -206,6 +208,7 @@ class ContactSchema {
       createAt: e['create_at'] ?? DateTime.now().millisecondsSinceEpoch,
       updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       address: e['address'] ?? "",
+      walletAddress: e['wallet_address'] ?? "",
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
       firstName: (e['first_name']?.toString() ?? "").isEmpty ? getDefaultName(e['address']) : e['first_name'],
       lastName: e['last_name'] ?? "",
@@ -214,6 +217,7 @@ class ContactSchema {
       isTop: (e['is_top'] != null) && (e['is_top'] == 1) ? true : false,
     );
     contact.address = contact.address.replaceAll("\n", "").trim();
+    contact.walletAddress = contact.walletAddress.replaceAll("\n", "").trim();
     if (e['options']?.toString().isNotEmpty == true) {
       Map<String, dynamic>? options = Util.jsonFormatMap(e['options']);
       contact.options = OptionsSchema.fromMap(options ?? Map());
@@ -227,6 +231,6 @@ class ContactSchema {
 
   @override
   String toString() {
-    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, address: $address, avatar: $avatar, firstName: $firstName, lastName: $lastName, remarkName: $remarkName, type: $type, isTop: $isTop, options: $options, data: $data}';
+    return 'ContactSchema{id: $id, createAt: $createAt, updateAt: $updateAt, address: $address, walletAddress: $walletAddress, avatar: $avatar, firstName: $firstName, lastName: $lastName, remarkName: $remarkName, type: $type, isTop: $isTop, options: $options, data: $data}';
   }
 }
