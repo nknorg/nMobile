@@ -1,18 +1,21 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
-import 'package:nmobile/storages/device_info.dart';
-import 'package:nmobile/storages/message.dart';
+import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/message_piece.dart';
-import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/subscriber.dart';
+import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
+import 'package:nmobile/utils/path.dart';
+import 'package:nmobile/utils/util.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart'; // TODO:GG 这个是不是要注意下?以及所有的import
 
 // TODO:GG 应该就不是升级，是迁移了，版本号还是改成7？
 // TODO:GG 各个表名要修改吗？
 // TODO:GG 尽量不要importSchema
+// TODO:GG 外部调用，记得tryCache和tryTimes
 class Upgrade6to7 {
   static Future upgradeDeviceInfo(Database db, {StreamSink<String?>? upgradeTipSink}) async {
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
@@ -64,15 +67,167 @@ class Upgrade6to7 {
     // count (INT) -> count (INT)(NOT NULL)
     // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(const=0)
     // options (TEXT) -> options (TEXT)(NOT NULL)
-    // data (TEXT) -> data (TEXT)(NOT NULL) ---->  clear。都是临时的，直接清除掉吧
-    ///----------------------
-    // if (e['theme_id'] != null && (e['theme_id'] is int) && e['theme_id'] != 0) {
-    // topicSchema.options?.avatarBgColor = Color(e['theme_id']);
-    // }
+    // data (TEXT) -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (3/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
+      upgradeTipSink?.add(".. (3/9)");
+      await TopicStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (3/9)");
+
+    // table(v5)
+    String oldTableName = "Topic_3";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (3/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // createAt
+        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        if (newCreateAt == 0) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldCreateAt null - data:$result");
+          newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
+        }
+        // updateAt
+        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldUpdateAt null - data:$result");
+          newUpdateAt = newCreateAt;
+        }
+        // topicId
+        String? oldTopicId = result["topic"]?.toString();
+        if ((oldTopicId == null) || oldTopicId.isEmpty) {
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - oldTopicId null - data:$result");
+          continue;
+        }
+        String newTopicId = (oldTopicId.length <= 100) ? oldTopicId : "";
+        if (newTopicId.isEmpty) {
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - newTopicId wrong - data:$result");
+          continue;
+        }
+        // type
+        int newType = int.tryParse(result["type"] ?? "") ?? 0; // 1/2
+        if ((newType != 1) && (newType != 2)) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldType null - data:$result");
+          newType = RegExp(r'\.[0-9A-Fa-f]{64}$').hasMatch(newTopicId) ? 2 : 1;
+        }
+        // joined
+        int newJoined = (result["joined"]?.toString() == '1') ? 1 : 0;
+        // subscribeAt
+        int? newSubscribeAt = int.tryParse(result["subscribe_at"] ?? "");
+        // expireHeight
+        int? newExpireHeight = int.tryParse(result["expire_height"] ?? "");
+        // avatar
+        String? newAvatar = Path.convert2Local(result["avatar"]?.toString());
+        // count
+        int newCount = int.tryParse(result["count"] ?? "") ?? 0;
+        // isTop
+        int newIsTop = 0;
+        // options
+        OptionsSchema? _newOptions;
+        if (result['options']?.toString().isNotEmpty == true) {
+          Map<String, dynamic>? map = Util.jsonFormatMap(result['options']?.toString());
+          _newOptions = OptionsSchema.fromMap(map ?? Map());
+        }
+        _newOptions = _newOptions ?? OptionsSchema();
+        if ((result['theme_id'] != null) && (result['theme_id'] is int) && (result['theme_id'] != 0)) {
+          _newOptions.avatarBgColor = Color(result['theme_id']);
+        }
+        String newOptions = "{}";
+        try {
+          newOptions = jsonEncode(_newOptions.toMap());
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - newOptions wrong - data:$result");
+        }
+        // data
+        String newData = "{}"; // clear temps
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            TopicStorage.tableName,
+            columns: ['id'],
+            where: 'topic_id = ?',
+            whereArgs: [newTopicId],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'create_at': newCreateAt,
+          'update_at': newUpdateAt,
+          'topic_id': newTopicId,
+          'type': newType,
+          'joined': newJoined,
+          'subscribe_at': newSubscribeAt,
+          'expire_height': newExpireHeight,
+          'avatar': newAvatar,
+          'count': newCount,
+          'is_top': newIsTop,
+          'options': newOptions,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(TopicStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${TopicStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (3/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradeSubscriber(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -164,9 +319,9 @@ class Upgrade6to7 {
         // status
         int newStatus = int.tryParse(result["status"] ?? "") ?? 0; // SubscriberStatus.None
         // permPage
-        int? newPermPage = int.tryParse(result["perm_page"] ?? ""); // maybe null
+        int? newPermPage = int.tryParse(result["perm_page"] ?? "");
         // data
-        Map<String, dynamic> newData = Map(); // nothing
+        String newData = "{}"; // nothing
         // duplicated
         try {
           List<Map<String, dynamic>>? duplicated = await db.query(
@@ -192,7 +347,7 @@ class Upgrade6to7 {
           'contact_address': newContactAddress,
           'status': newStatus,
           'perm_page': newPermPage,
-          'data': jsonEncode(newData),
+          'data': newData,
         };
         try {
           int id = await db.insert(SubscriberStorage.tableName, entity);
