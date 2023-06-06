@@ -96,9 +96,9 @@ class PrivateGroupCommon with Tag {
       return null;
     }
     // insert
-    schemaGroup.version = genPrivateGroupVersion(1, schemaGroup.signature, [schemaItem]);
     schemaGroup.joined = true;
     schemaGroup.count = 1;
+    schemaGroup.data["version"] = genPrivateGroupVersion(1, schemaGroup.signature, [schemaItem]);
     schemaGroup = await addPrivateGroup(schemaGroup, notify: true);
     logger.i('$TAG - createPrivateGroup - success - group:$schemaGroup - owner:$schemaItem');
     return schemaGroup;
@@ -281,11 +281,16 @@ class PrivateGroupCommon with Tag {
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     List<PrivateGroupItemSchema> members = await getMembersAll(schema.groupId);
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    var data = await setGroupVersion(schema.groupId, schemaGroup.version);
+    if (data == null) {
+      logger.e('$TAG - onInviteeAccept - set version fail. - invitee:$schema - group:$schemaGroup');
+      return null;
+    }
     schemaGroup.count = members.length;
-    bool success = await setVersionCount(schema.groupId, schemaGroup.version, schemaGroup.count, notify: true);
+    await setCount(schema.groupId, schemaGroup.count, notify: true);
     logger.i('$TAG - onInviteeAccept - success - invitee:$schema - group:$schemaGroup');
-    return success ? schemaGroup : null;
+    return schemaGroup;
   }
 
   Future<bool> quit(String? groupId, {bool toast = false, bool notify = false}) async {
@@ -408,13 +413,14 @@ class PrivateGroupCommon with Tag {
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     List<PrivateGroupItemSchema> members = await getMembersAll(schemaGroup.groupId);
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
-    schemaGroup.count = members.length;
-    success = await setVersionCount(schemaGroup.groupId, schemaGroup.version, schemaGroup.count, notify: notify);
-    if (!success) {
+    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    var data = await setGroupVersion(schemaGroup.groupId, schemaGroup.version);
+    if (data == null) {
       logger.e('$TAG - onMemberQuit - kickOut group sql fail.');
       return false;
     }
+    schemaGroup.count = members.length;
+    await setCount(schemaGroup.groupId, schemaGroup.count, notify: notify);
     // sync members
     members.add(lefter);
     members.removeWhere((m) => m.invitee == selfAddress);
@@ -493,13 +499,14 @@ class PrivateGroupCommon with Tag {
     // group
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
-    schemaGroup.count = members.length;
-    success = await setVersionCount(groupId, schemaGroup.version, schemaGroup.count, notify: notify);
-    if (!success) {
+    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    var data = await setGroupVersion(groupId, schemaGroup.version);
+    if (data == null) {
       logger.e('$TAG - kickOut - kickOut group sql fail.');
       return false;
     }
+    schemaGroup.count = members.length;
+    await setCount(groupId, schemaGroup.count, notify: notify);
     // sync members
     members.add(blacker);
     members.removeWhere((m) => m.invitee == selfAddress);
@@ -551,18 +558,18 @@ class PrivateGroupCommon with Tag {
       logger.e('$TAG - setOptionsBurning - group sign create fail. - pk:$ownerPrivateKey - group:$schemaGroup');
       return false;
     }
-    var data = await setGroupSignature(groupId, signatureData, notify: true);
+    schemaGroup.data["signature"] = signatureData;
+    var data = await setGroupSignature(groupId, schemaGroup.signature, notify: true);
     if (data == null) {
       logger.e('$TAG - setOptionsBurning - signature sql fail.');
       return false;
     }
-    schemaGroup.data = data;
     // version
     int commits = (getPrivateGroupVersionCommits(schemaGroup.version) ?? 0) + 1;
     List<PrivateGroupItemSchema> members = await getMembersAll(groupId);
-    schemaGroup.version = genPrivateGroupVersion(commits, schemaGroup.signature, members);
-    bool success = await setVersionCount(groupId, schemaGroup.version, schemaGroup.count, notify: notify);
-    if (!success) {
+    schemaGroup.data["version"] = genPrivateGroupVersion(commits, schemaGroup.signature, members);
+    data = await setGroupVersion(schemaGroup.groupId, schemaGroup.version, notify: notify);
+    if (data == null) {
       logger.e('$TAG - setOptionsBurning - version sql fail.');
       return false;
     }
@@ -619,10 +626,10 @@ class PrivateGroupCommon with Tag {
     if (exists == null) {
       PrivateGroupSchema? _newGroup = PrivateGroupSchema.create(groupId, infos['name'], type: infos['type']);
       if (_newGroup == null) return null;
-      _newGroup.version = version;
       _newGroup.count = count;
       _newGroup.options = OptionsSchema(deleteAfterSeconds: int.tryParse(infos['deleteAfterSeconds']?.toString() ?? ""));
       _newGroup.data['signature'] = signature;
+      _newGroup.data['version'] = version;
       exists = await addPrivateGroup(_newGroup, notify: true);
       logger.i('$TAG - updatePrivateGroupOptions - group create - group:$exists');
     } else {
@@ -644,14 +651,17 @@ class PrivateGroupCommon with Tag {
             if (options != null) exists.options = options;
           }
           if (signature != exists.signature) {
-            var data = await setGroupSignature(groupId, signature, notify: true);
-            if (data != null) exists.data = data;
+            exists.data["signature"] = signature;
+            await setGroupSignature(groupId, exists.signature, notify: true);
           }
         }
-        if ((version != exists.version) || (count != exists.count)) {
-          exists.version = version;
+        if (version != exists.version) {
+          exists.data["version"] = version;
+          await setGroupVersion(groupId, version);
+        }
+        if (count != exists.count) {
           exists.count = count;
-          await setVersionCount(groupId, version, count, notify: true);
+          await setCount(groupId, count, notify: true);
         }
         logger.i('$TAG - updatePrivateGroupOptions - group modify - group:$exists');
       } else {
@@ -924,10 +934,10 @@ class PrivateGroupCommon with Tag {
     return success;
   }
 
-  Future<bool> setVersionCount(String? groupId, String? version, int userCount, {bool notify = false}) async {
+  Future<bool> setCount(String? groupId, int userCount, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return false;
     if (userCount < 0) userCount = 0;
-    bool success = await PrivateGroupStorage.instance.setVersionCount(groupId, version, userCount);
+    bool success = await PrivateGroupStorage.instance.setCount(groupId, userCount);
     if (success && notify) queryAndNotifyGroup(groupId);
     return success;
   }
@@ -951,16 +961,30 @@ class PrivateGroupCommon with Tag {
     return options;
   }
 
+  Future<Map<String, dynamic>?> setGroupVersion(String? groupId, String? version, {bool notify = false}) async {
+    if (groupId == null || groupId.isEmpty) return null;
+    var data = await PrivateGroupStorage.instance.setData(groupId, {
+      "version": version,
+    });
+    if (data != null) {
+      logger.i("$TAG - setGroupVersion - success - version:$version - data:$data - groupId:$groupId");
+      if (notify) queryAndNotifyGroup(groupId);
+    } else {
+      logger.w("$TAG - setGroupVersion - fail - version:$version - data:$data - groupId:$groupId");
+    }
+    return data;
+  }
+
   Future<Map<String, dynamic>?> setGroupSignature(String? groupId, String? signature, {bool notify = false}) async {
     if (groupId == null || groupId.isEmpty) return null;
     var data = await PrivateGroupStorage.instance.setData(groupId, {
       "signature": signature,
     });
     if (data != null) {
-      logger.i("$TAG - setSignature - success - signature:$signature - data:$data - groupId:$groupId");
+      logger.i("$TAG - setGroupSignature - success - signature:$signature - data:$data - groupId:$groupId");
       if (notify) queryAndNotifyGroup(groupId);
     } else {
-      logger.w("$TAG - setSignature - fail - signature:$signature - data:$data - groupId:$groupId");
+      logger.w("$TAG - setGroupSignature - fail - signature:$signature - data:$data - groupId:$groupId");
     }
     return data;
   }

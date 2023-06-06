@@ -24,7 +24,6 @@ class PrivateGroupStorage with Tag {
         `update_at` BIGINT,
         `group_id` VARCHAR(100),
         `type` INT,
-        `version` TEXT,
         `name` VARCHAR(100),
         `count` INT,
         `avatar` TEXT,
@@ -200,7 +199,7 @@ class PrivateGroupStorage with Tag {
         false;
   }
 
-  Future<bool> setVersionCount(String? groupId, String? version, int membersCount) async {
+  Future<bool> setCount(String? groupId, int membersCount) async {
     if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty) return false;
     return await _queue.add(() async {
@@ -209,7 +208,6 @@ class PrivateGroupStorage with Tag {
               return txn.update(
                 tableName,
                 {
-                  'version': version,
                   'count': membersCount,
                   'update_at': DateTime.now().millisecondsSinceEpoch,
                 },
@@ -218,10 +216,10 @@ class PrivateGroupStorage with Tag {
               );
             });
             if (count != null && count > 0) {
-              // logger.v("$TAG - setVersionCount - success - groupId:$groupId - count:$count");
+              // logger.v("$TAG - setCount - success - groupId:$groupId - count:$count");
               return true;
             }
-            logger.w("$TAG - setVersionCount - fail - groupId:$groupId - count:$count");
+            logger.w("$TAG - setCount - fail - groupId:$groupId - count:$count");
           } catch (e, st) {
             handleError(e, st);
           }

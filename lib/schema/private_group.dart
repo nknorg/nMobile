@@ -17,7 +17,6 @@ class PrivateGroupSchema {
 
   String groupId;
   int type;
-  String? version;
 
   String name;
   int count;
@@ -35,7 +34,6 @@ class PrivateGroupSchema {
     this.updateAt = 0,
     required this.groupId,
     this.type = PrivateGroupType.normal,
-    this.version,
     required this.name,
     this.count = 0,
     this.avatar,
@@ -46,7 +44,7 @@ class PrivateGroupSchema {
     if (updateAt == 0) updateAt = DateTime.now().millisecondsSinceEpoch;
   }
 
-  static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined, String? version}) {
+  static PrivateGroupSchema? create(String? groupId, String? name, {int? type, bool? joined}) {
     if (groupId == null || groupId.isEmpty) return null;
     if (name == null || name.isEmpty) name = groupId;
     return PrivateGroupSchema(
@@ -55,7 +53,6 @@ class PrivateGroupSchema {
       groupId: groupId,
       type: type ?? PrivateGroupType.normal,
       name: name,
-      version: version,
       joined: joined ?? false,
     );
   }
@@ -93,7 +90,11 @@ class PrivateGroupSchema {
   }
 
   String get signature {
-    return data['signature'] ?? "";
+    return data['signature']?.toString() ?? "";
+  }
+
+  String get version {
+    return data['version']?.toString() ?? "";
   }
 
   int? get quitCommits {
@@ -137,7 +138,6 @@ class PrivateGroupSchema {
       'update_at': updateAt,
       'group_id': groupId,
       'type': type,
-      'version': version,
       'name': name,
       'count': count,
       'avatar': Path.convert2Local(avatar?.path),
@@ -156,7 +156,6 @@ class PrivateGroupSchema {
       updateAt: e['update_at'] ?? DateTime.now().millisecondsSinceEpoch,
       groupId: e['group_id'] ?? "",
       type: e['type'] ?? PrivateGroupType.normal,
-      version: e['version'],
       name: e['name'] ?? e['group_id'] ?? "",
       count: e['count'] ?? 0,
       avatar: Path.convert2Complete(e['avatar']) != null ? File(Path.convert2Complete(e['avatar'])!) : null,
@@ -176,6 +175,6 @@ class PrivateGroupSchema {
 
   @override
   String toString() {
-    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, type: $type, version: $version, name: $name, count: $count, avatar: $avatar, joined: $joined, isTop: $isTop, options: $options, data: $data}';
+    return 'PrivateGroupSchema{id: $id, createAt: $createAt, updateAt: $updateAt, groupId: $groupId, type: $type, name: $name, count: $count, avatar: $avatar, joined: $joined, isTop: $isTop, options: $options, data: $data}';
   }
 }
