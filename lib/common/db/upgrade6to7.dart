@@ -30,16 +30,16 @@ class Upgrade6to7 {
     // update_at/create_at (BIGINT) -> online_at (BIGINT)(NOT EMPTY)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (1/9)");
+    upgradeTipSink?.add(". (1/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, DeviceInfoStorage.tableName))) {
-      upgradeTipSink?.add(".. (1/9)");
+      upgradeTipSink?.add(".. (1/10)");
       await DeviceInfoStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (1/9)");
+    upgradeTipSink?.add("... (1/10)");
 
     // table(v5)
     String oldTableName = "DeviceInfo";
@@ -47,7 +47,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (1/9)");
+    upgradeTipSink?.add(".... (1/10)");
 
     // total
     int totalRawCount = 0;
@@ -166,7 +166,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (1/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -195,16 +195,16 @@ class Upgrade6to7 {
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (2/9)");
+    upgradeTipSink?.add(". (2/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, ContactStorage.tableName))) {
-      upgradeTipSink?.add(".. (2/9)");
+      upgradeTipSink?.add(".. (2/10)");
       await ContactStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${ContactStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (2/9)");
+    upgradeTipSink?.add("... (2/10)");
 
     // table(v5)
     String oldTableName = "Contact_2";
@@ -212,7 +212,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (2/9)");
+    upgradeTipSink?.add(".... (2/10)");
 
     // total
     int totalRawCount = 0;
@@ -384,7 +384,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (2/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -413,16 +413,16 @@ class Upgrade6to7 {
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (3/9)");
+    upgradeTipSink?.add(". (3/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, TopicStorage.tableName))) {
-      upgradeTipSink?.add(".. (3/9)");
+      upgradeTipSink?.add(".. (3/10)");
       await TopicStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${TopicStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (3/9)");
+    upgradeTipSink?.add("... (3/10)");
 
     // table(v5)
     String oldTableName = "Topic_3";
@@ -430,7 +430,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (3/9)");
+    upgradeTipSink?.add(".... (3/10)");
 
     // total
     int totalRawCount = 0;
@@ -561,7 +561,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (3/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -585,16 +585,16 @@ class Upgrade6to7 {
     // perm_page (INT) -> perm_page (INT)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (4/9)");
+    upgradeTipSink?.add(". (4/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, SubscriberStorage.tableName))) {
-      upgradeTipSink?.add(".. (4/9)");
+      upgradeTipSink?.add(".. (4/10)");
       await SubscriberStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (4/9)");
+    upgradeTipSink?.add("... (4/10)");
 
     // table(v5)
     String oldTableName = "Subscriber_3";
@@ -602,7 +602,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (4/9)");
+    upgradeTipSink?.add(".... (4/10)");
 
     // total
     int totalRawCount = 0;
@@ -707,7 +707,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (4/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -735,16 +735,16 @@ class Upgrade6to7 {
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (5/9)");
+    upgradeTipSink?.add(". (5/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, PrivateGroupStorage.tableName))) {
-      upgradeTipSink?.add(".. (5/9)");
+      upgradeTipSink?.add(".. (5/10)");
       await PrivateGroupStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (5/9)");
+    upgradeTipSink?.add("... (5/10)");
 
     // table(v5)
     String oldTableName = "PrivateGroup";
@@ -752,7 +752,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (5/9)");
+    upgradeTipSink?.add(".... (5/10)");
 
     // total
     int totalRawCount = 0;
@@ -891,7 +891,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (5/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -918,16 +918,16 @@ class Upgrade6to7 {
     // invitee_signature (VARCHAR(200)) -> invitee_signature (VARCHAR(200))
     // data (TEXT) -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (6/9)");
+    upgradeTipSink?.add(". (6/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, PrivateGroupItemStorage.tableName))) {
-      upgradeTipSink?.add(".. (6/9)");
+      upgradeTipSink?.add(".. (6/10)");
       await PrivateGroupItemStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (6/9)");
+    upgradeTipSink?.add("... (6/10)");
 
     // table(v5)
     String oldTableName = "PrivateGroupList";
@@ -935,7 +935,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (6/9)");
+    upgradeTipSink?.add(".... (6/10)");
 
     // total
     int totalRawCount = 0;
@@ -1032,7 +1032,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (6/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1066,16 +1066,16 @@ class Upgrade6to7 {
     // options (TEXT) -> options (TEXT)(NOT NULL)
     // ??? -> data (TEXT)
 
-    upgradeTipSink?.add(". (7/9)");
+    upgradeTipSink?.add(". (7/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
-      upgradeTipSink?.add(".. (7/9)");
+      upgradeTipSink?.add(".. (7/10)");
       await MessageStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${MessageStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (7/9)");
+    upgradeTipSink?.add("... (7/10)");
 
     // table(v5)
     String oldTableName = "Messages_2";
@@ -1083,7 +1083,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (7/9)");
+    upgradeTipSink?.add(".... (7/10)");
 
     // total
     int totalRawCount = 0;
@@ -1341,7 +1341,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (7/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1448,10 +1448,10 @@ class Upgrade6to7 {
   }
 
   static Future upgradeMessagePiece(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    upgradeTipSink?.add(". (8/9)");
+    upgradeTipSink?.add(". (8/10)");
     // just create table
     if (!(await DB.checkTableExists(db, MessagePieceStorage.tableName))) {
-      upgradeTipSink?.add(".. (8/9)");
+      upgradeTipSink?.add(".. (8/10)");
       await MessagePieceStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${MessagePieceStorage.tableName} - exist");
@@ -1467,16 +1467,16 @@ class Upgrade6to7 {
     // un_read_count (INT) -> un_read_count (INT)(NOT NULL)
     // ??? -> data (TEXT)(NOT NULL)
 
-    upgradeTipSink?.add(". (9/9)");
+    upgradeTipSink?.add(". (9/10)");
 
     // table(v7)
     if (!(await DB.checkTableExists(db, SessionStorage.tableName))) {
-      upgradeTipSink?.add(".. (9/9)");
+      upgradeTipSink?.add(".. (9/10)");
       await SessionStorage.create(db);
     } else {
       logger.w("Upgrade6to7 - ${SessionStorage.tableName} - exist");
     }
-    upgradeTipSink?.add("... (9/9)");
+    upgradeTipSink?.add("... (9/10)");
 
     // table(v5)
     String oldTableName = "Session";
@@ -1484,7 +1484,7 @@ class Upgrade6to7 {
       logger.w("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName no exist");
       return;
     }
-    upgradeTipSink?.add(".... (9/9)");
+    upgradeTipSink?.add(".... (9/10)");
 
     // total
     int totalRawCount = 0;
@@ -1595,7 +1595,7 @@ class Upgrade6to7 {
           logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (9/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
