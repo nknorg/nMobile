@@ -10,7 +10,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class TopicStorage with Tag {
   // static String get tableName => 'Topic';
   // static String get tableName => 'topic';
-  static String get tableName => 'Topic_3'; // v5
+  // static String get tableName => 'Topic_3'; // v5
+  static String get tableName => 'topic_v7'; // v7
 
   static TopicStorage instance = TopicStorage();
 
