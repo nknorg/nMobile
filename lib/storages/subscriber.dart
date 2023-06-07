@@ -10,7 +10,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 class SubscriberStorage with Tag {
   // static String get tableName => 'Subscribers';
   // static String get tableName => 'subscriber';
-  static String get tableName => 'Subscriber_3'; // v5
+  // static String get tableName => 'Subscriber_3'; // v5
+  static String get tableName => 'subscriber_v7'; // v7
 
   static SubscriberStorage instance = SubscriberStorage();
 

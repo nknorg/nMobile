@@ -8,7 +8,8 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class SessionStorage with Tag {
-  static String get tableName => 'Session';
+  // static String get tableName => 'Session';
+  static String get tableName => 'session_v7'; // v7
 
   static SessionStorage instance = SessionStorage();
 

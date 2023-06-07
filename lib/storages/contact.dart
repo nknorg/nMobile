@@ -10,7 +10,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactStorage with Tag {
   // static String get tableName => 'Contact';
-  static String get tableName => 'Contact_2'; // v5
+  // static String get tableName => 'Contact_2'; // v5
+  static String get tableName => 'contact_v7'; // v7
 
   static ContactStorage instance = ContactStorage();
 
