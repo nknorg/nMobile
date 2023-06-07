@@ -12,7 +12,8 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessageStorage with Tag {
   // static String get tableName => 'Messages';
-  static String get tableName => 'Messages_2';
+  // static String get tableName => 'Messages_2';
+  static String get tableName => 'message_v7'; // v7
 
   static MessageStorage instance = MessageStorage();
 

@@ -8,7 +8,7 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessagePieceStorage with Tag {
-  static String get tableName => 'Message_piece';
+  static String get tableName => 'message_piece_v7'; // v7
 
   static MessagePieceStorage instance = MessagePieceStorage();
 

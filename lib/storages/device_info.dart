@@ -8,7 +8,8 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DeviceInfoStorage with Tag {
-  static String get tableName => 'DeviceInfo'; // v5
+  // static String get tableName => 'DeviceInfo'; // v5
+  static String get tableName => 'device_info_v7'; // v7
 
   static DeviceInfoStorage instance = DeviceInfoStorage();
 

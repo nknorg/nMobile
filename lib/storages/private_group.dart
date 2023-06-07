@@ -9,7 +9,8 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class PrivateGroupStorage with Tag {
-  static String get tableName => 'PrivateGroup';
+  // static String get tableName => 'PrivateGroup';
+  static String get tableName => 'private_group_v7'; // v7
 
   static PrivateGroupStorage instance = PrivateGroupStorage();
 
