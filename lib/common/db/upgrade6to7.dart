@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
-import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
@@ -1098,7 +1097,8 @@ class Upgrade6to7 {
     // convert(v5->v7)
     int total = 0;
     final limit = 50;
-    Map<String, int> receivedMessages = {};
+    Map<String, Map<String, int>> _contactReceivesList = {};
+    Map<String, Map<String, int>> _groupReceivesList = {};
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -1212,13 +1212,25 @@ class Upgrade6to7 {
         int? newDeleteAt = int.tryParse(result["delete_at"] ?? "");
         if ((newIsDelete == 1) || ((newDeleteAt != null) && (newDeleteAt <= nowAt))) {
           if (newStatus > 0) {
-            int gap = 10 * 24 * 60 * 60 * 1000; // 20d
+            int gap = 20 * 24 * 60 * 60 * 1000; // 20d
             if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
               logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
               continue;
             } else {
-              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after (loop over) - data:$result");
-              receivedMessages.addAll({newMsgId: newReceiveAt}); // TODO:GG 还是当下弄比较好？
+              if (newTargetType == 3) {
+                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_3 (loop over) - data:$result");
+                _groupReceivesList.addAll({
+                  newTargetId: {newMsgId: newReceiveAt}
+                });
+              } else if (newTargetType == 1) {
+                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_1 (loop over) - data:$result");
+                _contactReceivesList.addAll({
+                  newTargetId: {newMsgId: newReceiveAt}
+                });
+              } else {
+                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
+                continue;
+              }
               continue;
             }
           } else {
@@ -1341,6 +1353,89 @@ class Upgrade6to7 {
         break;
       } else {
         logger.d("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
+    // receivedMessages
+    List<String> contactKeys = _contactReceivesList.keys.toList();
+    for (int i = 0; i < contactKeys.length; i++) {
+      String address = contactKeys[i];
+      Map<String, int>? _contactReceives = _contactReceivesList[address];
+      String? newData;
+      // query
+      List<Map<String, dynamic>>? res = await db.query(
+        ContactStorage.tableName,
+        columns: ['id'],
+        where: 'address = ?',
+        whereArgs: [address],
+        offset: 0,
+        limit: 1,
+      );
+      if (res != null && res.length > 0) {
+        Map entity = res.first;
+        Map<String, dynamic>? _newData;
+        if (entity['data']?.toString().isNotEmpty == true) {
+          _newData = Util.jsonFormatMap(entity['data']);
+        }
+        _newData = _newData ?? Map();
+        _newData["receivedMessages"] = _contactReceives;
+        newData = jsonEncode(_newData);
+      }
+      if ((newData == null) || newData.isEmpty) continue;
+      // update
+      int? count = await db.update(
+        ContactStorage.tableName,
+        {
+          'data': newData,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'address = ?',
+        whereArgs: [address],
+      );
+      if ((count ?? 0) > 0) {
+        logger.i("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set success - newData:$newData");
+      } else {
+        logger.w("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set none - newData:$newData");
+      }
+    }
+    List<String> groupKeys = _groupReceivesList.keys.toList();
+    for (int i = 0; i < groupKeys.length; i++) {
+      String address = groupKeys[i];
+      Map<String, int>? _groupReceives = _groupReceivesList[address];
+      String? newData;
+      // query
+      List<Map<String, dynamic>>? res = await db.query(
+        PrivateGroupStorage.tableName,
+        columns: ['id'],
+        where: 'address = ?',
+        whereArgs: [address],
+        offset: 0,
+        limit: 1,
+      );
+      if (res != null && res.length > 0) {
+        Map entity = res.first;
+        Map<String, dynamic>? _newData;
+        if (entity['data']?.toString().isNotEmpty == true) {
+          _newData = Util.jsonFormatMap(entity['data']);
+        }
+        _newData = _newData ?? Map();
+        _newData["receivedMessages"] = _groupReceives;
+        newData = jsonEncode(_newData);
+      }
+      if ((newData == null) || newData.isEmpty) continue;
+      // update
+      int? count = await db.update(
+        PrivateGroupStorage.tableName,
+        {
+          'data': newData,
+          'update_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'address = ?',
+        whereArgs: [address],
+      );
+      if ((count ?? 0) > 0) {
+        logger.i("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set success - newData:$newData");
+      } else {
+        logger.w("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set none - newData:$newData");
       }
     }
   }
