@@ -16,11 +16,9 @@ import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart'; // TODO:GG 这个是不是要注意下?以及所有的import
+import 'package:sqflite_sqlcipher/sqflite.dart'; // TODO:GG 这个是不是要注意一下！！！以及所有的import
 
-// TODO:GG 应该就不是升级，是迁移了，版本号还是改成7？
 // TODO:GG 各个表名要修改吗？
-// TODO:GG 尽量不要importSchema
 // TODO:GG 外部调用，记得tryCache和tryTimes
 class Upgrade6to7 {
   static Future upgradeDeviceInfo(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -1613,6 +1611,46 @@ class Upgrade6to7 {
   }
 
   static Future deletesOldTables(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // TODO:GG db
+    // none piece
+    String oldDeviceInfoTableName = "DeviceInfo";
+    String oldContactTableName = "Contact_2";
+    String oldTopicTableName = "Topic_3";
+    String oldSubscriberTableName = "Subscriber_3";
+    String oldGroupTableName = "PrivateGroup";
+    String oldGroupItemTableName = "PrivateGroupList";
+    String oldMessageTableName = "Messages_2";
+    String oldSessionTableName = "Session";
+    // tableNames
+    List<String> tableNames = [
+      oldDeviceInfoTableName,
+      oldContactTableName,
+      oldTopicTableName,
+      oldSubscriberTableName,
+      oldGroupTableName,
+      oldGroupItemTableName,
+      oldMessageTableName,
+      oldSessionTableName,
+    ];
+    // delete
+    String prefix = "";
+    for (int i = 0; i < tableNames.length; i++) {
+      prefix = prefix + ".";
+      upgradeTipSink?.add("$prefix (10/10)");
+      String tableName = tableNames[i];
+      try {
+        if (await DB.checkTableExists(db, tableName)) {
+          int count = await db.delete(tableName);
+          if (count <= 0) {
+            logger.w("Upgrade4to5 - $tableName delete - fail");
+          } else {
+            logger.i("Upgrade4to5 - $tableName delete - success");
+          }
+        } else {
+          logger.w("Upgrade4to5 - delete $tableName no exist");
+        }
+      } catch (e) {
+        logger.e("Upgrade4to5 - delete $tableName error - e:${e.toString()}");
+      }
+    }
   }
 }
