@@ -447,7 +447,7 @@ class ContactStorage with Tag {
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
-              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> data = schema.data;
               if ((removeKeys != null) && removeKeys.isNotEmpty) {
                 removeKeys.forEach((element) => data.remove(element));
               }
@@ -490,7 +490,7 @@ class ContactStorage with Tag {
                 return null;
               }
               ContactSchema schema = ContactSchema.fromMap(res.first);
-              Map<String, dynamic> data = schema.data ?? Map<String, dynamic>();
+              Map<String, dynamic> data = schema.data;
               Map<String, dynamic> values = data[key] ?? Map();
               if (delKeys.isNotEmpty) values.removeWhere((key, _) => delKeys.indexWhere((item) => key.toString() == item.toString()) >= 0);
               if (addPairs.isNotEmpty) values.addAll(addPairs.map((key, value) => MapEntry(key.toString(), value)));
