@@ -19,7 +19,7 @@ class SettingsStorage {
   static const String CLOSE_BUG_UPLOAD_API = 'close_bug_upload_api';
   static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
 
-  // FIXED:GG ios_db_error
+  // FUTURE:GG IOS_152_V2
   static const String DATABASE_FIXED_IOS_152 = "database_fixed_ios_152";
   static const String DATABASE_CLEAN_PWD_ON_IOS_14 = "database_clean_pwd_on_ios_14";
   static const String DATABASE_RESET_PWD_ON_IOS_16 = "database_reset_pwd_on_ios_16";
