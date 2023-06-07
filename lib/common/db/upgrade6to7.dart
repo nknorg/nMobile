@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:nmobile/common/db/db.dart';
+import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
+import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
@@ -1048,30 +1050,299 @@ class Upgrade6to7 {
   }
 
   static Future upgradeMessage(Database db, {StreamSink<String?>? upgradeTipSink}) async {
-    // pid (VARCHAR(300)) -> pid (VARCHAR(100))(NOT EMPTY) // TODO:GG 除非是StatusError，否则Null不插入
+    // pid (VARCHAR(300)) -> pid (VARCHAR(100))(NOT EMPTY)
     // msg_id (VARCHAR(300)) -> msg_id (VARCHAR(100))(NOT EMPTY)
-    // ??? -> device_id (VARCHAR(200))(const="")
-    // ??? -> queue_id (BIGINT)(const=0)
+    // ??? -> device_id (VARCHAR(200))
+    // ??? -> queue_id (BIGINT)
     // sender (VARCHAR(200)) -> sender (VARCHAR(100))(NOT EMPTY)
     // target_id/(group_id/topic/receiver) (VARCHAR(200)) -> target_id (VARCHAR(100))(NOT EMPTY)
-    // 根据group_id/topic/receiver判断 -> target_type (INT)(NOT EMPTY)
+    // (group_id/topic/receiver) -> target_type (INT)(NOT EMPTY)
     // is_outbound (BOOLEAN DEFAULT 0) -> is_outbound (BOOLEAN DEFAULT 0)(NOT EMPTY)
-    // status (INT) -> status (INT)(NOT EMPTY) // TODO:GG 注意转换。所有的success，都先改成receipt，有sendAt过滤？?
+    // status (INT) -> status (INT)(NOT EMPTY)
     // send_at (BIGINT) -> send_at (BIGINT)(NOT EMPTY)
-    // receive_at (BIGINT) -> receive_at (BIGINT) // TODO:GG 收到的就NOT EMPTY
-    // is_delete (BOOLEAN DEFAULT 0) -> is_delete (BOOLEAN DEFAULT 0)(NOT EMPTY) // TODO:GG 是1的话，如果>receipt，就真删除
-    // delete_at (BIGINT) -> delete_at (BIGINT) // TODO:GG deleteAt到期的话，如果>receipt，就真删除
-    // type (VARCHAR(30)) -> type (VARCHAR(30))(NOT EMPTY) // TODO:GG 注意转换
-    // content (TEXT) -> content (TEXT) // TODO:GG 分type，来过滤错误的格式
-    // options (TEXT) -> options (TEXT)(NOT NULL) // TODO:GG 注意转换
-    // ??? -> data (TEXT) ----> clear。旧的没有值
-    ///----------------------
-    // 消息删除的时候，根据receiveAt，来判断是否插入 (???) -> .data[receivedMessages] (Map<String, int>)
-    // TODO:GG 仔细看看
+    // receive_at (BIGINT) -> receive_at (BIGINT)
+    // is_delete (BOOLEAN DEFAULT 0) -> is_delete (BOOLEAN DEFAULT 0)(NOT EMPTY)
+    // delete_at (BIGINT) -> delete_at (BIGINT)
+    // type (VARCHAR(30)) -> type (VARCHAR(30))(NOT EMPTY)
+    // content (TEXT) -> content (TEXT)
+    // options (TEXT) -> options (TEXT)(NOT NULL)
+    // ??? -> data (TEXT)
 
     upgradeTipSink?.add(". (7/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, MessageStorage.tableName))) {
+      upgradeTipSink?.add(".. (7/9)");
+      await MessageStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (7/9)");
+
+    // table(v5)
+    String oldTableName = "Messages_2";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (7/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    Map<String, int> receivedMessages = {};
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        int nowAt = DateTime.now().millisecondsSinceEpoch;
+        // pid
+        var newPid = result["pid"];
+        // msgId
+        String? oldMsgId = result["msg_id"]?.toString();
+        if ((oldMsgId == null) || oldMsgId.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldMsgId null - data:$result");
+          continue;
+        }
+        String newMsgId = (oldMsgId.length <= 100) ? oldMsgId : "";
+        if (newMsgId.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newMsgId null - data:$result");
+          continue;
+        }
+        // deviceId
+        String newDeviceId = "";
+        // queueId
+        int newQueueId = 0;
+        // sender
+        String? oldSender = result["sender"]?.toString();
+        if ((oldSender == null) || oldSender.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldSender null - data:$result");
+          continue;
+        }
+        String newSender = (oldSender.length <= 100) ? oldSender : "";
+        if (newSender.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newSenderId null - data:$result");
+          continue;
+        }
+        // targetId
+        String? _oldGroupId = (result["group_id"]?.toString() ?? "").isNotEmpty ? result["group_id"]?.toString() : null;
+        String? _oldTopicId = (result["topic"]?.toString() ?? "").isNotEmpty ? result["topic"]?.toString() : null;
+        String? _oldReceiver = (result["receiver"]?.toString() ?? "").isNotEmpty ? result["receiver"]?.toString() : null;
+        String? _oldTargetId = (result["target_id"]?.toString() ?? "").isNotEmpty ? result["target_id"]?.toString() : null;
+        String? oldTargetId = _oldGroupId ?? _oldTopicId ?? _oldReceiver ?? _oldTargetId;
+        if ((oldTargetId == null) || oldTargetId.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldTargetId null - data:$result");
+          continue;
+        }
+        String newTargetId = (oldTargetId.length <= 100) ? oldTargetId : "";
+        if (newTargetId.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newTargetId null - data:$result");
+          continue;
+        }
+        // targetType
+        int newTargetType;
+        if (_oldGroupId != null) {
+          newTargetType = 3;
+        } else if (_oldTopicId != null) {
+          newTargetType = 2;
+        } else {
+          newTargetType = 1;
+        }
+        // isOutbound
+        int newIsOutbound = (result["is_outbound"]?.toString() == '1') ? 1 : 0;
+        // status
+        int? oldStatus = int.tryParse(result["status"] ?? "");
+        if (oldStatus == null) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldStatus null - data:$result");
+          continue;
+        }
+        int? newStatus;
+        switch (oldStatus) {
+          case 100: // Sending
+            newStatus = 0;
+            break;
+          case 110: // Error
+            newStatus = -10;
+            break;
+          case 120: // Success
+          // newStatus = 10; // Success
+          // break;
+          case 130: // Receipt
+          case 200: // Received
+            newStatus = 20; // Receipt
+            break;
+          case 310: // Read
+            newStatus = 30;
+            break;
+        }
+        if (newStatus == null) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newStatus null - data:$result");
+          continue;
+        } else if ((newPid == null) && (newStatus >= 0)) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldPid null - data:$result");
+          continue;
+        }
+        // sendAt
+        int newSendAt = int.tryParse(result["send_at"] ?? "") ?? 0;
+        if (newSendAt == 0) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldSendAt null - data:$result");
+          continue;
+        }
+        // receiveAt
+        int newReceiveAt = int.tryParse(result["receive_at"] ?? "") ?? newSendAt;
+        // isDelete
+        int newIsDelete = (result["is_delete"]?.toString() == '1') ? 1 : 0;
+        int? newDeleteAt = int.tryParse(result["delete_at"] ?? "");
+        if ((newIsDelete == 1) || ((newDeleteAt != null) && (newDeleteAt <= nowAt))) {
+          if (newStatus > 0) {
+            int gap = 10 * 24 * 60 * 60 * 1000; // 20d
+            if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
+              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
+              continue;
+            } else {
+              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after (loop over) - data:$result");
+              receivedMessages.addAll({newMsgId: newReceiveAt}); // TODO:GG 还是当下弄比较好？
+              continue;
+            }
+          } else {
+            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (burning progress) - data:$result");
+          }
+        }
+        // type
+        String oldContentType = result["type"]?.toString() ?? "";
+        String newContentType = "";
+        switch (oldContentType) {
+          case "event:contactOptions":
+            newContentType = "contact:options";
+            break;
+          case "media":
+          case "nknImage":
+            newContentType = "image";
+            break;
+          case "event:subscribe":
+            newContentType = "topic:subscribe";
+            break;
+          case "event:channelInvitation":
+            newContentType = "topic:invitation";
+            break;
+          case "text":
+          case "textExtension":
+          case "ipfs":
+          case "file":
+          case "image":
+          case "audio":
+          case "video":
+          case "privateGroup:invitation":
+          case "privateGroup:subscribe":
+            newContentType = oldContentType;
+            break;
+          default:
+            // nothing
+            break;
+        }
+        if (newContentType.isEmpty) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newContentType null - data:$result");
+          continue;
+        }
+        // content
+        var newContent = result["content"];
+        if ((newContent == null) && ((newContentType == "text") || (newContentType == "textExtension") || (newContentType == "image") || (newContentType == "audio"))) {
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldContent null - data:$result");
+          continue;
+        }
+        // options
+        Map<String, dynamic> _newOptions = Map();
+        if (result['options']?.toString().isNotEmpty == true) {
+          _newOptions = Util.jsonFormatMap(result['options']?.toString()) ?? Map();
+        }
+        if (newIsOutbound == 1) _newOptions["sendSuccessAt"] = newSendAt;
+        String newOptions = "{}";
+        try {
+          newOptions = jsonEncode(_newOptions);
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+        }
+        // data
+        String? newData; // nothing
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            MessageStorage.tableName,
+            columns: ['id'],
+            where: 'msg_id = ?',
+            whereArgs: [newMsgId],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'pid': newPid,
+          'msg_id': newMsgId,
+          'device_id': newDeviceId,
+          'queue_id': newQueueId,
+          'sender': newSender,
+          'target_id': newTargetId,
+          'target_type': newTargetType,
+          'is_outbound': newIsOutbound,
+          'status': newStatus,
+          'send_at': newSendAt,
+          'receive_at': newReceiveAt,
+          'is_delete': newIsDelete,
+          'delete_at': newDeleteAt,
+          'type': newContentType,
+          'content': newContent,
+          'options': newOptions,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(MessageStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${MessageStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (7/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future upgradeMessagePiece(Database db, {StreamSink<String?>? upgradeTipSink}) async {
@@ -1091,7 +1362,7 @@ class Upgrade6to7 {
     // last_message_at (BIGINT) -> last_message_at (BIGINT)(NOT EMPTY)
     // last_message_options (TEXT) -> last_message_options (TEXT)
     // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(NOT EMPTY)
-    // un_read_count (INT) -> un_read_count (INT)(NOT NULL)
+    // un_read_count (INT) -> un_read_count (INT)(NOT NULL) ---> 需要queryCount
     // ??? -> data (TEXT)(NOT NULL) ----> reset。只有一个senderName，直接从last_message_options里找contact然后赋值
 
     upgradeTipSink?.add(". (9/9)");
