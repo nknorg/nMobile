@@ -16,10 +16,8 @@ import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:nmobile/utils/util.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart'; // TODO:GG 这个是不是要注意一下！！！以及所有的import
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
-// TODO:GG 各个表名要修改吗？
-// TODO:GG 外部调用，记得tryCache和tryTimes
 class Upgrade6to7 {
   static Future upgradeDeviceInfo(Database db, {StreamSink<String?>? upgradeTipSink}) async {
     // create_at (BIGINT) -> create_at (BIGINT)(NOT EMPTY)
@@ -977,17 +975,17 @@ class Upgrade6to7 {
         // expiresAt
         int? newExpiresAt = int.tryParse(result["expires_at"] ?? "");
         // inviter
-        String? newInviter = result["inviter"];
+        String? newInviter = result["inviter"]?.toString();
         // newInvitee
-        String? newInvitee = result["invitee"];
+        String? newInvitee = result["invitee"]?.toString();
         // inviterRawData
-        String? newInviterRawData = result["inviter_raw_data"];
+        String? newInviterRawData = result["inviter_raw_data"]?.toString();
         // inviteeRawData
-        String? newInviteeRawData = result["invitee_raw_data"];
+        String? newInviteeRawData = result["invitee_raw_data"]?.toString();
         // inviterSignature
-        String? newInviterSignature = result["inviter_signature"];
+        String? newInviterSignature = result["inviter_signature"]?.toString();
         // inviteeSignature
-        String? newInviteeSignature = result["invitee_signature"];
+        String? newInviteeSignature = result["invitee_signature"]?.toString();
         // data
         String newData = "{}"; // nothing
         // duplicated
@@ -1542,11 +1540,11 @@ class Upgrade6to7 {
             limit: limit,
           );
           if ((res != null) && res.isNotEmpty) {
+            newLastMessageAt = int.tryParse(res.first["send_at"] ?? "") ?? newLastMessageAt;
             try {
-              newLastMessageAt = int.tryParse(res.first["send_at"] ?? "") ?? newLastMessageAt;
               newLastMessageOptions = jsonEncode(res.first);
             } catch (e) {
-              logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessage wrong - message:${res.first} - data:$result - error:${e.toString()}");
+              logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions wrong - message:${res.first} - data:$result - error:${e.toString()}");
             }
           }
         }

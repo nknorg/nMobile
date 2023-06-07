@@ -152,8 +152,6 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       isLoginProgress = false;
       return false;
     }
-    // fixed:GG ios_152_db
-    if (init) await dbCommon.fixIOS_152();
     // client
     bool success = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, input, dbOpen) {
       if (dbOpen) _setConnected(true);
