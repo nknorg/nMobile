@@ -10,6 +10,7 @@ import 'package:nmobile/storages/message.dart';
 import 'package:nmobile/storages/message_piece.dart';
 import 'package:nmobile/storages/private_group.dart';
 import 'package:nmobile/storages/private_group_item.dart';
+import 'package:nmobile/storages/session.dart';
 import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -1358,84 +1359,92 @@ class Upgrade6to7 {
     // receivedMessages
     List<String> contactKeys = _contactReceivesList.keys.toList();
     for (int i = 0; i < contactKeys.length; i++) {
-      String address = contactKeys[i];
-      Map<String, int>? _contactReceives = _contactReceivesList[address];
-      String? newData;
-      // query
-      List<Map<String, dynamic>>? res = await db.query(
-        ContactStorage.tableName,
-        columns: ['id'],
-        where: 'address = ?',
-        whereArgs: [address],
-        offset: 0,
-        limit: 1,
-      );
-      if (res != null && res.length > 0) {
-        Map entity = res.first;
-        Map<String, dynamic>? _newData;
-        if (entity['data']?.toString().isNotEmpty == true) {
-          _newData = Util.jsonFormatMap(entity['data']);
+      try {
+        String address = contactKeys[i];
+        Map<String, int>? _contactReceives = _contactReceivesList[address];
+        String? newData;
+        // query
+        List<Map<String, dynamic>>? res = await db.query(
+          ContactStorage.tableName,
+          columns: ['id'],
+          where: 'address = ?',
+          whereArgs: [address],
+          offset: 0,
+          limit: 1,
+        );
+        if (res != null && res.length > 0) {
+          Map entity = res.first;
+          Map<String, dynamic>? _newData;
+          if (entity['data']?.toString().isNotEmpty == true) {
+            _newData = Util.jsonFormatMap(entity['data']);
+          }
+          _newData = _newData ?? Map();
+          _newData["receivedMessages"] = _contactReceives;
+          newData = jsonEncode(_newData);
         }
-        _newData = _newData ?? Map();
-        _newData["receivedMessages"] = _contactReceives;
-        newData = jsonEncode(_newData);
-      }
-      if ((newData == null) || newData.isEmpty) continue;
-      // update
-      int? count = await db.update(
-        ContactStorage.tableName,
-        {
-          'data': newData,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'address = ?',
-        whereArgs: [address],
-      );
-      if ((count ?? 0) > 0) {
-        logger.i("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set success - newData:$newData");
-      } else {
-        logger.w("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set none - newData:$newData");
+        if ((newData == null) || newData.isEmpty) continue;
+        // update
+        int? count = await db.update(
+          ContactStorage.tableName,
+          {
+            'data': newData,
+            'update_at': DateTime.now().millisecondsSinceEpoch,
+          },
+          where: 'address = ?',
+          whereArgs: [address],
+        );
+        if ((count ?? 0) > 0) {
+          logger.i("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set success - newData:$newData");
+        } else {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set none - newData:$newData");
+        }
+      } catch (e) {
+        logger.e("Upgrade6to7 - ${MessageStorage.tableName} - contactReceives set error - e:${e.toString()}");
       }
     }
     List<String> groupKeys = _groupReceivesList.keys.toList();
     for (int i = 0; i < groupKeys.length; i++) {
-      String address = groupKeys[i];
-      Map<String, int>? _groupReceives = _groupReceivesList[address];
-      String? newData;
-      // query
-      List<Map<String, dynamic>>? res = await db.query(
-        PrivateGroupStorage.tableName,
-        columns: ['id'],
-        where: 'address = ?',
-        whereArgs: [address],
-        offset: 0,
-        limit: 1,
-      );
-      if (res != null && res.length > 0) {
-        Map entity = res.first;
-        Map<String, dynamic>? _newData;
-        if (entity['data']?.toString().isNotEmpty == true) {
-          _newData = Util.jsonFormatMap(entity['data']);
+      try {
+        String address = groupKeys[i];
+        Map<String, int>? _groupReceives = _groupReceivesList[address];
+        String? newData;
+        // query
+        List<Map<String, dynamic>>? res = await db.query(
+          PrivateGroupStorage.tableName,
+          columns: ['id'],
+          where: 'address = ?',
+          whereArgs: [address],
+          offset: 0,
+          limit: 1,
+        );
+        if (res != null && res.length > 0) {
+          Map entity = res.first;
+          Map<String, dynamic>? _newData;
+          if (entity['data']?.toString().isNotEmpty == true) {
+            _newData = Util.jsonFormatMap(entity['data']);
+          }
+          _newData = _newData ?? Map();
+          _newData["receivedMessages"] = _groupReceives;
+          newData = jsonEncode(_newData);
         }
-        _newData = _newData ?? Map();
-        _newData["receivedMessages"] = _groupReceives;
-        newData = jsonEncode(_newData);
-      }
-      if ((newData == null) || newData.isEmpty) continue;
-      // update
-      int? count = await db.update(
-        PrivateGroupStorage.tableName,
-        {
-          'data': newData,
-          'update_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        where: 'address = ?',
-        whereArgs: [address],
-      );
-      if ((count ?? 0) > 0) {
-        logger.i("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set success - newData:$newData");
-      } else {
-        logger.w("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set none - newData:$newData");
+        if ((newData == null) || newData.isEmpty) continue;
+        // update
+        int? count = await db.update(
+          PrivateGroupStorage.tableName,
+          {
+            'data': newData,
+            'update_at': DateTime.now().millisecondsSinceEpoch,
+          },
+          where: 'address = ?',
+          whereArgs: [address],
+        );
+        if ((count ?? 0) > 0) {
+          logger.i("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set success - newData:$newData");
+        } else {
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set none - newData:$newData");
+        }
+      } catch (e) {
+        logger.e("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set error - e:${e.toString()}");
       }
     }
   }
@@ -1457,12 +1466,150 @@ class Upgrade6to7 {
     // last_message_at (BIGINT) -> last_message_at (BIGINT)(NOT EMPTY)
     // last_message_options (TEXT) -> last_message_options (TEXT)
     // is_top (BOOLEAN DEFAULT 0) -> is_top (BOOLEAN DEFAULT 0)(NOT EMPTY)
-    // un_read_count (INT) -> un_read_count (INT)(NOT NULL) ---> 需要queryCount
-    // ??? -> data (TEXT)(NOT NULL) ----> reset。只有一个senderName，直接从last_message_options里找contact然后赋值
+    // un_read_count (INT) -> un_read_count (INT)(NOT NULL)
+    // ??? -> data (TEXT)(NOT NULL)
 
     upgradeTipSink?.add(". (9/9)");
 
-    // TODO:GG db
+    // table(v7)
+    if (!(await DB.checkTableExists(db, SessionStorage.tableName))) {
+      upgradeTipSink?.add(".. (9/9)");
+      await SessionStorage.create(db);
+    } else {
+      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - exist");
+    }
+    upgradeTipSink?.add("... (9/9)");
+
+    // table(v5)
+    String oldTableName = "Session";
+    if (!(await DB.checkTableExists(db, oldTableName))) {
+      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName no exist");
+      return;
+    }
+    upgradeTipSink?.add(".... (9/9)");
+
+    // total
+    int totalRawCount = 0;
+    try {
+      totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
+    } catch (e) {
+      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - totalRawCount error - error:${e.toString()}");
+    }
+
+    // convert(v5->v7)
+    int total = 0;
+    final limit = 50;
+    for (int offset = 0; true; offset += limit) {
+      // items
+      List<Map<String, dynamic>>? results = (await db.query(
+            oldTableName,
+            columns: ['*'],
+            orderBy: 'id ASC',
+            offset: offset,
+            limit: limit,
+          )) ??
+          [];
+      // item
+      for (int i = 0; i < results.length; i++) {
+        Map<String, dynamic> result = results[i];
+        // targetId
+        String? oldTargetId = result["target_id"]?.toString();
+        if ((oldTargetId == null) || oldTargetId.isEmpty) {
+          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - oldTargetId null - data:$result");
+          continue;
+        }
+        String newTargetId = (oldTargetId.length <= 100) ? oldTargetId : "";
+        if (newTargetId.isEmpty) {
+          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - newTargetId null - data:$result");
+          continue;
+        }
+        // type
+        int newType = int.tryParse(result["type"] ?? "") ?? 0;
+        if ((newType != 1) && (newType != 2) && (newType != 3)) {
+          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - oldType null - data:$result");
+          continue;
+        }
+        // lastMessageAt
+        int newLastMessageAt = int.tryParse(result["last_message_at"] ?? "") ?? 0;
+        // lastMessageOptions
+        String newLastMessageOptions = result["last_message_options"]?.toString() ?? "";
+        if ((newLastMessageAt == 0) || newLastMessageOptions.isEmpty) {
+          List<Map<String, dynamic>>? res = await db.query(
+            MessageStorage.tableName,
+            columns: ['*'],
+            where: 'target_id = ? AND target_type = ? AND is_delete = ?',
+            whereArgs: [newTargetId, newType, 0],
+            orderBy: 'send_at DESC',
+            offset: offset,
+            limit: limit,
+          );
+          if ((res != null) && res.isNotEmpty) {
+            try {
+              newLastMessageAt = int.tryParse(res.first["send_at"] ?? "") ?? newLastMessageAt;
+              newLastMessageOptions = jsonEncode(res.first);
+            } catch (e) {
+              logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessage wrong - message:${res.first} - data:$result - error:${e.toString()}");
+            }
+          }
+        }
+        // isTop
+        int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
+        // unReadCount
+        int newUnReadCount = int.tryParse(result["un_read_count"] ?? "") ?? 0;
+        // data
+        String newData = "{}"; // set skip [senderName]
+        // duplicated
+        try {
+          List<Map<String, dynamic>>? duplicated = await db.query(
+            SessionStorage.tableName,
+            columns: ['id'],
+            where: 'target_id = ? AND type = ?',
+            whereArgs: [newTargetId, newType],
+            offset: 0,
+            limit: 1,
+          );
+          if ((duplicated != null) && duplicated.isNotEmpty) {
+            logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            continue;
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - duplicated query error - error:${e.toString()}");
+        }
+        // insert
+        Map<String, dynamic> entity = {
+          'target_id': newTargetId,
+          'type': newType,
+          'last_message_at': newLastMessageAt,
+          'last_message_options': newLastMessageOptions,
+          'is_top': newIsTop,
+          'un_read_count': newUnReadCount,
+          'data': newData,
+        };
+        try {
+          int id = await db.insert(SessionStorage.tableName, entity);
+          if (id > 0) {
+            logger.d("Upgrade6to7 - ${SessionStorage.tableName} - insert success - data:$entity");
+            total++;
+          } else {
+            logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert fail - data:$entity");
+          }
+        } catch (e) {
+          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
+        }
+      }
+      upgradeTipSink?.add("..... (9/9) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      // loop
+      if (results.length < limit) {
+        if (total != totalRawCount) {
+          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName loop over(warn) - progress:$total/${offset + limit}/$totalRawCount");
+        } else {
+          logger.i("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName loop over(ok) - progress:$total/${offset + limit}/$totalRawCount");
+        }
+        break;
+      } else {
+        logger.d("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName loop next - progress:$total/${offset + limit}/$totalRawCount");
+      }
+    }
   }
 
   static Future deletesOldTables(Database db, {StreamSink<String?>? upgradeTipSink}) async {
