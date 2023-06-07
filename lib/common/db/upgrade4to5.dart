@@ -533,7 +533,7 @@ class Upgrade4to5 {
     // target_id (TEXT) -> target_id (VARCHAR(200))
     // is_send_error/is_success/is_read (BOOLEAN) -> status (INT)
     // is_outbound (BOOLEAN) -> is_outbound (BOOLEAN)
-    // content (TEXT) -> is_delete (BOOLEAN)
+    // is_delete (TEXT) -> is_delete (BOOLEAN)
     // send_time (INTEGER) -> send_at (BIGINT)
     // receive_time (INTEGER) -> receive_at (BIGINT)
     // delete_time (INTEGER) -> delete_at (BIGINT)
