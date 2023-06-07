@@ -254,7 +254,8 @@ class MessageCommon with Tag {
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success) {
       message.status = status;
-      if (message.status == MessageStatus.Success) {
+      int sendSuccessAt = MessageOptions.getSendSuccessAt(message.options) ?? 0;
+      if ((sendSuccessAt <= 0) && (message.status >= MessageStatus.Success)) {
         message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
         await updateMessageOptions(message, message.options, notify: false);
       }
