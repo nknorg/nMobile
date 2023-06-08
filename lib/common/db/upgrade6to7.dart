@@ -42,7 +42,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "DeviceInfo";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (1/10)");
@@ -52,7 +52,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -123,7 +123,7 @@ class Upgrade6to7 {
         try {
           newData = jsonEncode(_newData);
         } catch (e) {
-          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
         }
         // duplicated
         try {
@@ -140,7 +140,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -161,7 +161,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -207,7 +207,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "Contact_2";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${ContactStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (2/10)");
@@ -217,7 +217,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${ContactStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -264,7 +264,7 @@ class Upgrade6to7 {
         // firstName
         String newFirstName = result["first_name"]?.toString() ?? "";
         if (newFirstName.isEmpty) {
-          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - oldFirstName wrong - data:$result");
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldFirstName wrong - data:$result");
           if (newAddress.length <= 6) {
             newFirstName = newAddress;
           } else {
@@ -297,7 +297,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions.toMap());
         } catch (e) {
-          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         Map<String, dynamic> _oldData = Map();
@@ -315,7 +315,7 @@ class Upgrade6to7 {
         try {
           newData = jsonEncode(_newData);
         } catch (e) {
-          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - newData wrong - data:$result - error:${e.toString()}");
         }
         // walletAddress
         String newWalletAddress = _oldData["nknWalletAddress"]?.toString() ?? ""; // no refresh
@@ -335,7 +335,7 @@ class Upgrade6to7 {
             );
             if ((count == null) || (count <= 0)) logger.w("Upgrade6to7 - ${ContactStorage.tableName} - deviceToken no set - old:$result");
           } catch (e) {
-            logger.w("Upgrade6to7 - ${ContactStorage.tableName} - deviceToken error - old:$result - error:${e.toString()}");
+            logger.e("Upgrade6to7 - ${ContactStorage.tableName} - deviceToken error - old:$result - error:${e.toString()}");
           }
         }
         // duplicated
@@ -353,7 +353,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -379,7 +379,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -425,7 +425,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "Topic_3";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${TopicStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (3/10)");
@@ -435,7 +435,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${TopicStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -511,7 +511,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions.toMap());
         } catch (e) {
-          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         String newData = "{}"; // clear temps
@@ -530,7 +530,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -556,7 +556,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -597,7 +597,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "Subscriber_3";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (4/10)");
@@ -607,7 +607,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -681,7 +681,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -702,7 +702,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -747,7 +747,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "PrivateGroup";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (5/10)");
@@ -757,7 +757,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -804,7 +804,7 @@ class Upgrade6to7 {
         // name
         String newName = result["name"]?.toString() ?? "";
         if (newName.isEmpty) {
-          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - oldName wrong - data:$result");
+          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - oldName wrong - data:$result");
           newName = newGroupId;
         }
         // count
@@ -828,7 +828,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions.toMap());
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         Map<String, dynamic> _oldData = Map();
@@ -861,7 +861,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -886,7 +886,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -930,7 +930,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "PrivateGroupList";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (6/10)");
@@ -940,7 +940,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -1003,7 +1003,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -1027,7 +1027,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -1078,7 +1078,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "Messages_2";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${MessageStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (7/10)");
@@ -1088,7 +1088,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${MessageStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -1286,7 +1286,7 @@ class Upgrade6to7 {
         try {
           newOptions = jsonEncode(_newOptions);
         } catch (e) {
-          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newOptions wrong - data:$result - error:${e.toString()}");
         }
         // data
         String? newData; // nothing
@@ -1305,7 +1305,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -1336,7 +1336,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
@@ -1479,7 +1479,7 @@ class Upgrade6to7 {
     // table(v5)
     String oldTableName = "Session";
     if (!(await DB.checkTableExists(db, oldTableName))) {
-      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName no exist");
+      logger.e("Upgrade6to7 - ${SessionStorage.tableName} - $oldTableName no exist");
       return;
     }
     upgradeTipSink?.add(".... (9/10)");
@@ -1489,7 +1489,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.e("Upgrade6to7 - ${SessionStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -1544,7 +1544,7 @@ class Upgrade6to7 {
             try {
               newLastMessageOptions = jsonEncode(res.first);
             } catch (e) {
-              logger.w("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions wrong - message:${res.first} - data:$result - error:${e.toString()}");
+              logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions wrong - message:${res.first} - data:$result - error:${e.toString()}");
             }
           }
         }
@@ -1569,7 +1569,7 @@ class Upgrade6to7 {
             continue;
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -1590,7 +1590,7 @@ class Upgrade6to7 {
             logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert fail - data:$entity");
           }
         } catch (e) {
-          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
+          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
       upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
