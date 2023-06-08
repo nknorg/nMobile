@@ -9,7 +9,7 @@ class OptionsSchema {
   bool receiveOpen; // FUTURE:GG options unread + notification TODO:GG black?
   bool notificationOpen; // FUTURE:GG options  topic TODO:GG duplicated to field muteExpireAt, maybe can convert to a params notificationOpen(only get)?
   int muteExpireAt; // FUTURE:GG options  chat TODO:GG like deviceToken:expireTimeAt?
-  String? soundResource; // FUTURE:GG options  chat
+  String? soundResource;
 
   // burning
   int? deleteAfterSeconds;
@@ -18,10 +18,10 @@ class OptionsSchema {
   Color? avatarBgColor;
   Color? avatarNameColor;
   // chat_style
-  File? chatBgFile; // FUTURE:GG options  ui
-  Color? chatBgColor; // FUTURE:GG options  ui
-  Color? chatBubbleBgColor; // FUTURE:GG options  ui
-  Color? chatBubbleTextColor; // FUTURE:GG options  ui
+  File? chatBgFile;
+  Color? chatBgColor;
+  Color? chatBubbleBgColor;
+  Color? chatBubbleTextColor;
 
   OptionsSchema({
     this.receiveOpen = false,
