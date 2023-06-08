@@ -45,8 +45,12 @@ class MessagePieceStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `$tableName` (`msg_id`)'); // no unique
-    await db.execute('CREATE INDEX `index_message_piece_target_id_target_type` ON `$tableName` (`target_id`, `target_type`)');
+    try {
+      await db.execute('CREATE INDEX `index_message_piece_msg_id` ON `$tableName` (`msg_id`)'); // no unique
+      await db.execute('CREATE INDEX `index_message_piece_target_id_target_type` ON `$tableName` (`target_id`, `target_type`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {

@@ -40,11 +40,15 @@ class TopicStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic_id` ON `$tableName` (`topic_id`)');
-    await db.execute('CREATE INDEX `index_topic_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
-    await db.execute('CREATE INDEX `index_topic_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
-    await db.execute('CREATE INDEX `index_topic_joined_is_top_create_at` ON `$tableName` (`joined`, `is_top`, `create_at`)');
-    await db.execute('CREATE INDEX `index_topic_joined_type_is_top_create_at` ON `$tableName` (`joined`, `type`, `is_top`, `create_at`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_unique_topic_topic_id` ON `$tableName` (`topic_id`)');
+      await db.execute('CREATE INDEX `index_topic_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
+      await db.execute('CREATE INDEX `index_topic_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
+      await db.execute('CREATE INDEX `index_topic_joined_is_top_create_at` ON `$tableName` (`joined`, `is_top`, `create_at`)');
+      await db.execute('CREATE INDEX `index_topic_joined_type_is_top_create_at` ON `$tableName` (`joined`, `type`, `is_top`, `create_at`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool unique = true}) async {

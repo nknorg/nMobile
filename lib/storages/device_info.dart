@@ -33,9 +33,13 @@ class DeviceInfoStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
-    await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
-    await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_online_at` ON `$tableName` (`contact_address`, `device_id`, `online_at`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_unique_device_info_contact_address_device_id` ON `$tableName` (`contact_address`, `device_id`)');
+      await db.execute('CREATE INDEX `index_device_info_contact_address_online_at` ON `$tableName` (`contact_address`, `online_at`)');
+      await db.execute('CREATE INDEX `index_device_info_contact_address_device_id_online_at` ON `$tableName` (`contact_address`, `device_id`, `online_at`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema, {bool unique = true}) async {

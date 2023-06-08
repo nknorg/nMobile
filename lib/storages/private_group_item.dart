@@ -34,9 +34,13 @@ class PrivateGroupItemStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_private_group_item_group_id_invitee` ON `$tableName` (`group_id`, `invitee`)');
-    await db.execute('CREATE INDEX `index_private_group_item_group_id_expires_at` ON `$tableName` (`group_id`, `expires_at`)');
-    await db.execute('CREATE INDEX `index_private_group_item_group_id_permission_expires_at` ON `$tableName` (`group_id`, `permission`, `expires_at`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_private_group_item_group_id_invitee` ON `$tableName` (`group_id`, `invitee`)');
+      await db.execute('CREATE INDEX `index_private_group_item_group_id_expires_at` ON `$tableName` (`group_id`, `expires_at`)');
+      await db.execute('CREATE INDEX `index_private_group_item_group_id_permission_expires_at` ON `$tableName` (`group_id`, `permission`, `expires_at`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<PrivateGroupItemSchema?> insert(PrivateGroupItemSchema? schema, {bool unique = true}) async {
