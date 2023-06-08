@@ -164,7 +164,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -382,7 +382,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -559,7 +559,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -705,7 +705,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -889,7 +889,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1030,7 +1030,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1337,7 +1337,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1591,7 +1591,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {

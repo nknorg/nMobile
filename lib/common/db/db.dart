@@ -82,15 +82,7 @@ class DB {
         bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         if (reset) {
           database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-        } else {
-          try {
-            database = await _openDB(path, password, publicKey: publicKey, upgradeTip: true);
-          } catch (e) {
-            _upgradeTipSink.add(null);
-          }
-        }
-        if (database != null) {
-          SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
+          if (database == null) Toast.show("database open failed.");
         } else {
           try {
             database = await _openDB(path, "", publicKey: publicKey);
@@ -153,16 +145,6 @@ class DB {
       }
     }
 
-    // test
-    // int i = 0;
-    // while (i < 100) {
-    //   if (upgradeTip) _upgradeTipSink.add("test_$i");
-    //   await Future.delayed(Duration(milliseconds: 100));
-    //   i++;
-    // }
-
-    // var db = await openDatabase(":memory:");
-    // var db = await sqflite.openDatabase(path);
     var db = await openDatabase(
       path,
       password: password,
@@ -321,10 +303,6 @@ class DB {
     }
     return false;
   }
-
-  // static Future<void> checkTable(Database db, String table) async {
-  //   await db.execute('DROP TABLE IF EXISTS $table;');
-  // }
 
   static Future<bool> checkTableExists(Database db, String table) async {
     var count = Sqflite.firstIntValue(await db.query('sqlite_master', columns: ['COUNT(*)'], where: 'type = ? AND name = ?', whereArgs: ['table', table]));
