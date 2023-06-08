@@ -1192,11 +1192,12 @@ packages:
   sqflite:
     dependency: "direct main"
     description:
-      name: sqflite
-      sha256: e7dfb6482d5d02b661d0b2399efa72b98909e5aa7b8336e1fb37e226264ade00
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.2.7"
+      path: sqflite
+      ref: fmdb_override
+      resolved-ref: "215d933108e6c0a11d87fd342e8cb04bb1d2e918"
+      url: "https://www.github.com/davidmartos96/sqflite_sqlcipher.git"
+    source: git
+    version: "2.0.3"
   sqflite_common:
     dependency: transitive
     description:
