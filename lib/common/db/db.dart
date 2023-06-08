@@ -3,16 +3,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:nkn_sdk_flutter/utils/hex.dart';
-import 'package:nmobile/common/contact/device_info.dart';
 import 'package:nmobile/common/db/upgrade1to2.dart';
 import 'package:nmobile/common/db/upgrade2to3.dart';
 import 'package:nmobile/common/db/upgrade3to4.dart';
 import 'package:nmobile/common/db/upgrade4to5.dart';
 import 'package:nmobile/common/db/upgrade5to6.dart';
-import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/db/upgrade6to7.dart';
 import 'package:nmobile/components/tip/toast.dart';
 import 'package:nmobile/helpers/error.dart';
-import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/storages/contact.dart';
 import 'package:nmobile/storages/device_info.dart';
 import 'package:nmobile/storages/message.dart';
@@ -28,11 +26,11 @@ import 'package:nmobile/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
-// import 'package:sqflite/sqflite.dart' as sqflite;
+// import 'package:sqflite/sqflite.dart';
 
 class DB {
   static const String NKN_DATABASE_NAME = 'nkn';
-  static const int VERSION_DB_NOW = 6;
+  static const int VERSION_DB_NOW = 7;
 
   // ignore: close_sinks
   StreamController<bool> _openedController = StreamController<bool>.broadcast();
@@ -53,9 +51,9 @@ class DB {
   DB();
 
   Future open(String publicKey, String seed) {
-    // publicKey = "e2113a5e3000f6be24ddf2e2ff6911e506173e77d75abfd27871479993bb67b0";
-    // seed = "e3e642b70824315486a566dc90decff5585a9b9059c964cc8e622570048fa9e5";
     return _lock.synchronized(() async {
+      // FUTURE:GG IOS_152_V3 (remove _openWithFix())
+      // database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
       return await _openWithFix(publicKey, seed);
     });
   }
@@ -70,159 +68,66 @@ class DB {
       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
     } else {
       if (!exists) {
-        // 1.new_14_v1，create-pwd=empty，tag(clean) -> [7/8]
-        // 2.new_16_v1，create-pwd=empty，tag(clean) -> [8]
-        database = await _tryOpenDB(path, "", publicKey: publicKey);
+        // FUTURE:GG IOS_152_V2
+        database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
         if (database != null) {
           SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
+          SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
         } else {
-          Toast.show("database create failed");
+          Toast.show("database create fail");
         }
-        // 3.new_14_v2，create-pwd=seed，tag(clean+reset)
-        // 4.new_16_v2，create-pwd=seed，tag(clean+reset)
-        // FUTURE:GG IOS_152_V2
-        // database = await _tryOpenDB(path, password, publicKey: publicKey);
-        // if (database != null) {
-        //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //   SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
-        // } else {
-        //   Toast.show("database create fail");
-        // }
       } else {
-        // 5.old_14_v1，database_copy，tag(clean) -> [7/8]
-        // 6.old_16_v1，default-pwd=empty，tag(clean) -> [8]
-        try {
-          database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
-        } catch (e) {
-          // nothing
-        }
+        // FUTURE:GG IOS_152_V2
         bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
-        if (!clean) {
-          if (database == null) {
-            database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-            if (database != null) {
-              if (DeviceInfoCommon.isIOSDeviceVersionLess152()) {
-                _upgradeTipSink.add("~ ~ ~ ~ ~");
-                await database?.close();
-                database = null;
-                await Future.delayed(Duration(milliseconds: 200));
-                String copyPath = await getDBFilePath("${publicKey}_copy");
-                bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: password);
-                if (copyTemp) {
-                  bool copyBack = await _copyDB2Plaintext(copyPath, path, sourcePwd: "");
-                  _deleteDBFile(copyPath); // await
-                  if (copyBack) {
-                    database = await _tryOpenDB(path, "", publicKey: publicKey);
-                    if (database != null) {
-                      SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-                    } else {
-                      logger.e("DB - open - open copy fail");
-                    }
-                  } else {
-                    logger.e("DB - open - copy_2 fail");
-                  }
+        bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
+        if (reset) {
+          database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
+        } else {
+          try {
+            database = await _openDB(path, password, publicKey: publicKey, upgradeTip: true);
+          } catch (e) {
+            _upgradeTipSink.add(null);
+          }
+        }
+        if (database != null) {
+          SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
+        } else {
+          try {
+            database = await _openDB(path, "", publicKey: publicKey);
+          } catch (e, st) {
+            if (clean) handleError(e, st);
+          }
+          if (database != null) {
+            _upgradeTipSink.add("~ ~ ~ ~ ~");
+            await database?.close();
+            database = null;
+            await Future.delayed(Duration(milliseconds: 200));
+            String copyPath = await getDBFilePath("${publicKey}_copy");
+            bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: "");
+            if (copyTemp) {
+              bool copyBack = await _copyDB2Encrypted(copyPath, path, password);
+              _deleteDBFile(copyPath); // await
+              if (copyBack) {
+                database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
+                if (database != null) {
+                  SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
                 } else {
-                  logger.e("DB - open - copy_1 fail");
+                  logger.e("DB - open - open copy fail");
+                  SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
                 }
-                _upgradeTipSink.add(null);
               } else {
-                SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-                SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
+                logger.e("DB - open - copy_2 fail");
+                SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
               }
             } else {
-              Toast.show("database open failed.");
+              logger.e("DB - open - copy_1 fail");
+              SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
             }
+            _upgradeTipSink.add(null);
           } else {
-            SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-          }
-        } else {
-          if (database == null) {
-            await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", false);
-            await Future.delayed(Duration(milliseconds: 200));
-            return await _openWithFix(publicKey, seed);
-          } else {
-            // success
+            Toast.show("database open failed.");
           }
         }
-        // 7.old_14_v2，[5/(1)] -> database_copy，tag(reset)
-        // 8.old_16_v2，[5/6/(1/2)] -> database_copy，tag(reset)
-        // FUTURE:GG IOS_152_V2
-        // try {
-        //   database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
-        // } catch (e) {}
-        // bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false;
-        // bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
-        // if (!clean) {
-        //   if (database == null) {
-        //     database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-        //     if (database != null) {
-        //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
-        //     } else {
-        //       Toast.show("database open failed.");
-        //     }
-        //   } else {
-        //     SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //     SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
-        //   }
-        // } else {
-        //   if (!reset) {
-        //     if (database == null) {
-        //       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-        //       if (database != null) {
-        //         SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //         SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
-        //       } else {
-        //         Toast.show("database open failed.");
-        //       }
-        //     } else {
-        //       _upgradeTipSink.add("~ ~ ~ ~ ~");
-        //       await database?.close();
-        //       database = null;
-        //       await Future.delayed(Duration(milliseconds: 200));
-        //       String copyPath = await getDBFilePath("${publicKey}_copy");
-        //       bool copyTemp = await _copyDB2Plaintext(path, copyPath, sourcePwd: "");
-        //       if (copyTemp) {
-        //         bool copyBack = await _copyDB2Encrypted(copyPath, path, password);
-        //         _deleteDBFile(copyPath); // await
-        //         if (copyBack) {
-        //           try {
-        //             database = await _openDB(path, "", publicKey: publicKey);
-        //           } catch (e) {}
-        //           if (database == null) {
-        //             database = await _tryOpenDB(path, password, publicKey: publicKey);
-        //             if (database != null) {
-        //               SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //               SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true); // await
-        //             } else {
-        //               logger.e("DB - open - open copy fail");
-        //             }
-        //           } else {
-        //             SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //             SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
-        //           }
-        //         } else {
-        //           logger.e("DB - open - copy_2 fail");
-        //         }
-        //       } else {
-        //         logger.e("DB - open - copy_1 fail");
-        //       }
-        //       _upgradeTipSink.add(null);
-        //     }
-        //   } else {
-        //     if (database != null) {
-        //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // await
-        //       SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false); // await
-        //     } else {
-        //       database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-        //       if (database == null) {
-        //         Toast.show("database open failed...");
-        //       } else {
-        //         // success
-        //       }
-        //     }
-        //   }
-        // }
       }
     }
     if (database != null) _openedSink.add(true);
@@ -330,6 +235,20 @@ class DB {
           await Upgrade5to6.createPrivateGroup(db);
           await Upgrade5to6.createPrivateGroupItem(db);
           await Upgrade5to6.upgradeMessages(db);
+        }
+
+        // 6-> 7
+        if ((v5to6 || (oldVersion == 6)) && (newVersion >= 7)) {
+          await Upgrade6to7.upgradeDeviceInfo(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeContact(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeTopic(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeSubscriber(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradePrivateGroup(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradePrivateGroupItem(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeMessage(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeMessagePiece(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.upgradeSession(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
+          await Upgrade6to7.deletesOldTables(db, upgradeTipSink: upgradeTip ? _upgradeTipSink : null);
         }
 
         // dismiss tip dialog
@@ -444,6 +363,7 @@ class DB {
       await sourceDB.execute("INSERT INTO `plaintext`.`${PrivateGroupStorage.tableName}` SELECT * FROM `${PrivateGroupStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${PrivateGroupItemStorage.tableName}` SELECT * FROM `${PrivateGroupItemStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessageStorage.tableName}` SELECT * FROM `${MessageStorage.tableName}`");
+      await sourceDB.execute("INSERT INTO `plaintext`.`${MessagePieceStorage.tableName}` SELECT * FROM `${MessagePieceStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
       await sourceDB.execute("DETACH `plaintext`");
       // close
@@ -480,6 +400,7 @@ class DB {
       await targetDB.execute("INSERT INTO `${PrivateGroupStorage.tableName}` SELECT * FROM `plaintext`.`${PrivateGroupStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${PrivateGroupItemStorage.tableName}` SELECT * FROM `plaintext`.`${PrivateGroupItemStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${MessageStorage.tableName}` SELECT * FROM `plaintext`.`${MessageStorage.tableName}`");
+      await targetDB.execute("INSERT INTO `${MessagePieceStorage.tableName}` SELECT * FROM `plaintext`.`${MessagePieceStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${SessionStorage.tableName}` SELECT * FROM `plaintext`.`${SessionStorage.tableName}`");
       await targetDB.execute("DETACH `plaintext`");
       // close
@@ -494,30 +415,5 @@ class DB {
       return false;
     }
     return true;
-  }
-
-  Future fixIOS_152() async {
-    if (!Platform.isIOS) return;
-    if (!DeviceInfoCommon.isIOSDeviceVersionLess152()) return;
-    bool fixed = (await SettingsStorage.getSettings(SettingsStorage.DATABASE_FIXED_IOS_152)) ?? false;
-    if (fixed) return;
-    _upgradeTipSink.add("...");
-    List<WalletSchema> wallets = await walletCommon.getWallets();
-    for (var i = 0; i < wallets.length; i++) {
-      WalletSchema wallet = wallets[i];
-      String publicKey = wallet.publicKey;
-      String path = await getDBFilePath(publicKey);
-      bool exists = await databaseExists(path);
-      bool clean = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey")) ?? false; // FUTURE:GG IOS_152_V2
-      if (exists && !clean) {
-        String seed = await walletCommon.getSeed(wallet.address);
-        await _openWithFix(publicKey, seed);
-        await database?.close();
-        database = null;
-        await SettingsStorage.setSettings("${SettingsStorage.DATABASE_CLEAN_PWD_ON_IOS_14}:$publicKey", true); // FUTURE:GG IOS_152_V2
-      }
-    }
-    await SettingsStorage.setSettings(SettingsStorage.DATABASE_FIXED_IOS_152, true); // FUTURE:GG IOS_152_V2
-    _upgradeTipSink.add(null);
   }
 }
