@@ -44,7 +44,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
   }
 
   _refreshSubscribeFee() async {
-    _fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+    _fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE))?.toString() ?? "0") ?? 0;
     if (_fee <= 0) _fee = Settings.feeTopicSubscribeDefault;
     _feeController.text = _fee.toStringAsFixed(8);
   }

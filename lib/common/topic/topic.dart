@@ -41,7 +41,7 @@ class TopicCommon with Tag {
     double? fee = 0.0;
     var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_SUBSCRIBE_SPEED_ENABLE);
     if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE))?.toString() ?? "0") ?? 0;
       if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
       fee = await BottomDialog.of(context).showTransactionSpeedUp(fee: fee);
     }
@@ -52,7 +52,7 @@ class TopicCommon with Tag {
     double fee = 0;
     var isAuto = await SettingsStorage.getSettings(SettingsStorage.DEFAULT_TOPIC_RESUBSCRIBE_SPEED_ENABLE);
     if ((isAuto != null) && ((isAuto.toString() == "true") || (isAuto == true))) {
-      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+      fee = double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE))?.toString() ?? "0") ?? 0;
       if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
     }
     return fee;
