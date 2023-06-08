@@ -49,6 +49,7 @@ nkn.aar
 **/Nkn.xcframework/
 
 # android build
+**.jks
 **.keystore
 **/key.properties
 /android/app/release/

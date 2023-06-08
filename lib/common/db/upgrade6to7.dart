@@ -72,13 +72,13 @@ class Upgrade6to7 {
       for (int i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
         // createAt
-        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        int newCreateAt = int.tryParse(result["create_at"]?.toString() ?? "") ?? 0;
         if (newCreateAt == 0) {
           logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldCreateAt null - data:$result");
           newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
         }
         // updateAt
-        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        int newUpdateAt = int.tryParse(result["update_at"]?.toString() ?? "") ?? 0;
         if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
           logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldUpdateAt null - data:$result");
           newUpdateAt = newCreateAt;
@@ -237,13 +237,13 @@ class Upgrade6to7 {
       for (int i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
         // createAt
-        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        int newCreateAt = int.tryParse(result["create_at"]?.toString() ?? "") ?? 0;
         if (newCreateAt == 0) {
           logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldCreateAt null - data:$result");
           newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
         }
         // updateAt
-        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        int newUpdateAt = int.tryParse(result["update_at"]?.toString() ?? "") ?? 0;
         if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
           logger.w("Upgrade6to7 - ${ContactStorage.tableName} - oldUpdateAt null - data:$result");
           newUpdateAt = newCreateAt;
@@ -281,7 +281,7 @@ class Upgrade6to7 {
         // lastName
         String newLastName = result["last_name"]?.toString() ?? "";
         // type
-        int newType = int.tryParse(result["type"] ?? "") ?? 0; // ContactType.none
+        int newType = int.tryParse(result["type"]?.toString() ?? "") ?? 0; // ContactType.none
         // isTop
         int newIsTop = 0;
         // options
@@ -455,13 +455,13 @@ class Upgrade6to7 {
       for (int i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
         // createAt
-        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        int newCreateAt = int.tryParse(result["create_at"]?.toString() ?? "") ?? 0;
         if (newCreateAt == 0) {
           logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldCreateAt null - data:$result");
           newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
         }
         // updateAt
-        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        int newUpdateAt = int.tryParse(result["update_at"]?.toString() ?? "") ?? 0;
         if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
           logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldUpdateAt null - data:$result");
           newUpdateAt = newCreateAt;
@@ -478,7 +478,7 @@ class Upgrade6to7 {
           continue;
         }
         // type
-        int newType = int.tryParse(result["type"] ?? "") ?? 0; // 1/2
+        int newType = int.tryParse(result["type"]?.toString() ?? "") ?? 0; // 1/2
         if ((newType != 1) && (newType != 2)) {
           logger.w("Upgrade6to7 - ${TopicStorage.tableName} - oldType null - data:$result");
           newType = RegExp(r'\.[0-9A-Fa-f]{64}$').hasMatch(newTopicId) ? 2 : 1;
@@ -486,13 +486,13 @@ class Upgrade6to7 {
         // joined
         int newJoined = (result["joined"]?.toString() == '1') ? 1 : 0;
         // subscribeAt
-        int? newSubscribeAt = int.tryParse(result["subscribe_at"] ?? "");
+        int? newSubscribeAt = int.tryParse(result["subscribe_at"]?.toString() ?? "");
         // expireHeight
-        int? newExpireHeight = int.tryParse(result["expire_height"] ?? "");
+        int? newExpireHeight = int.tryParse(result["expire_height"]?.toString() ?? "");
         // avatar
         String? newAvatar = Path.convert2Local(result["avatar"]?.toString());
         // count
-        int newCount = int.tryParse(result["count"] ?? "") ?? 0;
+        int newCount = int.tryParse(result["count"]?.toString() ?? "") ?? 0;
         // isTop
         int newIsTop = 0;
         // options
@@ -627,13 +627,13 @@ class Upgrade6to7 {
       for (int i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
         // createAt
-        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        int newCreateAt = int.tryParse(result["create_at"]?.toString() ?? "") ?? 0;
         if (newCreateAt == 0) {
           logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - oldCreateAt null - data:$result");
           newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
         }
         // updateAt
-        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        int newUpdateAt = int.tryParse(result["update_at"]?.toString() ?? "") ?? 0;
         if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
           logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - oldUpdateAt null - data:$result");
           newUpdateAt = newCreateAt;
@@ -661,9 +661,9 @@ class Upgrade6to7 {
           continue;
         }
         // status
-        int newStatus = int.tryParse(result["status"] ?? "") ?? 0; // SubscriberStatus.None
+        int newStatus = int.tryParse(result["status"]?.toString() ?? "") ?? 0; // SubscriberStatus.None
         // permPage
-        int? newPermPage = int.tryParse(result["perm_page"] ?? "");
+        int? newPermPage = int.tryParse(result["perm_page"]?.toString() ?? "");
         // data
         String newData = "{}"; // clear temps
         // duplicated
@@ -777,13 +777,13 @@ class Upgrade6to7 {
       for (int i = 0; i < results.length; i++) {
         Map<String, dynamic> result = results[i];
         // createAt
-        int newCreateAt = int.tryParse(result["create_at"] ?? "") ?? 0;
+        int newCreateAt = int.tryParse(result["create_at"]?.toString() ?? "") ?? 0;
         if (newCreateAt == 0) {
           logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - oldCreateAt null - data:$result");
           newCreateAt = DateTime.now().millisecondsSinceEpoch - 1 * 24 * 60 * 60 * 1000; // 1d
         }
         // updateAt
-        int newUpdateAt = int.tryParse(result["update_at"] ?? "") ?? 0;
+        int newUpdateAt = int.tryParse(result["update_at"]?.toString() ?? "") ?? 0;
         if ((newUpdateAt == 0) || (newUpdateAt < newCreateAt)) {
           logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - oldUpdateAt null - data:$result");
           newUpdateAt = newCreateAt;
@@ -808,7 +808,7 @@ class Upgrade6to7 {
           newName = newGroupId;
         }
         // count
-        int newCount = int.tryParse(result["count"] ?? "") ?? 0;
+        int newCount = int.tryParse(result["count"]?.toString() ?? "") ?? 0;
         // avatar
         String? newAvatar = Path.convert2Local(result["avatar"]?.toString());
         // joined
@@ -971,9 +971,9 @@ class Upgrade6to7 {
           continue;
         }
         // permission
-        int newPermission = int.tryParse(result["permission"] ?? "") ?? 0; // PrivateGroupItemPerm.None
+        int newPermission = int.tryParse(result["permission"]?.toString() ?? "") ?? 0; // PrivateGroupItemPerm.None
         // expiresAt
-        int? newExpiresAt = int.tryParse(result["expires_at"] ?? "");
+        int? newExpiresAt = int.tryParse(result["expires_at"]?.toString() ?? "");
         // inviter
         String? newInviter = result["inviter"]?.toString();
         // newInvitee
@@ -1165,7 +1165,7 @@ class Upgrade6to7 {
         // isOutbound
         int newIsOutbound = (result["is_outbound"]?.toString() == '1') ? 1 : 0;
         // status
-        int? oldStatus = int.tryParse(result["status"] ?? "");
+        int? oldStatus = int.tryParse(result["status"]?.toString() ?? "");
         if (oldStatus == null) {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldStatus null - data:$result");
           continue;
@@ -1197,16 +1197,16 @@ class Upgrade6to7 {
           continue;
         }
         // sendAt
-        int newSendAt = int.tryParse(result["send_at"] ?? "") ?? 0;
+        int newSendAt = int.tryParse(result["send_at"]?.toString() ?? "") ?? 0;
         if (newSendAt == 0) {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldSendAt null - data:$result");
           continue;
         }
         // receiveAt
-        int newReceiveAt = int.tryParse(result["receive_at"] ?? "") ?? newSendAt;
+        int newReceiveAt = int.tryParse(result["receive_at"]?.toString() ?? "") ?? newSendAt;
         // isDelete
         int newIsDelete = (result["is_delete"]?.toString() == '1') ? 1 : 0;
-        int? newDeleteAt = int.tryParse(result["delete_at"] ?? "");
+        int? newDeleteAt = int.tryParse(result["delete_at"]?.toString() ?? "");
         if ((newIsDelete == 1) || ((newDeleteAt != null) && (newDeleteAt <= nowAt))) {
           if (newStatus > 0) {
             int gap = 20 * 24 * 60 * 60 * 1000; // 20d
@@ -1372,7 +1372,7 @@ class Upgrade6to7 {
           Map entity = res.first;
           Map<String, dynamic>? _newData;
           if (entity['data']?.toString().isNotEmpty == true) {
-            _newData = Util.jsonFormatMap(entity['data']);
+            _newData = Util.jsonFormatMap(entity['data']?.toString());
           }
           _newData = _newData ?? Map();
           _newData["receivedMessages"] = _contactReceives;
@@ -1417,7 +1417,7 @@ class Upgrade6to7 {
           Map entity = res.first;
           Map<String, dynamic>? _newData;
           if (entity['data']?.toString().isNotEmpty == true) {
-            _newData = Util.jsonFormatMap(entity['data']);
+            _newData = Util.jsonFormatMap(entity['data']?.toString());
           }
           _newData = _newData ?? Map();
           _newData["receivedMessages"] = _groupReceives;
@@ -1520,13 +1520,13 @@ class Upgrade6to7 {
           continue;
         }
         // type
-        int newType = int.tryParse(result["type"] ?? "") ?? 0;
+        int newType = int.tryParse(result["type"]?.toString() ?? "") ?? 0;
         if ((newType != 1) && (newType != 2) && (newType != 3)) {
           logger.e("Upgrade6to7 - ${SessionStorage.tableName} - oldType null - data:$result");
           continue;
         }
         // lastMessageAt
-        int newLastMessageAt = int.tryParse(result["last_message_at"] ?? "") ?? 0;
+        int newLastMessageAt = int.tryParse(result["last_message_at"]?.toString() ?? "") ?? 0;
         // lastMessageOptions
         String newLastMessageOptions = result["last_message_options"]?.toString() ?? "";
         if ((newLastMessageAt == 0) || newLastMessageOptions.isEmpty) {
@@ -1540,7 +1540,7 @@ class Upgrade6to7 {
             limit: limit,
           );
           if ((res != null) && res.isNotEmpty) {
-            newLastMessageAt = int.tryParse(res.first["send_at"] ?? "") ?? newLastMessageAt;
+            newLastMessageAt = int.tryParse(res.first["send_at"]?.toString() ?? "") ?? newLastMessageAt;
             try {
               newLastMessageOptions = jsonEncode(res.first);
             } catch (e) {
@@ -1551,7 +1551,7 @@ class Upgrade6to7 {
         // isTop
         int newIsTop = (result["is_top"]?.toString() == '1') ? 1 : 0;
         // unReadCount
-        int newUnReadCount = int.tryParse(result["un_read_count"] ?? "") ?? 0;
+        int newUnReadCount = int.tryParse(result["un_read_count"]?.toString() ?? "") ?? 0;
         // data
         String newData = "{}"; // set skip [senderName]
         // duplicated

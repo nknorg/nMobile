@@ -393,7 +393,7 @@ class BottomDialog extends BaseStateFulWidget {
   Future<double?> showTransactionSpeedUp({double? fee}) async {
     TextEditingController _inputController = TextEditingController();
 
-    fee = fee ?? double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE)) ?? "0") ?? 0;
+    fee = fee ?? double.tryParse((await SettingsStorage.getSettings(SettingsStorage.DEFAULT_FEE))?.toString() ?? "0") ?? 0;
     if (fee <= 0) fee = Settings.feeTopicSubscribeDefault;
     _inputController.text = fee.toStringAsFixed(8);
 
