@@ -52,7 +52,7 @@ class SecureStorage {
     if (val == null) {
       return 0;
     }
-    return int.tryParse(val) ?? 0;
+    return int.tryParse(val.toString()) ?? 0;
   }
 
   Future<Map<String, dynamic>?> getItem(String key, int n) async {
