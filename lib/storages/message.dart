@@ -49,23 +49,27 @@ class MessageStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_message_msg_id` ON `$tableName` (`msg_id`)');
-    // queryListByTarget
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_send_at` ON `$tableName` (`target_id`, `target_type`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `is_delete`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `is_delete`, `send_at`)');
-    // queryListByOutboundStatus
-    await db.execute('CREATE INDEX `index_message_is_outbound_status_send_at` ON `$tableName` (`is_outbound`, `status`, `send_at`)');
-    await db.execute('CREATE INDEX `index_message_is_outbound_status_is_delete_send_at` ON `$tableName` (`is_outbound`, `status`, `is_delete`, `send_at`)');
-    // queryListByTargetTypesWithNoDelete
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_type_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `type`, `send_at`)');
-    // queryListByTargetDeviceQueueId
-    await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id_send_at` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`, `send_at`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_message_msg_id` ON `$tableName` (`msg_id`)');
+      // queryListByTarget
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_send_at` ON `$tableName` (`target_id`, `target_type`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_status_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `status`, `is_delete`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `is_delete`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_outbound_status_is_delete_send_at` ON `$tableName` (`target_id`, `target_type`, `is_outbound`, `status`, `is_delete`, `send_at`)');
+      // queryListByOutboundStatus
+      await db.execute('CREATE INDEX `index_message_is_outbound_status_send_at` ON `$tableName` (`is_outbound`, `status`, `send_at`)');
+      await db.execute('CREATE INDEX `index_message_is_outbound_status_is_delete_send_at` ON `$tableName` (`is_outbound`, `status`, `is_delete`, `send_at`)');
+      // queryListByTargetTypesWithNoDelete
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_is_delete_type_send_at` ON `$tableName` (`target_id`, `target_type`, `is_delete`, `type`, `send_at`)');
+      // queryListByTargetDeviceQueueId
+      await db.execute('CREATE INDEX `index_message_target_id_target_type_device_id_queue_id_send_at` ON `$tableName` (`target_id`, `target_type`, `device_id`, `queue_id`, `send_at`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {

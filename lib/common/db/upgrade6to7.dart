@@ -52,7 +52,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -97,7 +97,7 @@ class Upgrade6to7 {
         // deviceId
         String? oldDeviceId = result["device_id"]?.toString().replaceAll("\n", "").trim();
         if ((oldDeviceId == null) || oldDeviceId.isEmpty) {
-          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldContactAddress null - data:$result");
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldDeviceId null - data:$result");
           continue;
         }
         String newDeviceId = (oldDeviceId.length <= 200) ? oldDeviceId : "";
@@ -136,11 +136,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -217,7 +217,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${ContactStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${ContactStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -349,11 +349,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${ContactStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${ContactStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${ContactStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${ContactStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -435,7 +435,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${TopicStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${TopicStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -526,11 +526,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${TopicStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${TopicStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${TopicStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${TopicStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -607,7 +607,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -677,11 +677,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${SubscriberStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${SubscriberStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -757,7 +757,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -857,11 +857,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${PrivateGroupStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -940,7 +940,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -999,11 +999,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -1088,7 +1088,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${MessageStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${MessageStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -1135,7 +1135,7 @@ class Upgrade6to7 {
         }
         String newSender = (oldSender.length <= 100) ? oldSender : "";
         if (newSender.isEmpty) {
-          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newSenderId null - data:$result");
+          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newSender null - data:$result");
           continue;
         }
         // targetId
@@ -1212,7 +1212,6 @@ class Upgrade6to7 {
             int gap = 20 * 24 * 60 * 60 * 1000; // 20d
             if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
               logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
-              continue;
             } else {
               if (newTargetType == 3) {
                 logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_3 (loop over) - data:$result");
@@ -1225,13 +1224,12 @@ class Upgrade6to7 {
                   newTargetId: {newMsgId: newReceiveAt}
                 });
               } else {
-                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
-                continue;
+                logger.w("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
               }
-              continue;
             }
+            continue;
           } else {
-            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (burning progress) - data:$result");
+            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (status wrong) - data:$result");
           }
         }
         // type
@@ -1301,11 +1299,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${MessageStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${MessageStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {
@@ -1489,7 +1487,7 @@ class Upgrade6to7 {
     try {
       totalRawCount = Sqflite.firstIntValue(await db.query(oldTableName, columns: ['COUNT(id)'])) ?? 0;
     } catch (e) {
-      logger.e("Upgrade6to7 - ${SessionStorage.tableName} - totalRawCount error - error:${e.toString()}");
+      logger.w("Upgrade6to7 - ${SessionStorage.tableName} - totalRawCount error - error:${e.toString()}");
     }
 
     // convert(v5->v7)
@@ -1544,7 +1542,7 @@ class Upgrade6to7 {
             try {
               newLastMessageOptions = jsonEncode(res.first);
             } catch (e) {
-              logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions wrong - message:${res.first} - data:$result - error:${e.toString()}");
+              logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions error - message:${res.first} - data:$result - error:${e.toString()}");
             }
           }
         }
@@ -1565,11 +1563,11 @@ class Upgrade6to7 {
             limit: 1,
           );
           if ((duplicated != null) && duplicated.isNotEmpty) {
-            logger.w("Upgrade6to7 - ${SessionStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
+            logger.i("Upgrade6to7 - ${SessionStorage.tableName} - insert duplicated - old:$result - exist:$duplicated");
             continue;
           }
         } catch (e) {
-          logger.e("Upgrade6to7 - ${SessionStorage.tableName} - duplicated query error - error:${e.toString()}");
+          logger.w("Upgrade6to7 - ${SessionStorage.tableName} - duplicated query error - error:${e.toString()}");
         }
         // insert
         Map<String, dynamic> entity = {

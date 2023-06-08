@@ -40,9 +40,13 @@ class ContactStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
-    await db.execute('CREATE INDEX `index_contact_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
-    await db.execute('CREATE INDEX `index_contact_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_unique_contact_address` ON `$tableName` (`address`)');
+      await db.execute('CREATE INDEX `index_contact_is_top_create_at` ON `$tableName` (`is_top`, `create_at`)');
+      await db.execute('CREATE INDEX `index_contact_type_is_top_create_at` ON `$tableName` (`type`, `is_top`, `create_at`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool unique = true}) async {
