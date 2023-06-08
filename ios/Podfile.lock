@@ -59,11 +59,8 @@ PODS:
     - flutter_sound_core (= 8.5.0)
     - mobile-ffmpeg-audio (= 4.4.LTS)
   - flutter_sound_core (8.5.0)
-  - FMDB (2.7.5):
-    - FMDB/standard (= 2.7.5)
   - FMDB/SQLCipher (2.7.5):
     - SQLCipher
-  - FMDB/standard (2.7.5)
   - image_cropper (0.0.4):
     - Flutter
     - TOCropViewController (~> 2.6.1)
@@ -132,7 +129,8 @@ PODS:
     - FlutterMacOS
   - sqflite (0.0.2):
     - Flutter
-    - FMDB (>= 2.7.5)
+    - FMDB/SQLCipher (>= 2.7.5)
+    - SQLCipher (~> 4.4.0)
   - sqflite_sqlcipher (0.0.1):
     - Flutter
     - FMDB/SQLCipher (~> 2.7.5)
@@ -326,7 +324,7 @@ SPEC CHECKSUMS:
   SentryPrivate: 2bb4f8d9ff558b25ac70b66c1dedc58a7c43630b
   share_plus: 056a1e8ac890df3e33cb503afffaf1e9b4fbae68
   shared_preferences_foundation: 986fc17f3d3251412d18b0265f9c64113a8c2472
-  sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
+  sqflite: c0667567fd3e682beb9509976c08bc2325429aab
   sqflite_sqlcipher: 70eb7fd8d4f0b0352d0bde5cf345b810737f54bb
   SQLCipher: 1ab0b9486a77d141e72e92ff30681926ed79c07a
   SwiftyGif: 6c3eafd0ce693cad58bb63d2b2fb9bacb8552780
