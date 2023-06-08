@@ -632,7 +632,7 @@ class MessageSchema {
     return schema;
   }
 
-  // FUTURE:GG
+  // SUPPORT:GG
   static String futureContentType(String oldType) {
     String contentType = oldType;
     switch (oldType) {
@@ -668,7 +668,7 @@ class MessageSchema {
     return contentType;
   }
 
-  // FUTURE:GG
+  // SUPPORT:GG
   static String supportContentType(String newType) {
     String contentType = newType;
     switch (newType) {
