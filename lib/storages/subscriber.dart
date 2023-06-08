@@ -35,10 +35,14 @@ class SubscriberStorage with Tag {
     // create table
     await db.execute(createSQL);
     // index
-    await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_id_contact_address` ON `$tableName` (`topic_id`, `contact_address`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_id_create_at` ON `$tableName` (`topic_id`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_id_status_create_at` ON `$tableName` (`topic_id`, `status`, `create_at`)');
-    await db.execute('CREATE INDEX `index_subscriber_topic_id_perm_status` ON `$tableName` (`topic_id`, `perm_page`, `status`)');
+    try {
+      await db.execute('CREATE UNIQUE INDEX `index_unique_subscriber_topic_id_contact_address` ON `$tableName` (`topic_id`, `contact_address`)');
+      await db.execute('CREATE INDEX `index_subscriber_topic_id_create_at` ON `$tableName` (`topic_id`, `create_at`)');
+      await db.execute('CREATE INDEX `index_subscriber_topic_id_status_create_at` ON `$tableName` (`topic_id`, `status`, `create_at`)');
+      await db.execute('CREATE INDEX `index_subscriber_topic_id_perm_status` ON `$tableName` (`topic_id`, `perm_page`, `status`)');
+    } catch (e) {
+      if (e.toString().contains("exists") != true) throw e;
+    }
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool unique = true}) async {
