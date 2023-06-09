@@ -48,6 +48,12 @@ android {
     }
 
     signingConfigs {
+        debug {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
         release {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
@@ -61,8 +67,8 @@ android {
             minifyEnabled false
             zipAlignEnabled true
             shrinkResources false
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            //applicationIdSuffix ".debug"
+            //versionNameSuffix "-debug"
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
