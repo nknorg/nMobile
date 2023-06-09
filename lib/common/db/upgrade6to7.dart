@@ -97,7 +97,8 @@ class Upgrade6to7 {
         // deviceId
         String? oldDeviceId = result["device_id"]?.toString().replaceAll("\n", "").trim();
         if ((oldDeviceId == null) || oldDeviceId.isEmpty) {
-          logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldDeviceId null - data:$result");
+          //logger.w("Upgrade6to7 - ${DeviceInfoStorage.tableName} - oldDeviceId null - data:$result");
+          totalRawCount--;
           continue;
         }
         String newDeviceId = (oldDeviceId.length <= 200) ? oldDeviceId : "";
@@ -164,7 +165,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${DeviceInfoStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (1/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -382,7 +383,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${ContactStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (2/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -559,7 +560,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${TopicStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (3/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -705,7 +706,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${SubscriberStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (4/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -889,7 +890,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${PrivateGroupStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (5/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1030,7 +1031,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${PrivateGroupItemStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (6/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1213,20 +1214,20 @@ class Upgrade6to7 {
             if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
               logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
             } else {
+              Map<String, int> map = Map()..addAll({newMsgId: newReceiveAt});
               if (newTargetType == 3) {
                 logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_3 (loop over) - data:$result");
-                _groupReceivesList.addAll({
-                  newTargetId: {newMsgId: newReceiveAt}
-                });
+                if (_groupReceivesList[newTargetId] == null) _groupReceivesList[newTargetId] = Map();
+                _groupReceivesList[newTargetId]?.addAll(map);
               } else if (newTargetType == 1) {
                 logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_1 (loop over) - data:$result");
-                _contactReceivesList.addAll({
-                  newTargetId: {newMsgId: newReceiveAt}
-                });
+                if (_contactReceivesList[newTargetId] == null) _contactReceivesList[newTargetId] = Map();
+                _contactReceivesList[newTargetId]?.addAll(map);
               } else {
                 logger.w("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
               }
             }
+            totalRawCount--;
             continue;
           } else {
             logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (status wrong) - data:$result");
@@ -1337,7 +1338,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (7/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
@@ -1360,7 +1361,7 @@ class Upgrade6to7 {
         // query
         List<Map<String, dynamic>>? res = await db.query(
           ContactStorage.tableName,
-          columns: ['id'],
+          columns: ['*'],
           where: 'address = ?',
           whereArgs: [address],
           offset: 0,
@@ -1399,15 +1400,15 @@ class Upgrade6to7 {
     List<String> groupKeys = _groupReceivesList.keys.toList();
     for (int i = 0; i < groupKeys.length; i++) {
       try {
-        String address = groupKeys[i];
-        Map<String, int>? _groupReceives = _groupReceivesList[address];
+        String groupId = groupKeys[i];
+        Map<String, int>? _groupReceives = _groupReceivesList[groupId];
         String? newData;
         // query
         List<Map<String, dynamic>>? res = await db.query(
           PrivateGroupStorage.tableName,
-          columns: ['id'],
-          where: 'address = ?',
-          whereArgs: [address],
+          columns: ['*'],
+          where: 'group_id = ?',
+          whereArgs: [groupId],
           offset: 0,
           limit: 1,
         );
@@ -1429,8 +1430,8 @@ class Upgrade6to7 {
             'data': newData,
             'update_at': DateTime.now().millisecondsSinceEpoch,
           },
-          where: 'address = ?',
-          whereArgs: [address],
+          where: 'group_id = ?',
+          whereArgs: [groupId],
         );
         if ((count ?? 0) > 0) {
           logger.i("Upgrade6to7 - ${MessageStorage.tableName} - groupReceives set success - newData:$newData");
@@ -1528,22 +1529,22 @@ class Upgrade6to7 {
         // lastMessageOptions
         String newLastMessageOptions = result["last_message_options"]?.toString() ?? "";
         if ((newLastMessageAt == 0) || newLastMessageOptions.isEmpty) {
-          List<Map<String, dynamic>>? res = await db.query(
-            MessageStorage.tableName,
-            columns: ['*'],
-            where: 'target_id = ? AND target_type = ? AND is_delete = ?',
-            whereArgs: [newTargetId, newType, 0],
-            orderBy: 'send_at DESC',
-            offset: offset,
-            limit: limit,
-          );
-          if ((res != null) && res.isNotEmpty) {
-            newLastMessageAt = int.tryParse(res.first["send_at"]?.toString() ?? "") ?? newLastMessageAt;
-            try {
+          try {
+            List<Map<String, dynamic>>? res = await db.query(
+              MessageStorage.tableName,
+              columns: ['*'],
+              where: 'target_id = ? AND target_type = ? AND is_delete = ?',
+              whereArgs: [newTargetId, newType, 0],
+              orderBy: 'send_at DESC',
+              offset: offset,
+              limit: limit,
+            );
+            if ((res != null) && res.isNotEmpty) {
+              newLastMessageAt = int.tryParse(res.first["send_at"]?.toString() ?? "") ?? newLastMessageAt;
               newLastMessageOptions = jsonEncode(res.first);
-            } catch (e) {
-              logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions error - message:${res.first} - data:$result - error:${e.toString()}");
             }
+          } catch (e) {
+            logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newLastMessageOptions error - data:$result - error:${e.toString()}");
           }
         }
         // isTop
@@ -1591,7 +1592,7 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${SessionStorage.tableName} - insert error - error:${e.toString()}");
         }
       }
-      if (totalRawCount > 0) upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ (totalRawCount * 100)}%");
+      if (totalRawCount > 0) upgradeTipSink?.add("..... (9/10) ${(total * 100) ~/ totalRawCount}%");
       // loop
       if (results.length < limit) {
         if (total != totalRawCount) {
