@@ -57,7 +57,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 40;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -222,7 +222,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 40;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -440,7 +440,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 20;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -612,7 +612,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 60;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -762,7 +762,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 20;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -945,7 +945,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 40;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
@@ -1093,7 +1093,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 80;
     Map<String, Map<String, int>> _contactReceivesList = {};
     Map<String, Map<String, int>> _groupReceivesList = {};
     for (int offset = 0; true; offset += limit) {
@@ -1141,9 +1141,9 @@ class Upgrade6to7 {
         // targetId
         String? _oldGroupId = (result["group_id"]?.toString() ?? "").isNotEmpty ? result["group_id"]?.toString() : null;
         String? _oldTopicId = (result["topic"]?.toString() ?? "").isNotEmpty ? result["topic"]?.toString() : null;
-        String? _oldReceiver = (result["receiver"]?.toString() ?? "").isNotEmpty ? result["receiver"]?.toString() : null;
         String? _oldTargetId = (result["target_id"]?.toString() ?? "").isNotEmpty ? result["target_id"]?.toString() : null;
-        String? oldTargetId = _oldGroupId ?? _oldTopicId ?? _oldReceiver ?? _oldTargetId;
+        //String? _oldReceiver = (result["receiver"]?.toString() ?? "").isNotEmpty ? result["receiver"]?.toString() : null;
+        String? oldTargetId = _oldGroupId ?? _oldTopicId ?? _oldTargetId;
         if ((oldTargetId == null) || oldTargetId.isEmpty) {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldTargetId null - data:$result");
           continue;
@@ -1193,8 +1193,8 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newStatus null - data:$result");
           continue;
         } else if ((newPid == null) && (newStatus >= 0)) {
-          logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldPid null - data:$result");
-          continue;
+          // logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldPid null - data:$result");
+          // continue;
         }
         // sendAt
         int newSendAt = int.tryParse(result["send_at"]?.toString() ?? "") ?? 0;
@@ -1492,7 +1492,7 @@ class Upgrade6to7 {
 
     // convert(v5->v7)
     int total = 0;
-    final limit = 50;
+    final limit = 20;
     for (int offset = 0; true; offset += limit) {
       // items
       List<Map<String, dynamic>>? results = (await db.query(
