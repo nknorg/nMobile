@@ -452,9 +452,6 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     ContactSchema _contact = this._target as ContactSchema;
     if (_contact.tipNotification) {
       return;
-    } else if (_contact.createAt < dbCommon.upgradeAt(7)) {
-      await contactCommon.setTipNotification(_contact.address, null, notify: true);
-      return;
     } else if (_contact.options.notificationOpen) {
       await contactCommon.setTipNotification(_contact.address, null, notify: true);
       return;
