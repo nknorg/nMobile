@@ -82,7 +82,12 @@ class DB {
         bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         if (reset) {
           database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-          if (database == null) Toast.show("database open failed.");
+          if (database == null) {
+            Toast.show("database open failed.");
+            await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false);
+            await Future.delayed(Duration(milliseconds: 500));
+            return await _openWithFix(publicKey, seed);
+          }
         } else {
           try {
             database = await _openDB(path, "", publicKey: publicKey);
@@ -322,17 +327,23 @@ class DB {
   }
 
   Future<bool> _copyDB2Plaintext(String sourcePath, String targetPath, {String sourcePwd = ""}) async {
+    // source+target
+    Database sourceDB;
+    Database targetDB;
     try {
-      // source
-      Database sourceDB = await _openDB(sourcePath, sourcePwd);
-      // target
+      sourceDB = await _openDB(sourcePath, sourcePwd);
       bool targetExists = await databaseExists(targetPath);
       if (targetExists) {
         await _deleteDBFile(targetPath);
         await Future.delayed(Duration(milliseconds: 100));
       }
-      Database targetDB = await _openDB(targetPath, "");
-      // copy
+      targetDB = await _openDB(targetPath, "");
+    } catch (e, st) {
+      handleError(e, st);
+      return false;
+    }
+    // copy
+    try {
       await sourceDB.execute("Attach DATABASE `$targetPath` AS `plaintext` KEY ``");
       await sourceDB.execute("INSERT INTO `plaintext`.`${ContactStorage.tableName}` SELECT * FROM `${ContactStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${DeviceInfoStorage.tableName}` SELECT * FROM `${DeviceInfoStorage.tableName}`");
@@ -344,7 +355,9 @@ class DB {
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessagePieceStorage.tableName}` SELECT * FROM `${MessagePieceStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
       await sourceDB.execute("DETACH `plaintext`");
-      // close
+    } catch (e) {}
+    // close
+    try {
       await sourceDB.close();
       await targetDB.close();
       // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
@@ -359,17 +372,23 @@ class DB {
   }
 
   Future<bool> _copyDB2Encrypted(String sourcePath, String targetPath, String targetPwd) async {
+    // source+target
+    Database sourceDB;
+    Database targetDB;
     try {
-      // source
-      Database sourceDB = await _openDB(sourcePath, "");
-      // target
+      sourceDB = await _openDB(sourcePath, "");
       bool targetExists = await databaseExists(targetPath);
       if (targetExists) {
         await _deleteDBFile(targetPath);
         await Future.delayed(Duration(milliseconds: 100));
       }
-      Database targetDB = await _openDB(targetPath, targetPwd);
-      // copy
+      targetDB = await _openDB(targetPath, targetPwd);
+    } catch (e, st) {
+      handleError(e, st);
+      return false;
+    }
+    // copy
+    try {
       await targetDB.execute("Attach DATABASE `$sourcePath` AS `plaintext` KEY ``");
       await targetDB.execute("INSERT INTO `${ContactStorage.tableName}` SELECT * FROM `plaintext`.`${ContactStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${DeviceInfoStorage.tableName}` SELECT * FROM `plaintext`.`${DeviceInfoStorage.tableName}`");
@@ -381,7 +400,9 @@ class DB {
       await targetDB.execute("INSERT INTO `${MessagePieceStorage.tableName}` SELECT * FROM `plaintext`.`${MessagePieceStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${SessionStorage.tableName}` SELECT * FROM `plaintext`.`${SessionStorage.tableName}`");
       await targetDB.execute("DETACH `plaintext`");
-      // close
+    } catch (e) {}
+    // close
+    try {
       await sourceDB.close();
       await targetDB.close();
       // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
