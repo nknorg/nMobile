@@ -307,7 +307,7 @@ class Upgrade6to7 {
         }
         Map<String, dynamic> _newData = Map();
         _newData["profileVersion"] = result["profile_version"]?.toString();
-        _newData['remarkAvatar'] = _oldData['avatar'] ?? _oldData['remarkAvatar'] ?? _oldData['remark_avatar'];
+        _newData['remarkAvatar'] = _oldData['remarkAvatar'] ?? _oldData['remark_avatar'] ?? _oldData['avatar'];
         _newData['notes'] = _oldData['notes'];
         _newData['mappedAddress'] = _oldData['mappedAddress'];
         _newData['tipNotification'] = 1; // or Settings."chat_tip_notification:$client_address:$targetId" (String(0/1)) -> .data[tipNotification] (Int(0/1))
@@ -321,7 +321,7 @@ class Upgrade6to7 {
         // walletAddress
         String newWalletAddress = _oldData["nknWalletAddress"]?.toString() ?? ""; // no refresh
         // remarkName
-        String newRemarkName = (_oldData["firstName"] ?? _oldData["first_name"] ?? _oldData["remarkName"] ?? _oldData["remark_name"])?.toString() ?? "";
+        String newRemarkName = (_oldData["remarkName"] ?? _oldData["remark_name"] ?? _oldData["firstName"] ?? _oldData["first_name"])?.toString() ?? "";
         // deviceToken
         String deviceToken = (result["device_token"]?.toString() ?? "").replaceAll("\n", "").trim();
         if (deviceToken.isNotEmpty && (deviceToken.startsWith("[APNS]:") || deviceToken.startsWith("[FCM]:"))) {
@@ -1139,12 +1139,14 @@ class Upgrade6to7 {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - newSender null - data:$result");
           continue;
         }
+        // isOutbound
+        int newIsOutbound = (result["is_outbound"]?.toString() == '1') ? 1 : 0;
         // targetId
+        String? _oldTargetId = (result["target_id"]?.toString() ?? "").isNotEmpty ? result["target_id"]?.toString() : null;
         String? _oldGroupId = (result["group_id"]?.toString() ?? "").isNotEmpty ? result["group_id"]?.toString() : null;
         String? _oldTopicId = (result["topic"]?.toString() ?? "").isNotEmpty ? result["topic"]?.toString() : null;
-        String? _oldTargetId = (result["target_id"]?.toString() ?? "").isNotEmpty ? result["target_id"]?.toString() : null;
-        //String? _oldReceiver = (result["receiver"]?.toString() ?? "").isNotEmpty ? result["receiver"]?.toString() : null;
-        String? oldTargetId = _oldGroupId ?? _oldTopicId ?? _oldTargetId;
+        String? _oldReceiver = (result["receiver"]?.toString() ?? "").isNotEmpty ? result["receiver"]?.toString() : null;
+        String? oldTargetId = _oldGroupId ?? _oldTopicId ?? _oldTargetId ?? ((newIsOutbound == 1) ? _oldReceiver : newSender);
         if ((oldTargetId == null) || oldTargetId.isEmpty) {
           logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldTargetId null - data:$result");
           continue;
@@ -1163,8 +1165,6 @@ class Upgrade6to7 {
         } else {
           newTargetType = 1;
         }
-        // isOutbound
-        int newIsOutbound = (result["is_outbound"]?.toString() == '1') ? 1 : 0;
         // status
         int? oldStatus = int.tryParse(result["status"]?.toString() ?? "");
         if (oldStatus == null) {
@@ -1209,29 +1209,29 @@ class Upgrade6to7 {
         int newIsDelete = (result["is_delete"]?.toString() == '1') ? 1 : 0;
         int? newDeleteAt = int.tryParse(result["delete_at"]?.toString() ?? "");
         if ((newIsDelete == 1) || ((newDeleteAt != null) && (newDeleteAt <= nowAt))) {
-          if (newStatus > 0) {
-            int gap = 20 * 24 * 60 * 60 * 1000; // 20d
-            if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
-              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
-            } else {
-              Map<String, int> map = Map()..addAll({newMsgId: newReceiveAt});
-              if (newTargetType == 3) {
-                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_3 (loop over) - data:$result");
-                if (_groupReceivesList[newTargetId] == null) _groupReceivesList[newTargetId] = Map();
-                _groupReceivesList[newTargetId]?.addAll(map);
-              } else if (newTargetType == 1) {
-                logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_1 (loop over) - data:$result");
-                if (_contactReceivesList[newTargetId] == null) _contactReceivesList[newTargetId] = Map();
-                _contactReceivesList[newTargetId]?.addAll(map);
-              } else {
-                logger.w("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
-              }
-            }
-            totalRawCount--;
-            continue;
+          // if (newStatus > 0) {
+          int gap = 20 * 24 * 60 * 60 * 1000; // 20d
+          if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
+            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
           } else {
-            logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (status wrong) - data:$result");
+            Map<String, int> map = Map()..addAll({newMsgId: newReceiveAt});
+            if (newTargetType == 3) {
+              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_3 (loop over) - data:$result");
+              if (_groupReceivesList[newTargetId] == null) _groupReceivesList[newTargetId] = Map();
+              _groupReceivesList[newTargetId]?.addAll(map);
+            } else if (newTargetType == 1) {
+              logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete after_1 (loop over) - data:$result");
+              if (_contactReceivesList[newTargetId] == null) _contactReceivesList[newTargetId] = Map();
+              _contactReceivesList[newTargetId]?.addAll(map);
+            } else {
+              logger.w("Upgrade6to7 - ${MessageStorage.tableName} - delete now (wrong type) - data:$result");
+            }
           }
+          totalRawCount--;
+          continue;
+          // } else {
+          //   logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete skip (status wrong) - data:$result");
+          // }
         }
         // type
         String oldContentType = result["type"]?.toString() ?? "";
