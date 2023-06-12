@@ -33,21 +33,21 @@ class MessageContentType {
 
   static const String receipt = 'receipt'; // status
   static const String read = 'read'; // status
-  static const String queue = 'queue'; // queue
+  static const String queue = 'queue'; // .
 
-  static const String contactProfile = 'contact:profile';
+  static const String contactProfile = 'contact:profile'; // .
   static const String contactOptions = 'contact:options'; // db + visible
 
   static const String deviceRequest = 'device:request'; // .
-  static const String deviceInfo = 'device:info'; // db
+  static const String deviceInfo = 'device:info'; // .
 
   static const String text = 'text'; // db + visible
   static const String textExtension = 'textExtension'; // db + visible
   static const String ipfs = 'ipfs'; // db + visible
-  static const String file = 'file'; // just bubble visible
+  static const String file = 'file'; // db + visible
   static const String image = 'image'; // db + visible
   static const String audio = 'audio'; // db + visible
-  static const String video = 'video'; // just bubble visible
+  static const String video = 'video'; // db + visible
   static const String piece = 'piece'; // db(delete)
 
   static const String topicSubscribe = 'topic:subscribe'; // db + visible
