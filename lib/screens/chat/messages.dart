@@ -610,7 +610,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         disableTip = Settings.locale((s) => s.need_re_subscribe, ctx: context);
       }
     } else if (_privateGroup != null) {
-      if ((_privateGroup.version == null) || (_privateGroup.version?.isEmpty == true)) {
+      if (_privateGroup.version.isEmpty) {
         disableTip = Settings.locale((s) => s.data_synchronization, ctx: context);
       } else if (!isJoined) {
         disableTip = Settings.locale((s) => s.contact_invite_group_tip, ctx: context);

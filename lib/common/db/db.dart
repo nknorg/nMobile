@@ -338,13 +338,13 @@ class DB {
         await Future.delayed(Duration(milliseconds: 100));
       }
       targetDB = await _openDB(targetPath, "");
+      await sourceDB.execute("Attach DATABASE `$targetPath` AS `plaintext` KEY ``");
     } catch (e, st) {
       handleError(e, st);
       return false;
     }
     // copy
     try {
-      await sourceDB.execute("Attach DATABASE `$targetPath` AS `plaintext` KEY ``");
       await sourceDB.execute("INSERT INTO `plaintext`.`${ContactStorage.tableName}` SELECT * FROM `${ContactStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${DeviceInfoStorage.tableName}` SELECT * FROM `${DeviceInfoStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${TopicStorage.tableName}` SELECT * FROM `${TopicStorage.tableName}`");
@@ -354,10 +354,10 @@ class DB {
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessageStorage.tableName}` SELECT * FROM `${MessageStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${MessagePieceStorage.tableName}` SELECT * FROM `${MessagePieceStorage.tableName}`");
       await sourceDB.execute("INSERT INTO `plaintext`.`${SessionStorage.tableName}` SELECT * FROM `${SessionStorage.tableName}`");
-      await sourceDB.execute("DETACH `plaintext`");
     } catch (e) {}
     // close
     try {
+      await sourceDB.execute("DETACH `plaintext`");
       await sourceDB.close();
       await targetDB.close();
       // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
@@ -383,13 +383,13 @@ class DB {
         await Future.delayed(Duration(milliseconds: 100));
       }
       targetDB = await _openDB(targetPath, targetPwd);
+      await targetDB.execute("Attach DATABASE `$sourcePath` AS `plaintext` KEY ``");
     } catch (e, st) {
       handleError(e, st);
       return false;
     }
     // copy
     try {
-      await targetDB.execute("Attach DATABASE `$sourcePath` AS `plaintext` KEY ``");
       await targetDB.execute("INSERT INTO `${ContactStorage.tableName}` SELECT * FROM `plaintext`.`${ContactStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${DeviceInfoStorage.tableName}` SELECT * FROM `plaintext`.`${DeviceInfoStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${TopicStorage.tableName}` SELECT * FROM `plaintext`.`${TopicStorage.tableName}`");
@@ -399,10 +399,10 @@ class DB {
       await targetDB.execute("INSERT INTO `${MessageStorage.tableName}` SELECT * FROM `plaintext`.`${MessageStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${MessagePieceStorage.tableName}` SELECT * FROM `plaintext`.`${MessagePieceStorage.tableName}`");
       await targetDB.execute("INSERT INTO `${SessionStorage.tableName}` SELECT * FROM `plaintext`.`${SessionStorage.tableName}`");
-      await targetDB.execute("DETACH `plaintext`");
     } catch (e) {}
     // close
     try {
+      await targetDB.execute("DETACH `plaintext`");
       await sourceDB.close();
       await targetDB.close();
       // if (sourcePwd.isNotEmpty) await sourceDB.execute("PRAGMA key = $sourcePwd"); // key error
