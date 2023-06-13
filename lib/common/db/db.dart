@@ -82,7 +82,9 @@ class DB {
         bool reset = (await SettingsStorage.getSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey")) ?? false;
         if (reset) {
           database = await _tryOpenDB(path, password, publicKey: publicKey, upgradeTip: true);
-          if (database == null) {
+          if (database != null) {
+            // success
+          } else {
             Toast.show("database open failed.");
             await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false);
             await Future.delayed(Duration(milliseconds: 500));
@@ -122,7 +124,9 @@ class DB {
             }
             _upgradeTipSink.add(null);
           } else {
-            Toast.show("database open failed.");
+            await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true);
+            await Future.delayed(Duration(milliseconds: 500));
+            return await _openWithFix(publicKey, seed);
           }
         }
       }
