@@ -293,7 +293,8 @@ class ChatInCommon with Tag {
       logger.w("$TAG - _receiveReceipt - target is empty - received:$received");
       return false;
     } else if (!exists.canReceipt) {
-      logger.d("$TAG - _receiveReceipt - contentType is error - received:$received");
+      logger.w("$TAG - _receiveReceipt - contentType is error - received:$received");
+      return false;
     } else if (!exists.isOutbound) {
       logger.w("$TAG - receiveReceipt - outbound error - exists:$exists");
       return false;

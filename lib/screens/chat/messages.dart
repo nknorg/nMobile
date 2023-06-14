@@ -390,7 +390,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
     TopicSchema _topic = this._target as TopicSchema;
     int lastRefreshAt = _topic.lastRefreshSubscribersAt();
     int interval = DateTime.now().millisecondsSinceEpoch - lastRefreshAt;
-    if (lastRefreshAt == 0) {
+    if ((lastRefreshAt == 0) && (_topic.createAt > (DateTime.now().millisecondsSinceEpoch - 5 * 60 * 1000))) {
       logger.i("$TAG - _refreshTopicSubscribers - wait sync members - topic:$_topic");
       return;
     } else if ((interval < Settings.gapTopicSubscribersRefreshMs) && !forceFetch) {
