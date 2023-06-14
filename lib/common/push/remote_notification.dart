@@ -27,16 +27,19 @@ class RemoteNotification {
       String? result;
       if (apns.isNotEmpty) {
         result = await sendAPNS(uuid, apns, Settings.apnsTopic, title, content);
-        logger.d("RemoteNotification - send - APNS success - deviceToken:$deviceToken");
       } else if (fcm.isNotEmpty) {
         result = await sendFCM(Settings.getGooglePushToken(), uuid, fcm, title, content);
-        logger.d("RemoteNotification - send - FCM success - deviceToken:$deviceToken");
       } else {
         logger.w("RemoteNotification - send - no platform find - deviceToken:$deviceToken");
       }
       if ((result != null) && result.isNotEmpty) {
         results.add(result);
       }
+    }
+    if (results.length == tokens.length) {
+      logger.d("RemoteNotification - send - success - ${results.length}/${tokens.length}");
+    } else {
+      logger.w("RemoteNotification - send - wrong - ${results.length}/${tokens.length}");
     }
     return results;
   }
