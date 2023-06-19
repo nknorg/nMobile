@@ -62,15 +62,14 @@ class OptionsSchema {
 
   static OptionsSchema fromMap(Map map) {
     OptionsSchema schema = OptionsSchema();
-    final random = Random().nextInt(application.theme.randomBackgroundColorList.length);
     schema.receiveOpen = ((map['receiveOpen'] != null) && (map['receiveOpen'].toString() == '1')) ? true : false;
     schema.notificationOpen = ((map['notificationOpen'] != null) && (map['notificationOpen'].toString() == '1')) ? true : false;
     schema.muteExpireAt = map['muteExpireAt'] ?? -1;
     schema.soundResource = map['soundResource'];
     schema.deleteAfterSeconds = map['deleteAfterSeconds'];
     schema.updateBurnAfterAt = map['updateBurnAfterAt'];
-    schema.avatarBgColor = map['avatarBgColor'] != null ? Color(map['avatarBgColor']) : application.theme.randomBackgroundColorList[random];
-    schema.avatarNameColor = map['avatarNameColor'] != null ? Color(map['avatarNameColor']) : application.theme.randomColorList[random];
+    schema.avatarBgColor = map['avatarBgColor'] != null ? Color(map['avatarBgColor']) : schema.avatarBgColor;
+    schema.avatarNameColor = map['avatarNameColor'] != null ? Color(map['avatarNameColor']) : schema.avatarNameColor;
     schema.chatBgFile = Path.convert2Complete(map['chatBgFile']) != null ? File(Path.convert2Complete(map['chatBgFile'])!) : null;
     schema.chatBgColor = map['chatBgColor'] != null ? Color(map['avatarBgColor']) : schema.chatBgColor;
     schema.chatBubbleBgColor = map['chatBubbleBgColor'] != null ? Color(map['chatBubbleBgColor']) : schema.chatBubbleBgColor;

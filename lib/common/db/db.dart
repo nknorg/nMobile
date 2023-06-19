@@ -92,7 +92,7 @@ class DB {
           }
         } else {
           try {
-            database = await _openDB(path, "", publicKey: publicKey);
+            database = await _openDB(path, "", publicKey: publicKey, upgradeTip: true);
           } catch (e, st) {
             if (clean) handleError(e, st);
           }
