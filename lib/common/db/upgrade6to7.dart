@@ -1197,6 +1197,9 @@ class Upgrade6to7 {
           // logger.e("Upgrade6to7 - ${MessageStorage.tableName} - oldPid null - data:$result");
           // continue;
         }
+        // if ((newStatus > 0) && ((newTargetType == 3) || (newTargetType == 2))) {
+        //   newStatus = 30;
+        // }
         // sendAt
         int newSendAt = int.tryParse(result["send_at"]?.toString() ?? "") ?? 0;
         if (newSendAt == 0) {

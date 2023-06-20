@@ -241,7 +241,7 @@ class MessageSchema {
       options: (data['options'] is Map) ? data['options'] : Map(),
       data: null, // just send set
     );
-    schema.status = schema.canReceipt ? schema.status : MessageStatus.Read;
+    schema.status = schema.canReceipt ? (schema.isTargetContact ? schema.status : MessageStatus.Receipt) : MessageStatus.Read;
     // content
     switch (schema.contentType) {
       case MessageContentType.receipt:

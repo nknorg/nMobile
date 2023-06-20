@@ -55,9 +55,9 @@ class RPC {
         if (walletAddress?.isNotEmpty == true) {
           List<String> saved = await _getRpcServers(walletAddress: walletAddress);
           if (saved.isEmpty) {
-            logger.i("PRC - getRpcServers - saved empty - walletAddress:$walletAddress");
+            logger.i("PRC - getRpcServers - history empty - walletAddress:$walletAddress");
           } else {
-            logger.i("PRC - getRpcServers - saved ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
+            logger.i("PRC - getRpcServers - history ok - walletAddress:$walletAddress - length:${saved.length} - list:$saved");
           }
         }
       } catch (e, st) {
