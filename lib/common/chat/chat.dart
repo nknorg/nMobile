@@ -54,6 +54,7 @@ class ChatCommon with Tag {
     }
     int count = await chatOutCommon.sendPing(targetIds, true, gap: Settings.gapPingSessionsMs);
     logger.i("$TAG - startInitChecks - ping_count:$count/${targetIds.length} - targetIds:$targetIds");
+    // burnings FUTURE:GG
     // receipts
     await chatInCommon.waitReceiveQueues("startInitChecks");
     List<MessageSchema> receiptList = await messageCommon.queryAllReceivedSuccess();
@@ -428,11 +429,13 @@ class ChatCommon with Tag {
     return message;
   }
 
-  MessageSchema burningTick(MessageSchema message, String tag, {Function? onTick}) {
+  MessageSchema burningTick(MessageSchema message, bool replace, {Function? onTick}) {
     if ((message.deleteAt == null) || (message.deleteAt == 0)) return message;
     if ((message.deleteAt ?? 0) > DateTime.now().millisecondsSinceEpoch) {
       String selfAddress = clientCommon.address ?? "";
-      String taskKey = "${TaskService.KEY_MSG_BURNING}:$tag:${message.msgId}";
+      String taskKey = "${TaskService.KEY_MSG_BURNING}:${message.msgId}";
+      bool isTaskRun = taskService.isTaskRun(taskKey, 1);
+      if (!replace && isTaskRun) return message;
       taskService.addTask(taskKey, 1, (String key) {
         String currentSelfAddress = clientCommon.address ?? "";
         if (selfAddress.isEmpty) {
