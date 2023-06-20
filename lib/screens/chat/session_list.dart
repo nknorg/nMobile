@@ -18,6 +18,8 @@ import 'package:nmobile/screens/chat/messages.dart';
 import 'package:nmobile/screens/chat/no_message.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
+import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/util.dart';
 
 class ChatSessionListLayout extends BaseStateFulWidget {
@@ -40,6 +42,8 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   StreamSubscription? _onMessageDeleteStreamSubscription;
 
   ContactSchema? _current;
+
+  ParallelQueue _queue = ParallelQueue("session_list", onLog: (log, error) => error ? logger.w(log) : null);
 
   bool _moreLoading = false;
   ScrollController _scrollController = ScrollController();
@@ -91,24 +95,19 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
 
     // session
     _sessionAddSubscription = sessionCommon.addStream.listen((SessionSchema event) {
-      if (_sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList().isEmpty) {
-        _sessionList.insert(0, event);
-        _sortMessages();
-      }
+      _sessionSet(event).then((_) {
+        setState(() {});
+      });
     });
     _sessionDeleteSubscription = sessionCommon.deleteStream.listen((values) {
-      setState(() {
-        _sessionList = _sessionList.where((element) => !((element.targetId == values[0]) && (element.type == values[1]))).toList();
+      _sessionDel(values[0], values[1]).then((_) {
+        setState(() {});
       });
     });
     _sessionUpdateSubscription = sessionCommon.updateStream.listen((SessionSchema event) {
-      var finds = _sessionList.where((element) => (element.targetId == event.targetId) && (element.type == event.type)).toList();
-      if (finds.isEmpty) {
-        _sessionList.insert(0, event);
-      } else {
-        _sessionList = _sessionList.map((SessionSchema e) => ((e.targetId == event.targetId) && (e.type == event.type)) ? event : e).toList();
-      }
-      _sortMessages();
+      _sessionSet(event).then((_) {
+        setState(() {});
+      });
     });
 
     // message
@@ -177,36 +176,45 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
   }
 
   Future _onMessageUpdate(MessageSchema msg) async {
-    SessionSchema? session;
-    for (var i = 0; i < _sessionList.length; i++) {
-      SessionSchema index = _sessionList[i];
-      if ((index.lastMessageOptions != null) && (index.lastMessageOptions!["msg_id"] == msg.msgId)) {
-        session = index;
-        break;
-      }
-    }
-    if (session != null) {
-      await sessionCommon.update(session.targetId, session.type, lastMsg: msg);
-    }
+    SessionSchema? session = await _sessionQuery(msg.msgId);
+    if (session == null) return;
+    await sessionCommon.update(session.targetId, session.type, lastMsg: msg);
   }
 
   Future _onMessageDelete(String msgId) async {
-    SessionSchema? session;
-    for (var i = 0; i < _sessionList.length; i++) {
-      SessionSchema index = _sessionList[i];
-      if ((index.lastMessageOptions != null) && (index.lastMessageOptions!["msg_id"] == msgId)) {
-        session = index;
-        break;
-      }
-    }
-    if (session != null) {
-      await sessionCommon.update(session.targetId, session.type, lastMsgAt: session.lastMessageAt);
-    }
+    SessionSchema? session = await _sessionQuery(msgId);
+    if (session == null) return;
+    await sessionCommon.update(session.targetId, session.type, lastMsgAt: session.lastMessageAt);
   }
 
-  _sortMessages() {
-    setState(() {
+  Future _sessionSet(SessionSchema s) async {
+    await _queue.add(() async {
+      if (_sessionList.where((element) => (element.targetId == s.targetId) && (element.type == s.type)).toList().isEmpty) {
+        _sessionList.insert(0, s);
+      } else {
+        _sessionList = _sessionList.map((SessionSchema e) => ((e.targetId == s.targetId) && (e.type == s.type)) ? s : e).toList();
+      }
       _sessionList.sort((a, b) => a.isTop ? (b.isTop ? (b.lastMessageAt).compareTo((a.lastMessageAt)) : -1) : (b.isTop ? 1 : b.lastMessageAt.compareTo(a.lastMessageAt)));
+    });
+  }
+
+  Future _sessionDel(String targetId, int targetType) async {
+    await _queue.add(() async {
+      _sessionList = _sessionList.where((element) => !((element.targetId == targetId) && (element.type == targetType))).toList();
+    });
+  }
+
+  Future<SessionSchema?> _sessionQuery(String msgId) async {
+    return await _queue.add(() async {
+      SessionSchema? session;
+      for (var i = 0; i < _sessionList.length; i++) {
+        SessionSchema index = _sessionList[i];
+        if ((index.lastMessageOptions != null) && (index.lastMessageOptions!["msg_id"] == msgId)) {
+          session = index;
+          break;
+        }
+      }
+      return session;
     });
   }
 
