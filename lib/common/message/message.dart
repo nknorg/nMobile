@@ -255,7 +255,7 @@ class MessageCommon with Tag {
     if (success) {
       message.status = status;
       int sendSuccessAt = MessageOptions.getSendSuccessAt(message.options) ?? 0;
-      if ((sendSuccessAt <= 0) && (message.status >= MessageStatus.Success)) {
+      if ((message.status == MessageStatus.Success) || (sendSuccessAt <= 0)) {
         message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
         await updateMessageOptions(message, message.options, notify: false);
       }
@@ -354,7 +354,7 @@ class MessageCommon with Tag {
 
   Future<bool> onSessionDelete(String? targetId, int targetType) async {
     // received tags
-    if (targetType == SessionType.CONTACT || targetType == SessionType.PRIVATE_GROUP) {
+    if ((targetType == SessionType.CONTACT) || (targetType == SessionType.PRIVATE_GROUP)) {
       int limit = 30;
       int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
       int nowAt = DateTime.now().millisecondsSinceEpoch;
