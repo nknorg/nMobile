@@ -196,7 +196,13 @@ class ChatOutCommon with Tag {
   // NO DB NO display NO topic (1 to 1)
   Future<bool> sendReceipt(MessageSchema received) async {
     if (!(await clientCommon.waitClientOk())) return false;
-    if (received.isTargetTopic || received.isTargetGroup) return false; // topic/group no receipt, just send message to myself
+    if (received.isTargetTopic || received.isTargetGroup) {
+      // handle in send topic/group with self receipt
+      if (received.status < MessageStatus.Receipt) {
+        await messageCommon.updateMessageStatus(received, MessageStatus.Receipt, notify: false);
+      }
+      return false; // topic/group no receipt, just send message to myself
+    }
     if (received.sender.isEmpty) return false;
     String data = MessageData.getReceipt(received.msgId);
     logger.i("$TAG - sendReceipt - dest:${received.sender} - msgId:${received.msgId}");

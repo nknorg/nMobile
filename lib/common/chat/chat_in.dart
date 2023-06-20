@@ -239,11 +239,7 @@ class ChatInCommon with Tag {
     }
     // receipt
     if (received.canReceipt && (insertOk || duplicated)) {
-      if (received.isTargetContact) {
-        chatOutCommon.sendReceipt(received); // await
-      } else {
-        // handle in send topic/group with self receipt
-      }
+      chatOutCommon.sendReceipt(received); // await
     }
     // session
     if (received.canDisplay && insertOk) {
