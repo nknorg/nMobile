@@ -60,7 +60,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     _message = widget.message;
     // burning
     _message = chatCommon.burningHandle(_message);
-    _message = chatCommon.burningTick(_message, "bubble", onTick: () => setState(() {}));
+    _message = chatCommon.burningTick(_message, true, onTick: () => setState(() {}));
     // progress
     _refreshProgress();
     // thumbnail
