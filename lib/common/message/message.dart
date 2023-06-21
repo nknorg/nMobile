@@ -719,6 +719,9 @@ class MessageCommon with Tag {
     } else {
       logger.d("$TAG - _syncContactMessages - queueIds no wrong (side==native) - sideSendQueueId:$sideSendQueueId - nativeReceiveQueueId:$nativeReceiveQueueId - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
+    // noAck
+    List<MessageSchema> noAckList = await queryAllNoACKByTarget(targetAddress, SessionType.CONTACT);
+    noAckList.removeWhere((element) => !element.canQueue);
     // queueIds
     List<int> resendQueueIds = sideLostQueueIds;
     if (sideReceiveQueueId < nativeSendQueueId) {
@@ -730,6 +733,11 @@ class MessageCommon with Tag {
     }
     if (resendQueueIds.isEmpty) {
       logger.d("$TAG - _syncContactMessages - resendQueueIds is empty - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      for (var i = 0; i < noAckList.length; i++) {
+        MessageSchema noAck = noAckList[i];
+        logger.i("$TAG - _syncContactMessages - noAck status update - message:$noAck - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+        await updateMessageStatus(noAck, MessageStatus.Receipt, receiveAt: DateTime.now().millisecondsSinceEpoch);
+      }
       return 0;
     }
     logger.i("$TAG - _syncContactMessages - resendQueueIds no empty - count:${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - nativeQueueIds:$nativeQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
@@ -785,19 +793,17 @@ class MessageCommon with Tag {
     }
     logger.i("$TAG - _syncContactMessages - resendMessages no empty - count:${resendMsgList.length}/${resendQueueIds.length} - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     // ack check (maybe other device queue)
-    List<MessageSchema> noAckList = await queryAllNoACKByTarget(targetAddress, SessionType.CONTACT);
-    noAckList.removeWhere((element) => !element.canQueue);
-    bool noAckAdded = false;
+    bool noAckAdded = true;
     for (var i = 0; i < noAckList.length; i++) {
       MessageSchema noAck = noAckList[i];
       if (resendMsgList.indexWhere((element) => noAck.msgId == element.msgId) < 0) {
-        logger.i("$TAG - _syncContactMessages - resend messages add - message:$noAck - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
-        noAckAdded = true;
+        logger.i("$TAG - _syncContactMessages - noAck add ok - message:$noAck - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+        noAckAdded = false;
         resendMsgList.add(noAck);
       }
     }
     if (noAckAdded) {
-      logger.i("$TAG - _syncContactMessages - resendMessages (with no ACK) no empty - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
+      logger.d("$TAG - _syncContactMessages - noAck add none - count:${resendMsgList.length}/${resendQueueIds.length} - resendQueueIds:$resendQueueIds - sideQueueIds:$sideQueueIds - targetAddress:$targetAddress - targetDeviceId:$targetDeviceId");
     }
     // resend
     int successCount = 0;
