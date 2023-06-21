@@ -189,7 +189,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     break
                 }
                 if (client.isClosed()) {
-                    clientListenQueue.asyncAfter(deadline: .now() + 0.5, execute: {
+                    self.clientListenQueue.asyncAfter(deadline: .now() + 0.5, execute: {
                         self.onMessage(_id: _id)
                     })
                     break
@@ -267,8 +267,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         
         let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
         
-        var cAddress: String = ""
-        
         let queueItem = DispatchWorkItem {
             do {
                 var error: NSError?
@@ -307,30 +305,27 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     self.resultError(result: result, code: "", message: "client create fail", details: "create_seed")
                     return
                 }
-                cAddress = clientAddress
                 
                 var resp:[String:Any] = [String:Any]()
                 resp["address"] = clientAddress
                 resp["publicKey"] = clientPubKey
                 resp["seed"] = clientSeed
                 self.resultSuccess(result: result, resp: resp)
+                
+                // listen
+                self.clientListenQueue.async {
+                    self.onConnect(_id: clientAddress, numSubClients: numSubClients)
+                }
+                self.clientListenQueue.async {
+                    self.onMessage(_id: clientAddress)
+                }
                 return
             } catch let error {
                 self.resultError(result: result, error: error)
                 return
             }
         }
-        clientQueue.sync(execute: queueItem)
-        
-        // listen
-        if(!cAddress.isEmpty) {
-            clientListenQueue.async {
-                self.onConnect(_id: cAddress, numSubClients: numSubClients)
-            }
-            clientListenQueue.async {
-                self.onMessage(_id: cAddress)
-            }
-        }
+        clientQueue.async(execute: queueItem)
     }
     
     private func recreate(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -346,8 +341,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
         
         let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
-        
-        var cAddress: String = ""
         
         let queueItem = DispatchWorkItem {
             do {
@@ -387,27 +380,24 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     self.resultError(result: result, code: "", message: "client create fail", details: "recreate_seed")
                     return
                 }
-                cAddress = clientAddress
                 
                 var resp:[String:Any] = [String:Any]()
                 resp["address"] = clientAddress
                 resp["publicKey"] = clientPubKey
                 resp["seed"] = clientSeed
                 self.resultSuccess(result: result, resp: resp)
+                
+                // listen
+                self.clientListenQueue.async {
+                    self.onConnect(_id: clientAddress, numSubClients: numSubClients)
+                }
                 return
             } catch let error {
                 self.resultError(result: result, error: error)
                 return
             }
         }
-        clientQueue.sync(execute: queueItem)
-        
-        // listen
-        if(!cAddress.isEmpty) {
-            clientListenQueue.async {
-                self.onConnect(_id: cAddress, numSubClients: numSubClients)
-            }
-        }
+        clientQueue.async(execute: queueItem)
     }
     
     private func reconnect(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -429,7 +419,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: nil)
             return
         }
-        clientQueue.sync(execute: queueItem)
+        clientQueue.async(execute: queueItem)
     }
     
     private func close(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -456,7 +446,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientQueue.sync(execute: queueItem)
+        clientQueue.async(execute: queueItem)
     }
     
     private func replyText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -489,7 +479,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func sendText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -560,7 +550,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func publishText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -602,7 +592,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func subscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -642,7 +632,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: hash)
             return
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func unsubscribe(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -680,7 +670,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             self.resultSuccess(result: result, resp: hash)
             return
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func getSubscribers(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -718,7 +708,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func getSubscribersCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -748,7 +738,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func getSubscription(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -780,7 +770,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func getHeight(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -808,7 +798,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
     
     private func getNonce(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -838,6 +828,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        clientEventQueue.sync(execute: queueItem)
+        clientEventQueue.async(execute: queueItem)
     }
 }
