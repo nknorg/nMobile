@@ -650,6 +650,7 @@ class MessageSchema {
         contentType = MessageContentType.piece;
         break;
       case "event:subscribe":
+      case "dchat/subscribe":
         contentType = MessageContentType.topicSubscribe;
         break;
       case "event:unsubscribe":
