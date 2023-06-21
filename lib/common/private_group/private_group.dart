@@ -717,14 +717,14 @@ class PrivateGroupCommon with Tag {
     }
     // version (can not gen version because members just not all, just check commits(version))
     int nativeCommits = getPrivateGroupVersionCommits(schemaGroup.version) ?? 0;
+    int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
     List<PrivateGroupItemSchema> members = await privateGroupCommon.getMembersAll(groupId);
     String nativeVersion = genPrivateGroupVersion(nativeCommits, schemaGroup.signature, members);
     String? nativeVersionKeys = getPrivateGroupVersionKeys(nativeVersion);
     String? remoteVersionKeys = getPrivateGroupVersionKeys(remoteVersion);
     if ((nativeVersionKeys != null) && (nativeVersionKeys.isNotEmpty) && (nativeVersionKeys == remoteVersionKeys)) {
       if (!schemaGroup.joined) {
-        int remoteCommits = getPrivateGroupVersionCommits(remoteVersion) ?? 0;
-        if ((schemaGroup.quitCommits ?? remoteCommits) < remoteCommits) {
+        if ((schemaGroup.quitCommits ?? nativeCommits) < remoteCommits) {
           logger.i('$TAG - updatePrivateGroupMembers - version commits no same after quit. - remote_version:$remoteVersion - exists:$schemaGroup');
         } else {
           logger.d('$TAG - updatePrivateGroupMembers - version commits same after quit. - remote_version:$remoteVersion - exists:$schemaGroup');
