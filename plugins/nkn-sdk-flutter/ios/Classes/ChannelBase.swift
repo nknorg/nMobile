@@ -1,22 +1,22 @@
 class ChannelBase: NSObject {
     func resultSuccess(result: @escaping FlutterResult, resp: Any?) {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             result(resp)
         }
     }
     
     func resultError(result: @escaping FlutterResult, error: NSError?, code: String? = "") {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             result(FlutterError(code: code ?? "", message: error?.localizedDescription, details: error?.description))
         }
     }
     func resultError(result: @escaping FlutterResult, error: Error?, code: String? = "") {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             result(FlutterError(code: code ?? "", message: error?.localizedDescription, details: ""))
         }
     }
     func resultError(result: @escaping FlutterResult, code: String? = "", message: String? = "", details: String? = "") {
-        DispatchQueue.main.async{
+        DispatchQueue.main.async {
             result(FlutterError(code: code ?? "", message: message, details: details))
         }
     }
