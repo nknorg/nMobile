@@ -881,7 +881,7 @@ class ChatOutCommon with Tag {
       pid = await _sendWithPrivateGroup(group, message, notification: pushNotification);
     } else if (message.isTargetContact) {
       ContactSchema? contact = await chatCommon.contactHandle(message);
-      bool pushNotification = message.canNotification && (contact?.options.notificationOpen == true) && (notification != false);
+      bool pushNotification = message.canNotification && (notification != false);
       pid = await _sendWithContact(contact, message, notification: pushNotification);
     } else {
       logger.e("$TAG - _send - with_error - type:${message.contentType} - message:${message.toStringSimple()}");
