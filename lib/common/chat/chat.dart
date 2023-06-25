@@ -163,17 +163,15 @@ class ChatCommon with Tag {
     DeviceInfoSchema? exists = await deviceInfoCommon.query(clientAddress, message.deviceId);
     if (message.isTargetSelf) return exists;
     // duplicated
-    if (exists == null) {
+    if ((exists == null) && message.deviceId.isNotEmpty) {
       // skip all messages need send contact request
-      if (message.deviceId.isNotEmpty) {
-        exists = await deviceInfoCommon.add(
-          DeviceInfoSchema(
-            contactAddress: clientAddress,
-            deviceId: message.deviceId,
-            onlineAt: DateTime.now().millisecondsSinceEpoch,
-          ),
-        );
-      }
+      exists = await deviceInfoCommon.add(
+        DeviceInfoSchema(
+          contactAddress: clientAddress,
+          deviceId: message.deviceId,
+          onlineAt: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
       logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$exists");
       chatOutCommon.sendDeviceRequest(clientAddress); // await
     }
@@ -181,7 +179,13 @@ class ChatCommon with Tag {
       if (message.deviceId.isNotEmpty) {
         logger.w("$TAG - deviceInfoHandle - exist is nil - clientAddress:$clientAddress");
       } else {
-        logger.d("$TAG - deviceInfoHandle - exist is nil (deviceId isEmpty) - clientAddress:$clientAddress");
+        DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(clientAddress);
+        if (latest == null) {
+          logger.i("$TAG - deviceInfoHandle - new - request (deviceId isEmpty) - clientAddress:$clientAddress - new:$exists");
+          chatOutCommon.sendDeviceRequest(clientAddress); // await
+        } else {
+          logger.d("$TAG - deviceInfoHandle - exist is nil (deviceId isEmpty) - clientAddress:$clientAddress");
+        }
       }
       return null;
     }
