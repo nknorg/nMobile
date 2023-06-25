@@ -470,9 +470,15 @@ class ChatInCommon with Tag {
     } else if (optionsType == '1') {
       String deviceToken = content['deviceToken']?.toString() ?? "";
       if (deviceInfo == null) {
-        logger.w("$TAG - _receiveContactOptions - deviceToken no_deviceInfo - sender:${received.sender} - new:$deviceToken - deviceId:${received.deviceId}");
-        return false;
-      } else if (deviceInfo.deviceToken != deviceToken) {
+        deviceInfo = await deviceInfoCommon.queryLatest(contact.address);
+        if ((deviceInfo == null) || deviceInfo.deviceToken.isNotEmpty) {
+          logger.w("$TAG - _receiveContactOptions - deviceToken info wrong - sender:${received.sender} - new:$deviceToken - deviceId:${received.deviceId}");
+          return false;
+        } else {
+          logger.i("$TAG - _receiveContactOptions - deviceToken latest set - sender:${received.sender} - new:$deviceToken - deviceInfo:$deviceInfo");
+        }
+      }
+      if (deviceInfo.deviceToken != deviceToken) {
         logger.i("$TAG - _receiveContactOptions - deviceToken set - sender:${received.sender} - new:$deviceToken - deviceInfo:$deviceInfo");
         bool success = await deviceInfoCommon.setDeviceToken(deviceInfo.contactAddress, deviceInfo.deviceId, deviceToken);
         if (!success) return false;
