@@ -86,9 +86,9 @@ class DB {
             // success
           } else {
             Toast.show("database open failed.");
-            await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false);
-            await Future.delayed(Duration(milliseconds: 500));
-            return await _openWithFix(publicKey, seed);
+            // await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", false);
+            // await Future.delayed(Duration(milliseconds: 500));
+            // return await _openWithFix(publicKey, seed);
           }
         } else {
           try {
@@ -124,9 +124,18 @@ class DB {
             }
             _upgradeTipSink.add(null);
           } else {
-            await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true);
-            await Future.delayed(Duration(milliseconds: 500));
-            return await _openWithFix(publicKey, seed);
+            Database? _db;
+            try {
+              _db = await _openDB(path, password, publicKey: publicKey, upgradeTip: true);
+            } catch (e) {}
+            if (_db != null) {
+              await _db.close();
+              await SettingsStorage.setSettings("${SettingsStorage.DATABASE_RESET_PWD_ON_IOS_16}:$publicKey", true);
+              await Future.delayed(Duration(milliseconds: 500));
+              return await _openWithFix(publicKey, seed);
+            } else {
+              Toast.show("database(old) open failed.");
+            }
           }
         }
       }
