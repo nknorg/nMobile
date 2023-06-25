@@ -13,6 +13,7 @@ class RemoteNotification {
   static Future<List<String>> send(List<String> tokens, {List<String>? uuids, String? title, String? content}) async {
     if (Settings.apnsTopic.isEmpty) return ["test"];
     if (!Settings.notificationPushEnable) return [];
+    if (tokens.isEmpty) return [];
     List<String> results = [];
     for (int i = 0; i < tokens.length; i++) {
       String deviceToken = tokens[i];
