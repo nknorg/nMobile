@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # 22/01/04
 #version: 1.4.1+280
 # 23/06/25
-version: 1.4.5+284
+version: 1.4.6+286
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
