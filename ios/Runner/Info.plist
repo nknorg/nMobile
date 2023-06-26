@@ -94,6 +94,8 @@
 	<string>App want to access your Photo Library to send image message or set avatar</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Recognize speech</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
@@ -120,8 +122,6 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
 </plist>
