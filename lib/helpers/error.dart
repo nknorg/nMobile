@@ -209,8 +209,8 @@ String? getErrorShow(dynamic error) {
   if (NknError.isNknError(error)) return errStr;
   if (errStr.contains("oom") == true) return "out of memory";
   if (errStr.contains("wrong password") == true) return errStr;
-  return Settings.locale((s) => s.something_went_wrong);
-  // return "";
+  return "";
+  // return Settings.locale((s) => s.something_went_wrong);
   // return error.toString();
 }
 
