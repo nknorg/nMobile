@@ -14,7 +14,7 @@ IOS_BUILDDIR=$(BUILDDIR)/ios
 IOS_ARTIFACT=$(IOS_BUILDDIR)/Nkn.xcframework
 
 BUILD_PACKAGE=./ ./crypto github.com/nknorg/nkn-sdk-go github.com/nknorg/ncp-go github.com/nknorg/nkn/v2/transaction github.com/nknorg/nkngomobile github.com/nknorg/reedsolomon github.com/nknorg/eth-resolver-go github.com/nknorg/dns-resolver-go
-ANDROID_BUILD_CMD="$(GOBIND) -ldflags $(ANDROID_LDFLAGS) -target=android -o $(ANDROID_ARTIFACT) $(BUILD_PACKAGE)"
+ANDROID_BUILD_CMD="$(GOBIND) -ldflags $(ANDROID_LDFLAGS) -target=android -androidapi=21 -o $(ANDROID_ARTIFACT) $(BUILD_PACKAGE)"
 IOS_BUILD_CMD="$(GOBIND) -ldflags $(LDFLAGS) -target=ios -o $(IOS_ARTIFACT) $(BUILD_PACKAGE)"
 
 
