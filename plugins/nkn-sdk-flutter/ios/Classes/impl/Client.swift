@@ -130,18 +130,6 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         self.removeClient(id: id)
     }
     
-    private func recreateClient(id: String, account: NknAccount, identifier: String = "", numSubClients: Int = 3, config: NknClientConfig) throws -> NknMultiClient? {
-        guard let newClient = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config) else {
-            return nil
-        }
-        let oldClient = self.getClient(id: id)
-        if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
-            try oldClient?.close()
-        }
-        self.setClient(id: newClient.address(), client: newClient)
-        return newClient
-    }
-    
     private func onConnect(_id: String, numSubClients: Int) {
         do {
             guard let client = self.getClient(id: _id) else {
@@ -153,33 +141,35 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             guard let node = try client.onConnect?.next() else {
                 return
             }
-            
-            var rpcServers = [String]()
-            for i in 0...numSubClients {
-                let c = client.getClient(i)
-                let rpcNode = c?.getNode()
-                var rpcAddr = rpcNode?.rpcAddr ?? ""
-                if (rpcAddr.count > 0) {
-                    rpcAddr = "http://" + rpcAddr
-                    if(!rpcServers.contains(rpcAddr)) {
-                        rpcServers.append(rpcAddr)
-                    }
-                }
-            }
-            
-            var resp: [String: Any] = [String: Any]()
-            resp["_id"] = client.address()
-            resp["event"] = "onConnect"
-            resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
-            resp["client"] = ["address": client.address()]
-            resp["rpcServers"] = rpcServers
-            //NSLog("%@", resp)
-            self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+            onConnectResult(client: client, node: node, numSubClients: numSubClients)
             return
         } catch let error {
             self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
             return
         }
+    }
+    
+    private func onConnectResult(client: NknMultiClient, node: NknNode, numSubClients: Int) {
+        var rpcServers = [String]()
+        for i in 0...numSubClients {
+            let c = client.getClient(i)
+            let rpcNode = c?.getNode()
+            var rpcAddr = rpcNode?.rpcAddr ?? ""
+            if (rpcAddr.count > 0) {
+                rpcAddr = "http://" + rpcAddr
+                if(!rpcServers.contains(rpcAddr)) {
+                    rpcServers.append(rpcAddr)
+                }
+            }
+        }
+        var resp: [String: Any] = [String: Any]()
+        resp["_id"] = client.address()
+        resp["event"] = "onConnect"
+        resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
+        resp["client"] = ["address": client.address()]
+        resp["rpcServers"] = rpcServers
+        //NSLog("%@", resp)
+        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
     }
     
     private func onMessage(_id: String) {
@@ -197,26 +187,27 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
                     continue
                 }
-                
-                var resp: [String: Any] = [String: Any]()
-                resp["_id"] = client.address()
-                resp["event"] = "onMessage"
-                resp["data"] = [
-                    "src": msg.src,
-                    "data": String(data: msg.data!, encoding: String.Encoding.utf8)!,
-                    "type": msg.type,
-                    "encrypted": msg.encrypted,
-                    "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil,
-                    "noReply": msg.noReply
-                ]
-                //NSLog("%@", resp)
-                self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
-                //return
+                onMessageResult(client: client, msg: msg)
             } catch let error {
                 self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
-                //return
             }
         }
+    }
+    
+    private func onMessageResult(client: NknMultiClient, msg: NknMessage) {
+        var resp: [String: Any] = [String: Any]()
+        resp["_id"] = client.address()
+        resp["event"] = "onMessage"
+        resp["data"] = [
+            "src": msg.src,
+            "data": String(data: msg.data!, encoding: String.Encoding.utf8)!,
+            "type": msg.type,
+            "encrypted": msg.encrypted,
+            "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil,
+            "noReply": msg.noReply
+        ]
+        //NSLog("%@", resp)
+        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
     }
     
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -356,12 +347,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 
                 var client: NknMultiClient?
                 do {
-                    client = try self.recreateClient(id: _id, account: account, identifier: identifier, numSubClients: numSubClients, config: config)
+                    client = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config)
                 } catch _ {
                 }
                 if (client == nil) {
                     NkngolibAddClientConfigWithDialContext(config)
-                    client = try self.recreateClient(id: _id, account: account, identifier: identifier, numSubClients: numSubClients, config: config)
+                    client = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config)
                 }
                 if (client == nil) {
                     self.resultError(result: result, code: "", message: "client create fail", details: "recreate")
@@ -380,16 +371,72 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     self.resultError(result: result, code: "", message: "client create fail", details: "recreate_seed")
                     return
                 }
-                
+                // result
                 var resp:[String:Any] = [String:Any]()
                 resp["address"] = clientAddress
                 resp["publicKey"] = clientPubKey
                 resp["seed"] = clientSeed
-                self.resultSuccess(result: result, resp: resp)
-                
                 // listen
+                var isSuccess = false
                 self.clientListenQueue.async {
-                    self.onConnect(_id: clientAddress, numSubClients: numSubClients)
+                    do {
+                        guard let client = client else {
+                            return
+                        }
+                        guard let node = try client.onConnect?.next() else {
+                            return
+                        }
+                        self.clientMapQueue.sync {
+                            do {
+                                if(!isSuccess) {
+                                    isSuccess = true
+                                    let oldClient = self.getClient(id: _id)
+                                    self.setClient(id: _id, client: client)
+                                    if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
+                                        try oldClient?.close()
+                                    }
+                                }
+                                self.resultSuccess(result: result, resp: resp)
+                            } catch let error {
+                                self.resultError(result: result, error: error)
+                                return
+                            }
+                        }
+                        self.onConnectResult(client: client, node: node, numSubClients: numSubClients)
+                    } catch let error {
+                        self.resultError(result: result, error: error)
+                        return
+                    }
+                }
+                self.clientListenQueue.async {
+                    do {
+                        guard let client = client else {
+                            return
+                        }
+                        guard let msg = try client.onMessage?.next() else {
+                            return
+                        }
+                        self.clientMapQueue.sync {
+                            do {
+                                if(!isSuccess) {
+                                    isSuccess = true
+                                    let oldClient = self.getClient(id: _id)
+                                    self.setClient(id: _id, client: client)
+                                    if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
+                                        try oldClient?.close()
+                                    }
+                                }
+                                self.resultSuccess(result: result, resp: resp)
+                            } catch let error {
+                                self.resultError(result: result, error: error)
+                                return
+                            }
+                        }
+                        self.onMessageResult(client: client, msg: msg)
+                    } catch let error {
+                        self.resultError(result: result, error: error)
+                        return
+                    }
                 }
                 return
             } catch let error {

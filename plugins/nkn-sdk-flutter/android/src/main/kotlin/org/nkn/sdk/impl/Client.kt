@@ -9,6 +9,8 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import nkn.*
 import nkngolib.Nkngolib
@@ -128,22 +130,6 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
-    private suspend fun recreateClient(
-        id: String,
-        account: Account,
-        identifier: String,
-        numSubClients: Long,
-        config: ClientConfig
-    ): MultiClient = withContext(Dispatchers.IO) {
-        val newClient = MultiClient(account, identifier, numSubClients, true, config)
-        val oldClient = if (clientMap.containsKey(id)) clientMap[id] else null
-        if ((oldClient != null) && !oldClient.isClosed) {
-            oldClient.close()
-        }
-        clientMap[newClient.address()] = newClient
-        newClient
-    }
-
     private suspend fun onConnect(_id: String, numSubClients: Long) =
         withContext(Dispatchers.IO) {
             try {
@@ -152,33 +138,35 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     return@withContext
                 }
                 val node = client.onConnect.next() ?: return@withContext
-
-                val rpcServers = ArrayList<String>()
-                for (i in 0..numSubClients) {
-                    val c = client.getClient(i)
-                    val rpcNode = c?.node
-                    var rpcAddr = rpcNode?.rpcAddr ?: ""
-                    if (rpcAddr.isNotEmpty()) {
-                        rpcAddr = "http://$rpcAddr"
-                        if (!rpcServers.contains(rpcAddr)) {
-                            rpcServers.add(rpcAddr)
-                        }
-                    }
-                }
-
-                val resp = hashMapOf(
-                    "_id" to client.address(),
-                    "event" to "onConnect",
-                    "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
-                    "client" to hashMapOf("address" to client.address()),
-                    "rpcServers" to rpcServers
-                )
-                //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
-                eventSinkSuccess(eventSink, resp)
+                onConnectResult(client, node, numSubClients)
             } catch (e: Throwable) {
                 eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
+
+    private suspend fun onConnectResult(client: MultiClient, node: Node, numSubClients: Long) {
+        val rpcServers = ArrayList<String>()
+        for (i in 0..numSubClients) {
+            val c = client.getClient(i)
+            val rpcNode = c?.node
+            var rpcAddr = rpcNode?.rpcAddr ?: ""
+            if (rpcAddr.isNotEmpty()) {
+                rpcAddr = "http://$rpcAddr"
+                if (!rpcServers.contains(rpcAddr)) {
+                    rpcServers.add(rpcAddr)
+                }
+            }
+        }
+        val resp = hashMapOf(
+            "_id" to client.address(),
+            "event" to "onConnect",
+            "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
+            "client" to hashMapOf("address" to client.address()),
+            "rpcServers" to rpcServers
+        )
+        //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
+        eventSinkSuccess(eventSink, resp)
+    }
 
     private suspend fun onMessage(_id: String) {
         withContext(Dispatchers.IO) {
@@ -192,21 +180,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         continue
                     }
                     val msg = client.onMessage.nextWithTimeout(5 * 1000) ?: continue
-
-                    val resp = hashMapOf(
-                        "_id" to client.address(),
-                        "event" to "onMessage",
-                        "data" to hashMapOf(
-                            "src" to msg.src,
-                            "data" to String(msg.data, Charsets.UTF_8),
-                            "type" to msg.type,
-                            "encrypted" to msg.encrypted,
-                            "messageId" to msg.messageID,
-                            "noReply" to msg.noReply
-                        )
-                    )
-                    //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
-                    eventSinkSuccess(eventSink, resp)
+                    onMessageResult(client, msg)
                 } catch (e: Throwable) {
                     eventSinkError(eventSink, _id, e.localizedMessage)
                 }
@@ -214,53 +188,40 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         }
     }
 
+    private suspend fun onMessageResult(client: MultiClient, msg: Message) {
+        val resp = hashMapOf(
+            "_id" to client.address(),
+            "event" to "onMessage",
+            "data" to hashMapOf(
+                "src" to msg.src,
+                "data" to String(msg.data, Charsets.UTF_8),
+                "type" to msg.type,
+                "encrypted" to msg.encrypted,
+                "messageId" to msg.messageID,
+                "noReply" to msg.noReply
+            )
+        )
+        //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
+        eventSinkSuccess(eventSink, resp)
+    }
+
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "create" -> {
-                create(call, result)
-            }
-            "recreate" -> {
-                recreate(call, result)
-            }
-            "reconnect" -> {
-                reconnect(call, result)
-            }
-            "close" -> {
-                close(call, result)
-            }
-            "replyText" -> {
-                replyText(call, result)
-            }
-            "sendText" -> {
-                sendText(call, result)
-            }
-            "publishText" -> {
-                publishText(call, result)
-            }
-            "subscribe" -> {
-                subscribe(call, result)
-            }
-            "unsubscribe" -> {
-                unsubscribe(call, result)
-            }
-            "getSubscribersCount" -> {
-                getSubscribersCount(call, result)
-            }
-            "getSubscribers" -> {
-                getSubscribers(call, result)
-            }
-            "getSubscription" -> {
-                getSubscription(call, result)
-            }
-            "getHeight" -> {
-                getHeight(call, result)
-            }
-            "getNonce" -> {
-                getNonce(call, result)
-            }
-            else -> {
-                result.notImplemented()
-            }
+            "create" -> create(call, result)
+            "recreate" -> recreate(call, result)
+            "reconnect" -> reconnect(call, result)
+            "close" -> close(call, result)
+            "replyText" -> replyText(call, result)
+            "sendText" -> sendText(call, result)
+            "publishText" -> publishText(call, result)
+            "subscribe" -> subscribe(call, result)
+            "unsubscribe" -> unsubscribe(call, result)
+            "getSubscribersCount" -> getSubscribersCount(call, result)
+            "getSubscribers" -> getSubscribers(call, result)
+            "getSubscription" -> getSubscription(call, result)
+            "getHeight" -> getHeight(call, result)
+            "getNonce" -> getNonce(call, result)
+            else -> result.notImplemented()
         }
     }
 
@@ -340,12 +301,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
                 var client: MultiClient? = null
                 try {
-                    client = recreateClient(_id, account, identifier, numSubClients, config)
+                    client = MultiClient(account, identifier, numSubClients, true, config)
                 } catch (_: Throwable) {
                 }
                 if (client == null) {
                     Nkngolib.addClientConfigWithDialContext(config)
-                    client = recreateClient(_id, account, identifier, numSubClients, config)
+                    client = MultiClient(account, identifier, numSubClients, true, config)
                 }
                 if (client == null) {
                     resultError(result, "", "client create fail", "recreate")
@@ -357,9 +318,45 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     "publicKey" to client.pubKey(),
                     "seed" to client.seed()
                 )
-                resultSuccess(result, data)
                 // listen
-                onConnect(client.address(), numSubClients)
+                val mutex = Mutex()
+                var isSuccess = false
+                withContext(Dispatchers.IO) {
+                    try {
+                        val node = client.onConnect.next() ?: return@withContext
+                        mutex.withLock {
+                            if (isSuccess) return@withLock
+                            isSuccess = true
+                            val oldClient = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                            clientMap[_id] = client
+                            if ((oldClient != null) && !oldClient.isClosed) {
+                                oldClient.close()
+                            }
+                            resultSuccess(result, data)
+                        }
+                        onConnectResult(client, node, numSubClients)
+                    } catch (e: Throwable) {
+                        resultError(result, e)
+                    }
+                }
+                withContext(Dispatchers.IO) {
+                    try {
+                        val msg = client.onMessage.next() ?: return@withContext
+                        mutex.withLock {
+                            if (isSuccess) return@withLock
+                            isSuccess = true
+                            val oldClient = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                            clientMap[_id] = client
+                            if ((oldClient != null) && !oldClient.isClosed) {
+                                oldClient.close()
+                            }
+                            resultSuccess(result, data)
+                        }
+                        onMessageResult(client, msg)
+                    } catch (e: Throwable) {
+                        resultError(result, e)
+                    }
+                }
             } catch (e: Throwable) {
                 resultError(result, e)
             }
