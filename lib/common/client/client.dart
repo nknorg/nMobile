@@ -458,7 +458,8 @@ class ClientCommon with Tag {
         return await reconnect();
       } else {
         logger.i("$TAG - reconnect - wait last complete");
-        return await reconnectCompleter?.future;
+        await reconnectCompleter?.future;
+        return true;
       }
     } else {
       logger.i("$TAG - reconnect - new new complete");
@@ -507,7 +508,8 @@ class ClientCommon with Tag {
   Future ping({bool status = false, int maxWaitTimes = Settings.tryTimesClientConnectWait}) async {
     if (isClientStop) return;
     if ((pingCompleter != null) && !(pingCompleter?.isCompleted == true)) {
-      return await pingCompleter?.future;
+      await pingCompleter?.future;
+      return;
     } else {
       pingCompleter = Completer();
     }
