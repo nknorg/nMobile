@@ -37,6 +37,7 @@ class NknError {
   // sdk
   static String writeTCP = "write tcp";
   static String readTCP = "read tcp";
+  static String broken = "Broken pipe";
   static String writeBroken = "write: broken pipe";
   static String readBroken = "read: broken pipe";
   static String keystoreNotExits = "keystore not exits";
@@ -76,6 +77,7 @@ class NknError {
   static List<String> clientErrors = [
     writeTCP,
     readTCP,
+    broken,
     writeBroken,
     readBroken,
     wrongNode,
@@ -196,6 +198,7 @@ String? getErrorShow(dynamic error) {
   if (errStr.isEmpty) return "";
   bool contains = _containsStrings(errStr, [
     NknError.rpcRequestFail,
+    NknError.broken,
     NknError.writeBroken,
     NknError.readBroken,
     NknError.writeTCP,

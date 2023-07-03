@@ -95,7 +95,7 @@ class ChatOutCommon with Tag {
         return [null, false, 0];
       }
       if (NknError.isClientError(e)) {
-        handleError(e, st, toast: false);
+        handleError(e, st, toast: false, upload: lastTime);
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting || clientCommon.isClientReconnecting) return [null, true, 1000];
         logger.w("$TAG - _sendData - reconnect - count:${destList.length} - destList:$destList");
