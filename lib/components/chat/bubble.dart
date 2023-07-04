@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
@@ -178,7 +179,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     bool isSendOut = _message.isOutbound;
     bool isTipBottom = (_message.status == MessageStatus.Success) || (_message.status == MessageStatus.Receipt);
 
-    return Row(
+    var widget = Row(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: isSendOut ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: isTipBottom ? CrossAxisAlignment.end : CrossAxisAlignment.center,
@@ -188,6 +189,11 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
         isSendOut ? SizedBox.shrink() : _widgetStatusTip(isSendOut),
       ],
     );
+
+    if (Settings.messageDebugInfo) {
+      return Column(children: [widget, _widgetMessageDebugInfo()]);
+    }
+    return widget;
   }
 
   Widget _widgetStatusTip(bool self) {
@@ -1057,5 +1063,48 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
 
   Color _getBgColor() {
     return _message.isOutbound ? application.theme.primaryColor : application.theme.backgroundColor2;
+  }
+
+  _widgetMessageDebugInfo() {
+    // common
+    // String _msgId = _message.msgId;
+    // String msgId = "id● ${(_msgId.length > 5) ? _msgId.substring(0, 4) : _msgId}";
+    int _successTimes = MessageOptions.getSuccessTimes(_message.options) ?? 0;
+    String times = "\ntimes● $_successTimes";
+    String _deviceId = _message.deviceId;
+    String queueID = (_message.queueId > 0) ? "\nsync● ${_message.queueId}.${(_deviceId.length > 10) ? _deviceId.substring(0, 9) : _deviceId}" : "";
+    String _queueIds = MessageOptions.getMessageQueueIds(_message.options) ?? "";
+    String queueIDs = _queueIds.isNotEmpty ? "\nsync● ${(_queueIds.length > 25) ? _queueIds.substring(0, 24) : _queueIds}" : "";
+
+    String sendAt = "\nsend● ${DateFormat("H:m s", Settings.language == 'zh' ? 'zh' : 'en').format(DateTime.fromMillisecondsSinceEpoch(_message.sendAt))}";
+    int _receiveAt = _message.receiveAt ?? 0;
+    String receiveAt = (_receiveAt > 0) ? "\nack● ${DateFormat("H:m s", Settings.language == 'zh' ? 'zh' : 'en').format(DateTime.fromMillisecondsSinceEpoch(_receiveAt))}" : "";
+
+    // out
+    int _sendSuccessAt = MessageOptions.getSendSuccessAt(_message.options) ?? 0;
+    String sendSuccessAt = (_sendSuccessAt > 0) ? "\nsend_ok● ${DateFormat("H:m s", Settings.language == 'zh' ? 'zh' : 'en').format(DateTime.fromMillisecondsSinceEpoch(_receiveAt))}" : "";
+    int _resendOk = MessageOptions.getResendMuteAt(_message.options) ?? 0;
+    String resendMuteAt = (_resendOk > 0) ? "\nresend_ok● ${DateFormat("H:m s", Settings.language == 'zh' ? 'zh' : 'en').format(DateTime.fromMillisecondsSinceEpoch(_resendOk))}" : "";
+    String _pushNotifyId = MessageOptions.getPushNotifyId(_message.options) ?? "";
+    String pushNotifyId = _pushNotifyId.isNotEmpty ? "\nnotifyID● ${(_pushNotifyId.length > 5) ? _pushNotifyId.substring(0, 4) : _pushNotifyId}" : "";
+
+    // text
+    String text = "$times$queueID$queueIDs$sendAt$receiveAt";
+    if (_message.isOutbound) {
+      text += "$sendSuccessAt$resendMuteAt$pushNotifyId";
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Label(
+          text,
+          type: LabelType.bodySmall,
+          height: 1,
+          fontSize: application.theme.iconTextFontSize,
+        ),
+      ],
+    );
   }
 }
