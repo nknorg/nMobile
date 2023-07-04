@@ -99,8 +99,8 @@ class ChatOutCommon with Tag {
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting || clientCommon.isClientReconnecting) return [null, true, 1000];
         logger.w("$TAG - _sendData - reconnect - count:${destList.length} - destList:$destList");
-        bool success = await clientCommon.reconnect();
-        return [null, true, success ? 500 : 1000];
+        await clientCommon.reconnect();
+        return [null, true, 500];
       }
       handleError(e, st);
       logger.e("$TAG - _sendData - try by unknown error - count:${destList.length} - destList:$destList");
