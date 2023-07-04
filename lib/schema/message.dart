@@ -717,6 +717,7 @@ class MessageSchema {
 class MessageOptions {
   static const KEY_SEND_SUCCESS_AT = "sendSuccessAt"; // native
   static const KEY_RESEND_MUTE_AT = "resendMuteAt"; // native
+  static const KEY_SUCCESS_TIMES = "successTimes"; // native
 
   static const KEY_PROFILE_VERSION = "profileVersion";
   static const KEY_DEVICE_TOKEN = "deviceToken";
@@ -795,6 +796,17 @@ class MessageOptions {
   static int? getResendMuteAt(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return int.tryParse(options[MessageOptions.KEY_RESEND_MUTE_AT]?.toString() ?? "");
+  }
+
+  static Map<String, dynamic> setSuccessTimes(Map<String, dynamic>? options, int resendAt) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_SUCCESS_TIMES] = resendAt;
+    return options;
+  }
+
+  static int? getSuccessTimes(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return int.tryParse(options[MessageOptions.KEY_SUCCESS_TIMES]?.toString() ?? "");
   }
 
   static Map<String, dynamic> setProfileVersion(Map<String, dynamic>? options, String profileVersion) {
@@ -1138,6 +1150,7 @@ class MessageData {
     Map<String, dynamic> map = Map()..addAll(options ?? Map());
     map.remove(MessageOptions.KEY_SEND_SUCCESS_AT);
     map.remove(MessageOptions.KEY_RESEND_MUTE_AT);
+    map.remove(MessageOptions.KEY_SUCCESS_TIMES);
     map.remove(MessageOptions.KEY_PUSH_NOTIFY_ID);
     map.remove(MessageOptions.KEY_IPFS_STATE);
     map.remove(MessageOptions.KEY_IPFS_THUMBNAIL_STATE);
