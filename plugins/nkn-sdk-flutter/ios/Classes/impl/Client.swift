@@ -57,12 +57,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     private func setClient(id: String, client: NknMultiClient) {
         clientMapQueue.sync {
             self.clientMap.updateValue(client, forKey: id)
+            return
         }
     }
     
     private func removeClient(id: String) {
         clientMapQueue.sync {
             self.clientMap.removeValue(forKey: id)
+            return
         }
     }
     
@@ -389,14 +391,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                         self.clientMapQueue.sync {
                             do {
                                 if(!isSuccess) {
-                                    isSuccess = true
-                                    let oldClient = self.getClient(id: _id)
-                                    self.setClient(id: _id, client: client)
+                                    let oldClient = self.clientMap.keys.contains(_id) ? self.clientMap[_id] : nil
+                                    self.clientMap.updateValue(client, forKey: _id)
                                     if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
                                         try oldClient?.close()
                                     }
+                                    isSuccess = true
+                                    self.resultSuccess(result: result, resp: resp)
                                 }
-                                self.resultSuccess(result: result, resp: resp)
                             } catch let error {
                                 self.resultError(result: result, error: error)
                                 return
@@ -419,14 +421,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                         self.clientMapQueue.sync {
                             do {
                                 if(!isSuccess) {
-                                    isSuccess = true
-                                    let oldClient = self.getClient(id: _id)
-                                    self.setClient(id: _id, client: client)
+                                    let oldClient = self.clientMap.keys.contains(_id) ? self.clientMap[_id] : nil
+                                    self.clientMap.updateValue(client, forKey: _id)
                                     if((oldClient != nil) && !(oldClient?.isClosed() == true)) {
                                         try oldClient?.close()
                                     }
+                                    isSuccess = true
+                                    self.resultSuccess(result: result, resp: resp)
                                 }
-                                self.resultSuccess(result: result, resp: resp)
                             } catch let error {
                                 self.resultError(result: result, error: error)
                                 return

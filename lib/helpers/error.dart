@@ -154,6 +154,7 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
       "fcm.googleapis.com",
       "mainnet.infura.io",
       "eth-mainnet.g.alchemy.com",
+      NknError.clientClosed,
       NknError.rpcRequestFail,
     ]);
     if (upload && !contains) {
