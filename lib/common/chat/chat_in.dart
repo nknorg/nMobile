@@ -150,6 +150,12 @@ class ChatInCommon with Tag {
         }
       }
     }
+    // times
+    if (received.canDisplay) {
+      int successTimes = MessageOptions.getSuccessTimes(received.options) ?? 0;
+      received.options = MessageOptions.setSuccessTimes(received.options, successTimes + 1);
+      await messageCommon.updateMessageOptions(received, received.options, notify: false);
+    }
     // receive
     bool insertOk = false;
     if (!duplicated) {

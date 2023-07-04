@@ -254,11 +254,6 @@ class MessageCommon with Tag {
     bool success = await MessageStorage.instance.updateStatus(message.msgId, status, receiveAt: receiveAt);
     if (success) {
       message.status = status;
-      int sendSuccessAt = MessageOptions.getSendSuccessAt(message.options) ?? 0;
-      if ((message.status == MessageStatus.Success) || (sendSuccessAt <= 0)) {
-        message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
-        await updateMessageOptions(message, message.options, notify: false);
-      }
       if (notify) onUpdateSink.add(message);
     }
     // delete

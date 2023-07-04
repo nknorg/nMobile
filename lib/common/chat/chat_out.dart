@@ -838,7 +838,9 @@ class ChatOutCommon with Tag {
       if (result != null) {
         logger.i("$TAG - resendMute - success mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
         result.options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
-        await messageCommon.updateMessageOptions(result, result.options, notify: false);
+        int successTimes = MessageOptions.getSuccessTimes(message.options) ?? 0;
+        message.options = MessageOptions.setSuccessTimes(message.options, successTimes + 1);
+        await messageCommon.updateMessageOptions(result, result.options, notify: true);
       } else {
         logger.w("$TAG - resendMute - fail mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
       }
@@ -913,6 +915,10 @@ class ChatOutCommon with Tag {
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         }
+        message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
+        int successTimes = MessageOptions.getSuccessTimes(message.options) ?? 0;
+        message.options = MessageOptions.setSuccessTimes(message.options, successTimes + 1);
+        await messageCommon.updateMessageOptions(message, message.options, notify: true);
       } else {
         if (message.canReceipt) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
