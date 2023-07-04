@@ -231,7 +231,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       Loading.dismiss();
 
       // client signIn
-      bool success = await clientCommon.signIn(selected, null, toast: true, loading: (visible, input, dbOpen) {
+      bool success = await clientCommon.signIn(selected, toast: true, loading: (visible, input, dbOpen) {
         if (visible && !input && !dbOpen) {
           Loading.show();
         } else if (visible && input) {

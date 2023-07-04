@@ -150,12 +150,6 @@ class ChatInCommon with Tag {
         }
       }
     }
-    // times
-    if (received.canDisplay) {
-      int successTimes = MessageOptions.getSuccessTimes(received.options) ?? 0;
-      received.options = MessageOptions.setSuccessTimes(received.options, successTimes + 1);
-      await messageCommon.updateMessageOptions(received, received.options, notify: false);
-    }
     // receive
     bool insertOk = false;
     if (!duplicated) {
@@ -250,6 +244,12 @@ class ChatInCommon with Tag {
     // session
     if (received.canDisplay && insertOk) {
       chatCommon.sessionHandle(received); // await
+    }
+    // times
+    if (received.canDisplay && (insertOk || duplicated)) {
+      int successTimes = MessageOptions.getSuccessTimes(received.options) ?? 0;
+      received.options = MessageOptions.setSuccessTimes(received.options, successTimes + 1);
+      await messageCommon.updateMessageOptions(received, received.options, notify: false);
     }
     // queue
     if (received.canQueue && (insertOk || duplicated)) {

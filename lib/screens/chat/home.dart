@@ -153,7 +153,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       return false;
     }
     // client
-    bool success = await clientCommon.signIn(wallet, null, toast: true, loading: (visible, input, dbOpen) {
+    bool success = await clientCommon.signIn(wallet, toast: true, loading: (visible, input, dbOpen) {
       if (dbOpen) _setConnected(true);
     });
     // check
