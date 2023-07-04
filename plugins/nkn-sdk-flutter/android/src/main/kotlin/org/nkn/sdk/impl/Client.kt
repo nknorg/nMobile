@@ -326,12 +326,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         val node = client.onConnect.next() ?: return@withContext
                         mutex.withLock {
                             if (isSuccess) return@withLock
-                            isSuccess = true
                             val oldClient = if (clientMap.containsKey(_id)) clientMap[_id] else null
                             clientMap[_id] = client
                             if ((oldClient != null) && !oldClient.isClosed) {
                                 oldClient.close()
                             }
+                            isSuccess = true
                             resultSuccess(result, data)
                         }
                         onConnectResult(client, node, numSubClients)
@@ -344,12 +344,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         val msg = client.onMessage.next() ?: return@withContext
                         mutex.withLock {
                             if (isSuccess) return@withLock
-                            isSuccess = true
                             val oldClient = if (clientMap.containsKey(_id)) clientMap[_id] else null
                             clientMap[_id] = client
                             if ((oldClient != null) && !oldClient.isClosed) {
                                 oldClient.close()
                             }
+                            isSuccess = true
                             resultSuccess(result, data)
                         }
                         onMessageResult(client, msg)
