@@ -90,13 +90,15 @@ class ClientCommon with Tag {
       } else {
         logger.i("$TAG - onConnectivityChanged - okay - status:$status");
       }
-      bool newNetworkStatus = status != ConnectivityResult.none;
-      if (newNetworkStatus != isNetworkOk) {
-        isNetworkOk = newNetworkStatus;
-        reconnect(force: !newNetworkStatus); // await
-      } else {
-        isNetworkOk = newNetworkStatus;
-        ping(status: true); // await
+      bool newNetworkOk = status != ConnectivityResult.none;
+      bool isDiff = newNetworkOk != isNetworkOk;
+      isNetworkOk = newNetworkOk;
+      if (!isClientStop && isNetworkOk) {
+        if (isDiff) {
+          reconnect(force: true); // await
+        } else {
+          ping(status: true); // await
+        }
       }
     });
   }
@@ -121,12 +123,16 @@ class ClientCommon with Tag {
   /// ***************************************   Sign   *************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> signIn(WalletSchema? wallet, String? password, {bool toast = false, Function(bool, bool, bool)? loading}) async {
+  Future<bool> signIn(WalletSchema? wallet, {bool toast = false, Function(bool, bool, bool)? loading}) async {
     if ((wallet == null) || wallet.address.isEmpty) return false;
+    String? password = await authorization.getWalletPassword(
+      wallet.address,
+      onInput: (visible) => loading?.call(true, visible, false),
+    );
     // status (just updated(connecting) in this func)
     if (status == ClientConnectStatus.connecting) return false;
     loading?.call(true, false, false);
-    await waitReconnect(); // before set status
+    await waitReconnect("signIn"); // before set status TODO:GG need modify?
     status = ClientConnectStatus.connecting;
     _statusSink.add(ClientConnectStatus.connecting);
     // client
@@ -137,7 +143,6 @@ class ClientCommon with Tag {
         Map<String, dynamic> result = await _signIn(
           wallet,
           password,
-          onInputVisible: (visible) => loading?.call(true, visible, false),
           onDatabaseOpen: () => loading?.call(true, false, true),
         );
         Client? c = result["client"];
@@ -152,7 +157,7 @@ class ClientCommon with Tag {
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
-          //ping(); // await
+          //ping(); // await (wait onConnect)
           break;
         } else if (!canTry) {
           logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
@@ -172,14 +177,13 @@ class ClientCommon with Tag {
     return success;
   }
 
-  Future<Map<String, dynamic>> _signIn(WalletSchema wallet, String? password, {Function(bool)? onInputVisible, Function? onDatabaseOpen}) async {
+  Future<Map<String, dynamic>> _signIn(WalletSchema wallet, String? password, {Function? onDatabaseOpen}) async {
     while (!isNetworkOk) {
       logger.w("$TAG - _signIn - wait network ok");
       await Future.delayed(Duration(milliseconds: 500));
     }
     // password
     try {
-      password = (password?.isNotEmpty == true) ? password : (await authorization.getWalletPassword(wallet.address, onInput: (visible) => onInputVisible?.call(visible)));
       if ((password == null) || password.isEmpty) {
         logger.w("$TAG - _signIn - password is null - wallet:$wallet");
         return {"client": null, "canTry": false}; // , "text": "password empty"
@@ -243,9 +247,15 @@ class ClientCommon with Tag {
         while ((client?.address == null) || (client?.address.isEmpty == true)) {
           client = await Client.create(hexDecode(seed), numSubClients: 4, config: config); // network
         }
+        logger.i("$TAG - _signIn - client create OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         _startListen(wallet);
       } else {
         await client?.recreate(hexDecode(seed), numSubClients: 4, config: config);
+        logger.i("$TAG - _signIn - client create(re) OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
+        if (isClientReconnecting) {
+          reconnectCompleter?.complete();
+          reconnectCompleter = null;
+        }
       }
       _lastAddress = client?.address;
     } catch (e, st) {
@@ -258,8 +268,8 @@ class ClientCommon with Tag {
 
   Future signOut({bool clearWallet = false, bool closeDB = true, bool lock = true}) async {
     // status (just updated(disconnecting/disconnected) in this func)
-    if (status == ClientConnectStatus.disconnecting || status == ClientConnectStatus.disconnected) return;
-    await waitReconnect(); // before set status
+    if ((status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected)) return;
+    await waitReconnect("signOut"); // before set status TODO:GG white screen bug?
     status = ClientConnectStatus.disconnecting;
     _statusSink.add(ClientConnectStatus.disconnecting);
     // wait message receive
@@ -322,23 +332,22 @@ class ClientCommon with Tag {
   void _startListen(WalletSchema wallet) {
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
-      logger.e("$TAG - onError -> event:${event.toString()}");
+      logger.e("$TAG - onError ->> event:${event.toString()}");
       handleError(event, null, text: "client error");
-      await reconnect(force: true);
+      if (!isClientStop) await reconnect(force: true);
     });
     // client connect (just listen once)
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
-      logger.i("$TAG - onConnect -> node:${event.node} - rpcServers:${event.rpcServers}");
+      logger.i("$TAG - onConnect ->> node:${event.node} - rpcServers:${event.rpcServers}");
       if (!isClientStop) {
         status = ClientConnectStatus.connected;
         _statusSink.add(ClientConnectStatus.connected);
       }
-      if (isClientReconnecting) reconnectCompleter?.complete();
       RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
     });
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
-      logger.d("$TAG - onMessage -> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
+      logger.d("$TAG - onMessage ->> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       MessageSchema? receive = MessageSchema.fromReceive(event);
       if (!isClientStop) {
         if (status != ClientConnectStatus.connected) {
@@ -351,7 +360,6 @@ class ClientCommon with Tag {
           }
         }
       }
-      if (isClientReconnecting) reconnectCompleter?.complete();
       chatInCommon.onMessageReceive(receive); // await
     });
   }
@@ -379,15 +387,16 @@ class ClientCommon with Tag {
     int interval = 500;
     int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
     if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    // reconnect
-    //await waitReconnect();
     // connect
     int tryTimes = 0;
     while (isClientConnecting) {
-      if (isClientStop) break;
       while (!isNetworkOk) {
         logger.w("$TAG - waitClientOk - wait network ok");
         await Future.delayed(Duration(milliseconds: 500));
+      }
+      if (isClientStop) {
+        logger.w("$TAG - waitClientOk - closed - client:${client == null} - status:$status");
+        return false;
       }
       if ((client != null) && (tryTimes > 0) && (tryTimes % 20 == 0)) {
         logger.w("$TAG - waitClientOk - try ping - tryTimes:$tryTimes - client:${client == null} - status:$status");
@@ -401,8 +410,8 @@ class ClientCommon with Tag {
       tryTimes++;
       await Future.delayed(Duration(milliseconds: 500));
     }
-    // reconnect-again
-    await waitReconnect();
+    // reconnect
+    await waitReconnect("waitClientOk");
     // log
     if (!isClientOK) {
       logger.w("$TAG - waitClientOk - broken - tryTimes:$tryTimes - client:${client == null} - status:$status");
@@ -414,23 +423,29 @@ class ClientCommon with Tag {
     return true;
   }
 
-  Future waitReconnect() async {
+  Future waitReconnect(String tag) async {
     if (isClientReconnecting) {
-      logger.i("$TAG - waitReconnect - client:${client != null} - status:$status");
+      logger.i("$TAG - waitReconnect - tag:$tag - client:${client != null} - status:$status");
       await reconnectCompleter?.future;
     }
   }
 
   Future<bool> reconnect({bool force = false}) async {
-    if (isClientStop) return false;
+    if (isClientStop) {
+      logger.w("$TAG - reconnect - closed - client:${client == null} - status:$status");
+      return false;
+    }
     // connecting wait
     if (isClientConnecting) {
       int tryTimes = 0;
       while (isClientConnecting) {
-        if (isClientStop) break;
         while (!isNetworkOk) {
           logger.w("$TAG - reconnect - wait network ok");
           await Future.delayed(Duration(milliseconds: 500));
+        }
+        if (isClientStop) {
+          logger.w("$TAG - reconnect - closed - client:${client == null} - status:$status");
+          return false;
         }
         if (force && (tryTimes >= 10)) {
           logger.w("$TAG - reconnect - force no wait connecting - tryTimes:$tryTimes - client:${client == null} - status:$status");
@@ -445,10 +460,14 @@ class ClientCommon with Tag {
           logger.w("$TAG - reconnect - connecting wait - tryTimes:$tryTimes - client:${client == null} - status:$status");
         }
         tryTimes++;
-        await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
+        await Future.delayed(Duration(milliseconds: 500));
       }
-      logger.i("$TAG - reconnect - connecting complete - ok:$isClientOK - tryTimes:$tryTimes - client:${client == null} - status:$status");
-      if (!isClientReconnecting) return isClientOK;
+      if (!isClientReconnecting) {
+        logger.i("$TAG - reconnect - connecting complete ok - tryTimes:$tryTimes - client:${client == null} - status:$status");
+        return isClientOK;
+      } else {
+        logger.w("$TAG - reconnect - connecting complete no - tryTimes:$tryTimes - client:${client == null} - status:$status");
+      }
     }
     // complete check
     if (isClientReconnecting) {
@@ -499,9 +518,12 @@ class ClientCommon with Tag {
       _statusSink.add(ClientConnectStatus.connecting); // need first flush
       await Future.delayed(Duration(milliseconds: isNetworkOk ? 100 : 200));
     }
-    //reconnectCompleter?.complete(); // complete in onConnect
-    //reconnectCompleter = null; // sync nil error
-    //ping(status: true); // await must after reconnectCompleter
+    if (!success) {
+      reconnectCompleter?.complete();
+      reconnectCompleter = null;
+      return false;
+    }
+    ping(status: true); // await (onConnect OK)
     return success;
   }
 
@@ -515,7 +537,7 @@ class ClientCommon with Tag {
     }
     int tryTimes = 0;
     while (true) {
-      await waitReconnect();
+      await waitReconnect("ping");
       if (isClientStop) {
         logger.i("$TAG - ping - closed break - tryTimes:$tryTimes - status:$status");
         break;
