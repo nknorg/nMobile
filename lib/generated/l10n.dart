@@ -4039,6 +4039,26 @@ class S {
       args: [],
     );
   }
+
+  /// `developer options`
+  String get developer_options {
+    return Intl.message(
+      'developer options',
+      name: 'developer_options',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `message debug information`
+  String get message_debug_info {
+    return Intl.message(
+      'message debug information',
+      name: 'message_debug_info',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

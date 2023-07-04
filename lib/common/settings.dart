@@ -59,6 +59,9 @@ class Settings {
   static String deviceVersion = "";
   static late Directory applicationRootDirectory; // eg:/data/user/0/org.nkn.mobile.app/app_flutter
 
+  // debug
+  static bool messageDebugInfo = false;
+
   // locale
   static S? _s;
 
@@ -145,6 +148,8 @@ class Settings {
     sentryEnable = !((bug?.toString() == "true") || (bug == true));
     var push = await SettingsStorage.getSettings(SettingsStorage.CLOSE_NOTIFICATION_PUSH_API);
     notificationPushEnable = !((push?.toString() == "true") || (push == true));
+    var msgDebug = await SettingsStorage.getSettings(SettingsStorage.OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG);
+    messageDebugInfo = ((msgDebug?.toString() == "true") || (msgDebug == true));
     IpfsHelper.init(infuraProjectId, infuraApiKeySecret);
     // app_info
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
