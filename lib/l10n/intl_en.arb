@@ -416,5 +416,7 @@
   "allow_push_message_notifications_to_others": "Allow push message notifications to others",
   "do_not_allow_push_message_notifications_to_others": "Do not allow push message notifications to others",
   "allow_uploading_application_exception_logs": "Allow uploading application exception logs",
-  "do_not_allow_uploading_application_exception_logs": "Do not allow uploading application exception logs"
+  "do_not_allow_uploading_application_exception_logs": "Do not allow uploading application exception logs",
+  "developer_options": "developer options",
+  "message_debug_info": "message debug information"
 }

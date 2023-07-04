@@ -19,6 +19,8 @@ class SettingsStorage {
   static const String CLOSE_BUG_UPLOAD_API = 'close_bug_upload_api';
   static const String CLOSE_NOTIFICATION_PUSH_API = 'close_notification_push_api';
 
+  static const String OPEN_DEVELOP_OPTIONS_MESSAGE_DEBUG = 'open_develop_options_message_debug';
+
   // FUTURE:GG IOS_152_V2
   static const String DATABASE_FIXED_IOS_152 = "database_fixed_ios_152";
   static const String DATABASE_CLEAN_PWD_ON_IOS_14 = "database_clean_pwd_on_ios_14";
