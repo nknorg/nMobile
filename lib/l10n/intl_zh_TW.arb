@@ -416,5 +416,7 @@
   "allow_push_message_notifications_to_others": "允許推送消息通知給其他人",
   "do_not_allow_push_message_notifications_to_others": "不允許推送消息通知給其他人",
   "allow_uploading_application_exception_logs": "允許上傳應用異常日誌",
-  "do_not_allow_uploading_application_exception_logs": "不允許上傳應用異常日誌"
+  "do_not_allow_uploading_application_exception_logs": "不允許上傳應用異常日誌",
+  "developer_options": "开发人员选项",
+  "message_debug_info": "消息调试信息"
 }

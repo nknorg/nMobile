@@ -182,6 +182,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "這將從您的設備中刪除帳戶。請確保您的帳戶已備份，否則您的資金將丟失且無法找回。"),
         "delete_wallet_confirm_title":
             MessageLookupByLibrary.simpleMessage("您確定要刪除此帳戶嗎?"),
+        "developer_options": MessageLookupByLibrary.simpleMessage("开发人员选项"),
         "disconnect": MessageLookupByLibrary.simpleMessage("斷開連接"),
         "do_not_allow_push_message_notifications_to_others":
             MessageLookupByLibrary.simpleMessage("不允許推送消息通知給其他人"),
@@ -330,6 +331,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "menu_news": MessageLookupByLibrary.simpleMessage("新聞"),
         "menu_settings": MessageLookupByLibrary.simpleMessage("設置"),
         "menu_wallet": MessageLookupByLibrary.simpleMessage("帳戶"),
+        "message_debug_info": MessageLookupByLibrary.simpleMessage("消息调试信息"),
         "min": MessageLookupByLibrary.simpleMessage("最小"),
         "minutes": MessageLookupByLibrary.simpleMessage("分鐘"),
         "my_contact": MessageLookupByLibrary.simpleMessage("我的聯繫人"),

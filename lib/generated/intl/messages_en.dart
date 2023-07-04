@@ -214,6 +214,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "This will remove the account off your local device. Please make sure your account is fully backed up or you will lose your funds."),
         "delete_wallet_confirm_title": MessageLookupByLibrary.simpleMessage(
             "Are you sure you want to delete this account?"),
+        "developer_options":
+            MessageLookupByLibrary.simpleMessage("developer options"),
         "disconnect": MessageLookupByLibrary.simpleMessage("Disconnect"),
         "do_not_allow_push_message_notifications_to_others":
             MessageLookupByLibrary.simpleMessage(
@@ -394,6 +396,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "menu_news": MessageLookupByLibrary.simpleMessage("News"),
         "menu_settings": MessageLookupByLibrary.simpleMessage("Settings"),
         "menu_wallet": MessageLookupByLibrary.simpleMessage("Account"),
+        "message_debug_info":
+            MessageLookupByLibrary.simpleMessage("message debug information"),
         "min": MessageLookupByLibrary.simpleMessage("Min"),
         "minutes": MessageLookupByLibrary.simpleMessage("minutes"),
         "my_contact": MessageLookupByLibrary.simpleMessage("My Contact"),

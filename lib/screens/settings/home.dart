@@ -20,6 +20,7 @@ import 'package:nmobile/helpers/validation.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/common/select.dart';
 import 'package:nmobile/screens/settings/cache.dart';
+import 'package:nmobile/screens/settings/develop.dart';
 import 'package:nmobile/screens/settings/subscribe.dart';
 import 'package:nmobile/screens/settings/terms.dart';
 import 'package:nmobile/screens/settings/tracker.dart';
@@ -638,6 +639,38 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
                     ),
                     onPressed: () {
                       Navigator.pushNamed(context, SettingsTrackerScreen.routeName);
+                    },
+                  ),
+                ),
+                Divider(height: 0, color: application.theme.dividerColor),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(bottom: true),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          Settings.locale((s) => s.developer_options, ctx: context),
+                          type: LabelType.bodyRegular,
+                          color: application.theme.fontColor1,
+                          fontWeight: FontWeight.bold,
+                          height: 1,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Asset.iconSvg(
+                              'right',
+                              width: 24,
+                              color: application.theme.fontColor2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, SettingsDevelopScreen.routeName);
                     },
                   ),
                 ),
