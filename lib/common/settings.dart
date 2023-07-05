@@ -109,7 +109,7 @@ class Settings {
   static const int timeoutIpfsThumbnailAutoDownloadMs = 7 * 24 * 60 * 60 * 1000; // 7d
   // tryTimes
   static const int tryTimesClientConnectWait = 10;
-  static const int tryTimesMsgSend = 10;
+  static const int tryTimesMsgSend = 30;
   static const int tryTimesTopicRpc = 3;
   static const int tryTimesIpfsThumbnailUpload = 3;
   static const int tryTimesIpfsThumbnailDownload = 5;

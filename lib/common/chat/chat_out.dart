@@ -75,7 +75,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<List<dynamic>> _sendData(List<String> destList, String data, {bool lastTime = false}) async {
-    if (!(await clientCommon.waitClientOk())) return [null, false];
+    if (!(await clientCommon.waitClientOk())) return [null, false, 0];
     // logger.v("$TAG - _sendData - send start - destList:$destList");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
