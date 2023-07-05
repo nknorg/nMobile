@@ -93,7 +93,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         // task add
         if (firstConnect) {
           firstConnect = false;
-          taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 8, (key) => clientCommon.ping(), delayMs: 1 * 1000);
+          taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 8, (key) => clientCommon.ping(), delayMs: 0);
           taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
           taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
@@ -176,12 +176,12 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   Future<bool> _tryAuth(bool gapOk) async {
     if (clientCommon.isClientStop) return false;
-    Function() runAfterAuth = () {
+    Function() clientReconnect = () {
       clientCommon.reconnect(force: true);
       _tryCompleteLogin();
     };
     if (!gapOk) {
-      runAfterAuth();
+      clientReconnect();
       return true;
     }
     if (isAuthProgress) return false;
@@ -209,8 +209,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // view
     _setAuthProgress(false);
     // client
+    clientReconnect(); // await
     chatCommon.startInitChecks(delay: 500); // await
-    runAfterAuth(); // await
     return true;
   }
 
