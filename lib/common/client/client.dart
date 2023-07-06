@@ -82,8 +82,9 @@ class ClientCommon with Tag {
 
   // tag
   bool isNetworkOk = true;
+  bool isForeLoading = false;
 
-  ClientCommon() {
+  void init() {
     // network
     Connectivity().onConnectivityChanged.listen((status) {
       if (status == ConnectivityResult.none) {
@@ -108,6 +109,14 @@ class ClientCommon with Tag {
         } else {
           _statusSink.add(ClientConnectStatus.connecting);
         }
+      }
+    });
+    // appLife
+    application.appLifeStream.listen((bool inBackground) async {
+      if (!isClientStop && !inBackground) {
+        await chatInCommon.waitReceiveQueues("connecting");
+        _statusSink.add(ClientConnectStatus.connecting);
+        isForeLoading = true;
       }
     });
   }
@@ -276,10 +285,7 @@ class ClientCommon with Tag {
       if ((status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected)) return;
       status = ClientConnectStatus.disconnecting;
       _statusSink.add(ClientConnectStatus.disconnecting);
-      // wait message receive
-      int interval = 500;
-      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+      // msgReceives
       await chatInCommon.waitReceiveQueues("signOut");
       // client
       int tryTimes = 0;
@@ -332,7 +338,7 @@ class ClientCommon with Tag {
       if (!isClientStop) await reconnect(force: true);
     });
     // client connect (just listen once)
-    _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) {
+    _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
       logger.i("$TAG - onConnect ->> node:${event.node} - rpcServers:${event.rpcServers}");
       RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
       if (!isClientStop) {
@@ -343,22 +349,25 @@ class ClientCommon with Tag {
       }
     });
     // client receive (looper)
-    _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) {
+    _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
       logger.d("$TAG - onMessage ->> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       MessageSchema? receive = MessageSchema.fromReceive(event);
       chatInCommon.onMessageReceive(receive); // await
       if (!isClientStop) {
-        _lock.synchronized(() async {
-          if (status != ClientConnectStatus.connected) {
+        if (status != ClientConnectStatus.connected) {
+          _lock.synchronized(() async {
             status = ClientConnectStatus.connected;
             _statusSink.add(ClientConnectStatus.connected);
-          } else if ((receive?.isTargetSelf == true) && (receive?.contentType == MessageContentType.ping)) {
-            int nowAt = DateTime.now().millisecondsSinceEpoch;
-            if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
-              _statusSink.add(ClientConnectStatus.connected);
-            }
+          });
+        } else if ((receive?.isTargetSelf == true) && (receive?.contentType == MessageContentType.ping)) {
+          int nowAt = DateTime.now().millisecondsSinceEpoch;
+          if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
+            _statusSink.add(ClientConnectStatus.connected);
           }
-        });
+        } else if (isForeLoading) {
+          isForeLoading = false;
+          _statusSink.add(ClientConnectStatus.connected);
+        }
       }
     });
   }

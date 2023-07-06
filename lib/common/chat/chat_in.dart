@@ -37,6 +37,10 @@ class ChatInCommon with Tag {
   }
 
   Future waitReceiveQueues(String key) async {
+    int interval = 500;
+    int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+    if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+    // futures
     List<Future> futures = [];
     _receiveQueues.forEach((targetId, queue) {
       futures.add(waitReceiveQueue(targetId, key));
