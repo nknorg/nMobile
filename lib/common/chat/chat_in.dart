@@ -37,31 +37,40 @@ class ChatInCommon with Tag {
   }
 
   Future waitReceiveQueues(String key) async {
-    int interval = 500;
-    int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-    if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    // futures
-    List<Future> futures = [];
-    _receiveQueues.forEach((targetId, queue) {
-      futures.add(waitReceiveQueue(targetId, key));
-    });
-    logger.d("$TAG - waitReceiveQueues - waiting - count:${futures.length} - key:$key");
-    await Future.wait(futures);
-    logger.d("$TAG - waitReceiveQueues - complete - count:${futures.length} - key:$key");
+    try {
+      int interval = 500;
+      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+      // futures
+      List<Future> futures = [];
+      _receiveQueues.forEach((targetId, queue) {
+        futures.add(waitReceiveQueue(targetId, key));
+      });
+      logger.d("$TAG - waitReceiveQueues - waiting - count:${futures.length} - key:$key");
+      await Future.wait(futures);
+      logger.d("$TAG - waitReceiveQueues - complete - count:${futures.length} - key:$key");
+    } catch (e, st) {
+      handleError(e, st);
+    }
   }
 
   Future<bool> waitReceiveQueue(String targetId, String keyPrefix, {bool duplicated = true}) async {
-    ParallelQueue? receiveQueue = _receiveQueues[targetId];
-    if (receiveQueue == null) return true;
-    bool isOnComplete = receiveQueue.isOnComplete("$keyPrefix$targetId");
-    if (isOnComplete && !duplicated) {
-      logger.d("$TAG - waitReceiveQueue - progress refuse duplicated - keyPrefix:$keyPrefix - targetId:$targetId");
-      return false;
+    try {
+      ParallelQueue? receiveQueue = _receiveQueues[targetId];
+      if (receiveQueue == null) return true;
+      bool isOnComplete = receiveQueue.isOnComplete("$keyPrefix$targetId");
+      if (isOnComplete && !duplicated) {
+        logger.d("$TAG - waitReceiveQueue - progress refuse duplicated - keyPrefix:$keyPrefix - targetId:$targetId");
+        return false;
+      }
+      logger.d("$TAG - waitReceiveQueue - waiting - keyPrefix:$keyPrefix - targetId:$targetId");
+      await receiveQueue.onComplete("$keyPrefix$targetId");
+      logger.d("$TAG - waitReceiveQueue - complete - keyPrefix:$keyPrefix - targetId:$targetId");
+      return true;
+    } catch (e, st) {
+      handleError(e, st);
     }
-    logger.d("$TAG - waitReceiveQueue - waiting - keyPrefix:$keyPrefix - targetId:$targetId");
-    await receiveQueue.onComplete("$keyPrefix$targetId");
-    logger.d("$TAG - waitReceiveQueue - complete - keyPrefix:$keyPrefix - targetId:$targetId");
-    return true;
+    return false;
   }
 
   Future onMessageReceive(MessageSchema? message, {bool priority = false, Function? onAdd}) async {
