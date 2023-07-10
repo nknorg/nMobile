@@ -313,9 +313,18 @@ class ChatOutCommon with Tag {
   }
 
   // NO DB NO display (1 to 1)
-  Future<bool> sendDeviceRequest(String? targetAddress) async {
+  Future<bool> sendDeviceRequest(String? targetAddress, {int gap = 0}) async {
     if (!(await clientCommon.waitClientOk())) return false;
     if (targetAddress == null || targetAddress.isEmpty) return false;
+    if (gap > 0) {
+      ContactSchema? _contact = await contactCommon.query(targetAddress, fetchWalletAddress: false);
+      if (_contact == null) return false;
+      int interval = DateTime.now().millisecondsSinceEpoch - _contact.deviceInfoRequestAt;
+      if (interval < gap) {
+        logger.d('$TAG - sendDeviceRequest - gap small - gap:$interval<$gap - targetAddress:$targetAddress');
+        return false;
+      }
+    }
     String data = MessageData.getDeviceRequest();
     logger.i("$TAG - sendDeviceRequest - dest:$targetAddress - data:$data");
     Uint8List? pid = await _sendWithAddress([targetAddress], data);

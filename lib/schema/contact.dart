@@ -182,6 +182,10 @@ class ContactSchema {
     return (int.tryParse(data['tipNotification']?.toString() ?? "0") ?? 0) > 0;
   }
 
+  int get deviceInfoRequestAt {
+    return int.tryParse(data['deviceInfoRequestAt']?.toString() ?? "0") ?? 0;
+  }
+
   Map<String, dynamic> toMap() {
     address = address.replaceAll("\n", "").trim();
     walletAddress = walletAddress.replaceAll("\n", "").trim();

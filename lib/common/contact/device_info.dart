@@ -163,12 +163,12 @@ class DeviceInfoCommon with Tag {
     return data != null;
   }
 
-  Future<bool> setDeviceInfoResponse(String? contactAddress, String? deviceId, {int? timeAt}) async {
+  Future<bool> setDeviceInfoResponseAt(String? contactAddress, String? deviceId, {int? timeAt}) async {
     if (contactAddress == null || contactAddress.isEmpty) return false;
     var data = await DeviceInfoStorage.instance.setData(contactAddress, deviceId, {
       "deviceInfoResponseAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
     });
-    logger.d("$TAG - setDeviceInfoResponse - success:${data != null} - timeAt:$timeAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
+    logger.d("$TAG - setDeviceInfoResponseAt - success:${data != null} - timeAt:$timeAt - data:$data - contactAddress:$contactAddress - deviceId:$deviceId");
     return data != null;
   }
 
