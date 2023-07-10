@@ -61,20 +61,23 @@ class Authorization {
       }
       return false;
     }).then((bool authOk) async {
-      String? pwd = await walletCommon.getPassword(walletAddress);
-      if (!authOk || pwd == null || pwd.isEmpty) {
-        onInput?.call(true);
-        String? password = await BottomDialog.of(Settings.appContext).showInput(
-          title: Settings.locale((s) => s.verify_wallet_password),
-          inputTip: Settings.locale((s) => s.wallet_password),
-          inputHint: Settings.locale((s) => s.input_password),
-          actionText: Settings.locale((s) => s.continue_text),
-          validator: Validator.of(Settings.appContext).password(),
-          password: true,
-        );
-        onInput?.call(false);
-        return password;
-      }
+      String? pwd;
+      try {
+        pwd = await walletCommon.getPassword(walletAddress);
+        if (!authOk || pwd == null || pwd.isEmpty) {
+          onInput?.call(true);
+          String? password = await BottomDialog.of(Settings.appContext).showInput(
+            title: Settings.locale((s) => s.verify_wallet_password),
+            inputTip: Settings.locale((s) => s.wallet_password),
+            inputHint: Settings.locale((s) => s.input_password),
+            actionText: Settings.locale((s) => s.continue_text),
+            validator: Validator.of(Settings.appContext).password(),
+            password: true,
+          );
+          onInput?.call(false);
+          return password;
+        }
+      } catch (_) {}
       return pwd;
     });
   }
