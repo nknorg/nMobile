@@ -424,9 +424,13 @@ class ClientCommon with Tag {
   }
 
   Future waitReconnect(String tag) async {
-    if (isClientReconnecting) {
-      logger.i("$TAG - waitReconnect - tag:$tag - client:${client != null} - status:$status");
-      await reconnectCompleter?.future;
+    try {
+      if (isClientReconnecting) {
+        logger.i("$TAG - waitReconnect - tag:$tag - client:${client != null} - status:$status");
+        await reconnectCompleter?.future;
+      }
+    } catch (e, st) {
+      handleError(e, st);
     }
   }
 
@@ -474,14 +478,18 @@ class ClientCommon with Tag {
     _statusSink.add(ClientConnectStatus.connecting);
     isViewLoading = true;
     // no-force
-    if (isClientReconnecting) {
-      if (!force) {
-        logger.i("$TAG - reconnect - wait last complete");
-        await reconnectCompleter?.future;
-        return isClientOK;
-      } else {
-        logger.i("$TAG - reconnect - force again");
+    try {
+      if (isClientReconnecting) {
+        if (!force) {
+          logger.i("$TAG - reconnect - wait last complete");
+          await reconnectCompleter?.future;
+          return isClientOK;
+        } else {
+          logger.i("$TAG - reconnect - force again");
+        }
       }
+    } catch (e, st) {
+      handleError(e, st);
     }
     // complete check
     bool success = await _lock.synchronized(() async {
