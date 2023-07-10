@@ -82,7 +82,7 @@ class ClientCommon with Tag {
 
   // tag
   bool isNetworkOk = true;
-  bool isForeLoading = false;
+  bool isViewLoading = false;
 
   void init() {
     // network
@@ -111,14 +111,6 @@ class ClientCommon with Tag {
         }
       }
     });
-    // appLife
-    application.appLifeStream.listen((bool inBackground) async {
-      if (!isClientStop && !inBackground) {
-        await chatInCommon.waitReceiveQueues("connecting");
-        _statusSink.add(ClientConnectStatus.connecting);
-        isForeLoading = true;
-      }
-    });
   }
 
   String? getPublicKey() {
@@ -144,6 +136,7 @@ class ClientCommon with Tag {
   Future<bool> signIn(WalletSchema? wallet, {bool toast = false, Function(bool, bool, bool)? loading}) async {
     if ((wallet == null) || wallet.address.isEmpty) return false;
     bool success = await _lock.synchronized(() async {
+      // password (before status update)
       String? password = await authorization.getWalletPassword(
         wallet.address,
         onInput: (visible) => loading?.call(true, visible, false),
@@ -334,8 +327,8 @@ class ClientCommon with Tag {
     // client error
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
       logger.e("$TAG - onError ->> event:${event.toString()}");
-      handleError(event, null, text: "client error");
-      if (!isClientStop) await reconnect(force: true);
+      handleError(event, null);
+      if (!isClientStop) reconnect(force: true); // await
     });
     // client connect (just listen once)
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
@@ -364,8 +357,8 @@ class ClientCommon with Tag {
           if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
             _statusSink.add(ClientConnectStatus.connected);
           }
-        } else if (isForeLoading) {
-          isForeLoading = false;
+        } else if (isViewLoading) {
+          isViewLoading = false;
           _statusSink.add(ClientConnectStatus.connected);
         }
       }
@@ -476,6 +469,10 @@ class ClientCommon with Tag {
         logger.w("$TAG - reconnect - connecting complete no - tryTimes:$tryTimes - client:${client == null} - status:$status");
       }
     }
+    // receiveMsg
+    await chatInCommon.waitReceiveQueues("reconnect");
+    _statusSink.add(ClientConnectStatus.connecting);
+    isViewLoading = true;
     // no-force
     if (isClientReconnecting) {
       if (!force) {

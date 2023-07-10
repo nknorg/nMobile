@@ -9,9 +9,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     var eventChannel: FlutterEventChannel?
     var eventSink: FlutterEventSink?
     
-    let clientQueue = DispatchQueue(label: "org.nkn.sdk/client/queue", qos: .default)
-    let clientMapQueue = DispatchQueue(label: "org.nkn.sdk/client/map/queue", qos: .default)
-    let clientListenQueue = DispatchQueue(label: "org.nkn.sdk/client/listen/queue", qos: .default, attributes: .concurrent)
+    let clientQueue = DispatchQueue(label: "org.nkn.sdk/client_queue", qos: .userInitiated)
+    let clientMapQueue = DispatchQueue(label: "org.nkn.sdk/client/map_queue", qos: .userInteractive)
+    let clientOnConnectQueue = DispatchQueue(label: "org.nkn.sdk/client/onConnect_queue", qos: .userInitiated, attributes: .concurrent)
+    let clientOnMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/onMessage_queue", qos: .userInitiated, attributes: .concurrent)
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     
     var clientMap = Dictionary<String, NknMultiClient>()
@@ -47,11 +48,9 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func getClient(id: String) -> NknMultiClient? {
-        var client :NknMultiClient?
-        clientMapQueue.sync {
-            client = self.clientMap.keys.contains(id) ? self.clientMap[id] : nil
+        return clientMapQueue.sync {
+            return self.clientMap.keys.contains(id) ? self.clientMap[id] : nil
         }
-        return client
     }
     
     private func setClient(id: String, client: NknMultiClient) {
@@ -70,47 +69,50 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     
     private func getClientConfig(seedRpc: [String]?, connectRetries: Int32, maxReconnectInterval: Int32, ethResolverConfigArray: [[String: Any]]?, dnsResolverConfigArray: [[String: Any]]?) -> NknClientConfig {
         let config: NknClientConfig = NknClientConfig()
-        
-        if(seedRpc != nil) {
-            config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
-            for (_, v) in seedRpc!.enumerated() {
-                config.seedRPCServerAddr?.append(v)
-            }
-        }
-        
-        config.connectRetries = connectRetries
-        config.maxReconnectInterval = maxReconnectInterval
-        
-        if (ethResolverConfigArray != nil) {
-            for (_, cfg) in ethResolverConfigArray!.enumerated() {
-                let ethResolverConfig: EthresolverConfig = EthresolverConfig()
-                ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
-                ethResolverConfig.rpcServer = cfg["rpcServer"] as! String
-                ethResolverConfig.contractAddress = cfg["contractAddress"] as! String
-                if (config.resolvers == nil) {
-                    config.resolvers = NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
-                } else {
-                    config.resolvers?.append(EthResolver(config: ethResolverConfig))
+        do {
+            if(seedRpc != nil) {
+                config.seedRPCServerAddr = NkngomobileNewStringArrayFromString(nil)
+                for (_, v) in seedRpc!.enumerated() {
+                    config.seedRPCServerAddr?.append(v)
                 }
             }
-        }
-        
-        if (dnsResolverConfigArray != nil) {
-            for (_, cfg) in dnsResolverConfigArray!.enumerated() {
-                let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
-                dnsResolverConfig.dnsServer = cfg["dnsServer"] as! String
-                if (config.resolvers == nil) {
-                    config.resolvers = NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
-                } else {
-                    config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
+            
+            config.connectRetries = connectRetries
+            config.maxReconnectInterval = maxReconnectInterval
+            
+            if (ethResolverConfigArray != nil) {
+                for (_, cfg) in ethResolverConfigArray!.enumerated() {
+                    let ethResolverConfig: EthresolverConfig = EthresolverConfig()
+                    ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as! String
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as! String
+                    if (config.resolvers == nil) {
+                        config.resolvers = NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
+                    } else {
+                        config.resolvers?.append(EthResolver(config: ethResolverConfig))
+                    }
                 }
             }
-        }
+            
+            if (dnsResolverConfigArray != nil) {
+                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
+                    let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as! String
+                    if (config.resolvers == nil) {
+                        config.resolvers = NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
+                    } else {
+                        config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
+                    }
+                }
+            }
+        } catch _ {}
         return config
     }
     
     private func createClient(account: NknAccount, identifier: String = "", numSubClients: Int = 3, config: NknClientConfig) throws -> NknMultiClient? {
-        let pubKey: String = account.pubKey()!.hexEncode
+        guard let pubKey = account.pubKey()?.hexEncode ?? nil else {
+            return nil
+        }
         let id = identifier.isEmpty ? pubKey : "\(identifier).\(pubKey)"
         
         try closeClient(id: id)
@@ -133,25 +135,29 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func onConnect(_id: String, numSubClients: Int) {
-        do {
-            guard let client = self.getClient(id: _id) else {
+        let workItem = DispatchWorkItem {
+            do {
+                guard let client = self.getClient(id: _id) else {
+                    return
+                }
+                guard (!client.isClosed()) else {
+                    return
+                }
+                guard let node = try client.onConnect?.next() else {
+                    return
+                }
+                let resp = self.getConnectResult(client: client, node: node, numSubClients: numSubClients)
+                self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+                return
+            } catch let error {
+                self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                 return
             }
-            guard (!client.isClosed()) else {
-                return
-            }
-            guard let node = try client.onConnect?.next() else {
-                return
-            }
-            onConnectResult(client: client, node: node, numSubClients: numSubClients)
-            return
-        } catch let error {
-            self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
-            return
         }
+        self.clientOnConnectQueue.async(execute: workItem)
     }
     
-    private func onConnectResult(client: NknMultiClient, node: NknNode, numSubClients: Int) {
+    private func getConnectResult(client: NknMultiClient, node: NknNode, numSubClients: Int) -> [String: Any] {
         var rpcServers = [String]()
         for i in 0...numSubClients {
             let c = client.getClient(i)
@@ -170,33 +176,39 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         resp["node"] = ["address": node.addr, "publicKey": node.pubKey]
         resp["client"] = ["address": client.address()]
         resp["rpcServers"] = rpcServers
-        //NSLog("%@", resp)
-        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+        return resp
     }
     
-    private func onMessage(_id: String) {
-        while(true) {
+    private func onMessage(_id: String, deadline: DispatchTime?) {
+        let workItem = DispatchWorkItem {
             do {
-                guard let client = self.getClient(id: _id) else {
-                    break
+                while(true) {
+                    guard let client = self.getClient(id: _id) else {
+                        break
+                    }
+                    if (client.isClosed()) {
+                        self.onMessage(_id: _id, deadline: .now() + 0.5)
+                        break
+                    }
+                    guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
+                        self.onMessage(_id: _id, deadline: .now() + 0.2)
+                        break
+                    }
+                    let resp = self.getMessageResult(client: client, msg: msg)
+                    self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
                 }
-                if (client.isClosed()) {
-                    self.clientListenQueue.asyncAfter(deadline: .now() + 0.5, execute: {
-                        self.onMessage(_id: _id)
-                    })
-                    break
-                }
-                guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
-                    continue
-                }
-                onMessageResult(client: client, msg: msg)
             } catch let error {
                 self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
             }
         }
+        guard let deadline = deadline else {
+            self.clientOnMessageQueue.async(execute: workItem)
+            return
+        }
+        self.clientOnMessageQueue.asyncAfter(deadline: deadline, execute: workItem)
     }
     
-    private func onMessageResult(client: NknMultiClient, msg: NknMessage) {
+    private func getMessageResult(client: NknMultiClient, msg: NknMessage) -> [String: Any] {
         var resp: [String: Any] = [String: Any]()
         resp["_id"] = client.address()
         resp["event"] = "onMessage"
@@ -208,8 +220,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             "messageId": msg.messageID != nil ? FlutterStandardTypedData(bytes: msg.messageID!) : nil,
             "noReply": msg.noReply
         ]
-        //NSLog("%@", resp)
-        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+        return resp
     }
     
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -306,12 +317,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 self.resultSuccess(result: result, resp: resp)
                 
                 // listen
-                self.clientListenQueue.async {
-                    self.onConnect(_id: clientAddress, numSubClients: numSubClients)
-                }
-                self.clientListenQueue.async {
-                    self.onMessage(_id: clientAddress)
-                }
+                self.onConnect(_id: clientAddress, numSubClients: numSubClients)
+                self.onMessage(_id: clientAddress, deadline: nil)
                 return
             } catch let error {
                 self.resultError(result: result, error: error)
@@ -380,7 +387,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 resp["seed"] = clientSeed
                 // listen
                 var isSuccess = false
-                self.clientListenQueue.async {
+                self.clientOnConnectQueue.async {
                     do {
                         guard let client = client else {
                             return
@@ -400,17 +407,18 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                                     self.resultSuccess(result: result, resp: resp)
                                 }
                             } catch let error {
-                                self.resultError(result: result, error: error)
+                                self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                                 return
                             }
                         }
-                        self.onConnectResult(client: client, node: node, numSubClients: numSubClients)
+                        let resp = self.getConnectResult(client: client, node: node, numSubClients: numSubClients)
+                        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
                     } catch let error {
-                        self.resultError(result: result, error: error)
+                        self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                         return
                     }
                 }
-                self.clientListenQueue.async {
+                self.clientOnMessageQueue.async {
                     do {
                         guard let client = client else {
                             return
@@ -430,13 +438,14 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                                     self.resultSuccess(result: result, resp: resp)
                                 }
                             } catch let error {
-                                self.resultError(result: result, error: error)
+                                self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                                 return
                             }
                         }
-                        self.onMessageResult(client: client, msg: msg)
+                        let resp = self.getMessageResult(client: client, msg: msg)
+                        self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
                     } catch let error {
-                        self.resultError(result: result, error: error)
+                        self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                         return
                     }
                 }
