@@ -393,6 +393,20 @@ class ContactCommon with Tag {
     return data;
   }
 
+  Future<Map<String, dynamic>?> setDeviceInfoRequestAt(String? address, {int? timeAt, bool notify = false}) async {
+    if (address == null || address.isEmpty) return null;
+    Map<String, dynamic>? data = await ContactStorage.instance.setData(address, {
+      "deviceInfoRequestAt": timeAt ?? DateTime.now().millisecondsSinceEpoch,
+    });
+    if (data != null) {
+      logger.i("$TAG - setDeviceInfoRequestAt - success - timeAt:$timeAt - data:$data - address:$address");
+      if (notify) queryAndNotify(address);
+    } else {
+      logger.w("$TAG - setDeviceInfoRequestAt - fail - timeAt:$timeAt - data:$data - address:$address");
+    }
+    return data;
+  }
+
   Future queryAndNotify(String? address) async {
     if (address == null || address.isEmpty) return;
     ContactSchema? updated = await query(address);

@@ -173,7 +173,9 @@ class ChatCommon with Tag {
         ),
       );
       logger.i("$TAG - deviceInfoHandle - new - request - clientAddress:$clientAddress - new:$exists");
-      chatOutCommon.sendDeviceRequest(clientAddress); // await
+      chatOutCommon.sendDeviceRequest(clientAddress, gap: Settings.gapDeviceInfoRequestMs).then((value) {
+        if (value) contactCommon.setDeviceInfoRequestAt(clientAddress);
+      }); // await
     }
     if (exists == null) {
       if (message.deviceId.isNotEmpty) {
@@ -182,7 +184,9 @@ class ChatCommon with Tag {
         DeviceInfoSchema? latest = await deviceInfoCommon.queryLatest(clientAddress);
         if (latest == null) {
           logger.i("$TAG - deviceInfoHandle - new - request (deviceId isEmpty) - clientAddress:$clientAddress - new:$exists");
-          chatOutCommon.sendDeviceRequest(clientAddress); // await
+          chatOutCommon.sendDeviceRequest(clientAddress, gap: Settings.gapDeviceInfoRequestMs * 10).then((value) {
+            if (value) contactCommon.setDeviceInfoRequestAt(clientAddress);
+          }); // await
         } else {
           logger.d("$TAG - deviceInfoHandle - exist is nil (deviceId isEmpty) - clientAddress:$clientAddress");
         }
