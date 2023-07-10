@@ -179,7 +179,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     if (!_profileFetched && (_contact?.isMe == false)) {
       _profileFetched = true;
       chatOutCommon.sendContactProfileRequest(_contact?.address, ContactRequestType.header, _contact?.profileVersion); // await
-      chatOutCommon.sendDeviceRequest(_contact?.address); // await
+      chatOutCommon.sendDeviceRequest(_contact?.address).then((value) {
+        if (value) contactCommon.setDeviceInfoRequestAt(_contact?.address);
+      }); // await
     }
   }
 

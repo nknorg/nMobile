@@ -515,7 +515,7 @@ class ChatInCommon with Tag {
     logger.i("$TAG - _receiveDeviceRequest - sender:${received.sender} - self:$deviceInfo");
     if (deviceInfo == null) return false;
     chatOutCommon.sendDeviceInfo(contact.address, deviceInfo, notificationOpen, targetDeviceInfo: targetDeviceInfo, gap: Settings.gapDeviceInfoSyncMs).then((value) {
-      if (value) deviceInfoCommon.setDeviceInfoResponse(targetDeviceInfo?.contactAddress, targetDeviceInfo?.deviceId);
+      if (value) deviceInfoCommon.setDeviceInfoResponseAt(targetDeviceInfo?.contactAddress, targetDeviceInfo?.deviceId);
     }); // await
     return true;
   }
