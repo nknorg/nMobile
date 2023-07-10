@@ -60,43 +60,45 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         dnsResolverConfigArray: ArrayList<Map<String, Any>>?
     ): ClientConfig {
         val config = ClientConfig()
-
-        if (seedRpc != null) {
-            config.seedRPCServerAddr = StringArray(null)
-            for (addr in seedRpc) {
-                config.seedRPCServerAddr.append(addr)
-            }
-        }
-
-        config.connectRetries = connectRetries
-        config.maxReconnectInterval = maxReconnectInterval
-
-        if (ethResolverConfigArray != null) {
-            for (cfg in ethResolverConfigArray) {
-                val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-                ethResolverConfig.prefix = cfg["prefix"] as String?
-                ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
-                ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
-                val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-                if (config.resolvers == null) {
-                    config.resolvers = nkngomobile.ResolverArray(ethResolver)
-                } else {
-                    config.resolvers.append(ethResolver)
+        try {
+            if (seedRpc != null) {
+                config.seedRPCServerAddr = StringArray(null)
+                for (addr in seedRpc) {
+                    config.seedRPCServerAddr.append(addr)
                 }
             }
-        }
 
-        if (dnsResolverConfigArray != null) {
-            for (cfg in dnsResolverConfigArray) {
-                val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-                dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
-                val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
-                if (config.resolvers == null) {
-                    config.resolvers = nkngomobile.ResolverArray(dnsResolver)
-                } else {
-                    config.resolvers.append(dnsResolver)
+            config.connectRetries = connectRetries
+            config.maxReconnectInterval = maxReconnectInterval
+
+            if (ethResolverConfigArray != null) {
+                for (cfg in ethResolverConfigArray) {
+                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+                    ethResolverConfig.prefix = cfg["prefix"] as String?
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
+                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
+                    } else {
+                        config.resolvers.append(ethResolver)
+                    }
                 }
             }
+
+            if (dnsResolverConfigArray != null) {
+                for (cfg in dnsResolverConfigArray) {
+                    val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
+                    val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(dnsResolver)
+                    } else {
+                        config.resolvers.append(dnsResolver)
+                    }
+                }
+            }
+        } catch (_: Throwable) {
         }
         return config
     }
@@ -106,9 +108,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         identifier: String,
         numSubClients: Long,
         config: ClientConfig
-    ): MultiClient = withContext(Dispatchers.IO) {
-        val pubKey = Hex.toHexString(account.pubKey())
-        val id = if (identifier.isEmpty()) pubKey else "${identifier}.${pubKey}"
+    ): MultiClient? = withContext(Dispatchers.IO) {
+        val pubKey = if (account.pubKey() == null) null else Hex.toHexString(account.pubKey())
+        val id = (if (identifier.isEmpty()) pubKey else "${identifier}.${pubKey}") ?: return@withContext null
 
         closeClient(id)
 
@@ -138,13 +140,14 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     return@withContext
                 }
                 val node = client.onConnect.next() ?: return@withContext
-                onConnectResult(client, node, numSubClients)
+                val resp = getConnectResult(client, node, numSubClients)
+                eventSinkSuccess(eventSink, resp)
             } catch (e: Throwable) {
                 eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
 
-    private suspend fun onConnectResult(client: MultiClient, node: Node, numSubClients: Long) {
+    private fun getConnectResult(client: MultiClient, node: Node, numSubClients: Long): Map<String, Any> {
         val rpcServers = ArrayList<String>()
         for (i in 0..numSubClients) {
             val c = client.getClient(i)
@@ -157,21 +160,19 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 }
             }
         }
-        val resp = hashMapOf(
+        return hashMapOf(
             "_id" to client.address(),
             "event" to "onConnect",
             "node" to hashMapOf("address" to node.addr, "publicKey" to node.pubKey),
             "client" to hashMapOf("address" to client.address()),
             "rpcServers" to rpcServers
         )
-        //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
-        eventSinkSuccess(eventSink, resp)
     }
 
     private suspend fun onMessage(_id: String) {
         withContext(Dispatchers.IO) {
-            while (true) {
-                try {
+            try {
+                while (true) {
                     val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
                     if (client == null) {
                         break
@@ -179,17 +180,22 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         delay(500)
                         continue
                     }
-                    val msg = client.onMessage.nextWithTimeout(5 * 1000) ?: continue
-                    onMessageResult(client, msg)
-                } catch (e: Throwable) {
-                    eventSinkError(eventSink, _id, e.localizedMessage)
+                    val msg = client.onMessage.nextWithTimeout(5 * 1000)
+                    if (msg == null) {
+                        delay(200)
+                        continue
+                    }
+                    val resp = getMessageResult(client, msg)
+                    eventSinkSuccess(eventSink, resp)
                 }
+            } catch (e: Throwable) {
+                eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
     }
 
-    private suspend fun onMessageResult(client: MultiClient, msg: Message) {
-        val resp = hashMapOf(
+    private fun getMessageResult(client: MultiClient, msg: Message): Map<String, Any> {
+        return hashMapOf(
             "_id" to client.address(),
             "event" to "onMessage",
             "data" to hashMapOf(
@@ -201,8 +207,6 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 "noReply" to msg.noReply
             )
         )
-        //Log.d(NknSdkFlutterPlugin.TAG, resp.toString())
-        eventSinkSuccess(eventSink, resp)
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -334,9 +338,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                             isSuccess = true
                             resultSuccess(result, data)
                         }
-                        onConnectResult(client, node, numSubClients)
+                        val resp = getConnectResult(client, node, numSubClients)
+                        eventSinkSuccess(eventSink, resp)
                     } catch (e: Throwable) {
-                        resultError(result, e)
+                        eventSinkError(eventSink, _id, e.localizedMessage)
                     }
                 }
                 withContext(Dispatchers.IO) {
@@ -352,9 +357,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                             isSuccess = true
                             resultSuccess(result, data)
                         }
-                        onMessageResult(client, msg)
+                        val resp = getMessageResult(client, msg)
+                        eventSinkSuccess(eventSink, resp)
                     } catch (e: Throwable) {
-                        resultError(result, e)
+                        eventSinkError(eventSink, _id, e.localizedMessage)
                     }
                 }
             } catch (e: Throwable) {
