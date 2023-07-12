@@ -28,6 +28,7 @@ if (keystorePropertiesFile.exists()) {
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.google.gms.google-services'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
@@ -131,7 +132,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     // sentry
-    implementation 'io.sentry:sentry-android:6.17.0'
+    //implementation 'io.sentry:sentry-android:6.23.0'
     // local_notification
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation 'androidx.window:window:1.0.0'
@@ -153,4 +154,3 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core:2.11.1"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.11.1"
 }
-apply plugin: 'com.google.gms.google-services'

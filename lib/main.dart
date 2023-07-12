@@ -52,6 +52,7 @@ void main() async {
         options.environment = Settings.isRelease ? 'production' : 'debug';
         options.release = Settings.versionFormat;
         options.dsn = Settings.sentryDSN;
+        options.autoInitializeNativeSdk = true;
         options.enableTracing = true;
         options.attachStacktrace = true;
         options.attachViewHierarchy = true;
