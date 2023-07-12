@@ -1,6 +1,5 @@
 import UIKit
 import Flutter
-import Sentry
 import receive_sharing_intent
 
 @UIApplicationMain
@@ -13,16 +12,6 @@ import receive_sharing_intent
         
         if #available(iOS 10.0, *) {
             UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
-        }
-        
-        SentrySDK.start { options in
-            options.dsn = ""
-            let infoDictionary = Bundle.main.infoDictionary
-            if let infoDictionary = infoDictionary {
-                let appBuild:String = infoDictionary["CFBundleVersion"] as! String
-                options.environment = appBuild
-            }
-            options.releaseName = "nMobile"
         }
         
         signal(SIGPIPE, SIG_IGN)

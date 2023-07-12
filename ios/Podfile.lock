@@ -110,18 +110,13 @@ PODS:
   - SDWebImageWebPCoder (0.9.1):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.13)
-  - Sentry (8.4.0):
-    - Sentry/Core (= 8.4.0)
-    - SentryPrivate (= 8.4.0)
-  - Sentry/Core (8.4.0):
-    - SentryPrivate (= 8.4.0)
-  - Sentry/HybridSDK (8.4.0):
-    - SentryPrivate (= 8.4.0)
+  - Sentry/HybridSDK (8.8.0):
+    - SentryPrivate (= 8.8.0)
   - sentry_flutter (0.0.1):
     - Flutter
     - FlutterMacOS
-    - Sentry/HybridSDK (= 8.4.0)
-  - SentryPrivate (8.4.0)
+    - Sentry/HybridSDK (= 8.8.0)
+  - SentryPrivate (8.8.0)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -178,7 +173,6 @@ DEPENDENCIES:
   - photo_manager (from `.symlinks/plugins/photo_manager/ios`)
   - qr_code_scanner (from `.symlinks/plugins/qr_code_scanner/ios`)
   - receive_sharing_intent (from `.symlinks/plugins/receive_sharing_intent/ios`)
-  - Sentry (from `https://github.com/getsentry/sentry-cocoa.git`, tag `8.4.0`)
   - sentry_flutter (from `.symlinks/plugins/sentry_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/ios`)
@@ -203,6 +197,7 @@ SPEC REPOS:
     - ReachabilitySwift
     - SDWebImage
     - SDWebImageWebPCoder
+    - Sentry
     - SentryPrivate
     - SQLCipher
     - SwiftyGif
@@ -255,9 +250,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/qr_code_scanner/ios"
   receive_sharing_intent:
     :path: ".symlinks/plugins/receive_sharing_intent/ios"
-  Sentry:
-    :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 8.4.0
   sentry_flutter:
     :path: ".symlinks/plugins/sentry_flutter/ios"
   share_plus:
@@ -278,11 +270,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/video_thumbnail/ios"
   webview_flutter_wkwebview:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
-
-CHECKOUT OPTIONS:
-  Sentry:
-    :git: https://github.com/getsentry/sentry-cocoa.git
-    :tag: 8.4.0
 
 SPEC CHECKSUMS:
   background_fetch: 9a9963128952bfdd197e21786983c7c7a30e1478
@@ -319,9 +306,9 @@ SPEC CHECKSUMS:
   receive_sharing_intent: c0d87310754e74c0f9542947e7cbdf3a0335a3b1
   SDWebImage: 9c36e66c8ce4620b41a7407698dda44211a96764
   SDWebImageWebPCoder: 18503de6621dd2c420d680e33d46bf8e1d5169b0
-  Sentry: 16d46dd5ca10e7f4469a2611805a3de123188add
-  sentry_flutter: 45124526f72f01bacc790d075443692cd490ee78
-  SentryPrivate: 2bb4f8d9ff558b25ac70b66c1dedc58a7c43630b
+  Sentry: 927dfb29d18a14d924229a59cc2ad149f43349f2
+  sentry_flutter: cf7da03b65520b631330ecb498deb592aa7640be
+  SentryPrivate: 4350d865f898224ab9fa02b37d6ee7fbb623f47e
   share_plus: 056a1e8ac890df3e33cb503afffaf1e9b4fbae68
   shared_preferences_foundation: 986fc17f3d3251412d18b0265f9c64113a8c2472
   sqflite: c0667567fd3e682beb9509976c08bc2325429aab
@@ -335,6 +322,6 @@ SPEC CHECKSUMS:
   video_thumbnail: c4e2a3c539e247d4de13cd545344fd2d26ffafd1
   webview_flutter_wkwebview: 2e2d318f21a5e036e2c3f26171342e95908bd60a
 
-PODFILE CHECKSUM: 7b649e9981e49d9172a2045976839c896a87cf3d
+PODFILE CHECKSUM: ba748205b7f47344221daae39e7dc6bdcca8ca07
 
 COCOAPODS: 1.12.1
