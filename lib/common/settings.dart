@@ -49,8 +49,9 @@ class Settings {
   static String version = '';
   static String build = '';
   static String get versionFormat {
+    String prefix = isRelease ? "" : "debug ";
     String suffix = (packageName.endsWith("test") || packageName.endsWith("Test")) ? " + test" : "";
-    return '$version + (Build $build)$suffix';
+    return '$prefix$version + (Build $build)$suffix';
   }
 
   // device_info

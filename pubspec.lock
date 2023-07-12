@@ -17,6 +17,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.7"
+  ansicolor:
+    dependency: transitive
+    description:
+      name: ansicolor
+      sha256: "607f8fa9786f392043f169898923e6c59b4518242b68b8862eb8a8b7d9c30b4a"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.1"
   archive:
     dependency: transitive
     description:
@@ -552,6 +560,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "7.2.0"
+  globbing:
+    dependency: transitive
+    description:
+      name: globbing
+      sha256: "4f89cfaf6fa74c9c1740a96259da06bd45411ede56744e28017cc534a12b6e2d"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0"
   hive:
     dependency: "direct main"
     description:
@@ -672,6 +688,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.6.3"
+  injector:
+    dependency: transitive
+    description:
+      name: injector
+      sha256: "2a683124c716e93b45521794f55bfe770e069cb3d871fc4fbc65b5acef78e832"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.0"
   intl:
     dependency: "direct main"
     description:
@@ -740,10 +764,10 @@ packages:
     dependency: "direct main"
     description:
       name: logger
-      sha256: db2ff852ed77090ba9f62d3611e4208a3d11dfa35991a81ae724c113fcb3e3f7
+      sha256: "7ad7215c15420a102ec687bb320a7312afd449bac63bfb1c60d9787c27b9767f"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.3.0"
+    version: "1.4.0"
   markdown:
     dependency: transitive
     description:
@@ -1092,18 +1116,26 @@ packages:
     dependency: transitive
     description:
       name: sentry
-      sha256: "9b005f502dfd84ca085dfa660dd4f16f7891c1b4b6300fda7c340330e61525d6"
+      sha256: "8f4f1d3ef3ca1801aa3138392bbf0851b39eff703008111765b265f76c8f0190"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.4.2"
+    version: "7.8.0"
+  sentry_dart_plugin:
+    dependency: "direct main"
+    description:
+      name: sentry_dart_plugin
+      sha256: "39626007e465f2fd0fe39540cf2ff053b210773a00b04ff598a506fe3478dda0"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.4.0"
   sentry_flutter:
     dependency: "direct main"
     description:
       name: sentry_flutter
-      sha256: bb537f6fedbe4c634aaf1a430d5efce8329e355b57dc2e0c224d8a2a3e54c4ac
+      sha256: bbc1048558cf8ae65c1e27b1249357298cfca50e5843ad0367387f5c873b8e42
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.4.2"
+    version: "7.8.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -1254,6 +1286,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.1.0"
+  system_info2:
+    dependency: transitive
+    description:
+      name: system_info2
+      sha256: "65206bbef475217008b5827374767550a5420ce70a04d2d7e94d1d2253f3efc9"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.0.0"
   term_glyph:
     dependency: transitive
     description:

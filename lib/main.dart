@@ -45,24 +45,44 @@ void main() async {
   });
   await application.initialize();
 
-  // error
-  catchGlobalError(() async {
-    if (Settings.sentryEnable) {
-      await SentryFlutter.init(
-        (options) {
-          options.debug = !Settings.isRelease;
-          options.dsn = Settings.sentryDSN;
-          options.environment = Settings.isRelease ? 'production' : 'debug';
-          options.release = Settings.versionFormat;
-        },
-        //appRunner: () => runApp(Main()),
-      );
-    }
-    runApp(Main());
-  }, onZoneError: (Object error, StackTrace stack) {
-    if (Settings.debug) logger.e(error);
-    if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stack);
-  });
+  if (Settings.sentryEnable) {
+    await SentryFlutter.init(
+      (options) {
+        options.debug = !Settings.isRelease;
+        options.environment = Settings.isRelease ? 'production' : 'debug';
+        options.release = Settings.versionFormat;
+        options.dsn = Settings.sentryDSN;
+        options.enableTracing = true;
+        options.attachStacktrace = true;
+        options.attachViewHierarchy = true;
+        options.idleTimeout = Duration(seconds: 10);
+        options.sendClientReports = true;
+        options.captureFailedRequests = true;
+        options.enableNativeCrashHandling = true;
+        options.enableAutoSessionTracking = true;
+        options.enableNdkScopeSync = true;
+        options.attachThreads = true;
+        options.enableAutoPerformanceTracing = true;
+        options.enableWatchdogTerminationTracking = true;
+        options.enableScopeSync = true;
+        options.reportPackages = true;
+        options.anrEnabled = true;
+        options.reportSilentFlutterErrors = true;
+        options.autoAppStart = true;
+        options.enableAutoNativeBreadcrumbs = true;
+        options.enableUserInteractionBreadcrumbs = true;
+        // options.beforeSend = (SentryEvent event, {Hint? hint}) {};
+      },
+      appRunner: () => runApp(Main()),
+    );
+  } else {
+    catchGlobalError(() async {
+      runApp(Main());
+    }, onZoneError: (Object error, StackTrace stack) {
+      if (Settings.debug) logger.e(error);
+      if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stack);
+    });
+  }
 }
 
 class Main extends StatefulWidget {
