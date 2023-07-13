@@ -15,7 +15,7 @@ class SessionStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_session", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = dbCommon.sessionQueue;
 
   static String createSQL = '''
       CREATE TABLE `$tableName` (

@@ -23,6 +23,7 @@ import 'package:nmobile/storages/subscriber.dart';
 import 'package:nmobile/storages/topic.dart';
 import 'package:nmobile/utils/hash.dart';
 import 'package:nmobile/utils/logger.dart';
+import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
@@ -45,6 +46,16 @@ class DB {
   Lock _lock = new Lock();
 
   Database? database;
+
+  ParallelQueue contactQueue = ParallelQueue("storage_contact", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue deviceInfoQueue = ParallelQueue("storage_deviceInfo", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue topicQueue = ParallelQueue("storage_topic", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue subscribeQueue = ParallelQueue("storage_subscriber", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue privateGroupQueue = ParallelQueue("storage_private_group", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue privateGroupItemQueue = ParallelQueue("storage_private_group_item", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue messageQueue = ParallelQueue("storage_message", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue messagePieceQueue = ParallelQueue("storage_message_piece", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue sessionQueue = ParallelQueue("storage_session", onLog: (log, error) => error ? logger.w(log) : null);
 
   Map<int, int> _upgradeAt = {};
 
@@ -281,6 +292,24 @@ class DB {
 
   Future close() async {
     await _lock.synchronized(() async {
+      // queues
+      List<ParallelQueue> queues = [
+        contactQueue,
+        deviceInfoQueue,
+        topicQueue,
+        subscribeQueue,
+        privateGroupQueue,
+        privateGroupItemQueue,
+        messageQueue,
+        messagePieceQueue,
+        sessionQueue,
+      ];
+      List<Future> futures = [];
+      for (var i = 0; i < queues.length; i++) {
+        futures.add(queues[i].onComplete("db_close_$i"));
+      }
+      await Future.wait(futures);
+      // close
       await database?.close();
       database = null;
       _openedSink.add(false);
