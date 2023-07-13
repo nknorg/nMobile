@@ -133,14 +133,15 @@ class ClientCommon with Tag {
   /// ***************************************   Sign   *************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> signIn(WalletSchema? wallet, {bool toast = false, Function(bool, bool, bool)? loading}) async {
+  Future<bool> signIn(WalletSchema? wallet, {String? pwd, bool toast = false, Function(bool, bool, bool)? loading}) async {
     if ((wallet == null) || wallet.address.isEmpty) return false;
     bool success = await _lock.synchronized(() async {
       // password (before status update)
-      String? password = await authorization.getWalletPassword(
-        wallet.address,
-        onInput: (visible) => loading?.call(true, visible, false),
-      );
+      String? password = pwd ??
+          await authorization.getWalletPassword(
+            wallet.address,
+            onInput: (visible) => loading?.call(true, visible, false),
+          );
       // status (just updated(connecting) in this func)
       if (status == ClientConnectStatus.connecting) return false;
       status = ClientConnectStatus.connecting;
@@ -328,7 +329,18 @@ class ClientCommon with Tag {
     _onErrorStreamSubscription = client?.onError.listen((dynamic event) async {
       logger.e("$TAG - onError ->> event:${event.toString()}");
       handleError(event, null);
-      if (!isClientStop) reconnect(force: true); // await
+      if (isClientStop) return;
+      WalletSchema? wallet = await walletCommon.getDefault();
+      if ((wallet == null) || wallet.address.isEmpty) {
+        logger.w("$TAG - onError - wallet is empty - address:$address");
+        AppScreen.go(Settings.appContext);
+        await signOut(clearWallet: true, closeDB: true);
+        return;
+      }
+      logger.i("$TAG - onError - wallet is ok - address:$address");
+      await signOut(clearWallet: false, closeDB: false);
+      String? password = await walletCommon.getPassword(wallet.address);
+      await signIn(wallet, pwd: password);
     });
     // client connect (just listen once)
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
@@ -480,12 +492,12 @@ class ClientCommon with Tag {
     // no-force
     try {
       if (isClientReconnecting) {
+        await reconnectCompleter?.future;
         if (!force) {
-          logger.i("$TAG - reconnect - wait last complete");
-          await reconnectCompleter?.future;
+          logger.i("$TAG - reconnect - wait last complete - isClientOK:$isClientOK");
           return isClientOK;
         } else {
-          logger.i("$TAG - reconnect - force again");
+          logger.i("$TAG - reconnect - wait last complete AND force next - isClientOK:$isClientOK");
         }
       }
     } catch (e, st) {
