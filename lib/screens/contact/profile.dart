@@ -229,7 +229,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     try {
       // client signOut
       await clientCommon.signOut(clearWallet: true, closeDB: true);
-      await Future.delayed(Duration(milliseconds: 500)); // wait client close
+      await Future.delayed(Duration(milliseconds: 250)); // wait client close
       Loading.dismiss();
 
       // client signIn
@@ -242,7 +242,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
           Loading.dismiss();
         }
       });
-      await Future.delayed(Duration(milliseconds: 500)); // wait client create
+      await Future.delayed(Duration(milliseconds: 250)); // wait client create
 
       if (success) {
         Toast.show(Settings.locale((s) => s.tip_switch_success, ctx: context)); // must global context
@@ -253,7 +253,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       if (mounted) {
         AppScreen.go(this.context);
       } else {
-        Future.delayed(Duration(milliseconds: 500), () => _refreshDefaultWallet()); // await ui refresh
+        Future.delayed(Duration(milliseconds: 250), () => _refreshDefaultWallet()); // await ui refresh
       }
     } catch (e, st) {
       handleError(e, st);
