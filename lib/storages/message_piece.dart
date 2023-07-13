@@ -14,7 +14,7 @@ class MessagePieceStorage with Tag {
 
   Database? get db => dbCommon.database;
 
-  ParallelQueue _queue = ParallelQueue("storage_message_piece", onLog: (log, error) => error ? logger.w(log) : null);
+  ParallelQueue _queue = dbCommon.messagePieceQueue;
 
   // same with table_messages
   static String createSQL = '''

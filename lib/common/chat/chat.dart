@@ -23,10 +23,6 @@ import 'package:nmobile/utils/path.dart';
 class ChatCommon with Tag {
   ChatCommon();
 
-  // checker
-  // Map<String, Map<String, dynamic>> _checkersParams = Map();
-  // ParallelQueue _checkQueue = ParallelQueue("checker_msg", parallel: 3, onLog: (log, error) => error ? logger.w(log) : null);
-
   Future reset(String walletAddress, {bool reset = true}) async {
     logger.i("$TAG - reset - reset:$reset - walletAddress:$walletAddress");
     // currentChatTargetId = null; // can not be reset
