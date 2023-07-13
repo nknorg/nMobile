@@ -66,6 +66,9 @@ class ParallelQueue {
       completer = Completer();
       _completeListeners[key] = completer;
     }
+    if ((length <= 0) && completeWhenEmpty) {
+      return Future.delayed(Duration(seconds: 0));
+    }
     return completer.future;
   }
 
