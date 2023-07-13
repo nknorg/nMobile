@@ -16,12 +16,12 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 
-# 22/12/21
-#version: 1.4.1+278
 # 22/01/04
 #version: 1.4.1+280
 # 23/06/26
-version: 1.4.6+288
+#version: 1.4.6+288
+# 23/07/13
+version: 1.4.7+289
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
