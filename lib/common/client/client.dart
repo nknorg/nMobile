@@ -342,6 +342,7 @@ class ClientCommon with Tag {
       }
       logger.i("$TAG - onError - wallet is ok - address:$address");
       await signOut(clearWallet: false, closeDB: false);
+      await Future.delayed(Duration(milliseconds: 500));
       String? password = await walletCommon.getPassword(wallet.address);
       await signIn(wallet, pwd: password);
     });
