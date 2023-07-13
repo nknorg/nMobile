@@ -119,10 +119,10 @@ class NknError {
     unencryptedMessage,
   ];
 
-  static bool isNknError(dynamic e) {
+  static bool isClientError(dynamic e) {
     String errStr = e?.toString().toLowerCase() ?? "";
     bool isClientError = false;
-    NknError.nknErrors.forEach((element) {
+    NknError.clientErrors.forEach((element) {
       if (errStr.contains(element) == true) {
         isClientError = true;
       }
@@ -130,10 +130,10 @@ class NknError {
     return isClientError;
   }
 
-  static bool isClientError(dynamic e) {
+  static bool isNknError(dynamic e) {
     String errStr = e?.toString().toLowerCase() ?? "";
     bool isClientError = false;
-    NknError.clientErrors.forEach((element) {
+    NknError.nknErrors.forEach((element) {
       if (errStr.contains(element) == true) {
         isClientError = true;
       }
