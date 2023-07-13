@@ -115,14 +115,14 @@ class ClientCommon with Tag {
 
   String? getPublicKey() {
     Uint8List? pkOriginal = client?.publicKey;
-    if ((pkOriginal == null) || pkOriginal.isEmpty) return null;
+    if ((pkOriginal == null) || pkOriginal.isEmpty) return address;
     try {
       String pk = hexEncode(pkOriginal);
-      return pk.isEmpty ? null : pk;
+      return pk.isEmpty ? address : pk;
     } catch (e, st) {
       handleError(e, st);
     }
-    return null;
+    return address;
   }
 
   Uint8List? getSeed() {
@@ -311,8 +311,11 @@ class ClientCommon with Tag {
   Future<bool> _signOut({bool clearWallet = true, bool closeDB = true}) async {
     try {
       await chatOutCommon.pause(reset: closeDB);
+      await Future.delayed(Duration(milliseconds: 500)); // wait message from client
       await client?.close();
+      await Future.delayed(Duration(milliseconds: 500)); // wait message from listen
       await _stopListen();
+      await chatInCommon.waitReceiveQueues("_signOut"); // wait db_insert from onMessage
       await chatInCommon.pause(reset: closeDB);
       client = null;
       if (clearWallet) BlocProvider.of<WalletBloc>(Settings.appContext).add(DefaultWallet(null));
@@ -540,7 +543,12 @@ class ClientCommon with Tag {
         _statusSink.add(ClientConnectStatus.connecting); // need first flush
         await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
       }
-      reconnectCompleter?.complete();
+      // complete
+      try {
+        reconnectCompleter?.complete();
+      } catch (e, st) {
+        handleError(e, st);
+      }
       return success;
     });
     if (success) ping(status: true); // await (onConnect OK)
