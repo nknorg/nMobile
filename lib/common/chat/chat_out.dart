@@ -75,7 +75,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<List<dynamic>> _sendData(List<String> destList, String data, {bool lastTime = false}) async {
-    if (!(await clientCommon.waitClientOk())) return [null, false, 0];
+    if (!(await clientCommon.waitClientOk())) return [null, false, 500];
     // logger.v("$TAG - _sendData - send start - destList:$destList");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
@@ -847,9 +847,7 @@ class ChatOutCommon with Tag {
       if (result != null) {
         logger.i("$TAG - resendMute - success mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
         result.options = MessageOptions.setResendMuteAt(result.options, DateTime.now().millisecondsSinceEpoch);
-        int successTimes = MessageOptions.getSuccessTimes(message.options) ?? 0;
-        message.options = MessageOptions.setSuccessTimes(message.options, successTimes + 1);
-        await messageCommon.updateMessageOptions(result, result.options, notify: true);
+        await messageCommon.updateMessageOptions(result, result.options, notify: false);
       } else {
         logger.w("$TAG - resendMute - fail mute - type:${message.contentType} - targetId:${message.targetId} - message:${message.toStringSimple()}");
       }
@@ -924,10 +922,6 @@ class ChatOutCommon with Tag {
           int? receiveAt = (message.receiveAt == null) ? DateTime.now().millisecondsSinceEpoch : message.receiveAt;
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Read, receiveAt: receiveAt);
         }
-        message.options = MessageOptions.setSendSuccessAt(message.options, DateTime.now().millisecondsSinceEpoch);
-        int successTimes = MessageOptions.getSuccessTimes(message.options) ?? 0;
-        message.options = MessageOptions.setSuccessTimes(message.options, successTimes + 1);
-        await messageCommon.updateMessageOptions(message, message.options, notify: true);
       } else {
         if (message.canReceipt) {
           message = await messageCommon.updateMessageStatus(message, MessageStatus.Error, force: true);
@@ -937,6 +931,14 @@ class ChatOutCommon with Tag {
           if (count > 0) messageCommon.onDeleteSink.add(message.msgId);
         }
       }
+    }
+    // options
+    if (sendSuccess && message.canDisplay) {
+      int sendAt = MessageOptions.getSendSuccessAt(message.options) ?? DateTime.now().millisecondsSinceEpoch;
+      message.options = MessageOptions.setSendSuccessAt(message.options, sendAt);
+      int successTimes = MessageOptions.getSuccessTimes(message.options) ?? 0;
+      message.options = MessageOptions.setSuccessTimes(message.options, successTimes + 1);
+      await messageCommon.updateMessageOptions(message, message.options, notify: true);
     }
     return sendSuccess ? message : null;
   }
