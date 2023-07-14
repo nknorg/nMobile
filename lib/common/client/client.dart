@@ -82,7 +82,7 @@ class ClientCommon with Tag {
 
   // tag
   bool isNetworkOk = true;
-  bool isViewLoading = false;
+  bool isReconnectLoading = false;
 
   void init() {
     // network
@@ -373,8 +373,8 @@ class ClientCommon with Tag {
           if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
             _statusSink.add(ClientConnectStatus.connected);
           }
-        } else if (isViewLoading) {
-          isViewLoading = false;
+        } else if (isReconnectLoading) {
+          isReconnectLoading = false;
           _statusSink.add(ClientConnectStatus.connected);
         }
       }
@@ -489,11 +489,7 @@ class ClientCommon with Tag {
         logger.w("$TAG - reconnect - connecting complete no - tryTimes:$tryTimes - client:${client == null} - status:$status");
       }
     }
-    // receiveMsg
-    await chatInCommon.waitReceiveQueues("reconnect");
-    _statusSink.add(ClientConnectStatus.connecting);
-    isViewLoading = true;
-    // no-force
+    // is_force
     try {
       if (isClientReconnecting) {
         await reconnectCompleter?.future;
@@ -507,6 +503,8 @@ class ClientCommon with Tag {
     } catch (e, st) {
       handleError(e, st);
     }
+    // receive_queue
+    await chatInCommon.waitReceiveQueues("reconnect");
     // complete check
     bool success = await _lock.synchronized(() async {
       // password
@@ -521,6 +519,9 @@ class ClientCommon with Tag {
       // completer
       logger.i("$TAG - reconnect - START");
       reconnectCompleter = Completer();
+      // loading
+      _statusSink.add(ClientConnectStatus.connecting);
+      isReconnectLoading = true;
       // recreate
       bool success = false;
       int tryTimes = 0;
