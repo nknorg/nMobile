@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/option.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class ContactStorage with Tag {
@@ -50,8 +52,13 @@ class ContactStorage with Tag {
   }
 
   Future<ContactSchema?> insert(ContactSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null || schema.address.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - insert\n - address:${schema.address}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -89,8 +96,13 @@ class ContactStorage with Tag {
   }
 
   Future<ContactSchema?> query(String? address) async {
-    if (db?.isOpen != true) return null;
     if (address == null || address.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - delete\n - address:$address"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -113,7 +125,12 @@ class ContactStorage with Tag {
   }
 
   Future<List<ContactSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - queryList\n - type:$type\n - orderDesc:$orderDesc"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -145,8 +162,13 @@ class ContactStorage with Tag {
   }
 
   Future<List<ContactSchema>> queryListByAddress(List<String>? addressList) async {
-    if (db?.isOpen != true) return [];
     if (addressList == null || addressList.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - queryListByAddress\n - addressList:$addressList"); // await
+      }
+      return [];
+    }
     try {
       List? res = await db?.transaction((txn) {
         Batch batch = txn.batch();
@@ -181,8 +203,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setWalletAddress(String? address, String walletAddress) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setWalletAddress\n - address:$address"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -210,8 +237,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setAvatar(String? address, String? avatarLocalPath) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setAvatar\n - address:$address"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -239,8 +271,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setFullName(String? address, String firstName, String lastName) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setFullName\n - address:$address"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -269,8 +306,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setRemarkName(String? address, String remarkName) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setRemarkName\n - address:$address"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -298,8 +340,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setType(String? address, int type) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setType\n - address:$address\n - type:$type"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -327,8 +374,13 @@ class ContactStorage with Tag {
   }
 
   Future<bool> setTop(String? address, bool top) async {
-    if (db?.isOpen != true) return false;
     if (address == null || address.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setTop\n - address:$address\n - top:$top"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -356,8 +408,13 @@ class ContactStorage with Tag {
   }
 
   Future<OptionsSchema?> setNotificationOpen(String? address, bool open) async {
-    if (db?.isOpen != true) return null;
     if (address == null || address.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setNotificationOpen\n - address:$address\n - open:$open"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -395,8 +452,13 @@ class ContactStorage with Tag {
   }
 
   Future<OptionsSchema?> setBurning(String? address, int? burningSeconds, int? updateAt) async {
-    if (db?.isOpen != true) return null;
     if (address == null || address.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setBurning\n - address:$address\n - burningSeconds:$burningSeconds\n - updateAt:$updateAt"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -435,9 +497,14 @@ class ContactStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setData(String? address, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
-    if (db?.isOpen != true) return null;
     if (address == null || address.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setData\n - address:$address\n - added:$added\n - removeKeys:$removeKeys"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {
@@ -478,9 +545,14 @@ class ContactStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setDataItemMapChange(String? address, String key, Map addPairs, List delKeys) async {
-    if (db?.isOpen != true) return null;
     if (address == null || address.isEmpty) return null;
     if (addPairs.isEmpty && delKeys.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_CONTACT CLOSED - setDataItemMapChange\n - address:$address\n - key:$key\n - addPairs:$addPairs\n - delKeys:$delKeys"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {

@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class SessionStorage with Tag {
@@ -44,8 +46,13 @@ class SessionStorage with Tag {
   }
 
   Future<SessionSchema?> insert(SessionSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - insert\n - targetId:${schema.targetId}\n - type:${schema.type}\n - lastMessageAt:${schema.lastMessageAt}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = await schema.toMap();
     return await _queue.add(() async {
       try {
@@ -83,8 +90,13 @@ class SessionStorage with Tag {
   }
 
   Future<bool> delete(String? targetId, int? type) async {
-    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - delete\n - targetId:$targetId\n - type:$type"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? result = await db?.transaction((txn) {
@@ -108,8 +120,13 @@ class SessionStorage with Tag {
   }
 
   Future<SessionSchema?> query(String? targetId, int? type) async {
-    if (db?.isOpen != true) return null;
     if (targetId == null || targetId.isEmpty || type == null) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - query\n - targetId:$targetId\n - type:$type"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -132,7 +149,12 @@ class SessionStorage with Tag {
   }
 
   Future<List<SessionSchema>> queryListRecent({int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - queryListRecent"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -163,7 +185,12 @@ class SessionStorage with Tag {
   }
 
   Future<int> querySumUnReadCount() async {
-    if (db?.isOpen != true) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - querySumUnReadCount"); // await
+      }
+      return 0;
+    }
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
@@ -181,8 +208,13 @@ class SessionStorage with Tag {
   }
 
   Future<bool> setLastMessageAndUnReadCount(SessionSchema? schema) async {
-    if (db?.isOpen != true) return false;
     if (schema == null || schema.targetId.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - setLastMessageAndUnReadCount\n - targetId:${schema.targetId}\n - type:${schema.type}"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -208,8 +240,13 @@ class SessionStorage with Tag {
   }
 
   Future<bool> setTop(String? targetId, int? type, bool isTop) async {
-    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - setTop\n - targetId:$targetId\n - type:$type\n - isTop:$isTop"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -233,8 +270,13 @@ class SessionStorage with Tag {
   }
 
   Future<bool> setUnReadCount(String? targetId, int? type, int unread) async {
-    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - setUnReadCount\n - targetId:$targetId\n - type:$type\n - unread:$unread"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -258,8 +300,13 @@ class SessionStorage with Tag {
   }
 
   Future<bool> setData(String? targetId, int? type, Map<String, dynamic>? newData) async {
-    if (db?.isOpen != true) return false;
     if (targetId == null || targetId.isEmpty || type == null) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SESSION CLOSED - setData\n - targetId:$targetId\n - type:$type\n - newData:$newData"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
