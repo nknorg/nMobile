@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class SubscriberStorage with Tag {
@@ -46,8 +48,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<SubscriberSchema?> insert(SubscriberSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null || schema.topicId.isEmpty || schema.contactAddress.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - insert\n - topicId:${schema.topicId}\n - address:${schema.contactAddress}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -85,8 +92,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<SubscriberSchema?> query(String? topicId, String? contactAddress) async {
-    if (db?.isOpen != true) return null;
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - query\n - topicId:$topicId\n - address:$contactAddress"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -109,8 +121,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<List<SubscriberSchema>> queryListByTopicId(String? topicId, {int? status, int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
     if (topicId == null || topicId.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - queryListByTopicId\n - topicId:$topicId"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -143,8 +160,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<List<SubscriberSchema>> queryListByTopicIdPerm(String? topicId, int? permPage, int limit) async {
-    if (db?.isOpen != true) return [];
     if (topicId == null || topicId.isEmpty || permPage == null) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - queryListByTopicIdPerm\n - topicId:$topicId\n - permPage:$permPage"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -176,8 +198,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<int> queryCountByTopicId(String? topicId, {int? status}) async {
-    if (db?.isOpen != true) return 0;
     if (topicId == null || topicId.isEmpty) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - queryCountByTopicId\n - topicId:$topicId\n - status:$status"); // await
+      }
+      return 0;
+    }
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
@@ -197,8 +224,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<int> queryCountByTopicIdPerm(String? topicId, int permPage, {int? status}) async {
-    if (db?.isOpen != true) return 0;
     if (topicId == null || topicId.isEmpty) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - queryCountByTopicIdPerm\n - topicId:$topicId\n - permPage:$permPage\n - status:$status"); // await
+      }
+      return 0;
+    }
     try {
       final res = await db?.transaction((txn) {
         return txn.query(
@@ -218,8 +250,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<int> queryMaxPermPageByTopicId(String? topicId) async {
-    if (db?.isOpen != true) return 0;
     if (topicId == null || topicId.isEmpty) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - queryMaxPermPageByTopicId\n - topicId:$topicId"); // await
+      }
+      return 0;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -246,8 +283,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<bool> setStatus(String? topicId, String? contactAddress, int status) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - setStatus\n - topicId:$topicId\n - address:$contactAddress\n - status:$status"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -275,8 +317,13 @@ class SubscriberStorage with Tag {
   }
 
   Future<bool> setPermPage(String? topicId, String? contactAddress, int? permPage) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - setPermPage\n - topicId:$topicId\n - address:$contactAddress\n - permPage:$permPage"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -304,9 +351,14 @@ class SubscriberStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setData(String? topicId, String? contactAddress, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
-    if (db?.isOpen != true) return null;
     if (topicId == null || topicId.isEmpty || contactAddress == null || contactAddress.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_SUBSCRIBER CLOSED - setData\n - topicId:$topicId\n - address:$contactAddress\n - added:$added\n - removeKeys:$removeKeys"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {

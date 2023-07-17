@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class TopicStorage with Tag {
@@ -52,8 +54,13 @@ class TopicStorage with Tag {
   }
 
   Future<TopicSchema?> insert(TopicSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null || schema.topicId.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - insert\n - topicId:${schema.topicId}\n - type:${schema.type}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -91,8 +98,13 @@ class TopicStorage with Tag {
   }
 
   Future<TopicSchema?> query(String? topicId) async {
-    if (db?.isOpen != true) return null;
     if (topicId == null || topicId.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - query\n - topicId:$topicId"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -115,7 +127,12 @@ class TopicStorage with Tag {
   }
 
   Future<List<TopicSchema>> queryList({int? type, bool orderDesc = true, int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - queryList"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -148,7 +165,12 @@ class TopicStorage with Tag {
   }
 
   Future<List<TopicSchema>> queryListByJoined(bool joined, {int? type, bool orderDesc = true, int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - queryListByJoined\n - joined:$joined"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -181,8 +203,13 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setJoined(String? topicId, bool joined, {int? subscribeAt, int? expireBlockHeight, int? createAt}) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - setJoined\n - topicId:$topicId"); // await
+      }
+      return false;
+    }
     var values = {
       'joined': joined ? 1 : 0,
       'update_at': DateTime.now().millisecondsSinceEpoch,
@@ -218,8 +245,13 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setAvatar(String? topicId, String? avatarLocalPath) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - setAvatar\n - topicId:$topicId"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -247,8 +279,13 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setCount(String? topicId, int userCount) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - setCount\n - topicId:$topicId"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -276,8 +313,13 @@ class TopicStorage with Tag {
   }
 
   Future<bool> setTop(String? topicId, bool top) async {
-    if (db?.isOpen != true) return false;
     if (topicId == null || topicId.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - setTop\n - topicId:$topicId"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -305,9 +347,14 @@ class TopicStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setData(String? topicId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
-    if (db?.isOpen != true) return null;
     if (topicId == null || topicId.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_TOPIC CLOSED - setData\n - topicId:$topicId\n - added:$added\n - removeKeys:$removeKeys"); // await
+      }
+      return null;
+    }
     return await _queue.add(() async {
           try {
             return await db?.transaction((txn) async {

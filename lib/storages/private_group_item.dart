@@ -1,8 +1,10 @@
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/private_group_item.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class PrivateGroupItemStorage with Tag {
@@ -44,8 +46,13 @@ class PrivateGroupItemStorage with Tag {
   }
 
   Future<PrivateGroupItemSchema?> insert(PrivateGroupItemSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null || schema.groupId.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_PRIVATE_GROUP_ITEM CLOSED - insert\n - groupId:${schema.groupId}\n - permission:${schema.permission}\n - invitee:${schema.invitee}\n - inviter:${schema.inviter}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -83,8 +90,13 @@ class PrivateGroupItemStorage with Tag {
   }
 
   Future<PrivateGroupItemSchema?> queryByInvitee(String? groupId, String? invitee) async {
-    if (db?.isOpen != true) return null;
     if (groupId == null || groupId.isEmpty || invitee == null || invitee.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_PRIVATE_GROUP_ITEM CLOSED - queryByInvitee\n - groupId:$groupId\n - invitee:$invitee"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.query(
         tableName,
@@ -104,8 +116,13 @@ class PrivateGroupItemStorage with Tag {
   }
 
   Future<List<PrivateGroupItemSchema>> queryList(String? groupId, {int? perm, int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
     if (groupId == null || groupId.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_PRIVATE_GROUP_ITEM CLOSED - queryList\n - groupId:$groupId"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -147,8 +164,13 @@ class PrivateGroupItemStorage with Tag {
     String? inviterSignature,
     String? inviteeSignature,
   ) async {
-    if (db?.isOpen != true) return false;
     if (groupId == null || groupId.isEmpty || invitee == null || invitee.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_PRIVATE_GROUP_ITEM CLOSED - updatePermission\n - groupId:$groupId\n - permission:$permission\n - invitee:$invitee"); // await
+      }
+      return false;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
