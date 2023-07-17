@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class MessagePieceStorage with Tag {
@@ -54,8 +56,13 @@ class MessagePieceStorage with Tag {
   }
 
   Future<MessageSchema?> insert(MessageSchema? schema) async {
-    if (db?.isOpen != true) return null;
     if (schema == null) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_MESSAGE_PIECE CLOSED - insert\n - targetId:${schema.targetId}\n - sender:${schema.sender}\n - queueId:${schema.queueId}\n - contentType:${schema.contentType}\n - isOutbound:${schema.isOutbound}\n - sendAt:${schema.sendAt}\n - receiveAt:${schema.receiveAt}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> map = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -76,8 +83,13 @@ class MessagePieceStorage with Tag {
   }
 
   Future<int> delete(String? msgId) async {
-    if (db?.isOpen != true) return 0;
     if (msgId == null || msgId.isEmpty) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_MESSAGE_PIECE CLOSED - delete\n - msgId:$msgId"); // await
+      }
+      return 0;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -101,8 +113,13 @@ class MessagePieceStorage with Tag {
   }
 
   Future<int> deleteByTarget(String? targetId, int targetType) async {
-    if (db?.isOpen != true) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_MESSAGE_PIECE CLOSED - deleteByTarget\n - targetId:$targetId\n - targetType:$targetType"); // await
+      }
+      return 0;
+    }
     return await _queue.add(() async {
           try {
             int? count = await db?.transaction((txn) {
@@ -126,8 +143,13 @@ class MessagePieceStorage with Tag {
   }
 
   Future<List<MessageSchema>> queryList(String? msgId, {int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
     if (msgId == null || msgId.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_MESSAGE_PIECE CLOSED - queryList\n - msgId:$msgId"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(

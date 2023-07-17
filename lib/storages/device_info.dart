@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:nmobile/common/locator.dart';
+import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DeviceInfoStorage with Tag {
@@ -43,8 +45,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> insert(DeviceInfoSchema? schema, {bool unique = true}) async {
-    if (db?.isOpen != true) return null;
     if (schema == null || schema.contactAddress.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - insert\n - address:${schema.contactAddress}\n - deviceId:${schema.deviceId}"); // await
+      }
+      return null;
+    }
     Map<String, dynamic> entity = schema.toMap();
     return await _queue.add(() async {
       try {
@@ -82,8 +89,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> query(String? contactAddress, String? deviceId) async {
-    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - delete\n - address:$contactAddress\n - deviceId:$deviceId"); // await
+      }
+      return null;
+    }
     deviceId = deviceId ?? "";
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
@@ -108,8 +120,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<DeviceInfoSchema?> queryLatest(String? contactAddress) async {
-    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - queryLatest\n - address:$contactAddress"); // await
+      }
+      return null;
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -135,8 +152,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<List<DeviceInfoSchema>> queryListLatest(String? contactAddress, {int offset = 0, final limit = 20}) async {
-    if (db?.isOpen != true) return [];
     if (contactAddress == null || contactAddress.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - queryListLatest\n - address:$contactAddress"); // await
+      }
+      return [];
+    }
     try {
       List<Map<String, dynamic>>? res = await db?.transaction((txn) {
         return txn.query(
@@ -168,8 +190,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<List<DeviceInfoSchema>> queryListByContactAddress(List<String>? contactAddressList) async {
-    if (db?.isOpen != true) return [];
     if (contactAddressList == null || contactAddressList.isEmpty) return [];
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - queryListByContactAddress\n - addressList:$contactAddressList"); // await
+      }
+      return [];
+    }
     try {
       List? res = await db?.transaction((txn) {
         Batch batch = txn.batch();
@@ -207,8 +234,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<bool> setDeviceToken(String? contactAddress, String? deviceId, String deviceToken) async {
-    if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - setDeviceToken\n - address:$contactAddress\n - deviceId:$deviceId"); // await
+      }
+      return false;
+    }
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
@@ -238,8 +270,13 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<bool> setOnlineAt(String? contactAddress, String? deviceId, {int? onlineAt}) async {
-    if (db?.isOpen != true) return false;
     if (contactAddress == null || contactAddress.isEmpty) return false;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - setOnlineAt\n - address:$contactAddress\n - deviceId:$deviceId"); // await
+      }
+      return false;
+    }
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
@@ -268,9 +305,14 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setData(String? contactAddress, String? deviceId, Map<String, dynamic>? added, {List<String>? removeKeys}) async {
-    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty) return null;
     if ((added == null || added.isEmpty) && (removeKeys == null || removeKeys.isEmpty)) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - setData\n - address:$contactAddress\n - deviceId:$deviceId\n - add:$added\n - removeKeys:$removeKeys"); // await
+      }
+      return null;
+    }
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
@@ -313,9 +355,14 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setDataItemListChange(String? contactAddress, String? deviceId, String key, List adds, List dels) async {
-    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || key.isEmpty) return null;
     if (adds.isEmpty && dels.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - setDataItemListChange\n - address:$contactAddress\n - deviceId:$deviceId\n - key:$key\n - adds:$adds\n - dels:$dels"); // await
+      }
+      return null;
+    }
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
@@ -357,9 +404,14 @@ class DeviceInfoStorage with Tag {
   }
 
   Future<Map<String, dynamic>?> setDataItemMapChange(String? contactAddress, String? deviceId, String key, Map addPairs, List delKeys) async {
-    if (db?.isOpen != true) return null;
     if (contactAddress == null || contactAddress.isEmpty || key.isEmpty) return null;
     if (addPairs.isEmpty && delKeys.isEmpty) return null;
+    if (db?.isOpen != true) {
+      if (Settings.sentryEnable) {
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - setDataItemMapChange\n - address:$contactAddress\n - deviceId:$deviceId\n - key:$key\n - addPairs:$addPairs\n - delKeys:$delKeys"); // await
+      }
+      return null;
+    }
     deviceId = deviceId ?? "";
     return await _queue.add(() async {
           try {
