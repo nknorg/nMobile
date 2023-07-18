@@ -6,7 +6,6 @@ import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/layout/header.dart';
 import 'package:nmobile/components/layout/layout.dart';
-import 'package:nmobile/components/text/fixed_text_field.dart';
 import 'package:nmobile/components/text/label.dart';
 import 'package:nmobile/helpers/validate.dart';
 import 'package:nmobile/storages/settings.dart';
@@ -110,7 +109,7 @@ class _SettingsAccelerateScreenState extends BaseStateFulWidgetState<SettingsAcc
                             children: <Widget>[
                               SizedBox(
                                 width: Settings.screenWidth() / 3,
-                                child: FixedTextField(
+                                child: TextField(
                                   controller: _feeController,
                                   focusNode: _feeFocusNode,
                                   keyboardType: TextInputType.numberWithOptions(decimal: true),

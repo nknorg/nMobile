@@ -352,7 +352,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
               PopMenu.MenuItem(
                 userInfo: 0,
                 title: Settings.locale((s) => s.copy, ctx: context),
-                textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 12),
+                textStyle: TextStyle(color: application.theme.fontLightColor, fontSize: 14),
               ),
             ],
             onClickMenu: (PopMenu.MenuItemProvider item) {

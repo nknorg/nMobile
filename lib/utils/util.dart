@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class Util {
   static void copyText(String? content, {bool toast = true}) {
+    if (content == null || content.isEmpty) return;
     Clipboard.setData(ClipboardData(text: content));
     if (toast) Toast.show(Settings.locale((s) => s.copy_success));
   }

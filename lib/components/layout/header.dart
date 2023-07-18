@@ -26,7 +26,7 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
   }) {
     _header = AppBar(
-      brightness: this.brightness,
+      // brightness: this.brightness,
       backgroundColor: backgroundColor ?? application.theme.primaryColor,
       centerTitle: false,
       titleSpacing: 0,
