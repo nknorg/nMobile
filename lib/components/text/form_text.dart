@@ -1,10 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/components/base/stateful.dart';
-import 'package:nmobile/components/text/fixed_text_form_field.dart';
 
 class FormText extends BaseStateFulWidget {
   dynamic value;
@@ -92,7 +90,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
     if (widget.password) {
       return Padding(
         padding: widget.padding,
-        child: FixedTextFormField(
+        child: TextFormField(
           initialValue: widget.value,
           style: TextStyle(fontSize: widget.fontSize, color: widget.fontColor ?? application.theme.fontColor1),
           controller: widget.controller,
@@ -105,7 +103,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
           autovalidateMode: (widget.validator != null) ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
           keyboardType: widget.keyboardType,
           maxLength: widget.maxLength,
-          maxLengthEnforced: widget.maxLengthEnforced,
+          // maxLengthEnforced: widget.maxLengthEnforced,
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
           textAlign: widget.textAlign,
@@ -131,7 +129,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
     } else {
       return Padding(
         padding: widget.padding,
-        child: FixedTextFormField(
+        child: TextFormField(
           initialValue: widget.value,
           style: TextStyle(fontSize: widget.fontSize, color: widget.fontColor ?? application.theme.fontColor1),
           controller: widget.controller,
@@ -145,7 +143,7 @@ class _FormTextState extends BaseStateFulWidgetState<FormText> {
           autovalidateMode: (widget.validator != null) ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
           keyboardType: widget.keyboardType,
           maxLength: widget.maxLength,
-          maxLengthEnforced: widget.maxLengthEnforced,
+          // maxLengthEnforced: widget.maxLengthEnforced,
           inputFormatters: widget.inputFormatters,
           textInputAction: widget.textInputAction,
           textAlign: widget.textAlign,
