@@ -56,7 +56,7 @@ dependencies:
   mime_type: ^1.0.0
   permission_handler: ^10.4.3
   vibration: ^1.8.1
-  flutter_local_notifications: ^13.0.0
+  flutter_local_notifications: ^15.1.0+1
   background_fetch: ^1.1.6
   fixnum: ^1.1.0
   android_id: ^0.3.3
