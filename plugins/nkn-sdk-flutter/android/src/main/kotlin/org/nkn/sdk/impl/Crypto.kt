@@ -36,25 +36,12 @@ class Crypto : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "getPublicKeyFromPrivateKey" -> {
-                getPublicKeyFromPrivateKey(call, result)
-            }
-            "getPrivateKeyFromSeed" -> {
-                getPrivateKeyFromSeed(call, result)
-            }
-            "getSeedFromPrivateKey" -> {
-                getSeedFromPrivateKey(call, result)
-            }
-            "sign" -> {
-                sign(call, result)
-            }
-            "verify" -> {
-                verify(call, result)
-            }
-
-            else -> {
-                result.notImplemented()
-            }
+            "getPublicKeyFromPrivateKey" -> getPublicKeyFromPrivateKey(call, result)
+            "getPrivateKeyFromSeed" -> getPrivateKeyFromSeed(call, result)
+            "getSeedFromPrivateKey" -> getSeedFromPrivateKey(call, result)
+            "sign" -> sign(call, result)
+            "verify" -> verify(call, result)
+            else -> result.notImplemented()
         }
     }
 
