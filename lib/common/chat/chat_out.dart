@@ -23,6 +23,7 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatOutCommon with Tag {
   ChatOutCommon();
@@ -1221,4 +1222,21 @@ class ChatOutCommon with Tag {
     }
     return message;
   }
+
+  // SUPPORT:START
+  Future sendMsgStatus(String? clientAddress, bool ask, List<String> msgIds) async {
+    if (!(await clientCommon.waitClientOk())) return false;
+    if (clientAddress == null || clientAddress.isEmpty || msgIds.isEmpty) return; // topic no read, just like receipt
+    Map map = {
+      'id': Uuid().v4(),
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'deviceId': Settings.deviceId,
+      'contentType': MessageContentType.msgStatus,
+      'requestType': ask ? "ask" : "reply",
+      'messageIds': msgIds,
+    };
+    String data = jsonEncode(map);
+    await _sendWithAddress([clientAddress], data);
+  }
+// SUPPORT:END
 }

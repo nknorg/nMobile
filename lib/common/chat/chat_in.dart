@@ -10,6 +10,7 @@ import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/message.dart';
 import 'package:nmobile/schema/private_group.dart';
 import 'package:nmobile/schema/private_group_item.dart';
+import 'package:nmobile/schema/session.dart';
 import 'package:nmobile/schema/subscriber.dart';
 import 'package:nmobile/schema/topic.dart';
 import 'package:nmobile/utils/format.dart';
@@ -243,7 +244,8 @@ class ChatInCommon with Tag {
         case MessageContentType.privateGroupMemberResponse:
           await _receivePrivateGroupMemberResponse(received);
           break;
-        case "msgStatus":
+        case MessageContentType.msgStatus:
+          await _receiveMsgStatus(received); // need interval
           break;
         default:
           logger.e("$TAG - _handleMessage - type error - type:${received.contentType} - targetId:${received.targetId} - message:${received.toStringSimple()}");
@@ -289,9 +291,15 @@ class ChatInCommon with Tag {
     if (content == "ping") {
       logger.i("$TAG - _receivePing - receive ping - sender:${received.sender} - options:${received.options}");
       chatOutCommon.sendPing([received.sender], false, gap: Settings.gapPongPingMs); // await
+      if (received.targetType == SessionType.CONTACT) {
+        messageCommon.checkMsgStatus(received.targetId); // await
+      }
     } else if (content == "pong") {
       logger.i("$TAG - _receivePing - receive pong - sender:${received.sender} - options:${received.options}");
       // nothing
+      if (received.targetType == SessionType.CONTACT) {
+        messageCommon.checkMsgStatus(received.targetId); // await
+      }
     } else {
       logger.e("$TAG - _receivePing - content wrong - received:$received - options:${received.options}");
       return false;
@@ -332,6 +340,11 @@ class ChatInCommon with Tag {
     // if (exists.contentType == MessageContentType.topicInvitation) {
     //   await subscriberCommon.onInvitedReceipt(exists.content, received.sender);
     // }
+
+    // checkMsgStatus
+    if ((received.targetType == SessionType.CONTACT) && !received.isTargetSelf) {
+      messageCommon.checkMsgStatus(exists.targetId); // await
+    }
     return true;
   }
 
@@ -953,4 +966,80 @@ class ChatInCommon with Tag {
     }
     return count;
   }
+
+  // SUPPORT:START
+  Future<bool> _receiveMsgStatus(MessageSchema received) async {
+    // if (received.isTopic) return; (limit in out)
+    if ((received.content == null) || !(received.content is Map<String, dynamic>)) return false;
+    Map<String, dynamic> data = received.content; // == data
+    String? requestType = data['requestType']?.toString();
+    List messageIds = data['messageIds'] ?? [];
+    if (messageIds.isEmpty) {
+      logger.w("$TAG - _receiveMsgStatus - messageIds empty - requestType:$requestType - targetId:${received.targetId} - received:$received");
+      return false;
+    }
+    if (requestType == "ask") {
+      // receive ask
+      List<String> msgIds = messageIds.map((e) => e?.toString() ?? "").toList();
+      List<MessageSchema> messageList = await messageCommon.queryListByIds(msgIds);
+      List<String> msgStatusList = [];
+      for (var i = 0; i < messageIds.length; i++) {
+        String msgId = messageIds[i];
+        if (msgId.isEmpty) continue;
+        int findIndex = messageList.indexWhere((element) => element.msgId == msgId);
+        MessageSchema? message = findIndex >= 0 ? messageList[findIndex] : null;
+        if (message != null) {
+          msgStatusList.add("$msgId:${message.status}");
+        } else {
+          msgStatusList.add("$msgId:${null}");
+        }
+      }
+      if (msgStatusList.isEmpty) {
+        logger.w("$TAG - _receiveMsgStatus - msgStatusList empty - requestType:$requestType - targetId:${received.targetId} - received:$received");
+        return false;
+      }
+      // send reply
+      logger.i("$TAG - _receiveMsgStatus - send reply - requestType:$requestType - targetId:${received.targetId} - msgList:$msgStatusList");
+      await chatOutCommon.sendMsgStatus(received.targetId, false, msgStatusList);
+    } else if (requestType == "reply") {
+      // receive reply
+      for (var i = 0; i < messageIds.length; i++) {
+        String combineId = messageIds[i];
+        if (combineId.isEmpty) {
+          logger.e("$TAG - _receiveMsgStatus - combineId is empty - received:$received");
+          continue;
+        }
+        List<String> splits = combineId.split(":");
+        String msgId = splits.length > 0 ? splits[0] : "";
+        if (msgId.isEmpty) {
+          logger.e("$TAG - _receiveMsgStatus - msgId is empty - received:$received");
+          continue;
+        }
+        MessageSchema? message = await messageCommon.query(msgId);
+        if (message == null) {
+          logger.e("$TAG - _receiveMsgStatus - message no exists - msgId:$msgId - received:$received");
+          continue;
+        }
+        String sStatus = splits.length > 1 ? splits[1] : "";
+        int? status = int.tryParse(sStatus);
+        if ((status == null) || (status == 0)) {
+          // resend msg
+          logger.i("$TAG - _receiveMsgStatus - msg resend - received:$received");
+          chatOutCommon.resend(message.msgId, mute: true, muteGap: Settings.gapMessageQueueResendMs); // await
+        } else if (message.status < MessageStatus.Receipt) {
+          // update status
+          logger.i("$TAG - _receiveMsgStatus - msg update status - received:$received");
+          await messageCommon.updateMessageStatus(message, MessageStatus.Receipt, receiveAt: DateTime.now().millisecondsSinceEpoch, notify: true);
+        } else {
+          // nothing
+          logger.i("$TAG - _receiveMsgStatus - msg nothing - received:$received");
+        }
+      }
+    } else {
+      logger.e("$TAG - _receiveMsgStatus - requestType error - requestType:$requestType - messageIds:$messageIds - received:$received");
+      return false;
+    }
+    return true;
+  }
+// SUPPORT:END
 }

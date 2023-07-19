@@ -63,6 +63,10 @@ class MessageContentType {
   static const String privateGroupOptionResponse = 'privateGroup:optionResponse'; // .
   static const String privateGroupMemberRequest = 'privateGroup:memberRequest'; // .
   static const String privateGroupMemberResponse = 'privateGroup:memberResponse'; // .
+
+  // SUPPORT:START
+  static const String msgStatus = 'msgStatus';
+// SUPPORT:END
 }
 
 class MessageSchema {
@@ -253,6 +257,7 @@ class MessageSchema {
       case MessageContentType.queue:
         schema.content = data['queueIds'];
         break;
+      case MessageContentType.msgStatus:
       case MessageContentType.contactProfile:
       case MessageContentType.contactOptions:
       case MessageContentType.deviceRequest:
