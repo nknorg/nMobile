@@ -74,9 +74,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             if (ethResolverConfigArray != null) {
                 for (cfg in ethResolverConfigArray) {
                     val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-                    ethResolverConfig.prefix = cfg["prefix"] as String?
-                    ethResolverConfig.rpcServer = cfg["rpcServer"] as String?
-                    ethResolverConfig.contractAddress = cfg["contractAddress"] as String?
+                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
                     val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
                     if (config.resolvers == null) {
                         config.resolvers = nkngomobile.ResolverArray(ethResolver)
@@ -89,7 +89,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             if (dnsResolverConfigArray != null) {
                 for (cfg in dnsResolverConfigArray) {
                     val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as String?
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
                     val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
                     if (config.resolvers == null) {
                         config.resolvers = nkngomobile.ResolverArray(dnsResolver)
@@ -281,7 +281,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun recreate(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
         val identifier = call.argument<String>("identifier") ?: ""
         val seed = call.argument<ByteArray>("seed")
         val seedRpc = call.argument<ArrayList<String>?>("seedRpc")
@@ -370,7 +370,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun reconnect(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
 
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
@@ -393,7 +393,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun close(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
 
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
@@ -415,13 +415,17 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun replyText(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
         val messageId = call.argument<ByteArray>("messageId")
-        val dest = call.argument<String>("dest")!!
-        val data = call.argument<String>("data")!!
+        val dest = call.argument<String>("dest") ?: ""
+        val data = call.argument<String>("data") ?: ""
         val encrypted = call.argument<Boolean>("encrypted") ?: true
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
 
+        if (dest.isEmpty() || data.isEmpty()) {
+            result.error("", "params error", "replyText")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "replyText")
@@ -431,12 +435,12 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val msg = Message()
-        msg.messageID = messageId
-        msg.src = dest
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val msg = Message()
+                msg.messageID = messageId
+                msg.src = dest
+
                 Nkngolib.reply(client, msg, data, encrypted, maxHoldingSeconds)
             } catch (e: Throwable) {
                 resultError(result, e)
@@ -446,13 +450,17 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun sendText(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-        val dests = call.argument<ArrayList<String>>("dests")!!
-        val data = call.argument<String>("data")!!
+        val _id = call.argument<String>("_id") ?: ""
+        val dests = call.argument<ArrayList<String>>("dests") ?: ArrayList()
+        val data = call.argument<String>("data") ?: ""
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
         val noReply = call.argument<Boolean>("noReply") ?: true
         val timeout = call.argument<Int>("timeout") ?: 10000
 
+        if (data.isEmpty()) {
+            result.error("", "params error", "sendText")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "sendText")
@@ -475,13 +483,13 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val config = MessageConfig()
-        config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
-        config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
-        config.noReply = noReply
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val config = MessageConfig()
+                config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
+                config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
+                config.noReply = noReply
+
                 if (!noReply) {
                     val onMessage = client.sendText(nknDests, data, config)
                     if (onMessage == null) {
@@ -520,14 +528,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun publishText(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-        val topic = call.argument<String>("topic")!!
-        val data = call.argument<String>("data")!!
+        val _id = call.argument<String>("_id") ?: ""
+        val topic = call.argument<String>("topic") ?: ""
+        val data = call.argument<String>("data") ?: ""
         val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
         val txPool = call.argument<Boolean>("txPool") ?: false
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 1000
 
+        if (topic.isEmpty() || data.isEmpty()) {
+            result.error("", "params error", "publishText")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "publishText")
@@ -537,15 +549,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val config = MessageConfig()
-        config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
-        config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
-        config.txPool = txPool
-        config.offset = offset
-        config.limit = limit
-
         viewModelScope.launch {
             try {
+                val config = MessageConfig()
+                config.maxHoldingSeconds = if (maxHoldingSeconds < 0) 0 else maxHoldingSeconds
+                config.messageID = Nkn.randomBytes(Nkn.MessageIDSize)
+                config.txPool = txPool
+                config.offset = offset
+                config.limit = limit
+
                 client.publishText(topic, data, config)
 
                 val resp = hashMapOf(
@@ -561,14 +573,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun subscribe(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
         val identifier = call.argument<String>("identifier") ?: ""
-        val topic = call.argument<String>("topic")!!
-        val duration = call.argument<Int>("duration")!!
+        val topic = call.argument<String>("topic") ?: ""
+        val duration = call.argument<Int>("duration") ?: 0
         val meta = call.argument<String>("meta")
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
+        if (topic.isEmpty()) {
+            result.error("", "params error", "subscribe")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "subscribe")
@@ -578,15 +594,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val transactionConfig = TransactionConfig()
-        transactionConfig.fee = fee
-        if (nonce != null) {
-            transactionConfig.nonce = nonce.toLong()
-            transactionConfig.fixNonce = true
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val transactionConfig = TransactionConfig()
+                transactionConfig.fee = fee
+                if (nonce != null) {
+                    transactionConfig.nonce = nonce.toLong()
+                    transactionConfig.fixNonce = true
+                }
+
                 val hash = client.subscribe(
                     identifier,
                     topic,
@@ -605,12 +621,16 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun unsubscribe(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
         val identifier = call.argument<String>("identifier") ?: ""
-        val topic = call.argument<String>("topic")!!
+        val topic = call.argument<String>("topic") ?: ""
         val fee = call.argument<String>("fee") ?: "0"
         val nonce = call.argument<Int>("nonce")
 
+        if (topic.isEmpty()) {
+            result.error("", "params error", "unsubscribe")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "unsubscribe")
@@ -620,15 +640,15 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             return
         }
 
-        val transactionConfig = TransactionConfig()
-        transactionConfig.fee = fee
-        if (nonce != null) {
-            transactionConfig.nonce = nonce.toLong()
-            transactionConfig.fixNonce = true
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                val transactionConfig = TransactionConfig()
+                transactionConfig.fee = fee
+                if (nonce != null) {
+                    transactionConfig.nonce = nonce.toLong()
+                    transactionConfig.fixNonce = true
+                }
+
                 val hash = client.unsubscribe(identifier, topic, transactionConfig)
 
                 resultSuccess(result, hash)
@@ -641,14 +661,18 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getSubscribers(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-        val topic = call.argument<String>("topic")!!
+        val _id = call.argument<String>("_id") ?: ""
+        val topic = call.argument<String>("topic") ?: ""
         val offset = call.argument<Int>("offset") ?: 0
         val limit = call.argument<Int>("limit") ?: 0
         val meta = call.argument<Boolean>("meta") ?: true
         val txPool = call.argument<Boolean>("txPool") ?: true
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
+        if (topic.isEmpty()) {
+            result.error("", "params error", "getSubscribers")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "getSubscribers")
@@ -690,10 +714,14 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getSubscription(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-        val topic = call.argument<String>("topic")!!
-        val subscriber = call.argument<String>("subscriber")!!
+        val _id = call.argument<String>("_id") ?: ""
+        val topic = call.argument<String>("topic") ?: ""
+        val subscriber = call.argument<String>("subscriber") ?: ""
 
+        if (topic.isEmpty() || subscriber.isEmpty()) {
+            result.error("", "params error", "getSubscription")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "getSubscription")
@@ -721,10 +749,14 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getSubscribersCount(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
-        val topic = call.argument<String>("topic")!!
+        val _id = call.argument<String>("_id") ?: ""
+        val topic = call.argument<String>("topic") ?: ""
         val subscriberHashPrefix = call.argument<ByteArray>("subscriberHashPrefix")
 
+        if (topic.isEmpty()) {
+            result.error("", "params error", "getSubscribersCount")
+            return
+        }
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
             result.error("", "client is null", "getSubscribersCount")
@@ -748,7 +780,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getHeight(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
 
         val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
         if (client == null) {
@@ -773,7 +805,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun getNonce(call: MethodCall, result: MethodChannel.Result) {
-        val _id = call.argument<String>("_id")!!
+        val _id = call.argument<String>("_id") ?: ""
         val address = call.argument<String>("address")
         val txPool = call.argument<Boolean>("txPool") ?: true
 

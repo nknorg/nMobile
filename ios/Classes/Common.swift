@@ -98,7 +98,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     private func saveImageToGallery(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
         let imageData = args["imageData"] as! FlutterStandardTypedData
         let imageName = args["imageName"] as! String
         let albumName = args["albumName"] as! String
@@ -124,7 +124,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     private func sendPushAPNS(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
         let uuid = args["uuid"] as? String ?? ""
         let deviceToken = args["deviceToken"] as? String ?? ""
         let topic = args["topic"] as? String ?? ""
@@ -152,7 +152,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     private func updateBadgeCount(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
         let badgeCount = args["badge_count"] as? Int ?? 0
         
         DispatchQueue.main.async { // run on UIThread
@@ -167,7 +167,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     private func splitPieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
         let flutterDataString = args["data"] as? String ?? ""
         let dataShards = args["dataShards"] as? Int ?? 0
         let parityShards = args["parityShards"] as? Int ?? 0
@@ -218,7 +218,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     /*private func encryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-     let args = call.arguments as! [String: Any]
+     let args = call.arguments as? [String: Any] ?? [String: Any]()
      let algorithm = args["algorithm"] as? String ?? ""
      let bits = args["bits"] as? Int ?? 1
      let data = args["data"] as! FlutterStandardTypedData
@@ -246,7 +246,7 @@ class Common : ChannelBase, FlutterStreamHandler {
      }*/
     
     /*private func decryptBytes(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-     let args = call.arguments as! [String: Any]
+     let args = call.arguments as? [String: Any] ?? [String: Any]()
      let algorithm = args["algorithm"] as? String ?? ""
      let bits = args["bits"] as? Int ?? 0
      let keyBytes = args["key_bytes"] as! FlutterStandardTypedData
@@ -266,7 +266,7 @@ class Common : ChannelBase, FlutterStreamHandler {
      }*/
     
     private func combinePieces(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
         let fDataList = args["data"] as? [FlutterStandardTypedData] ?? []
         let dataShards = args["dataShards"] as? Int ?? 0
         let parityShards = args["parityShards"] as? Int ?? 0
@@ -334,7 +334,7 @@ class Common : ChannelBase, FlutterStreamHandler {
     }
     
     //    private func resetSQLitePassword(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    //        let args = call.arguments as! [String: Any]
+    //        let args = call.arguments as? [String: Any] ?? [String: Any]()
     //        let path = args["path"] as! String
     //        let password = args["password"] as! String
     //        let readOnly = args["readOnly"] as? Bool ?? false
