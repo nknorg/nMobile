@@ -96,36 +96,16 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "backDesktop" -> {
-                backDesktop(call, result)
-            }
-            "saveImageToGallery" -> {
-                saveImageToGallery(call, result)
-            }
-            "sendPushAPNS" -> {
-                sendPushAPNS(call, result)
-            }
-            //"isGoogleServiceAvailable" -> {
-            //    isGoogleServiceAvailable(call, result)
-            //}
-            "getFCMToken" -> {
-                getFCMToken(call, result)
-            }
-            //"encryptBytes" -> {
-            //    encryptBytes(call, result)
-            //}
-            //"decryptBytes" -> {
-            //    decryptBytes(call, result)
-            //}
-            "splitPieces" -> {
-                splitPieces(call, result)
-            }
-            "combinePieces" -> {
-                combinePieces(call, result)
-            }
-            else -> {
-                result.notImplemented()
-            }
+            "backDesktop" -> backDesktop(call, result)
+            "saveImageToGallery" -> saveImageToGallery(call, result)
+            "sendPushAPNS" -> sendPushAPNS(call, result)
+            //"isGoogleServiceAvailable" -> isGoogleServiceAvailable(call, result)
+            "getFCMToken" -> getFCMToken(call, result)
+            //"encryptBytes" -> encryptBytes(call, result)
+            //"decryptBytes" -> decryptBytes(call, result)
+            "splitPieces" -> splitPieces(call, result)
+            "combinePieces" -> combinePieces(call, result)
+            else -> result.notImplemented()
         }
     }
 
@@ -168,10 +148,10 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun sendPushAPNS(call: MethodCall, result: MethodChannel.Result) {
-        val uuid = call.argument<String>("uuid")!!
-        val deviceToken = call.argument<String>("deviceToken")!!
-        val topic = call.argument<String>("topic")!!
-        val pushPayload = call.argument<String>("pushPayload")!!
+        val uuid = call.argument<String>("uuid") ?: ""
+        val deviceToken = call.argument<String>("deviceToken") ?: ""
+        val topic = call.argument<String>("topic") ?: ""
+        val pushPayload = call.argument<String>("pushPayload") ?: ""
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -337,9 +317,9 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }*/
 
     private fun splitPieces(call: MethodCall, result: MethodChannel.Result) {
-        val dataString = call.argument<String>("data")!!
-        val dataShards = call.argument<Int>("dataShards")!!
-        val parityShards = call.argument<Int>("parityShards")!!
+        val dataString = call.argument<String>("data") ?: ""
+        val dataShards = call.argument<Int>("dataShards") ?: 0
+        val parityShards = call.argument<Int>("parityShards") ?: 0
 
         viewModelScope.launch(Dispatchers.IO) {
             val encoder: Encoder? = Reedsolomon.newDefault(dataShards.toLong(), parityShards.toLong())
@@ -370,10 +350,10 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun combinePieces(call: MethodCall, result: MethodChannel.Result) {
-        val dataList = call.argument<ArrayList<ByteArray>>("data")!!
-        val dataShards = call.argument<Int>("dataShards")!!
-        val parityShards = call.argument<Int>("parityShards")!!
-        val bytesLength = call.argument<Int>("bytesLength")!!
+        val dataList = call.argument<ArrayList<ByteArray>>("data") ?: ArrayList()
+        val dataShards = call.argument<Int>("dataShards") ?: 0
+        val parityShards = call.argument<Int>("parityShards") ?: 0
+        val bytesLength = call.argument<Int>("bytesLength") ?: 0
 
         viewModelScope.launch(Dispatchers.IO) {
             val encodeDataBytes = BytesArray((dataShards + parityShards).toLong())

@@ -35,16 +35,9 @@ class Common : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "configure" -> {
-                configure(call, result)
-            }
-            "installWalletPlugin" -> {
-                installWalletPlugin(call, result)
-            }
-
-            else -> {
-                result.notImplemented()
-            }
+            "configure" -> configure(call, result)
+            "installWalletPlugin" -> installWalletPlugin(call, result)
+            else -> result.notImplemented()
         }
     }
 
