@@ -117,7 +117,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         
         try closeClient(id: id)
         
-        guard let client = NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config) else {
+        guard let client = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config) else {
             return nil
         }
         self.setClient(id: client.address(), client: client)
@@ -269,6 +269,11 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
         
+        if (seed == nil || seed?.data == nil) {
+            self.resultError(result: result, code: "", message: "params error", details: "create")
+            return
+        }
+        
         let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
         
         let queueItem = DispatchWorkItem {
@@ -289,7 +294,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 } catch _ {
                 }
                 if (client == nil) {
-                    NkngolibAddClientConfigWithDialContext(config)
+                    try NkngolibAddClientConfigWithDialContext(config)
                     client = try self.createClient(account: account, identifier: identifier, numSubClients: numSubClients, config: config)
                 }
                 if (client == nil) {
@@ -339,7 +344,12 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
         let maxReconnectInterval = args["maxReconnectInterval"] as? Int32 ?? 5000
         let ethResolverConfigArray = args["ethResolverConfigArray"] as? [[String: Any]]
         let dnsResolverConfigArray = args["dnsResolverConfigArray"] as? [[String: Any]]
-
+        
+        if (seed == nil || seed?.data == nil) {
+            self.resultError(result: result, code: "", message: "params error", details: "recreate")
+            return
+        }
+        
         let config: NknClientConfig = getClientConfig(seedRpc: seedRpc, connectRetries: connectRetries, maxReconnectInterval: maxReconnectInterval, ethResolverConfigArray: ethResolverConfigArray, dnsResolverConfigArray: dnsResolverConfigArray)
         
         let queueItem = DispatchWorkItem {
@@ -360,7 +370,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 } catch _ {
                 }
                 if (client == nil) {
-                    NkngolibAddClientConfigWithDialContext(config)
+                    try NkngolibAddClientConfigWithDialContext(config)
                     client = try NknMultiClient(account, baseIdentifier: identifier, numSubClients: numSubClients, originalClient: true, config: config)
                 }
                 if (client == nil) {
