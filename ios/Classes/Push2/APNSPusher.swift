@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Sentry
 
 let p12FileName = "fileName"
 let p12FilePasswordd = "password"

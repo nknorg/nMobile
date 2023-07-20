@@ -241,6 +241,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
         val dnsResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
 
+        if (seed == null) {
+            result.error("", "params error", "create")
+            return
+        }
+
         val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -292,6 +297,11 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             call.argument<ArrayList<Map<String, Any>>?>("ethResolverConfigArray")
         val dnsResolverConfigArray =
             call.argument<ArrayList<Map<String, Any>>?>("dnsResolverConfigArray")
+
+        if (seed == null) {
+            result.error("", "params error", "recreate")
+            return
+        }
 
         val config = getClientConfig(seedRpc, connectRetries, maxReconnectInterval, ethResolverConfigArray, dnsResolverConfigArray)
 
