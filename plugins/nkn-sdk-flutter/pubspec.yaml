@@ -11,9 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  crypto: ^3.0.2
+  crypto: ^3.0.3
   convert: ^3.1.1
-  logger: ^1.1.0
+  logger: ^1.4.0
+  sentry_flutter: ^7.8.0
+  sentry_dart_plugin: ^1.5.0
 
 dev_dependencies:
   flutter_test:
@@ -66,3 +68,17 @@ flutter:
   #
   # For details regarding fonts in packages, see
   # https://flutter.dev/custom-fonts/#from-packages
+
+sentry:
+  project: nmobile-flutter
+  org: nknorg
+  auth_token: 99da06f2818a4928b85775f64bbb38e9671e8555b8594b0da121d4114719625c
+  upload_debug_symbols: true
+  upload_source_maps: true
+  upload_sources: true
+  wait_for_processing: false
+  log_level: error
+  commits: auto
+  ignore_missing: true
+#  release: ...
+#  url: ...

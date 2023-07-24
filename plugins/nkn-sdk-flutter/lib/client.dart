@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:nkn_sdk_flutter/utils/hex.dart';
 import 'package:nkn_sdk_flutter/wallet.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// NKN message's PayloadType
 class MessageType {
@@ -120,6 +121,32 @@ class Client {
   /// Need to [install] before use.
   static install() {
     _stream = _eventChannel.receiveBroadcastStream();
+    SentryFlutter.init((options) {
+      options.debug = false;
+      options.environment = 'nkn_sdk_flutter';
+      options.release = "nkn_sdk_flutter";
+      options.dsn = "";
+      options.autoInitializeNativeSdk = true;
+      options.enableTracing = true;
+      options.attachStacktrace = true;
+      options.attachViewHierarchy = true;
+      options.idleTimeout = Duration(seconds: 10);
+      options.sendClientReports = true;
+      options.captureFailedRequests = true;
+      options.enableNativeCrashHandling = true;
+      options.enableAutoSessionTracking = true;
+      options.enableNdkScopeSync = true;
+      options.attachThreads = true;
+      options.enableAutoPerformanceTracing = true;
+      options.enableWatchdogTerminationTracking = true;
+      options.enableScopeSync = true;
+      options.reportPackages = true;
+      options.anrEnabled = true;
+      options.reportSilentFlutterErrors = true;
+      options.autoAppStart = true;
+      options.enableAutoNativeBreadcrumbs = true;
+      options.enableUserInteractionBreadcrumbs = true;
+    });
   }
 
   /// NKN client address
