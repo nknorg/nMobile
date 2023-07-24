@@ -17,6 +17,7 @@ nkn-sdk-flutter
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
+  s.dependency 'Sentry', '~> 8.8.0'
   s.vendored_frameworks = 'Frameworks/*.xcframework'
 
   # Flutter.framework does not contain a i386 slice.
