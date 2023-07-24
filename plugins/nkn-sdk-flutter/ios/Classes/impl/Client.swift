@@ -11,8 +11,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     
     let clientQueue = DispatchQueue(label: "org.nkn.sdk/client_queue", qos: .userInitiated)
     let clientMapQueue = DispatchQueue(label: "org.nkn.sdk/client/map_queue", qos: .userInteractive)
-    let clientOnConnectQueue = DispatchQueue(label: "org.nkn.sdk/client/onConnect_queue", qos: .userInitiated, attributes: .concurrent)
-    let clientOnMessageQueue = DispatchQueue(label: "org.nkn.sdk/client/onMessage_queue", qos: .userInitiated, attributes: .concurrent)
+    let clientListenQueue = DispatchQueue(label: "org.nkn.sdk/client/listen_queue", qos: .userInitiated, attributes: .concurrent)
+    let clientListen2Queue = DispatchQueue(label: "org.nkn.sdk/client/listen2_queue", qos: .userInitiated, attributes: .concurrent)
     let clientEventQueue = DispatchQueue(label: "org.nkn.sdk/client/event/queue", qos: .default, attributes: .concurrent)
     
     var clientMap = Dictionary<String, NknMultiClient>()
@@ -154,7 +154,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 return
             }
         }
-        self.clientOnConnectQueue.async(execute: workItem)
+        self.clientListenQueue.async(execute: workItem)
     }
     
     private func getConnectResult(client: NknMultiClient, node: NknNode, numSubClients: Int) -> [String: Any] {
@@ -202,10 +202,10 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             }
         }
         guard let deadline = deadline else {
-            self.clientOnMessageQueue.async(execute: workItem)
+            self.clientListenQueue.async(execute: workItem)
             return
         }
-        self.clientOnMessageQueue.asyncAfter(deadline: deadline, execute: workItem)
+        self.clientListenQueue.asyncAfter(deadline: deadline, execute: workItem)
     }
     
     private func getMessageResult(client: NknMultiClient, msg: NknMessage) -> [String: Any] {
@@ -397,7 +397,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 resp["seed"] = clientSeed
                 // listen
                 var isSuccess = false
-                self.clientOnConnectQueue.async {
+                self.clientListen2Queue.async {
                     do {
                         guard let client = client else {
                             return
@@ -415,6 +415,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                                     }
                                     isSuccess = true
                                     self.resultSuccess(result: result, resp: resp)
+                                    return
                                 }
                             } catch let error {
                                 self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
@@ -423,12 +424,13 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                         }
                         let resp = self.getConnectResult(client: client, node: node, numSubClients: numSubClients)
                         self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+                        return
                     } catch let error {
                         self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                         return
                     }
                 }
-                self.clientOnMessageQueue.async {
+                self.clientListen2Queue.async {
                     do {
                         guard let client = client else {
                             return
@@ -446,6 +448,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                                     }
                                     isSuccess = true
                                     self.resultSuccess(result: result, resp: resp)
+                                    return
                                 }
                             } catch let error {
                                 self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
@@ -454,6 +457,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                         }
                         let resp = self.getMessageResult(client: client, msg: msg)
                         self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
+                        return
                     } catch let error {
                         self.eventSinkError(eventSink: self.eventSink, error: error, code: _id)
                         return
