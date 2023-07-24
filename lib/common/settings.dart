@@ -4,6 +4,7 @@ import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:nmobile/generated/l10n.dart';
+import 'package:nmobile/helpers/error.dart';
 import 'package:nmobile/helpers/ipfs.dart';
 import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -67,11 +68,15 @@ class Settings {
   static S? _s;
 
   static S? _ss({BuildContext? ctx}) {
-    if (_s != null) return _s;
-    if (ctx != null) return S.maybeOf(ctx);
-    if (appContext != null) {
-      S? s = S.maybeOf(appContext);
-      if ((s != null) && (_s == null)) _s = s;
+    try {
+      if (_s != null) return _s;
+      if (ctx != null) return S.maybeOf(ctx);
+      if (appContext != null) {
+        S? s = S.maybeOf(appContext);
+        if ((s != null) && (_s == null)) _s = s;
+      }
+    } catch (e, st) {
+      handleError(e, st, toast: false, upload: false);
     }
     return _s;
   }
