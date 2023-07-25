@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:nmobile/common/locator.dart';
 import 'package:nmobile/utils/logger.dart';
 
 class SecureStorage {
@@ -12,11 +10,11 @@ class SecureStorage {
   static SecureStorage instance = SecureStorage();
 
   Future set(String key, val) async {
-    if (Platform.isIOS) {
-      int interval = 500;
-      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    }
+    // if (Platform.isIOS) {
+    //   int interval = 500;
+    //   int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+    //   if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+    // }
     try {
       final options = IOSOptions(synchronizable: false, accessibility: KeychainAccessibility.first_unlock);
       if (val is String) {
@@ -32,11 +30,11 @@ class SecureStorage {
   }
 
   Future get(String key) async {
-    if (Platform.isIOS) {
-      int interval = 500;
-      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    }
+    // if (Platform.isIOS) {
+    //   int interval = 500;
+    //   int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+    //   if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+    // }
     try {
       final options = IOSOptions(synchronizable: false, accessibility: KeychainAccessibility.first_unlock);
       return await _storage.read(key: key, iOptions: options);
@@ -47,11 +45,11 @@ class SecureStorage {
   }
 
   Future delete(String key) async {
-    if (Platform.isIOS) {
-      int interval = 500;
-      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    }
+    // if (Platform.isIOS) {
+    //   int interval = 500;
+    //   int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+    //   if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+    // }
     try {
       final options = IOSOptions(synchronizable: false, accessibility: KeychainAccessibility.first_unlock);
       await _storage.delete(key: key, iOptions: options);
