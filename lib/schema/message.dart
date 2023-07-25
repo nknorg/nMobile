@@ -235,7 +235,7 @@ class MessageSchema {
       isOutbound: false,
       status: MessageStatus.Success,
       // at
-      sendAt: int.tryParse(data['timestamp']?.toString() ?? "") ?? DateTime.now().millisecondsSinceEpoch,
+      sendAt: int.tryParse(data['send_timestamp']?.toString() ?? "") ?? int.tryParse(data['timestamp']?.toString() ?? "") ?? DateTime.now().millisecondsSinceEpoch,
       receiveAt: DateTime.now().millisecondsSinceEpoch,
       // delete
       isDelete: false,

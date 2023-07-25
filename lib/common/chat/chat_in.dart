@@ -987,9 +987,9 @@ class ChatInCommon with Tag {
         String msgId = messageIds[i];
         if (msgId.isEmpty) continue;
         int findIndex = messageList.indexWhere((element) => element.msgId == msgId);
-        MessageSchema? message = findIndex >= 0 ? messageList[findIndex] : null;
+        MessageSchema? message = (findIndex >= 0) ? messageList[findIndex] : null;
         if (message != null) {
-          msgStatusList.add("$msgId:${message.status}");
+          msgStatusList.add("$msgId:310"); // ${message.status} // need convert // 310 == read
         } else {
           msgStatusList.add("$msgId:${null}");
         }
@@ -1021,7 +1021,7 @@ class ChatInCommon with Tag {
           continue;
         }
         String sStatus = splits.length > 1 ? splits[1] : "";
-        int? status = int.tryParse(sStatus);
+        int? status = int.tryParse(sStatus); // no need convert
         if ((status == null) || (status == 0)) {
           // resend msg
           logger.i("$TAG - _receiveMsgStatus - msg resend - received:$received");
