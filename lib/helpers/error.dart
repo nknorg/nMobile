@@ -149,7 +149,9 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
       "wrong password",
       "biometrics",
       "startRecorder",
-      "Permission state error",
+      "permission state error",
+      "permission_requesting",
+      "photo_access_denied",
       "Cannot delete file",
       "fcm.googleapis.com",
       "mainnet.infura.io",
@@ -158,7 +160,7 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
       NknError.rpcRequestFail,
     ]);
     if (upload && !contains) {
-      if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace);
+      if (Settings.sentryEnable) Sentry.captureException(error, stackTrace: stackTrace); // await
     }
   } else if (Settings.debug) {
     logger.e(error);
