@@ -306,7 +306,7 @@ class MessageCommon with Tag {
     if (targetId == null || targetId.isEmpty) return false;
     if ((targetType != SessionType.CONTACT) && (targetType != SessionType.PRIVATE_GROUP)) return false;
     int nowAt = DateTime.now().millisecondsSinceEpoch;
-    int gap = 30 * 24 * 60 * 60 * 1000; // 30d == clientMaxHoldTime
+    int gap = 365 * 24 * 60 * 60 * 1000; // 365d
     int minReceiveAt = nowAt - gap;
     Map<String, int>? receivedMessages;
     if (targetType == SessionType.CONTACT) {
@@ -463,7 +463,7 @@ class MessageCommon with Tag {
   Future<MessageSchema> loadMessageSendQueue(MessageSchema message) async {
     if (!message.canQueue) return message;
     if (message.isTargetContact && !message.isTargetSelf) {
-      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueue");
+      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueue_");
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // just can latest
       if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         message.queueId = await newContactMessageQueueId(message.targetId, device.deviceId, message.msgId);
@@ -485,7 +485,7 @@ class MessageCommon with Tag {
   Future<MessageSchema> loadMessageSendQueueAgain(MessageSchema message) async {
     if (!message.canQueue) return message;
     if (message.isTargetContact && !message.isTargetSelf) {
-      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueueAgain");
+      await chatInCommon.waitReceiveQueue(message.targetId, "loadMessageSendQueueAgain_");
       DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(message.targetId); // must be latest
       if ((device != null) && DeviceInfoCommon.isMessageQueueEnable(device.platform, device.appVersion)) {
         String? oldQueueIds = MessageOptions.getMessageQueueIds(message.options);
@@ -813,65 +813,62 @@ class MessageCommon with Tag {
   }
 
   // SUPPORT:START
-  Future<int> checkMsgStatus(String? targetId, {int filterSec = 10}) async {
+  Future<int> checkMsgStatus(String? targetId, {int filterSec = 5}) async {
     if (!(await clientCommon.waitClientOk())) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     // device
     DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId);
-    if ((device?.appVersion ?? 0) > 280) {
+    if ((device?.appVersion ?? 281) > 280) {
       logger.d("$TAG - checkMsgStatus - disable with high version - version:${device?.appVersion}");
       return 0;
     }
     // wait receive queue complete
-    await Future.delayed(Duration(milliseconds: 500));
     bool onComplete = await chatInCommon.waitReceiveQueue(targetId, "checkMsgStatus_", duplicated: false);
     if (!onComplete) {
       logger.d("$TAG - checkMsgStatus - receive_queue progress - targetId:$targetId");
       return 0;
     }
+    await Future.delayed(Duration(milliseconds: 500));
     // noAck
     int limit = 20;
     int maxCount = 100;
-    List<MessageSchema> checkList = [];
+    List<MessageSchema> messages = [];
     for (int offset = 0; true; offset += limit) {
-      List<MessageSchema> messages = [];
-      final limit = 20;
-      for (int offset = 0; true; offset += limit) {
-        List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(
-          targetId,
-          SessionType.CONTACT,
-          isOutbound: true,
-          status: MessageStatus.Success,
-          offset: offset,
-          limit: limit,
-        );
-        messages.addAll(result);
-        if (result.length < limit) break;
-      }
-      final canReceipts = messages.where((element) => element.canReceipt).toList();
-      checkList.addAll(canReceipts);
-      logger.d("$TAG - checkMsgStatus - noAck - offset:$offset - current_len:${canReceipts.length} - total_len:${checkList.length}");
-      if (messages.length < limit) break;
-      if ((offset + limit) >= maxCount) break;
+      List<MessageSchema> result = await MessageStorage.instance.queryListByTarget(
+        targetId,
+        SessionType.CONTACT,
+        isOutbound: true,
+        status: MessageStatus.Success,
+        offset: offset,
+        limit: limit,
+      );
+      messages.addAll(result.where((element) => element.canReceipt).toList());
+      if (result.length < limit) break;
+      if (messages.length >= maxCount) break;
+    }
+    if (messages.isEmpty) {
+      logger.d("$TAG - checkMsgStatus - OK OK OK - targetId:$targetId");
+      return 0;
     }
     // filter
-    checkList = checkList.where((element) {
-      int msgSendAt = MessageOptions.getSendSuccessAt(element.options) ?? 0;
+    messages = messages.where((element) {
+      int msgSendAt = MessageOptions.getSendSuccessAt(element.options) ?? DateTime.now().millisecondsSinceEpoch;
       int between = DateTime.now().millisecondsSinceEpoch - msgSendAt;
-      int filter = (element.contentType == MessageContentType.ipfs) ? filterSec * 3 : (element.isContentFile ? filterSec * 2 : filterSec);
+      int filter = filterSec * ((element.contentType == MessageContentType.ipfs) ? 3 : (element.isContentFile ? 2 : 1));
       if (between < (filter * 1000)) {
         logger.d("$TAG - checkMsgStatus - sendAt justNow - targetId:$targetId - message:$element");
         return false;
       }
       return true;
     }).toList();
-    if (checkList.isEmpty) {
+    if (messages.isEmpty) {
       logger.d("$TAG - checkMsgStatus - OK OK OK - targetId:$targetId");
       return 0;
     }
+    logger.i("$TAG - checkMsgStatus - resend - len:${messages.length} - targetId:$targetId");
     // resend
     List<String> msgIds = [];
-    checkList.forEach((element) {
+    messages.forEach((element) {
       if (element.msgId.isNotEmpty) msgIds.add(element.msgId);
     });
     chatOutCommon.sendMsgStatus(targetId, true, msgIds); // await

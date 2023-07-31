@@ -1213,7 +1213,7 @@ class Upgrade6to7 {
         int? newDeleteAt = int.tryParse(result["delete_at"]?.toString() ?? "");
         if ((newIsDelete == 1) || ((newDeleteAt != null) && (newDeleteAt <= nowAt))) {
           // if (newStatus > 0) {
-          int gap = 20 * 24 * 60 * 60 * 1000; // 20d
+          int gap = 365 * 24 * 60 * 60 * 1000; // 365d
           if ((newSendAt < (nowAt - gap)) || (newReceiveAt < (nowAt - gap))) {
             logger.i("Upgrade6to7 - ${MessageStorage.tableName} - delete now (too old) - data:$result");
           } else {

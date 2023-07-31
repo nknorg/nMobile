@@ -245,7 +245,7 @@ class ChatInCommon with Tag {
           await _receivePrivateGroupMemberResponse(received);
           break;
         case MessageContentType.msgStatus:
-          await _receiveMsgStatus(received); // need interval
+          _receiveMsgStatus(received); // await // need interval
           break;
         default:
           logger.e("$TAG - _handleMessage - type error - type:${received.contentType} - targetId:${received.targetId} - message:${received.toStringSimple()}");
@@ -343,7 +343,7 @@ class ChatInCommon with Tag {
 
     // checkMsgStatus
     if ((received.targetType == SessionType.CONTACT) && !received.isTargetSelf) {
-      messageCommon.checkMsgStatus(exists.targetId); // await
+      messageCommon.checkMsgStatus(received.targetId); // await
     }
     return true;
   }
@@ -981,17 +981,20 @@ class ChatInCommon with Tag {
     if (requestType == "ask") {
       // receive ask
       List<String> msgIds = messageIds.map((e) => e?.toString() ?? "").toList();
-      List<MessageSchema> messageList = await messageCommon.queryListByIds(msgIds);
+      msgIds = msgIds.where((element) => element.toString().isNotEmpty).toList();
+      ContactSchema? _contact = await contactCommon.query(received.targetId, fetchWalletAddress: false);
+      Map<String, int> receivedMessages = _contact?.receivedMessages ?? {};
       List<String> msgStatusList = [];
-      for (var i = 0; i < messageIds.length; i++) {
-        String msgId = messageIds[i];
-        if (msgId.isEmpty) continue;
-        int findIndex = messageList.indexWhere((element) => element.msgId == msgId);
-        MessageSchema? message = (findIndex >= 0) ? messageList[findIndex] : null;
-        if (message != null) {
+      for (var i = 0; i < msgIds.length; i++) {
+        String msgId = msgIds[i];
+        bool exist = (await messageCommon.query(msgId)) != null;
+        if (!exist) {
+          exist = receivedMessages[msgId] != null;
+        }
+        if (exist) {
           msgStatusList.add("$msgId:310"); // ${message.status} // need convert // 310 == read
         } else {
-          msgStatusList.add("$msgId:${null}");
+          msgStatusList.add("$msgId:0");
         }
       }
       if (msgStatusList.isEmpty) {
@@ -999,7 +1002,7 @@ class ChatInCommon with Tag {
         return false;
       }
       // send reply
-      logger.i("$TAG - _receiveMsgStatus - send reply - requestType:$requestType - targetId:${received.targetId} - msgList:$msgStatusList");
+      logger.i("$TAG - _receiveMsgStatus - send reply - len:${msgStatusList.length} - requestType:$requestType - targetId:${received.targetId}");
       await chatOutCommon.sendMsgStatus(received.targetId, false, msgStatusList);
     } else if (requestType == "reply") {
       // receive reply
@@ -1025,7 +1028,7 @@ class ChatInCommon with Tag {
         if ((status == null) || (status == 0)) {
           // resend msg
           logger.i("$TAG - _receiveMsgStatus - msg resend - received:$received");
-          chatOutCommon.resend(message.msgId, mute: true, muteGap: Settings.gapMessageQueueResendMs); // await
+          await chatOutCommon.resend(message.msgId, mute: true, muteGap: Settings.gapMessageQueueResendMs);
         } else if (message.status < MessageStatus.Receipt) {
           // update status
           logger.i("$TAG - _receiveMsgStatus - msg update status - received:$received");
