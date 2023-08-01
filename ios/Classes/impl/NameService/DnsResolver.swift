@@ -28,7 +28,7 @@ class DnsResolver : ChannelBase, FlutterStreamHandler {
     }
     
     func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        //         eventSink = nil
+        eventSink = nil
         return nil
     }
     
@@ -42,9 +42,9 @@ class DnsResolver : ChannelBase, FlutterStreamHandler {
     }
     
     private func resolve(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as! [String: Any]
-        let config = args["config"] as! [String: Any]
-        let address = args["address"] as! String
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let config = args["config"] as? [String: Any] ?? [String: Any]()
+        let address = args["address"] as? String ?? ""
         
         let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
         dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?? ""
@@ -56,7 +56,7 @@ class DnsResolver : ChannelBase, FlutterStreamHandler {
             return
         }
         var error1: NSError?
-        let res = dnsResolver!.resolve(address, error: &error1)
+        let res = dnsResolver?.resolve(address, error: &error1)
         if (error1 != nil) {
             self.resultError(result: result, error: error1)
             return

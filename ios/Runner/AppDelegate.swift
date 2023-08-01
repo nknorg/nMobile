@@ -23,7 +23,6 @@ import receive_sharing_intent
         Crypto.register(controller: controller)
         EthResolver.register(controller: controller)
         DnsResolver.register(controller: controller)
-        // EthResolver.register(controller: controller)
         
         registerNotification();
         
