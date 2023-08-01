@@ -71,7 +71,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             config.connectRetries = connectRetries
             config.maxReconnectInterval = maxReconnectInterval
 
-            if (ethResolverConfigArray != null) {
+            if (!ethResolverConfigArray.isNullOrEmpty()) {
                 for (cfg in ethResolverConfigArray) {
                     val ethResolverConfig: ethresolver.Config = ethresolver.Config()
                     ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
@@ -86,7 +86,7 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 }
             }
 
-            if (dnsResolverConfigArray != null) {
+            if (!dnsResolverConfigArray.isNullOrEmpty()) {
                 for (cfg in dnsResolverConfigArray) {
                     val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
                     dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
