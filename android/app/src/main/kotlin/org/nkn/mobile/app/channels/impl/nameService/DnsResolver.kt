@@ -29,21 +29,16 @@ class DnsResolver : IChannelHandler, MethodChannel.MethodCallHandler, ViewModel(
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "resolve" -> {
-                resolve(call, result)
-            }
-
-            else -> {
-                result.notImplemented()
-            }
+            "resolve" -> resolve(call, result)
+            else -> result.notImplemented()
         }
     }
 
     private fun resolve(call: MethodCall, result: MethodChannel.Result) {
-        val config = call.argument<Map<String, Any>>("config")!!
-        val address = call.argument<String>("address")
+        val config = call.argument<Map<String, Any>>("config") ?: mapOf()
+        val address = call.argument<String>("address") ?: ""
         val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-        dnsResolverConfig.dnsServer = config["dnsServer"] as String?
+        dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?: ""
         val dnsresolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
         val res = dnsresolver.resolve(address)
         result.success(res)
