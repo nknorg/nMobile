@@ -170,7 +170,7 @@ class Client {
     ClientConfig? config,
   }) async {
     List<Map>? ethResolverConfigArray;
-    if (config?.ethResolverConfig != null) {
+    if ((config?.ethResolverConfig != null) && (config?.ethResolverConfig?.isNotEmpty == true)) {
       ethResolverConfigArray = <Map>[];
       config?.ethResolverConfig?.forEach((item) {
         ethResolverConfigArray?.add({'prefix': item.prefix, 'contractAddress': item.contractAddress, 'rpcServer': item.rpcServer});
@@ -178,7 +178,7 @@ class Client {
     }
 
     List<Map>? dnsResolverConfigArray;
-    if (config?.dnsResolverConfig != null) {
+    if ((config?.dnsResolverConfig != null) && (config?.dnsResolverConfig?.isNotEmpty == true)) {
       dnsResolverConfigArray = <Map>[];
       config?.dnsResolverConfig?.forEach((item) {
         dnsResolverConfigArray?.add({
