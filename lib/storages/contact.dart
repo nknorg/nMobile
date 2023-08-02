@@ -99,7 +99,7 @@ class ContactStorage with Tag {
     if (address == null || address.isEmpty) return null;
     if (db?.isOpen != true) {
       if (Settings.sentryEnable) {
-        Sentry.captureMessage("DB_CONTACT CLOSED - delete\n - address:$address"); // await
+        Sentry.captureMessage("DB_CONTACT CLOSED - query\n - address:$address"); // await
       }
       return null;
     }
