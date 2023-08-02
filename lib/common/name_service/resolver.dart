@@ -26,6 +26,7 @@ class Resolver {
   static native.DnsResolverConfig DNS_RESOLVER_CONFIG = native.DnsResolverConfig(dnsServer: '8.8.8.8:53');
 
   Future<String?> resolve(String address) async {
+    return null;
     String addr = address;
     for (int i = 0; i < 16; i++) {
       var config;
