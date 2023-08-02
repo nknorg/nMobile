@@ -42,26 +42,26 @@ class DnsResolver : ChannelBase, FlutterStreamHandler {
     }
     
     private func resolve(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
-        let config = args["config"] as? [String: Any] ?? [String: Any]()
-        let address = args["address"] as? String ?? ""
-        
-        let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
-        dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?? ""
-        
-        var error: NSError?
-        let dnsResolver: DnsresolverResolver? = DnsresolverNewResolver(dnsResolverConfig, &error)
-        if (error != nil) {
-            self.resultError(result: result, error: error)
-            return
-        }
-        var error1: NSError?
-        let res = dnsResolver?.resolve(address, error: &error1)
-        if (error1 != nil) {
-            self.resultError(result: result, error: error1)
-            return
-        }
-        result(res)
+//        let args = call.arguments as? [String: Any] ?? [String: Any]()
+//        let config = args["config"] as? [String: Any] ?? [String: Any]()
+//        let address = args["address"] as? String ?? ""
+//
+//        let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
+//        dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?? ""
+//
+//        var error: NSError?
+//        let dnsResolver: DnsresolverResolver? = DnsresolverNewResolver(dnsResolverConfig, &error)
+//        if (error != nil) {
+//            self.resultError(result: result, error: error)
+//            return
+//        }
+//        var error1: NSError?
+//        let res = dnsResolver?.resolve(address, error: &error1)
+//        if (error1 != nil) {
+//            self.resultError(result: result, error: error1)
+//            return
+//        }
+//        result(res)
     }
     
     
