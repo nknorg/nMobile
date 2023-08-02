@@ -347,10 +347,6 @@ github.com/multiformats/go-varint v0.0.7/go.mod h1:r8PUYw/fD/SjBCiKOoDlGF6QawOEL
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/naoina/go-stringutil v0.1.0/go.mod h1:XJ2SJL9jCtBh+P9q5btrd/Ylo8XwT/h1USek5+NqSA0=
 github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416/go.mod h1:NBIhNtsFMo3G2szEBne+bO4gS192HuIYRqfvOWb4i1E=
-github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e h1:GBCXdZ7X3+je1Kz8eq34Y61knTGDkLJqqZEOi87nO7w=
-github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e/go.mod h1:4kmAlcljv8giDwPUs2SoGNB+KKicismVnOrBy8SgEi8=
-github.com/nknorg/eth-resolver-go v0.0.0-20230404061427-d0bd773f899f h1:EOCImWeST/oFGiNCjX5ciUHmiQaK+idbCNS0eSojrYk=
-github.com/nknorg/eth-resolver-go v0.0.0-20230404061427-d0bd773f899f/go.mod h1:u5Dhckhgl266RlajmjBqvWHt66br0PG5MMg+dunrD1U=
 github.com/nknorg/mockconn-go v0.0.0-20230125231524-d664e728352a/go.mod h1:/SvBORYxt9wlm8ZbaEFEri6ooOSDcU3ovU0L2eRRdS4=
 github.com/nknorg/ncp-go v1.0.5 h1:alJjq6bi6tRwUAAv932FIfE/R3S7DRR0pgXOgBXNHAk=
 github.com/nknorg/ncp-go v1.0.5/go.mod h1:ze88qf5e9/DBXSOaJPL2Caa0IbdZJLzESAFM1S7mGwg=
