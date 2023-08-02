@@ -108,6 +108,10 @@ class ContactCommon with Tag {
     String myAddress = selfAddress ?? clientCommon.address ?? "";
     if ((contact == null) && myAddress.isNotEmpty) {
       contact = await ContactStorage.instance.query(myAddress);
+      if (contact != null) {
+        await ContactStorage.instance.setType(contact.address, ContactType.me);
+        contact.type = ContactType.me;
+      }
     }
     if ((contact == null) && myAddress.isNotEmpty && canAdd) {
       contact = await addByType(myAddress, ContactType.me, notify: true);
@@ -137,6 +141,7 @@ class ContactCommon with Tag {
     return await add(schema, fetchWalletAddress: fetchWalletAddress, notify: notify);
   }
 
+  // FUTURE:GG check all isNknChatIdentifierOk
   Future<ContactSchema?> add(ContactSchema? schema, {bool fetchWalletAddress = true, bool notify = false}) async {
     if (schema == null || schema.address.isEmpty) return null;
     if (fetchWalletAddress) await schema.loadWalletAddress();
@@ -153,6 +158,7 @@ class ContactCommon with Tag {
   //   return success;
   // }
 
+  // FUTURE:GG check all isNknChatIdentifierOk
   Future<ContactSchema?> query(String? address, {bool fetchWalletAddress = true}) async {
     if (address == null || address.isEmpty) return null;
     ContactSchema? _schema = await ContactStorage.instance.query(address);
@@ -167,6 +173,7 @@ class ContactCommon with Tag {
     return _schema;
   }
 
+  // FUTURE:GG check all isNknChatIdentifierOk
   Future<List<ContactSchema>> queryListByAddress(List<String>? clientAddressList) async {
     if (clientAddressList == null || clientAddressList.isEmpty) return [];
     List<ContactSchema> contactList = await ContactStorage.instance.queryListByAddress(clientAddressList);
