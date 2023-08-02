@@ -92,7 +92,7 @@ class DeviceInfoStorage with Tag {
     if (contactAddress == null || contactAddress.isEmpty) return null;
     if (db?.isOpen != true) {
       if (Settings.sentryEnable) {
-        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - delete\n - address:$contactAddress\n - deviceId:$deviceId"); // await
+        Sentry.captureMessage("DB_DEVICE_INFO CLOSED - query\n - address:$contactAddress\n - deviceId:$deviceId"); // await
       }
       return null;
     }
