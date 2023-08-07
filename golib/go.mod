@@ -1,6 +1,6 @@
 module nkngolib
 
-go 1.18
+go 1.17
 
 require (
 	github.com/nknorg/ncp-go v1.0.5 // indirect
