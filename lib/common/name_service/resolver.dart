@@ -26,31 +26,30 @@ class Resolver {
   static native.DnsResolverConfig DNS_RESOLVER_CONFIG = native.DnsResolverConfig(dnsServer: '8.8.8.8:53');
 
   Future<String?> resolve(String address) async {
-    return null;
-    // String addr = address;
-    // for (int i = 0; i < 16; i++) {
-    //   var config;
-    //   if (addr.toUpperCase().startsWith('DNS:')) {
-    //     config = DNS_RESOLVER_CONFIG;
-    //     addr = await native.DnsResolver.resolve(config, addr);
-    //   } else {
-    //     if (addr.toUpperCase().startsWith(ETH_RESOLVER_CONFIG.prefix!)) {
-    //       config = ETH_RESOLVER_CONFIG;
-    //     } else if (addr.toUpperCase().startsWith(HARMONY_RESOLVER_CONFIG.prefix!)) {
-    //       config = HARMONY_RESOLVER_CONFIG;
-    //     } else if (addr.toUpperCase().startsWith(IOTEX_RESOLVER_CONFIG.prefix!)) {
-    //       config = IOTEX_RESOLVER_CONFIG;
-    //     } else if (addr.toUpperCase().startsWith(THETA_RESOLVER_CONFIG.prefix!)) {
-    //       config = THETA_RESOLVER_CONFIG;
-    //     }
-    //     if (config == null) return null;
-    //     addr = await native.EthResolver.resolve(config, addr);
-    //   }
-    //
-    //   if (addr.indexOf(':') == -1) {
-    //     return addr;
-    //   }
-    // }
-    // return addr;
+    String addr = address;
+    for (int i = 0; i < 16; i++) {
+      var config;
+      if (addr.toUpperCase().startsWith('DNS:')) {
+        config = DNS_RESOLVER_CONFIG;
+        addr = await native.DnsResolver.resolve(config, addr);
+      } else {
+        if (addr.toUpperCase().startsWith(ETH_RESOLVER_CONFIG.prefix!)) {
+          config = ETH_RESOLVER_CONFIG;
+        } else if (addr.toUpperCase().startsWith(HARMONY_RESOLVER_CONFIG.prefix!)) {
+          config = HARMONY_RESOLVER_CONFIG;
+        } else if (addr.toUpperCase().startsWith(IOTEX_RESOLVER_CONFIG.prefix!)) {
+          config = IOTEX_RESOLVER_CONFIG;
+        } else if (addr.toUpperCase().startsWith(THETA_RESOLVER_CONFIG.prefix!)) {
+          config = THETA_RESOLVER_CONFIG;
+        }
+        if (config == null) return null;
+        addr = await native.EthResolver.resolve(config, addr);
+      }
+
+      if (addr.indexOf(':') == -1) {
+        return addr;
+      }
+    }
+    return addr;
   }
 }

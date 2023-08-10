@@ -35,14 +35,14 @@ class EthResolver : IChannelHandler, MethodChannel.MethodCallHandler, ViewModel(
     }
 
     private fun resolve(call: MethodCall, result: MethodChannel.Result) {
-//        val config = call.argument<Map<String, Any>>("config") ?: mapOf()
-//        val address = call.argument<String>("address") ?: ""
-//        val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-//        ethResolverConfig.prefix = config["prefix"] as? String ?: ""
-//        ethResolverConfig.rpcServer = config["rpcServer"] as? String ?: ""
-//        ethResolverConfig.contractAddress = config["contractAddress"] as? String ?: ""
-//        val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-//        val res = ethResolver.resolve(address)
-//        result.success(res)
+        val config = call.argument<Map<String, Any>>("config") ?: mapOf()
+        val address = call.argument<String>("address") ?: ""
+        val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+        ethResolverConfig.prefix = config["prefix"] as? String ?: ""
+        ethResolverConfig.rpcServer = config["rpcServer"] as? String ?: ""
+        ethResolverConfig.contractAddress = config["contractAddress"] as? String ?: ""
+        val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+        val res = ethResolver.resolve(address)
+        result.success(res)
     }
 }
