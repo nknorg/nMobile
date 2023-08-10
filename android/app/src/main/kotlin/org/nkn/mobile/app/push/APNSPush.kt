@@ -18,12 +18,16 @@ import java.util.concurrent.TimeUnit
  */
 class APNSPush {
     companion object {
-        private const val ApnsAssetsPath = "ApnsFilePath"
-        private const val ApnsPassword = "ApnsFilePwd"
+        private const val ApnsAssetsPath = ""
+        private const val ApnsPassword = ""
 
         private var apnsClient: ApnsClient? = null
 
         fun openClient(assetManager: AssetManager) {
+            if (ApnsAssetsPath.isEmpty() || ApnsPassword.isEmpty()) {
+                Log.w("APNSPush", "openClient: empty apns_file")
+                return
+            }
             try {
                 val inputStream = assetManager.open(ApnsAssetsPath)
                 apnsClient = ApnsClientBuilder()
@@ -34,13 +38,13 @@ class APNSPush {
                     .withPassword(ApnsPassword)
                     .build()
             } catch (e: Exception) {
-                Log.e("SendPush", "openClient: ${e.message}")
+                Log.e("APNSPush", "openClient: ${e.message}")
                 e.printStackTrace()
             }
         }
 
         fun closeClient() {
-            Log.i("SendPush", "closeClient")
+            Log.i("APNSPush", "closeClient")
             // apnsClient?.cose()
         }
 
