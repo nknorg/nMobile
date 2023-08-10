@@ -42,28 +42,28 @@ class EthResolver : ChannelBase, FlutterStreamHandler {
     }
     
     private func resolve(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-//        let args = call.arguments as? [String: Any] ?? [String: Any]()
-//        let config = args["config"] as? [String: Any] ?? [String: Any]()
-//        let address = args["address"] as? String ?? ""
-//
-//        let ethresolverConfig: EthresolverConfig = EthresolverConfig()
-//        ethresolverConfig.prefix = config["prefix"] as? String ?? ""
-//        ethresolverConfig.rpcServer = config["rpcServer"] as? String ?? ""
-//        ethresolverConfig.contractAddress = config["contractAddress"] as? String ?? ""
-//
-//        var error: NSError?
-//        let ethResolver: EthresolverResolver? = EthresolverNewResolver(ethresolverConfig, &error)
-//        if (error != nil) {
-//            self.resultError(result: result, error: error)
-//            return
-//        }
-//        var error1: NSError?
-//        let res = ethResolver?.resolve(address, error: &error1)
-//        if (error1 != nil) {
-//            self.resultError(result: result, error: error1)
-//            return
-//        }
-//        result(res)
+        let args = call.arguments as? [String: Any] ?? [String: Any]()
+        let config = args["config"] as? [String: Any] ?? [String: Any]()
+        let address = args["address"] as? String ?? ""
+
+        let ethresolverConfig: EthresolverConfig = EthresolverConfig()
+        ethresolverConfig.prefix = config["prefix"] as? String ?? ""
+        ethresolverConfig.rpcServer = config["rpcServer"] as? String ?? ""
+        ethresolverConfig.contractAddress = config["contractAddress"] as? String ?? ""
+
+        var error: NSError?
+        let ethResolver: EthresolverResolver? = EthresolverNewResolver(ethresolverConfig, &error)
+        if (error != nil) {
+            self.resultError(result: result, error: error)
+            return
+        }
+        var error1: NSError?
+        let res = ethResolver?.resolve(address, error: &error1)
+        if (error1 != nil) {
+            self.resultError(result: result, error: error1)
+            return
+        }
+        result(res)
     }
     
     

@@ -35,12 +35,12 @@ class DnsResolver : IChannelHandler, MethodChannel.MethodCallHandler, ViewModel(
     }
 
     private fun resolve(call: MethodCall, result: MethodChannel.Result) {
-//        val config = call.argument<Map<String, Any>>("config") ?: mapOf()
-//        val address = call.argument<String>("address") ?: ""
-//        val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-//        dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?: ""
-//        val dnsresolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
-//        val res = dnsresolver.resolve(address)
-//        result.success(res)
+        val config = call.argument<Map<String, Any>>("config") ?: mapOf()
+        val address = call.argument<String>("address") ?: ""
+        val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+        dnsResolverConfig.dnsServer = config["dnsServer"] as? String ?: ""
+        val dnsresolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+        val res = dnsresolver.resolve(address)
+        result.success(res)
     }
 }

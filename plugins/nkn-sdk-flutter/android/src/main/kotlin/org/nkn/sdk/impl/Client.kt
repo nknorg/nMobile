@@ -71,33 +71,33 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
             config.connectRetries = connectRetries
             config.maxReconnectInterval = maxReconnectInterval
 
-//            if (!ethResolverConfigArray.isNullOrEmpty()) {
-//                for (cfg in ethResolverConfigArray) {
-//                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-//                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
-//                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
-//                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
-//                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-//                    if (config.resolvers == null) {
-//                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
-//                    } else {
-//                        config.resolvers.append(ethResolver)
-//                    }
-//                }
-//            }
-//
-//            if (!dnsResolverConfigArray.isNullOrEmpty()) {
-//                for (cfg in dnsResolverConfigArray) {
-//                    val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-//                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
-//                    val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
-//                    if (config.resolvers == null) {
-//                        config.resolvers = nkngomobile.ResolverArray(dnsResolver)
-//                    } else {
-//                        config.resolvers.append(dnsResolver)
-//                    }
-//                }
-//            }
+            if (!ethResolverConfigArray.isNullOrEmpty()) {
+                for (cfg in ethResolverConfigArray) {
+                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
+                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
+                    } else {
+                        config.resolvers.append(ethResolver)
+                    }
+                }
+            }
+
+            if (!dnsResolverConfigArray.isNullOrEmpty()) {
+                for (cfg in dnsResolverConfigArray) {
+                    val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
+                    val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(dnsResolver)
+                    } else {
+                        config.resolvers.append(dnsResolver)
+                    }
+                }
+            }
         } catch (_: Throwable) {
         }
         return config

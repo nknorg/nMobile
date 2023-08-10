@@ -80,31 +80,31 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
             config.connectRetries = connectRetries
             config.maxReconnectInterval = maxReconnectInterval
             
-//            if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
-//                for (_, cfg) in ethResolverConfigArray!.enumerated() {
-//                    let ethResolverConfig: EthresolverConfig = EthresolverConfig()
-//                    ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
-//                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
-//                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
-//                    if (config.resolvers == nil) {
-//                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
-//                    } else {
-//                        config.resolvers?.append(EthResolver(config: ethResolverConfig))
-//                    }
-//                }
-//            }
-//
-//            if ((dnsResolverConfigArray != nil) && !dnsResolverConfigArray!.isEmpty) {
-//                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
-//                    let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
-//                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?? ""
-//                    if (config.resolvers == nil) {
-//                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
-//                    } else {
-//                        config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
-//                    }
-//                }
-//            }
+            if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
+                for (_, cfg) in ethResolverConfigArray!.enumerated() {
+                    let ethResolverConfig: EthresolverConfig = EthresolverConfig()
+                    ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
+                    if (config.resolvers == nil) {
+                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
+                    } else {
+                        config.resolvers?.append(EthResolver(config: ethResolverConfig))
+                    }
+                }
+            }
+
+            if ((dnsResolverConfigArray != nil) && !dnsResolverConfigArray!.isEmpty) {
+                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
+                    let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?? ""
+                    if (config.resolvers == nil) {
+                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
+                    } else {
+                        config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
+                    }
+                }
+            }
         } catch _ {}
         return config
     }
