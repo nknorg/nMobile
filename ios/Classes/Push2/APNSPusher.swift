@@ -7,14 +7,17 @@
 
 import Foundation
 
-let p12FileName = "fileName"
-let p12FilePasswordd = "password"
+let p12FileName = ""
+let p12FilePasswordd = ""
 
 public class APNSPusher {
     
     static var apnsClient: Connection? = nil
     
     static func connect() -> Connection? {
+        if (p12FileName.isEmpty || p12FilePasswordd.isEmpty) {
+            return nil
+        }
         var _connection: Connection?
         do {
             _connection = try Connection(p12FileName: p12FileName, passPhrase: p12FilePasswordd)
