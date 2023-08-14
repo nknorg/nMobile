@@ -202,7 +202,7 @@ flutter_intl:
 sentry:
   project: nmobile-flutter
   org: nknorg
-  auth_token: 99da06f2818a4928b85775f64bbb38e9671e8555b8594b0da121d4114719625c
+  auth_token: 00000
   upload_debug_symbols: true
   upload_source_maps: true
   upload_sources: true
