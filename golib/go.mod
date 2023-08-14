@@ -1,6 +1,6 @@
 module nkngolib
 
-go 1.17
+go 1.21
 
 require (
 	github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e
