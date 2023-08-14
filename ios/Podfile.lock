@@ -1,5 +1,5 @@
 PODS:
-  - background_fetch (1.1.6):
+  - background_fetch (1.2.0):
     - Flutter
   - camera_avfoundation (0.0.1):
     - Flutter
@@ -272,7 +272,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
 
 SPEC CHECKSUMS:
-  background_fetch: bc9b44b0bf8b434e282a2ac9be8662800a0296ed
+  background_fetch: 79229f3677f19e1851b8e46d051720842e25a7fc
   camera_avfoundation: 3125e8cd1a4387f6f31c6c63abb8a55892a9eeeb
   connectivity_plus: 07c49e96d7fc92bc9920617b83238c4d178b446a
   device_info_plus: 7545d84d8d1b896cb16a4ff98c19f07ec4b298ea
