@@ -98,8 +98,8 @@ class IpfsHelper with Tag {
   ParallelQueue _downloadQueue = ParallelQueue("ipfs_download", parallel: 3, interval: Duration(milliseconds: 500), onLog: (log, error) => error ? logger.w(log) : null);
 
   IpfsHelper() {
-    _dio.options.connectTimeout = Duration(seconds: 1 * 60); // 1m
-    _dio.options.receiveTimeout = null; // no limit
+    _dio.options.connectTimeout = 1 * 60 * 1000; // Duration(seconds: 1 * 60); // 1m
+    _dio.options.receiveTimeout = 0; // null; // no limit
     // _dio.interceptors.add(LogInterceptor(
     //   request: true,
     //   requestHeader: true,
