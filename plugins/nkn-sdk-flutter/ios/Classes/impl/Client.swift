@@ -77,34 +77,34 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                 }
             }
             
-            config.connectRetries = connectRetries
-            config.maxReconnectInterval = maxReconnectInterval
+//            config.connectRetries = connectRetries
+//            config.maxReconnectInterval = maxReconnectInterval
             
-            if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
-                for (_, cfg) in ethResolverConfigArray!.enumerated() {
-                    let ethResolverConfig: EthresolverConfig = EthresolverConfig()
-                    ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
-                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
-                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
-                    if (config.resolvers == nil) {
-                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
-                    } else {
-                        config.resolvers?.append(EthResolver(config: ethResolverConfig))
-                    }
-                }
-            }
-
-            if ((dnsResolverConfigArray != nil) && !dnsResolverConfigArray!.isEmpty) {
-                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
-                    let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
-                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?? ""
-                    if (config.resolvers == nil) {
-                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
-                    } else {
-                        config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
-                    }
-                }
-            }
+//            if ((ethResolverConfigArray != nil) && !ethResolverConfigArray!.isEmpty) {
+//                for (_, cfg) in ethResolverConfigArray!.enumerated() {
+//                    let ethResolverConfig: EthresolverConfig = EthresolverConfig()
+//                    ethResolverConfig.prefix = cfg["prefix"] as? String ?? ""
+//                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?? ""
+//                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?? ""
+//                    if (config.resolvers == nil) {
+//                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(EthResolver(config: ethResolverConfig))
+//                    } else {
+//                        config.resolvers?.append(EthResolver(config: ethResolverConfig))
+//                    }
+//                }
+//            }
+//
+//            if ((dnsResolverConfigArray != nil) && !dnsResolverConfigArray!.isEmpty) {
+//                for (_, cfg) in dnsResolverConfigArray!.enumerated() {
+//                    let dnsResolverConfig: DnsresolverConfig = DnsresolverConfig()
+//                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?? ""
+//                    if (config.resolvers == nil) {
+//                        config.resolvers = try NkngomobileNewResolverArrayFromResolver(DnsResolver(config: dnsResolverConfig))
+//                    } else {
+//                        config.resolvers?.append(DnsResolver(config: dnsResolverConfig))
+//                    }
+//                }
+//            }
         } catch _ {}
         return config
     }
@@ -527,48 +527,50 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     }
     
     private func replyText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let args = call.arguments as? [String: Any] ?? [String: Any]()
-        let _id = args["_id"] as? String ?? ""
-        let messageId = args["messageId"] as? FlutterStandardTypedData
-        let dest = args["dest"] as? String ?? ""
-        let data = args["data"] as? String ?? ""
-        let encrypted = args["encrypted"] as? Bool ?? true
-        let maxHoldingSeconds = args["maxHoldingSeconds"] as? Int32 ?? 0
+        self.resultSuccess(result: result, resp: nil)
         
-        guard !dest.isEmpty && !data.isEmpty else {
-            self.resultError(result: result, code: "", message: "params error", details: "replyText")
-            return
-        }
-        guard let client = self.getClient(id: _id) else {
-            self.resultError(result: result, code: "", message: "client is null", details: "replyText")
-            return
-        }
-        guard (!client.isClosed()) else {
-            self.resultError(result: result, code: "", message: "client is closed", details: "replyText")
-            return
-        }
-        
-        let queueItem = DispatchWorkItem {
-            do {
-                let msg = NknMessage()
-                msg.messageID = messageId?.data
-                msg.src = dest
-                
-                var error: NSError?
-                try NkngolibReply(client, msg, data, encrypted, maxHoldingSeconds, &error)
-                if(error != nil) {
-                    self.resultError(result: result, error: error)
-                    return
-                }
-
-                self.resultSuccess(result: result, resp: nil)
-                return
-            } catch let error {
-                self.resultError(result: result, error: error)
-                return
-            }
-        }
-        clientEventQueue.async(execute: queueItem)
+//        let args = call.arguments as? [String: Any] ?? [String: Any]()
+//        let _id = args["_id"] as? String ?? ""
+//        let messageId = args["messageId"] as? FlutterStandardTypedData
+//        let dest = args["dest"] as? String ?? ""
+//        let data = args["data"] as? String ?? ""
+//        let encrypted = args["encrypted"] as? Bool ?? true
+//        let maxHoldingSeconds = args["maxHoldingSeconds"] as? Int32 ?? 0
+//
+//        guard !dest.isEmpty && !data.isEmpty else {
+//            self.resultError(result: result, code: "", message: "params error", details: "replyText")
+//            return
+//        }
+//        guard let client = self.getClient(id: _id) else {
+//            self.resultError(result: result, code: "", message: "client is null", details: "replyText")
+//            return
+//        }
+//        guard (!client.isClosed()) else {
+//            self.resultError(result: result, code: "", message: "client is closed", details: "replyText")
+//            return
+//        }
+//
+//        let queueItem = DispatchWorkItem {
+//            do {
+//                let msg = NknMessage()
+//                msg.messageID = messageId?.data
+//                msg.src = dest
+//
+//                var error: NSError?
+//                try NkngolibReply(client, msg, data, encrypted, maxHoldingSeconds, &error)
+//                if(error != nil) {
+//                    self.resultError(result: result, error: error)
+//                    return
+//                }
+//
+//                self.resultSuccess(result: result, resp: nil)
+//                return
+//            } catch let error {
+//                self.resultError(result: result, error: error)
+//                return
+//            }
+//        }
+//        clientEventQueue.async(execute: queueItem)
     }
     
     private func sendText(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
