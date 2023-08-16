@@ -367,7 +367,7 @@ class _MediaScreenState extends BaseStateFulWidgetState<MediaScreen> with Single
         DismissiblePage(
           isFullScreen: true,
           backgroundColor: Colors.black,
-          behavior: HitTestBehavior.opaque,
+          hitTestBehavior: HitTestBehavior.opaque,
           direction: DismissiblePageDismissDirection.multi,
           minScale: .70,
           reverseDuration: const Duration(milliseconds: 200),
