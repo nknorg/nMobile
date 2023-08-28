@@ -598,12 +598,17 @@ class MediaPicker {
   static Future<Map<String, dynamic>?> getVideoThumbnail(String filePath, String savePath, {int quality = 20, int maxWidth = 100}) async {
     if (filePath.isEmpty || savePath.isEmpty) return null;
     // thumbnail
-    Uint8List? imgBytes = await VideoThumbnail.VideoThumbnail.thumbnailData(
-      video: filePath,
-      imageFormat: VideoThumbnail.ImageFormat.JPEG,
-      maxWidth: maxWidth, // specify the width of the thumbnail, let the height auto-scaled to keep the source aspect ratio
-      quality: quality,
-    );
+    Uint8List? imgBytes;
+    try {
+      imgBytes = await VideoThumbnail.VideoThumbnail.thumbnailData(
+        video: filePath,
+        imageFormat: VideoThumbnail.ImageFormat.JPEG,
+        maxWidth: maxWidth, // specify the width of the thumbnail, let the height auto-scaled to keep the source aspect ratio
+        quality: quality,
+      );
+    } catch (e, st) {
+      handleError(e, st);
+    }
     if (imgBytes == null || imgBytes.isEmpty) {
       logger.w('MediaPicker - getVideoThumbnail - fail - filePath:$filePath');
       return null;
