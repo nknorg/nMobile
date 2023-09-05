@@ -68,36 +68,36 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 }
             }
 
-//            config.connectRetries = connectRetries
-//            config.maxReconnectInterval = maxReconnectInterval
+            config.connectRetries = connectRetries
+            config.maxReconnectInterval = maxReconnectInterval
 
-//            if (!ethResolverConfigArray.isNullOrEmpty()) {
-//                for (cfg in ethResolverConfigArray) {
-//                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
-//                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
-//                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
-//                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
-//                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
-//                    if (config.resolvers == null) {
-//                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
-//                    } else {
-//                        config.resolvers.append(ethResolver)
-//                    }
-//                }
-//            }
-//
-//            if (!dnsResolverConfigArray.isNullOrEmpty()) {
-//                for (cfg in dnsResolverConfigArray) {
-//                    val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
-//                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
-//                    val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
-//                    if (config.resolvers == null) {
-//                        config.resolvers = nkngomobile.ResolverArray(dnsResolver)
-//                    } else {
-//                        config.resolvers.append(dnsResolver)
-//                    }
-//                }
-//            }
+            if (!ethResolverConfigArray.isNullOrEmpty()) {
+                for (cfg in ethResolverConfigArray) {
+                    val ethResolverConfig: ethresolver.Config = ethresolver.Config()
+                    ethResolverConfig.prefix = cfg["prefix"] as? String ?: ""
+                    ethResolverConfig.rpcServer = cfg["rpcServer"] as? String ?: ""
+                    ethResolverConfig.contractAddress = cfg["contractAddress"] as? String ?: ""
+                    val ethResolver: ethresolver.Resolver = ethresolver.Resolver(ethResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(ethResolver)
+                    } else {
+                        config.resolvers.append(ethResolver)
+                    }
+                }
+            }
+
+            if (!dnsResolverConfigArray.isNullOrEmpty()) {
+                for (cfg in dnsResolverConfigArray) {
+                    val dnsResolverConfig: dnsresolver.Config = dnsresolver.Config()
+                    dnsResolverConfig.dnsServer = cfg["dnsServer"] as? String ?: ""
+                    val dnsResolver: dnsresolver.Resolver = dnsresolver.Resolver(dnsResolverConfig)
+                    if (config.resolvers == null) {
+                        config.resolvers = nkngomobile.ResolverArray(dnsResolver)
+                    } else {
+                        config.resolvers.append(dnsResolver)
+                    }
+                }
+            }
         } catch (_: Throwable) {
         }
         return config
@@ -425,38 +425,38 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     }
 
     private fun replyText(call: MethodCall, result: MethodChannel.Result) {
-//        val _id = call.argument<String>("_id") ?: ""
-//        val messageId = call.argument<ByteArray>("messageId")
-//        val dest = call.argument<String>("dest") ?: ""
-//        val data = call.argument<String>("data") ?: ""
-//        val encrypted = call.argument<Boolean>("encrypted") ?: true
-//        val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
-//
-//        if (dest.isEmpty() || data.isEmpty()) {
-//            result.error("", "params error", "replyText")
-//            return
-//        }
-//        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
-//        if (client == null) {
-//            result.error("", "client is null", "replyText")
-//            return
-//        } else if (client.isClosed) {
-//            result.error("", "client is closed", "replyText")
-//            return
-//        }
-//
-//        viewModelScope.launch(Dispatchers.IO) {
-//            try {
-//                val msg = Message()
-//                msg.messageID = messageId
-//                msg.src = dest
-//
-//                Nkngolib.reply(client, msg, data, encrypted, maxHoldingSeconds)
-//            } catch (e: Throwable) {
-//                resultError(result, e)
-//                return@launch
-//            }
-//        }
+        val _id = call.argument<String>("_id") ?: ""
+        val messageId = call.argument<ByteArray>("messageId")
+        val dest = call.argument<String>("dest") ?: ""
+        val data = call.argument<String>("data") ?: ""
+        val encrypted = call.argument<Boolean>("encrypted") ?: true
+        val maxHoldingSeconds = call.argument<Int>("maxHoldingSeconds") ?: 0
+
+        if (dest.isEmpty() || data.isEmpty()) {
+            result.error("", "params error", "replyText")
+            return
+        }
+        val client = if (clientMap.containsKey(_id)) clientMap[_id] else null
+        if (client == null) {
+            result.error("", "client is null", "replyText")
+            return
+        } else if (client.isClosed) {
+            result.error("", "client is closed", "replyText")
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val msg = Message()
+                msg.messageID = messageId
+                msg.src = dest
+
+                Nkngolib.reply(client, msg, data, encrypted, maxHoldingSeconds)
+            } catch (e: Throwable) {
+                resultError(result, e)
+                return@launch
+            }
+        }
     }
 
     private fun sendText(call: MethodCall, result: MethodChannel.Result) {
