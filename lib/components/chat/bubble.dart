@@ -1073,6 +1073,8 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     String times = "\ntimes● $_successTimes";
     String _deviceId = _message.deviceId;
     String queueID = (_message.queueId > 0) ? "\nsync● ${_message.queueId}.${(_deviceId.length > 10) ? _deviceId.substring(0, 9) : _deviceId}" : "";
+    String _firstQueueIDs = MessageOptions.getFirstMessageQueueIds(_message.options) ?? "";
+    String firstQueueIDs = _firstQueueIDs.isNotEmpty ? "\nsync● ${(_firstQueueIDs.length > 25) ? _firstQueueIDs.substring(0, 24) : _firstQueueIDs}" : "";
     String _queueIds = MessageOptions.getMessageQueueIds(_message.options) ?? "";
     String queueIDs = _queueIds.isNotEmpty ? "\nsync● ${(_queueIds.length > 25) ? _queueIds.substring(0, 24) : _queueIds}" : "";
 
@@ -1089,7 +1091,7 @@ class _ChatBubbleState extends BaseStateFulWidgetState<ChatBubble> with Tag {
     String pushNotifyId = _pushNotifyId.isNotEmpty ? "\nnotifyID● ${(_pushNotifyId.length > 5) ? _pushNotifyId.substring(0, 4) : _pushNotifyId}" : "";
 
     // text
-    String text = "$times$queueID$queueIDs$sendAt$receiveAt";
+    String text = "$times$queueID$firstQueueIDs$queueIDs$sendAt$receiveAt";
     if (_message.isOutbound) {
       text += "$sendSuccessAt$resendMuteAt$pushNotifyId";
     }

@@ -469,7 +469,10 @@ class MessageCommon with Tag {
         message.queueId = await newContactMessageQueueId(message.targetId, device.deviceId, message.msgId);
         if (message.queueId > 0) {
           String? queueIds = await deviceInfoCommon.joinQueueIdsByAddressDeviceId(message.targetId, device.deviceId);
-          if (queueIds != null) message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+          if (queueIds != null) {
+            message.options = MessageOptions.setFirstMessageQueueIds(message.options, queueIds);
+            message.options = MessageOptions.setMessageQueueIds(message.options, queueIds);
+          }
         } else {
           logger.w("$TAG - loadMessageSendQueue - new queueId fail - queueId:${message.queueId} - options:${message.options} - targetId:${message.targetId}");
         }
