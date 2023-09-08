@@ -6,7 +6,7 @@ require (
 	github.com/nknorg/dns-resolver-go v0.0.0-20220705102626-b041cd8d4a8e
 	github.com/nknorg/eth-resolver-go v0.0.0-20230404061427-d0bd773f899f
 	github.com/nknorg/ncp-go v1.0.5 // indirect
-	github.com/nknorg/nkn-sdk-go v1.4.6
+	github.com/nknorg/nkn-sdk-go v1.4.5
 	github.com/nknorg/nkn/v2 v2.2.0
 	github.com/nknorg/nkngomobile v0.0.0-20220615081414-671ad1afdfa9
 	github.com/nknorg/reedsolomon v1.9.12-0.20210315025804-a0c1b6031ab4

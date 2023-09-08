@@ -727,6 +727,7 @@ class MessageOptions {
   static const KEY_PROFILE_VERSION = "profileVersion";
   static const KEY_DEVICE_TOKEN = "deviceToken";
   static const KEY_DEVICE_PROFILE = "deviceProfile";
+  static const KEY_FIRST_MESSAGE_QUEUE_IDS = "firstMessageQueueIds";
   static const KEY_MESSAGE_QUEUE_IDS = "messageQueueIds";
   static const KEY_PRIVATE_GROUP_VERSION = "privateGroupVersion";
 
@@ -845,6 +846,17 @@ class MessageOptions {
   static String? getDeviceProfile(Map<String, dynamic>? options) {
     if (options == null || options.keys.length == 0) return null;
     return options[MessageOptions.KEY_DEVICE_PROFILE]?.toString();
+  }
+
+  static Map<String, dynamic> setFirstMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
+    if (options == null) options = Map<String, dynamic>();
+    options[MessageOptions.KEY_FIRST_MESSAGE_QUEUE_IDS] = queueIds;
+    return options;
+  }
+
+  static String? getFirstMessageQueueIds(Map<String, dynamic>? options) {
+    if (options == null || options.keys.length == 0) return null;
+    return options[MessageOptions.KEY_FIRST_MESSAGE_QUEUE_IDS]?.toString();
   }
 
   static Map<String, dynamic> setMessageQueueIds(Map<String, dynamic>? options, String queueIds) {
