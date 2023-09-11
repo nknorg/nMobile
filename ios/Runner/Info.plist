@@ -80,6 +80,12 @@
 	<string>Contacts permission is required for read contacts.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>For protect your assets, please turn on Face ID to login.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>The location permission is required to record your location to assign the optimal network line..</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>The location permission is required to record your location to assign the optimal network line..</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The location permission is required to record your location to assign the optimal network line..</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app uses the microphone to record your speech and send it as a message.</string>
 	<key>NSMotionUsageDescription</key>
