@@ -80,7 +80,7 @@ dependencies:
 
   # storage
   flutter_secure_storage: ^7.0.1
-  sqflite: ^2.3.0
+  sqflite: ^2.0.3
   sqflite_sqlcipher: ^2.1.1
   hive: ^2.2.3
 
