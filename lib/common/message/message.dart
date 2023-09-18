@@ -817,7 +817,7 @@ class MessageCommon with Tag {
 
   // SUPPORT:START
   Future<int> checkMsgStatus(String? targetId, {int filterSec = 5}) async {
-    if (!(await clientCommon.waitClientOk("checkMsgStatus"))) return 0;
+    if (!(await clientCommon.checkClientOk("checkMsgStatus"))) return 0;
     if (targetId == null || targetId.isEmpty) return 0;
     // device
     DeviceInfoSchema? device = await deviceInfoCommon.queryLatest(targetId);
