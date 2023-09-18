@@ -346,8 +346,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     // update
     var data = await contactCommon.setNotificationOpen(_contact?.address, notificationOpen, notify: true);
     if (data == null) return;
-    bool success = await chatOutCommon.sendContactOptionsToken(_contact?.address, deviceToken);
-    if (!success) await contactCommon.setNotificationOpen(_contact?.address, !notificationOpen, notify: true);
+    chatOutCommon.sendContactOptionsToken(_contact?.address, deviceToken).then((success) {
+      if (!success) contactCommon.setNotificationOpen(_contact?.address, !notificationOpen, notify: true); // await
+    }); // await
   }
 
   _addFriend() async {

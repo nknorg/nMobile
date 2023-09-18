@@ -271,6 +271,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
     Widget statusWidget;
     switch (clientConnectStatus) {
       case ClientConnectStatus.connecting:
+      case ClientConnectStatus.connectPing:
         statusWidget = Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
