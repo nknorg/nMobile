@@ -71,10 +71,10 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
     // clientStatus
     _clientStatusChangeSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
       clientConnectStatus = status;
-      if (clientConnectStatus == ClientConnectStatus.connecting) {
+      if ((clientConnectStatus == ClientConnectStatus.connecting) || (clientConnectStatus == ClientConnectStatus.connectPing)) {
         Future.delayed(Duration(seconds: 5)).then((value) {
           setState(() {
-            clientConnectingVisible = clientConnectStatus == ClientConnectStatus.connecting;
+            clientConnectingVisible = (clientConnectStatus == ClientConnectStatus.connecting) || (clientConnectStatus == ClientConnectStatus.connectPing);
           });
         });
       } else {

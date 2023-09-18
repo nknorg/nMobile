@@ -68,7 +68,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
   int _targetType = 0;
   dynamic _target;
 
-  bool isClientOk = clientCommon.status == ClientConnectStatus.connected;
+  bool isClientSendOk = (clientCommon.status != ClientConnectStatus.disconnecting) && (clientCommon.status != ClientConnectStatus.disconnected);
 
   StreamController<Map<String, String>> _onInputChangeController = StreamController<Map<String, String>>.broadcast();
   StreamSink<Map<String, String>> get _onInputChangeSink => _onInputChangeController.sink;
@@ -130,9 +130,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
 
     // clientStatus
     _clientStatusSubscription = clientCommon.statusStream.distinct((prev, next) => prev == next).listen((int status) {
-      if (isClientOk != (clientCommon.status == ClientConnectStatus.connected)) {
+      if (isClientSendOk != ((clientCommon.status != ClientConnectStatus.disconnecting) && (clientCommon.status != ClientConnectStatus.disconnected))) {
         setState(() {
-          isClientOk = (clientCommon.status == ClientConnectStatus.connected);
+          isClientSendOk = (clientCommon.status != ClientConnectStatus.disconnecting) && (clientCommon.status != ClientConnectStatus.disconnected);
         });
       }
     });
@@ -504,8 +504,9 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
       // update
       var data = await contactCommon.setNotificationOpen(_contact.address, nextOpen, notify: true);
       if (data == null) return;
-      bool success = await chatOutCommon.sendContactOptionsToken(_contact.address, deviceToken);
-      if (!success) await contactCommon.setNotificationOpen(_contact.address, !nextOpen, notify: true);
+      chatOutCommon.sendContactOptionsToken(_contact.address, deviceToken).then((success) {
+        if (!success) contactCommon.setNotificationOpen(_contact.address, !nextOpen, notify: true); // await
+      }); // await
     } else if (this._targetType == SessionType.TOPIC) {
       // nothing
     } else if (this._targetType == SessionType.PRIVATE_GROUP) {
@@ -616,7 +617,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
         disableTip = Settings.locale((s) => s.contact_invite_group_tip, ctx: context);
       }
     }
-    if (!isClientOk) {
+    if (!isClientSendOk) {
       disableTip = Settings.locale((s) => s.d_chat_not_login, ctx: context);
     }
 
@@ -898,7 +899,7 @@ class _ChatMessagesScreenState extends BaseStateFulWidgetState<ChatMessagesScree
                 },
                 onChangeStream: _onInputChangeStream,
               ),
-              isClientOk && isJoined
+              isClientSendOk && isJoined
                   ? ChatBottomMenu(
                       target: _targetId,
                       show: _showBottomMenu,
