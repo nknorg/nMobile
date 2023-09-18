@@ -25,8 +25,9 @@ import 'package:synchronized/synchronized.dart';
 class ClientConnectStatus {
   static const int disconnected = 0;
   static const int connecting = 1;
-  static const int connected = 2;
-  static const int disconnecting = 3;
+  static const int connectPing = 2;
+  static const int connected = 3;
+  static const int disconnecting = 4;
 }
 
 String? getPubKeyFromTopicOrChatId(String s) {
@@ -71,20 +72,26 @@ class ClientCommon with Tag {
 
   // status
   int status = ClientConnectStatus.disconnected;
-  bool get isClientConnecting => (status == ClientConnectStatus.connecting);
+  bool get isClientConnecting => (status == ClientConnectStatus.connecting) || (status == ClientConnectStatus.connectPing);
   bool get isClientReconnecting => (reconnectCompleter != null) && !(reconnectCompleter?.isCompleted == true);
   bool get isClientOK => (client != null) && (status == ClientConnectStatus.connected) && !isClientReconnecting;
   bool get isClientStop => (status == ClientConnectStatus.disconnecting) || (status == ClientConnectStatus.disconnected);
 
   // complete
+  Completer? clientOkCompleter;
   Completer? reconnectCompleter;
-  Completer? pingCompleter;
+  // Completer? pingCompleter;
 
   // tag
   bool isNetworkOk = true;
-  bool isReconnectLoading = false;
 
   void init() {
+    // application
+    application.appLifeStream.listen((bool inBackground) {
+      if (!inBackground) {
+        waitClientOk("appLifeStream_foreground", force: true, ping: true); // await
+      }
+    });
     // network
     Connectivity().onConnectivityChanged.listen((status) {
       if (status == ConnectivityResult.none) {
@@ -95,20 +102,19 @@ class ClientCommon with Tag {
       bool newNetworkOk = status != ConnectivityResult.none;
       bool isDiff = newNetworkOk != isNetworkOk;
       isNetworkOk = newNetworkOk;
-      if (!isClientStop) {
-        if (isNetworkOk) {
-          if (isDiff) {
-            reconnect(force: true); // await
-          } else {
-            if (!isClientOK) {
-              reconnect(); // await
-            } else {
-              ping(status: true); // await
-            }
-          }
+      if (isClientStop) return;
+      if (isNetworkOk) {
+        if (isDiff) {
+          reconnect(force: true); // await
         } else {
-          _statusSink.add(ClientConnectStatus.connecting);
+          if (!isClientOK) {
+            reconnect(); // await
+          } else {
+            waitClientOk("onConnectivityChanged_okay", ping: true); // await
+          }
         }
+      } else {
+        waitClientOk("onConnectivityChanged_none", ping: true); // await
       }
     });
   }
@@ -168,7 +174,7 @@ class ClientCommon with Tag {
         if (c != null) {
           logger.i("$TAG - signIn - try success - tryTimes:$tryTimes - address:${c.address} - wallet:$wallet - password:$password");
           success = true;
-          //ping(); // await (wait onConnect)
+          waitClientOk("signIn", force: true, ping: true); // await
           break;
         } else if (!canTry) {
           logger.e("$TAG - signIn - try broken - tryTimes:$tryTimes - address:${c?.address} - wallet:$wallet - password:$password");
@@ -261,7 +267,7 @@ class ClientCommon with Tag {
         logger.i("$TAG - _signIn - client create OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
         _startListen(wallet);
       } else {
-        await client?.recreate(hexDecode(seed), numSubClients: 4, config: config);
+        await client?.recreate(hexDecode(seed), numSubClients: 4, config: config); // network
         logger.i("$TAG - _signIn - client create(re) OK - wallet:$wallet - pubKey:$pubKey - seed:$seed");
       }
       _lastAddress = client?.address;
@@ -350,34 +356,29 @@ class ClientCommon with Tag {
     _onConnectStreamSubscription = client?.onConnect.listen((OnConnect event) async {
       logger.i("$TAG - onConnect ->> node:${event.node} - rpcServers:${event.rpcServers}");
       RPC.addRpcServers(wallet.address, event.rpcServers ?? []); // await
-      if (!isClientStop) {
-        _lock.synchronized(() async {
-          status = ClientConnectStatus.connected;
-          _statusSink.add(ClientConnectStatus.connected);
-        });
-      }
+      waitClientOk("onConnect", force: true, ping: true); // await
     });
     // client receive (looper)
     _onMessageStreamSubscription = client?.onMessage.listen((OnMessage event) async {
       logger.d("$TAG - onMessage ->> from:${event.src} - data:${((event.data is String) && (event.data as String).length <= 1000) ? event.data : "[data to long~~~]"}");
       MessageSchema? receive = MessageSchema.fromReceive(event);
       chatInCommon.onMessageReceive(receive); // await
-      if (!isClientStop) {
-        if (status != ClientConnectStatus.connected) {
-          _lock.synchronized(() async {
-            status = ClientConnectStatus.connected;
-            _statusSink.add(ClientConnectStatus.connected);
-          });
-        } else if ((receive?.isTargetSelf == true) && (receive?.contentType == MessageContentType.ping)) {
-          int nowAt = DateTime.now().millisecondsSinceEpoch;
-          if ((nowAt - (receive?.sendAt ?? 0)) < 1 * 60 * 1000) {
-            _statusSink.add(ClientConnectStatus.connected);
-          }
-        } else if (isReconnectLoading) {
-          isReconnectLoading = false;
+      // connect_status
+      if (isClientStop) return;
+      if ((receive?.isTargetSelf != true) || (receive?.contentType != MessageContentType.ping)) return;
+      if ((DateTime.now().millisecondsSinceEpoch - (receive?.sendAt ?? 0)) > 2 * 1000) return;
+      if (status != ClientConnectStatus.connected) {
+        _lock.synchronized(() async {
+          status = ClientConnectStatus.connected;
           _statusSink.add(ClientConnectStatus.connected);
-        }
+        }); // await
+      } else {
+        _statusSink.add(ClientConnectStatus.connected);
       }
+      // completer
+      try {
+        if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(true);
+      } catch (_) {}
     });
   }
 
@@ -395,77 +396,22 @@ class ClientCommon with Tag {
   /// *********************************   Connect   ****************************************** ///
   /// **************************************************************************************** ///
 
-  Future<bool> waitClientOk() async {
-    if (isClientStop) {
-      logger.w("$TAG - waitClientOk - closed - client:${client == null} - status:$status");
-      return false;
-    }
-    // interval
-    int interval = 500;
-    int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
-    if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
-    // connect
-    int tryTimes = 0;
-    while (isClientConnecting) {
-      while (!isNetworkOk) {
-        logger.w("$TAG - waitClientOk - wait network ok");
-        await Future.delayed(Duration(milliseconds: 500));
-      }
-      if (isClientStop) {
-        logger.w("$TAG - waitClientOk - closed - client:${client == null} - status:$status");
-        return false;
-      }
-      if ((client != null) && (tryTimes > 0) && (tryTimes % 20 == 0)) {
-        logger.w("$TAG - waitClientOk - try ping - tryTimes:$tryTimes - client:${client == null} - status:$status");
-        try {
-          String data = MessageData.getPing(true);
-          await client?.sendText([address ?? ""], data); // skip error handle
-        } catch (e) {}
-      } else {
-        logger.w("$TAG - waitClientOk - connecting - tryTimes:$tryTimes - client:${client == null} - status:$status");
-      }
-      tryTimes++;
-      await Future.delayed(Duration(milliseconds: 500));
-    }
-    // reconnect
-    await waitReconnect("waitClientOk");
-    // return
-    if (!isClientOK) {
-      if (isClientReconnecting) return await waitClientOk();
-      logger.w("$TAG - waitClientOk - broken - tryTimes:$tryTimes - client:${client != null} - status:$status");
-      return false;
-    }
-    if (tryTimes > 0) logger.d("$TAG - waitClientOk - success - tryTimes:$tryTimes");
-    return true;
-  }
-
-  Future waitReconnect(String tag) async {
-    try {
-      if (isClientReconnecting) {
-        logger.i("$TAG - waitReconnect - tag:$tag - client:${client != null} - status:$status");
-        await reconnectCompleter?.future;
-      }
-    } catch (e, st) {
-      handleError(e, st);
-    }
-  }
-
   Future<bool> reconnect({bool force = false}) async {
     if (isClientStop) {
-      logger.w("$TAG - reconnect - closed - client:${client == null} - status:$status");
+      logger.w("$TAG - reconnect - client closed - client:${client == null} - status:$status");
       return false;
     }
     // connecting wait
     if (isClientConnecting) {
       int tryTimes = 0;
       while (isClientConnecting) {
+        if (isClientStop) {
+          logger.w("$TAG - reconnect - client closed - client:${client == null} - status:$status");
+          return false;
+        }
         while (!isNetworkOk) {
           logger.w("$TAG - reconnect - wait network ok");
           await Future.delayed(Duration(milliseconds: 500));
-        }
-        if (isClientStop) {
-          logger.w("$TAG - reconnect - closed - client:${client == null} - status:$status");
-          return false;
         }
         if (force && (tryTimes >= 10)) {
           logger.w("$TAG - reconnect - force jump wait connecting - tryTimes:$tryTimes - client:${client == null} - status:$status");
@@ -474,8 +420,10 @@ class ClientCommon with Tag {
           logger.w("$TAG - reconnect - try ping - tryTimes:$tryTimes - client:${client == null} - status:$status");
           try {
             String data = MessageData.getPing(true);
-            await client?.sendText([address ?? ""], data); // skip error handle
-          } catch (e) {}
+            await client?.sendText([address ?? ""], data);
+          } catch (e) {
+            // skip error handle
+          }
         } else {
           logger.w("$TAG - reconnect - connecting wait - tryTimes:$tryTimes - client:${client == null} - status:$status");
         }
@@ -484,7 +432,7 @@ class ClientCommon with Tag {
       }
       if (!isClientReconnecting) {
         logger.i("$TAG - reconnect - connecting complete ok - tryTimes:$tryTimes - client:${client == null} - status:$status");
-        return isClientOK;
+        return await waitClientOk("reconnect_1", force: true, ping: true);
       } else {
         logger.w("$TAG - reconnect - connecting complete no - tryTimes:$tryTimes - client:${client == null} - status:$status");
       }
@@ -519,9 +467,9 @@ class ClientCommon with Tag {
       // completer
       logger.i("$TAG - reconnect - START");
       reconnectCompleter = Completer();
-      // loading
+      // status
+      status = ClientConnectStatus.connecting;
       _statusSink.add(ClientConnectStatus.connecting);
-      isReconnectLoading = true;
       // recreate
       bool success = false;
       int tryTimes = 0;
@@ -553,56 +501,146 @@ class ClientCommon with Tag {
       }
       return success;
     });
-    if (success) ping(status: true); // await (onConnect OK)
+    if (success) waitClientOk("reconnect_2", force: true, ping: true); // await
     return success;
   }
 
-  Future ping({bool status = false, int maxWaitTimes = Settings.tryTimesClientConnectWait}) async {
-    if (isClientStop) return;
-    try {
-      if ((pingCompleter != null) && !(pingCompleter?.isCompleted == true)) {
-        await pingCompleter?.future;
-        return;
-      } else {
-        pingCompleter = Completer();
-      }
-    } catch (_) {}
-    int tryTimes = 0;
-    while (true) {
-      await waitReconnect("ping");
-      if (isClientStop) {
-        logger.i("$TAG - ping - closed break - tryTimes:$tryTimes - status:$status");
-        break;
-      } else if (!isNetworkOk) {
-        logger.w("$TAG - ping - wait network ok - tryTimes:$tryTimes - status:$status");
-        if (status) _statusSink.add(ClientConnectStatus.connecting);
-        await Future.delayed(Duration(milliseconds: 1000));
-        continue;
-      } else if (isClientOK) {
-        logger.v("$TAG - ping - ping - tryTimes:$tryTimes - address:$address");
-        if (status) _statusSink.add(ClientConnectStatus.connecting);
-        await chatOutCommon.sendPing([address ?? ""], true);
-        break;
-      } else if (tryTimes < maxWaitTimes) {
-        logger.i("$TAG - ping - wait connecting - tryTimes:$tryTimes - status:$status");
-        ++tryTimes;
-        if (status) _statusSink.add(ClientConnectStatus.connecting);
-        await Future.delayed(Duration(milliseconds: maxWaitTimes <= 1 ? (2 * 1000) : 1000));
-        continue;
-      } else {
-        logger.w("$TAG - ping - reconnect start - tryTimes:$tryTimes");
-        if (await reconnect()) {
-          tryTimes = 0;
-          await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
-          continue;
-        }
-        logger.e("$TAG - ping - reconnect fail - tryTimes:$tryTimes");
-        break;
-      }
+  // Future waitReconnect(String tag) async {
+  //   try {
+  //     if (isClientReconnecting) {
+  //       logger.i("$TAG - waitReconnect - tag:$tag - client:${client != null} - status:$status");
+  //       await reconnectCompleter?.future;
+  //     }
+  //   } catch (e, st) {
+  //     handleError(e, st);
+  //   }
+  // }
+
+  Future<bool> waitClientOk(String tag, {bool force = false, bool ping = false}) async {
+    if (isClientStop) {
+      logger.w("$TAG - waitClientOk:$tag - client closed - client:${client == null} - status:$status");
+      return false;
     }
+    // status
+    if (ping) {
+      await _lock.synchronized(() async {
+        // status (just updated(waitClientOk) in this func)
+        if (status == ClientConnectStatus.connectPing) return;
+        status = ClientConnectStatus.connectPing;
+        _statusSink.add(ClientConnectStatus.connectPing);
+      });
+    }
+    // completer
     try {
-      if (pingCompleter?.isCompleted != true) pingCompleter?.complete();
+      if ((clientOkCompleter != null) && !(clientOkCompleter?.isCompleted == true)) {
+        bool success = await clientOkCompleter?.future;
+        if (!force) {
+          logger.i("$TAG - waitClientOk:$tag - wait last complete - isClientOK:$isClientOK");
+          return success;
+        } else {
+          logger.i("$TAG - waitClientOk:$tag - wait last complete AND force next - isClientOK:$isClientOK");
+        }
+      }
+      clientOkCompleter = Completer();
     } catch (_) {}
-    await Future.delayed(Duration(milliseconds: 200));
+    // interval
+    int interval = 500;
+    int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+    if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+    // connect
+    int tryTimes = 0;
+    while (isClientConnecting) {
+      if (isClientStop) {
+        logger.w("$TAG - waitClientOk:$tag - client closed - client:${client == null} - status:$status");
+        try {
+          if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(false);
+        } catch (_) {}
+        return false;
+      }
+      while (!isNetworkOk) {
+        logger.w("$TAG - waitClientOk:$tag - wait network ok");
+        await Future.delayed(Duration(milliseconds: 500));
+      }
+      while (isClientReconnecting) {
+        logger.d("$TAG - waitClientOk:$tag - wait client reconnect");
+        await Future.delayed(Duration(milliseconds: 500));
+      }
+      if ((client != null) && (ping || (tryTimes > 0)) && (tryTimes % 2 == 0)) {
+        logger.i("$TAG - waitClientOk:$tag - try ping:$ping - tryTimes:$tryTimes - client:${client == null} - status:$status");
+        try {
+          String data = MessageData.getPing(true);
+          await client?.sendText([address ?? ""], data);
+        } catch (e) {
+          // skip error handle
+        }
+      } else {
+        logger.w("$TAG - waitClientOk:$tag - connecting - tryTimes:$tryTimes - client:${client == null} - status:$status");
+      }
+      tryTimes++;
+      await Future.delayed(Duration(milliseconds: 500));
+    }
+    // return
+    if (!isClientOK) {
+      if (isClientReconnecting) {
+        await Future.delayed(Duration(milliseconds: 500));
+        return await waitClientOk(tag, ping: ping);
+      }
+      logger.w("$TAG - waitClientOk:$tag - broken - tryTimes:$tryTimes - client:${client != null} - status:$status");
+      try {
+        if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(false);
+      } catch (_) {}
+      return false;
+    }
+    if (tryTimes > 0) logger.d("$TAG - waitClientOk:$tag - success - tryTimes:$tryTimes");
+    try {
+      if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(true);
+    } catch (_) {}
+    return true;
   }
+
+  // Future ping({int maxWaitTimes = Settings.tryTimesClientConnectWait}) async {
+  //   if (isClientStop) return;
+  //   try {
+  //     if ((pingCompleter != null) && !(pingCompleter?.isCompleted == true)) {
+  //       await pingCompleter?.future;
+  //       return;
+  //     } else {
+  //       pingCompleter = Completer();
+  //     }
+  //   } catch (_) {}
+  //   int tryTimes = 0;
+  //   while (true) {
+  //     await waitReconnect("ping");
+  //     if (isClientStop) {
+  //       logger.i("$TAG - ping - closed break - tryTimes:$tryTimes - status:$status");
+  //       break;
+  //     } else if (!isNetworkOk) {
+  //       logger.w("$TAG - ping - wait network ok - tryTimes:$tryTimes - status:$status");
+  //       await Future.delayed(Duration(milliseconds: 1000));
+  //       continue;
+  //     } else if (isClientOK) {
+  //       logger.v("$TAG - ping - ping - tryTimes:$tryTimes - address:$address");
+  //       await chatOutCommon.sendPing([address ?? ""], true);
+  //       break;
+  //     } else if (tryTimes < maxWaitTimes) {
+  //       logger.i("$TAG - ping - wait connecting - tryTimes:$tryTimes - status:$status");
+  //       ++tryTimes;
+  //       await Future.delayed(Duration(milliseconds: maxWaitTimes <= 1 ? (2 * 1000) : 1000));
+  //       continue;
+  //     } else {
+  //       logger.w("$TAG - ping - reconnect start - tryTimes:$tryTimes");
+  //       if (await reconnect()) {
+  //         tryTimes = 0;
+  //         await Future.delayed(Duration(milliseconds: isNetworkOk ? 500 : 1000));
+  //         continue;
+  //       }
+  //       logger.e("$TAG - ping - reconnect fail - tryTimes:$tryTimes");
+  //       break;
+  //     }
+  //   }
+  //   try {
+  //     if (pingCompleter?.isCompleted != true) pingCompleter?.complete();
+  //   } catch (_) {}
+  //   await Future.delayed(Duration(milliseconds: 200));
+  // }
 }

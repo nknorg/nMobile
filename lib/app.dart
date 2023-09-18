@@ -94,13 +94,13 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         // task add
         if (firstConnect) {
           firstConnect = false;
-          taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 6, (key) => clientCommon.ping(), delayMs: 0);
+          // taskService.addTask(TaskService.KEY_CLIENT_CONNECT, 6, (key) => clientCommon.ping(), delayMs: 0);
           taskService.addTask(TaskService.KEY_SUBSCRIBE_CHECK, 50, (key) => topicCommon.checkAndTryAllSubscribe(), delayMs: 2 * 1000);
           taskService.addTask(TaskService.KEY_PERMISSION_CHECK, 50, (key) => topicCommon.checkAndTryAllPermission(), delayMs: 3 * 1000);
         }
       } else if (clientCommon.isClientStop) {
         // task remove
-        taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 6);
+        // taskService.removeTask(TaskService.KEY_CLIENT_CONNECT, 6);
         taskService.removeTask(TaskService.KEY_SUBSCRIBE_CHECK, 50);
         taskService.removeTask(TaskService.KEY_PERMISSION_CHECK, 50);
         firstConnect = true;
@@ -112,10 +112,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
       if (inBackground) {
         loginCompleter = Completer();
       } else {
-        if (dbCommon.isOpen()) {
-          int gap = application.goForegroundAt - application.goBackgroundAt;
-          _tryAuth(gap >= Settings.gapClientReAuthMs);
-        }
+        int gap = application.goForegroundAt - application.goBackgroundAt;
+        _tryAuth(gap >= Settings.gapClientReAuthMs);
       }
     });
 

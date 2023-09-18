@@ -56,7 +56,7 @@ class ChatCommon with Tag {
     List<MessageSchema> receiptList = await messageCommon.queryAllReceivedSuccess();
     for (var i = 0; i < receiptList.length; i++) {
       MessageSchema message = receiptList[i];
-      await chatOutCommon.sendReceipt(message);
+      chatOutCommon.sendReceipt(message); // await
     }
     if (receiptList.length > 0) logger.i("$TAG - startInitChecks - receipt_count:${receiptList.length}");
   }
