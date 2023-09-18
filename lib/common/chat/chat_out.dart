@@ -41,7 +41,7 @@ class ChatOutCommon with Tag {
   }
 
   Future<List<dynamic>> _sendData(List<String> destList, String data, {bool ping = false, bool lastTime = false}) async {
-    if (!(await clientCommon.waitClientOk("_sendData", ping: ping))) return [null, false, 500];
+    if (!(await clientCommon.checkClientOk("_sendData", ping: ping))) return [null, false, 500];
     // logger.v("$TAG - _sendData - send start - destList:$destList");
     try {
       OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
@@ -413,7 +413,7 @@ class ChatOutCommon with Tag {
     if (sessionSync) await chatCommon.sessionHandle(message);
     // sdk
     Uint8List? pid;
-    if (await clientCommon.waitClientOk("_sendVisible", ping: true)) {
+    if (await clientCommon.checkClientOk("_sendVisible", ping: true)) {
       if (message.isTargetTopic) {
         TopicSchema? topic = await chatCommon.topicHandle(message);
         bool pushNotification = message.canNotification && (notification != false);
@@ -578,7 +578,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<int> sendPing(List<String> clientAddressList, bool isPing, {int gap = 0}) async {
-    if (!(await clientCommon.waitClientOk("sendPing", ping: true))) return 0;
+    if (!(await clientCommon.checkClientOk("sendPing", ping: true))) return 0;
     if (clientAddressList.isEmpty) return 0;
     String? selfAddress = clientCommon.address;
     // destList
