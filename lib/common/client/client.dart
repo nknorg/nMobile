@@ -361,7 +361,7 @@ class ClientCommon with Tag {
       // connect_status
       if (isClientStop) return;
       if ((receive?.isTargetSelf != true) || (receive?.contentType != MessageContentType.ping)) return;
-      if ((DateTime.now().millisecondsSinceEpoch - (receive?.sendAt ?? 0)) > 1500) return;
+      if ((DateTime.now().millisecondsSinceEpoch - (receive?.sendAt ?? 0)) > 1000) return;
       if (status != ClientConnectStatus.connected) {
         logger.i("$TAG - onMessage ->> receive client ping - gap:${(DateTime.now().millisecondsSinceEpoch - (receive?.sendAt ?? 0))}");
         _lock.synchronized(() async {
@@ -547,7 +547,6 @@ class ClientCommon with Tag {
         logger.d("$TAG - checkClientOk:$tag - wait client reconnect");
         await Future.delayed(Duration(milliseconds: 200));
       }
-      return await checkClientOk(tag, force: false, ping: ping);
     } else if (status == ClientConnectStatus.connecting) {
       int tryTimes = 0;
       while (status == ClientConnectStatus.connecting) {
@@ -578,12 +577,12 @@ class ClientCommon with Tag {
         tryTimes++;
         await Future.delayed(Duration(milliseconds: 500));
       }
-      return await checkClientOk(tag, force: false, ping: ping);
     }
     // ping
-    if (ping) {
+    bool success = status == ClientConnectStatus.connected;
+    if (ping || (status == ClientConnectStatus.connectPing)) {
       int tryTimes = 0;
-      while (!isClientOK) {
+      while (status != ClientConnectStatus.connected) {
         logger.i("$TAG - checkClientOk:$tag - try ping_ping - tryTimes:$tryTimes - client:${client == null} - status:$status");
         if (client != null) {
           try {
@@ -599,17 +598,18 @@ class ClientCommon with Tag {
         tryTimes++;
         await Future.delayed(Duration(milliseconds: 500));
       }
-    } else {
-      try {
-        if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(isClientOK);
-      } catch (e, st) {
-        handleError(e, st);
-      }
+      success = status == ClientConnectStatus.connected;
+    }
+    // complete
+    try {
+      if (clientOkCompleter?.isCompleted != true) clientOkCompleter?.complete(success);
+    } catch (e, st) {
+      handleError(e, st);
     }
     // return
-    if (!isClientOK) logger.w("$TAG - checkClientOk:$tag - fail - client:${client != null} - status:$status");
+    if (!success) logger.w("$TAG - checkClientOk:$tag - fail - client:${client != null} - status:$status");
     if (ping) logger.d("$TAG - checkClientOk:$tag - success - status:$status");
-    return isClientOK;
+    return success;
   }
 
   // Future ping({int maxWaitTimes = Settings.tryTimesClientConnectWait}) async {

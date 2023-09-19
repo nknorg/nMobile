@@ -185,7 +185,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     }
     if (isAuthProgress) return false;
     // view
-    clientCommon.checkClientOk("_tryAuth", force: false, ping: true);
+    clientCommon.checkClientOk("_tryAuth", force: false, ping: true); // await
     _setAuthProgress(true);
     AppScreen.go(this.context);
     // wallet
