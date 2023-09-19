@@ -57,6 +57,10 @@ class ChatInCommon with Tag {
 
   Future<bool> waitReceiveQueue(String targetId, String keyPrefix, {bool duplicated = true}) async {
     try {
+      int interval = 500;
+      int gap = DateTime.now().millisecondsSinceEpoch - application.goForegroundAt;
+      if (gap < interval) await Future.delayed(Duration(milliseconds: interval - gap));
+      // futures
       ParallelQueue? receiveQueue = _receiveQueues[targetId];
       if (receiveQueue == null) return true;
       bool isOnComplete = receiveQueue.isOnComplete("$keyPrefix$targetId");
