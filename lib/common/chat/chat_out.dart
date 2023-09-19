@@ -64,8 +64,8 @@ class ChatOutCommon with Tag {
         // if (clientCommon.isClientOK) return [null, true, 100];
         if (clientCommon.isClientConnecting || clientCommon.isClientReconnecting) return [null, true, 1000];
         logger.w("$TAG - _sendData - reconnect - count:${destList.length} - destList:$destList");
-        await clientCommon.reconnect();
-        return [null, true, 500];
+        bool success = await clientCommon.reconnect();
+        return [null, true, success ? 100 : 500];
       }
       handleError(e, st);
       logger.e("$TAG - _sendData - try by unknown error - count:${destList.length} - destList:$destList");
@@ -92,6 +92,7 @@ class ChatOutCommon with Tag {
       OnMessage? onMessage;
       int tryTimes = 0;
       while (tryTimes < Settings.tryTimesMsgSend) {
+        if (clientCommon.isClientStop) break;
         List<dynamic> result = await _sendData(
           destList,
           data,
