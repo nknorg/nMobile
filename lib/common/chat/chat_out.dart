@@ -579,7 +579,7 @@ class ChatOutCommon with Tag {
 
   // NO DB NO display NO topic (1 to 1)
   Future<int> sendPing(List<String> clientAddressList, bool isPing, {int gap = 0}) async {
-    if (!(await clientCommon.checkClientOk("sendPing", ping: true))) return 0;
+    if (!(await clientCommon.checkClientOk("sendPing"))) return 0;
     if (clientAddressList.isEmpty) return 0;
     String? selfAddress = clientCommon.address;
     // destList
