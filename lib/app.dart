@@ -113,7 +113,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         loginCompleter = Completer();
       } else {
         int gap = application.goForegroundAt - application.goBackgroundAt;
-        _tryAuth(gap >= Settings.gapClientReAuthMs);
+        if (gap >= Settings.gapClientReAuthMs) _tryAuth();
       }
     });
 
@@ -173,19 +173,10 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     application.appLifeSink.add([old, state]);
   }
 
-  Future<bool> _tryAuth(bool gapOk) async {
+  Future<bool> _tryAuth() async {
     if (clientCommon.isClientStop) return false;
-    Function() clientReconnect = () {
-      clientCommon.reconnect(force: true);
-      _tryCompleteLogin();
-    };
-    if (!gapOk) {
-      clientReconnect();
-      return true;
-    }
     if (isAuthProgress) return false;
     // view
-    clientCommon.checkClientOk("_tryAuth", force: false, ping: true); // await
     _setAuthProgress(true);
     AppScreen.go(this.context);
     // wallet
@@ -209,7 +200,8 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // view
     _setAuthProgress(false);
     // client
-    clientReconnect(); // await
+    clientCommon.reconnect(force: true); // await
+    _tryCompleteLogin(); // await
     chatCommon.startInitChecks(delay: 500); // await
     return true;
   }
