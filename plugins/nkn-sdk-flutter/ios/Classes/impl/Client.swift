@@ -237,7 +237,7 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                     }
                     guard let msg = try client.onMessage?.next(withTimeout: 3 * 1000) else {
                         let oldestClient = clients.keys.sorted().first == key
-                        let gapLarge = (Int(Date().timeIntervalSince1970) - key) >= 24 * 60 * 60 * 1000 // 24h
+                        let gapLarge = (Int(Date().timeIntervalSince1970) - key) >= 24 * 60 * 60 // 24h
                         let countLarge = clients.count > 3
                         if (oldestClient && gapLarge && countLarge) {
                             self.removeClient(id: _id, key: key)
