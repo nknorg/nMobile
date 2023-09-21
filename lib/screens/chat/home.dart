@@ -157,7 +157,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
       if (dbOpen) _setConnected(true);
     });
     // check
-    if (success) chatCommon.startInitChecks(delay: 1000); // await
+    if (success) chatCommon.startInitChecks(delay: 500); // await
     // view
     _setConnected(success);
     isLoginProgress = false;

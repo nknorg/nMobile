@@ -102,52 +102,6 @@ class ChatInCommon with Tag {
   }
 
   Future _handleMessage(MessageSchema received) async {
-    // contact
-    ContactSchema? contact = await chatCommon.contactHandle(received);
-    // deviceInfo
-    DeviceInfoSchema? deviceInfo = await chatCommon.deviceInfoHandle(received);
-    // topic
-    TopicSchema? topic = await chatCommon.topicHandle(received);
-    if (topic != null) {
-      if (topic.joined != true) {
-        logger.w("$TAG - _handleMessage - topic - deny message - unsubscribe - topic:$topic");
-        return;
-      }
-      SubscriberSchema? me = await subscriberCommon.query(topic.topicId, clientCommon.address);
-      if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
-        logger.w("$TAG - _handleMessage - topic - deny message - me no permission - me:$me - topic:$topic");
-        return;
-      }
-      if (!received.isTopicAction) {
-        SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic);
-        if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
-          logger.w("$TAG - _handleMessage - topic - deny message - sender no permission - sender:$sender - topic:$topic");
-          return;
-        }
-      }
-    }
-    // group
-    PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
-    if (privateGroup != null) {
-      if (received.isGroupAction) {
-        // nothing
-      } else {
-        if (privateGroup.joined != true) {
-          logger.w("$TAG - _handleMessage - group - deny message - me no joined - topic:$topic");
-          return;
-        }
-        PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
-        if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
-          logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
-          return;
-        }
-        PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.sender);
-        if ((_sender == null) || (_sender.permission <= PrivateGroupItemPerm.none)) {
-          logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
-          return;
-        }
-      }
-    }
     // duplicated
     bool duplicated = false;
     if (received.canDisplay) {
@@ -168,9 +122,52 @@ class ChatInCommon with Tag {
         }
       }
     }
-    // receive
+    // handle
     bool insertOk = false;
     if (!duplicated) {
+      // topic
+      TopicSchema? topic = await chatCommon.topicHandle(received);
+      if (topic != null) {
+        if (topic.joined != true) {
+          logger.w("$TAG - _handleMessage - topic - deny message - unsubscribe - topic:$topic");
+          return;
+        }
+        SubscriberSchema? me = await subscriberCommon.query(topic.topicId, clientCommon.address);
+        if ((me == null) || (me.status != SubscriberStatus.Subscribed)) {
+          logger.w("$TAG - _handleMessage - topic - deny message - me no permission - me:$me - topic:$topic");
+          return;
+        }
+        if (!received.isTopicAction) {
+          SubscriberSchema? sender = await chatCommon.subscriberHandle(received, topic);
+          if ((sender == null) || (sender.status != SubscriberStatus.Subscribed)) {
+            logger.w("$TAG - _handleMessage - topic - deny message - sender no permission - sender:$sender - topic:$topic");
+            return;
+          }
+        }
+      }
+      // group
+      PrivateGroupSchema? privateGroup = await chatCommon.privateGroupHandle(received);
+      if (privateGroup != null) {
+        if (received.isGroupAction) {
+          // nothing
+        } else {
+          if (privateGroup.joined != true) {
+            logger.w("$TAG - _handleMessage - group - deny message - me no joined - topic:$topic");
+            return;
+          }
+          PrivateGroupItemSchema? _me = await privateGroupCommon.queryGroupItem(privateGroup.groupId, clientCommon.address);
+          if ((_me == null) || (_me.permission <= PrivateGroupItemPerm.none)) {
+            logger.w("$TAG - _handleMessage - group - deny message - me no permission - me:$_me - group:$privateGroup");
+            return;
+          }
+          PrivateGroupItemSchema? _sender = await privateGroupCommon.queryGroupItem(privateGroup.groupId, received.sender);
+          if ((_sender == null) || (_sender.permission <= PrivateGroupItemPerm.none)) {
+            logger.w("$TAG - _handleMessage - group - deny message - sender no permission - sender:$_sender - group:$privateGroup");
+            return;
+          }
+        }
+      }
+      // receive
       switch (received.contentType) {
         case MessageContentType.ping:
           await _receivePing(received);
@@ -185,16 +182,24 @@ class ChatInCommon with Tag {
           await _receiveQueue(received);
           break;
         case MessageContentType.contactProfile:
-          await _receiveContact(received, contact, deviceInfo);
-          break;
         case MessageContentType.contactOptions:
-          insertOk = await _receiveContactOptions(received, contact, deviceInfo);
-          break;
         case MessageContentType.deviceRequest:
-          await _receiveDeviceRequest(received, contact, deviceInfo);
-          break;
-        case MessageContentType.deviceInfo:
-          await _receiveDeviceInfo(received, contact);
+          ContactSchema? contact = await chatCommon.contactHandle(received);
+          DeviceInfoSchema? deviceInfo = await chatCommon.deviceInfoHandle(received);
+          switch (received.contentType) {
+            case MessageContentType.contactProfile:
+              await _receiveContact(received, contact, deviceInfo);
+              break;
+            case MessageContentType.contactOptions:
+              insertOk = await _receiveContactOptions(received, contact, deviceInfo);
+              break;
+            case MessageContentType.deviceRequest:
+              await _receiveDeviceRequest(received, contact, deviceInfo);
+              break;
+            case MessageContentType.deviceInfo:
+              await _receiveDeviceInfo(received, contact);
+              break;
+          }
           break;
         case MessageContentType.text:
         case MessageContentType.textExtension:
