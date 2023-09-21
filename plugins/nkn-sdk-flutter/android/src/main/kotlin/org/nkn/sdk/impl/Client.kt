@@ -148,6 +148,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                 val resp = getConnectResult(client, node, numSubClients)
                 eventSinkSuccess(eventSink, resp)
             } catch (e: Throwable) {
+                val clients = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                if (clients.isNullOrEmpty()) return@withContext
+                val client = if (clients.containsKey(key)) clients[key] else null
+                if ((client == null) || client.isClosed) return@withContext
                 eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
@@ -202,6 +206,10 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                     delay(100)
                 }
             } catch (e: Throwable) {
+                val clients = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                if (clients.isNullOrEmpty()) return@withContext
+                val client = if (clients.containsKey(key)) clients[key] else null
+                if ((client == null) || client.isClosed) return@withContext
                 eventSinkError(eventSink, _id, e.localizedMessage)
             }
         }
