@@ -90,7 +90,6 @@ class NknError {
     nilClient,
     "new account fail", // same with native
     "client create fail", // same with native
-    "client is null", // same with native
     "client is closed", // same with native
   ];
 
