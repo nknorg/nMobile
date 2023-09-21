@@ -200,7 +200,7 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // view
     _setAuthProgress(false);
     // client
-    clientCommon.reconnect().then((success) {
+    clientCommon.reconnect(force: true).then((success) {
       if (success) chatCommon.startInitChecks(delay: 500); // await
     }); // await
     _tryCompleteLogin(); // await
