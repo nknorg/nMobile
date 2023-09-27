@@ -224,6 +224,20 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
     private func onMessage(_id: String, key: Int, deadline: DispatchTime?) {
         let workItem = DispatchWorkItem {
             do {
+                // check
+                guard let checks = self.getClients(id: _id) else {
+                    return
+                }
+                for (k, v) in checks {
+                    let gapLarge = (Int(Date().timeIntervalSince1970) - k) >= 1 * 60 * 60 // 1h
+                    let countLarge = checks.count > 3
+                    if (gapLarge && countLarge) {
+                        try v.close()
+                        self.removeClient(id: _id, key: k)
+                        break
+                    }
+                }
+                // loop
                 while(true) {
                     guard let clients = self.getClients(id: _id) else {
                         break
@@ -235,17 +249,8 @@ class Client : ChannelBase, IChannelHandler, FlutterStreamHandler {
                         self.removeClient(id: _id, key: key)
                         break
                     }
-                    guard let msg = try client.onMessage?.next(withTimeout: 3 * 1000) else {
-                        let oldestClient = clients.keys.sorted().first == key
-                        let gapLarge = (Int(Date().timeIntervalSince1970) - key) >= 24 * 60 * 60 // 24h
-                        let countLarge = clients.count > 3
-                        if (oldestClient && gapLarge && countLarge) {
-                            self.removeClient(id: _id, key: key)
-                            try client.close()
-                            break
-                        }
-                        self.onMessage(_id: _id, key: key, deadline: .now() + 0.1)
-                        break
+                    guard let msg = try client.onMessage?.next(withTimeout: 5 * 1000) else {
+                        continue
                     }
                     let resp = self.getMessageResult(client: client, msg: msg)
                     self.eventSinkSuccess(eventSink: self.eventSink, resp: resp)
