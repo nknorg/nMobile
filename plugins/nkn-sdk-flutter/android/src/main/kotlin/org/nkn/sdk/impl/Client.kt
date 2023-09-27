@@ -10,7 +10,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import nkn.*
+import nkn.Account
+import nkn.ClientConfig
+import nkn.Message
+import nkn.MessageConfig
+import nkn.MultiClient
+import nkn.Nkn
+import nkn.Node
+import nkn.TransactionConfig
 import nkngolib.Nkngolib
 import nkngomobile.Nkngomobile.newStringArrayFromString
 import nkngomobile.StringArray
@@ -181,6 +188,19 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
     private suspend fun onMessage(_id: String, key: Long) {
         withContext(Dispatchers.IO) {
             try {
+                // check
+                val checks = if (clientMap.containsKey(_id)) clientMap[_id] else null
+                if (checks.isNullOrEmpty()) return@withContext
+                val keys = checks.keys.toList()
+                for (item in keys) {
+                    val gapLarge = (System.currentTimeMillis() - item) >= 1 * 60 * 60 * 1000 // 1h
+                    val countLarge = checks.count() > 3
+                    if (gapLarge && countLarge) {
+                        checks[item]?.close()
+                        checks.remove(item)
+                    }
+                }
+                // loop
                 while (true) {
                     val clients = if (clientMap.containsKey(_id)) clientMap[_id] else null
                     if (clients.isNullOrEmpty()) break
@@ -189,21 +209,9 @@ class Client : IChannelHandler, MethodChannel.MethodCallHandler, EventChannel.St
                         clients.remove(key)
                         break
                     }
-                    val msg = client.onMessage.nextWithTimeout(3 * 1000)
-                    if (msg != null) {
-                        val resp = getMessageResult(client, msg)
-                        eventSinkSuccess(eventSink, resp)
-                        continue
-                    }
-                    val oldestClient = clients.keys.minOf { it } == key
-                    val gapLarge = (System.currentTimeMillis() - key) >= 24 * 60 * 60 * 1000 // 24h
-                    val countLarge = clients.count() > 3
-                    if (oldestClient && gapLarge && countLarge) {
-                        clients.remove(key)
-                        client.close()
-                        break
-                    }
-                    delay(100)
+                    val msg = client.onMessage.nextWithTimeout(5 * 1000) ?: continue
+                    val resp = getMessageResult(client, msg)
+                    eventSinkSuccess(eventSink, resp)
                 }
             } catch (e: Throwable) {
                 val clients = if (clientMap.containsKey(_id)) clientMap[_id] else null
