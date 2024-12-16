@@ -246,6 +246,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
             padding: EdgeInsets.only(bottom: 60, right: 4),
             child: FloatingActionButton(
               key: _floatingActionKey,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
               elevation: 12,
               backgroundColor: application.theme.primaryColor,
               child: Asset.iconSvg('pencil', width: 24),

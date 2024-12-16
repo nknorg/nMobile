@@ -25,7 +25,6 @@ class LocalNotification {
       defaultPresentAlert: true,
       defaultPresentSound: false,
       defaultPresentBadge: true,
-      onDidReceiveLocalNotification: null,
     );
 
     var initializationSettings = InitializationSettings(

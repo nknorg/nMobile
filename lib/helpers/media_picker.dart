@@ -442,7 +442,7 @@ class MediaPicker {
     try {
       CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: original.absolute.path,
-        cropStyle: cropStyle,
+        compressFormat: ImageCompressFormat.png,
         aspectRatio: cropRatio,
         compressQuality: quality, // later handle
         maxWidth: width,
@@ -664,10 +664,10 @@ class MediaPicker {
       primaryColorDark: theme.primaryColorDark,
       canvasColor: Colors.black87,
       scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
-      bottomAppBarColor: theme.bottomAppBarColor,
+      // bottomAppBarColor: theme.bottomAppBarColor,
       cardColor: theme.cardColor,
       highlightColor: theme.highlightColor,
-      toggleableActiveColor: theme.toggleableActiveColor,
+      // toggleableActiveColor: theme.toggleableActiveColor,
       textSelectionTheme: theme.textSelectionTheme,
       indicatorColor: theme.indicatorColor,
       appBarTheme: theme.appBarTheme,
