@@ -18,7 +18,6 @@ import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as VideoThumbnail;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
-// import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
 class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
@@ -442,7 +441,7 @@ class MediaPicker {
     try {
       CroppedFile? croppedFile = await ImageCropper().cropImage(
         sourcePath: original.absolute.path,
-        compressFormat: ImageCompressFormat.png,
+        compressFormat: ImageCompressFormat.jpg,
         aspectRatio: cropRatio,
         compressQuality: quality, // later handle
         maxWidth: width,

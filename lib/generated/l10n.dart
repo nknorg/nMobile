@@ -3910,6 +3910,16 @@ class S {
     );
   }
 
+  /// `Need microphone permission`
+  String get need_microphone_permission {
+    return Intl.message(
+      'Need microphone permission',
+      name: 'need_microphone_permission',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `During the database upgrade, please do not exit the app or leave this page.`
   String get upgrade_db_tips {
     return Intl.message(
