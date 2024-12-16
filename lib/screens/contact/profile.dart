@@ -433,7 +433,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       mappedWidget.add(Slidable(
         key: ObjectKey(mappeds[i]),
         direction: Axis.horizontal,
-        actionPane: SlidableDrawerActionPane(),
+
         child: TextButton(
           style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
           onPressed: () {
@@ -455,37 +455,40 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
             ],
           ),
         ),
-        secondaryActions: [
-          IconSlideAction(
-            caption: Settings.locale((s) => s.delete, ctx: context),
-            color: Colors.red,
-            icon: Icons.delete,
-            onTap: () => {
-              ModalDialog.of(Settings.appContext).confirm(
-                title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
-                agree: Button(
-                  width: double.infinity,
-                  text: Settings.locale((s) => s.delete, ctx: context),
-                  backgroundColor: application.theme.strongColor,
-                  onPressed: () async {
-                    List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
-                    Navigator.pop(this.context);
-                  },
-                ),
-                reject: Button(
-                  width: double.infinity,
-                  text: Settings.locale((s) => s.cancel, ctx: context),
-                  fontColor: application.theme.fontColor2,
-                  backgroundColor: application.theme.backgroundLightColor,
-                  onPressed: () {
-                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  },
-                ),
-              )
-            },
-          ),
-        ],
+        endActionPane: ActionPane(
+          motion: ScrollMotion(),
+          children: [
+            SlidableAction(
+              onPressed: (BuildContext context) {
+                ModalDialog.of(Settings.appContext).confirm(
+                  title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
+                  agree: Button(
+                    width: double.infinity,
+                    text: Settings.locale((s) => s.delete, ctx: context),
+                    backgroundColor: application.theme.strongColor,
+                    onPressed: () async {
+                      List<String> modified = mappeds..remove(mappeds[i]);
+                      await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
+                      Navigator.pop(this.context);
+                    },
+                  ),
+                  reject: Button(
+                    width: double.infinity,
+                    text: Settings.locale((s) => s.cancel, ctx: context),
+                    fontColor: application.theme.fontColor2,
+                    backgroundColor: application.theme.backgroundLightColor,
+                    onPressed: () {
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                    },
+                  ),
+                );
+              },
+              icon: Icons.delete,
+              label: Settings.locale((s) => s.delete, ctx: context),
+              backgroundColor: Colors.red,
+            ),
+          ],
+        ),
       ));
     }
     return SingleChildScrollView(
@@ -692,7 +695,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       mappedWidget.add(Slidable(
         key: ObjectKey(mappeds[i]),
         direction: Axis.horizontal,
-        actionPane: SlidableDrawerActionPane(),
         child: TextButton(
           style: _buttonStyle(topRadius: false, botRadius: false, topPad: 15, botPad: 10),
           onPressed: () {
@@ -714,37 +716,40 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
             ],
           ),
         ),
-        secondaryActions: [
-          IconSlideAction(
-            caption: Settings.locale((s) => s.delete, ctx: context),
-            color: Colors.red,
-            icon: Icons.delete,
-            onTap: () => {
-              ModalDialog.of(Settings.appContext).confirm(
-                title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
-                agree: Button(
-                  width: double.infinity,
-                  text: Settings.locale((s) => s.delete, ctx: context),
-                  backgroundColor: application.theme.strongColor,
-                  onPressed: () async {
-                    List<String> modified = mappeds..remove(mappeds[i]);
-                    await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
-                    Navigator.pop(this.context);
-                  },
-                ),
-                reject: Button(
-                  width: double.infinity,
-                  text: Settings.locale((s) => s.cancel, ctx: context),
-                  fontColor: application.theme.fontColor2,
-                  backgroundColor: application.theme.backgroundLightColor,
-                  onPressed: () {
-                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  },
-                ),
-              )
-            },
-          ),
-        ],
+        endActionPane: ActionPane(
+          motion: ScrollMotion(),
+          children: [
+            SlidableAction(
+              onPressed: (BuildContext context) {
+                ModalDialog.of(Settings.appContext).confirm(
+                  title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
+                  agree: Button(
+                    width: double.infinity,
+                    text: Settings.locale((s) => s.delete, ctx: context),
+                    backgroundColor: application.theme.strongColor,
+                    onPressed: () async {
+                      List<String> modified = mappeds..remove(mappeds[i]);
+                      await contactCommon.setMappedAddress(_contact?.address, modified.toSet().toList(), notify: true);
+                      Navigator.pop(this.context);
+                    },
+                  ),
+                  reject: Button(
+                    width: double.infinity,
+                    text: Settings.locale((s) => s.cancel, ctx: context),
+                    fontColor: application.theme.fontColor2,
+                    backgroundColor: application.theme.backgroundLightColor,
+                    onPressed: () {
+                      if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                    },
+                  ),
+                );
+              },
+              icon: Icons.delete,
+              label: Settings.locale((s) => s.delete, ctx: context),
+              backgroundColor: Colors.red,
+            ),
+          ],
+        ),
       ));
     }
     return SingleChildScrollView(

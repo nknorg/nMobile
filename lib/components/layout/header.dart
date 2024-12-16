@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nmobile/common/locator.dart';
 
 class Header extends StatelessWidget implements PreferredSizeWidget {
@@ -27,6 +28,11 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
   }) {
     _header = AppBar(
       // brightness: this.brightness,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: this.brightness,
+      ),
       backgroundColor: backgroundColor ?? application.theme.primaryColor,
       centerTitle: false,
       titleSpacing: 0,

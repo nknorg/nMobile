@@ -743,7 +743,7 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
     if (_hasIntrinsicError) {
       return effectiveDecoration.copyWith(
         errorText: effectiveDecoration.errorText ?? '',
-        counterStyle: effectiveDecoration.errorStyle ?? themeData.textTheme.caption!.copyWith(color: themeData.errorColor),
+        // counterStyle: effectiveDecoration.errorStyle ?? themeData.textTheme.caption!.copyWith(color: themeData.errorColor),
         counterText: counterText,
         semanticCounterText: semanticCounterText,
       );
@@ -903,8 +903,8 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
 
     final ThemeData theme = Theme.of(context);
     final TextSelectionThemeData selectionTheme = TextSelectionTheme.of(context);
-    final TextStyle style = theme.textTheme.subtitle1!.merge(widget.style);
-    final Brightness keyboardAppearance = widget.keyboardAppearance ?? theme.primaryColorBrightness;
+    final TextStyle style = theme.textTheme.titleMedium!.merge(widget.style);
+    // final Brightness keyboardAppearance = widget.keyboardAppearance ?? theme.primaryColorBrightness;
     final TextEditingController controller = _effectiveController;
     final FocusNode focusNode = _effectiveFocusNode;
     final List<TextInputFormatter> formatters = <TextInputFormatter>[
@@ -1041,7 +1041,7 @@ class _FixedTextFieldState extends State<FixedTextField> with RestorationMixin i
           paintCursorAboveText: paintCursorAboveText,
           backgroundCursorColor: CupertinoColors.inactiveGray,
           scrollPadding: widget.scrollPadding,
-          keyboardAppearance: keyboardAppearance,
+          // keyboardAppearance: keyboardAppearance,
           enableInteractiveSelection: widget.enableInteractiveSelection,
           dragStartBehavior: widget.dragStartBehavior,
           scrollController: widget.scrollController,

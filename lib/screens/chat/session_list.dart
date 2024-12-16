@@ -410,7 +410,7 @@ class _ChatSessionListLayoutState extends BaseStateFulWidgetState<ChatSessionLis
                 _popItemMenu(session, index);
               },
             ),
-            Divider(color: session.isTop ? application.theme.backgroundColor3 : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
+            Divider(color: session.isTop ? application.theme.backgroundColor3.withAlpha(120) : application.theme.dividerColor, height: 0, indent: 70, endIndent: 12),
           ],
         );
       },

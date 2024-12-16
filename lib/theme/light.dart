@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nmobile/theme/theme.dart';
 
 // FUTURE:GG refactor
@@ -54,13 +55,28 @@ class LightTheme implements SkinTheme {
           selectedItemColor: primaryColor,
         ),
         textTheme: TextTheme(
-          headline1: headline1,
-          headline2: headline2,
-          headline3: headline3,
-          headline4: headline4,
-          headline5: display,
-          bodyText1: bodyText1,
-          bodyText2: bodyText2,
+          headlineLarge: headline1,
+          headlineMedium: headline2,
+          headlineSmall: headline3,
+          bodyLarge: bodyText1,
+          bodyMedium: bodyText2,
+          bodySmall: bodyText3,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: fontLightColor,
+          foregroundColor: fontLightColor,
+          titleTextStyle: TextStyle(color: fontLightColor, fontSize: 20, fontWeight: FontWeight.bold),
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
+        ),
+        dividerColor: dividerColor,
+        dividerTheme: DividerThemeData(
+          color: dividerColor,
+          space: 1,
+          thickness: 1,
         ),
         buttonTheme: ButtonThemeData(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -102,7 +118,7 @@ class LightTheme implements SkinTheme {
   Color get disabledColor => backgroundColor5;
 
   @override
-  Color dividerColor = Color(0xFFF2F2F2);
+  Color dividerColor = Color(0xFFF2F2F2).withAlpha(120);
 
   @override
   Color backgroundColor1 = Color(0xFFF6F7FB);

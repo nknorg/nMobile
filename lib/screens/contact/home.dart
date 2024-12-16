@@ -454,8 +454,6 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
   Widget _getFriendItemView(ContactSchema item) {
     return Slidable(
       key: ObjectKey(item),
-      direction: Axis.horizontal,
-      actionPane: SlidableDrawerActionPane(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -479,80 +477,51 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           Divider(height: 1, indent: 74, endIndent: 16),
         ],
       ),
-      secondaryActions: [
-        IconSlideAction(
-          caption: Settings.locale((s) => s.delete, ctx: context),
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () => {
-            ModalDialog.of(Settings.appContext).confirm(
-              title: Settings.locale((s) => s.delete_contact_confirm_title, ctx: context),
-              contentWidget: ContactItem(
-                contact: item,
-                bodyTitle: item.displayName,
-                bodyDesc: item.address,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              ),
-              agree: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.delete_contact, ctx: context),
-                backgroundColor: application.theme.strongColor,
-                onPressed: () async {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  await contactCommon.setType(item.address, ContactType.none, notify: true);
-                },
-              ),
-              reject: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.cancel, ctx: context),
-                fontColor: application.theme.fontColor2,
-                backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                },
-              ),
-            )
-          },
-        ),
-      ],
+      endActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (BuildContext context)  {
+              ModalDialog.of(Settings.appContext).confirm(
+                title: Settings.locale((s) => s.delete_contact_confirm_title, ctx: context),
+                contentWidget: ContactItem(
+                  contact: item,
+                  bodyTitle: item.displayName,
+                  bodyDesc: item.address,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                ),
+                agree: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.delete_contact, ctx: context),
+                  backgroundColor: application.theme.strongColor,
+                  onPressed: () async {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                    await contactCommon.setType(item.address, ContactType.none, notify: true);
+                  },
+                ),
+                reject: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.cancel, ctx: context),
+                  fontColor: application.theme.fontColor2,
+                  backgroundColor: application.theme.backgroundLightColor,
+                  onPressed: () {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  },
+                ),
+              );
+            },
+            icon: Icons.delete,
+            label: Settings.locale((s) => s.delete, ctx: context),
+            backgroundColor: Colors.red,
+          ),
+        ],
+      ),
     );
   }
-
-  /*Widget _getStrangerItemView(ContactSchema item) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ContactItem(
-          contact: item,
-          onTap: () {
-            _onTapContactItem(item);
-          },
-          bgColor: Colors.transparent,
-          bodyTitle: item.displayName,
-          bodyDesc: Time.formatTime(item.updateAt != null ? DateTime.fromMillisecondsSinceEpoch(item.updateAt!) : null),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          tail: Padding(
-            padding: const EdgeInsets.only(right: 8, left: 16),
-            child: Label(
-              item.isMe ? 'Me' : '',
-              type: LabelType.bodySmall,
-            ),
-          ),
-        ),
-        Divider(
-          height: 1,
-          indent: 74,
-          endIndent: 16,
-        ),
-      ],
-    );
-  }*/
 
   Widget _getTopicItemView(TopicSchema item) {
     return Slidable(
       key: ObjectKey(item),
-      direction: Axis.horizontal,
-      actionPane: SlidableDrawerActionPane(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -573,57 +542,58 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           ),
         ],
       ),
-      secondaryActions: [
-        IconSlideAction(
-          caption: Settings.locale((s) => s.delete, ctx: context),
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () => {
-            ModalDialog.of(Settings.appContext).confirm(
-              title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
-              contentWidget: TopicItem(
-                topic: item,
-                bodyTitle: item.topicNameShort,
-                bodyDesc: item.topicId,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              ),
-              agree: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.delete, ctx: context),
-                backgroundColor: application.theme.strongColor,
-                onPressed: () async {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  double? fee = await topicCommon.getTopicSubscribeFee(this.context);
-                  if (fee == null) return;
-                  Loading.show();
-                  TopicSchema? deleted = await topicCommon.unsubscribe(item.topicId, fee: fee, toast: true);
-                  Loading.dismiss();
-                  if (deleted != null) {
-                    Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
-                  }
-                },
-              ),
-              reject: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.cancel, ctx: context),
-                fontColor: application.theme.fontColor2,
-                backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                },
-              ),
-            )
-          },
-        ),
-      ],
+      endActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (BuildContext context) {
+              ModalDialog.of(Settings.appContext).confirm(
+                title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
+                contentWidget: TopicItem(
+                  topic: item,
+                  bodyTitle: item.topicNameShort,
+                  bodyDesc: item.topicId,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                agree: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.delete, ctx: context),
+                  backgroundColor: application.theme.strongColor,
+                  onPressed: () async {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                    double? fee = await topicCommon.getTopicSubscribeFee(this.context);
+                    if (fee == null) return;
+                    Loading.show();
+                    TopicSchema? deleted = await topicCommon.unsubscribe(item.topicId, fee: fee, toast: true);
+                    Loading.dismiss();
+                    if (deleted != null) {
+                      Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
+                    }
+                  },
+                ),
+                reject: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.cancel, ctx: context),
+                  fontColor: application.theme.fontColor2,
+                  backgroundColor: application.theme.backgroundLightColor,
+                  onPressed: () {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  },
+                ),
+              );
+            },
+            icon: Icons.delete,
+            label: Settings.locale((s) => s.delete, ctx: context),
+            backgroundColor: Colors.red,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _getGroupItemView(PrivateGroupSchema item) {
     return Slidable(
       key: ObjectKey(item),
-      direction: Axis.horizontal,
-      actionPane: SlidableDrawerActionPane(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -644,45 +614,48 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
           ),
         ],
       ),
-      secondaryActions: [
-        IconSlideAction(
-          caption: Settings.locale((s) => s.delete, ctx: context),
-          color: Colors.red,
-          icon: Icons.delete,
-          onTap: () => {
-            ModalDialog.of(Settings.appContext).confirm(
-              title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
-              contentWidget: PrivateGroupItem(
-                privateGroup: item,
-                bodyTitle: item.name,
-                bodyDesc: item.groupId,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              ),
-              agree: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.delete, ctx: context),
-                backgroundColor: application.theme.strongColor,
-                onPressed: () async {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                  Loading.show();
-                  bool success = await privateGroupCommon.quit(item.groupId, toast: true, notify: true);
-                  Loading.dismiss();
-                  if (success) Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
-                },
-              ),
-              reject: Button(
-                width: double.infinity,
-                text: Settings.locale((s) => s.cancel, ctx: context),
-                fontColor: application.theme.fontColor2,
-                backgroundColor: application.theme.backgroundLightColor,
-                onPressed: () {
-                  if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
-                },
-              ),
-            )
-          },
-        ),
-      ],
+      endActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (BuildContext context) {
+              ModalDialog.of(Settings.appContext).confirm(
+                title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
+                contentWidget: PrivateGroupItem(
+                  privateGroup: item,
+                  bodyTitle: item.name,
+                  bodyDesc: item.groupId,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                agree: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.delete, ctx: context),
+                  backgroundColor: application.theme.strongColor,
+                  onPressed: () async {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                    Loading.show();
+                    bool success = await privateGroupCommon.quit(item.groupId, toast: true, notify: true);
+                    Loading.dismiss();
+                    if (success) Toast.show(Settings.locale((s) => s.unsubscribed, ctx: context));
+                  },
+                ),
+                reject: Button(
+                  width: double.infinity,
+                  text: Settings.locale((s) => s.cancel, ctx: context),
+                  fontColor: application.theme.fontColor2,
+                  backgroundColor: application.theme.backgroundLightColor,
+                  onPressed: () {
+                    if (Navigator.of(this.context).canPop()) Navigator.pop(this.context);
+                  },
+                ),
+              );
+            },
+            icon: Icons.delete,
+            label: Settings.locale((s) => s.delete, ctx: context),
+            backgroundColor: Colors.red,
+          ),
+        ],
+      ),
     );
   }
 }

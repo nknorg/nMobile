@@ -35,7 +35,7 @@ class Settings {
   // notification
   static bool notificationPushEnable = true;
   static int notificationType = NotificationType.only_name;
-  static const String apnsTopic = "";
+  static const String apnsTopic = "org.nkn.nmobile";
 
   // authentication
   static bool biometricsAuthentication = true;
