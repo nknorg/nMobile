@@ -422,7 +422,9 @@ class _ChatSendBarState extends BaseStateFulWidgetState<ChatSendBar> {
                                     height: ActionHeight,
                                     child: Center(
                                       child: Label(
-                                        _audioLockedMode ? Settings.locale((s) => s.cancel, ctx: context) : (_audioDragPercent != 0 ? Settings.locale((s) => s.release_to_cancel, ctx: context) : Settings.locale((s) => s.slide_to_cancel)),
+                                        _audioLockedMode
+                                            ? Settings.locale((s) => s.cancel, ctx: context)
+                                            : (_audioDragPercent != 0 ? Settings.locale((s) => s.release_to_cancel, ctx: context) : Settings.locale((s) => s.slide_to_cancel)),
                                         type: LabelType.bodyLarge,
                                         textAlign: TextAlign.center,
                                         color: recordWidgetColor,

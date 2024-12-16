@@ -457,8 +457,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         ),
         endActionPane: ActionPane(
           motion: ScrollMotion(),
+          extentRatio: 0.25,
           children: [
-            SlidableAction(
+            CustomSlidableAction(
               onPressed: (BuildContext context) {
                 ModalDialog.of(Settings.appContext).confirm(
                   title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
@@ -483,9 +484,20 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   ),
                 );
               },
-              icon: Icons.delete,
-              label: Settings.locale((s) => s.delete, ctx: context),
               backgroundColor: Colors.red,
+              foregroundColor: application.theme.fontLightColor,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                  Label(
+                    Settings.locale((s) => s.delete, ctx: context),
+                    color: application.theme.fontLightColor,
+                    type: LabelType.bodyRegular,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -718,8 +730,9 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         ),
         endActionPane: ActionPane(
           motion: ScrollMotion(),
+          extentRatio: 0.25,
           children: [
-            SlidableAction(
+            CustomSlidableAction(
               onPressed: (BuildContext context) {
                 ModalDialog.of(Settings.appContext).confirm(
                   title: Settings.locale((s) => s.delete_mapping_address_confirm_title, ctx: context),
@@ -744,9 +757,20 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   ),
                 );
               },
-              icon: Icons.delete,
-              label: Settings.locale((s) => s.delete, ctx: context),
               backgroundColor: Colors.red,
+              foregroundColor: application.theme.fontLightColor,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                  Label(
+                    Settings.locale((s) => s.delete, ctx: context),
+                    color: application.theme.fontLightColor,
+                    type: LabelType.bodyRegular,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

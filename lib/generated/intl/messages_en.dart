@@ -406,6 +406,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "my_profile": MessageLookupByLibrary.simpleMessage("My Profile"),
         "my_wallets": MessageLookupByLibrary.simpleMessage("My Accounts"),
         "name": MessageLookupByLibrary.simpleMessage("Name"),
+        "need_microphone_permission":
+            MessageLookupByLibrary.simpleMessage("Need microphone permission"),
         "need_re_subscribe":
             MessageLookupByLibrary.simpleMessage("Need to re-subscribe"),
         "new_message": MessageLookupByLibrary.simpleMessage("New Message"),

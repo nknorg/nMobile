@@ -404,6 +404,7 @@
   "waiting_for_data_to_sync": "等待数据同步",
   "no_permission_join_group": "还未获得入群权限，请稍后再试。",
   "no_permission_action": "无权进行此操作",
+  "need_microphone_permission": "需要麦克风权限",
   "upgrade_db_tips": "数据库升级中,请勿退出app或离开此页面。",
   "share": "分享",
   "mapped_address_does_not_match": "映射地址不匹配",

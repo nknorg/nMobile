@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart' as Sound;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:logger/logger.dart';
@@ -12,7 +13,9 @@ import 'package:nmobile/helpers/file.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:audioplayers/audioplayers.dart' as Player;
+
+import '../components/button/button.dart';
+import '../components/dialog/modal.dart';
 
 class AudioHelper with Tag {
   // player
@@ -167,6 +170,29 @@ class AudioHelper with Tag {
     if (isRecordReleasing) return null;
     // permission
     var status = await Permission.microphone.request();
+    if (status.isPermanentlyDenied) {
+      ModalDialog.of(Settings.appContext).confirm(
+        title: Settings.locale((s) => s.tip, ctx: Settings.appContext),
+        content: Settings.locale((s) => s.need_microphone_permission, ctx: Settings.appContext),
+        agree: Button(
+          width: double.infinity,
+          text: Settings.locale((s) => s.settings, ctx: Settings.appContext),
+          backgroundColor: application.theme.primaryColor,
+          onPressed: () async {
+            openAppSettings();
+          },
+        ),
+        reject: Button(
+          width: double.infinity,
+          text: Settings.locale((s) => s.cancel, ctx: Settings.appContext),
+          fontColor: application.theme.fontColor2,
+          backgroundColor: application.theme.backgroundLightColor,
+          onPressed: () {
+            if (Navigator.of(Settings.appContext).canPop()) Navigator.pop(Settings.appContext);
+          },
+        ),
+      );
+    }
     if (status != PermissionStatus.granted) {
       await recordStop(); // throw RecordingPermissionException('Microphone permission not granted');
     }

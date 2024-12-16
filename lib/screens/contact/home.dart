@@ -479,8 +479,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       endActionPane: ActionPane(
         motion: ScrollMotion(),
+        extentRatio: 0.25,
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (BuildContext context)  {
               ModalDialog.of(Settings.appContext).confirm(
                 title: Settings.locale((s) => s.delete_contact_confirm_title, ctx: context),
@@ -510,9 +511,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 ),
               );
             },
-            icon: Icons.delete,
-            label: Settings.locale((s) => s.delete, ctx: context),
             backgroundColor: Colors.red,
+            foregroundColor: application.theme.fontLightColor,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                Label(
+                  Settings.locale((s) => s.delete, ctx: context),
+                  color: application.theme.fontLightColor,
+                  type: LabelType.bodyRegular,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -544,8 +556,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       endActionPane: ActionPane(
         motion: ScrollMotion(),
+        extentRatio: 0.25,
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (BuildContext context) {
               ModalDialog.of(Settings.appContext).confirm(
                 title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
@@ -582,9 +595,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 ),
               );
             },
-            icon: Icons.delete,
-            label: Settings.locale((s) => s.delete, ctx: context),
             backgroundColor: Colors.red,
+            foregroundColor: application.theme.fontLightColor,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                Label(
+                  Settings.locale((s) => s.delete, ctx: context),
+                  color: application.theme.fontLightColor,
+                  type: LabelType.bodyRegular,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -616,8 +640,9 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
       ),
       endActionPane: ActionPane(
         motion: ScrollMotion(),
+        extentRatio: 0.25,
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (BuildContext context) {
               ModalDialog.of(Settings.appContext).confirm(
                 title: Settings.locale((s) => s.confirm_unsubscribe_group, ctx: context),
@@ -650,9 +675,20 @@ class _ContactHomeScreenState extends BaseStateFulWidgetState<ContactHomeScreen>
                 ),
               );
             },
-            icon: Icons.delete,
-            label: Settings.locale((s) => s.delete, ctx: context),
             backgroundColor: Colors.red,
+            foregroundColor: application.theme.fontLightColor,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.delete, color: application.theme.fontLightColor, size: 24,),
+                Label(
+                  Settings.locale((s) => s.delete, ctx: context),
+                  color: application.theme.fontLightColor,
+                  type: LabelType.bodyRegular,
+                ),
+              ],
+            ),
           ),
         ],
       ),
