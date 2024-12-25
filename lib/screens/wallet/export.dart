@@ -118,10 +118,7 @@ class _WalletExportScreenState extends BaseStateFulWidgetState<WalletExportScree
                           ),
                           Column(
                             children: <Widget>[
-                              _getItemWidgets('wallet', Settings.locale((s) => s.wallet_address, ctx: context), _address),
-                              _getItemWidgets('key', Settings.locale((s) => s.public_key, ctx: context), _publicKey),
                               _getItemWidgets('key', Settings.locale((s) => s.seed, ctx: context), _seed, backupOk: true),
-                              _getItemWidgets('key', Settings.locale((s) => s.keystore, ctx: context), _keystore, backupOk: true),
                             ],
                           )
                         ],
