@@ -45,7 +45,6 @@ class AppScreen extends StatefulWidget {
 class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   List<Widget> screens = <Widget>[
     ChatHomeScreen(),
-    WalletHomeScreen(),
     SettingsHomeScreen(),
   ];
 

@@ -48,11 +48,6 @@ class _NavState extends BaseStateFulWidgetState<Nav> {
           label: Settings.locale((s) => s.menu_chat, ctx: context),
         ),
         BottomNavigationBarItem(
-          icon: Asset.iconSvg('wallet', color: _color),
-          activeIcon: Asset.iconSvg('wallet', color: _selectedColor),
-          label: Settings.locale((s) => s.menu_wallet, ctx: context),
-        ),
-        BottomNavigationBarItem(
           icon: Asset.iconSvg('settings', color: _color),
           activeIcon: Asset.iconSvg('settings', color: _selectedColor),
           label: Settings.locale((s) => s.menu_settings, ctx: context),

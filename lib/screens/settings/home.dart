@@ -28,6 +28,8 @@ import 'package:nmobile/storages/settings.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/util.dart';
 
+import '../wallet/home.dart';
+
 class SettingsHomeScreen extends BaseStateFulWidget {
   static const String routeName = '/settings';
 
@@ -149,6 +151,62 @@ class _SettingsHomeScreenState extends BaseStateFulWidgetState<SettingsHomeScree
       body: ListView(
         padding: const EdgeInsets.only(top: 20, bottom: 100, left: 20, right: 20),
         children: [
+          // My account
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Label(
+                  Settings.locale((s) => s.my_wallets, ctx: context),
+                  type: LabelType.h3,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: application.theme.backgroundLightColor,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            child: Column(
+              children: <Widget>[
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: TextButton(
+                    style: _buttonStyle(top: true, bottom: true),
+                    onPressed: () async {
+                      Navigator.pushNamed(context, WalletHomeScreen.routeName);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Label(
+                          Settings.locale((s) => s.menu_wallet, ctx: context),
+                          type: LabelType.bodyRegular,
+                          fontWeight: FontWeight.bold,
+                          color: application.theme.fontColor1,
+                          height: 1,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Asset.iconSvg(
+                              'right',
+                              width: 24,
+                              color: application.theme.fontColor2,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // general
           Padding(
             padding: const EdgeInsets.only(top: 16, bottom: 16),
