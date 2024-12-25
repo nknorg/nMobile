@@ -643,47 +643,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                       ),
                     ),
                     SizedBox(height: 24),
-
-                    /// mappedAddress
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Label(
-                          Settings.locale((s) => s.mapped_address, ctx: context),
-                          type: LabelType.h3,
-                        ),
-                        ButtonIcon(
-                          icon: Asset.iconSvg('scan', width: 24, color: application.theme.primaryColor),
-                          width: 48,
-                          onPressed: () async {
-                            String? qrData = (await Navigator.pushNamed(context, ScannerScreen.routeName))?.toString();
-                            logger.i("$TAG - mapped_address - qr_data:$qrData");
-                            if (qrData == null || qrData.isEmpty) return;
-                            String? clientAddress;
-                            try {
-                              Resolver resolver = Resolver();
-                              clientAddress = await resolver.resolve(qrData);
-                            } catch (e, st) {
-                              handleError(e, st);
-                            }
-                            if (clientAddress != _contact?.address) {
-                              Toast.show(Settings.locale((s) => s.mapped_address_does_not_match, ctx: context));
-                              return;
-                            }
-                            List<String> added = mappeds..add(qrData);
-                            await contactCommon.setMappedAddress(_contact?.address, added.toSet().toList(), notify: true);
-                          },
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 24),
-                    PhysicalModel(
-                      elevation: 0,
-                      clipBehavior: Clip.antiAlias,
-                      color: application.theme.backgroundColor,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
-                      child: Column(children: mappedWidget),
-                    ),
                   ],
                 ),
               ),
@@ -880,27 +839,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
                   ],
                 ),
               ),
-
-              mappeds.length > 0
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 6),
-                      child: Label(
-                        Settings.locale((s) => s.mapped_address, ctx: context),
-                        type: LabelType.bodySmall,
-                        fontWeight: FontWeight.w600,
-                        softWrap: true,
-                      ),
-                    )
-                  : SizedBox.shrink(),
-              mappeds.length > 0
-                  ? PhysicalModel(
-                      elevation: 0,
-                      clipBehavior: Clip.antiAlias,
-                      color: application.theme.backgroundColor,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12), bottom: Radius.circular(12)),
-                      child: Column(children: mappedWidget),
-                    )
-                  : SizedBox.shrink(),
             ],
           ),
           SizedBox(height: 28),
