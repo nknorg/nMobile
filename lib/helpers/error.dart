@@ -175,6 +175,9 @@ void handleError(dynamic error, StackTrace? stackTrace, {bool toast = true, Stri
 
 String? getErrorShow(dynamic error) {
   String errStr = error?.toString().toLowerCase() ?? "";
+  if (errStr.contains(NknError.rpcRequestFail)) {
+    return null;
+  }
   if (errStr.contains("platformexception(")) {
     errStr = errStr.substring(18, errStr.length - 1);
     List<String> splits = errStr.split(",");
