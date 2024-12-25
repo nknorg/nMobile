@@ -427,7 +427,7 @@ class ClientCommon with Tag {
           logger.i("$TAG - reconnect - force next completer - isClientOK:$isClientOK");
         }
       } catch (e, st) {
-        handleError(e, st);
+        handleError(e, st, toast: false);
       }
     }
     // receive_queue
@@ -476,7 +476,7 @@ class ClientCommon with Tag {
       try {
         reconnectCompleter?.complete();
       } catch (e, st) {
-        handleError(e, st);
+        handleError(e, st, toast: false);
       }
       return success;
     });
