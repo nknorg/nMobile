@@ -25,6 +25,8 @@ import 'package:nmobile/utils/parallel_queue.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:uuid/uuid.dart';
 
+const TEXT_EXTENSION_MAX_HOLDING_SECONDS = 864000; // 10 days
+
 class ChatOutCommon with Tag {
   ChatOutCommon();
 
@@ -40,11 +42,12 @@ class ChatOutCommon with Tag {
     _sendQueue.pause();
   }
 
-  Future<List<dynamic>> _sendData(List<String> destList, String data, {bool ping = false, bool lastTime = false}) async {
+  Future<List<dynamic>> _sendData(List<String> destList, String data, {bool ping = false, bool lastTime = false, int maxHoldingSeconds = 8640000}) async {
     if (!(await clientCommon.checkClientOk("_sendData", ping: ping))) return [null, false, 500];
     // logger.v("$TAG - _sendData - send start - destList:$destList");
     try {
-      OnMessage? onMessage = await clientCommon.client?.sendText(destList, data);
+      logger.d("$TAG - _sendData - start - count:${destList.length} - size:${Format.flowSize(data.length.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - destList:$destList - maxHoldingSeconds:$maxHoldingSeconds");
+      OnMessage? onMessage = await clientCommon.client?.sendText(destList, data, maxHoldingSeconds: maxHoldingSeconds);
       if (onMessage?.messageId?.isNotEmpty == true) {
         logger.v("$TAG - _sendData - success - count:${destList.length} - destList:$destList");
       } else {
@@ -73,8 +76,8 @@ class ChatOutCommon with Tag {
     return [null, true, 500];
   }
 
-  Future<OnMessage?> sendMsg(List<String> destList, String data) async {
-    // logger.v("$TAG - sendMsg - send start - destList:$destList");
+  Future<OnMessage?> sendMsg(List<String> destList, String data, {int maxHoldingSeconds = 8640000}) async {
+    logger.v("$TAG - sendMsg - send start - destList:$destList");
     // dest
     destList = destList.where((element) => element.isNotEmpty).toList();
     if (destList.isEmpty) {
@@ -98,6 +101,7 @@ class ChatOutCommon with Tag {
           data,
           ping: tryTimes > 0,
           lastTime: tryTimes >= (Settings.tryTimesMsgSend - 1),
+          maxHoldingSeconds: maxHoldingSeconds,
         );
         onMessage = result[0];
         bool canTry = result[1];
@@ -201,7 +205,7 @@ class ChatOutCommon with Tag {
     return (await sendMsg(targetAddressList, data))?.messageId;
   }
 
-  Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, {bool notification = false}) async {
+  Future<Uint8List?> _sendWithContact(ContactSchema? contact, MessageSchema? message, {bool notification = false, int maxHoldingSeconds = 8640000}) async {
     String? data = message?.data;
     if (message == null || data == null) {
       logger.e("$TAG - _sendWithContact - data == null - message:${message?.toStringSimple()}");
@@ -222,7 +226,7 @@ class ChatOutCommon with Tag {
       }
     }
     if (tryNoPiece && ((pid == null) || pid.isEmpty)) {
-      pid = (await sendMsg([message.targetId], data))?.messageId;
+      pid = (await sendMsg([message.targetId], data, maxHoldingSeconds: maxHoldingSeconds))?.messageId;
     }
     if (pid == null || pid.isEmpty) return pid;
     // notification
@@ -406,6 +410,7 @@ class ChatOutCommon with Tag {
     bool sessionSync = true,
     bool statusSync = true,
     bool? notification,
+    int maxHoldingSeconds = 8640000,
   }) async {
     if (message == null || message.data == null) return null;
     if (insert) message = await insertMessage(message);
@@ -427,7 +432,7 @@ class ChatOutCommon with Tag {
       } else if (message.isTargetContact) {
         ContactSchema? contact = await chatCommon.contactHandle(message);
         bool pushNotification = message.canNotification && (notification != false);
-        pid = await _sendWithContact(contact, message, notification: pushNotification);
+        pid = await _sendWithContact(contact, message, notification: pushNotification, maxHoldingSeconds: maxHoldingSeconds);
       } else {
         logger.e("$TAG - _sendVisible - with_error - type:${message.contentType} - message:${message.toStringSimple()}");
         return null;
@@ -849,8 +854,15 @@ class ChatOutCommon with Tag {
     message = await messageCommon.loadMessageSendQueue(message);
     // data
     message.data = MessageData.getText(message);
+    int maxHoldingSeconds = 8640000;
+    if (message.contentType == MessageContentType.textExtension) {
+      maxHoldingSeconds = TEXT_EXTENSION_MAX_HOLDING_SECONDS;
+      if (deleteAfterSeconds != null && deleteAfterSeconds > maxHoldingSeconds) {
+        maxHoldingSeconds = deleteAfterSeconds;
+      }
+    }
     logger.i("$TAG - sendText - targetId:$targetId - content:$content - data:${message.data}");
-    return await _sendVisible(message);
+    return await _sendVisible(message, maxHoldingSeconds: maxHoldingSeconds);
   }
 
   Future<MessageSchema?> saveIpfs(dynamic target, Map<String, dynamic> data) async {
