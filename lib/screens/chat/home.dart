@@ -174,7 +174,7 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
   }
 
   _refreshContactMe({bool deviceInfo = false}) async {
-    ContactSchema? contact = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
+    ContactSchema? contact = await contactCommon.getMe(selfAddress: clientCommon.address, canAdd: true, fetchWalletAddress: true);
     if ((contact == null) && mounted) {
       return await Future.delayed(Duration(milliseconds: 500), () {
         _refreshContactMe(deviceInfo: deviceInfo);
@@ -210,7 +210,12 @@ class _ChatHomeScreenState extends BaseStateFulWidgetState<ChatHomeScreen> with 
         } else if (!dbOpen && (dbUpdateTip?.isNotEmpty == true)) {
           return _dbUpgradeTip();
         } else if (!connected || (state.defaultWallet() == null)) {
-          return ChatNoConnectLayout((w) => _tryLogin(wallet: w));
+          return ChatNoConnectLayout((w) async {
+            bool succeed = await _tryLogin(wallet: w);
+            if (succeed) {
+              _refreshContactMe(deviceInfo: true);
+            }
+          });
         }
         // client connected
         return Layout(
