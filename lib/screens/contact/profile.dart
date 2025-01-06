@@ -7,11 +7,9 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:nmobile/app.dart';
 import 'package:nmobile/common/locator.dart';
-import 'package:nmobile/common/name_service/resolver.dart';
 import 'package:nmobile/common/settings.dart';
 import 'package:nmobile/components/base/stateful.dart';
 import 'package:nmobile/components/button/button.dart';
-import 'package:nmobile/components/button/button_icon.dart';
 import 'package:nmobile/components/contact/avatar_editable.dart';
 import 'package:nmobile/components/dialog/bottom.dart';
 import 'package:nmobile/components/dialog/loading.dart';
@@ -28,7 +26,6 @@ import 'package:nmobile/schema/contact.dart';
 import 'package:nmobile/schema/device_info.dart';
 import 'package:nmobile/schema/wallet.dart';
 import 'package:nmobile/screens/chat/messages.dart';
-import 'package:nmobile/screens/common/scanner.dart';
 import 'package:nmobile/screens/contact/chat_profile.dart';
 import 'package:nmobile/utils/asset.dart';
 import 'package:nmobile/utils/logger.dart';
@@ -158,6 +155,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
     } else if (contactAddress?.isNotEmpty == true) {
       this._contact = await contactCommon.query(contactAddress);
     }
+
     if (this._contact == null || (this._contact?.address.isEmpty == true)) return;
 
     // exist
@@ -231,7 +229,6 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
       await clientCommon.signOut(clearWallet: true, closeDB: true);
       await Future.delayed(Duration(milliseconds: 250)); // wait client close
       Loading.dismiss();
-
       // client signIn
       bool success = await clientCommon.signIn(selected, toast: true, loading: (visible, input, dbOpen) {
         if (visible && !input && !dbOpen) {
@@ -249,6 +246,7 @@ class _ContactProfileScreenState extends BaseStateFulWidgetState<ContactProfileS
         // contact
         ContactSchema? _me = await contactCommon.getMe(canAdd: true, fetchWalletAddress: true);
         await _refreshContactSchema(schema: _me);
+        contactCommon.meUpdateSink.add(_me);
       }
       if (mounted) {
         AppScreen.go(this.context);

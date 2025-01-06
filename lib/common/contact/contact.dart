@@ -104,12 +104,20 @@ class ContactCommon with Tag {
     bool fetchWalletAddress = false,
   }) async {
     List<ContactSchema> contacts = await queryList(type: ContactType.me, orderDesc: false, limit: 1);
-    ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : null;
     String myAddress = selfAddress ?? clientCommon.address ?? "";
+    // TODO: fix multiple me
+    for(int i = 0; i < contacts.length; i++) {
+      if (myAddress.isNotEmpty && contacts[i].address != myAddress) {
+        await setType(contacts[i].address, ContactType.none, notify: false);
+        contacts.remove(contacts[i]);
+      }
+    }
+
+    ContactSchema? contact = contacts.isNotEmpty ? contacts[0] : null;
     if ((contact == null) && myAddress.isNotEmpty) {
       contact = await ContactStorage.instance.query(myAddress);
       if (contact != null) {
-        await ContactStorage.instance.setType(contact.address, ContactType.me);
+        await ContactStorage.instance.setType(myAddress, ContactType.me);
         contact.type = ContactType.me;
       }
     }
