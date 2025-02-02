@@ -25,11 +25,13 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m1(field) => "${field} is required.";
 
-  static String m2(other) => "${other} invites You to join group";
+  static String m2(limit) => "Upload up to ${limit} images at a time";
 
-  static String m3(other) => "You invites ${other} to join group";
+  static String m3(other) => "${other} invites You to join group";
 
-  static String m4(other) => "${other} have already accepted";
+  static String m4(other) => "You invites ${other} to join group";
+
+  static String m5(other) => "${other} have already accepted";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -276,6 +278,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("The file does not exist"),
         "file_too_big":
             MessageLookupByLibrary.simpleMessage("The file is too big"),
+        "file_too_many": m2,
         "files": MessageLookupByLibrary.simpleMessage("Files"),
         "first_name": MessageLookupByLibrary.simpleMessage("First Name"),
         "friends": MessageLookupByLibrary.simpleMessage("Friend"),
@@ -348,8 +351,8 @@ class MessageLookup extends MessageLookupByLibrary {
             "You have already invited this member,still invite?"),
         "invitee_already_exists":
             MessageLookupByLibrary.simpleMessage("Invitee already exists"),
-        "invites_desc_me": m2,
-        "invites_desc_other": m3,
+        "invites_desc_me": m3,
+        "invites_desc_other": m4,
         "inviting": MessageLookupByLibrary.simpleMessage("inviting"),
         "join_but_not_invite":
             MessageLookupByLibrary.simpleMessage("not invited"),
@@ -451,7 +454,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "only_owner_can_modify": MessageLookupByLibrary.simpleMessage(
             "Only the group owner can modify this item"),
         "optional": MessageLookupByLibrary.simpleMessage("optional"),
-        "other_accepted_already": m4,
+        "other_accepted_already": m5,
         "owner": MessageLookupByLibrary.simpleMessage("Owner"),
         "password_wrong": MessageLookupByLibrary.simpleMessage(
             "Account password or keystore file is wrong."),
