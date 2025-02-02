@@ -117,36 +117,21 @@ class _AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     });
 
     // For sharing images coming from outside the app while the app is in the memory
-    _intentDataMediaStreamSubscription = ReceiveSharingIntent.getMediaStream().listen((List<SharedMediaFile>? values) async {
+    _intentDataMediaStreamSubscription = ReceiveSharingIntent.instance.getMediaStream().listen((List<SharedMediaFile>? values) async {
       if (values == null || values.isEmpty) return;
       await loginCompleter.future;
       ShareHelper.showWithFiles(this.context, values);
-    }, onError: (err, stack) {
-      handleError(err, stack);
-    });
-
-    // For sharing or opening urls/text coming from outside the app while the app is in the memory
-    _intentDataTextStreamSubscription = ReceiveSharingIntent.getTextStream().listen((String? value) async {
-      if (value == null || value.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithTexts(this.context, [value]);
     }, onError: (err, stack) {
       handleError(err, stack);
     });
 
     // For sharing images coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialMedia().then((List<SharedMediaFile>? values) async {
+    ReceiveSharingIntent.instance.getInitialMedia().then((List<SharedMediaFile>? values) async {
       if (values == null || values.isEmpty) return;
       await loginCompleter.future;
       ShareHelper.showWithFiles(this.context, values);
     });
 
-    // For sharing or opening urls/text coming from outside the app while the app is closed
-    ReceiveSharingIntent.getInitialText().then((String? value) async {
-      if (value == null || value.isEmpty) return;
-      await loginCompleter.future;
-      ShareHelper.showWithTexts(this.context, [value]);
-    });
 
     // wallet
     taskService.addTask(TaskService.KEY_WALLET_BALANCE, 60, (key) => walletCommon.queryAllBalance(), delayMs: 1 * 1000);
