@@ -64,6 +64,7 @@ class ShareHelper {
       results.add(params);
     }
     if (results.isEmpty) return;
+    String text = "";
     // messages
     for (var i = 0; i < results.length; i++) {
       Map<String, dynamic> result = results[i];
@@ -71,6 +72,7 @@ class ShareHelper {
       int size = int.tryParse(result["size"]?.toString() ?? "") ?? File(path).lengthSync();
       String? mimeType = result["mimeType"];
       double durationS = double.tryParse(result["duration"]?.toString() ?? "") ?? 0;
+      String message = result["message"] ?? "";
       if (path.isEmpty) continue;
       // no message_type(video/file), and result no mime_type from file_picker
       // so big_file and video+file go with type_ipfs
@@ -81,6 +83,10 @@ class ShareHelper {
       } else {
         chatOutCommon.saveIpfs(target, result); // await
       }
+      if (text.isEmpty && message.isNotEmpty) text = message;
+    }
+    if (text.isNotEmpty) {
+      chatOutCommon.sendText(target, text); // await
     }
   }
 
@@ -98,19 +104,19 @@ class ShareHelper {
     }
     // type
     String mimeType = "";
-    if (shareMedia.type == SharedMediaType.IMAGE) {
+    if (shareMedia.type == SharedMediaType.image) {
       mimeType = "image";
-    } else if (shareMedia.type == SharedMediaType.VIDEO) {
+    } else if (shareMedia.type == SharedMediaType.video) {
       mimeType = "video";
-    } else if (shareMedia.type == SharedMediaType.FILE) {
+    } else if (shareMedia.type == SharedMediaType.file) {
       mimeType = "file";
     }
     // ext
     String ext = Path.getFileExt(file, "");
     if (ext.isEmpty) {
-      if (shareMedia.type == SharedMediaType.IMAGE) {
+      if (shareMedia.type == SharedMediaType.image) {
         ext = FileHelper.DEFAULT_IMAGE_EXT;
-      } else if (shareMedia.type == SharedMediaType.VIDEO) {
+      } else if (shareMedia.type == SharedMediaType.video) {
         ext = FileHelper.DEFAULT_VIDEO_EXT;
       }
     }
@@ -181,6 +187,7 @@ class ShareHelper {
         "duration": (duration != null) ? (duration / 1000) : null,
         "thumbnailPath": thumbnailPath,
         "thumbnailSize": thumbnailSize,
+        "message": shareMedia.message,
       };
       return params;
     }
