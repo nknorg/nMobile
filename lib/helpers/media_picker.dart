@@ -16,8 +16,10 @@ import 'package:nmobile/utils/format.dart';
 import 'package:nmobile/utils/logger.dart';
 import 'package:nmobile/utils/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart' as VideoThumbnail;
-import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+
+final ImagePicker picker = ImagePicker();
 
 class MediaPicker {
   static Future<List<Map<String, dynamic>>> pickCommons(
@@ -37,23 +39,35 @@ class MediaPicker {
     if (!permissionOK) return [];
 
     // pick
-    List<AssetEntity>? pickedResults;
+    // List<AssetEntity>? pickedResults;
+    // try {
+    //   pickedResults = await AssetPicker.pickAssets(
+    //     Settings.appContext,
+    //     pickerConfig: AssetPickerConfig(
+    //       // themeColor: application.theme.primaryColor,
+    //       requestType: RequestType.common,
+    //       pickerTheme: _getTheme(),
+    //       maxAssets: maxNum,
+    //       previewThumbnailSize: Platform.isAndroid ? ThumbnailSize.square(Settings.screenWidth().toInt()) : null,
+    //       gridCount: 4,
+    //       pageSize: 32,
+    //     ),
+    //   );
+    // } catch (e, st) {
+    //   handleError(e, st);
+    // }
+    List<XFile>? pickedResults;
     try {
-      pickedResults = await AssetPicker.pickAssets(
-        Settings.appContext,
-        pickerConfig: AssetPickerConfig(
-          // themeColor: application.theme.primaryColor,
-          requestType: RequestType.common,
-          pickerTheme: _getTheme(),
-          maxAssets: maxNum,
-          previewThumbnailSize: Platform.isAndroid ? ThumbnailSize.square(Settings.screenWidth().toInt()) : null,
-          gridCount: 4,
-          pageSize: 32,
-        ),
-      );
+      pickedResults = await picker.pickMultipleMedia(limit: maxNum);
     } catch (e, st) {
-      handleError(e, st);
+
     }
+
+    if (pickedResults != null && pickedResults.length > maxNum) {
+      Toast.show(Settings.locale((s) => s.file_too_many(maxNum)));
+      pickedResults = pickedResults.sublist(0, maxNum);
+    }
+
     if (pickedResults == null || pickedResults.isEmpty) {
       logger.d("MediaPicker - pickCommons - pickedResults = null");
       return [];
@@ -62,24 +76,27 @@ class MediaPicker {
     // result
     List<Map<String, dynamic>> pickedMaps = [];
     for (var i = 0; i < pickedResults.length; i++) {
-      AssetEntity entity = pickedResults[i];
       // exist
-      File? file = (await entity.originFile) ?? (await entity.loadFile(isOrigin: true));
-      if (file == null || file.path.isEmpty) {
+      XFile? entity = pickedResults[i];
+      File file = File(entity.path);
+      if (entity == null || entity.path.isEmpty) {
         logger.e("MediaPicker - pickCommons - pickedResults originFile = null");
         continue;
       }
+
       // type
-      String mimetype = entity.mimeType ?? "";
-      if (mimetype.isEmpty) {
-        if (entity.typeInt == AssetType.image.index) {
-          mimetype = "image";
-        } else if (entity.typeInt == AssetType.audio.index) {
-          mimetype = "audio";
-        } else if (entity.typeInt == AssetType.video.index) {
-          mimetype = "video";
+      String? fileExt = Path.getFileExt(file, "");
+      String? mimeType;
+      if (fileExt != null && fileExt.isNotEmpty) {
+        if (FileHelper.isVideoByExt(fileExt)) {
+          mimeType = "video";
+        } else if (FileHelper.isAudioByExt(fileExt)) {
+          mimeType = "audio";
+        } else if (FileHelper.isImageByExt(fileExt)) {
+          mimeType = "image";
         }
       }
+
       String ext = "";
       List<String>? splits = entity.mimeType?.split("/");
       if (splits != null && splits.length > 1) {
@@ -88,19 +105,20 @@ class MediaPicker {
       if (ext.isEmpty) {
         ext = Path.getFileExt(file, "");
       }
+
       if (ext.isEmpty) {
-        if (entity.typeInt == AssetType.image.index) {
+        if (mimeType == "image") {
           ext = FileHelper.DEFAULT_IMAGE_EXT;
-        } else if (entity.typeInt == AssetType.audio.index) {
+        } else if (mimeType == "audio") {
           ext = FileHelper.DEFAULT_AUDIO_EXT;
-        } else if (entity.typeInt == AssetType.video.index) {
+        } else if (mimeType == "video") {
           ext = FileHelper.DEFAULT_VIDEO_EXT;
         }
       }
-      // compress
-      bool isImage = entity.type == AssetType.image;
-      bool isAudio = entity.type == AssetType.audio;
-      bool isVideo = entity.type == AssetType.video;
+      // TODO:compress
+      bool isImage = mimeType == "image";
+      bool isAudio = mimeType == "audio";
+      bool isVideo = mimeType == "video";
       try {
         if (isImage && compressImage) {
           // FUTURE:GG compress
@@ -139,17 +157,20 @@ class MediaPicker {
       }
       // map
       if (savePath.isNotEmpty) {
+        Image img = Image.file(file);
         Map<String, dynamic> params = {
           "path": savePath,
           "size": size,
           "name": null,
           "fileExt": ext.isEmpty ? null : ext,
-          "mimeType": mimetype,
-          "width": entity.orientatedWidth,
-          "height": entity.orientatedHeight,
+          "mimeType": mimeType,
+          "width": img.width,
+          "height": img.height,
         };
         if (isAudio || isVideo) {
-          params.addAll({"duration": entity.duration});
+          var videoController = VideoPlayerController.file(file);
+          await videoController.initialize();
+          params.addAll({"duration": videoController.value.duration.inSeconds});
         }
         pickedMaps.add(params);
       }
@@ -157,132 +178,6 @@ class MediaPicker {
     }
     return pickedMaps;
   }
-
-  /*static Future<Map<String, dynamic>?> takeCommon(
-    String? savePath, {
-    bool compressImage = false,
-    bool compressAudio = false,
-    bool compressVideo = false,
-    Duration maxDuration = const Duration(seconds: 10),
-  }) async {
-    // permission
-    bool permissionOK = await _isPermissionOK(ImageSource.camera);
-    if (!permissionOK) return null;
-
-    // take
-    AssetEntity? entity;
-    try {
-      entity = await CameraPicker.pickFromCamera(
-        Settings.appContext,
-        pickerConfig: CameraPickerConfig(
-          enableRecording: true,
-          enableTapRecording: false,
-          enableAudio: true,
-          enableSetExposure: true,
-          enableExposureControlOnPoint: true,
-          enablePinchToZoom: true,
-          enablePullToZoomInRecord: true,
-          shouldDeletePreviewFile: false,
-          maximumRecordingDuration: maxDuration,
-          theme: _getTheme(),
-          resolutionPreset: ResolutionPreset.max,
-          imageFormatGroup: ImageFormatGroup.unknown,
-        ),
-      );
-    } catch (e, st) {
-      handleError(e, st);
-    }
-
-    // file
-    File? file = (await entity?.originFile) ?? (await entity?.loadFile(isOrigin: true));
-    if (entity == null || file == null || file.path.isEmpty) {
-      logger.w("MediaPicker - takeCommon - pickedResults originFile = null");
-      return null;
-    }
-
-    // type
-    String mimetype = entity.mimeType ?? "";
-    if (mimetype.isEmpty) {
-      if (entity.typeInt == AssetType.image.index) {
-        mimetype = "image";
-      } else if (entity.typeInt == AssetType.audio.index) {
-        mimetype = "audio";
-      } else if (entity.typeInt == AssetType.video.index) {
-        mimetype = "video";
-      }
-    }
-    String ext = "";
-    List<String>? splits = entity.mimeType?.split("/");
-    if (splits != null && splits.length > 1) {
-      ext = splits[splits.length - 1];
-    }
-    if (ext.isEmpty) {
-      ext = Path.getFileExt(file, "");
-    }
-    if (ext.isEmpty) {
-      if (entity.typeInt == AssetType.image.index) {
-        ext = FileHelper.DEFAULT_IMAGE_EXT;
-      } else if (entity.typeInt == AssetType.audio.index) {
-        ext = FileHelper.DEFAULT_AUDIO_EXT;
-      } else if (entity.typeInt == AssetType.video.index) {
-        ext = FileHelper.DEFAULT_VIDEO_EXT;
-      }
-    }
-
-    // compress
-    int size = file.lengthSync();
-    bool isImage = entity.type == AssetType.image;
-    bool isAudio = entity.type == AssetType.audio;
-    bool isVideo = entity.type == AssetType.video;
-    try {
-      if (isImage && compressImage) {
-        // FUTURE:GG compress
-      } else if (isAudio && compressAudio) {
-        // FUTURE:GG compress
-      } else if (isVideo && compressVideo) {
-        // FUTURE:GG compress
-      } else {
-        // FUTURE:GG original
-      }
-    } catch (e, st) {
-      handleError(e, st);
-    }
-
-    // save
-    if (savePath == null || savePath.isEmpty == true) {
-      savePath = file.absolute.path;
-    } else {
-      savePath = Path.joinFileExt(savePath, ext);
-      File saveFile = File(savePath);
-      if (!await saveFile.exists()) {
-        await saveFile.create(recursive: true);
-      } else {
-        await saveFile.delete();
-        await saveFile.create(recursive: true);
-      }
-      saveFile = await file.copy(savePath);
-    }
-
-    // map
-    if (savePath.isNotEmpty) {
-      Map<String, dynamic> params = {
-        "path": savePath,
-        "size": size,
-        "name": null,
-        "fileExt": ext.isEmpty ? null : ext,
-        "mimeType": mimetype,
-        "width": (Platform.isAndroid && isImage) ? null : entity.orientatedWidth,
-        "height": (Platform.isAndroid && isImage) ? null : entity.orientatedHeight,
-      };
-      if (isAudio || isVideo) {
-        params.addAll({"duration": entity.duration});
-      }
-      logger.i("MediaPicker - takeCommon - picked success - params:${params.toString()} - entity${entity.toString()}");
-      return params;
-    }
-    logger.w("MediaPicker - takeCommon - picked fail");
-    return null;
-  }*/
 
   static Future<Map<String, dynamic>?> takeImage(String? savePath, {bool compress = false}) async {
     // permission
@@ -364,29 +259,19 @@ class MediaPicker {
     bool permissionOK = await _isPermissionOK(ImageSource.gallery);
     if (!permissionOK) return null;
 
-    // pick
-    List<AssetEntity>? pickedResults;
+    XFile? pickedResults;
     try {
-      pickedResults = await AssetPicker.pickAssets(
-        Settings.appContext,
-        pickerConfig: AssetPickerConfig(
-          themeColor: application.theme.primaryColor,
-          requestType: RequestType.image,
-          maxAssets: 1,
-          gridCount: 3,
-          pageSize: 30,
-        ),
-      );
+      pickedResults = await picker.pickImage(source: ImageSource.gallery);
     } catch (e, st) {
       handleError(e, st);
     }
-    if (pickedResults == null || pickedResults.isEmpty) {
+    if (pickedResults == null) {
       logger.d("MediaPicker - pickImage - pickedResults = null");
       return null;
     }
 
     // convert
-    File? pickedFile = (await pickedResults[0].originFile) ?? (await pickedResults[0].loadFile(isOrigin: false));
+    File? pickedFile = File(pickedResults.path);
     if (pickedFile == null || pickedFile.path.isEmpty) {
       logger.e("MediaPicker - pickImage - pickedFile = null");
       return null;
@@ -443,7 +328,8 @@ class MediaPicker {
         sourcePath: original.absolute.path,
         compressFormat: ImageCompressFormat.jpg,
         aspectRatio: cropRatio,
-        compressQuality: quality, // later handle
+        compressQuality: quality,
+        // later handle
         maxWidth: width,
         maxHeight: height,
         uiSettings: [
@@ -484,7 +370,12 @@ class MediaPicker {
       return original;
     } else if (maxEnable && !bestEnable) {
       if (originalSize <= maxSize) {
-        logger.i('MediaPicker - _compressImage - ok with only maxSize - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        logger.i('MediaPicker - _compressImage - ok with only maxSize - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         return original;
       } else if (isGif) {
         if (toast) Toast.show(Settings.locale((s) => s.file_too_big));
@@ -494,7 +385,12 @@ class MediaPicker {
       }
     } else if (!maxEnable && bestEnable) {
       if (originalSize <= bestSize) {
-        logger.i('MediaPicker - _compressImage - ok with only bestSize - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        logger.i('MediaPicker - _compressImage - ok with only bestSize - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         return original;
       } else if (isGif) {
         return original;
@@ -503,7 +399,17 @@ class MediaPicker {
       }
     } else if (maxEnable && bestEnable) {
       if ((originalSize <= bestSize) && (originalSize <= maxSize)) {
-        logger.i('MediaPicker - _compressImage - ok with size - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        logger.i('MediaPicker - _compressImage - ok with size - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])}');
         return original;
       } else if (isGif) {
         if (originalSize > maxSize) {
@@ -516,7 +422,17 @@ class MediaPicker {
         // go compress
       }
     }
-    logger.i('MediaPicker - _compressImage - compress:START - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+    logger.i('MediaPicker - _compressImage - compress:START - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])}');
 
     // filePath
     String fileExt = Path.getFileExt(original, FileHelper.DEFAULT_IMAGE_EXT);
@@ -560,7 +476,17 @@ class MediaPicker {
           keepExif: false, // true -> ios error
         );
         compressSize = await compressFile?.length() ?? 0;
-        logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:${i + 1} - quality:$compressQuality - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
+        logger.d('MediaPicker - _compressImage - compress:OK - tryTimes:${i + 1} - quality:$compressQuality - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: [
+              'B',
+              'KB',
+              'MB',
+              'GB'
+            ])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])}');
         if (compressSize <= bestSize) break;
       }
     } catch (e, st) {
@@ -568,11 +494,31 @@ class MediaPicker {
     }
 
     if (compressSize > maxSize) {
-      logger.w('MediaPicker - _compressImage - compress:BREAK - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
+      logger.w('MediaPicker - _compressImage - compress:BREAK - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+          ])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+          ])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
       if (toast) Toast.show(Settings.locale((s) => s.file_too_big));
       return null;
     }
-    logger.i('MediaPicker - _compressImage - compress:END - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
+    logger.i('MediaPicker - _compressImage - compress:END - compressSize:${Format.flowSize(compressSize.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])} - originalSize:${Format.flowSize(originalSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - bestSize:${Format.flowSize(bestSize.toDouble(), unitArr: [
+          'B',
+          'KB',
+          'MB',
+          'GB'
+        ])} - maxSize:${Format.flowSize(maxSize.toDouble(), unitArr: ['B', 'KB', 'MB', 'GB'])} - format:$format - path:${compressFile?.path}');
     return compressFile;
   }
 
@@ -655,24 +601,24 @@ class MediaPicker {
     return true;
   }
 
-  static ThemeData _getTheme() {
-    ThemeData theme = AssetPicker.themeData(application.theme.primaryColor);
-    theme = ThemeData.dark().copyWith(
-      primaryColor: theme.primaryColor,
-      primaryColorLight: theme.primaryColorLight,
-      primaryColorDark: theme.primaryColorDark,
-      canvasColor: Colors.black87,
-      scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
-      // bottomAppBarColor: theme.bottomAppBarColor,
-      cardColor: theme.cardColor,
-      highlightColor: theme.highlightColor,
-      // toggleableActiveColor: theme.toggleableActiveColor,
-      textSelectionTheme: theme.textSelectionTheme,
-      indicatorColor: theme.indicatorColor,
-      appBarTheme: theme.appBarTheme,
-      buttonTheme: theme.buttonTheme,
-      colorScheme: theme.colorScheme,
-    );
-    return theme;
-  }
+  // static ThemeData _getTheme() {
+  //   ThemeData theme = AssetPicker.themeData(application.theme.primaryColor);
+  //   theme = ThemeData.dark().copyWith(
+  //     primaryColor: theme.primaryColor,
+  //     primaryColorLight: theme.primaryColorLight,
+  //     primaryColorDark: theme.primaryColorDark,
+  //     canvasColor: Colors.black87,
+  //     scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
+  //     // bottomAppBarColor: theme.bottomAppBarColor,
+  //     cardColor: theme.cardColor,
+  //     highlightColor: theme.highlightColor,
+  //     // toggleableActiveColor: theme.toggleableActiveColor,
+  //     textSelectionTheme: theme.textSelectionTheme,
+  //     indicatorColor: theme.indicatorColor,
+  //     appBarTheme: theme.appBarTheme,
+  //     buttonTheme: theme.buttonTheme,
+  //     colorScheme: theme.colorScheme,
+  //   );
+  //   return theme;
+  // }
 }
