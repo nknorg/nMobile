@@ -3810,6 +3810,16 @@ class S {
     );
   }
 
+  /// `Upload up to {limit} images at a time`
+  String file_too_many(Object limit) {
+    return Intl.message(
+      'Upload up to $limit images at a time',
+      name: 'file_too_many',
+      desc: '',
+      args: [limit],
+    );
+  }
+
   /// `The user has been added`
   String get add_user_duplicated {
     return Intl.message(

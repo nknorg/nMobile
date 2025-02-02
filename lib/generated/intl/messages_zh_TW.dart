@@ -24,11 +24,13 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m1(field) => "${field} 必填";
 
-  static String m2(other) => "${other} 邀請您加入群聊";
+  static String m2(limit) => "一次最多上傳${limit}張圖片";
 
-  static String m3(other) => "您邀請 ${other} 加入群聊";
+  static String m3(other) => "${other} 邀請您加入群聊";
 
-  static String m4(other) => "${other}已接受邀請";
+  static String m4(other) => "您邀請 ${other} 加入群聊";
+
+  static String m5(other) => "${other}已接受邀請";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -232,6 +234,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "fee": MessageLookupByLibrary.simpleMessage("礦工費"),
         "file_not_exist": MessageLookupByLibrary.simpleMessage("文件不存在"),
         "file_too_big": MessageLookupByLibrary.simpleMessage("文件尺寸過大"),
+        "file_too_many": m2,
         "files": MessageLookupByLibrary.simpleMessage("文件"),
         "first_name": MessageLookupByLibrary.simpleMessage("名"),
         "friends": MessageLookupByLibrary.simpleMessage("好友"),
@@ -289,8 +292,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("你已經邀請過該成員，繼續邀請?"),
         "invitee_already_exists":
             MessageLookupByLibrary.simpleMessage("收邀人已存在"),
-        "invites_desc_me": m2,
-        "invites_desc_other": m3,
+        "invites_desc_me": m3,
+        "invites_desc_other": m4,
         "inviting": MessageLookupByLibrary.simpleMessage("邀請中"),
         "join_but_not_invite": MessageLookupByLibrary.simpleMessage("未邀請"),
         "joined_channel": MessageLookupByLibrary.simpleMessage("加入群聊"),
@@ -374,7 +377,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "only_owner_can_modify":
             MessageLookupByLibrary.simpleMessage("僅群主可修改此項"),
         "optional": MessageLookupByLibrary.simpleMessage("可選"),
-        "other_accepted_already": m4,
+        "other_accepted_already": m5,
         "owner": MessageLookupByLibrary.simpleMessage("群主"),
         "password_wrong":
             MessageLookupByLibrary.simpleMessage("賬戶密碼或keystore錯誤"),
