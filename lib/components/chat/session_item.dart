@@ -367,10 +367,10 @@ class _ChatSessionItemState extends BaseStateFulWidgetState<ChatSessionItem> {
 
     String? draft = memoryCache.getDraft(session.targetId);
     String contactName = _contact?.displayName ?? " ";
-    String senderName = widget.session.data["senderName"]?.toString() ?? " ";
+    String senderName = widget.session.data["senderName"]?.toString() ?? ContactSchema.getDefaultName(_contact?.address ?? session.lastMessageOptions?["sender"]);
     String who = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? senderName : contactName);
     String prefix = (_lastMsg?.isOutbound == true) ? "" : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$senderName: " : "");
-    String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$senderName: " : "");
+    String whoPrefix = (_lastMsg?.isOutbound == true) ? Settings.locale((s) => s.you, ctx: context) : (((_lastMsg?.isTargetTopic == true) || (_lastMsg?.isTargetGroup == true)) ? "$senderName " : "");
 
     Widget contentWidget;
     if (draft != null && draft.length > 0) {
